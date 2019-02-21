@@ -1,0 +1,88 @@
+{
+    "3": {
+        "$id": "3",
+        "DnsDomain": "",
+        "NTDomain": "",
+        "HostName": "MSTICALERTSWIN1",
+        "NetBiosName": "MSTICALERTSWIN1",
+        "OSFamily": "Windows",
+        "IsDomainJoined": false,
+        "Type": "host",
+        "OsVersion": null
+    },
+    "4": {
+        "$id": "4",
+        "Directory": "c:\\windows\\system32",
+        "Name": "cmd.exe",
+        "Type": "file"
+    },
+    "5": {
+        "$id": "5",
+        "ProcessId": "0x1558",
+        "CommandLine": "",
+        "ImageFile": {
+            "$id": "4",
+            "Directory": "c:\\windows\\system32",
+            "Name": "cmd.exe",
+            "Type": "file"
+        },
+        "Host": {
+            "$ref": "3"
+        },
+        "Type": "process"
+    },
+    "6": {
+        "$id": "6",
+        "Name": "MSTICAlertsWin1$",
+        "NTDomain": "WORKGROUP",
+        "Host": {
+            "$ref": "3"
+        },
+        "Sid": "S-1-5-20",
+        "IsDomainJoined": true,
+        "Type": "account",
+        "LogonId": "0x3e4"
+    },
+    "7": {
+        "$id": "7",
+        "Directory": "c:\\windows\\servic~2\\networ~1\\appdata\\local\\temp",
+        "Name": "mimikatz.exe",
+        "Type": "file"
+    },
+    "8": {
+        "$id": "8",
+        "ProcessId": "0x6b8",
+        "CommandLine": ".\\mimikatz.exe",
+        "ElevationToken": "Default",
+        "CreationTimeUtc": "2018-11-15T23:54:29.300019Z",
+        "ImageFile": {
+            "$id": "7",
+            "Directory": "c:\\windows\\servic~2\\networ~1\\appdata\\local\\temp",
+            "Name": "mimikatz.exe",
+            "Type": "file"
+        },
+        "Account": {
+            "$ref": "6"
+        },
+        "ParentProcess": {
+            "$ref": "5"
+        },
+        "Host": {
+            "$ref": "3"
+        },
+        "Type": "process"
+    },
+    "9": {
+        "$id": "9",
+        "SessionId": "0x3e4",
+        "StartTimeUtc": "2018-11-15T23:54:29.300019Z",
+        "EndTimeUtc": "2018-11-15T23:54:29.300019Z",
+        "Type": "host-logon-session",
+        "Host": {
+            "$ref": "3"
+        },
+        "Account": {
+            "$ref": "6"
+        }
+    }
+}
