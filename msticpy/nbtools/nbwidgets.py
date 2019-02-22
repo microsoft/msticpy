@@ -331,6 +331,7 @@ class AlertSelector(QueryParamProvider):
 
     def display(self):
         """Display the interactive widgets."""
+        self._select_top_alert()
         display(widgets.VBox([self._w_filter_alerts,
                               self._w_select_alert,
                               self._w_output]))
@@ -346,9 +347,10 @@ class AlertSelector(QueryParamProvider):
         """Filter the alert list by substring."""
         if change is not None and 'new' in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change['new'] in i]
+                i for i in self._select_items if change['new'].lower() in i.lower()]
 
     def _select_alert(self, selection=None):
+        """Select action triggered by picking item from list."""
         if (selection is None or 'new' not in selection or
                 not isinstance(selection['new'], str)):
             self.selected_alert = None
@@ -363,6 +365,7 @@ class AlertSelector(QueryParamProvider):
                         self.alert_action(self.selected_alert)
 
     def _get_alert(self, alert_id):
+        """Get the alert by alert_id."""
         self.alert_id = alert_id
         selected_alerts = self.alerts[self.alerts['SystemAlertId'] == alert_id]
 
@@ -377,6 +380,17 @@ class AlertSelector(QueryParamProvider):
                 except JSONDecodeError:
                     pass
             return alert
+
+    def _select_top_alert(self):
+        """Select the first alert by default."""
+        top_alert = self.alerts.iloc[0]
+        if top_alert:
+            self.alert_id = top_alert.SystemAlertId
+            self.selected_alert = self._get_alert(self.alert_id)
+            if self.alert_action is not None:
+                self._w_output.clear_output()
+                with self._w_output:
+                    self.alert_action(self.selected_alert)
 
     @property
     def query_params(self):
@@ -480,7 +494,7 @@ class GetSingleAlert(QueryParamProvider):
         self.alerts = qry.exec_query(query_name='get_alert',
                                      start=self._start,
                                      end=self._end,
-                                     provider_alert_id=self.alert_id)
+                                     system_alert_id=self.alert_id)
         if self.alerts is not None:
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
