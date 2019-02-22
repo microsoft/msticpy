@@ -384,7 +384,7 @@ class AlertSelector(QueryParamProvider):
     def _select_top_alert(self):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
-        if top_alert:
+        if len(top_alert) == 1:
             self.alert_id = top_alert.SystemAlertId
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
