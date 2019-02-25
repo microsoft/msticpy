@@ -5,9 +5,17 @@
 # --------------------------------------------------------------------------
 """vtlookup test class."""
 import unittest
+import os
+from os import path
+
 import pandas as pd
 from .. sectools.vtlookup import VTLookup
 
+_test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('\\tests\\testdata')]
+if len(_test_data_folders) == 1:
+    _TEST_DATA = _test_data_folders[0]
+else:
+    _TEST_DATA = '.\\tests\\testdata'
 
 
 class TestVTLookup(unittest.TestCase):
@@ -56,7 +64,7 @@ class TestVTLookup(unittest.TestCase):
     def test_parse_file_results(self):
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
 
-        FILE_NAME = 'msticpy/tests/testdata/fileresponse.json'
+        FILE_NAME = path.join(_TEST_DATA, 'fileresponse.json')
         with open(FILE_NAME, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -71,7 +79,7 @@ class TestVTLookup(unittest.TestCase):
         print(test_df.T)
 
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
-        FILE_NAME2 = 'msticpy/tests/testdata/file-multi_pos.json'
+        FILE_NAME2 = path.join(_TEST_DATA, 'file-multi_pos.json')
         with open(FILE_NAME2, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -88,7 +96,7 @@ class TestVTLookup(unittest.TestCase):
     def test_parse_url_results(self):
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
 
-        FILE_NAME = 'msticpy/tests/testdata/url_pos.json'
+        FILE_NAME = path.join(_TEST_DATA, 'url_pos.json')
         with open(FILE_NAME, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -102,7 +110,7 @@ class TestVTLookup(unittest.TestCase):
         print(test_df.T)
 
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
-        FILE_NAME2 = 'msticpy/tests/testdata/url_neg.json'
+        FILE_NAME2 = path.join(_TEST_DATA, 'url_neg.json')
         with open(FILE_NAME2, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -118,7 +126,7 @@ class TestVTLookup(unittest.TestCase):
     def test_parse_domain_results(self):
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
 
-        FILE_NAME = 'msticpy/tests/testdata/domain_pos.json'
+        FILE_NAME = path.join(_TEST_DATA, 'domain_pos.json')
         with open(FILE_NAME, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -137,7 +145,7 @@ class TestVTLookup(unittest.TestCase):
         print(test_df.T)
 
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
-        FILE_NAME2 = 'msticpy/tests/testdata/domain_neg.json'
+        FILE_NAME2 = path.join(_TEST_DATA, 'domain_neg.json')
         with open(FILE_NAME2, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -155,7 +163,7 @@ class TestVTLookup(unittest.TestCase):
     def test_parse_ip_results(self):
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
 
-        FILE_NAME = 'msticpy/tests/testdata/ip-address_pos.json'
+        FILE_NAME = path.join(_TEST_DATA, 'ip-address_pos.json')
         with open(FILE_NAME, 'r') as file_handle:
             txt = file_handle.read()
          
@@ -172,7 +180,7 @@ class TestVTLookup(unittest.TestCase):
         print(test_df.T)
 
         vtlookup = VTLookup(vtkey='fake', verbosity=2)
-        FILE_NAME2 = 'msticpy/tests/testdata/ip-address_neg.json'
+        FILE_NAME2 = path.join(_TEST_DATA, 'ip-address_neg.json')
         with open(FILE_NAME2, 'r') as file_handle:
             txt = file_handle.read()
          

@@ -7,10 +7,12 @@
 """geoip module using ipstack."""
 # import gzip
 from json import JSONDecodeError
+import math
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from typing import Tuple
 from IPython import get_ipython
 from IPython.display import display, HTML
 
@@ -268,3 +270,42 @@ if not get_ipython():
 else:
     display(HTML(_MM_LICENSE_HTML))
     display(HTML(_IPSTACK_LICENSE_HTML))
+
+
+def geo_distance(origin: Tuple[float, float],
+                 destination: Tuple[float, float]) -> float:
+    """
+    Calculate the Haversine distance.
+
+    Author: Martin Thoma - stackoverflow
+
+    Parameters
+    ----------
+    origin : tuple of float
+        (lat, long)
+    destination : tuple of float
+        (lat, long)
+
+    Returns
+    -------
+    distance_in_km : float
+
+    Examples
+    --------
+    >>> origin = (48.1372, 11.5756)  # Munich
+    >>> destination = (52.5186, 13.4083)  # Berlin
+    >>> round(distance(origin, destination), 1)
+    504.2
+
+    """
+    orig_lat, orig_lon = origin
+    dest_lat, dest_lon = destination
+    EARTH_RADIUS_KM = 6371  # km
+
+    ang_dist_lat = math.radians(dest_lat - orig_lat)
+    ang_dist_lon = math.radians(dest_lon - orig_lon)
+    hav_a = (math.sin(ang_dist_lat / 2) * math.sin(ang_dist_lat / 2) +
+             math.cos(math.radians(orig_lat)) * math.cos(math.radians(dest_lat)) *
+             math.sin(ang_dist_lon / 2) * math.sin(ang_dist_lon / 2))
+    hav_c = 2 * math.atan2(math.sqrt(hav_a), math.sqrt(1 - hav_a))
+    return EARTH_RADIUS_KM * hav_c

@@ -459,8 +459,8 @@ class Host(Entity):
             if 'Computer' in src_event:
                 self._computer = src_event['Computer']
                 if '.' in src_event['Computer']:
-                    self.HostName = src_event['Computer'].split('.')[-1]
-                    self.DnsDomain = src_event['Computer'].split('.')[:-1]
+                    self.HostName = src_event['Computer'].split('.', 1)[0]
+                    self.DnsDomain = src_event['Computer'].split('.', 1)[1]
                 else:
                     self.HostName = src_event['Computer']
                 self.NetBiosName = self.HostName
@@ -546,6 +546,7 @@ class IpAddress(Entity):
     }
 
 
+@export
 class GeoLocation(Entity):
     """GeoLocation class."""
 

@@ -476,7 +476,7 @@ class GetSingleAlert(QueryParamProvider):
 
         """
         return {
-            'provider_alert_id': self.alert_id
+            'system_alert_id': self.alert_id
         }
 
     def display(self):

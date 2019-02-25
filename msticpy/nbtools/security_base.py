@@ -190,11 +190,10 @@ class SecurityBase(QueryParamProvider):
         proc_name = (self.primary_process.ImageFile.FullPath if
                      self.primary_process and self.primary_process.ImageFile
                      else None)
-        acct_name = self.primary_account.qualified_name if self.primary_account else None
+        acct_name = self.primary_account.Name if self.primary_account else None
         path_separator = self.path_separator
         if self.data_family == DataFamily.WindowsSecurity:
             proc_name = escape_windows_path(proc_name)
-            acct_name = escape_windows_path(acct_name)
             path_separator = escape_windows_path(self.path_separator)
 
         dyn_query_params = {
