@@ -27,7 +27,7 @@ INSTALL_REQUIRES = ['matplotlib>=3.0.0',
 
 
 # pylint: disable=locally-disabled, C0103
-with open("Readme.md", "r") as fh:
+with open("README.MD", "r") as fh:
     long_description = fh.read()
 # pylint: enable=locally-disabled, C0103
 
