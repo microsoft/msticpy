@@ -9,7 +9,7 @@ import os
 from os import path
 
 import pandas as pd
-from .. sectools.vtlookup import VTLookup
+from .. msticpy.sectools.vtlookup import VTLookup
 
 _test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('\\tests\\testdata')]
 if len(_test_data_folders) == 1:
