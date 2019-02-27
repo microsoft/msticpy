@@ -11,10 +11,16 @@ from .utility import export
 __version__ = '0.1'
 __author__ = 'Ian Hellen'
 
-
 @export
 class WorkspaceConfig(object):
     """Workspace configuration class."""
+
+    # Constants
+    TENANT_ID = "{{cookiecutter.tenant_id}}"
+    SUBSCRIPTION_ID = "{{cookiecutter.subscription_id}}"
+    RESOURCE_GROUP = "{{cookiecutter.resource_group}}"
+    WORKSPACE_ID = "{{cookiecutter.workspace_id}}"
+    WORKSPACE_NAME = "{{cookiecutter.workspace_name}}"
 
     def __init__(self, config_file: str):
         """
