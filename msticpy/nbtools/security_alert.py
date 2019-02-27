@@ -10,7 +10,7 @@ from json import JSONDecodeError
 import pandas as pd
 
 from .._version import VERSION
-from .entityschema import Entity
+from .entityschema import Entity, UnknownEntity
 from .security_base import SecurityBase
 from .utility import export
 
@@ -157,7 +157,7 @@ class SecurityAlert(SecurityBase):
             except TypeError:
                 # if we didn't instantiate a known entity
                 # just add it as it is
-                entity = ent
+                entity = UnknownEntity(**ent)
             if '$id' in ent:
                 self._src_entities[ent['$id']] = entity
 

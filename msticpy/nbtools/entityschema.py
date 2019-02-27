@@ -54,6 +54,13 @@ class Entity(ABC):
                             self[k] = ElevationToken(src_entity[k])
                         elif v == GeoLocation.__name__:
                             self[k] = GeoLocation(src_entity[k])
+                        elif v == Algorithm.__name__:
+                            self[k] = Algorithm(src_entity[k])
+                        elif isinstance(v, tuple):
+                            entity_list = []
+                            for col_entity in src_entity[k]:
+                                entity_list.append(Entity.instantiate_entity(col_entity))
+                            self[k] = entity_list
                         else:
                             self[k] = Entity.instantiate_entity(src_entity[k])
             # add AdditionalData dictionary if it's populated
@@ -193,8 +200,14 @@ class Entity(ABC):
         elif (raw_entity['Type'] == 'registry-value' or
               raw_entity['Type'] == 'registryvalue'):
             return RegistryValue(raw_entity)
-        elif raw_entity['Type'] == 'host-logon-session':
+        elif (raw_entity['Type'] == 'host-logon-session' or
+              raw_entity['Type'] == 'hostlogonsession'):
             return HostLogonSession(raw_entity)
+        elif raw_entity['Type'] == 'filehash':
+            return FileHash(raw_entity)
+        elif (raw_entity['Type'] == 'security-group' or
+              raw_entity['Type'] == 'securitygroup'):
+            return SecurityGroup(raw_entity)
         elif (raw_entity['Type'] == 'alerts' or
               raw_entity['Type'] == 'alert'):
             return Alert(raw_entity)
@@ -213,6 +226,7 @@ class Account(Entity):
 
             :param src_entity: instantiate entity using properties of src entity
             :param src_event: instantiate entity using properties of src event
+            :param kwargs: key-value pair representation of entity
         """
 # pylint: disable=locally-disabled, C0301
         super().__init__(src_entity=src_entity, **kwargs)
@@ -280,6 +294,34 @@ class Account(Entity):
 
 
 @export
+class SecurityGroup(Entity):
+    """SecurityGroup Entity class."""
+
+    def __init__(self, src_entity=None, **kwargs):
+        """
+        Create a new instance of the entity type.
+
+            :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
+        """
+        super().__init__(src_entity=src_entity, **kwargs)
+
+    @property
+    def description_str(self):
+        """Return Entity Description."""
+        return self.DistinguishedName
+
+    _entity_schema = {
+        # DistinguishedName (type System.String)
+        'DistinguishedName': None,
+        # SID (type System.String)
+        'SID': None,
+        # ObjectGuid (type System.String)
+        'ObjectGuid': None,
+    }
+
+
+@export
 class HostLogonSession(Entity):
     """HostLogonSession Entity class."""
 
@@ -289,6 +331,7 @@ class HostLogonSession(Entity):
 
             :param src_entity: instantiate entity using properties of src entity
             :param src_event: instantiate entity using properties of src event
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -328,6 +371,7 @@ class CloudApplication(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -382,6 +426,7 @@ class File(Entity):
 
             :param src_entity: instantiate entity using properties of src entity
             :param src_event: instantiate entity using properties of src event
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -426,7 +471,8 @@ class File(Entity):
         # Sha256 (type System.String)
         'Sha256': None,
         # Sha256Ac (type System.String)
-        'Sha256Ac': None
+        'Sha256Ac': None,
+        'FileHashes': (list, 'FileHash')
     }
 
     def _add_paths(self, full_path):
@@ -440,6 +486,42 @@ class File(Entity):
         self.FullPath = full_path
         self.Name = full_path.split(self.PathSeparator)[-1]
         self.Directory = full_path.split(self.PathSeparator)[:-1]
+
+
+@export
+class FileHash(Entity):
+    """File Hash class."""
+
+    def __init__(self, src_entity=None, **kwargs):
+        """
+        Create a new instance of the entity type.
+
+            :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
+        """
+        super().__init__(src_entity=src_entity, **kwargs)
+
+    @property
+    def description_str(self) -> str:
+        """Return Entity Description."""
+        return f'{self.Algorithm}: {self.Value}'
+
+    _entity_schema = {
+        # The hash algorithm (type System.String)
+        'Algorithm': 'Algorithm',
+        # Value (type System.String)
+        'Value': None,
+    }
+
+
+@export
+class Algorithm(Enum):
+    """FileHash Algorithm Enumeration."""
+    Unknown = 0
+    MD5 = 1
+    SHA1 = 2
+    SHA256 = 3
+    SHA256AC = 4
 
 
 @export
@@ -514,6 +596,7 @@ class IpAddress(Entity):
 
             :param src_entity: instantiate entity using properties of src entity
             :param src_event: instantiate entity using properties of src event
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -555,6 +638,7 @@ class GeoLocation(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -590,6 +674,7 @@ class Malware(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -604,7 +689,9 @@ class Malware(Entity):
         # Category (type System.String)
         'Category': None,
         # File (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.File)
-        'File': 'File'
+        'File': 'File',
+        'Files': (list, 'File'),
+        'Processes': (list, 'Process'),
     }
 
 
@@ -617,6 +704,7 @@ class NetworkConnection(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -654,6 +742,7 @@ class Process(Entity):
 
             :param src_entity: instantiate entity using properties of src entity
             :param src_event: instantiate entity using properties of src event
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 # pylint: disable=locally-disabled, C0301
@@ -720,7 +809,9 @@ class Process(Entity):
         # .V3.Entities.Process)
         'ParentProcess': 'Process',
         # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
-        'Host': 'Host'
+        'Host': 'Host',
+        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.HostLogonSession)
+        'LogonSession': 'HostLogonSession',
     }
 
 
@@ -759,6 +850,7 @@ class RegistryKey(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -784,6 +876,7 @@ class RegistryValue(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -830,6 +923,7 @@ class AzureResource(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -857,6 +951,7 @@ class Alert(Entity):
         Create a new instance of the entity type.
 
             :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -887,6 +982,54 @@ class Alert(Entity):
         # ProviderName (type System.String)
         'ProviderName': None
     }
+
+
+@export
+class Threatintelligence(Entity):
+    """Threatintelligence Entity class."""
+
+    def __init__(self, src_entity=None, **kwargs):
+        """
+        Create a new instance of the entity type.
+
+            :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
+        """
+        super().__init__(src_entity=src_entity, **kwargs)
+
+    def description_str(self) -> str:
+        """Return Entity Description."""
+        return f'{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}'
+
+    _entity_schema = {
+        # String Name of the provider from whom this Threat Intelligence information was received
+        'ProviderName': None,
+
+        'ThreatType': None,
+        'ThreatName': None,
+        'Confidence': None,
+        'ReportLink': None,
+        'ThreatDescription': None,
+    }
+
+@export
+class UnknownEntity(Entity):
+    """Generic Entity class."""
+
+    def __init__(self, src_entity=None, **kwargs):
+        """
+        Create a new instance of the entity type.
+
+            :param src_entity: instantiate entity using properties of src entity
+            :param kwargs: key-value pair representation of entity
+        """
+        super().__init__(src_entity=src_entity, **kwargs)
+
+    def description_str(self) -> str:
+        """Return Entity Description."""
+        return 'OtherEntity'
+
+    _entity_schema = {}
 
 # # test code
 # if __name__ == '__main__':

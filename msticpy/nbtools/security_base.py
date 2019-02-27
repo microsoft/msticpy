@@ -266,7 +266,8 @@ class SecurityBase(QueryParamProvider):
         if the account entity is not supplied, return the logon id
         of the first host-logon-session or account entity.
         """
-        for session in [e for e in self.entities if e['Type'] == 'host-logon-session']:
+        for session in [e for e in self.entities if
+                        e['Type'] == 'host-logon-session' or e['Type'] == 'hostlogonsession']:
             if account is None or session['Account'] == account:
                 return session['SessionId']
         if account is None:
@@ -342,7 +343,8 @@ class SecurityBase(QueryParamProvider):
             html_doc = html_doc + entity_title + entity_html
         else:
             e_counts = Counter([ent['Type'] for ent in self.entities])
-            e_counts_str = ', '.join([f'{e}: {c}' for e, c in e_counts.items()])
+            e_counts_str = ', '.join(
+                [f'{e}: {c}' for e, c in e_counts.items()])
             html_doc = html_doc + f'<h3>Entity counts: </h3>{e_counts_str}'
         return html_doc
 

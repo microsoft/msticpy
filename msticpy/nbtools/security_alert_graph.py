@@ -49,7 +49,13 @@ def create_alert_graph(alert: SecurityAlert):
         # relationships between entities and child entities
         # So if this entity has a property that is an entity, we add an edge to it
         # and prune any edge that it might have to the alert
-        for prop, rel_entity in [(p, v) for (p, v) in entity.properties.items()
+        if isinstance(entity, Entity):
+            ent_props = entity.properties
+        elif isinstance(entity, dict):
+            ent_props = entity
+        else:
+            continue
+        for prop, rel_entity in [(p, v) for (p, v) in ent_props.items()
                                  if isinstance(v, Entity)]:
             if rel_entity['Type'] == 'host':
                 # don't add a new edge to the host
@@ -204,10 +210,17 @@ def _get_other_name_desc(entity):
     else:
         e_name = entity['Type']
 
+    if isinstance(entity, Entity):
+        ent_props = entity.properties
+    elif isinstance(entity, dict):
+        ent_props = entity
+    else:
+        ent_props = {'unknown': None}
+
     # Nasty dict comprehension to join all other items in the dictionary into a string
     e_properties = '\n'.join({'{}:{}'.format(k, v) for (k, v)
-                              in entity.properties.items() if (k not in ('Type', 'Name') and
-                                                               isinstance(v, str))})
+                              in ent_props.items() if (k not in ('Type', 'Name') and
+                                                       isinstance(v, str))})
     e_description = '{}\n{})'.format(e_name, e_properties)
     return e_name, e_description
 
