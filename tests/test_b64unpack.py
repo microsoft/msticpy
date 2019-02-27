@@ -12,11 +12,11 @@ import pandas as pd
 from .. msticpy.sectools import base64unpack as b64
 
 
-_test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('\\tests\\testdata')]
+_test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('/tests/testdata')]
 if len(_test_data_folders) == 1:
     _TEST_DATA = _test_data_folders[0]
 else:
-    _TEST_DATA = '.\\tests\\testdata'
+    _TEST_DATA = './tests/testdata'
 
 
 class TestB64Unpack(unittest.TestCase):
