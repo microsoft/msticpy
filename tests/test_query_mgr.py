@@ -7,10 +7,10 @@
 import unittest
 from datetime import datetime
 
-from .. nbtools import query_builtin_queries as queries
-from .. nbtools import kql
-from .. nbtools.query_mgr import replace_query_params, add_query, required_params
-from .. nbtools.query_defns import DataFamily, DataEnvironment, KqlQuery, QueryParamProvider
+from .. msticpy.nbtools import query_builtin_queries as queries
+from .. msticpy.nbtools import kql
+from .. msticpy.nbtools.query_mgr import replace_query_params, add_query, required_params
+from .. msticpy.nbtools.query_defns import DataFamily, DataEnvironment, KqlQuery, QueryParamProvider
 
 
 class QPTest(QueryParamProvider):

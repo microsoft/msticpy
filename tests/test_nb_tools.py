@@ -10,7 +10,7 @@ import json
 # from .. nbtools import query_builtin_queries as queries
 # from .. nbtools.query_mgr import replace_query_params, add_query
 # from .. nbtools.query_defns import DataFamily, DataEnvironment, KqlQuery
-from .. nbtools.entityschema import Entity, Account, Host, Process, File, IpAddress
+from .. msticpy.nbtools.entityschema import Entity, Account, Host, Process, File, IpAddress
 
 
 class Testnbtools(unittest.TestCase):

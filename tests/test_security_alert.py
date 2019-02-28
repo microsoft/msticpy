@@ -8,10 +8,10 @@ import sys
 import unittest
 import pandas as pd
 
-from .. nbtools import SecurityAlert
-from .. nbtools.security_alert_graph import create_alert_graph
-from .. nbtools.nbdisplay import display_alert
-from .. nbtools.query_defns import DataFamily, DataEnvironment
+from .. msticpy.nbtools import SecurityAlert
+from .. msticpy.nbtools.security_alert_graph import create_alert_graph
+from .. msticpy.nbtools.nbdisplay import display_alert
+from .. msticpy.nbtools.query_defns import DataFamily, DataEnvironment
 
 
 sample_alert = {

@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 
 # Test code
-from .. sectools.iocextract import IoCExtract
+from .. msticpy.sectools.iocextract import IoCExtract
 
 TEST_CASES = {
     'ipv4_test': r'c:\one\path\or\another\myprocess -ip4:206.123.1.123',
