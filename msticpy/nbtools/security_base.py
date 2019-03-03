@@ -186,32 +186,38 @@ class SecurityBase(QueryParamProvider):
             dict(str, str) -- Dictionary of parameter names
 
         """
-        host_name = self.primary_host.fqdn
-        proc_name = (self.primary_process.ImageFile.FullPath if
-                     self.primary_process and self.primary_process.ImageFile
-                     else None)
-        acct_name = self.primary_account.Name if self.primary_account else None
-        path_separator = self.path_separator
-        if self.data_family == DataFamily.WindowsSecurity:
-            proc_name = escape_windows_path(proc_name)
-            path_separator = escape_windows_path(self.path_separator)
+        try:
+            if self.primary_host:
+                host_name = self.primary_host.fqdn
+            else:
+                host_name = None
+            proc_name = (self.primary_process.ImageFile.FullPath if
+                         self.primary_process and self.primary_process.ImageFile
+                         else None)
+            acct_name = self.primary_account.Name if self.primary_account else None
+            path_separator = self.path_separator
+            if self.data_family == DataFamily.WindowsSecurity:
+                proc_name = escape_windows_path(proc_name)
+                path_separator = escape_windows_path(self.path_separator)
 
-        dyn_query_params = {
-            'subscription_filter': self.subscription_filter(),
-            'host_filter_eq': self.host_filter(operator='=='),
-            'host_filter_neq': self.host_filter(operator='!='),
-            'host_name': host_name,
-            'account_name': acct_name,
-            'process_name': proc_name,
-            'logon_session_id': self.get_logon_id(),
-            'process_id': (self.primary_process.ProcessId if self.primary_process else None),
-            'path_separator': path_separator,
-            'data_family': self.data_family,
-            'data_environment': self.data_environment
-        }
+            dyn_query_params = {
+                'subscription_filter': self.subscription_filter(),
+                'host_filter_eq': self.host_filter(operator='=='),
+                'host_filter_neq': self.host_filter(operator='!='),
+                'host_name': host_name,
+                'account_name': acct_name,
+                'process_name': proc_name,
+                'logon_session_id': self.get_logon_id(),
+                'process_id': (self.primary_process.ProcessId if self.primary_process else None),
+                'path_separator': path_separator,
+                'data_family': self.data_family,
+                'data_environment': self.data_environment,
+            }
 
-        dyn_query_params.update(self._custom_query_params)
-        return dyn_query_params
+            dyn_query_params.update(self._custom_query_params)
+            return dyn_query_params
+        except AttributeError:
+            return {}
 
     @property
     def data_family(self) -> DataFamily:

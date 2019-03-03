@@ -46,23 +46,28 @@ class Entity(ABC):
                     self[k] = src_entity[k]
 
                     if v is not None:
-                        if v == RegistryHive.__name__:
-                            self[k] = RegistryHive(src_entity[k])
-                        elif v == OSFamily.__name__:
-                            self[k] = OSFamily(src_entity[k])
-                        elif v == ElevationToken.__name__:
-                            self[k] = ElevationToken(src_entity[k])
-                        elif v == GeoLocation.__name__:
-                            self[k] = GeoLocation(src_entity[k])
-                        elif v == Algorithm.__name__:
-                            self[k] = Algorithm(src_entity[k])
-                        elif isinstance(v, tuple):
-                            entity_list = []
-                            for col_entity in src_entity[k]:
-                                entity_list.append(Entity.instantiate_entity(col_entity))
-                            self[k] = entity_list
-                        else:
-                            self[k] = Entity.instantiate_entity(src_entity[k])
+                        try:
+                            if v == RegistryHive.__name__:
+                                self[k] = RegistryHive[src_entity[k]]
+                            elif v == OSFamily.__name__:
+                                self[k] = OSFamily[src_entity[k]]
+                            elif v == ElevationToken.__name__:
+                                self[k] = ElevationToken[src_entity[k]]
+                            elif v == GeoLocation.__name__:
+                                self[k] = GeoLocation[src_entity[k]]
+                            elif v == Algorithm.__name__:
+                                self[k] = Algorithm[src_entity[k]]
+                            elif isinstance(v, tuple):
+                                entity_list = []
+                                for col_entity in src_entity[k]:
+                                    entity_list.append(Entity.instantiate_entity(col_entity))
+                                self[k] = entity_list
+                            else:
+                                self[k] = Entity.instantiate_entity(src_entity[k])
+                        except KeyError:
+                            # Catch key errors from invalid enum values
+                            self[k] = None
+
             # add AdditionalData dictionary if it's populated
             if 'AdditionalData' in src_entity:
                 self['AdditionalData'] = src_entity['AdditionalData']
@@ -517,6 +522,7 @@ class FileHash(Entity):
 @export
 class Algorithm(Enum):
     """FileHash Algorithm Enumeration."""
+
     Unknown = 0
     MD5 = 1
     SHA1 = 2
@@ -862,7 +868,7 @@ class RegistryKey(Entity):
     _entity_schema = {
         # Hive (type System.Nullable`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryHive])
-        'Hive': RegistryHive,
+        'Hive': 'RegistryHive',
         # Key (type System.String)
         'Key': None
     }

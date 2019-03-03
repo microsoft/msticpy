@@ -32,8 +32,8 @@ class SecurityAlert(SecurityBase):
         super().__init__(src_row=src_row)
 
         # add entities to dictionary to remove dups
+        self._src_entities = dict()
         if 'Entities' in src_row:
-            self._src_entities = dict()
             self._extract_entities(src_row)
 
         if 'ExtendedProperties' in src_row:
@@ -44,6 +44,8 @@ class SecurityAlert(SecurityBase):
                     self.extended_properties = json.loads(src_row.ExtendedProperties)
                 except JSONDecodeError:
                     pass
+        else:
+            self.extended_properties = []
         self._find_os_family()
 
     @property

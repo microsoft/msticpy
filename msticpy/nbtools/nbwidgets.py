@@ -372,8 +372,11 @@ class AlertSelector(QueryParamProvider):
         if selected_alerts.shape[0] > 0:
             alert = pd.Series(selected_alerts.iloc[0])
             if isinstance(alert['ExtendedProperties'], str):
-                alert['ExtendedProperties'] = json.loads(
-                    (alert['ExtendedProperties']))
+                try:
+                    alert['ExtendedProperties'] = json.loads(
+                        (alert['ExtendedProperties']))
+                except JSONDecodeError:
+                    pass
             if isinstance(alert['Entities'], str):
                 try:
                     alert['Entities'] = json.loads((alert['Entities']))
