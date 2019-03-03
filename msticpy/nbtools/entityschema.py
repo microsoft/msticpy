@@ -522,7 +522,7 @@ class FileHash(Entity):
 @export
 class Algorithm(Enum):
     """FileHash Algorithm Enumeration."""
-    
+
     Unknown = 0
     MD5 = 1
     SHA1 = 2
