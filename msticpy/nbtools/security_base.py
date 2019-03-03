@@ -186,7 +186,7 @@ class SecurityBase(QueryParamProvider):
             dict(str, str) -- Dictionary of parameter names
 
         """
-        host_name = self.primary_host.fqdn
+        host_name = (self.primary_host.fqdn if self.primary_host else None)
         proc_name = (self.primary_process.ImageFile.FullPath if
                      self.primary_process and self.primary_process.ImageFile
                      else None)
