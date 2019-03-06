@@ -49,7 +49,8 @@ def _is_kqlmagic_loaded() -> bool:
 
     if _ip is not None:
         _kql_magic_loaded = _ip.find_magic('kql') is not None
-        return _kql_magic_loaded
+
+    return _kql_magic_loaded
 
 
 @export
