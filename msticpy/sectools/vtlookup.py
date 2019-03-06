@@ -214,8 +214,8 @@ class VTLookup:
             list_res = self.results.apply(
                 lambda x: x.to_dict(), axis=1).tolist()
             return list_res[0] if len(list_res) == 1 else list_res
-        else:
-            return self.results
+        
+        return self.results
 
     def _lookup_ioc_type(self, input_frame: pd.DataFrame, ioc_type: str, src_col: str,
                          src_index_col: str):
