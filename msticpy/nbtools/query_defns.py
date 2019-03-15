@@ -16,7 +16,7 @@ __all__ = ['KqlQuery']
 
 # Query definition
 @attrs
-class KqlQuery(object):
+class KqlQuery():
     """KqlQuery definition."""
 
     name = attrib(default=None)

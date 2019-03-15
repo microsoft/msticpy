@@ -150,4 +150,3 @@ def get_notebook_query_string():
             "nb_query_string='".concat(window.location.search).concat("'"));
     </script>
     ''')
-    return None

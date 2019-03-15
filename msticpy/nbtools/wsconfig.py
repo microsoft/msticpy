@@ -12,7 +12,7 @@ __version__ = '0.1'
 __author__ = 'Ian Hellen'
 
 @export
-class WorkspaceConfig(object):
+class WorkspaceConfig():
     """Workspace configuration class."""
 
     # Constants
