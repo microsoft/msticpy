@@ -7,6 +7,7 @@
 
 import re
 from collections import namedtuple, defaultdict
+from typing import Any, List, Mapping, Set
 from urllib.parse import unquote
 
 import pandas as pd
@@ -18,8 +19,8 @@ __author__ = 'Ian Hellen'
 
 
 def _compile_regex(regex):
-
     return re.compile(regex, re.I | re.X | re.M)
+
 
 IoCPattern = namedtuple('IoCPattern', ['ioc_type', 'comp_regex', 'priority'])
 
@@ -113,13 +114,25 @@ class IoCExtract(object):
         """
         Add an IoC type and regular expression to use to the built-in set.
 
-        Note: adding an ioc_type that exists in the internal set will overwrite that item
-        Regular expressions are compiled with re.I | re.X | re.M (Ignore case, Verbose
-        and MultiLine)
-            :param: ioc_type - a unique name for the IoC type
-            :param: ioc_regex - a regular expression used to search for the type
-            :type ioc_type: str
-            :type ioc_regex: str
+        Parameters
+        ----------
+        ioc_type : str
+            A unique name for the IoC type
+        ioc_regex : str
+            A regular expression used to search for the type
+        priority : int, optional
+            Priority of the regex match vs. other ioc_patterns. 0 is
+            the highest priority (the default is 0).
+
+        Notes
+        -----
+        Pattern priorities.
+            If two IocType patterns match on the same substring, the matched
+            substring is assigned to the pattern/IocType with the highest
+            priority. E.g. `foo.bar.com` will match types: `dns`, `windows_path`
+            and `linux_path` but since `dns` has a higher priority, the expression
+            is assigned to the `dns` matches.
+
         """
         if ioc_type is None or ioc_type.strip() is None:
             raise Exception('No value supplied for ioc_type parameter')
@@ -127,7 +140,8 @@ class IoCExtract(object):
             raise Exception('No value supplied for ioc_regex parameter')
 
         self._content_regex[ioc_type] = IoCPattern(ioc_type=ioc_type,
-                                                   comp_regex=_compile_regex(regex=ioc_regex),
+                                                   comp_regex=_compile_regex(
+                                                       regex=ioc_regex),
                                                    priority=priority)
 
     @property
@@ -135,32 +149,53 @@ class IoCExtract(object):
         """
         Return the current set of IoC types and regular expressions.
 
-            :rtype: dict of IoC Type names and regular expressions
+        Returns
+        -------
+        dict
+            dict of IoC Type names and regular expressions
+
         """
         return self._content_regex
 
-    def extract(self, src: str = None, data: pd.DataFrame = None,
-                columns: list = None, os_family='Windows',
-                ioc_types: list = None):
+    def extract(self, src: str = None,
+                data: pd.DataFrame = None,
+                columns: List[str] = None,
+                os_family='Windows',
+                ioc_types: List[str] = None,
+                include_paths: bool = False) -> Any:
         """
         Extract IoCs from either a string or pandas DataFrame.
 
-        Keyword Arguments:
-            src {str} --  source string in which to look for IoC patterns
-                (default: {None})
-            data {pd.DataFrame} -- input DataFrame from which to read source strings
-                 (default: {None})
-            columns {list} -- The list of columns to use as source strings,
-                if the data parameter is used.  (default: {None})
-            os_family {str} -- 'Linux' or 'Windows' (default: {'Windows'})
-            ioc_types {list({str})} -- Restrict matching to just specified
-                types (default: {None})
+        Parameters
+        ----------
+        src : str, optional
+            source string in which to look for IoC patterns
+            (the default is None)
+        data : pd.DataFrame, optional
+            input DataFrame from which to read source strings
+            (the default is None)
+        columns : list, optional
+            The list of columns to use as source strings,
+            if the `data` parameter is used. (the default is None)
+        os_family : str, optional
+            'Linux' or 'Windows' (the default is 'Windows'). This
+            is used to toggle between Windows or Linux path matching.
+        ioc_types : list, optional
+            Restrict matching to just specified types.
+        include_paths : bool, optional
+            Whether to include path matches (which can be noisy)
+            (the default is false - excludes 'windows_path'
+            and 'linux_path'). If `ioc_types` is specified
+            this parameter is ignored.
 
-
-        Returns:
+        Returns
+        -------
+        Any
             dict of found observables (if input is a string) or
             DataFrame of observables
 
+        Notes
+        -----
         Extract takes either a string or a pandas DataFrame as input.
         When using the string option as an input extract will
         return a dictionary of results.
@@ -170,6 +205,13 @@ class IoCExtract(object):
         - Observable: the actual value of the observable
         - SourceIndex: the index of the row in the input DataFrame from
         which the source for the IoC observable was extracted.
+
+        IoCType Pattern selection
+        The default list is:  ['ipv4', 'ipv6', 'dns', 'url',
+        'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
+        user-defined types.
+        'windows_path', 'linux_path' are excluded unless `include_paths`
+        is True or explicitly included in `ioc_paths`.
 
         """
         if src and src.strip():
@@ -185,9 +227,19 @@ class IoCExtract(object):
             raise Exception(
                 'No values where supplied for the columns parameter')
 
+        # Use only requested IoC Type patterns
+        if ioc_types:
+            ioc_types_to_use = list(set(ioc_types))
+        else:
+            ioc_types_to_use = list(set(self._content_regex.keys()))
+            if not include_paths:
+                ioc_types_to_use.remove('windows_path')
+                ioc_types_to_use.remove('linux_path')
+
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            missing_cols = [
+                elem for elem in col_set if elem not in data.colums]
             raise Exception('Source column(s) {} not found in supplied DataFrame'
                             .format(', '.join(missing_cols)))
 
@@ -195,7 +247,8 @@ class IoCExtract(object):
         result_frame = pd.DataFrame(columns=result_columns)
         for idx, datarow in data.iterrows():
             for col in columns:
-                ioc_results = self._scan_for_iocs(datarow[col], os_family, ioc_types)
+                ioc_results = self._scan_for_iocs(
+                    datarow[col], os_family, ioc_types_to_use)
                 for result_type, result_set in ioc_results.items():
                     if result_set:
                         for observable in result_set:
@@ -210,12 +263,17 @@ class IoCExtract(object):
         """
         Return true if the input_str matches the corresponding regex.
 
-        Arguments:
-            :input_str str: the string to test
-            :ioc_type str: the regex pattern to use
+        Parameters
+        ----------
+        input_str : str
+            the string to test
+        ioc_type : str
+            the regex pattern to use
 
-        Returns:
-            bool - True if match.
+        Returns
+        -------
+        bool
+            True if match.
 
         """
         if ioc_type not in self._content_regex:
@@ -225,7 +283,9 @@ class IoCExtract(object):
         return rgx.comp_regex.fullmatch(input_str) is not None
 
     # Private methods
-    def _scan_for_iocs(self, src: str, os_family: str, ioc_types: list = None) -> dict:
+    def _scan_for_iocs(self, src: str,
+                       os_family: str,
+                       ioc_types: List[str] = None) -> Mapping[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results = defaultdict(set)
         iocs_found = {}
@@ -253,7 +313,8 @@ class IoCExtract(object):
                                                             url_match.group(),
                                                             rgx_def)
                                 self._add_highest_pri_match(iocs_found,
-                                                            url_match.groupdict()['host'],
+                                                            url_match.groupdict()[
+                                                                'host'],
                                                             self._content_regex['dns'])
                     match_pos = rgx_match.end()
                 else:
@@ -263,10 +324,14 @@ class IoCExtract(object):
 
         return ioc_results
 
-    def _add_highest_pri_match(self, iocs_found: dict, current_match: str, current_def: IoCPattern):
+    def _add_highest_pri_match(self,
+                               iocs_found: dict,
+                               current_match: str,
+                               current_def: IoCPattern):
         # if we already found a match for this item and the previous
         # ioc type is more specific then don't add this to the results
         if current_match in iocs_found and current_def.priority > iocs_found[current_match][1]:
             return
-        else:
-            iocs_found[current_match] = (current_def.ioc_type, current_def.priority)
+
+        iocs_found[current_match] = (
+            current_def.ioc_type, current_def.priority)

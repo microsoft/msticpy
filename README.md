@@ -1,6 +1,12 @@
 # MSTIC Jupyter and Python Security Tools
 
-Microsoft Threat Intelligence Python Security Package:
+Microsoft Threat Intelligence Python Security Tools.
+
+The **msticpy** package was initially developed to supported Jupyter Notebook authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/). 
+However, most of the components can be used in many security scenarios for threat hunting and threat investigation. There are three main sub-packages:
+- sectools - python security tools to help with data analysis or investigation
+- nbtools - Jupyter-specific UI tools such as widgets and data display
+- data - data interfaces specific to Sentinel/Log Analytics
 
 ## sectools
 This subpackage contains several modules helpful for working on security
@@ -8,6 +14,7 @@ investigations and hunting:
 ### base64unpack
 Base64 and archive (gz, zip, tar) extractor. Input can either be a single string or a specified column of a pandas dataframe. It will try to identify any base64 encoded strings and decode them. If the result looks like one of the supported archive types it will unpack the contents. The results of each decode/unpack are rechecked for further base64 content and will recurse down up to 20 levels (default can be overridden).
 Output is to a decoded string (for single string input) or a DataFrame (for dataframe input).
+
 [Base64Unpack Notebook](./doc/Base64Unpack.ipynb)
 
 ### iocextract
@@ -22,6 +29,8 @@ The following types are built-in:
 You can modify or add to the regular expressions used at runtime.
 
 Output is a dictionary of matches (for single string input) or a DataFrame (for dataframe input).
+
+[Base64Unpack Notebook](./doc/Base64Unpack.ipynb)
 
 ### vtlookup
 Wrapper class around Virus Total API (https://www.virustotal.com/en/documentation/public-api/).
@@ -57,11 +66,24 @@ does some maintenance on thousands of servers with a commandline such as:
 Will be collapsed using the pattern of the command and ignoring 
 individal host names and guids.
 This is an unsupervised learning module implemented using SciKit Learn DBScan.
+
 [EventClustering Notebook](./doc/EventClustering.ipynb)
 
+### auditdextract
+Module to load and decode Linux audit logs. It collapses messages sharing the same
+message ID into single events, decodes hex-encoded data fields and performs some
+event-specific formatting and normalization (e.g. for process start events it will
+re-assemble the process command line arguments into a single string). This is still 
+a working in progress.
+
+### outliers
+Similar to the eventcluster module but a little bit more experimental (read 'less tested').
+It uses SkLean Isolation Forest to identify outlier events in a single data set or using
+one data set as training data and another on which to predict outliers.
+
 ## nbtools
-This is a collection of data access, display and utility modules 
-designed to make working with Log Analytics data in Jupyter notebooks 
+This is a collection of display and utility modules 
+designed to make working with security data in Jupyter notebooks 
 quicker and easier.
 - nbwidgets - groups common functionality such as list pickers, 
 time boundary settings, saving and retrieving
@@ -71,6 +93,11 @@ alerts, events in a slightly more consumable way than print()
 - entityschema - implements entity classes (e.g. Host, Account, IPAddress) 
 used in Log Analytics alerts and in many of these modules. 
 Each entity encaspulates one or more properties related to the entity.
+
+## data
+These components are currently still part of the nbtools sub-package but will be
+refactored to separate them into their own package.
+
 - query manager - collection of modules that implement common 
 kql/Log Analytics queries using KqlMagic
 - security_alert and security_event - encapsulation classes for alerts 
@@ -79,6 +106,21 @@ entities found in the alert or event. These can also be used as
 meta-parameters for many of the queries. For example the query:
 ```qry.list_host_logons(provs==[query_times, alert])``` will extract the
 value for the ```hostname``` query parameter from the alert.
+
+# To-Do
+- Refactor data modules into separate package.
+- Replace custom data schema with [Intake](https://intake.readthedocs.io/en/latest/).
+- Add additional notebooks to document use the tools.
+
+# Supported Platforms and Packages
+- msticpy is OS-independent
+- Requires Python 3.6 or later
+- Requires the following python packages: pandas, bokeh, matplotlib, seaborn, setuptools, urllib3,  
+ipywidgets, numpy, attrs, requests, networkx, ipython, scikit_learn, typing
+- The following packages are recommended and needed for some specific functionality: Kqlmagic, maxminddb_geolite2, 
+folium, dnspython, ipwhois
+
+See [requirements.txt](requirements.txt) for more details and version requirements.
 
 # Contributing
 

@@ -4,15 +4,15 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""geoip module using ipstack."""
+"""geoip module using IPStack and Maxmind GeoLite2."""
 # import gzip
 from json import JSONDecodeError
 import math
 import os
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Tuple, List, Mapping
 from IPython import get_ipython
 from IPython.display import display, HTML
 
@@ -28,33 +28,63 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
-class GeoIpLookup(ABC):
-    """Abstract base class for GeoIP Lookup classes."""
+class GeoIpLookup(metaclass=ABCMeta):
+    """
+    Abstract base class for GeoIP Lookup classes.
+
+    Parameters
+    ----------
+    metaclass : ABCMeta, optional
+        Defines class as abstract base class (the default is ABCMeta)
+
+    See Also:
+        IPStackLookup : IPStack GeoIP Implementation
+        GeoLiteLookup : MaxMind GeoIP Implementation
+
+    """
 
     @abstractmethod
-    def lookup_ip(self, ip_address: str = None, ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None):
+    def lookup_ip(self, ip_address: str = None,
+                  ip_addr_list: Iterable = None,
+                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
         """
-        Lookup IP location.
+        Lookup IP location abstract method.
 
-        Keyword Arguments:
-            ip_address {str} -- a single address to look up (default: {None})
-            ip_addr_list {Iterable} -- a collection of addresses to lookup (default: {None})
-            ip_entity {IpAddress} -- an IpAddress entity
+        Parameters
+        ----------
+        ip_address : str, optional
+            a single address to look up (the default is None)
+        ip_addr_list : Iterable, optional
+            a collection of addresses to lookup (the default is None)
+        ip_entity : IpAddress, optional
+            an IpAddress entity (the default is None) - any existing
+            data in the Location property will be overwritten
 
-        Returns:
-            tuple(list{dict}, list{entity}) -- returns raw geolocation results and
-                same results as IP/Geolocation entities
+        Returns
+        -------
+        Tuple[List[Mapping[str, str]], List[IpAddress]]
+            raw geolocation results and same results as IpAddress entities with
+            populated Location property.
 
         """
 
-    def df_lookup_ip(self, data: pd.DataFrame, column: str):
+    def df_lookup_ip(self, data: pd.DataFrame, column: str) -> pd.DataFrame:
         """
         Lookup Geolocation data from a pandas Dataframe.
 
-        Keyword Arguments:
-            data {pd.DataFrame} -- pandas dataframe containing IpAddress column
-            column {str} -- the name of the dataframe column to use as a source
+        Parameters
+        ----------
+        data : pd.DataFrame
+            pandas dataframe containing IpAddress column
+        column : str
+            the name of the dataframe column to use as a source
+
+        Returns
+        -------
+        pd.DataFrame
+            Copy of original dataframe with IP Location information columns
+            appended (where a location lookup was successful)
+
         """
         ip_list = data[column].values
         _, entities = self.lookup_ip(ip_addr_list=ip_list)
@@ -62,50 +92,74 @@ class GeoIpLookup(ABC):
         ip_dicts = [ent.Location.properties().update(IpAddress=ent.Address)
                     for ent in entities]
         df_out = pd.DataFrame(data=ip_dicts)
-        return data.merge(df_out, left_on=column, right_on='IpAddress')
+        return data.merge(df_out, how='left', left_on=column, right_on='IpAddress')
 
 
 @export
 class IPStackLookup(GeoIpLookup):
     """
-    GeoIP Lookup using IPStack web service.
+    IPStack GeoIP Implementation.
 
-    Raises:
-        ConnectionError -- Invalid status returned from http request
-        PermissionError -- Service refused request (e.g. requesting batch of addresses
-                on free tier API key)
+    Parameters
+    ----------
+    GeoIpLookup : GeoIPLookup
+        Abstract base class for IPLookup implementations
+
+    See Also:
+        GeoIpLookup : Abstract base class
+        GeoLiteLookup : MaxMind GeoIP Implementation
 
     """
 
-    _IPSTACK_API = 'http://api.ipstack.com/{iplist}?access_key={access_key}'
+    _IPSTACK_API = 'http://api.ipstack.com/{iplist}?access_key={access_key}&output=json'
 
-    def __init__(self, api_key):
+    def __init__(self, api_key: str, bulk_lookup: bool = False):
         """
         Create a new instance of IPStackLookup.
 
-        Arguments:
-            api_key {str} -- API Key from IPStack - see https://ipstack.com
+        Parameters
+        ----------
+        api_key : str
+            API Key from IPStack - see https://ipstack.com
+        bulk_lookup : bool, optional
+            For Professional and above tiers allowing you to
+            submit multiple IPs in a single request.
+            (the default is False, which submits a single request
+            per address)
+
         """
         self._api_key = api_key
+        self.bulk_lookup = bulk_lookup
 
-    def lookup_ip(self, ip_address: str = None, ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None):
+    def lookup_ip(self, ip_address: str = None,
+                  ip_addr_list: Iterable = None,
+                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
-        Keyword Arguments:
-            ip_address {str} -- a single address to look up (default: {None})
-            ip_addr_list {Iterable} -- a collection of addresses to lookup (default: {None})
-            ip_entity {IpAddress} -- an IpAddress entity
+        Parameters
+        ----------
+        ip_address : str, optional
+            a single address to look up (the default is None)
+        ip_addr_list : Iterable, optional
+            a collection of addresses to lookup (the default is None)
+        ip_entity : IpAddress, optional
+            an IpAddress entity (the default is None) - any existing
+            data in the Location property will be overwritten
 
-        Raises:
-            ConnectionError -- Invalid status returned from http request
-            PermissionError -- Service refused request (e.g. requesting batch of addresses
-                on free tier API key)
+        Returns
+        -------
+        Tuple[List[Mapping[str, str]], List[IpAddress]]
+            raw geolocation results and same results as IpAddress entities with
+            populated Location property.
 
-        Returns:
-            tuple(list{dict}, list{entity}) -- returns raw geolocation results and
-                same results as IP/Geolocation entities
+        Raises
+        ------
+        ConnectionError
+            Invalid status returned from http request
+        PermissionError
+            Service refused request (e.g. requesting batch of addresses
+            on free tier API key)
 
         """
         if ip_address and isinstance(ip_address, str):
@@ -117,27 +171,14 @@ class IPStackLookup(GeoIpLookup):
         else:
             raise ValueError('No valid ip addresses were passed as arguments.')
 
-        results, status = self._submit_request(ip_list)
-        if status != 200:
-            raise ConnectionError('Error reponse from server: ' + str(status))
-
-        # {"success":false,"error":{"code":303,"type":"batch_not_supported_on_plan",
-        # "info":"Bulk requests are not supported on your plan.
-        # Please upgrade your subscription."}}
-
-        if 'success' in results and not results["success"]:
-            raise PermissionError('Service unable to complete request. Error: {}'
-                                  .format(results['error']))
-
-        output_raw = list(results)
+        results = self._submit_request(ip_list)
         output_entities = []
-        if isinstance(results, list):
-            for ip_loc in results:
-                output_entities.append(self._create_ip_entity(ip_loc, ip_entity))
-        else:
-            output_entities.append(self._create_ip_entity(results, ip_entity))
+        for ip_loc, status in results:
+            if status == 200:
+                output_entities.append(
+                    self._create_ip_entity(ip_loc, ip_entity))
 
-        return output_raw, output_entities
+        return results, output_entities
 
     def _create_ip_entity(self, ip_loc: dict, ip_entity):
         if not ip_entity:
@@ -156,24 +197,64 @@ class IPStackLookup(GeoIpLookup):
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _submit_request(self, ip_list):
+    def _submit_request(self, ip_list: List[str]) -> List[Tuple[str, int]]:
         """
         Submit the request to IPStack.
 
-            :param ip_list: Comma-separated string list of IPs to look up
-        """
-        submit_url = self._IPSTACK_API.format(iplist=ip_list, access_key=self._api_key)
-        response = requests.get(submit_url)
+        Parameters
+        ----------
+        ip_list : List[str]
+            String list of IPs to look up
 
-        if response.status_code == 200:
-            return response.json(), response.status_code
+        Returns
+        -------
+        List[Tuple[str, int]]
+            List of response, status code pairs
+
+        """
+        ip_loc_results = []
+        if not self.bulk_lookup:
+            for ip_addr in ip_list:
+                submit_url = self._IPSTACK_API.format(
+                    iplist=ip_addr, access_key=self._api_key)
+                response = requests.get(submit_url)
+                if response.status_code == 200:
+                    ip_loc_results.append(
+                        (response.json(), response.status_code))
+                else:
+                    if response:
+                        try:
+                            ip_loc_results.append(
+                                (response.json(), response.status_code))
+                            continue
+                        except JSONDecodeError:
+                            ip_loc_results.append(None, response.status_code)
+                    else:
+                        print('Unknown response from IPStack request.')
+                        ip_loc_results.append(None, -1)
+            return ip_loc_results
         else:
-            if response:
-                try:
-                    return response.json(), response.status_code
-                except JSONDecodeError:
-                    pass
-            return None, response.status_code
+            submit_url = self._IPSTACK_API.format(iplist=','.join(ip_list),
+                                                  access_key=self._api_key)
+            response = requests.get(submit_url)
+
+            if response.status_code == 200:
+                results = response.json()
+                # {"success":false,"error":{"code":303,"type":"batch_not_supported_on_plan",
+                # "info":"Bulk requests are not supported on your plan.
+                # Please upgrade your subscription."}}
+
+                if 'success' in results and not results["success"]:
+                    raise PermissionError('Service unable to complete request. Error: {}'
+                                          .format(results['error']))
+                return [(item, response.status_code) for item in results]
+            else:
+                if response:
+                    try:
+                        return [(response.json(), response.status_code)]
+                    except JSONDecodeError:
+                        pass
+                return [(None, response.status_code)]
 
 
 @export
@@ -181,10 +262,14 @@ class GeoLiteLookup(GeoIpLookup):
     """
     GeoIP Lookup using MaxMindDB database.
 
-    Raises:
-        ConnectionError -- Invalid status returned from http request
-        PermissionError -- Service refused request (e.g. requesting batch of addresses
-                on free tier API key)
+    Parameters
+    ----------
+    GeoIpLookup : GeoIPLookup
+        Abstract base class for IPLookup implementations
+
+    See Also:
+        IPStackLookup : IPStack GeoIP Implementation
+        GeoLiteLookup : MaxMind GeoIP Implementation
 
     """
 
@@ -194,24 +279,36 @@ class GeoLiteLookup(GeoIpLookup):
     def __init__(self):
         """Return new instance of GeoLiteLookup class."""
         self._reader = geolite2.reader()
-        last_mod_time = datetime.fromtimestamp(os.path.getmtime(geolite2.filename))
+        last_mod_time = datetime.fromtimestamp(
+            os.path.getmtime(geolite2.filename))
         db_age = datetime.utcnow() - last_mod_time
         if db_age > timedelta(40):
-            print(f'{self._DB_FILE} is over one month old. Update the maxminddb package')
-            print(f'to refresh or download a new version from {self._MAXMIND_DOWNLOAD}')
+            print(
+                f'{self._DB_FILE} is over one month old. Update the maxminddb package')
+            print(
+                f'to refresh or download a new version from {self._MAXMIND_DOWNLOAD}')
 
-    def lookup_ip(self, ip_address: str = None, ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None):
+    def lookup_ip(self, ip_address: str = None,
+                  ip_addr_list: Iterable = None,
+                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
-        Keyword Arguments:
-            ip_address {str} -- a single address to look up (default: {None})
-            ip_addr_list {Iterable} -- a collection of addresses to lookup (default: {None})
+        Parameters
+        ----------
+        ip_address : str, optional
+            a single address to look up (the default is None)
+        ip_addr_list : Iterable, optional
+            a collection of addresses to lookup (the default is None)
+        ip_entity : IpAddress, optional
+            an IpAddress entity (the default is None) - any existing
+            data in the Location property will be overwritten
 
-        Returns:
-            tuple(list{dict}, list{entity}) -- returns raw geolocation results and
-                same results as IP/Geolocation entities
+        Returns
+        -------
+        Tuple[List[Mapping[str, str]], List[IpAddress]]
+            raw geolocation results and same results as IpAddress entities with
+            populated Location property.
 
         """
         if ip_address and isinstance(ip_address, str):
@@ -229,7 +326,8 @@ class GeoLiteLookup(GeoIpLookup):
             geo_match = self._reader.get(ip_input)
             if geo_match:
                 output_raw.append(geo_match)
-                output_entities.append(self._create_ip_entity(ip_input, geo_match, ip_entity))
+                output_entities.append(self._create_ip_entity(
+                    ip_input, geo_match, ip_entity))
 
         return output_raw, output_entities
 
@@ -238,14 +336,19 @@ class GeoLiteLookup(GeoIpLookup):
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = geo_match.get('country', {}).get('iso_code', None)
-        geo_entity.CountryName = geo_match.get('country', {}).get('names', {}).get('en', None)
+        geo_entity.CountryCode = geo_match.get(
+            'country', {}).get('iso_code', None)
+        geo_entity.CountryName = geo_match.get(
+            'country', {}).get('names', {}).get('en', None)
         subdivs = geo_match.get('subdivisions', [])
         if subdivs:
             geo_entity.State = subdivs[0].get('names', {}).get('en', None)
-        geo_entity.City = geo_match.get('city', {}).get('names', {}).get('en', None)
-        geo_entity.Longitude = geo_match.get('location', {}).get('longitude', None)
-        geo_entity.Latitude = geo_match.get('location', {}).get('latitude', None)
+        geo_entity.City = geo_match.get(
+            'city', {}).get('names', {}).get('en', None)
+        geo_entity.Longitude = geo_match.get(
+            'location', {}).get('longitude', None)
+        geo_entity.Latitude = geo_match.get(
+            'location', {}).get('latitude', None)
         ip_entity.Location = geo_entity
         return ip_entity
 
@@ -272,35 +375,70 @@ else:
     display(HTML(_IPSTACK_LICENSE_HTML))
 
 
+def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
+    """
+    Return distance between two IP Entities.
+
+    Parameters
+    ----------
+    ip_src : IpAddress
+        Source/Origin IpAddress Entity
+    ip_dest : IpAddress
+        Destination IpAddress Entity
+
+    Returns
+    -------
+    float
+        Distance in kilometers.
+
+    Raises
+    ------
+        AttributeError
+            If either entity has no location information
+
+    """
+    if not ip_src.Location or not ip_dest.Location:
+        raise AttributeError(
+            'Source and destination entities must have defined Location properties.')
+
+    return geo_distance(origin=(ip_src.Location.Latitude, ip_src.Location.Longitude),
+                        destination=(ip_dest.Location.Latitude, ip_dest.Location.Longitude))
+
+
+_EARTH_RADIUS_KM = 6371  # km
+
+
 def geo_distance(origin: Tuple[float, float],
                  destination: Tuple[float, float]) -> float:
     """
     Calculate the Haversine distance.
 
-    Author: Martin Thoma - stackoverflow
-
     Parameters
     ----------
-    origin : tuple of float
-        (lat, long)
-    destination : tuple of float
-        (lat, long)
+    origin : Tuple[float, float]
+        Latitude, Longitude of origin of distance measurement.
+    destination : Tuple[float, float]
+        Latitude, Longitude of origin of distance measurement.
 
     Returns
     -------
-    distance_in_km : float
+    float
+        Distance in kilometers.
 
     Examples
     --------
     >>> origin = (48.1372, 11.5756)  # Munich
     >>> destination = (52.5186, 13.4083)  # Berlin
-    >>> round(distance(origin, destination), 1)
+    >>> round(geo_distance(origin, destination), 1)
     504.2
+
+    Notes
+    -----
+        Author: Martin Thoma - stackoverflow
 
     """
     orig_lat, orig_lon = origin
     dest_lat, dest_lon = destination
-    EARTH_RADIUS_KM = 6371  # km
 
     ang_dist_lat = math.radians(dest_lat - orig_lat)
     ang_dist_lon = math.radians(dest_lon - orig_lon)
@@ -308,4 +446,4 @@ def geo_distance(origin: Tuple[float, float],
              math.cos(math.radians(orig_lat)) * math.cos(math.radians(dest_lat)) *
              math.sin(ang_dist_lon / 2) * math.sin(ang_dist_lon / 2))
     hav_c = 2 * math.atan2(math.sqrt(hav_a), math.sqrt(1 - hav_a))
-    return EARTH_RADIUS_KM * hav_c
+    return _EARTH_RADIUS_KM * hav_c

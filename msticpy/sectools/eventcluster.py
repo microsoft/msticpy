@@ -14,6 +14,7 @@ add_process_features: derives numerical features from text features such as
 commandline and process path.
 """
 from math import log10, floor
+from typing import List, Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -28,26 +29,48 @@ __author__ = 'Ian Hellen'
 
 
 @export
-def dbcluster_events(data, cluster_columns=None, verbose=False, normalize=True,
-                     time_column='TimeCreatedUtc',
-                     max_cluster_distance=0.01, min_cluster_samples=2,
-                     **kwargs):
+def dbcluster_events(data: Any,
+                     cluster_columns: List[Any] = None,
+                     verbose: bool = False,
+                     normalize: bool = True,
+                     time_column: str = 'TimeCreatedUtc',
+                     max_cluster_distance: float = 0.01,
+                     min_cluster_samples: int = 2,
+                     **kwargs) -> Tuple[pd.DataFrame, DBSCAN, np.ndarray]:
     """
     Cluster data set according to cluster_columns features.
 
-    Uses sklearn DBSCAN
-        :param data: Input data as a pandas DataFrame or numpy array
-        :param cluster_columns=None: List of columns to use for features
-            for DataFrame this is a list of column names
-            for numpy array this is a list of column indexes
-        :param verbose=False: Print additional information about clustering
-            results
-        :param normalize=True: Normalize the input data (should probably always be True)
-        :param time_column='TimeCreatedUtc': If there is a time column the output
-            data will be ordered by this
-        :param max_cluster_distance=0.01: DBSCAN eps (max cluster member distance)
-        :param min_cluster_samples=2: DBSCAN min_samples (the minimum cluster size)
-        :param **kwargs: Other arguments are passed to DBSCAN constructor
+    Parameters
+    ----------
+    data : Any
+        Input data as a pandas DataFrame or numpy array
+    cluster_columns : List[Any], optional
+        List of columns to use for features
+        - for DataFrame this is a list of column names
+        - for numpy array this is a list of column indexes
+    verbose : bool, optional
+        Print additional information about clustering results (the default is False)
+    normalize : bool, optional
+        Normalize the input data (should probably always be True)
+    time_column : str, optional
+        If there is a time column the output data will be ordered by this
+        (the default is 'TimeCreatedUtc')
+    max_cluster_distance : float, optional
+        DBSCAN eps (max cluster member distance) (the default is 0.01)
+    min_cluster_samples : int, optional
+        DBSCAN min_samples (the minimum cluster size) (the default is 2)
+
+    Other Parameters
+    ----------------
+    kwargs: Other arguments are passed to DBSCAN constructor
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, DBSCAN, np.ndarray]
+        Output dataframe with clustered rows
+        DBSCAN model
+        Normalized data set
+
     """
     allowed_types = [np.ndarray, pd.DataFrame]
 
@@ -146,17 +169,32 @@ def dbcluster_events(data, cluster_columns=None, verbose=False, normalize=True,
 
 
 @export
-def add_process_features(input_frame, path_separator=None, force=False):
+def add_process_features(input_frame: pd.DataFrame,
+                         path_separator: str = None,
+                         force: bool = False) -> pd.DataFrame:
     r"""
     Add numerical features based on patterns of command line and process name.
 
-        :param input_frame: The input dataframe
-        :param path_separator=None: Path separator - if not supplied, try to determine
+    Parameters
+    ----------
+    input_frame : pd.DataFrame
+        The input dataframe
+    path_separator : str, optional
+        Path separator - if not supplied, try to determine
             from 'NewProcessName' column of first 10 rows
-        :param force=False: Forces re-calculation of feature columns even if they
-            already exist
+            (the default is None)
+    force : bool, optional
+        Forces re-calculation of feature columns even if they
+        already exist (the default is False, which [default_description])
 
-    Features:
+    Returns
+    -------
+    pd.DataFrame
+        Copy of the dataframe with the additional numeric features
+
+    Notes
+    -----
+    Features added:
         processNameLen: length of process file name (inc path)
         processNameTokens: the number of elements in the path
         processName: the process file name (minus path)
@@ -170,6 +208,7 @@ def add_process_features(input_frame, path_separator=None, force=False):
         pathLogScore: log10 of pathScore
         commandlineScore: sum of ord() value of characters in commandline
         commandlineLogScore: log10 of commandlineScore
+
     """
     output_df = input_frame.copy()
 
@@ -258,14 +297,26 @@ def add_process_features(input_frame, path_separator=None, force=False):
 
 
 @export
-def delim_count(input_row: pd.Series, column: str,
+def delim_count(input_row: pd.Series,
+                column: str,
                 delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int:
     r"""
     Count the delimiters in input column.
 
-        :param input_row:pd.Series: The series to process
-        :param column:str: Column name
-        :param delim_list:str=r'[\s\-\\/\."\'|&:;%$()]: delimiters to use.
+    Parameters
+    ----------
+    input_row : pd.Series
+        The series to process
+    column : str
+        The name of the column to process
+    delim_list : str, optional
+        delimiters to use. (the default is r'[\s\-\\/\.,"\'|&:;%$()]', which [default_description])
+
+    Returns
+    -------
+    int
+        Count of delimiters in the string.
+
     """
     return input_row[column].str.count(delim_list)
 
@@ -275,6 +326,24 @@ def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
     """
     Return sum of ord values of characters in string.
 
+    Parameters
+    ----------
+    input_row : pd.Series
+        The series to process
+    column : str
+        Column name to process
+    scale : int, optional
+        reduce the scale of the feature (reducing the
+        influence of variations this feature on the clustering
+        algorithm (the default is 1)
+
+    Returns
+    -------
+    int
+        [description]
+
+    Notes
+    -----
     This function sums the ordinal value of each character in the
     input string. Two strings with minor differences will result in
     a similar score. However, for strings with highly variable content
@@ -284,18 +353,6 @@ def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
     influence of features using this function on clustering and anomaly
     algorithms.
 
-    Arguments:
-        input_row {pd.Series} -- The series to process
-        column {str} -- Column name
-        scale {int} -- reduce the scale of the feature (reducing the
-            influence of variations this feature on the )
-
-    Keyword Arguments:
-        delimiter {str} -- Delimiter used to split the column string (default: {' '})
-
-    Returns:
-        {int} -- count of tokens
-
     """
     return floor(sum([ord(x) for x in input_row[column]]) / scale)
 
@@ -303,17 +360,22 @@ def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
 @export
 def token_count(input_row: pd.Series, column: str, delimiter: str = ' ') -> int:
     """
-    Return delimiter-separated tokens pd.Series column.
+    Return count of delimiter-separated tokens pd.Series column.
 
-    Arguments:
-        input_row {pd.Series} -- The series to process
-        column {str} -- Column name
+    Parameters
+    ----------
+    input_row : pd.Series
+        The series to process
+    column : str
+        Column name to process
+    delimiter : str, optional
+        Delimiter used to split the column string.
+        (the default is ' ')
 
-    Keyword Arguments:
-        delimiter {str} -- Delimiter used to split the column string (default: {' '})
-
-    Returns:
-        {int} -- count of tokens
+    Returns
+    -------
+    int
+        count of tokens
 
     """
     return len(input_row[column].split(delimiter))
