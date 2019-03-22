@@ -63,7 +63,7 @@ class TestIoCExtractor(unittest.TestCase):
         input_df = pd.DataFrame.from_dict(data=TEST_CASES, orient='index', columns=['input'])
         output_df = self.extractor.extract(data=input_df, columns=['input'], 
                                            os_family='Windows', include_paths=True)
-
+        
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df['IoCType'] == 'ipv4'].shape[0], 3)
         self.assertEqual(output_df[output_df['IoCType'] == 'ipv6'].shape[0], 2)
