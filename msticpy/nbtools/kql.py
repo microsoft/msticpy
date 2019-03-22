@@ -97,7 +97,7 @@ def exec_query(query_name: str, **kwargs) -> (pd.DataFrame, results.ResultSet):
             # Did user want both dataframe and ResultSet
             if not kql_result:
                 return data_frame
-            
+
             return data_frame, result
 
         print("Warning - query did not complete successfully.")

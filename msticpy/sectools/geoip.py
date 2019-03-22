@@ -16,9 +16,10 @@ from typing import Tuple, List, Mapping
 from IPython import get_ipython
 from IPython.display import display, HTML
 
-from geolite2 import geolite2
 import pandas as pd
 import requests
+
+from geolite2 import geolite2
 
 from .. nbtools.entityschema import GeoLocation, IpAddress
 from .. nbtools.utility import export

@@ -103,7 +103,8 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
         the assembled message type and contents
 
     """
-    if 'SYSCALL' in message_dict:
+    # Handle process executions specially
+    if 'SYSCALL' in message_dict and 'EXECVE' in message_dict:
         proc_create_dict = {}
         for mssg_type in ['SYSCALL', 'CWD', 'EXECVE', 'PROCTITLE']:
             if (mssg_type not in message_dict or
@@ -118,7 +119,10 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
                         value = int(value)
                         if value == 4294967295:
                             value = -1
-                proc_create_dict[fieldname] = value
+                if fieldname in proc_create_dict:
+                    proc_create_dict[f'{fieldname}_{mssg_type}'] = value
+                else:
+                    proc_create_dict[fieldname] = value
             if mssg_type == 'EXECVE':
                 args = int(proc_create_dict.get('argc', 1))
                 arg_strs = []
@@ -126,7 +130,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
                     arg_strs.append(proc_create_dict.get(f'a{arg_idx}', ''))
 
                 proc_create_dict['cmdline'] = ' '.join(arg_strs)
-        return 'SYSCALL', proc_create_dict
+        return 'SYSCALL_EXECVE', proc_create_dict
     else:
         event_dict = {}
         for mssg_type, _ in message_dict.items():
@@ -138,9 +142,14 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
                             value = int(value)
                             if value == 4294967295:
                                 value = -1
-                    event_dict[fieldname] = value
+                    if fieldname in event_dict:
+                        event_dict[f'{fieldname}_{mssg_type}'] = value
+                    else:
+                        event_dict[fieldname] = value
             else:
-
+                # We don't check for duplicated keys here - if
+                # there are multiple messages with the same key, the 
+                # last one will overwrite the previous value
                 event_dict.update(message_dict[mssg_type])
         return list(message_dict.keys())[0], event_dict
 

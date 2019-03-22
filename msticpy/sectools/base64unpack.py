@@ -165,7 +165,8 @@ def unpack_items(input_string: str = None,
             raise ValueError('column must be supplied if the input is a DataFrame')
 
         output_df = None
-        for input_row in data[[column]].itertuples():
+        rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
+        for input_row in rows_with_b64_match[[column]].itertuples():
             (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
             output_frame['src_index'] = input_row.Index
             output_frame['full_decoded_string'] = decoded_string
