@@ -182,6 +182,7 @@ class IoCExtract(object):
             is used to toggle between Windows or Linux path matching.
         ioc_types : list, optional
             Restrict matching to just specified types.
+            (default is all types)
         include_paths : bool, optional
             Whether to include path matches (which can be noisy)
             (the default is false - excludes 'windows_path'
@@ -261,7 +262,7 @@ class IoCExtract(object):
 
     def validate(self, input_str: str, ioc_type: str) -> bool:
         """
-        Return true if the input_str matches the corresponding regex.
+        Check that `input_str` matches the regex for the specificed `ioc_type`.
 
         Parameters
         ----------
