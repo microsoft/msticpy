@@ -64,7 +64,7 @@ class SecurityEvent(SecurityBase):
             if event_id == '4688':
                 self._entities.append(Process(src_row, role='new'))
 
-            if event_id == '4624' or event_id == '4625':
+            if event_id in ('4624', '4625'):
                 self._entities.append(Account(src_event=src_row, role='subject'))
                 self._entities.append(Account(src_event=src_row, role='target'))
                 self._entities.append(IpAddress(src_event=src_row))

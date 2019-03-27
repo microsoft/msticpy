@@ -11,7 +11,7 @@ import os
 import re
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable
+from typing import Callable, List, Mapping
 
 import pandas as pd
 from IPython.display import display
@@ -54,9 +54,10 @@ class Lookback(QueryParamProvider):
     """
     ipwidget wrapper to display integer slider.
 
-    Attributes:
-        lookback: the time value of the slider
-        value: synonym for lookback
+    Parameters
+    ----------
+    QueryParamProvider : QueryParamProvider
+        Abstract base class
 
     """
 
@@ -66,18 +67,34 @@ class Lookback(QueryParamProvider):
         """
         Create an instance of the lookback slider widget.
 
-            :param default=4: Default value.
-            :param label='Select time (hrs) to look back': prompt string
-            :param min_value=1: Minimum value of range.
-            :param max_value=240: Maximum value of range.
-            :param origin_time: The time from which to calculate the lookback offset
+        Parameters
+        ----------
+        default : int, optional
+            The default 'lookback' time (the default is 4)
+        label : str, optional
+            The description to display
+            (the default is 'Select time ({units}) to look back')
+        origin_time : datetime, optional
+            The origin time (the default is `datetime.utcnow()`)
+        min_value : int, optional
+            Minimum value (the default is 1)
+        max_value : int, optional
+            Maximum value (the default is 240)
+        units : str, optional
+            Time unit (the default is 'hour')
+            Permissable values are 'day', 'hour', 'minute', 'second'
+            These can all be abbreviated down to initial characters
+            ('d', 'm', etc.)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
         """
         # default to now
         self.origin_time = datetime.utcnow() if origin_time is None else origin_time
 
         self._time_unit = _parse_time_unit(units)
         if '{units}' in label:
-            label = label.format(units=self._time_unit)
+            label = label.format(units=self._time_unit.name)
         self._lookback_wgt = widgets.IntSlider(value=default,
                                                min=min_value,
                                                max=max_value,
@@ -87,9 +104,10 @@ class Lookback(QueryParamProvider):
                                                    width='60%', height='50px'),
                                                style={'description_width': 'initial'})
 
-        self.end = datetime.utcnow
+        self.end = self.origin_time
         self._time_unit = _parse_time_unit(units)
-        self.start = self.end - timedelta(self._time_unit * self._lookback_wgt.value)
+        self.start = self.end - timedelta(seconds=(self._time_unit.value *
+                                          self._lookback_wgt.value))
 
         self._lookback_wgt.observe(self._time_range_change, names='value')
 
@@ -113,9 +131,7 @@ class Lookback(QueryParamProvider):
     def _time_range_change(self, change):
         del change
         self.start = (self.origin_time +
-                      timedelta(0, self._lookback_wgt.value[0] * self._time_unit.value))
-        self.end = (self.origin_time +
-                    timedelta(0, self._lookback_wgt.value[1] * self._time_unit.value))
+                      timedelta(0, self._lookback_wgt.value * self._time_unit.value))
 
     @property
     def query_params(self):
@@ -140,9 +156,10 @@ class QueryTime(QueryParamProvider):
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
-    Atrributes:
-        start: the selected query start time
-        end: the selected query end time
+    Parameters
+    ----------
+    QueryParamProvider : QueryParamProvider
+        Abstract base class
 
     """
 
@@ -154,14 +171,31 @@ class QueryTime(QueryParamProvider):
         """
         Create new instance of QueryTime.
 
-            :param origin_time:datetime=None: The starting time for the time range widget
-            defaults to datetime.utcnow()
-            :param before=60: The default start time offset from origin_time
-            :param after=10: The default end time offset from origin_time
-            :param max_before=600: The maximum offset value for the start time range
-            :param max_after=100: The maximum offset value for the end time range
-            :param label=None: override the default label 'Set query time boundaries'
-            :param units='min: time unit to use ('min', 'hour', 'sec', 'day')
+        Parameters
+        ----------
+        origin_time : datetime, optional
+            The origin time (the default is `datetime.utcnow()`)
+        label : str, optional
+            The description to display
+            (the default is 'Select time ({units}) to look back')
+        before : int, optional
+            The default number of `units` before the `origin_time`
+            (the default is 60)
+        after : int, optional
+            The default number of `units` after the `origin_time`
+            (the default is 10)
+        max_before : int, optional
+            The largest value for `before` (the default is 600)
+        max_after : int, optional
+            The largest value for `after` (the default is 100)
+        units : str, optional
+            Time unit (the default is 'min')
+            Permissable values are 'day', 'hour', 'minute', 'second'
+            These can all be abbreviated down to initial characters
+            ('d', 'm', etc.)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
         """
         self._label = 'Set query time boundaries' if label is None else label
         self._time_unit = _parse_time_unit(units)
@@ -295,8 +329,20 @@ class AlertSelector(QueryParamProvider):
         """
         Create a new instance of AlertSelector.
 
-            :param alerts: DataFrame of alerts.
-            :param action=None: Optional function to execute for each selected alert.
+        Parameters
+        ----------
+        alerts : pd.DataFrame
+            DataFrame of alerts.
+        action : Callable[..., None], optional
+            Optional function to execute for each selected alert.
+            (the default is None)
+        columns : list, optional
+            Override the default column names to use from `alerts`
+            (the default is ['StartTimeUtc', 'AlertName',
+            'CompromisedEntity', 'SystemAlertId'])
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
         """
         self.alerts = alerts
         self.alert_action = action
@@ -423,16 +469,26 @@ class GetSingleAlert(QueryParamProvider):
 
     """
 
-    def __init__(self, action: Callable[..., None] = None, max_lookback: int = 28,
+    def __init__(self, action: Callable[..., None] = None, max_lookback: float = 28,
                  query_time_provider=None, auto_display: bool = False):
         """
         Create a new instance of GetSingleAlert.
 
-            :param action=None: Optional function to execute for retrieved alert.
-            :param max_lookback: days
-            :param query_time_provider - an object with 'start' and 'end' properties
-                or a QueryParamProvider with start and end defined in its
-                query_params property
+        Parameters
+        ----------
+        action : Callable[..., None], optional
+            Create a new instance of GetSingleAlert.
+            (the default is None)
+        max_lookback : float, optional
+            Number of days to search for an alert with the
+            supplied ID (the default is 28, fractional days allowed)
+        query_time_provider : [type], optional
+            An object with 'start' and 'end' properties
+            or a QueryParamProvider with start and end defined in its
+            query_params property (the default is None)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
         """
         self.alert_action = action
         self.selected_alert = None
@@ -525,28 +581,33 @@ class GetSingleAlert(QueryParamProvider):
 
 
 @export
-class GetEnvironmentKey(object):
+class GetEnvironmentKey:
     """
     GetEnvironmentKey.
 
     Tries to retrieve an environment variable value. The value
     can be changed/set and optionally saved back to the system
     environment.
-
-    Attributes:
-        name: the name of the environment variable
-        value: the value of the variable
-
     """
 
-    def __init__(self, env_var: str, help_str: str = None, prompt: str = "Enter the value: ",
+    def __init__(self, env_var: str, help_str: str = None,
+                 prompt: str = "Enter the value: ",
                  auto_display: bool = False):
         """
         Create a new instance of GetEnvironmentKey.
 
-            :param env_var: Name of the environment variable.
-            :param help_str=None: Help to display if the environment variable is not set.
-            :param prompt="Enter the value:": Prompt to display with the text box.
+        Parameters
+        ----------
+        env_var : str
+            Name of the environment variable.
+        help_str : str, optional
+            Help to display if the environment variable is not set. (the default is None)
+        prompt : str, optional
+            Prompt to display with the text box.
+            (the default is "Enter the value: ")
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
         """
         self._value = os.environ.get(env_var)
         self._name = env_var
@@ -594,7 +655,7 @@ class GetEnvironmentKey(object):
 
 
 @export
-class SelectString(object):
+class SelectString:
     """
     Selection list from list or dict.
 
@@ -603,22 +664,41 @@ class SelectString(object):
 
     """
 
-    def __init__(self, description: str = None,
-                 item_list: list({str})=None,
+    def __init__(self, 
+                 description: str = 'Select an item',
+                 item_list: List[str] = None,
                  action: Callable[..., None] = None,
-                 item_dict: dict({str: str})=None,
+                 item_dict: Mapping[str, str] = None,
                  auto_display: bool = False,
                  height: str = '100px',
                  width: str = '50%'):
         """
-        Initialize and display list picker.
+        Select an item from a list or dict.
 
-            :param description=None: List label
-            :param item_list=None: Item List
-            :param item_dict=None: Item dictionary { display_string: value }
-            :param action=None: function to call when item selected
-            :param height='100px': height of list box
-            :param width='50%': width of list box
+        Parameters
+        ----------
+        description : str, optional
+            The widget label to display.
+            (the default is 'Select an item')
+        item_list : List[str], optional
+            A `list` of items to select from (the default is None)
+        item_dict : Mapping[str, str], optional
+            A `dict` of items to select from. When using `item_dict`
+            the keys are displayed as the selectable items and value
+            corresponding to the selected key is set as the `value`
+            property.
+            (the default is None)
+        action : Callable[..., None], optional
+            function to call when item selected (passed a single
+            parameter - the value of the currently selected item)
+            (the default is None)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+        height : str, optional
+            Selection list height (the default is '100px')
+        width : str, optional
+            Selection list width (the default is '50%')
+
         """
         if item_list:
             self._item_list = item_list

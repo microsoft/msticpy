@@ -29,7 +29,7 @@ class TestIoCExtractor(unittest.TestCase):
             raise Exception('One or more required parameters were missing')
 
         test_input = TEST_CASES[testcase + '_test']
-        results = extractor.extract(test_input, os_family=os_family)
+        results = extractor.extract(test_input, os_family=os_family, include_paths=True)
         for k, v in expected_items.items():
             self.assertEqual(len(results[k]), v, 'Unexpected value for ' + k)
 
@@ -61,8 +61,9 @@ class TestIoCExtractor(unittest.TestCase):
     def test_dataframe(self):
 
         input_df = pd.DataFrame.from_dict(data=TEST_CASES, orient='index', columns=['input'])
-        output_df = self.extractor.extract(data=input_df, columns=['input'], os_family='Windows')
-
+        output_df = self.extractor.extract(data=input_df, columns=['input'], 
+                                           os_family='Windows', include_paths=True)
+        
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df['IoCType'] == 'ipv4'].shape[0], 3)
         self.assertEqual(output_df[output_df['IoCType'] == 'ipv6'].shape[0], 2)
@@ -74,7 +75,8 @@ class TestIoCExtractor(unittest.TestCase):
         self.assertEqual(output_df[output_df['IoCType'] == 'sha256_hash'].shape[0], 3)
 
         input_df = pd.DataFrame.from_dict(data=TEST_CASES, orient='index', columns=['input'])
-        output_df = self.extractor.extract(data=input_df, columns=['input'], os_family='Linux')
+        output_df = self.extractor.extract(data=input_df, columns=['input'], 
+                                           os_family='Linux', include_paths=True)
         # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
         #     print(row.Observable)
         self.assertGreater(output_df.shape[0], 0)
