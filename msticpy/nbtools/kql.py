@@ -6,79 +6,105 @@
 """KQL Helper functions."""
 import sys
 from functools import partial
+from typing import Tuple, Union
 
 import pandas as pd
 from IPython import get_ipython
 from Kqlmagic import results
 
 from . query_builtin_queries import query_definitions
-# pylint: disable=locally-disabled, W0611
+# pylint: disable=locally-disabled, unused-import
 # (list_queries not used here but want to bring in into module namespace)
-from . query_mgr import (replace_prov_query_params, list_queries,
-                         clean_kql_query, query_help, print_kql)
-# pylint: enable=locally-disabled, W0611
+from . query_mgr import (replace_prov_query_params, list_queries,  # noqa: F401
+                         clean_kql_query, query_help, print_kql)  # noqa: F401
+# pylint: enable=locally-disabled, unused-import
 from . utility import export
 from .. _version import VERSION
 
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
-# pylint: disable=locally-disabled, C0103
+# pylint: disable=locally-disabled, invalid-name
 _kql_magic_loaded = False
 _ip = get_ipython()
-# pylint: enable=locally-disabled, C0103
+# pylint: enable=locally-disabled, invalid-name
+
+
+def load_kql():
+    """Closure to maintain state of Kql Magic load."""
+    _is_loaded = False
+
+    def load_if_not_loaded():
+        nonlocal _is_loaded
+        if _is_loaded:
+            return True
+
+        print('Loading kql')
+        _load_kql_magic()
+        _is_loaded = _is_kqlmagic_loaded()
+        if _is_loaded:
+            return True
+        return False
+
+    return load_if_not_loaded
+
+
+_KQL_LOADER = load_kql()
 
 
 @export
 def load_kql_magic():
     """Load KqlMagic if not loaded."""
     # KqlMagic
-    if not _is_kqlmagic_loaded():
-        print('Please wait. Loading Kqlmagic extension...')
-        get_ipython().run_line_magic('reload_ext', 'Kqlmagic')
-        # get_ipython().run_line_magic('config', 'Kqlmagic.auto_dataframe=True')
-        if not _is_kqlmagic_loaded():
-            raise EnvironmentError('Kqlmagic did not load correctly.')
+    if not _KQL_LOADER():
+        raise EnvironmentError('Kqlmagic did not load correctly.')
+
+
+def _load_kql_magic():
+    """Load KqlMagic if not loaded."""
+    # KqlMagic
+    print('Please wait. Loading Kqlmagic extension...')
+    get_ipython().run_line_magic('reload_ext', 'Kqlmagic')
 
 
 def _is_kqlmagic_loaded() -> bool:
     """Return true if kql magic is loaded."""
-    # pylint: disable=locally-disabled, C0103, W0603
-    global _kql_magic_loaded
-    # pylint: enable=locally-disabled, C0103, W0603
-
     if _ip is not None:
-        _kql_magic_loaded = _ip.find_magic('kql') is not None
+        return _ip.find_magic('kql') is not None
 
-    return _kql_magic_loaded
+    return False
 
 
 @export
-def exec_query(query_name: str, **kwargs) -> (pd.DataFrame, results.ResultSet):
+def exec_query(query_name: str, **kwargs) -> Union[pd.DataFrame,
+                                                   Tuple[pd.DataFrame, results.ResultSet]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 
-    Use list_queries() to see the current set).
-    Use query_help(query_name) to view the query and expected paramaters
-    Arguments:
-        query_name {string}: the name of query to run
-        kwargs: additional replacable paramters for the query
-            {string:bool} kql_result=True - return (DataFrame, KqlResultSet)
-                    tuple.
-                    kql_result=False - return DataFrame only (default)
-            {string:[QueryParamProvider]} - for the key 'provs'
-                (or alias 'providers')
-                this should be a collection of objects that
-                implement QueryParamProvider (from which query
-                parameters can be extracted).
-                OR
-            {string:value pairs} -- custom parameter list
-                (override default values and values extracted
-                from QueryParamProviders).
-    Returns:
-        dataframe {pd.DataFrame}: if kql_result == False (default).
-        (dataframe, ResultSet): tuple of dataframe and Kql ResultSet
-            if kql_result==True (pass this as a kw argument).
+    Parameters
+    ----------
+    query_name : str
+        the name of query to run
+
+    Other Parameters
+    ----------------
+    kwargs: additional replacable paramters for the query
+        kql_result=True - return (DataFrame, KqlResultSet) tuple.
+        kql_result=False - return DataFrame only (default)
+        provs=Iterable[QueryParamProvider]
+            this should be a collection of objects that
+            implement QueryParamProvider (from which query
+            parameters can be extracted).
+            OR
+        kwargs [str, Any] custom parameter list
+            (override default values and values extracted
+            from QueryParamProviders).
+    Returns
+    -------
+    Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]
+        if kql_result == False (default) returns a tuple of
+        dataframe and Kql ResultSet. Otherwise returns
+        just dataframe.
 
     """
     if 'kql_result' in kwargs:
@@ -103,32 +129,36 @@ def exec_query(query_name: str, **kwargs) -> (pd.DataFrame, results.ResultSet):
         print("Warning - query did not complete successfully.")
         print("Kql ResultSet returned - check  \'completion_query_info\' property.")
         return result
+    raise ValueError('Could not resolve query or query parameters.')
 
 
 @export
-def show_filled_query(query_name: str, **kwargs) -> (pd.DataFrame, results.ResultSet):
+def show_filled_query(query_name: str, **kwargs) -> str:
     """
     Print the kql query with replaced parameter values.
 
-    Use list_queries() to see the current set).
-    Use query_help(query_name) to view the query and expected paramaters
-    Arguments:
-        query_name {string}: the name of query to run
-        kwargs: additional replacable paramters for the query
-            {string:bool} kql_result=True - return (DataFrame, KqlResultSet)
-                    tuple.
-                    kql_result=False - return DataFrame only (default)
-            {string:[QueryParamProvider]} - for the key 'provs'
-                (or alias 'providers')
-                this should be a collection of objects that
-                implement QueryParamProvider (from which query
-                parameters can be extracted).
-                OR
-            {string:value pairs} -- custom parameter list
-                (override default values and values extracted
-                from QueryParamProviders).
-    Returns:
-        replaced_query {str}: the query with substituted parameters.
+    Parameters
+    ----------
+    query_name : str
+        the name of query to run
+
+    Other Parameters
+    ----------------
+    kwargs: additional replacable paramters for the query
+        kql_result=True - return (DataFrame, KqlResultSet) tuple.
+        kql_result=False - return DataFrame only (default)
+        provs=Iterable[QueryParamProvider]
+            this should be a collection of objects that
+            implement QueryParamProvider (from which query
+            parameters can be extracted).
+            OR
+        kwargs [str, Any] custom parameter list
+            (override default values and values extracted
+            from QueryParamProviders).
+    Returns
+    -------
+    str
+        The query string with populated parameters.
 
     """
     replaced_query = replace_prov_query_params(query_name=query_name, **kwargs)

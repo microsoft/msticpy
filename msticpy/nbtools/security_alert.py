@@ -6,6 +6,7 @@
 """Module for SecurityAlert class."""
 import json
 from json import JSONDecodeError
+from typing import Dict, Any, List
 
 import pandas as pd
 
@@ -32,52 +33,61 @@ class SecurityAlert(SecurityBase):
         super().__init__(src_row=src_row)
 
         # add entities to dictionary to remove dups
-        self._src_entities = dict()
-        if 'Entities' in src_row:
-            self._extract_entities(src_row)
+        self._src_entities: Dict[int, Entity] = dict()
 
-        if 'ExtendedProperties' in src_row:
-            if isinstance(src_row.ExtendedProperties, dict):
-                self.extended_properties = src_row.ExtendedProperties
-            elif isinstance(src_row.ExtendedProperties, str):
-                try:
-                    self.extended_properties = json.loads(src_row.ExtendedProperties)
-                except JSONDecodeError:
-                    pass
+        if src_row is not None:
+            if 'Entities' in src_row:
+                self._extract_entities(src_row)
+
+            if 'ExtendedProperties' in src_row:
+                if isinstance(src_row.ExtendedProperties, dict):
+                    self.extended_properties = src_row.ExtendedProperties
+                elif isinstance(src_row.ExtendedProperties, str):
+                    try:
+                        self.extended_properties = json.loads(src_row.ExtendedProperties)
+                    except JSONDecodeError:
+                        pass
         else:
-            self.extended_properties = []
+            self.extended_properties: Dict[str, Any] = {}
         self._find_os_family()
 
     @property
-    def entities(self) -> list:
+    def entities(self) -> List[Entity]:
         """Return a list of the Security Alert entities."""
         return list(self._src_entities.values())
 
     @property
-    def query_params(self) -> dict:
+    def query_params(self) -> Dict[str, Any]:
         """
         Query parameters derived from alert.
 
-        Returns:
-            dict(str, str) -- Dictionary of parameter names
+        Returns
+        -------
+            Dict[str, Any]
+                Dictionary of parameter names/value
 
         """
         params_dict = super().query_params
-        if ('system_alert_id' not in params_dict or
-                params_dict['system_alert_id'] is None):
+        if ('system_alert_id' not in params_dict
+                or params_dict['system_alert_id'] is None):
             params_dict['system_alert_id'] = self._ids['SystemAlertId']
         return params_dict
 
-    def to_html(self, show_entities=False):
+    def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
-        title = '''
-        <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>, entity=<b>{entity}</b>, id=<b>{id}</b>
-        <br/>
-        '''.format(start=self._source_data['StartTimeUtc'],
-                   name=self._source_data['AlertDisplayName'],
-                   entity=self._source_data.get(
-                       'CompromisedEntity', 'unknown'),
-                   id=self._source_data['SystemAlertId'])
+        if (self.properties is not None
+                and not self.properties.empty):
+            title = '''
+            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
+            entity=<b>{entity}</b>, id=<b>{id}</b>
+            <br/>
+            '''.format(start=self.properties['StartTimeUtc'],
+                       name=self.properties['AlertDisplayName'],
+                       entity=self.properties.get('CompromisedEntity',
+                                                  'unknown'),
+                       id=self.properties['SystemAlertId'])
+        else:
+            title = 'Alert has no data.'
         return title + super().to_html(show_entities)
 
     # Public methods

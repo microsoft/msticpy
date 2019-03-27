@@ -8,6 +8,7 @@ eventschema.
 
 Module for DataSchema class
 """
+from typing import Dict
 from . query_defns import DataFamily, DataEnvironment
 from . utility import export
 from .. _version import VERSION
@@ -21,8 +22,11 @@ __author__ = 'Ian Hellen'
 class DataSchema:
     """DataSchema class for Log Analytics Queries."""
 
-    DATA_MAPPINGS = {DataEnvironment.LogAnalytics: {},
-                     DataEnvironment.Kusto: {}}
+    DATA_MAPPINGS: Dict[DataEnvironment,
+                        Dict[DataFamily,
+                             Dict[str,
+                                  Dict[str, str]]]] = {DataEnvironment.LogAnalytics: {},
+                                                       DataEnvironment.Kusto: {}}
     DATA_MAPPINGS[DataEnvironment.LogAnalytics] = {DataFamily.WindowsSecurity: {},
                                                    DataFamily.LinuxSecurity: {},
                                                    DataFamily.SecurityAlert: {}}
@@ -287,20 +291,3 @@ class DataSchema:
                 families.add(DataFamily(data_map).name)
 
         return list(families)
-
-
-if __name__ == '__main__':
-    # mini test code
-    # pylint: disable=locally-disabled, C0103
-    schema = DataSchema(environment='LogAnalytics',
-                        data_family='WindowsSecurity', data_source='process_create')
-    assert len(schema.data_environments) >= 2
-    assert len(schema.data_families) >= 2
-    assert len(schema.data_source_types) >= 3
-    assert 'table' in schema
-    assert 'query_project' in schema
-    schemas = DataSchema.default_schemas(
-        environment='LogAnalytics', data_family='WindowsSecurity')
-    assert schemas is not None
-    assert len(schemas) >= 3
-    # pylint: enable=locally-disabled, C0103

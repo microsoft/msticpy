@@ -8,9 +8,9 @@ from . query_defns import KqlQuery, DataFamily, DataEnvironment
 
 # Module level variable that holds dictionary of queries
 # indexed by name
-# pylint: disable=C0103
+# pylint: disable=invalid-name
 query_definitions = dict()
-# pylint: enable=C0103
+# pylint: enable=invalid-name
 
 
 KNOWN_PARAM_NAMES = ['table', 'query_project', 'start', 'end',

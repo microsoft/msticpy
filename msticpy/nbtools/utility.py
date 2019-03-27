@@ -6,6 +6,9 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
+import warnings
+from typing import Callable, Optional, Any
+
 from IPython.core.display import display, HTML
 
 import pandas as pd
@@ -16,24 +19,26 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
-def export(func):
+def export(func: Callable):
     """Decorate function or class to export to __all__."""
     mod = sys.modules[func.__module__]
     if hasattr(mod, '__all__'):
-        mod.__all__.append(func.__name__)
+        all_list = getattr(mod, '__all__')
+        all_list.append(func.__name__)
     else:
-        mod.__all__ = [func.__name__]
+        all_list = [func.__name__]
+        setattr(mod, '__all__', all_list)
     return func
 
 
 @export
-def string_empty(string):
+def string_empty(string: str) -> bool:
     """Return True if the input string is None or whitespace."""
     return (string is None) or not (string and string.strip())
 
 
 @export
-def is_not_empty(test_object):
+def is_not_empty(test_object: Any) -> bool:
     """Return True if the test_object is not None or empty."""
     if test_object:
         if isinstance(test_object, str):
@@ -75,7 +80,7 @@ def toggle_code():
 
 # String escapes
 @export
-def escape_windows_path(str_path):
+def escape_windows_path(str_path: str) -> str:
     """Escape backslash characters in a string."""
     if is_not_empty(str_path):
         return str_path.replace('\\', '\\\\')
@@ -83,7 +88,7 @@ def escape_windows_path(str_path):
 
 
 @export
-def unescape_windows_path(str_path):
+def unescape_windows_path(str_path: str) -> str:
     """Remove escaping from backslash characters in a string."""
     if is_not_empty(str_path):
         return str_path.replace('\\\\', '\\')
@@ -101,7 +106,7 @@ def pd_version_23() -> bool:
 
 
 @export
-def get_nb_query_param(nb_url_search: str, param: str) -> str:
+def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     """
     Get a url query parameter from the search string.
 
@@ -150,3 +155,24 @@ def get_notebook_query_string():
             "nb_query_string='".concat(window.location.search).concat("'"));
     </script>
     ''')
+
+
+def deprecated(message: str) -> Callable:
+    """
+    Decorate function to issue deprecation warning.
+
+    Parameters
+    ----------
+    message : str
+        Deprecation warning
+
+    """
+    def deprecated_decorator(func):
+        def deprecated_func(*args, **kwargs):
+            warnings.warn("{} is a deprecated function. {}".format(func.__name__, message),
+                          category=DeprecationWarning,
+                          stacklevel=2)
+            warnings.simplefilter('default', DeprecationWarning)
+            return func(*args, **kwargs)
+        return deprecated_func
+    return deprecated_decorator

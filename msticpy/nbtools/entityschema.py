@@ -8,11 +8,13 @@ entityschema module.
 
 Module for V3 Entities class
 """
-import ipaddress
+from ipaddress import ip_address, IPv4Address, IPv6Address
 import json
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
+# pylint: disable=locally-disabled, unused-import
+from typing import Mapping, Any, Union, Dict, Type  # noqa: F401
 
 from . utility import export
 from .. _version import VERSION
@@ -21,6 +23,7 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
+# pylint: disable=too-many-lines
 # pylint: disable=invalid-name
 @export
 class Entity(ABC):
@@ -30,54 +33,83 @@ class Entity(ABC):
     Implements common methods for Entity classes
     """
 
-    _entity_schema = {}
+    _entity_schema = {}  # type: Mapping[str, Any]
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of an entity.
 
-        If src_entity is supplied it attempts to extract common properties
-        from the source entity and assign them to the new instance.
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            If src_entity is supplied it attempts to extract common
+            properties from the source entity and assign them to
+            the new instance. (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
-        self._entity_properties = {}
-        if src_entity is not None:
-            for k, v in self._entity_schema.items():
-                if k in src_entity:
-                    self[k] = src_entity[k]
-
-                    if v is not None:
-                        try:
-                            if v == RegistryHive.__name__:
-                                self[k] = RegistryHive[src_entity[k]]
-                            elif v == OSFamily.__name__:
-                                self[k] = OSFamily[src_entity[k]]
-                            elif v == ElevationToken.__name__:
-                                self[k] = ElevationToken[src_entity[k]]
-                            elif v == GeoLocation.__name__:
-                                self[k] = GeoLocation[src_entity[k]]
-                            elif v == Algorithm.__name__:
-                                self[k] = Algorithm[src_entity[k]]
-                            elif isinstance(v, tuple):
-                                entity_list = []
-                                for col_entity in src_entity[k]:
-                                    entity_list.append(Entity.instantiate_entity(col_entity))
-                                self[k] = entity_list
-                            else:
-                                self[k] = Entity.instantiate_entity(src_entity[k])
-                        except KeyError:
-                            # Catch key errors from invalid enum values
-                            self[k] = None
-
-            # add AdditionalData dictionary if it's populated
-            if 'AdditionalData' in src_entity:
-                self['AdditionalData'] = src_entity['AdditionalData']
-        elif kwargs:
-            self._entity_properties.update(kwargs)
-
+        self._entity_properties = {}  # type: Dict[str, Any]
         # if we didn't populate AdditionalData, add an empty dict in case it's
         # needed
         if 'AdditionalData' not in self:
             self['AdditionalData'] = {}
+
+        if src_entity is None:
+            return
+
+        self._extract_src_entity(src_entity)
+
+        # add AdditionalData dictionary if it's populated
+        if 'AdditionalData' in src_entity:
+            self['AdditionalData'] = src_entity['AdditionalData']
+
+        if kwargs:
+            self._entity_properties.update(kwargs)
+
+    def _extract_src_entity(self, src_entity: Mapping[str, Any]):
+        """
+        Extract source entity properties.
+
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any]
+            The source mappable object from which to
+            extract entity properties.
+
+        """
+        for k, v in self._entity_schema.items():
+            if k not in src_entity:
+                continue
+            self[k] = src_entity[k]
+
+            if v is not None:
+                try:
+                    # If the property is an enum
+                    if v == RegistryHive.__name__:
+                        self[k] = RegistryHive[src_entity[k]]
+                    elif v == OSFamily.__name__:
+                        self[k] = OSFamily[src_entity[k]]
+                    elif v == ElevationToken.__name__:
+                        self[k] = ElevationToken[src_entity[k]]
+                    elif v == Algorithm.__name__:
+                        self[k] = Algorithm[src_entity[k]]
+                    elif isinstance(v, tuple):
+                        # if the property is a collection
+                        entity_list = []
+                        for col_entity in src_entity[k]:
+                            entity_list.append(Entity.instantiate_entity(col_entity))
+                        self[k] = entity_list
+                    else:
+                        # else try to instantiate an entity
+                        self[k] = Entity.instantiate_entity(src_entity[k])
+                except KeyError:
+                    # Catch key errors from invalid enum values
+                    self[k] = None
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -91,16 +123,16 @@ class Entity(ABC):
             return None
         raise KeyError
 
-    def __setitem__(self, key: str, value: any):
+    def __setitem__(self, key: str, value: Any):
         """Allow property set using dictionary key syntax."""
         self._entity_properties[key] = value
 
     def __contains__(self, key: str):
         """Allow property in test."""
         # In operator overload
-        return (key == 'Type' or
-                key in self._entity_properties or
-                key in self.__dict__)
+        return (key == 'Type'
+                or key in self._entity_properties
+                or key in self.__dict__)
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
@@ -110,7 +142,7 @@ class Entity(ABC):
             return None
         raise AttributeError(f'{name} is not a valid attribute.')
 
-    def __setattr__(self, name: str, value: any):
+    def __setattr__(self, name: str, value: Any):
         """Set the value of the named property 'name'."""
         if name == '_entity_properties':
             self.__dict__[name] = value
@@ -129,7 +161,7 @@ class Entity(ABC):
         """Return string representation of entity."""
         return pprint.pformat(self._to_dict(self), indent=2, width=100)
 
-    def __repr__(self) -> dict:
+    def __repr__(self) -> str:
         """Return repr of entity."""
         return json.dumps(self._to_dict(self), default=self._jdump_default)
 
@@ -155,85 +187,111 @@ class Entity(ABC):
         return o.__dict__
 
     @property
-    def Type(self) -> str:
-        """Return the Entity name (class type)."""
+    def Type(self) -> str:  # noqa: N802
+        """
+        Return the Entity name (class type).
+
+        Returns
+        -------
+        str
+            The Entity name (class type).
+
+        """
         return type(self).__name__.lower()
 
     @property
     def properties(self) -> dict:
-        """Return dictionary properties of entity."""
+        """
+        Return dictionary properties of entity.
+
+        Returns
+        -------
+        dict
+            Entity properties.
+
+        """
         return self._entity_properties
 
     @property
     @abstractmethod
     def description_str(self) -> str:
-        """Return Entity Description."""
+        """
+        Return Entity Description.
+
+        Returns
+        -------
+        str
+            Entity description (optional). If not overridden
+            by the Entity instance type, it will return the
+            Type string.
+
+        """
         return self.Type
 
+# pylint: disable=bad-continuation, too-many-branches
+# noqa: MC0001
     @classmethod
-    def instantiate_entity(cls, raw_entity: dict):
+    def instantiate_entity(cls,
+                           raw_entity: Mapping[str, Any]
+                           ) -> Union['Entity', Mapping[str, Any]]:
         """
         Class factory to return entity from raw dictionary representation.
 
-            :param raw_entity:dict:
+        Parameters
+        ----------
+        raw_entity : Mapping[str, Any]
+            A mapping object (e.g. dictionary or pandas Series)
+            that contains the properties of the entity.
+
+        Returns
+        -------
+        Entity
+            The instantiated entity
+
         """
         if 'Type' not in raw_entity:
             return raw_entity
 
-        if raw_entity['Type'] == 'account':
-            return Account(raw_entity)
-        elif raw_entity['Type'] == 'host':
-            return Host(raw_entity)
-        elif raw_entity['Type'] == 'process':
-            return Process(raw_entity)
-        elif raw_entity['Type'] == 'file':
-            return File(raw_entity)
-        elif raw_entity['Type'] == 'cloudapplication':
-            return CloudApplication(raw_entity)
-        elif raw_entity['Type'] == 'dnsresolve':
-            return DnsResolve(raw_entity)
-        elif (raw_entity['Type'] == 'ipaddress' or
-              raw_entity['Type'] == 'ip'):
-            return IpAddress(raw_entity)
-        elif raw_entity['Type'] == 'networkconnection':
-            return NetworkConnection(raw_entity)
-        elif raw_entity['Type'] == 'malware':
-            return Malware(raw_entity)
-        elif (raw_entity['Type'] == 'registry-key' or
-              raw_entity['Type'] == 'registrykey'):
-            return RegistryKey(raw_entity)
-        elif (raw_entity['Type'] == 'registry-value' or
-              raw_entity['Type'] == 'registryvalue'):
-            return RegistryValue(raw_entity)
-        elif (raw_entity['Type'] == 'host-logon-session' or
-              raw_entity['Type'] == 'hostlogonsession'):
-            return HostLogonSession(raw_entity)
-        elif raw_entity['Type'] == 'filehash':
-            return FileHash(raw_entity)
-        elif (raw_entity['Type'] == 'security-group' or
-              raw_entity['Type'] == 'securitygroup'):
-            return SecurityGroup(raw_entity)
-        elif (raw_entity['Type'] == 'alerts' or
-              raw_entity['Type'] == 'alert'):
-            return Alert(raw_entity)
+        entity_type = raw_entity['Type']
+        if entity_type in _ENTITY_NAME_MAP:
+            return _ENTITY_NAME_MAP[entity_type](raw_entity)
 
         raise TypeError(
-            'Could not find a suitable type for {}'.format(raw_entity['Type']))
+            'Could not find a suitable type for {}'.format(entity_type))
 
 
 @export
 class Account(Entity):
     """Account Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, role='subject', **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None,
+                 role: str = 'subject', **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing Account entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+        role : str, optional
+            'subject' or 'target' - only relevant if the entity
+            is being constructed from an event.
+            (the default is 'subject')
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
-# pylint: disable=locally-disabled, C0301
+# pylint: disable=locally-disabled, line-too-long
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:
             if role == 'subject' and 'SubjectUserName' in src_event:
@@ -252,10 +310,10 @@ class Account(Entity):
             self.PUID = src_event['PUID'] if 'PUID' in src_event else None
             self.DisplayName = src_event['DisplayName'] if 'DisplayName' in src_event else None
             self.UPNSuffix = src_event['UPNSuffix'] if 'UPNSuffix' in src_event else None
-# pylint: enable=locally-disabled, C0301
+# pylint: enable=locally-disabled, line-too-long
 
     @property
-    def description_str(self):
+    def description_str(self) -> str:
         """Return Entity Description."""
         return self.qualified_name
 
@@ -302,12 +360,23 @@ class Account(Entity):
 class SecurityGroup(Entity):
     """SecurityGroup Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -330,13 +399,28 @@ class SecurityGroup(Entity):
 class HostLogonSession(Entity):
     """HostLogonSession Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -371,12 +455,23 @@ class HostLogonSession(Entity):
 class CloudApplication(Entity):
     """CloudApplication Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -395,11 +490,23 @@ class CloudApplication(Entity):
 class DnsResolve(Entity):
     """DNS Resolve Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -425,13 +532,32 @@ class DnsResolve(Entity):
 class File(Entity):
     """File Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, role='new', **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None,
+                 role: str = 'new', **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+        role : str, optional
+            'new' or 'parent' - only relevant if the entity
+            is being constructed from an event.
+            (the default is 'new')
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -452,8 +578,7 @@ class File(Entity):
         """Return the path separator used by the file."""
         if '/' in self._entity_properties.get('Directory', ''):
             return '/'
-        else:
-            return '\\'
+        return '\\'
 
     @property
     def description_str(self) -> str:
@@ -497,12 +622,23 @@ class File(Entity):
 class FileHash(Entity):
     """File Hash class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -534,12 +670,29 @@ class Algorithm(Enum):
 class Host(Entity):
     """Host Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, **kwargs):
+    def __init__(self,
+                 src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None,
+                 **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
@@ -563,8 +716,7 @@ class Host(Entity):
         """Construct FQDN from host + dns."""
         if self.DnsDomain:
             return f'{self.HostName}.{self.DnsDomain}'
-        else:
-            return self.HostName
+        return self.HostName
 
     @property
     def description_str(self) -> str:
@@ -596,13 +748,29 @@ class Host(Entity):
 class IpAddress(Entity):
     """IPAddress Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, **kwargs):
+    def __init__(self,
+                 src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None,
+                 **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -611,12 +779,9 @@ class IpAddress(Entity):
                 self.Address = src_event['IpAddress']
 
     @property
-    def ip_address(self) -> ipaddress:
+    def ip_address(self) -> Union[IPv4Address, IPv6Address]:
         """Return a python ipaddress object from the entity property."""
-        try:
-            return ipaddress.ip_address(self._entity_properties['Address'])
-        except ValueError:
-            return 'Address not convertible.'
+        return ip_address(self._entity_properties['Address'])
 
     @property
     def description_str(self) -> str:
@@ -639,12 +804,23 @@ class IpAddress(Entity):
 class GeoLocation(Entity):
     """GeoLocation class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -675,12 +851,23 @@ class GeoLocation(Entity):
 class Malware(Entity):
     """Malware Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -705,12 +892,23 @@ class Malware(Entity):
 class NetworkConnection(Entity):
     """NetworkConnection Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -742,52 +940,83 @@ class NetworkConnection(Entity):
 class Process(Entity):
     """Process Entity class."""
 
-    def __init__(self, src_entity=None, src_event=None, role='new', **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None,
+                 src_event: Mapping[str, Any] = None, role='new', **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param src_event: instantiate entity using properties of src event
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+        role : str, optional
+            'new' or 'parent' - only relevant if the entity
+            is being constructed from an event.
+            (the default is 'new')
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
-# pylint: disable=locally-disabled, C0301
+# pylint: disable=locally-disabled, line-too-long
         if src_event is not None:
             if role == "new":
-                self.ProcessId = src_event['NewProcessId'] if 'NewProcessId' in src_event else None
-                self.CommandLine = src_event['CommandLine'] if 'CommandLine' in src_event else None
+                self.ProcessId = (src_event['NewProcessId']
+                                  if 'NewProcessId' in src_event else None)
+                self.CommandLine = (src_event['CommandLine']
+                                    if 'CommandLine' in src_event else None)
                 if 'TimeCreatedUtc' in src_event:
                     self.CreationTimeUtc = src_event['TimeCreatedUtc']
                 elif 'TimeGenerated' in src_event:
                     self.CreationTimeUtc = src_event['TimeGenerated']
-                self.ProcessId = src_event['NewProcessId'] if 'NewProcessId' in src_event else None
+                self.ProcessId = (src_event['NewProcessId']
+                                  if 'NewProcessId' in src_event else None)
                 self.ImageFile = File(src_event=src_event, role='new')
                 self.Account = Account(src_event=src_event, role='subject')
 
-                self.success = src_event['success'] if 'success' in src_event else None
-                self.audit_user = src_event['audit_user'] if 'audit_user' in src_event else None
+                if 'ParentProcessName' in src_event or 'ProcessName' in src_event:
+                    parent = Process(src_event=src_event, role='parent')
+                    self.ParentProcess = parent
+
+                # Linux properties
+                self.success = (src_event['success']
+                                if 'success' in src_event else None)
+                self.audit_user = (src_event['audit_user']
+                                   if 'audit_user' in src_event else None)
                 self.auid = src_event['auid'] if 'auid' in src_event else None
                 self.group = src_event['group'] if 'group' in src_event else None
                 self.gid = src_event['gid'] if 'gid' in src_event else None
-                self.effective_user = src_event['effective_user'] if 'effective_user' in src_event else None
+                self.effective_user = (src_event['effective_user']
+                                       if 'effective_user' in src_event else None)
                 self.euid = src_event['euid'] if 'euid' in src_event else None
-                self.effective_group = src_event['effective_group'] if 'effective_group' in src_event else None
-                self.egid = src_event['effective_group'] if 'effective_group' in src_event else None
+                self.effective_group = (src_event['effective_group']
+                                        if 'effective_group' in src_event else None)
+                self.egid = (src_event['effective_group']
+                             if 'effective_group' in src_event else None)
                 self.cwd = src_event['cwd'] if 'cwd' in src_event else None
                 self.name = src_event['cwd'] if 'cwd' in src_event else None
             else:
                 self.ProcessId = src_event['ProcessId'] if 'ProcessId' in src_event else None
                 self.ImageFile = File(src_event=src_event, role='parent')
-# pylint: enable=locally-disabled, C0301
+# pylint: enable=locally-disabled, line-too-long
 
     @property
-    def ProcessName(self) -> str:
+    def ProcessName(self) -> str:  # noqa: N802
         """Return the name of the process file."""
         file = self._entity_properties.get('ImageFile', None)
         return file.Name if file else None
 
     @property
-    def ProcessFilePath(self) -> str:
+    def ProcessFilePath(self) -> str:  # noqa: N802
         """Return the name of the process file path."""
         file = self._entity_properties.get('ImageFile', None)
         return file.FullPath if file else None
@@ -851,12 +1080,23 @@ class RegistryHive(Enum):
 class RegistryKey(Entity):
     """RegistryKey Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -877,12 +1117,23 @@ class RegistryKey(Entity):
 class RegistryValue(Entity):
     """RegistryValue Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -924,12 +1175,23 @@ class ElevationToken(Enum):
 class AzureResource(Entity):
     """AzureResource Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -952,12 +1214,23 @@ class AzureResource(Entity):
 class Alert(Entity):
     """Alert Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -994,7 +1267,7 @@ class Alert(Entity):
 class Threatintelligence(Entity):
     """Threatintelligence Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
@@ -1018,11 +1291,12 @@ class Threatintelligence(Entity):
         'ThreatDescription': None,
     }
 
+
 @export
 class UnknownEntity(Entity):
     """Generic Entity class."""
 
-    def __init__(self, src_entity=None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
@@ -1035,48 +1309,30 @@ class UnknownEntity(Entity):
         """Return Entity Description."""
         return 'OtherEntity'
 
-    _entity_schema = {}
+    _entity_schema = {}  # type: Dict[str, Any]
 
-# # test code
-# if __name__ == '__main__':
-#     import json
-#     import os
-#     print('hello')
 
-#     file = './python/tests/entities.json'
-#     if not os.path.exists(file):
-#         print('Test file {} not found'.format(file))
-#         exit()
-
-#     with open(file, 'r') as fh:
-#         txt = fh.read()
-#         entity_dict = json.loads(txt)
-#         parsed_entities = []
-#         for _, entity in entity_dict.items():
-#             e = Entity.instantiate_entity(entity)
-#             assert(isinstance(e, Entity))
-
-#             if e['Type'] == 'account':
-#                 assert(isinstance(e, Account))
-#                 assert('Name' in e)
-#                 assert(len(e.Name) > 0)
-#             elif e['Type'] == 'host':
-#                 assert(isinstance(e, Host))
-#                 assert('HostName' in e)
-#                 assert(len(e.HostName) > 0)
-#             elif e['Type'] == 'process':
-#                 assert(isinstance(e, Process))
-#                 assert('ProcessId' in e)
-#                 assert(len(e.ProcessId) > 0)
-#             elif e['Type'] == 'file':
-#                 assert(isinstance(e, File))
-#                 assert('Name' in e)
-#                 assert(len(e.Name) > 0)
-#             elif e['Type'] == 'ipaddress':
-#                 assert(isinstance(e, IpAddress))
-#                 assert('Address' in e)
-#                 assert(len(e.Address) > 0)
-
-#             parsed_entities.append(e)
-
-#         assert(len(parsed_entities) >= 7)
+# Dictionary to map text names of types to the class.
+_ENTITY_NAME_MAP: Dict[str, Type] = {
+    'account': Account,
+    'host': Host,
+    'process': Process,
+    'file': File,
+    'cloudapplication': CloudApplication,
+    'dnsresolve': DnsResolve,
+    'ipaddress': IpAddress,
+    'ip': IpAddress,
+    'networkconnection': NetworkConnection,
+    'malware': Malware,
+    'registry-key': RegistryKey,
+    'registrykey': RegistryKey,
+    'registry-value': RegistryValue,
+    'registryvalue': RegistryValue,
+    'host-logon-session': HostLogonSession,
+    'hostlogonsession': HostLogonSession,
+    'filehash': FileHash,
+    'security-group': SecurityGroup,
+    'securitygroup': SecurityGroup,
+    'alerts': Alert,
+    'alert': Alert,
+}

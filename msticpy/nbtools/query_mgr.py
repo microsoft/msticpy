@@ -7,10 +7,13 @@
 import sys
 from functools import partial
 import re
+from typing import (Union, List, Iterable, Mapping, Dict,
+                    Tuple, Any, Optional)
 
 from . query_schema import DataSchema
 from . query_builtin_queries import query_definitions
-from . query_defns import KqlQuery, QueryParamProvider, DataFamily, DataEnvironment
+from . query_defns import (KqlQuery, QueryParamProvider,
+                           DataFamily, DataEnvironment)
 from . utility import export
 from .. _version import VERSION
 
@@ -74,7 +77,12 @@ def add_query(kql_query: KqlQuery = None, **kwargs):
     """
     Add a query to the current set.
 
-        :param kql_query:KqlQuery:
+    Parameters
+    ----------
+    kql_query : KqlQuery, optional
+        KqlQuery object to add
+        (the default is None, which prints help)
+
     """
     if kql_query is None:
         def_data_families = [DataEnvironment.LogAnalytics]
@@ -110,25 +118,36 @@ def replace_query_params(query_name: str, *args, **kwargs) -> str:
     """
     Return the parameterized query for query_name.
 
-    Arguments:
-        query_name {string}: The query to use
-        args {QueryParamProvider}: objects that
-                implement QueryParamProvider (from which query
-                parameters can be extracted).
-        kwargs:
-            {string:[QueryParamProvider]} - for the key 'provs'
-                this should be a collection of objects that
-                implement QueryParamProvider (from which query
-                parameters can be extracted).
-                OR
-            {string:value pairs} -- custom parameter list
-                (override default values and values extracted
-                from QueryParamProviders).
-    Raises:
-        LookupError -- query_name cannot be found
+    Parameters
+    ----------
+    query_name : str
+        The query to use
 
-    Returns:
-        string -- substituted query
+    Other Parameters
+    ----------------
+    args : Tuple[QueryParamProvider]
+        objects that implement QueryParamProvider
+        (from which query parameters can be extracted).
+
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+                OR
+    kwargs : Dict[str, Any]
+        custom parameter list to populate queries
+        (override default values and values extracted
+        from QueryParamProviders).
+
+    Returns
+    -------
+    str
+        Populated query
+
+    Raises
+    ------
+    LookupError
+        query_name cannot be found
 
     """
     return replace_prov_query_params(query_name=query_name,
@@ -141,23 +160,32 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
     """
     Return the parameterized query for query_name.
 
-    Arguments:
-        query_name {string} -- The query to use
-        kwargs
-            {string:[QueryParamProvider]} - for the key 'provs'
-                this should be a collection of objects that
-                implement QueryParamProvider (from which query
-                parameters can be extracted).
-                OR
-            {string:value pairs} -- custom parameter list
-                (override default values and values extracted
-                from QueryParamProviders).
-    Raises:
-        LookupError -- query_name cannot be found.
-        ValueError -- query parameter value could not be found.
+    Parameters
+    ----------
+    query_name : str
+        The query to use
 
-    Returns:
-        string -- substituted query
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+                OR
+    kwargs : Dict[str, Any]
+        custom parameter list to populate queries
+        (override default values and values extracted
+        from QueryParamProviders).
+
+    Returns
+    -------
+    str
+        Populated query
+
+    Raises
+    ------
+    LookupError
+        query_name cannot be found
+    ValueError
+        query parameter value could not be found.
 
     """
     if query_name not in query_definitions:
@@ -172,31 +200,35 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
     return kql_query.query.format(**query_params)
 
 
-def _get_query_params(kql_query, *args, **kwargs):
+def _get_query_params(kql_query: KqlQuery,
+                      *args, **kwargs) -> Dict[str, Any]:
     """
     Get the parameters needed for the query.
 
-    Arguments:
-        kql_query {KqlQuery} -- query object
-        args {list} -- set of source objects to extract parameter
-            values from
-        kwargs {string:value pairs} -- custom parameter list
-            (overrides auto-extracted values)
+    Parameters
+    ----------
+    kql_query : KqlQuery
+        query object
 
-    Raises:
-        LookupError -- Could not find valid data_family or
-            data_environment
-        ValueError -- Values for one or more required parameters
-            could not be found
+    args : Tuple[QueryParamProvider]
+        objects that implement QueryParamProvider
+        (from which query parameters can be extracted).
 
-    Returns:
-        dict -- Dictionary of parameter names and values to be used
+    kwargs : Dict[str, Any]
+        custom parameter list to populate queries
+        (override default values and values extracted
+        from QueryParamProviders).
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary of parameter names and values to be used
             in the query
 
     """
     # get the required parameters for this query and build a dictionary
     req_param_names = required_params(kql_query.query)
-    req_params = {param: None for param in req_param_names}
+    req_params: Dict[str, Any] = {param: None for param in req_param_names}
 
     # Iterate through required parameters. If any are set in the supplied
     # provider objects, assign them to our output dictionary
@@ -236,34 +268,60 @@ def _get_query_params(kql_query, *args, **kwargs):
     # as attributes of the object
     missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
     if missing_params:
-        for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
-            for m_param in missing_params:
-                if m_param in other_object:
-                    req_params[m_param] = getattr(other_object, m_param)
-            missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
-
-        if missing_params:
-            # check for and remove optional parameters from the missing params list
-            for m_param in missing_params:
-                if m_param in kql_query.optional_params:
-                    req_params[m_param] = ''
-            missing_params = [p_name for p_name in missing_params
-                              if p_name not in kql_query.optional_params]
-
-        if missing_params:
-            # If still have missing params then we error out
-            query_help(kql_query.name)
-            mssg = ('The following required parameters for this query were not set:',
-                    ', '.join(missing_params))
-            raise ValueError(mssg)
+        _get_missing_params(args, missing_params, req_params, kql_query)
 
     return req_params
 
 
-def _get_data_family_and_env(kql_query, providers, custom_params):
+def _get_missing_params(args: Tuple[Any, ...],
+                        missing_params: List[str],
+                        req_params: Dict[str, Any],
+                        kql_query: KqlQuery):
+    """
+    Get missing params from arguments.
+
+    Parameters
+    ----------
+    args : Tuple[Any]
+        Args list from calling funtion
+    missing_params : List[str]
+        The list of missing parameters to get
+    req_params : Dict[str, str]
+        Dictionary of required parameters
+    kql_query : KqlQuery
+        The query object
+
+    """
+    for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
+        for m_param in missing_params:
+            if m_param in other_object:
+                req_params[m_param] = getattr(other_object, m_param)
+        missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+
+    if missing_params:
+        # check for and remove optional parameters from the missing params list
+        for m_param in missing_params:
+            if m_param in kql_query.optional_params:
+                req_params[m_param] = ''
+        missing_params = [p_name for p_name in missing_params
+                          if p_name not in kql_query.optional_params]
+
+    if missing_params:
+        # If still have missing params then we error out
+        query_help(kql_query.name)
+        mssg = ('The following required parameters for this query were not set:',
+                ', '.join(missing_params))
+        raise ValueError(mssg)
+
+
+def _get_data_family_and_env(
+        kql_query: KqlQuery,
+        providers: Iterable[QueryParamProvider],
+        custom_params: Mapping[str, Any]) -> Tuple[Optional[DataFamily],
+                                                   Optional[DataEnvironment]]:
     """Get the data_family and environment."""
-    data_family = None
-    data_environment = None
+    data_family = None  # type: Optional[DataFamily]
+    data_environment = None  # type: Optional[DataEnvironment]
 
     # If there is only one data family for this query, then use that
     if len(kql_query.data_families) == 1:
@@ -277,26 +335,21 @@ def _get_data_family_and_env(kql_query, providers, custom_params):
     candidate_families = set()
     candidate_environments = set()
     for provider in providers:
-        if _DATA_FAMILY_NAME in provider.query_params:
-            fam_value = DataFamily.parse(provider.query_params[_DATA_FAMILY_NAME])
-            if fam_value:
-                candidate_families.add(fam_value)
-        if _DATA_ENVIRONMENT_NAME in provider.query_params:
-            env_value = DataEnvironment.parse(provider.query_params[_DATA_ENVIRONMENT_NAME])
-            if env_value:
-                candidate_environments.add(env_value)
+        family, env = _get_env_and_family(provider.query_params)
+        if family:
+            candidate_families.add(family)
+        if env:
+            candidate_environments.add(env)
 
     if custom_params:
         # If we haven't yet worked out the data family and environment
         # try to get this from one of custom_params
-        if _DATA_FAMILY_NAME in custom_params:
-            fam_value = DataFamily.parse(custom_params[_DATA_FAMILY_NAME])
-            if fam_value:
-                candidate_families.add(fam_value)
-        if _DATA_ENVIRONMENT_NAME in custom_params:
-            env_value = DataEnvironment.parse(custom_params[_DATA_ENVIRONMENT_NAME])
-            if env_value:
-                candidate_environments.add(env_value)
+        family, env = _get_env_and_family(custom_params)
+
+        if family:
+            candidate_families.add(family)
+        if env:
+            candidate_environments.add(env)
 
     # get the intersection of families and environments that we found and those
     # supported by the query. If it is 1 item we are good to go.
@@ -310,12 +363,47 @@ def _get_data_family_and_env(kql_query, providers, custom_params):
     return data_family, data_environment
 
 
+def _get_env_and_family(params: Mapping[str, Any]) -> Tuple[Optional[DataFamily],
+                                                            Optional[DataEnvironment]]:
+    """
+    Extract environment and family from params dictionary.
+
+    Parameters
+    ----------
+    params : Mapping[str, Any]
+        Input dictionary
+
+    Returns
+    -------
+    Tuple[Optional[DataFamily],Optional[DataEnvironment]]
+        Tuple of family and environment, if found.
+
+    """
+    family = None
+    environment = None
+
+    if _DATA_FAMILY_NAME in params:
+        family = DataFamily.parse(params[_DATA_FAMILY_NAME])
+    if _DATA_ENVIRONMENT_NAME in params:
+        environment = DataEnvironment.parse(params[_DATA_ENVIRONMENT_NAME])
+    return family, environment
+
+
 @export
-def required_params(kql_query: any) -> list:
+def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     """
     Return the set of required parameters for the query.
 
-        :param query_string:
+    Parameters
+    ----------
+    kql_query : Union[KqlQuery, str]
+        The KqlQuery object or Kql string
+
+    Returns
+    -------
+    List[str]
+        The list of required parameters.
+
     """
     if isinstance(kql_query, KqlQuery):
         query_string = kql_query.query

@@ -6,7 +6,7 @@
 """Auditd extractor."""
 import codecs
 from datetime import datetime
-from typing import Mapping, Any, Tuple
+from typing import Mapping, Any, Tuple, Dict
 
 import pandas as pd
 
@@ -110,19 +110,8 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
             if (mssg_type not in message_dict or
                     mssg_type not in _FIELD_DEFS):
                 continue
-            for fieldname, conv in _FIELD_DEFS[mssg_type].items():
-                value = message_dict[mssg_type].get(fieldname, None)
-                if not value:
-                    continue
-                if conv:
-                    if conv == 'int':
-                        value = int(value)
-                        if value == 4294967295:
-                            value = -1
-                if fieldname in proc_create_dict:
-                    proc_create_dict[f'{fieldname}_{mssg_type}'] = value
-                else:
-                    proc_create_dict[fieldname] = value
+            _extract_mssg_value(mssg_type, message_dict, proc_create_dict)
+
             if mssg_type == 'EXECVE':
                 args = int(proc_create_dict.get('argc', 1))
                 arg_strs = []
@@ -131,27 +120,48 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 
                 proc_create_dict['cmdline'] = ' '.join(arg_strs)
         return 'SYSCALL_EXECVE', proc_create_dict
-    else:
-        event_dict = {}
-        for mssg_type, _ in message_dict.items():
-            if mssg_type in _FIELD_DEFS:
-                for fieldname, conv in _FIELD_DEFS[mssg_type].items():
-                    value = message_dict[mssg_type].get(fieldname, None)
-                    if conv:
-                        if conv == 'int':
-                            value = int(value)
-                            if value == 4294967295:
-                                value = -1
-                    if fieldname in event_dict:
-                        event_dict[f'{fieldname}_{mssg_type}'] = value
-                    else:
-                        event_dict[fieldname] = value
-            else:
-                # We don't check for duplicated keys here - if
-                # there are multiple messages with the same key, the 
-                # last one will overwrite the previous value
-                event_dict.update(message_dict[mssg_type])
-        return list(message_dict.keys())[0], event_dict
+
+    event_dict = {}
+    for mssg_type, _ in message_dict.items():
+        if mssg_type in _FIELD_DEFS:
+            _extract_mssg_value(mssg_type, message_dict, event_dict)
+        else:
+            # We don't check for duplicated keys here - if
+            # there are multiple messages with the same key, the
+            # last one will overwrite the previous value
+            event_dict.update(message_dict[mssg_type])
+    return list(message_dict.keys())[0], event_dict
+
+
+def _extract_mssg_value(mssg_type: str,
+                        message_dict: Mapping[str, str],
+                        event_dict: Dict[str, Any]):
+    """
+    Extract field/value from the message dictionary.
+
+    Parameters
+    ----------
+    mssg_type : str
+        The Audit message type
+    message_dict : Mapping[str, str]
+        The input dictionary
+    event_dict : Dict[str, Any]
+        The output dictionary
+
+    """
+    for fieldname, conv in _FIELD_DEFS[mssg_type].items():
+        value = message_dict[mssg_type].get(fieldname, None)
+        if not value:
+            return
+        if conv:
+            if conv == 'int':
+                value = int(value)
+                if value == 4294967295:
+                    value = -1
+        if fieldname in event_dict:
+            event_dict[f'{fieldname}_{mssg_type}'] = value
+        else:
+            event_dict[fieldname] = value
 
 
 def _move_cols_to_front(data: pd.DataFrame, column_count: int = 1) -> pd.DataFrame:
