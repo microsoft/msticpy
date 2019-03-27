@@ -31,6 +31,7 @@ import hashlib
 import io
 import re
 import tarfile
+from typing import Tuple, Any, Set, Mapping
 import zipfile
 from collections import namedtuple
 
@@ -54,7 +55,7 @@ _BASE64_HEADER_TYPES = {
     'TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAA4fug': 'dll',
     'TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6AAAAA4fug': 'sys',
     'UEsDBBQAAAAIA': 'zip',
-    'UEsDBBQAAQAIA': 'zip (passprotected)',
+    'UEsDBBQAAQAIA': 'zip (pwd protected)',
     'H4sI': 'gz',
     'N3q8ryccAAR': '7z',
     'UmFyIRoHAM': 'rar',
@@ -95,9 +96,30 @@ _debug_trace = False
 
 
 @export
-def unpack_items(input_string=None, data=None, column=None, trace=False):
+def unpack_items(input_string: str = None,
+                 data: pd.DataFrame = None,
+                 column: str = None,
+                 trace: bool = False) -> Any:
     """
     Base64 decode an input string or multiple strings taken from a pandas dataframe column.
+
+    Parameters
+    ----------
+    input_string : str, optional
+        single string to decode (the default is None)
+    data : pd.DataFrame, optional
+        dataframe containing column to decode (the default is None)
+    column : str, optional
+        Name of dataframe text column (the default is None)
+    trace : bool, optional
+        Show additional status (the default is None)
+
+    Returns
+    -------
+    Tuple[str, pd.DataFrame] (if `input_string`)
+        Decoded string and additional metadata
+    pd.DataFrame
+        Decoded stringa and additional metadata in dataframe
 
     If the input is a dataframe you must supply the name of the column to use.
 
@@ -130,7 +152,8 @@ def unpack_items(input_string=None, data=None, column=None, trace=False):
 
     If the input is a dataframe the output dataframe will also include the
     following column: - src_index - the index of the source row in the input
-    frame. This allows you to re-join the output data to the input data
+    frame. This allows you to re-join the output data to the input data.
+
     """
     global _debug_trace
     _debug_trace = trace
@@ -142,7 +165,8 @@ def unpack_items(input_string=None, data=None, column=None, trace=False):
             raise ValueError('column must be supplied if the input is a DataFrame')
 
         output_df = None
-        for input_row in data[[column]].itertuples():
+        rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
+        for input_row in rows_with_b64_match[[column]].itertuples():
             (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
             output_frame['src_index'] = input_row.Index
             output_frame['full_decoded_string'] = decoded_string
@@ -166,8 +190,10 @@ def _debug_print_trace(*args):
 
 
 # base64 decoding
-def _decode_and_format_b64_string(b64encoded_string, item_prefix=None,
-                                  current_depth=1, current_index=1):
+def _decode_and_format_b64_string(b64encoded_string: str,
+                                  item_prefix: str = None,
+                                  current_depth: int = 1,
+                                  current_index: int = 1) -> Tuple[str, BinaryRecord]:
     """Decode string and return displayable content plus list of decoded artifacts."""
     # Check if we recognize this as a known file type
     (_, f_type) = _is_known_b64_prefix(b64encoded_string)
@@ -185,22 +211,24 @@ def _decode_and_format_b64_string(b64encoded_string, item_prefix=None,
         # Build display string
         # If a string, include the decoded item in the output
         if out_record.encoding_type in ['utf-8', 'utf-16']:
-            display_string = f'<decoded type=\'string\' name=\'{out_name}\' ' +\
-                             f'index=\'{item_prefix}{current_index}\' ' +\
-                             f'depth=\'{current_depth}\'>' +\
-                             f'{out_record.decoded_string}</decoded>'
+            display_string = (f'<decoded type=\'string\' name=\'{out_name}\' '
+                              f'index=\'{item_prefix}{current_index}\' '
+                              f'depth=\'{current_depth}\'>'
+                              f'{out_record.decoded_string}</decoded>')
             return display_string, [out_record]
         else:
-            # if a binary just record its presence
-            display_string = f'<decoded value=\'binary\'  name=\'{out_name}\' ' +\
-                             f'type=\'{out_record.file_type}\' ' +\
-                             f'index=\'{item_prefix}{current_index}\' ' +\
-                             f'depth=\'{current_depth}\'/>'
+            # if a binary include printable bytes
+            display_string = (f'<decoded value=\'binary\'  name=\'{out_name}\' '
+                              f'type=\'{out_record.file_type}\' '
+                              f'index=\'{item_prefix}{current_index}\' '
+                              f'depth=\'{current_depth}\'>'
+                              f'{out_record.printable_bytes}</decoded>')
             return display_string, [out_record]
     else:
         # Build header display string
-        display_header = f'<decoded value=\'multiple binary\' type=\'multiple\' ' +\
-                         f' index=\'{item_prefix}{current_index}\'>'
+        display_header = (f'<decoded value=\'multiple binary\' type=\'multiple\' '
+                          f'index=\'{item_prefix}{current_index}\' '
+                          f'depth=\'{current_depth}\'>')
         child_display_strings = []
         child_index = 1
         child_depth = current_depth + 1
@@ -213,16 +241,17 @@ def _decode_and_format_b64_string(b64encoded_string, item_prefix=None,
 
             if child_rec.encoding_type in ['utf-8', 'utf-16']:
                 # If a string, include the decoded item in the output
-                child_display_string = f'<decoded type=\'string\' name=\'{child_name}\' ' +\
-                                       f'index=\'{child_index_string}\' ' +\
-                                       f'depth=\'{child_depth}\'>' +\
-                                       f'{child_rec.decoded_string}</decoded>'
+                child_display_string = (f'<decoded type=\'string\' name=\'{child_name}\' '
+                                        f'index=\'{child_index_string}\' '
+                                        f'depth=\'{child_depth}\'>'
+                                        f'{child_rec.decoded_string}</decoded>')
             else:
                 # if a binary just record its presence
-                child_display_string = f'<decoded type=\'{child_rec.file_type}\' ' +\
-                                       f'name=\'{child_name}\' ' +\
-                                       f'index=\'{child_index_string}\' ' +\
-                                       f'depth=\'{child_depth}\'/>'
+                child_display_string = (f'<decoded type=\'{child_rec.file_type}\' '
+                                        f'name=\'{child_name}\' '
+                                        f'index=\'{child_index_string}\' '
+                                        f'depth=\'{child_depth}\'>'
+                                        f'{child_rec.printable_bytes}</decoded>')
             child_display_strings.append(child_display_string)
             child_index += 1
 
@@ -230,8 +259,11 @@ def _decode_and_format_b64_string(b64encoded_string, item_prefix=None,
         return display_string, output_files.values()
 
 
-def _decode_b64_string_recursive(input_string, undecodable_strings=None,
-                                 max_recursion=20, current_depth=1, item_prefix=''):
+def _decode_b64_string_recursive(input_string: str,
+                                 undecodable_strings: Set[str] = None,
+                                 max_recursion: int = 20,
+                                 current_depth: int = 1,
+                                 item_prefix: str = '') -> Tuple[str, pd.DataFrame]:
     """
     Recursively decode and unpack an encoded string.
 
@@ -496,15 +528,41 @@ def _get_items_from_archive(binary, archive_type='zip'):
 
 
 @export
-def get_items_from_gzip(binary):
-    """Return decompressed gzip contents."""
+def get_items_from_gzip(binary: bytes) -> Tuple[str, bytes]:
+    """
+    Return decompressed gzip contents.
+
+    Parameters
+    ----------
+    binary : bytes
+        byte array of gz file
+
+    Returns
+    -------
+    Tuple[str, bytes]
+        File type + decompressed file
+
+    """
     archive_file = gzip.decompress(binary)
     return 'gz', {'gzip_file': archive_file}
 
 
 @export
-def get_items_from_zip(binary):
-    """Return dictionary of zip contents."""
+def get_items_from_zip(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
+    """
+    Return dictionary of zip contents.
+
+    Parameters
+    ----------
+    binary : bytes
+        byte array of zip file
+
+    Returns
+    -------
+    Tuple[str, Mapping[str, bytes]]
+        Filetype + dictionary of file name + file content
+
+    """
     file_obj = io.BytesIO(binary)
     zip_archive = zipfile.ZipFile(file_obj, mode='r')
     archive_dict = dict()
@@ -515,8 +573,21 @@ def get_items_from_zip(binary):
 
 
 @export
-def get_items_from_tar(binary):
-    """Return dictionary of tar file contents."""
+def get_items_from_tar(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
+    """
+    Return dictionary of tar file contents.
+
+    Parameters
+    ----------
+    binary : bytes
+        byte array of zip file
+
+    Returns
+    -------
+    Tuple[str, Mapping[str, bytes]]
+        Filetype + dictionary of file name + file content
+
+    """
     file_obj = io.BytesIO(binary)
     # Open tarfile
     tar = tarfile.open(mode="r", fileobj=file_obj)
@@ -530,8 +601,21 @@ def get_items_from_tar(binary):
 
 
 @export
-def get_hashes(binary):
-    """Return md5, sha1 and sha256 hashes of input byte string."""
+def get_hashes(binary: bytes) -> Mapping[str, str]:
+    """
+    Return md5, sha1 and sha256 hashes of input byte string.
+
+    Parameters
+    ----------
+    binary : bytes
+        byte string of item to be hashed
+
+    Returns
+    -------
+    Mapping[str, str]
+        dictionary of hash algorithm + hash value
+
+    """
     hash_dict = dict()
     for hash_type in ['md5', 'sha1', 'sha256']:
         if hash_type == 'md5':

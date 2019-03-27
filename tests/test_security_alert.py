@@ -57,7 +57,13 @@ sample_alert = {
          'Key': 'software\\microsoft\\windows\\currentversion\\run', 'Hive': 'HKEY_CURRENT_USER'},
         {'Type': 'registry-value', '$id': '8',
          'ValueType': 'Unknown', 'Key': {'$ref': '7'}},
-        {'Type': 'registry-value', '$id': '9', 'Name': 'cclientcleandll', 'ValueType': 'String', 'Key': {'$ref': '7'}, 'Value': 'System.Byte[]'}],
+        {'Type': 'registry-value', '$id': '9', 'Name': 'cclientcleandll',
+            'ValueType': 'String', 'Key': {'$ref': '7'}, 'Value': 'System.Byte[]'},
+        {'$id': '10', 'Algorithm': 'SHA256',
+            'Value': 'D41D122374906FE97D7185DBB2C767B8D98DF9DEC564C4A204028DFD892496BA', 'Type': 'filehash'},
+        {'$id': '11', 'Directory': '%OSDRIVE%\\WINDOWSAZURE\\SECAGENT', 'Name': 'WASECAGENTPROV.EXE',
+            'Host': {'$ref': '1'}, 'FileHashes': [{'$ref': '10'}], 'Type': 'file'},
+    ],
     'ConfidenceLevel': 'Unknown',
     'ConfidenceScore': None,
     'ConfidenceReasons': None,
@@ -80,10 +86,13 @@ class TestQuerySchema(unittest.TestCase):
 
     def setUp(self):
         self.raw_alert = pd.Series(sample_alert)
-        self.raw_alert['StartTimeUtc'] = pd.to_datetime(self.raw_alert['StartTimeUtc'])
-        self.raw_alert['EndTimeUtc'] = pd.to_datetime(self.raw_alert['EndTimeUtc'])
-        self.raw_alert['TimeGeneratedUtc'] = pd.to_datetime(self.raw_alert['TimeGeneratedUtc'])
-    
+        self.raw_alert['StartTimeUtc'] = pd.to_datetime(
+            self.raw_alert['StartTimeUtc'])
+        self.raw_alert['EndTimeUtc'] = pd.to_datetime(
+            self.raw_alert['EndTimeUtc'])
+        self.raw_alert['TimeGeneratedUtc'] = pd.to_datetime(
+            self.raw_alert['TimeGeneratedUtc'])
+
     def test_alert_import(self):
         alert = SecurityAlert(self.raw_alert)
 
@@ -114,10 +123,12 @@ class TestQuerySchema(unittest.TestCase):
         self.assertEqual('TESTHOST', alert.primary_host.HostName)
         self.assertIsNotNone(alert.primary_process)
         self.assertIsNotNone(alert.primary_process.ProcessFilePath)
-        self.assertEqual('c:\\windows\\system32\\reg.exe', alert.primary_process.ProcessFilePath)
+        self.assertEqual('c:\\windows\\system32\\reg.exe',
+                         alert.primary_process.ProcessFilePath)
         self.assertIsNotNone(alert.primary_account)
         self.assertEqual('TESTHOST$', alert.primary_account.Name)
-        self.assertEqual('DOM\\TESTHOST$', alert.primary_account.qualified_name)
+        self.assertEqual('DOM\\TESTHOST$',
+                         alert.primary_account.qualified_name)
         self.assertEqual('0x3e7', alert.get_logon_id())
 
         self.assertIn('SourceComputerId', alert.host_filter(operator='=='))
@@ -127,7 +138,20 @@ class TestQuerySchema(unittest.TestCase):
         self.assertIsNotNone(alert.host_filter(operator='=='))
         self.assertIn('true', alert.subscription_filter(operator='=='))
 
-        self.assertEqual(2, len(alert.get_entities_of_type(entity_type='file')))
+        self.assertEqual(
+            3, len(alert.get_entities_of_type(entity_type='file')))
+        self.assertEqual(
+            2, len(alert.get_entities_of_type(entity_type='process')))
+        self.assertEqual(
+            1, len(alert.get_entities_of_type(entity_type='filehash')))
+        self.assertEqual(
+            2, len(alert.get_entities_of_type(entity_type='registryvalue')))
+        self.assertEqual(
+            1, len(alert.get_entities_of_type(entity_type='registrykey')))
+        self.assertEqual(
+            1, len(alert.get_entities_of_type(entity_type='account')))
+        self.assertEqual(
+            1, len(alert.get_entities_of_type(entity_type='host')))
 
         self.assertGreater(len(alert.query_params), 5)
         self.assertEqual(alert.data_family, DataFamily.WindowsSecurity)

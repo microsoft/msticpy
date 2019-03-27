@@ -6,6 +6,7 @@
 """Auditd extractor."""
 import codecs
 from datetime import datetime
+from typing import Mapping, Any, Tuple
 
 import pandas as pd
 
@@ -14,20 +15,48 @@ from .. _version import VERSION
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
+# Constants
 _ENCODED_PARAMS = {'EXECVE': {'a0', 'a1', 'a2', 'a3', 'arch'},
                    'PROCTITLE': {'proctitle'},
                    'USER_CMD': {'cmd'}}
 
+_USER_START = {'pid': 'int', 'uid': 'int', 'auid': 'int',
+               'ses': 'int', 'msg': None, 'acct': None, 'exe': None,
+               'hostname': None, 'addr': None, 'terminal': None,
+               'res': None}
+_FIELD_DEFS = {'SYSCALL': {'success': None, 'ppid': 'int', 'pid': 'int',
+                           'auid': 'int', 'uid': 'int', 'gid': 'int',
+                           'euid': 'int', 'egid': 'int', 'ses': 'int',
+                           'exe': None, 'com': None},
+               'CWD': {'cwd': None},
+               'PROCTITLE': {'proctitle': None},
+               'LOGIN': {'pid': 'int', 'uid': 'int', 'tty': None, 'old-ses': 'int',
+                         'ses': 'int', 'res': None},
+               'EXECVE': {'argc': 'int', 'a0': None, 'a1': None, 'a2': None},
+               '_USER_START': _USER_START,
+               'USER_END': _USER_START,
+               'CRED_DISP': _USER_START,
+               'USER_ACCT': _USER_START,
+               'CRED_ACQ': _USER_START,
+               'USER_CMD': {'pid': 'int', 'uid': 'int', 'auid': 'int',
+                            'ses': 'int', 'msg': None, 'cmd': None,
+                            'terminal': None, 'res': None},
+               }
 
-def unpack_auditd(audit_str: str) -> dict:
+
+def unpack_auditd(audit_str: str) -> Mapping[str, Any]:
     """
-    Unpack an Auditd message and returns a dictionary of fields.
+    Unpack an Audit message and returns a dictionary of fields.
 
-    Arguments:
-        audit_str {str} -- The auditd raw record
+    Parameters
+    ----------
+    audit_str : str
+        The auditd raw record
 
-    Returns:
-        {dict} -- the extract message fields and values
+    Returns
+    -------
+    Mapping[str, Any]
+        The extracted message fields and values
 
     """
     event_dict = {}
@@ -59,42 +88,23 @@ def unpack_auditd(audit_str: str) -> dict:
     return event_dict
 
 
-_USER_START = {'pid': 'int', 'uid': 'int', 'auid': 'int',
-               'ses': 'int', 'msg': None, 'acct': None, 'exe': None,
-               'hostname': None, 'addr': None, 'terminal': None,
-               'res': None}
-_FIELD_DEFS = {'SYSCALL': {'success': None, 'ppid': 'int', 'pid': 'int',
-                           'auid': 'int', 'uid': 'int', 'gid': 'int',
-                           'euid': 'int', 'egid': 'int', 'ses': 'int',
-                           'exe': None, 'com': None},
-               'CWD': {'cwd': None},
-               'PROCTITLE': {'proctitle': None},
-               'LOGIN': {'pid': 'int', 'uid': 'int', 'tty': None, 'old-ses': 'int',
-                         'ses': 'int', 'res': None},
-               'EXECVE': {'argc': 'int', 'a0': None, 'a1': None, 'a2': None},
-               '_USER_START': _USER_START,
-               'USER_END': _USER_START,
-               'CRED_DISP': _USER_START,
-               'USER_ACCT': _USER_START,
-               'CRED_ACQ': _USER_START,
-               'USER_CMD': {'pid': 'int', 'uid': 'int', 'auid': 'int',
-                            'ses': 'int', 'msg': None, 'cmd': None,
-                            'terminal': None, 'res': None},
-               }
-
-
-def _extract_event(message_dict: dict) -> tuple(str, dict):
+def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, Any]]:
     """
     Assemble discrete messages sharing the same message Id into a single event.
 
-    Arguments:
-        message_dict {dict} -- the input dictionary
+    Parameters
+    ----------
+    message_dict : Mapping[str, Any]
+        the input dictionary
 
-    Returns:
-        {tuple({str}, {dict})} the assembled message type and contents
+    Returns
+    -------
+    Tuple[str, Mapping[str, Any]
+        the assembled message type and contents
 
     """
-    if 'SYSCALL' in message_dict:
+    # Handle process executions specially
+    if 'SYSCALL' in message_dict and 'EXECVE' in message_dict:
         proc_create_dict = {}
         for mssg_type in ['SYSCALL', 'CWD', 'EXECVE', 'PROCTITLE']:
             if (mssg_type not in message_dict or
@@ -109,7 +119,10 @@ def _extract_event(message_dict: dict) -> tuple(str, dict):
                         value = int(value)
                         if value == 4294967295:
                             value = -1
-                proc_create_dict[fieldname] = value
+                if fieldname in proc_create_dict:
+                    proc_create_dict[f'{fieldname}_{mssg_type}'] = value
+                else:
+                    proc_create_dict[fieldname] = value
             if mssg_type == 'EXECVE':
                 args = int(proc_create_dict.get('argc', 1))
                 arg_strs = []
@@ -117,7 +130,7 @@ def _extract_event(message_dict: dict) -> tuple(str, dict):
                     arg_strs.append(proc_create_dict.get(f'a{arg_idx}', ''))
 
                 proc_create_dict['cmdline'] = ' '.join(arg_strs)
-        return 'SYSCALL', proc_create_dict
+        return 'SYSCALL_EXECVE', proc_create_dict
     else:
         event_dict = {}
         for mssg_type, _ in message_dict.items():
@@ -129,9 +142,14 @@ def _extract_event(message_dict: dict) -> tuple(str, dict):
                             value = int(value)
                             if value == 4294967295:
                                 value = -1
-                    event_dict[fieldname] = value
+                    if fieldname in event_dict:
+                        event_dict[f'{fieldname}_{mssg_type}'] = value
+                    else:
+                        event_dict[fieldname] = value
             else:
-
+                # We don't check for duplicated keys here - if
+                # there are multiple messages with the same key, the 
+                # last one will overwrite the previous value
                 event_dict.update(message_dict[mssg_type])
         return list(message_dict.keys())[0], event_dict
 
@@ -140,17 +158,21 @@ def _move_cols_to_front(data: pd.DataFrame, column_count: int = 1) -> pd.DataFra
     """
     Move N columns from end to front of DataFrame.
 
-    Arguments:
-        data {pd.DataFrame} -- The input DataFrame
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame
+    column_count : int, optional
+        The number of columns to move (the default is 1)
 
-    Keyword Arguments:
-        column_count {int} -- The number of columns to move (default: {1})
-
-    Returns:
-        pd.DataFrame -- DataFrame with N columns shifted to front
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with `column_count` columns shifted to front
 
     """
-    return data[list(data.columns[-column_count:]) + list(data.columns[:-column_count])]
+    return data[list(data.columns[-column_count:]) +
+                list(data.columns[:-column_count])]
 
 
 def extract_events_to_df(data: pd.DataFrame,
@@ -160,18 +182,22 @@ def extract_events_to_df(data: pd.DataFrame,
     """
     Extract auditd raw messages into a dataframe.
 
-    Arguments:
-        data {pd.DataFrame} -- The input dataframe with raw auditd
-            data in a single string column
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input dataframe with raw auditd data in
+        a single string column
+    input_column : str, optional
+        the input column name (the default is 'AuditdMessage')
+    event_type : str, optional
+        the event type, if None, defaults to all (the default is None)
+    verbose : bool, optional
+        Give feedback on stages of processing (the default is False)
 
-    Keyword Arguments:
-        input_column {str} -- the input column name (default: {'AuditdMessage'})
-        event_type {str} -- the event type, if None, defaults to all
-            (default: {None})
-        verbose {bool} -- Give feedback on stages of processing (default: {False})
-
-    Returns:
-        pd.DataFrame -- The resultant DataFrame
+    Returns
+    -------
+    pd.DataFrame
+        The resultant DataFrame
 
     """
     if verbose:

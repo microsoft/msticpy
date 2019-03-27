@@ -19,7 +19,7 @@ __author__ = 'Ian Hellen'
 
 
 @export
-class FoliumMap(object):
+class FoliumMap():
     """Wrapper class for Folium/Leaflet mapping."""
 
     def __init__(self, title: str = 'layer1', zoom_start: int = 7, tiles=None,
