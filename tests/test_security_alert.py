@@ -27,7 +27,7 @@ sample_alert = {
     'IsIncident': False,
     'ExtendedProperties': {
         'resourceType': 'Non-Azure Resource',
-        'enrichment_tas_threat__reports': '{"Kind":"MultiLink","DisplayValueToUrlDictionary":{"Report: Registry Persistence":"https://iflowreportsproda.blob.core.windows.net/reports/MSTI-TS-Registry-Persistence.pdf?sv=2018-03-28&sr=b&sig=TCqDRg1fQUp1P0gEznjM5wdqOGAKmAhsVzk4WPnx5gU%3D&spr=https&st=2018-09-27T13:37:57Z&se=2018-12-26T13:52:57Z&sp=r&callerId=ddd5443d-e6f4-441c-b52b-5278d2f21dfa&tenantId=bdb7e59d-8ba8-4351-aa6d-eedc6b916aa5"}}',
+        'enrichment_tas_threat__reports': '{"Kind":"MultiLink","DisplayValueToUrlDictionary":{"Report: Registry Persistence":"https://iflowreportsproda.blob.core.windows.net/reports/MSTI-TS-Registry-Persistence.pdf"}}',
         'parent process id':  '0x940',
         'account logon id':  '0x3e7',
         'User SID':  'S-1-5-18',
