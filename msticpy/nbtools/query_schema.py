@@ -17,7 +17,6 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
-# TODO Refactor to simpler data structure
 @export
 class DataSchema:
     """DataSchema class for Log Analytics Queries."""

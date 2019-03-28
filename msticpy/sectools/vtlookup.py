@@ -9,7 +9,7 @@ import json
 from json import JSONDecodeError
 import math
 import re
-from typing import List, Mapping, Any, Dict, Optional, Iterable, Tuple
+from typing import List, Mapping, Any, Dict, Optional, Tuple
 from collections import namedtuple, Counter
 from ipaddress import IPv4Address, ip_address
 import socket
@@ -63,7 +63,7 @@ class VTLookup:
     """
 
     # Ioc types that we support
-    _SUPPORTED_INPUT_TYPES = [
+    _SUPPORTED_INPUT_TYPES: List[str] = [
         "ipv4",
         "dns",
         "url",
@@ -73,9 +73,8 @@ class VTLookup:
     ]
 
     # Mapping to to VT Types
-    _VT_TYPE_MAP = {
+    _VT_TYPE_MAP: Dict[str, str] = {
         "ipv4": "ip-address",
-        "ipv6": None,
         "dns": "domain",
         "url": "url",
         "md5_hash": "file",
@@ -86,14 +85,14 @@ class VTLookup:
     # VT API parameters
     _HDR_GZIP = {"Accept-Encoding": "gzip, deflate"}
     _VT_API = "https://www.virustotal.com/vtapi/v2/{type}/report"
-    _VT_API_TYPES = {
+    _VT_API_TYPES: Dict[str, VTParams] = {
         "url": VTParams("url", 1, "\n", "get", "resource", _HDR_GZIP),
         "file": VTParams("file", 25, ",", "get", "resource", _HDR_GZIP),
         "ip-address": VTParams("ip-address", 1, "", "get", "ip", None),
         "domain": VTParams("domain", 1, "", "get", "domain", None),
-    }  # type: Dict[str, VTParams]
+    }
 
-    _RESULT_COLUMNS = [
+    _RESULT_COLUMNS: List[str] = [
         "Observable",
         "IoCType",
         "Status",
@@ -167,7 +166,7 @@ class VTLookup:
         return list(self._VT_API_TYPES.keys())
 
     @property
-    def ioc_vt_type_mapping(self) -> Dict[str, Optional[str]]:
+    def ioc_vt_type_mapping(self) -> Dict[str, str]:
         """
         Return mapping between internal and VirusTotal IoC type names.
 
@@ -314,6 +313,7 @@ class VTLookup:
 
         return self.results
 
+# pylint: disable=too-many-locals, too-many-arguments
     def _lookup_ioc_type(self,
                          input_frame: pd.DataFrame,
                          ioc_type: str,
@@ -463,7 +463,7 @@ class VTLookup:
         else:
             observables = [observable]
 
-        # pylint: disable=locally-disabled, C0200
+        # pylint: disable=locally-disabled, consider-using-enumerate
         for result_idx in range(0, len(results_to_parse)):
             df_dict_vtresults = self._parse_single_result(
                 results_to_parse[result_idx], ioc_type
@@ -549,7 +549,7 @@ class VTLookup:
                 df_dict_vtresults["SHA1"] = results_dict.get("sha1", None)
                 df_dict_vtresults["SHA256"] = results_dict.get("sha256", None)
 
-        if ioc_type == "ipv4" or ioc_type == "dns":
+        if ioc_type in ["ipv4", "dns"]:
             df_dict_vtresults["ResponseCode"] = results_dict.get("response_code", None)
             df_dict_vtresults["VerboseMsg"] = results_dict.get("verbose_msg", None)
             # dns and ipv4 have multi-valued 'resolutions' and 'detected_urls' lists
@@ -767,13 +767,13 @@ class VTLookup:
             response = requests.get(submit_url, params=params, headers=headers)
         if response.status_code == 200:
             return response.json(), response.status_code
-        else:
-            if response:
-                try:
-                    return response.json(), response.status_code
-                except JSONDecodeError:
-                    pass
-            return None, response.status_code
+
+        if response:
+            try:
+                return response.json(), response.status_code
+            except JSONDecodeError:
+                pass
+        return None, response.status_code
 
     def _preprocess_observable(self, observable, ioc_type) -> PreProcessResult:
         """
@@ -931,7 +931,7 @@ class VTLookup:
         except ValueError:
             pass
         try:
-            _ = socket.gethostbyname(domain)
+            socket.gethostbyname(domain)
         except gaierror:
             return PreProcessResult(None, "Domain not resolvable")
 

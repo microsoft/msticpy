@@ -6,7 +6,7 @@
 """Auditd extractor."""
 import codecs
 from datetime import datetime
-from typing import Mapping, Any, Tuple, Dict
+from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 
 import pandas as pd
 
@@ -16,35 +16,44 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 # Constants
-_ENCODED_PARAMS = {'EXECVE': {'a0', 'a1', 'a2', 'a3', 'arch'},
-                   'PROCTITLE': {'proctitle'},
-                   'USER_CMD': {'cmd'}}
+# Fields that we know are frequently encoded
+_ENCODED_PARAMS: Dict[str, Set[str]] = {
+    'EXECVE': {'a0', 'a1', 'a2', 'a3', 'arch'},
+    'PROCTITLE': {'proctitle'},
+    'USER_CMD': {'cmd'},
+}
 
-_USER_START = {'pid': 'int', 'uid': 'int', 'auid': 'int',
-               'ses': 'int', 'msg': None, 'acct': None, 'exe': None,
-               'hostname': None, 'addr': None, 'terminal': None,
-               'res': None}
-_FIELD_DEFS = {'SYSCALL': {'success': None, 'ppid': 'int', 'pid': 'int',
-                           'auid': 'int', 'uid': 'int', 'gid': 'int',
-                           'euid': 'int', 'egid': 'int', 'ses': 'int',
-                           'exe': None, 'com': None},
-               'CWD': {'cwd': None},
-               'PROCTITLE': {'proctitle': None},
-               'LOGIN': {'pid': 'int', 'uid': 'int', 'tty': None, 'old-ses': 'int',
-                         'ses': 'int', 'res': None},
-               'EXECVE': {'argc': 'int', 'a0': None, 'a1': None, 'a2': None},
-               '_USER_START': _USER_START,
-               'USER_END': _USER_START,
-               'CRED_DISP': _USER_START,
-               'USER_ACCT': _USER_START,
-               'CRED_ACQ': _USER_START,
-               'USER_CMD': {'pid': 'int', 'uid': 'int', 'auid': 'int',
-                            'ses': 'int', 'msg': None, 'cmd': None,
-                            'terminal': None, 'res': None},
-               }
+# USER_START message schema
+_USER_START: Dict[str, Optional[str]] = {
+    'pid': 'int', 'uid': 'int', 'auid': 'int',
+    'ses': 'int', 'msg': None, 'acct': None, 'exe': None,
+    'hostname': None, 'addr': None, 'terminal': None,
+    'res': None,
+}
+
+# Message types schema
+_FIELD_DEFS: Dict[str, Dict[str, Optional[str]]] = {
+    'SYSCALL': {'success': None, 'ppid': 'int', 'pid': 'int',
+                'auid': 'int', 'uid': 'int', 'gid': 'int',
+                'euid': 'int', 'egid': 'int', 'ses': 'int',
+                'exe': None, 'com': None},
+    'CWD': {'cwd': None},
+    'PROCTITLE': {'proctitle': None},
+    'LOGIN': {'pid': 'int', 'uid': 'int', 'tty': None, 'old-ses': 'int',
+              'ses': 'int', 'res': None},
+    'EXECVE': {'argc': 'int', 'a0': None, 'a1': None, 'a2': None},
+    '_USER_START': _USER_START,
+    'USER_END': _USER_START,
+    'CRED_DISP': _USER_START,
+    'USER_ACCT': _USER_START,
+    'CRED_ACQ': _USER_START,
+    'USER_CMD': {'pid': 'int', 'uid': 'int', 'auid': 'int',
+                 'ses': 'int', 'msg': None, 'cmd': None,
+                 'terminal': None, 'res': None},
+}
 
 
-def unpack_auditd(audit_str: str) -> Mapping[str, Any]:
+def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, Any]]:
     """
     Unpack an Audit message and returns a dictionary of fields.
 
@@ -59,13 +68,20 @@ def unpack_auditd(audit_str: str) -> Mapping[str, Any]:
         The extracted message fields and values
 
     """
-    event_dict = {}
-    for record in audit_str:
+    event_dict: Dict[str, Dict[str, Any]] = {}
 
+    # The audit_str is a list of dicts - '{EXECVE : {'p1': 'foo', p2: 'bar'...},
+    #                                      PATH: {'a1': 'xyz',....}}
+    for record in audit_str:
+        # process a single message type, splitting into type name
+        # and contents
         for rec_key, rec_val in record.items():
-            rec_dict = {}
+            rec_dict: Dict[str, Optional[str]] = {}
+            # Get our field mapping for encoded params for this
+            # mssg_type (rec_key)
             encoded_fields_map = _ENCODED_PARAMS.get(rec_key, None)
             for rec_item in rec_val:
+                # for each mssg item, split into k/v pair
                 rec_split = rec_item.split('=', maxsplit=1)
                 if len(rec_split) == 1:
                     rec_dict[rec_split[0]] = None
@@ -75,8 +91,12 @@ def unpack_auditd(audit_str: str) -> Mapping[str, Any]:
                     field_value = rec_split[1].strip('\"')
                 else:
                     try:
+                        # Try to decode this from hex-string to text
+                        # Mypy thinks codecs.decode returns a str so
+                        # incorrectly issues a type warning - in this case it
+                        # will return a bytes string.
                         field_value = codecs.decode(
-                            rec_split[1], 'hex').decode('utf-8')
+                            bytes(rec_split[1], 'utf-8'), 'hex').decode('utf-8')
                     except ValueError:
                         field_value = rec_split[1]
                         print(rec_val)
@@ -105,7 +125,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
     """
     # Handle process executions specially
     if 'SYSCALL' in message_dict and 'EXECVE' in message_dict:
-        proc_create_dict = {}
+        proc_create_dict: Dict[str, Any] = {}
         for mssg_type in ['SYSCALL', 'CWD', 'EXECVE', 'PROCTITLE']:
             if (mssg_type not in message_dict or
                     mssg_type not in _FIELD_DEFS):
@@ -121,7 +141,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
                 proc_create_dict['cmdline'] = ' '.join(arg_strs)
         return 'SYSCALL_EXECVE', proc_create_dict
 
-    event_dict = {}
+    event_dict: Dict[str, Any] = {}
     for mssg_type, _ in message_dict.items():
         if mssg_type in _FIELD_DEFS:
             _extract_mssg_value(mssg_type, message_dict, event_dict)
@@ -134,7 +154,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 
 
 def _extract_mssg_value(mssg_type: str,
-                        message_dict: Mapping[str, str],
+                        message_dict: Mapping[str, Mapping[str, Any]],
                         event_dict: Dict[str, Any]):
     """
     Extract field/value from the message dictionary.
@@ -149,6 +169,8 @@ def _extract_mssg_value(mssg_type: str,
         The output dictionary
 
     """
+    # if the field requires conversion conv will specify the
+    # target type - only int currently
     for fieldname, conv in _FIELD_DEFS[mssg_type].items():
         value = message_dict[mssg_type].get(fieldname, None)
         if not value:
@@ -214,6 +236,10 @@ def extract_events_to_df(data: pd.DataFrame,
         start_time = datetime.utcnow()
         print(f'Unpacking auditd messages for {len(data)} events...')
 
+    # Our first pandas expression does most of the work - unpacking the
+    # column contents, then extracting these into a two columns
+    # EventType (the main auditd mssg type) and a dict of k/v values
+    # EventData
     tmp_df = (data.apply(lambda x: _extract_event(unpack_auditd(x[input_column])),
                          axis=1, result_type='expand')
               .rename(columns={0: 'EventType',
@@ -228,6 +254,11 @@ def extract_events_to_df(data: pd.DataFrame,
     if verbose:
         print('Building output dataframe...')
 
+    # We convert the EventData dict into a series,
+    # then merge with:
+    # First - the intermediate input DF to add back the EventType column
+    # Second - the original input DF to add back metadata columns like Computer
+    # Finally get rid of any empty columns
     tmp_df = (tmp_df.apply(lambda x: pd.Series(x.EventData), axis=1)
               .merge(tmp_df[['EventType']], left_index=True, right_index=True)
               .merge(data.drop([input_column], axis=1),

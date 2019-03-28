@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 import pandas as pd
 
 from . entityschema import (Entity, Host, Process, Account, IpAddress,
-                            HostLogonSession, File)
+                            HostLogonSession)
 from . security_base import SecurityBase
 from . utility import export
 from .. _version import VERSION
@@ -29,7 +29,7 @@ class SecurityEvent(SecurityBase):
             :param src_row: Pandas series containing single security event
         """
         self._source_data = src_row
-        
+
         super().__init__(src_row=src_row)
 
         self._extract_entities(src_row)

@@ -33,6 +33,7 @@ class Entity(ABC):
     Implements common methods for Entity classes
     """
 
+    ENTITY_NAME_MAP: Dict[str, Type] = {}
     _entity_schema = {}  # type: Mapping[str, Any]
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
@@ -253,8 +254,12 @@ class Entity(ABC):
             return raw_entity
 
         entity_type = raw_entity['Type']
-        if entity_type in _ENTITY_NAME_MAP:
-            return _ENTITY_NAME_MAP[entity_type](raw_entity)
+
+        # We get an undefined-variable warning here. _ENTITY_NAME_MAP
+        # is not defined/populated until end of module since it needs
+        # entity
+        if entity_type in cls.ENTITY_NAME_MAP:
+            return cls.ENTITY_NAME_MAP[entity_type](raw_entity)
 
         raise TypeError(
             'Could not find a suitable type for {}'.format(entity_type))
@@ -1313,7 +1318,7 @@ class UnknownEntity(Entity):
 
 
 # Dictionary to map text names of types to the class.
-_ENTITY_NAME_MAP: Dict[str, Type] = {
+Entity.ENTITY_NAME_MAP.update({
     'account': Account,
     'host': Host,
     'process': Process,
@@ -1335,4 +1340,4 @@ _ENTITY_NAME_MAP: Dict[str, Type] = {
     'securitygroup': SecurityGroup,
     'alerts': Alert,
     'alert': Alert,
-}
+})

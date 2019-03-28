@@ -98,10 +98,9 @@ class Observations:
             (the default is None)
 
         """
-        self.observation_list = OrderedDict()
+        self.observation_list: Dict[str, Observation] = OrderedDict()
         if observationlist is not None:
             self.observation_list.update(observationlist.observations)
-
 
     @property
     def observations(self) -> Mapping[str, Observation]:
