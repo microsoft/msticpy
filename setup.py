@@ -42,7 +42,7 @@ setuptools.setup(
     description="MSTIC Security Tools",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://https://github.com/ianhelle/msyticpy",
+    url="https://https://github.com/microsoft/msticpy",
     python_requires='>=3.6',
     packages=setuptools.find_packages(exclude=['*.tests']),
     classifiers=[
