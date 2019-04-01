@@ -4,20 +4,22 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
-from collections.abc import Iterable
+from typing import Iterable
 from numbers import Number
 import warnings
 
 import folium
 
-# pylint: enable=locally-disabled, W0611
+# pylint: enable=locally-disabled, unused-import
 from . utility import export
+from . entityschema import IpAddress
 from .. _version import VERSION
 
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
+# pylint: disable=too-many-arguments
 @export
 class FoliumMap():
     """Wrapper class for Folium/Leaflet mapping."""
@@ -27,32 +29,41 @@ class FoliumMap():
         """
         Create an instance of the folium map.
 
-        Keyword Arguments:
-            title {str} -- Name of the layer (default: {'layer1'})
-            zoom_start {int} -- The zoom level of the map (default: {7})
-            tiles {[type]} -- Custom set of tiles or tile URL (default: {None})
-            width {str} -- Map display width (default: {'100%'})
-            height {str} -- Map display height (default: {'100%'})
+        Parameters
+        ----------
+        title : str, optional
+            Name of the layer (the default is 'layer1')
+        zoom_start : int, optional
+            The zoom level of the map (the default is 7)
+        tiles : [type], optional
+            Custom set of tiles or tile URL (the default is None)
+        width : str, optional
+            Map display width (the default is '100%')
+        height : str, optional
+            Map display height (the default is '100%')
 
         """
         self.folium_map = folium.Map(
             zoom_start=zoom_start, tiles=tiles, width=width, height=height)
         self.folium_map.add_tile_layer(name=title)
 
-    def add_ip_cluster(self, ip_entities: Iterable, **kwargs):
+    def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
         Add a collection of IP Entities to the map.
 
-        Arguments:
-            ip_entities {Iterable} -- a list of IpAddress Entities
+        Parameters
+        ----------
+        ip_entities : Iterable[IpAddress]
+            a iterable of IpAddress Entities
 
-        Keyword Arguments:
+        Other Parameters
+        ----------------
             kwargs: icon properties to use for displaying this cluster
 
         """
         for ip_entity in ip_entities:
-            if not (isinstance(ip_entity.Location.Latitude, Number) and
-                    isinstance(ip_entity.Location.Longitude, Number)):
+            if not (isinstance(ip_entity.Location.Latitude, Number)
+                    and isinstance(ip_entity.Location.Longitude, Number)):
                 warnings.warn("Invalid location information for IP: " + ip_entity.Address,
                               RuntimeWarning)
                 continue

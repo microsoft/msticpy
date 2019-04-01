@@ -7,7 +7,7 @@
 
 import re
 from collections import namedtuple, defaultdict
-from typing import Any, List, Mapping, Set
+from typing import Any, List, Mapping, Set, Dict, Tuple
 from urllib.parse import unquote
 
 import pandas as pd
@@ -26,7 +26,7 @@ IoCPattern = namedtuple('IoCPattern', ['ioc_type', 'comp_regex', 'priority'])
 
 
 @export
-class IoCExtract(object):
+class IoCExtract:
     """
     IoC Extractor - looks for common IoC patterns in input strings.
 
@@ -73,7 +73,8 @@ class IoCExtract(object):
             (?P<folder>\\(?:[^\/:*?"\'<>|\r\n]+\\)*)
             (?P<file>[^\\/*?""<>|\r\n ]+)'''
     # Linux simplified - this ignores some legal linux paths avoid matching too much
-    # TODO - also matches URLs!
+    # This also matches URLs but these should be thrown out by priority
+    # weighting since URL has a higher priority
     LXPATH_REGEX = r'''(?P<root>/+||[.]+)
             (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
             (?P<file>[^/\0<>|\r\n ]+)'''
@@ -82,7 +83,7 @@ class IoCExtract(object):
     SHA1_REGEX = r'(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])'
     SHA256_REGEX = r'(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])'
 
-    _content_regex = {}
+    _content_regex: Dict[str, IoCPattern] = {}
 
     def __init__(self):
         """Intialize new instance of IoCExtract."""
@@ -91,7 +92,9 @@ class IoCExtract(object):
         self.add_ioc_type('ipv6', self.IPV6_REGEX, 0)
 
         # Dns Domains
-        # TODO - This also matches IP addresses
+        # This also matches IP addresses but IPs have higher
+        # priority both matching on the same substring will defer
+        # to the IP regex
         self.add_ioc_type('dns', self.DNS_REGEX, 1)
 
         # Http requests
@@ -157,6 +160,7 @@ class IoCExtract(object):
         """
         return self._content_regex
 
+# pylint: disable=too-many-arguments, too-many-locals
     def extract(self, src: str = None,
                 data: pd.DataFrame = None,
                 columns: List[str] = None,
@@ -288,8 +292,8 @@ class IoCExtract(object):
                        os_family: str,
                        ioc_types: List[str] = None) -> Mapping[str, Set[str]]:
         """Return IoCs found in the string."""
-        ioc_results = defaultdict(set)
-        iocs_found = {}
+        ioc_results: Dict[str, Set] = defaultdict(set)
+        iocs_found: Dict[str, Tuple[str, int]] = {}
 
         for (ioc_type, rgx_def) in self._content_regex.items():
             if ioc_types and ioc_type not in ioc_types:
@@ -302,24 +306,24 @@ class IoCExtract(object):
 
             match_pos = 0
             for rgx_match in rgx_def.comp_regex.finditer(src, match_pos):
-                if rgx_match is not None:
-                    self._add_highest_pri_match(iocs_found,
-                                                rgx_match.group(),
-                                                rgx_def)
-                    if ioc_type == 'url':
-                        decoded_url = unquote(rgx_match.group())
-                        for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
-                            if url_match is not None:
-                                self._add_highest_pri_match(iocs_found,
-                                                            url_match.group(),
-                                                            rgx_def)
-                                self._add_highest_pri_match(iocs_found,
-                                                            url_match.groupdict()[
-                                                                'host'],
-                                                            self._content_regex['dns'])
-                    match_pos = rgx_match.end()
-                else:
+                if rgx_match is None:
                     break
+                self._add_highest_pri_match(iocs_found,
+                                            rgx_match.group(),
+                                            rgx_def)
+                if ioc_type == 'url':
+                    decoded_url = unquote(rgx_match.group())
+                    for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
+                        if url_match is not None:
+                            self._add_highest_pri_match(iocs_found,
+                                                        url_match.group(),
+                                                        rgx_def)
+                            self._add_highest_pri_match(iocs_found,
+                                                        url_match.groupdict()[
+                                                            'host'],
+                                                        self._content_regex['dns'])
+                match_pos = rgx_match.end()
+
         for ioc, ioc_result in iocs_found.items():
             ioc_results[ioc_result[0]].add(ioc)
 

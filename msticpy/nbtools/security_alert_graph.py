@@ -28,8 +28,8 @@ def create_alert_graph(alert: SecurityAlert):
     alertentity_graph.add_node(alert['AlertType'],
                                name=alert['AlertType'],
                                time=str(alert['StartTimeUtc']),
-                               description='Alert: ' +
-                               alert['AlertDisplayName'],
+                               description='Alert: '
+                               + alert['AlertDisplayName'],
                                color='red',
                                node_type='alert')
 
@@ -154,6 +154,7 @@ def _find_graph_node(nx_graph, node_type, target_name):
              if n_type == node_type and n.startswith(node_prefix)]
     if nodes:
         return nodes[0]
+    return None
 
 
 def _add_related_alert_edge(nx_graph, source, target):
@@ -180,8 +181,7 @@ def _get_account_qualified_name(account):
         name = account['Name']
     if 'NTDomain' in account:
         return '{}\\{}'.format(account['NTDomain'], name)
-    else:
-        return name
+    return name
 
 
 def _get_name_and_description(entity, os_family='Windows'):
@@ -230,8 +230,8 @@ def _get_other_name_desc(entity):
 
     # Nasty dict comprehension to join all other items in the dictionary into a string
     e_properties = '\n'.join({'{}:{}'.format(k, v) for (k, v)
-                              in ent_props.items() if (k not in ('Type', 'Name') and
-                                                       isinstance(v, str))})
+                              in ent_props.items() if (k not in ('Type', 'Name')
+                                                       and isinstance(v, str))})
     e_description = '{}\n{})'.format(e_name, e_properties)
     return e_name, e_description
 
@@ -272,8 +272,8 @@ def _get_process_name_desc(entity):
 
 
 def _get_account_name_desc(entity):
-    e_name = (entity['NTDomain'] +
-              '\\' if 'NTDomain' in entity else '') + entity['Name']
+    e_dom = entity['NTDomain'] + '\\' if 'NTDomain' in entity else ''
+    e_name = e_dom + entity['Name']
     e_name = '{}: {}'.format(entity['Type'], e_name)
     if 'IsDomainJoined' in entity:
         domain_joined = entity['IsDomainJoined']

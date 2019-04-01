@@ -8,22 +8,24 @@ import html
 import re
 from datetime import datetime
 from collections import Counter
+from typing import List, Dict, Any, Optional, Union, Mapping
 
 import pandas as pd
 
-from .entityschema import Process
+from .entityschema import Entity, Process, Account, Host
 from .query_defns import QueryParamProvider, DataFamily, DataEnvironment
 from .utility import is_not_empty, escape_windows_path
-from . utility import export
+from . utility import export, deprecated
 from .. _version import VERSION
 
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
-_ID_PROPERTIES = ['AzSubscriptionId', 'AzResourceId', 'WorkspaceId', 'AgentId',
-                  'TenantId', 'SourceComputerId', 'ResourceId',
-                  'WorkspaceSubscriptionId', 'WorkspaceResourceGroup',
-                  'ProviderAlertId', 'SystemAlertId', 'ResourceId']
+_ID_PROPERTIES: List[str] = ['AzSubscriptionId', 'AzResourceId',
+                             'WorkspaceId', 'AgentId', 'TenantId',
+                             'SourceComputerId', 'ResourceId',
+                             'WorkspaceSubscriptionId', 'WorkspaceResourceGroup',
+                             'ProviderAlertId', 'SystemAlertId', 'ResourceId']
 
 
 @export
@@ -37,15 +39,16 @@ class SecurityBase(QueryParamProvider):
 
     def __init__(self, src_row: pd.Series = None):
         """Instantiate a security alert from a pandas Series."""
-        self._source_data = src_row
-        self._custom_query_params = {}
-        self._entities = []
+        self._source_data: pd.Series = src_row
+        self._custom_query_params: Dict[str, Any] = {}
+        self._entities: List[Entity] = []
 
         # Extract and cache alert ID properties
-        self._ids = dict()
-        for id_property in _ID_PROPERTIES:
-            if id_property in self._source_data:
-                self._ids[id_property] = self._source_data[id_property]
+        self._ids: Dict[str, str] = dict()
+        if self._source_data is not None:
+            for id_property in _ID_PROPERTIES:
+                if id_property in self._source_data:
+                    self._ids[id_property] = self._source_data[id_property]
 
         self.path_separator = '\\'
         self.os_family = 'Windows'
@@ -55,10 +58,9 @@ class SecurityBase(QueryParamProvider):
         """Allow property get using dictionary key syntax."""
         if key in self.__dict__:
             return self.__dict__[key]
-        elif key in self._source_data:
+        if key in self._source_data:
             return self._source_data[key]
-        else:
-            raise KeyError
+        raise KeyError
 
     def __setitem__(self, key, value):
         """Allow property set using dictionary key syntax."""
@@ -105,17 +107,38 @@ class SecurityBase(QueryParamProvider):
 
     # Properties
     @property
-    def entities(self):
-        """Return a list of the Security Alert entities."""
+    def entities(self) -> List[Entity]:
+        """
+        Return a list of the Alert or Event entities.
+
+        Returns
+        -------
+        List[Entity]
+            List of the Alert or Event entities.
+
+        """
         return self._entities
 
     @property
-    def hostname(self):
+    def properties(self) -> Mapping[str, Any]:
+        """
+        Return a dictionary of the Alert or Event properties.
+
+        Returns
+        -------
+        Mapping[str, Any]
+            dictionary of the Alert or Event properties.
+
+        """
+        return self._source_data
+
+    @property
+    def hostname(self) -> str:
         """Return the Hostname (not FQDN) of the host associated with the alert."""
         return self.get_entity_property(entity_type='host', entity_property='HostName')
 
     @property
-    def computer(self):
+    def computer(self) -> Optional[str]:
         """
         Return the Computer name of the host associated with the alert.
 
@@ -124,43 +147,61 @@ class SecurityBase(QueryParamProvider):
         return self.primary_host.computer if self.primary_host is not None else None
 
     @property
-    def ids(self):
+    def ids(self) -> Dict[str, str]:
         """Return a collection of Identity properties for the alert."""
         return self._ids
 
     @property
-    def is_in_workspace(self):
+    def is_in_workspace(self) -> bool:
         """Return True if the alert has a Log Analytics WorkspaceID."""
         return 'WorkspaceId' in self._ids and 'AgentId' in self._ids
 
     @property
-    def is_in_log_analytics(self):
+    def is_in_log_analytics(self) -> bool:
         """Return True if the alert originates from a Log Analytics Workspace host."""
         return 'TenantId' in self._ids
 
     @property
-    def is_in_azure_sub(self):
+    def is_in_azure_sub(self) -> bool:
         """Return True if the alert originates from an Azure Security Center host."""
-        if ('AzSubscriptionId' not in self._ids and
-                'AzResourceId' not in self._ids and
-                'ResourceId' in self._ids and self._ids['ResourceId']):
+        if ('AzSubscriptionId' not in self._ids
+                and 'AzResourceId' not in self._ids
+                and 'ResourceId' in self._ids
+                and self._ids['ResourceId']):
             self._ids['AzResourceId'] = self._id['ResourceId']
-            self._ids['AzSubscriptionId'] = (
-                self._get_subscription_from_resource(self._id['ResourceId']))
+            res = self._get_subscription_from_resource(self._id['ResourceId'])
+            if res:
+                self._ids['AzSubscriptionId'] = res
 
         return 'AzSubscriptionId' in self._ids and 'AzResourceId' in self._ids
 
     @property
-    def primary_host(self):
-        """Return the Primary host entity of the host associated with the alert."""
+    def primary_host(self) -> Optional[Union[Host, Entity]]:
+        """
+        Return the primary host entity (if any) associated with this object.
+
+        Returns
+        -------
+        Optional[Host]
+            primary host entity (if any)
+
+        """
         hosts = self.get_entities_of_type('host')
         if hosts:
             return hosts[0]
         return None
 
     @property
-    def primary_process(self):
-        """Return the primary process entity (if any) associated with the alert."""
+    def primary_process(self) -> Optional[Union[Process, Entity]]:
+        """
+        Return the primary process entity (if any) associated with this object.
+
+        Returns
+        -------
+        Optional[Process]
+            primary process entity (if any)
+
+        """
         procs = self.get_entities_of_type('process')
         if not procs:
             return None
@@ -172,18 +213,28 @@ class SecurityBase(QueryParamProvider):
         return procs_with_parent[0] if procs_with_parent else procs[0]
 
     @property
-    def primary_account(self):
-        """Return the primary account entity (if any) associated with this object."""
+    def primary_account(self) -> Optional[Union[Process, Entity]]:
+        """
+        Return the primary account entity (if any) associated with this object.
+
+        Returns
+        -------
+        Optional[Process]
+            primary account entity (if any)
+
+        """
         accts = self.get_entities_of_type('account')
         return accts[0] if accts else None
 
     @property
-    def query_params(self):
+    def query_params(self) -> Dict[str, Any]:
         """
         Query parameters derived from alert.
 
-        Returns:
-            dict(str, str) -- Dictionary of parameter names
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of parameter names/values
 
         """
         try:
@@ -224,34 +275,47 @@ class SecurityBase(QueryParamProvider):
         """Return the data family of the alert for subsequent queries."""
         if self.os_family == 'Linux':
             return DataFamily.LinuxSecurity
-        elif self.os_family == 'Windows':
+        if self.os_family == 'Windows':
             return DataFamily.WindowsSecurity
-        return None
+        raise ValueError('Unknown Data family.')
 
     @property
     def data_environment(self) -> DataEnvironment:
         """Return the data environment of the alert for subsequent queries."""
         if self.is_in_log_analytics:
             return DataEnvironment.LogAnalytics
-        else:
-            return DataEnvironment.Kusto
+        return DataEnvironment.Kusto
 
     @property
     def origin_time(self) -> datetime:
         """Return the datetime of event."""
         return self.TimeGenerated
 
-    def get_entity_property(self, entity_property, entity_type=None, entity=None):
+    @deprecated('Use properties of entity directly.')
+    def get_entity_property(self, entity_property: str,
+                            entity_type: str = None,
+                            entity: Entity = None) -> Any:
         """
         Return the value of the named entity property.
-
-            :param entity_property: the name of the property to return
-            :param entity_type=None: the name of the entity type (optional if entity is supplied)
-            :param entity=None: the target entity.
 
         If the entity parameter is not supplied the function will return the
         property value of the first entity of the current alert that
         matches the specified type and has a property of entity_property
+
+        Parameters
+        ----------
+        entity_property : str
+            The name of the property to return
+        entity_type : str, optional
+            The name of the entity type (optional if entity is supplied)
+            (the default is None)
+        entity : Entity, optional
+            Source Entity (the default is None)
+
+        Returns
+        -------
+        Any
+            The retrieved value or None.
 
         """
         if entity and entity_property in entity:
@@ -260,39 +324,70 @@ class SecurityBase(QueryParamProvider):
         if self.entities is not None:
             for test_entity in [entity for entity in self.entities
                                 if entity['Type'] == entity_type]:
-                if (test_entity and entity_property in test_entity and
-                        is_not_empty(test_entity[entity_property])):
+                if (test_entity
+                        and entity_property in test_entity
+                        and is_not_empty(test_entity[entity_property])):
                     return test_entity[entity_property]
         return None
 
-    def get_logon_id(self, account=None):
+    def get_logon_id(self, account: Account = None) -> Optional[Union[str, int]]:
         """
         Get the logon Id for the alert or the account, if supplied.
 
-        if the account entity is not supplied, return the logon id
+        If `account` is not supplied, return the logon id
         of the first host-logon-session or account entity.
+
+        Parameters
+        ----------
+        account : Account, optional
+            Account objec to use (the default is None)
+
+        Returns
+        -------
+        Optional[Union[str, int]]
+            The logon Id for primary account
+
         """
-        for session in [e for e in self.entities if
-                        e['Type'] == 'host-logon-session' or e['Type'] == 'hostlogonsession']:
+        for session in [e for e in self.entities
+                        if e['Type'] == 'host-logon-session'
+                        or e['Type'] == 'hostlogonsession']:
             if account is None or session['Account'] == account:
                 return session['SessionId']
         if account is None:
-            for acct in [e for e in self.entities if e['Type'] == 'account' and 'LogonId' in e]:
+            for acct in [e for e in self.entities
+                         if e['Type'] == 'account' and 'LogonId' in e]:
                 return acct['LogonId']
         elif 'LogonId' in account:
             return account['LogonId']
         return None
 
-    def get_process_name(self, process):
-        """Return the process (filename) of the process."""
+    @deprecated('Use properties of entity directly.')
+    def get_process_name(self, process: Process) -> Optional[str]:
+        """
+        Return the process (filename) of the process.
+
+        If `process` is not supplied, return the filename
+        of the first process entity.
+        Parameters
+        ----------
+        process : Process
+            [description]
+
+        Returns
+        -------
+        Optional[str]
+            Process name or None.
+
+        """
         if isinstance(process, Process) and process.ProcessFilePath:
             return process.ProcessFilePath
         if 'ImageFile' in process:
             if 'FullPath' in process['ImageFile']:
                 return process['ImageFile']['FullPath']
-            elif 'Directory' in process['ImageFile']:
-                return (process['ImageFile']['Directory'] +
-                        self.path_separator + process['ImageFile']['Name'])
+            if 'Directory' in process['ImageFile']:
+                return (process['ImageFile']['Directory']
+                        + self.path_separator
+                        + process['ImageFile']['Name'])
         return None
 
     def subscription_filter(self, operator='=='):
@@ -304,6 +399,7 @@ class SecurityBase(QueryParamProvider):
                     .format(operator, self._ids['AzSubscriptionId']))
         if self.is_in_workspace:
             return 'WorkspaceId {} \'{}\''.format(operator, self._ids['WorkspaceId'])
+
         # Otherwise we default to including everything
         return 'true'
 
@@ -314,29 +410,49 @@ class SecurityBase(QueryParamProvider):
             :param operator='==': the operator to use in the filter clause.
                 '==' and '!=' typically.
         """
-        if (self.is_in_log_analytics and 'SourceComputerId' in self._ids and
-                self._ids['SourceComputerId']):
-            return 'SourceComputerId {} \'{}\''.format(operator, self._ids['SourceComputerId'])
-        if (self.is_in_azure_sub and 'AzureResourceId' in self._ids and
-                self._ids['AzResourceId']):
-            return 'AzureResourceId {} \'{}\''.format(operator, self._ids['AzResourceId'])
-        if self.is_in_workspace and 'AgendId' in self._ids and self._ids['AgentId']:
-            return 'AgentId {} \'{}\''.format(operator, self._ids['AgentId'])
-
         if self.primary_host:
             case_insens_op = '=~' if operator == '==' else '!~'
-            return 'Computer {} \'{}\''.format(case_insens_op, self.primary_host.computer)
+            return 'Computer {} \'{}\''.format(case_insens_op,
+                                               self.primary_host.computer)
+
+        if (self.is_in_log_analytics
+                and 'SourceComputerId' in self._ids
+                and self._ids['SourceComputerId']):
+            return 'SourceComputerId {} \'{}\''.format(operator,
+                                                       self._ids['SourceComputerId'])
+        if (self.is_in_azure_sub
+                and 'AzureResourceId' in self._ids
+                and self._ids['AzResourceId']):
+            return 'AzureResourceId {} \'{}\''.format(operator,
+                                                      self._ids['AzResourceId'])
+        if (self.is_in_workspace
+                and 'AgendId' in self._ids
+                and self._ids['AgentId']):
+            return 'AgentId {} \'{}\''.format(operator, self._ids['AgentId'])
         return None
 
-    def get_entities_of_type(self, entity_type='host'):
-        """Return entity collection for a give entity type."""
+    def get_entities_of_type(self, entity_type: str) -> List[Entity]:
+        """
+        Return entity collection for a give entity type.
+
+        Parameters
+        ----------
+        entity_type : str, optional
+            The entity type.
+
+        Returns
+        -------
+        List[Entity]
+            The entities matching `entity_type`.
+
+        """
         return [p for p in self.entities if p['Type'] == entity_type]
 
-    def to_html(self, show_entities=False):
+    def to_html(self, show_entities: bool = False) -> str:
         """Return the item as HTML string."""
         html_doc = pd.DataFrame(self._source_data).to_html()
 
-        if 'ExtendedProperties' in self._source_data:
+        if self._source_data is not None and 'ExtendedProperties' in self._source_data:
             ext_prop_title = '<br/><h3>ExtendedProperties:</h3>'
             ext_prop_html = pd.DataFrame(
                 pd.Series(self._source_data['ExtendedProperties'])).to_html()
@@ -389,9 +505,11 @@ class SecurityBase(QueryParamProvider):
                         break
 
     @staticmethod
-    def _get_subscription_from_resource(resource_id):
+    def _get_subscription_from_resource(resource_id) -> Optional[str]:
         """Extract subscription Id from resource string."""
         sub_regex = r'^/subscriptions/([^/]+)/'
         sub_ids = re.findall(sub_regex, resource_id, re.RegexFlag.I)
         if sub_ids:
             return sub_ids[0]
+
+        return None

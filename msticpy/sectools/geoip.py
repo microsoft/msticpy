@@ -12,7 +12,7 @@ import os
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Tuple, List, Mapping
+from typing import Tuple, List, Dict
 from IPython import get_ipython
 from IPython.display import display, HTML
 
@@ -47,7 +47,8 @@ class GeoIpLookup(metaclass=ABCMeta):
     @abstractmethod
     def lookup_ip(self, ip_address: str = None,
                   ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
+                  ip_entity: IpAddress = None) -> Tuple[List[Tuple[Dict[str, str], int]],
+                                                        List[IpAddress]]:
         """
         Lookup IP location abstract method.
 
@@ -134,7 +135,8 @@ class IPStackLookup(GeoIpLookup):
 
     def lookup_ip(self, ip_address: str = None,
                   ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
+                  ip_entity: IpAddress = None) -> Tuple[List[Tuple[Dict[str, str], int]],
+                                                        List[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
@@ -166,7 +168,7 @@ class IPStackLookup(GeoIpLookup):
         if ip_address and isinstance(ip_address, str):
             ip_list = [ip_address.strip()]
         elif ip_addr_list:
-            ip_list = (ip.strip() for ip in ip_addr_list)
+            ip_list = list((ip.strip() for ip in ip_addr_list))
         elif ip_entity:
             ip_list = [ip_entity.Address]
         else:
@@ -181,7 +183,7 @@ class IPStackLookup(GeoIpLookup):
 
         return results, output_entities
 
-    def _create_ip_entity(self, ip_loc: dict, ip_entity):
+    def _create_ip_entity(self, ip_loc: dict, ip_entity) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc['ip']
@@ -198,7 +200,7 @@ class IPStackLookup(GeoIpLookup):
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _submit_request(self, ip_list: List[str]) -> List[Tuple[str, int]]:
+    def _submit_request(self, ip_list: List[str]) -> List[Tuple[Dict[str, str], int]]:
         """
         Submit the request to IPStack.
 
@@ -229,33 +231,33 @@ class IPStackLookup(GeoIpLookup):
                                 (response.json(), response.status_code))
                             continue
                         except JSONDecodeError:
-                            ip_loc_results.append(None, response.status_code)
+                            ip_loc_results.append((None, response.status_code))
                     else:
                         print('Unknown response from IPStack request.')
-                        ip_loc_results.append(None, -1)
+                        ip_loc_results.append((None, -1))
             return ip_loc_results
-        else:
-            submit_url = self._IPSTACK_API.format(iplist=','.join(ip_list),
-                                                  access_key=self._api_key)
-            response = requests.get(submit_url)
+        
+        submit_url = self._IPSTACK_API.format(iplist=','.join(ip_list),
+                                                access_key=self._api_key)
+        response = requests.get(submit_url)
 
-            if response.status_code == 200:
-                results = response.json()
-                # {"success":false,"error":{"code":303,"type":"batch_not_supported_on_plan",
-                # "info":"Bulk requests are not supported on your plan.
-                # Please upgrade your subscription."}}
+        if response.status_code == 200:
+            results = response.json()
+            # {"success":false,"error":{"code":303,"type":"batch_not_supported_on_plan",
+            # "info":"Bulk requests are not supported on your plan.
+            # Please upgrade your subscription."}}
 
-                if 'success' in results and not results["success"]:
-                    raise PermissionError('Service unable to complete request. Error: {}'
-                                          .format(results['error']))
-                return [(item, response.status_code) for item in results]
-            else:
-                if response:
-                    try:
-                        return [(response.json(), response.status_code)]
-                    except JSONDecodeError:
-                        pass
-                return [(None, response.status_code)]
+            if 'success' in results and not results["success"]:
+                raise PermissionError('Service unable to complete request. Error: {}'
+                                        .format(results['error']))
+            return [(item, response.status_code) for item in results]
+        
+        if response:
+            try:
+                return [(response.json(), response.status_code)]
+            except JSONDecodeError:
+                pass
+        return [({}, response.status_code)]
 
 
 @export
@@ -277,21 +279,24 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = 'https://dev.maxmind.com/geoip/geoip2/geolite2/#Downloads'
     _DB_FILE = 'GeoLite2-City.mmdb'
 
+    # Check for out of date file
+    _last_mod_time = datetime.fromtimestamp(
+        os.path.getmtime(geolite2.filename))
+    _db_age = datetime.utcnow() - _last_mod_time
+    if _db_age > timedelta(40):
+        print(
+            f'{_DB_FILE} is over one month old. Update the maxminddb package')
+        print(
+            f'to refresh or download a new version from {_MAXMIND_DOWNLOAD}')
+
     def __init__(self):
         """Return new instance of GeoLiteLookup class."""
         self._reader = geolite2.reader()
-        last_mod_time = datetime.fromtimestamp(
-            os.path.getmtime(geolite2.filename))
-        db_age = datetime.utcnow() - last_mod_time
-        if db_age > timedelta(40):
-            print(
-                f'{self._DB_FILE} is over one month old. Update the maxminddb package')
-            print(
-                f'to refresh or download a new version from {self._MAXMIND_DOWNLOAD}')
 
     def lookup_ip(self, ip_address: str = None,
                   ip_addr_list: Iterable = None,
-                  ip_entity: IpAddress = None) -> Tuple[List[Mapping[str, str]], List[IpAddress]]:
+                  ip_entity: IpAddress = None) -> Tuple[List[Tuple[Dict[str, str], int]],
+                                                        List[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
@@ -315,7 +320,7 @@ class GeoLiteLookup(GeoIpLookup):
         if ip_address and isinstance(ip_address, str):
             ip_list = [ip_address.strip()]
         elif ip_addr_list:
-            ip_list = (ip.strip() for ip in ip_addr_list)
+            ip_list = list((ip.strip() for ip in ip_addr_list))
         elif ip_entity:
             ip_list = [ip_entity.Address]
         else:
@@ -332,7 +337,7 @@ class GeoLiteLookup(GeoIpLookup):
 
         return output_raw, output_entities
 
-    def _create_ip_entity(self, ip_address, geo_match: dict, ip_entity):
+    def _create_ip_entity(self, ip_address, geo_match: dict, ip_entity) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
