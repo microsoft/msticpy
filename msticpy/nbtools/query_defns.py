@@ -6,26 +6,18 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import List, Union
 
-from attr import attrs, attrib, Factory
+import attr
+from attr import Factory
 
 from . utility import export
+from .. _version import VERSION
+
+__version__ = VERSION
+__author__ = 'Ian Hellen'
 
 __all__ = ['KqlQuery']
-
-
-# Query definition
-@attrs
-class KqlQuery():
-    """KqlQuery definition."""
-
-    name = attrib(default=None)
-    query = attrib(default=None)
-    description = attrib(default=None)
-    data_source = attrib(default=None)
-    data_families = attrib(default=Factory(list))
-    data_environments = attrib(default=Factory(list))
-    optional_params = attrib(default=Factory(list))
 
 
 @export
@@ -42,11 +34,15 @@ class DataFamily(Enum):
     SecurityAlert = 3
 
     @classmethod
-    def parse(cls, value):
+    def parse(cls, value: Union[str, int]):
         """
-        Conver string or int to enum.
+        Convert string or int to enum.
 
-            :param value: value to parse
+        Parameters
+        ----------
+        value : Union[str, int]
+            value to parse
+
         """
         if isinstance(value, cls):
             return value
@@ -75,11 +71,15 @@ class DataEnvironment(Enum):
     Kusto = 2
 
     @classmethod
-    def parse(cls, value):
+    def parse(cls, value: Union[str, int]):
         """
-        Conver string or int to enum.
+        Convert string or int to enum.
 
-            :param value: value to parse
+        Parameters
+        ----------
+        value : Union[str, int]
+            value to parse
+
         """
         if isinstance(value, cls):
             return value
@@ -118,3 +118,17 @@ class QueryParamProvider(ABC):
 
         """
         return {}
+
+
+# Query definition
+@attr.s(auto_attribs=True)
+class KqlQuery():
+    """KqlQuery definition."""
+
+    name: str = ''
+    query: str = ''
+    description: str = ''
+    data_source: str = ''
+    data_families: List[DataFamily] = Factory(list)
+    data_environments: List[DataEnvironment] = Factory(list)
+    optional_params: List[str] = Factory(list)

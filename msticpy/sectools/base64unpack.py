@@ -31,7 +31,7 @@ import hashlib
 import io
 import re
 import tarfile
-from typing import Tuple, Any, Set, Mapping
+from typing import Tuple, Any, Set, Mapping, Optional, List, Dict
 import zipfile
 from collections import namedtuple
 
@@ -43,9 +43,11 @@ from .. _version import VERSION
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
-_RESULT_FIELDS = ['reference', 'original_string', 'file_name', 'file_type',
-                  'input_bytes', 'decoded_string', 'encoding_type',
-                  'file_hashes', 'md5', 'sha1', 'sha256', 'printable_bytes']
+_RESULT_FIELDS: List[str] = ['reference', 'original_string',
+                             'file_name', 'file_type',
+                             'input_bytes', 'decoded_string',
+                             'encoding_type', 'file_hashes',
+                             'md5', 'sha1', 'sha256', 'printable_bytes']
 
 BinaryRecord = namedtuple('BinaryRecord', _RESULT_FIELDS)
 
@@ -90,9 +92,9 @@ BASE64_REGEX_C = re.compile(_BASE64_REGEX, re.I | re.X)
 
 # When True prints see more verbose execution
 # (set from 'trace' parameter to unpack_items)
-# pylint: disable=locally-disabled, C0103
+# pylint: disable=locally-disabled, invalid-name
 _debug_trace = False
-# pylint: enable=locally-disabled, C0103
+# pylint: enable=locally-disabled, invalid-name
 
 
 @export
@@ -155,6 +157,7 @@ def unpack_items(input_string: str = None,
     frame. This allows you to re-join the output data to the input data.
 
     """
+    # pylint: disable=invalid-name, global-statement
     global _debug_trace
     _debug_trace = trace
 
@@ -189,11 +192,12 @@ def _debug_print_trace(*args):
         print()
 
 
-# base64 decoding
+# pylint: disable=too-many-locals
 def _decode_and_format_b64_string(b64encoded_string: str,
                                   item_prefix: str = None,
                                   current_depth: int = 1,
-                                  current_index: int = 1) -> Tuple[str, BinaryRecord]:
+                                  current_index: int = 1) -> Tuple[str,
+                                                                   Optional[List[BinaryRecord]]]:
     """Decode string and return displayable content plus list of decoded artifacts."""
     # Check if we recognize this as a known file type
     (_, f_type) = _is_known_b64_prefix(b64encoded_string)
@@ -216,49 +220,50 @@ def _decode_and_format_b64_string(b64encoded_string: str,
                               f'depth=\'{current_depth}\'>'
                               f'{out_record.decoded_string}</decoded>')
             return display_string, [out_record]
-        else:
-            # if a binary include printable bytes
-            display_string = (f'<decoded value=\'binary\'  name=\'{out_name}\' '
-                              f'type=\'{out_record.file_type}\' '
-                              f'index=\'{item_prefix}{current_index}\' '
-                              f'depth=\'{current_depth}\'>'
-                              f'{out_record.printable_bytes}</decoded>')
-            return display_string, [out_record]
-    else:
-        # Build header display string
-        display_header = (f'<decoded value=\'multiple binary\' type=\'multiple\' '
+
+        # if a binary include printable bytes
+        display_string = (f'<decoded value=\'binary\'  name=\'{out_name}\' '
+                          f'type=\'{out_record.file_type}\' '
                           f'index=\'{item_prefix}{current_index}\' '
-                          f'depth=\'{current_depth}\'>')
-        child_display_strings = []
-        child_index = 1
-        child_depth = current_depth + 1
-        _debug_print_trace('_decode_b64_binary returned multiple records')
+                          f'depth=\'{current_depth}\'>'
+                          f'{out_record.printable_bytes}</decoded>')
+        return display_string, [out_record]
 
-        # Build child display strings
-        for child_name, child_rec in output_files.items():
-            _debug_print_trace('Child_decode: ', child_rec)
-            child_index_string = f'{item_prefix}{current_index}.{child_index}'
+    # Build header display string
+    display_header = (f'<decoded value=\'multiple binary\' type=\'multiple\' '
+                      f'index=\'{item_prefix}{current_index}\' '
+                      f'depth=\'{current_depth}\'>')
+    child_display_strings = []
+    child_index = 1
+    child_depth = current_depth + 1
+    _debug_print_trace('_decode_b64_binary returned multiple records')
 
-            if child_rec.encoding_type in ['utf-8', 'utf-16']:
-                # If a string, include the decoded item in the output
-                child_display_string = (f'<decoded type=\'string\' name=\'{child_name}\' '
-                                        f'index=\'{child_index_string}\' '
-                                        f'depth=\'{child_depth}\'>'
-                                        f'{child_rec.decoded_string}</decoded>')
-            else:
-                # if a binary just record its presence
-                child_display_string = (f'<decoded type=\'{child_rec.file_type}\' '
-                                        f'name=\'{child_name}\' '
-                                        f'index=\'{child_index_string}\' '
-                                        f'depth=\'{child_depth}\'>'
-                                        f'{child_rec.printable_bytes}</decoded>')
-            child_display_strings.append(child_display_string)
-            child_index += 1
+    # Build child display strings
+    for child_name, child_rec in output_files.items():
+        _debug_print_trace('Child_decode: ', child_rec)
+        child_index_string = f'{item_prefix}{current_index}.{child_index}'
 
-        display_string = display_header + ''.join(child_display_strings) + '</decoded>'
-        return display_string, output_files.values()
+        if child_rec.encoding_type in ['utf-8', 'utf-16']:
+            # If a string, include the decoded item in the output
+            child_display_string = (f'<decoded type=\'string\' name=\'{child_name}\' '
+                                    f'index=\'{child_index_string}\' '
+                                    f'depth=\'{child_depth}\'>'
+                                    f'{child_rec.decoded_string}</decoded>')
+        else:
+            # if a binary just record its presence
+            child_display_string = (f'<decoded type=\'{child_rec.file_type}\' '
+                                    f'name=\'{child_name}\' '
+                                    f'index=\'{child_index_string}\' '
+                                    f'depth=\'{child_depth}\'>'
+                                    f'{child_rec.printable_bytes}</decoded>')
+        child_display_strings.append(child_display_string)
+        child_index += 1
+
+    display_string = display_header + ''.join(child_display_strings) + '</decoded>'
+    return display_string, output_files.values()
 
 
+# pylint: disable=too-many-locals
 def _decode_b64_string_recursive(input_string: str,
                                  undecodable_strings: Set[str] = None,
                                  max_recursion: int = 20,
@@ -284,6 +289,8 @@ def _decode_b64_string_recursive(input_string: str,
     fragment_index = 0
     match_pos = 0
     something_decoded = False
+
+    # pylint: disable=too-many-nested-blocks
     while True:
         # search sequentially through the input string for any strings that look like base64
         _debug_print_trace('regex searching ', decoded_string[:200],
@@ -364,9 +371,8 @@ def _decode_b64_string_recursive(input_string: str,
             max_recursion=max_recursion - 1, current_depth=(current_depth + 1))
         return next_level_string, binary_records.append(
             child_records, ignore_index=True, sort=False)
-    else:
-        _debug_print_trace('Nothing left to decode')
-        return decoded_string, binary_records
+    _debug_print_trace('Nothing left to decode')
+    return decoded_string, binary_records
 
 
 def _print_bytes(bytes_array):
@@ -519,16 +525,15 @@ def _get_items_from_archive(binary, archive_type='zip'):
     _debug_print_trace('_get_items_from_archive type: ', archive_type)
     if archive_type == 'zip':
         return get_items_from_zip(binary)
-    elif archive_type == 'gz':
+    if archive_type == 'gz':
         return get_items_from_gzip(binary)
-    elif archive_type == 'tar':
+    if archive_type == 'tar':
         return get_items_from_tar(binary)
-    else:
-        return 'unknown', {archive_type, binary}
+    return 'unknown', {archive_type, binary}
 
 
 @export
-def get_items_from_gzip(binary: bytes) -> Tuple[str, bytes]:
+def get_items_from_gzip(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
     """
     Return decompressed gzip contents.
 
@@ -573,7 +578,8 @@ def get_items_from_zip(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
 
 
 @export
-def get_items_from_tar(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
+def get_items_from_tar(binary: bytes) -> Tuple[str,
+                                               Mapping[str, Optional[bytes]]]:
     """
     Return dictionary of tar file contents.
 
@@ -591,12 +597,14 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Mapping[str, bytes]]:
     file_obj = io.BytesIO(binary)
     # Open tarfile
     tar = tarfile.open(mode="r", fileobj=file_obj)
-    archive_dict = dict()
+    archive_dict: Dict[str, Optional[bytes]] = dict()
     # Iterate over every member
     for item in tar.getnames():
         tar_file = tar.extractfile(item)
-        archive_file = tar_file.read()
-        archive_dict[item] = archive_file
+        if tar_file:
+            archive_dict[item] = tar_file.read()
+        else:
+            archive_dict[item] = None
     return 'tar', archive_dict
 
 

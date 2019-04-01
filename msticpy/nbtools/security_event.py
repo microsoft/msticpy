@@ -4,9 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for SecurityEvent class."""
+from typing import List, Dict, Any
+
 import pandas as pd
 
-from . entityschema import Host, Process, Account, IpAddress
+from . entityschema import (Entity, Host, Process, Account, IpAddress,
+                            HostLogonSession)
 from . security_base import SecurityBase
 from . utility import export
 from .. _version import VERSION
@@ -26,7 +29,6 @@ class SecurityEvent(SecurityBase):
             :param src_row: Pandas series containing single security event
         """
         self._source_data = src_row
-        self._entity_set = []
 
         super().__init__(src_row=src_row)
 
@@ -35,17 +37,27 @@ class SecurityEvent(SecurityBase):
 
     # Properties
     @property
-    def entities(self):
-        """Return the list of entities extracted from the event."""
-        return list(self._entity_set)
+    def entities(self) -> List[Entity]:
+        """
+        Return the list of entities extracted from the event.
+
+        Returns
+        -------
+        List[Entity]
+            The list of entities extracted from the event.
+
+        """
+        return list(self._entities)
 
     @property
-    def query_params(self):
+    def query_params(self) -> Dict[str, Any]:
         """
         Query parameters derived from alert.
 
-        Returns:
-            dict(str, str) -- Dictionary of parameter names
+        Returns
+        -------
+            Dict[str, Any]
+                Dictionary of parameter names
 
         """
         return super().query_params
@@ -59,12 +71,32 @@ class SecurityEvent(SecurityBase):
 
     def _extract_entities(self, src_row):
         if 'EventID' in src_row:
-            self._entities.append(Host(src_event=src_row))
+            host = Host(src_event=src_row)
+            self._entities.append(host)
             event_id = str(src_row['EventID'])
             if event_id == '4688':
-                self._entities.append(Process(src_row, role='new'))
+                event_proc = Process(src_event=src_row, role='new')
+                self._entities.append(event_proc)
+                event_proc['Host'] = host
+                if 'ParentProcess' in event_proc:
+                    self._entities.append(event_proc.ParentProcess)
+                    if 'ImageFile' in event_proc.ParentProcess:
+                        self._entities.append(event_proc.ParentProcess.ImageFile)
+                logon_session = HostLogonSession(src_event=src_row)
+                logon_session.Host = host
+                if 'Account' in event_proc:
+                    logon_session.Account = event_proc.Account
+                    event_proc.Account.Host = host
+                    self._entities.append(event_proc.Account)
+                self._entities.append(logon_session)
+                if 'ImageFile' in event_proc:
+                    self._entities.append(event_proc.ImageFile)
 
             if event_id in ('4624', '4625'):
-                self._entities.append(Account(src_event=src_row, role='subject'))
-                self._entities.append(Account(src_event=src_row, role='target'))
+                subj_account = Account(src_event=src_row, role='subject')
+                subj_account.Host = host
+                self._entities.append(subj_account)
+                tgt_account = Account(src_event=src_row, role='target')
+                tgt_account.Host = host
+                self._entities.append(tgt_account)
                 self._entities.append(IpAddress(src_event=src_row))

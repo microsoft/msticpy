@@ -61,6 +61,7 @@ class Lookback(QueryParamProvider):
 
     """
 
+# pylint: disable=too-many-arguments
     def __init__(self, default: int = 4, label: str = 'Select time ({units}) to look back',
                  origin_time: datetime = None, min_value: int = 1, max_value: int = 240,
                  units: str = 'hour', auto_display: bool = False):
@@ -106,8 +107,8 @@ class Lookback(QueryParamProvider):
 
         self.end = self.origin_time
         self._time_unit = _parse_time_unit(units)
-        self.start = self.end - timedelta(seconds=(self._time_unit.value *
-                                          self._lookback_wgt.value))
+        self.start = self.end - timedelta(seconds=(self._time_unit.value
+                                                   * self._lookback_wgt.value))
 
         self._lookback_wgt.observe(self._time_range_change, names='value')
 
@@ -130,8 +131,9 @@ class Lookback(QueryParamProvider):
 
     def _time_range_change(self, change):
         del change
-        self.start = (self.origin_time +
-                      timedelta(0, self._lookback_wgt.value * self._time_unit.value))
+        self.start = (self.origin_time
+                      + timedelta(0, self._lookback_wgt.value
+                                  * self._time_unit.value))
 
     @property
     def query_params(self):
@@ -165,6 +167,7 @@ class QueryTime(QueryParamProvider):
 
     _label_style = {'description_width': 'initial'}
 
+# pylint: disable=too-many-arguments
     def __init__(self, origin_time: datetime = None, before: int = 60, after: int = 10,
                  max_before: int = 600, max_after: int = 100, label: str = None,
                  units: str = 'min', auto_display: bool = False):
@@ -262,8 +265,8 @@ class QueryTime(QueryParamProvider):
                               self._w_start_time_txt,
                               self._w_end_time_txt]))
 
-    # pylint: disable=locally-disabled, W0613
     def _update_origin(self, change):
+        del change
         try:
             tm_value = datetime.strptime(
                 self._w_origin_tm.value, '%H:%M:%S.%f').time()
@@ -274,10 +277,13 @@ class QueryTime(QueryParamProvider):
             pass
 
     def _time_range_change(self, change):
-        self._query_start = (self.origin_time +
-                             timedelta(0, self._w_tm_range.value[0] * self._time_unit.value))
-        self._query_end = (self.origin_time +
-                           timedelta(0, self._w_tm_range.value[1] * self._time_unit.value))
+        del change
+        self._query_start = (self.origin_time
+                             + timedelta(0, self._w_tm_range.value[0]
+                                         * self._time_unit.value))
+        self._query_end = (self.origin_time
+                           + timedelta(0, self._w_tm_range.value[1]
+                                       * self._time_unit.value))
         self._w_start_time_txt.value = self._query_start.isoformat(sep=' ')
         self._w_end_time_txt.value = self._query_end.isoformat(sep=' ')
 
@@ -325,7 +331,7 @@ class AlertSelector(QueryParamProvider):
     _ALERTID_REGEX = r'\[id:(?P<alert_id>.*)\]$'
 
     def __init__(self, alerts: pd.DataFrame, action: Callable[..., None] = None,
-                 columns: list({str})=None, auto_display: bool = False):
+                 columns: List[str] = None, auto_display: bool = False):
         """
         Create a new instance of AlertSelector.
 
@@ -336,7 +342,7 @@ class AlertSelector(QueryParamProvider):
         action : Callable[..., None], optional
             Optional function to execute for each selected alert.
             (the default is None)
-        columns : list, optional
+        columns : List[str], optional
             Override the default column names to use from `alerts`
             (the default is ['StartTimeUtc', 'AlertName',
             'CompromisedEntity', 'SystemAlertId'])
@@ -397,8 +403,9 @@ class AlertSelector(QueryParamProvider):
 
     def _select_alert(self, selection=None):
         """Select action triggered by picking item from list."""
-        if (selection is None or 'new' not in selection or
-                not isinstance(selection['new'], str)):
+        if (selection is None
+                or 'new' not in selection
+                or not isinstance(selection['new'], str)):
             self.selected_alert = None
         else:
             match = re.search(self._ALERTID_REGEX, selection['new'])
@@ -429,6 +436,7 @@ class AlertSelector(QueryParamProvider):
                 except JSONDecodeError:
                     pass
             return alert
+        return None
 
     def _select_top_alert(self):
         """Select the first alert by default."""
@@ -498,8 +506,8 @@ class GetSingleAlert(QueryParamProvider):
         self._start = None
         self._end = None
         if query_time_provider is not None:
-            if ('start' in query_time_provider.__dir__ and
-                    'end' in query_time_provider.__dir__):
+            if ('start' in query_time_provider.__dir__
+                    and 'end' in query_time_provider.__dir__):
                 self._start = query_time_provider.start
                 self._end = query_time_provider.end
             elif isinstance(query_time_provider, QueryParamProvider):
@@ -578,6 +586,7 @@ class GetSingleAlert(QueryParamProvider):
                 except JSONDecodeError:
                     pass
             return alert
+        return None
 
 
 @export
@@ -648,8 +657,8 @@ class GetEnvironmentKey:
         """Display the interactive widgets."""
         display(self._hbox)
 
-    # pylint: disable=locally-disabled, W0613
     def _on_save_button_clicked(self, button):
+        del button
         if self._w_check_save.value:
             os.environ[self._name] = self._w_text.value.strip()
 
@@ -664,7 +673,8 @@ class SelectString:
 
     """
 
-    def __init__(self, 
+# pylint: disable=too-many-arguments
+    def __init__(self,
                  description: str = 'Select an item',
                  item_list: List[str] = None,
                  action: Callable[..., None] = None,
@@ -724,8 +734,9 @@ class SelectString:
             self.display()
 
     def _select_item(self, selection):
-        if (selection is None or 'new' not in selection or
-                not isinstance(selection['new'], str)):
+        if (selection is None
+                or 'new' not in selection
+                or not isinstance(selection['new'], str)):
             return
         value = selection['new']
 

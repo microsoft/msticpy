@@ -1,0 +1,7 @@
+{
+  "tenant_id": "My Tenant Id",
+  "subscription_id": "My Sub Id",
+  "resource_group": "OMSWorkspaceRG",
+  "workspace_id": "My Workspace Id",
+  "workspace_name": "OMSWorkspace"
+}

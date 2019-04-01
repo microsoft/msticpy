@@ -82,7 +82,7 @@ sample_alert = {
 }
 
 
-class TestQuerySchema(unittest.TestCase):
+class TestSecurityAlert(unittest.TestCase):
 
     def setUp(self):
         self.raw_alert = pd.Series(sample_alert)
@@ -131,7 +131,7 @@ class TestQuerySchema(unittest.TestCase):
                          alert.primary_account.qualified_name)
         self.assertEqual('0x3e7', alert.get_logon_id())
 
-        self.assertIn('SourceComputerId', alert.host_filter(operator='=='))
+        self.assertIn('Computer', alert.host_filter(operator='=='))
         self.assertTrue(alert.is_in_log_analytics)
         self.assertTrue(alert.is_in_workspace)
         self.assertFalse(alert.is_in_azure_sub)
