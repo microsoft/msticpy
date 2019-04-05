@@ -3,8 +3,22 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""
+r"""
 eventcluster module.
+
+This module is intended to be used to summarize large numbers of events
+into clusters of different patterns. High volume repeating events can
+often make it difficult to see unique and interesting items.
+
+The module contains functions to generate clusterable features from
+string data. For example, an administration command that does some
+maintenance on thousands of servers with a commandline such as:
+``install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback``\  can
+be collapsed into a single cluster pattern by ignoring the character
+values in the string and using delimiters or tokens to group the values.
+
+This is an unsupervised learning module implemented using SciKit Learn
+DBScan.
 
 Contains:
 dbcluster_events: generic clustering method using DBSCAN designed to summarize
@@ -12,6 +26,7 @@ process events and other similar data by grouping on common features.
 
 add_process_features: derives numerical features from text features such as
 commandline and process path.
+
 """
 from math import log10, floor
 from typing import List, Any, Tuple, Union
@@ -198,9 +213,9 @@ def add_process_features(input_frame: pd.DataFrame,
     input_frame : pd.DataFrame
         The input dataframe
     path_separator : str, optional
-        Path separator - if not supplied, try to determine
-            from 'NewProcessName' column of first 10 rows
-            (the default is None)
+        Path separator. If not supplied, try to determine
+        from 'NewProcessName' column of first 10 rows
+        (the default is None)
     force : bool, optional
         Forces re-calculation of feature columns even if they
         already exist (the default is False)
@@ -213,19 +228,20 @@ def add_process_features(input_frame: pd.DataFrame,
     Notes
     -----
     Features added:
-        processNameLen: length of process file name (inc path)
-        processNameTokens: the number of elements in the path
-        processName: the process file name (minus path)
-        commandlineTokens: number of space-separated tokens in the command line
-        commandlineLen: length of the command line
-        commandlineLogLen: log10 length of commandline
-        isSystemSession: 1 if session Id is 0x3e7 for Windows or -1 for Linux
-        commandlineTokensFull: counts number of token separators in commandline
-            [\s\-\\/\.,"\'|&:;%$()]
-        pathScore: sum of ord() value of characters in path
-        pathLogScore: log10 of pathScore
-        commandlineScore: sum of ord() value of characters in commandline
-        commandlineLogScore: log10 of commandlineScore
+
+    - processNameLen: length of process file name (inc path)
+    - processNameTokens: the number of elements in the path
+    - processName: the process file name (minus path)
+    - commandlineTokens: number of space-separated tokens in the command line
+    - commandlineLen: length of the command line
+    - commandlineLogLen: log10 length of commandline
+    - isSystemSession: 1 if session Id is 0x3e7 for Windows or -1 for Linux
+    - commandlineTokensFull: counts number of token separators in commandline
+      [\\s\-\\/\.,"\'\|&:;%$()]
+    - pathScore: sum of ord() value of characters in path
+    - pathLogScore: log10 of pathScore
+    - commandlineScore: sum of ord() value of characters in commandline
+    - commandlineLogScore: log10 of commandlineScore
 
     """
     output_df = input_frame.copy()
@@ -366,7 +382,7 @@ def delim_count(input_row: pd.Series,
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\s\-\\/\.,"\'|&:;%$()]')
+        delimiters to use. (the default is r'[\\s\-\\/\.,"\'\|&:;%$()]')
 
     Returns
     -------

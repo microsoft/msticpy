@@ -54,10 +54,24 @@ class Lookback(QueryParamProvider):
     """
     ipwidget wrapper to display integer slider.
 
-    Parameters
+    Attributes
     ----------
-    QueryParamProvider : QueryParamProvider
-        Abstract base class
+    before : int
+        The default number of `units` before the `origin_time`
+        (the default is 60)
+    after : int
+        The default number of `units` after the `origin_time`
+        (the default is 10)
+    max_before : int
+        The largest value for `before` (the default is 600)
+    max_after : int
+        The largest value for `after` (the default is 100)
+    origin_time : datetime
+            The origin time (the default is `datetime.utcnow()`)
+    start : datetime
+        Query start time.
+    end : datetime
+        Query end time.
 
     """
 
@@ -158,10 +172,25 @@ class QueryTime(QueryParamProvider):
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
-    Parameters
+    Attributes
     ----------
-    QueryParamProvider : QueryParamProvider
-        Abstract base class
+    before : int
+        The default number of `units` before the `origin_time`
+        (the default is 60)
+    after : int
+        The default number of `units` after the `origin_time`
+        (the default is 10)
+    max_before : int
+        The largest value for `before` (the default is 600)
+    max_after : int
+        The largest value for `after` (the default is 100)
+    origin_time : datetime
+            The origin time (the default is `datetime.utcnow()`)
+    start : datetime
+        Query start time.
+    end : datetime
+        Query end time.
+    query_params
 
     """
 
@@ -321,10 +350,17 @@ class AlertSelector(QueryParamProvider):
     Optionally provide and action to call with the selected alert as a parameter
     (typically used to display the alert.)
 
-    Attributes:
-        selected_alert: the selected alert
-        alert_id: the ID of the selected alert
-        alerts: the current alert list (DataFrame)
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame)
+    action : Callable[..., None]
+        The callback action to execute on selection
+        of an alert.
 
     """
 
@@ -470,10 +506,15 @@ class GetSingleAlert(QueryParamProvider):
 
     Try to fetch a single alert by SystemAlertId.
 
-    Attributes:
-        selected_alert: the selected alert
-        alert_id: the ID of the selected alert
-        alerts: the current alert list (DataFrame)
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame).
+        Should always have one member.
 
     """
 
@@ -668,8 +709,12 @@ class SelectString:
     """
     Selection list from list or dict.
 
-    Attributes:
-        value : The selected value.
+    Attributes
+    ----------
+    value : Any
+        The selected value.
+    item_action : Callable[..., None]
+        Action to call for each selection.
 
     """
 

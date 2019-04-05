@@ -3,7 +3,25 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module for IoCExtract class."""
+"""
+Module for IoCExtract class.
+
+Uses a set of builtin regular expressions to look for Indicator of
+Compromise (IoC) patterns. Input can be a single string or a pandas
+dataframe with one or more columns specified as input.
+
+The following types are built-in:
+
+-  IPv4 and IPv6
+-  URL
+-  DNS domain
+-  Hashes (MD5, SHA1, SHA256)
+-  Windows file paths
+-  Linux file paths (this is kind of noisy because a legal linux file
+   path can have almost any character) You can modify or add to the
+   regular expressions used at runtime.
+
+"""
 
 import re
 from collections import namedtuple, defaultdict
@@ -220,7 +238,8 @@ class IoCExtract:
 
         """
         if src and src.strip():
-            return self._scan_for_iocs(src, os_family)
+            return self._scan_for_iocs(src=src, os_family=os_family,
+                                       ioc_types=ioc_types)
 
         if data is None:
             raise Exception('No source data was supplied to extract')
@@ -295,6 +314,7 @@ class IoCExtract:
         ioc_results: Dict[str, Set] = defaultdict(set)
         iocs_found: Dict[str, Tuple[str, int]] = {}
 
+# pylint: disable=too-many-nested-blocks
         for (ioc_type, rgx_def) in self._content_regex.items():
             if ioc_types and ioc_type not in ioc_types:
                 continue

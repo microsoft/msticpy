@@ -3,8 +3,23 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module for VTLookup class."""
+"""
+Module for VTLookup class.
 
+Wrapper class around `Virus Total
+API <https://www.virustotal.com/en/documentation/public-api/>`__. Input
+can be a single IoC observable or a pandas DataFrame containing multiple
+observables. Processing requires a Virus Total account and API key and
+processing performance is limited to the number of requests per minute
+for the account type that you have. Support IoC Types:
+
+-  Filehash
+-  URL
+-  DNS Domain
+-  IPv4 Address
+
+"""
+# pylint: disable=too-many-lines
 import json
 from json import JSONDecodeError
 import math
@@ -313,7 +328,7 @@ class VTLookup:
 
         return self.results
 
-# pylint: disable=too-many-locals, too-many-arguments
+# pylint: disable=too-many-locals
     def _lookup_ioc_type(self,
                          input_frame: pd.DataFrame,
                          ioc_type: str,
@@ -416,6 +431,7 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
+# pylint: disable=too-many-arguments
     def _parse_vt_results(self,
                           vt_results: Any,
                           observable: str,

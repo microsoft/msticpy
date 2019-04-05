@@ -42,6 +42,11 @@ class FoliumMap():
         height : str, optional
             Map display height (the default is '100%')
 
+        Attributes
+        ----------
+        folium_map : folium.Map
+            The map object.
+
         """
         self.folium_map = folium.Map(
             zoom_start=zoom_start, tiles=tiles, width=width, height=height)

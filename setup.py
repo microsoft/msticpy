@@ -34,7 +34,8 @@ with open("LICENSE.TXT", "r") as fh:
 # pylint: enable=locally-disabled, invalid-name
 
 with open("msticpy/_version.py", "r") as fd:
-    __version__ = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
+    __version__ = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(),
+                            re.MULTILINE).group(1)
 
 setuptools.setup(
     name="msticpy",

@@ -88,17 +88,20 @@ def exec_query(query_name: str, **kwargs) -> Union[pd.DataFrame,
 
     Other Parameters
     ----------------
-    kwargs: additional replacable paramters for the query
-        kql_result=True - return (DataFrame, KqlResultSet) tuple.
-        kql_result=False - return DataFrame only (default)
-        provs=Iterable[QueryParamProvider]
-            this should be a collection of objects that
-            implement QueryParamProvider (from which query
-            parameters can be extracted).
-            OR
-        kwargs [str, Any] custom parameter list
-            (override default values and values extracted
-            from QueryParamProviders).
+    kwargs : Mapping[str, Any]
+        additional replacable paramters for the query
+        Parameters supplied here will override default
+        for the query and values and values extracted
+        from QueryParamProviders supplied in the provs
+        kw parameter.
+    kql_result : bool
+        If True - return (DataFrame, KqlResultSet) tuple.
+        If False or not present return DataFrame only (default)
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+
     Returns
     -------
     Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]
@@ -144,17 +147,20 @@ def show_filled_query(query_name: str, **kwargs) -> str:
 
     Other Parameters
     ----------------
-    kwargs: additional replacable paramters for the query
-        kql_result=True - return (DataFrame, KqlResultSet) tuple.
-        kql_result=False - return DataFrame only (default)
-        provs=Iterable[QueryParamProvider]
-            this should be a collection of objects that
-            implement QueryParamProvider (from which query
-            parameters can be extracted).
-            OR
-        kwargs [str, Any] custom parameter list
-            (override default values and values extracted
-            from QueryParamProviders).
+    kwargs : Mapping[str, Any]
+        additional replacable paramters for the query
+        Parameters supplied here will override default
+        for the query and values and values extracted
+        from QueryParamProviders supplied in the provs
+        kw parameter.
+    kql_result : bool
+        If True - return (DataFrame, KqlResultSet) tuple.
+        If False or not present return DataFrame only (default)
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+
     Returns
     -------
     str

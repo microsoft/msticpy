@@ -49,7 +49,7 @@ will unpack the contents. The results of each decode/unpack are rechecked for fu
 base64 content and will recurse down up to 20 levels (default can be overridden).
 Output is to a decoded string (for single string input) or a DataFrame (for dataframe input).
 
-[Base64Unpack Notebook](./doc/Base64Unpack.ipynb)
+[Base64Unpack Notebook](./docs/notebooks/Base64Unpack.ipynb)
 
 ### iocextract
 
@@ -69,7 +69,7 @@ You can modify or add to the regular expressions used at runtime.
 
 Output is a dictionary of matches (for single string input) or a DataFrame (for dataframe input).
 
-[Base64Unpack Notebook](./doc/IoCExtract.ipynb)
+[Base64Unpack Notebook](./docs/notebooks/IoCExtract.ipynb)
 
 ### vtlookup
 
@@ -84,7 +84,7 @@ Support IoC Types:
 - DNS Domain
 - IPv4 Address
 
-[VTLookup Notebook](./doc/VirusTotalLookup.ipynb)
+[VTLookup Notebook](./docs/notebooks/VirusTotalLookup.ipynb)
 
 ### geoip
 
@@ -99,7 +99,7 @@ a paid tier will normally get you more accuracy, more detail and
 a higher throughput rate. Maxmind geolite uses a downloadable database,
 while IPStack is an online lookup (API key required).
 
-[GeoIP Lookup Notebook](./doc/GeoIPLookups.ipynb)
+[GeoIP Lookup Notebook](./docs/notebooks/GeoIPLookups.ipynb)
 
 ### eventcluster
 
@@ -110,8 +110,9 @@ items.
 
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that
-does some maintenance on thousands of servers with a commandline such as:<br>
-```
+does some maintenance on thousands of servers with a commandline such as:
+
+```bash
 install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
 ```
 
@@ -144,7 +145,7 @@ quicker and easier.
 - nbdisplay - functions that implement common display of things like alerts, events in a slightly more consumable way than print()
 - entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in Log Analytics alerts and in many of these modules. Each entity encaspulates one or more properties related to the entity.
 
-[Notebooks Tools](./doc/NotebookWidgets.ipynb)
+[Notebooks Tools](./docs/notebooks/NotebookWidgets.ipynb)
 
 ## Data sub-package - `data`
 

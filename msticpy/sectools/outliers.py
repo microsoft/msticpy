@@ -3,9 +3,18 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Outlier detection class. TODO **Preliminary**."""
+"""
+Outlier detection class. TODO **Preliminary**.
+
+Similar to the eventcluster module but a little bit more experimental
+(read 'less tested'). It uses SkLearn Isolation Forest to identify
+outlier events in a single data set or using one data set as training
+data and another on which to predict outliers.
+
+"""
 
 import math
+from typing import List
 
 import pandas as pd
 import numpy as np
@@ -21,7 +30,7 @@ __author__ = 'Ian Hellen'
 # noqa
 
 
-def identify_outliers(X: np.array, X_predict: np.Array = None, contamination: float = 0.05):
+def identify_outliers(X: np.array, X_predict: np.ndarray = None, contamination: float = 0.05):
     """
     Identify outlier items using SkLearn IsolationForest.
 
@@ -40,8 +49,10 @@ def identify_outliers(X: np.array, X_predict: np.Array = None, contamination: fl
     max_features = math.floor(math.sqrt(rows))
     clf = IsolationForest(max_samples=max_samples, max_features=max_features,
                           random_state=rng, contamination=contamination)
+
+    # fit and train the model
     clf.fit(X)
-    y_pred_train = clf.predict(X)
+    clf.predict(X)
 
     y_pred_outliers = clf.predict(X_predict)
 
@@ -49,9 +60,9 @@ def identify_outliers(X: np.array, X_predict: np.Array = None, contamination: fl
     return clf, X_outliers, y_pred_outliers
 
 
-def plot_outlier_results(clf: IsolationForest, X: np.array,
-                         X_predict: np.array, X_outliers: np.array,
-                         feature_columns: list({int}), plt_title: str):
+def plot_outlier_results(clf: IsolationForest, X: np.ndarray,
+                         X_predict: np.ndarray, X_outliers: np.ndarray,
+                         feature_columns: List[int], plt_title: str):
     """
     Plot Isolation Forest results.
 
