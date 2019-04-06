@@ -297,13 +297,18 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
     """
     Return a subset of the events matching type event_type.
 
-    Arguments:
-        data {pd.DataFrame} -- The input data
-        event_type {str} -- The event type to select
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input data
+    event_type : str
+        The event type to select
 
-    Returns:
-        pd.DataFrame -- The subset of the data where
-            data['EventType'] == event_type
+    Returns
+    -------
+    pd.DataFrame
+        The subset of the data where
+        data['EventType'] == event_type
 
     """
     return (data[data['EventType'] == event_type]

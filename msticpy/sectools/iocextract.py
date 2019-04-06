@@ -75,7 +75,8 @@ class IoCExtract:
     IPV4_REGEX = r'(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})'
     IPV6_REGEX = r'(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])'
     DNS_REGEX = r'((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){2,}[a-z]{2,63}'
-    # dns_regex = '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
+    # dns_regex =
+    #   '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
 
     URL_REGEX = r'''
             (?P<protocol>(https?|ftp|telnet|ldap|file)://)
@@ -277,7 +278,8 @@ class IoCExtract:
                     if result_set:
                         for observable in result_set:
                             result_row = pd.Series(
-                                data=[result_type, observable, idx], index=result_columns)
+                                data=[result_type, observable, idx],
+                                index=result_columns)
                             result_frame = result_frame.append(
                                 result_row, ignore_index=True)
 
@@ -333,7 +335,8 @@ class IoCExtract:
                                             rgx_def)
                 if ioc_type == 'url':
                     decoded_url = unquote(rgx_match.group())
-                    for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
+                    for url_match in rgx_def.comp_regex.finditer(decoded_url,
+                                                                 match_pos):
                         if url_match is not None:
                             self._add_highest_pri_match(iocs_found,
                                                         url_match.group(),
@@ -355,7 +358,8 @@ class IoCExtract:
                                current_def: IoCPattern):
         # if we already found a match for this item and the previous
         # ioc type is more specific then don't add this to the results
-        if current_match in iocs_found and current_def.priority > iocs_found[current_match][1]:
+        if (current_match in iocs_found
+                and current_def.priority > iocs_found[current_match][1]):
             return
 
         iocs_found[current_match] = (

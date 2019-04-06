@@ -223,7 +223,8 @@ class VTLookup:
         Other Parameters
         ----------------
             key/value pairs of additional mappings to supported IoC type names
-            e.g. ipv4='ipaddress', url='httprequest'. This allows you to specify custom
+            e.g. ipv4='ipaddress', url='httprequest'.
+            This allows you to specify custom
             mappings when the source data is tagged with different names.
 
         Returns
@@ -234,11 +235,13 @@ class VTLookup:
         Notes
         -----
             See supported_ioc_types attribute for a list of valid target types.
-            Not all of these types are supported by VirusTotal. See ioc_vt_type_mapping for
-            current mappings. Types mapped to None will not be submitted to VT.
+            Not all of these types are supported by VirusTotal.
+            See ioc_vt_type_mapping for current mappings.
+            Types mapped to None will not be submitted to VT.
 
-            For urls a full http request can be submitted, query string and fragments will be
-            dropped before submitting. Other supported protocols are ftp, telnet, ldap, file
+            For urls a full http request can be submitted, query string
+            and fragments will be dropped before submitting.
+            Other supported protocols are ftp, telnet, ldap, file
             For files MD5, SHA1 and SHA256 hashes are supported.
             For IP addresses only dotted IPv4 addresses are supported.
 

@@ -130,10 +130,14 @@ def get_nb_query_params(nb_url_search: str) -> dict:
     """
     Get the url query parameters from the search string.
 
-    Arguments:
-        nb_url_search {str} -- The URL search string
+    Parameters
+    ----------
+    nb_url_search : str
+        The URL search string
 
-    Returns:
+    Returns
+    -------
+    dict
         dictionary of the query string parameters.
 
     """
@@ -166,10 +170,14 @@ def deprecated(message: str) -> Callable:
     message : str
         Deprecation warning
 
+    Returns : Callable
+        The decorated function
+
     """
     def deprecated_decorator(func):
         def deprecated_func(*args, **kwargs):
-            warnings.warn("{} is a deprecated function. {}".format(func.__name__, message),
+            mssg = f'{func.__name__} is a deprecated function. {message}'
+            warnings.warn(mssg,
                           category=DeprecationWarning,
                           stacklevel=2)
             warnings.simplefilter('default', DeprecationWarning)

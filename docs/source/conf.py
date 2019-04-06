@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'msticpy'
+# pylint: disable=redefined-builtin
 copyright = '2019, (c) Microsoft Corporation.'
 author = 'Ian Hellen'
 

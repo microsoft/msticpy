@@ -37,7 +37,8 @@ def print_kql(query_string: str):
         The query string to print
 
     """
-    clean_qry = re.sub(r'(//[^\"\'\n]+)', ' ', query_string, re.MULTILINE).strip()
+    clean_qry = re.sub(r'(//[^\"\'\n]+)', ' ',
+                       query_string, re.MULTILINE).strip()
     for line in clean_qry.split('\n'):
         print(line.strip())
 
@@ -58,7 +59,8 @@ def clean_kql_query(query_string: str) -> str:
         Cleaned query.
 
     """
-    remove_comments = re.sub(r'(//[^\"\'\n]+)', ' ', query_string, re.MULTILINE).strip()
+    remove_comments = re.sub(r'(//[^\"\'\n]+)', ' ',
+                             query_string, re.MULTILINE).strip()
     # get rid of newlines and returns
     return re.sub(r'(\s*\n\s*)', ' ', remove_comments)
 
@@ -121,9 +123,11 @@ def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
         def_data_families = [DataEnvironment.LogAnalytics]
         def_data_environments = [
             DataFamily.WindowsSecurity, DataFamily.LinuxSecurity]
-        if 'name' not in kwargs or 'query' not in kwargs or 'data_source' not in kwargs:
-            raise ValueError(
-                'If kql_query is not supplied the kwargs must include name, query and data_source.')
+        if ('name' not in kwargs
+                or 'query' not in kwargs
+                or 'data_source' not in kwargs):
+            raise ValueError('If kql_query is not supplied the kwargs',
+                             ' must include name, query and data_source.')
         kql_query = KqlQuery(name=kwargs['name'],
                              query=kwargs['query'],
                              description=kwargs.get('description', None),
@@ -274,7 +278,9 @@ def _get_query_params(kql_query: KqlQuery,
     if kwargs:
         req_params.update(kwargs)
 
-    data_family, data_environment = _get_data_family_and_env(kql_query, query_providers, kwargs)
+    data_family, data_environment = _get_data_family_and_env(kql_query,
+                                                             query_providers,
+                                                             kwargs)
 
     if not data_family:
         supp_families = ', '.join(DataSchema.get_data_families())
@@ -297,7 +303,8 @@ def _get_query_params(kql_query: KqlQuery,
 
     # If we have missing parameters try to retrieve them
     # as attributes of the object
-    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+    missing_params = [p_name for p_name, p_value in req_params.items()
+                      if not p_value]
     if missing_params:
         _get_missing_params(args, missing_params, req_params, kql_query)
 
@@ -323,11 +330,13 @@ def _get_missing_params(args: Tuple[Any, ...],
         The query object
 
     """
-    for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
+    for other_object in [obj for obj in args
+                         if not isinstance(obj, QueryParamProvider)]:
         for m_param in missing_params:
             if m_param in other_object:
                 req_params[m_param] = getattr(other_object, m_param)
-        missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+        missing_params = [p_name for p_name, p_value in req_params.items()
+                          if not p_value]
 
     if missing_params:
         # check for and remove optional parameters from the missing params list

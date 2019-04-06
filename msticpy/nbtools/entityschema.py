@@ -488,7 +488,8 @@ class HostLogonSession(Entity):
             elif 'TimeGenerated' in src_event:
                 self.StartTimeUtc = src_event['TimeGenerated']
             self.EndTimeUtc = self.StartTimeUtc
-            self.SessionId = src_event['TargetLogonId'] if 'TargetLogonId' in src_event else None
+            self.SessionId = (src_event['TargetLogonId']
+                              if 'TargetLogonId' in src_event else None)
 
     @property
     def description_str(self) -> str:
@@ -601,9 +602,11 @@ class DnsResolve(Entity):
         # IpAdresses (type System.Collections.Generic.List`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP])
         'IpAdresses': None,
-        # DnsServerIp (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # DnsServerIp (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'DnsServerIp': 'IPAddress',
-        # HostIpAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # HostIpAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'HostIpAddress': 'IPAddress'
     }
 
@@ -698,7 +701,8 @@ class File(Entity):
         'Name': None,
         # Md5 (type System.String)
         'Md5': None,
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Host)
         'Host': None,
         # Sha1 (type System.String)
         'Sha1': None,
@@ -944,7 +948,8 @@ class IpAddress(Entity):
         # .V3.ContextObjects.GeoLocation)
         'Location': 'GeoLocation',
         # ThreatIntelligence (type System.Collections.Generic.List`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.ContextObjects.ThreatIntelligence])
+        # [Microsoft.Azure.Security.Detection.AlertContracts.V3
+        # .ContextObjects.ThreatIntelligence])
         'ThreatIntelligence': (list, 'Threatintelligence')
     }
 
@@ -1125,11 +1130,13 @@ class NetworkConnection(Entity):
         return desc
 
     _entity_schema = {
-        # SourceAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # SourceAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'SourceAddress': 'IPAddress',
         # SourcePort (type System.Nullable`1[System.Int32])
         'SourcePort': None,
-        # DestinationAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # DestinationAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'DestinationAddress': 'IPAddress',
         # DestinationPort (type System.Nullable`1[System.Int32])
         'DestinationPort': None,
@@ -1225,13 +1232,15 @@ class Process(Entity):
                                        if 'effective_user' in src_event else None)
                 self.euid = src_event['euid'] if 'euid' in src_event else None
                 self.effective_group = (src_event['effective_group']
-                                        if 'effective_group' in src_event else None)
+                                        if 'effective_group'
+                                        in src_event else None)
                 self.egid = (src_event['effective_group']
                              if 'effective_group' in src_event else None)
                 self.cwd = src_event['cwd'] if 'cwd' in src_event else None
                 self.name = src_event['cwd'] if 'cwd' in src_event else None
             else:
-                self.ProcessId = src_event['ProcessId'] if 'ProcessId' in src_event else None
+                self.ProcessId = (src_event['ProcessId']
+                                  if 'ProcessId' in src_event else None)
                 self.ImageFile = File(src_event=src_event, role='parent')
 # pylint: enable=locally-disabled, line-too-long
 
@@ -1258,20 +1267,25 @@ class Process(Entity):
         # CommandLine (type System.String)
         'CommandLine': None,
         # ElevationToken (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.ElevationToken])
+        # [Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.ElevationToken])
         'ElevationToken': None,
         # CreationTimeUtc (type System.Nullable`1[System.DateTime])
         'CreationTimeUtc': None,
-        # ImageFile (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.File)
+        # ImageFile (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.File)
         'ImageFile': 'File',
-        # Account (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Account)
+        # Account (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Account)
         'Account': 'Account',
         # ParentProcess (type Microsoft.Azure.Security.Detection.AlertContracts
         # .V3.Entities.Process)
         'ParentProcess': 'Process',
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Host)
         'Host': 'Host',
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.HostLogonSession)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.HostLogonSession)
         'LogonSession': 'HostLogonSession',
     }
 
@@ -1393,7 +1407,8 @@ class RegistryValue(Entity):
         return f'{self.Name}[{self.ValueType}]:{repr(self.Value)}'
 
     _entity_schema = {
-        # Key (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryKey)
+        # Key (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.RegistryKey)
         'Key': None,
         # Name (type System.String)
         'Name': None,
@@ -1591,9 +1606,9 @@ class Threatintelligence(Entity):
         return f'{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}'
 
     _entity_schema = {
-        # String Name of the provider from whom this Threat Intelligence information was received
+        # String Name of the provider from whom this
+        # Threat Intelligence information was received
         'ProviderName': None,
-
         'ThreatType': None,
         'ThreatName': None,
         'Confidence': None,

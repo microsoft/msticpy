@@ -76,8 +76,9 @@ def _is_kqlmagic_loaded() -> bool:
 
 
 @export
-def exec_query(query_name: str, **kwargs) -> Union[pd.DataFrame,
-                                                   Tuple[pd.DataFrame, results.ResultSet]]:
+def exec_query(query_name: str,
+               **kwargs) -> Union[pd.DataFrame,
+                                  Tuple[pd.DataFrame, results.ResultSet]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 

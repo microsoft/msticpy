@@ -84,7 +84,8 @@ def create_alert_graph(alert: SecurityAlert):
 
 
 @export
-def add_related_alerts(related_alerts: pd.DataFrame, alertgraph: nx.Graph) ->nx.Graph:
+def add_related_alerts(related_alerts: pd.DataFrame,
+                       alertgraph: nx.Graph) ->nx.Graph:
     """
     Add related alerts to the graph.
 
@@ -195,8 +196,8 @@ def _get_name_and_description(entity, os_family='Windows'):
         e_name, e_description = _get_account_name_desc(entity)
     elif entity['Type'] == 'host-logon-session':
         e_name = 'host-logon-session'
-        e_description = 'Logon session {}\n(Start time: {})'.format(entity['SessionId'],
-                                                                    entity['StartTimeUtc'])
+        e_description = f'Logon session {entity["SessionId"]}\n'
+        e_description = e_description + f'(Start time: {entity["StartTimeUtc"]}'
     elif entity['Type'] == 'process':
         e_name, e_description = _get_process_name_desc(entity)
     elif entity['Type'] == 'file':
@@ -228,7 +229,8 @@ def _get_other_name_desc(entity):
     else:
         ent_props = {'unknown': None}
 
-    # Nasty dict comprehension to join all other items in the dictionary into a string
+    # Nasty dict comprehension to join all other items in the
+    # dictionary into a string
     e_properties = '\n'.join({'{}:{}'.format(k, v) for (k, v)
                               in ent_props.items() if (k not in ('Type', 'Name')
                                                        and isinstance(v, str))})
@@ -280,9 +282,8 @@ def _get_account_name_desc(entity):
     else:
         domain_joined = 'false'
     if 'LogonId' in entity:
-        e_description = '{}\n(LogonId: {}, Domain-joined: {})'.format(e_name,
-                                                                      entity.LogonId,
-                                                                      domain_joined)
+        e_description = f'{e_name}\n(LogonId: {entity.LogonId},'
+        e_description = e_description + f' Domain-joined: {domain_joined})'
     else:
         e_description = '{}\n(Domain-joined: {})'.format(e_name, domain_joined)
     return e_name, e_description
@@ -304,6 +305,7 @@ def _get_host_name_desc(entity, os_family):
     if 'OSFamily' in entity:
         os_family = entity['OSFamily']
     e_description = '{}\n({}, Domain-joined: {})'.format(e_name,
-                                                         os_family, domain_joined)
+                                                         os_family,
+                                                         domain_joined)
 
     return e_name, e_description
