@@ -40,7 +40,7 @@ def _compile_regex(regex):
     return re.compile(regex, re.I | re.X | re.M)
 
 
-IoCPattern = namedtuple('IoCPattern', ['ioc_type', 'comp_regex', 'priority'])
+IoCPattern = namedtuple('IoCPattern', ['ioc_type', 'comp_regex', 'priority', 'group'])
 
 
 @export
@@ -83,7 +83,7 @@ class IoCExtract:
             (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
             (?P<host>([a-z0-9-._~!$&\'()*+,;=]|%[0-9A-F]{2})*)
             (:(?P<port>\d*))?
-            (/(?P<path>([^?\# ]|%[0-9A-F]{2})*/?))?
+            (/(?P<path>([^?\#"<> ]|%[0-9A-F]{2})*/?))?
             (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
             (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?'''
 
@@ -107,7 +107,7 @@ class IoCExtract:
     def __init__(self):
         """Intialize new instance of IoCExtract."""
         # IP Addresses
-        self.add_ioc_type('ipv4', self.IPV4_REGEX, 0)
+        self.add_ioc_type('ipv4', self.IPV4_REGEX, 0, 'ipaddress')
         self.add_ioc_type('ipv6', self.IPV6_REGEX, 0)
 
         # Dns Domains
@@ -126,13 +126,16 @@ class IoCExtract:
         self.add_ioc_type('linux_path', self.LXPATH_REGEX, 2)
 
         # MD5, SHA1, SHA256 hashes
-        self.add_ioc_type('md5_hash', self.MD5_REGEX, 1)
-        self.add_ioc_type('sha1_hash', self.SHA1_REGEX, 1)
-        self.add_ioc_type('sha256_hash', self.SHA256_REGEX, 1)
+        self.add_ioc_type('md5_hash', self.MD5_REGEX, 1, 'hash')
+        self.add_ioc_type('sha1_hash', self.SHA1_REGEX, 1, 'hash')
+        self.add_ioc_type('sha256_hash', self.SHA256_REGEX, 1, 'hash')
 
     # Public members
 
-    def add_ioc_type(self, ioc_type: str, ioc_regex: str, priority: int = 0):
+    def add_ioc_type(self, ioc_type: str,
+                     ioc_regex: str,
+                     priority: int = 0,
+                     group: str = None):
         """
         Add an IoC type and regular expression to use to the built-in set.
 
@@ -145,6 +148,9 @@ class IoCExtract:
         priority : int, optional
             Priority of the regex match vs. other ioc_patterns. 0 is
             the highest priority (the default is 0).
+        group : str, optional
+            The regex group to match (the default is None,
+            which will match on the whole expression)
 
         Notes
         -----
@@ -164,7 +170,8 @@ class IoCExtract:
         self._content_regex[ioc_type] = IoCPattern(ioc_type=ioc_type,
                                                    comp_regex=_compile_regex(
                                                        regex=ioc_regex),
-                                                   priority=priority)
+                                                   priority=priority,
+                                                   group=group)
 
     @property
     def ioc_types(self) -> dict:
@@ -330,11 +337,15 @@ class IoCExtract:
             for rgx_match in rgx_def.comp_regex.finditer(src, match_pos):
                 if rgx_match is None:
                     break
+                # If the rgx_def names a group to match on, use that
+                match_str = (rgx_match.groupdict()[rgx_def.group]
+                             if rgx_def.group else rgx_match.group())
+
                 self._add_highest_pri_match(iocs_found,
-                                            rgx_match.group(),
+                                            match_str,
                                             rgx_def)
                 if ioc_type == 'url':
-                    decoded_url = unquote(rgx_match.group())
+                    decoded_url = unquote(match_str)
                     for url_match in rgx_def.comp_regex.finditer(decoded_url,
                                                                  match_pos):
                         if url_match is not None:
@@ -359,7 +370,7 @@ class IoCExtract:
         # if we already found a match for this item and the previous
         # ioc type is more specific then don't add this to the results
         if (current_match in iocs_found
-                and current_def.priority > iocs_found[current_match][1]):
+                and current_def.priority >= iocs_found[current_match][1]):
             return
 
         iocs_found[current_match] = (
