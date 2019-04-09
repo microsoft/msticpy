@@ -107,11 +107,13 @@ class SecurityAlert(SecurityBase):
         """
         Resolve and replace entity properties that are '$ref' type.
 
-        When serialized the nested entities can be references to other referenced
-        objects in the collection. This iterates through the raw entities and
-        replaces referenced items with the actual object reference.
-        If the Id referenced by this property exists in the entities dictionary
-        we replace the original property with a reference to the entity in the dictionary
+        When serialized the nested entities can be references to other
+        referenced objects in the collection. This iterates through
+        the raw entities and replaces referenced items with the actual
+        object reference. If the Id referenced by this property exists
+        in the entities dictionary we replace the original property
+        with a reference to the entity in the dictionary.
+
         """
         for _, entity in self._src_entities.items():
             if not isinstance(entity, Entity):
@@ -123,7 +125,7 @@ class SecurityAlert(SecurityBase):
                         entity[prop_name] = self._src_entities[entity_id]
 
     def _find_os_family(self):
-        """Work out which OSFamily and path separator to use from entities or file paths."""
+        """Discover OSFamily and path separator from entities or file paths."""
         self.path_separator = '\\'
         self.os_family = 'Windows'
 

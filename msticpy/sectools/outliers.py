@@ -14,7 +14,7 @@ data and another on which to predict outliers.
 """
 
 import math
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 import numpy as np
@@ -26,21 +26,33 @@ from .. _version import VERSION
 __version__ = VERSION
 __author__ = 'Ian Hellen'
 
-# pylint: disable=all
-# noqa
 
-
-def identify_outliers(X: np.array, X_predict: np.ndarray = None, contamination: float = 0.05):
+# pylint: disable=invalid-name
+def identify_outliers(X: np.ndarray,
+                      X_predict: np.ndarray = None,
+                      contamination: float = 0.05) -> Tuple[IsolationForest,
+                                                            np.ndarray,
+                                                            np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
 
-    Arguments:
-        X {[np.array]} -- Input data
+    Arguments
+    ---------
+    X : np.ndarray
+            Input data
+    X_predict : np.ndarray
+        Model (default: {None})
+    contamination : float
+        Percentage contamination (default: {0.05})
 
-    Keyword Arguments:
-        X_predict {[np.array]} -- Model (default: {None})
-        contamination {float} -- Percentage contamination (default: {0.05})
+    Returns
+    -------
+    Tuple[IsolationForest, np.ndarray, np.ndarray]
+        IsolationForest model, X_Outliers,
+        y_pred_outliers
+
     """
+    # pylint: disable=no-member
     rng = np.random.RandomState(42)
 
     # fit the model
@@ -60,19 +72,31 @@ def identify_outliers(X: np.array, X_predict: np.ndarray = None, contamination: 
     return clf, X_outliers, y_pred_outliers
 
 
-def plot_outlier_results(clf: IsolationForest, X: np.ndarray,
-                         X_predict: np.ndarray, X_outliers: np.ndarray,
-                         feature_columns: List[int], plt_title: str):
+# pylint: disable=too-many-arguments, too-many-locals
+def plot_outlier_results(clf: IsolationForest,
+                         X: np.ndarray,
+                         X_predict: np.ndarray,
+                         X_outliers: np.ndarray,
+                         feature_columns: List[int],
+                         plt_title: str):
     """
     Plot Isolation Forest results.
 
-    Arguments:
-        clf {IsolationForest} -- Isolation Forest model
-        X {np.array} -- Input data
-        X_predict {np.array} -- Prediction
-        X_outliers {np.array} -- Set of outliers
-        feature_columns {list} -- list of feature columns to display
-        plt_title {str} -- Title
+    Parameters
+    ----------
+    clf : IsolationForest
+        Isolation Forest model
+    X : np.ndarray
+        Input data
+    X_predict : np.ndarray
+        Prediction
+    X_outliers : np.ndarray
+        Set of outliers
+    feature_columns : List[int]
+        list of feature columns to display
+    plt_title : str
+        Plot title
+
     """
     # plot the line, the samples, and the nearest vectors to the plane
     x_max_x = X[:, 0].max() + (X[:, 0].max() / 10)
@@ -87,6 +111,7 @@ def plot_outlier_results(clf: IsolationForest, X: np.ndarray,
     plt.rcParams['figure.figsize'] = (20, 10)
 
     plt.title(plt_title)
+    # pylint: disable=no-member
     plt.contourf(xx, yy, Z, cmap=plt.cm.Blues_r)
 
     b1 = plt.scatter(X[:, 0], X[:, 1], c='white',
@@ -114,15 +139,25 @@ def plot_outlier_results(clf: IsolationForest, X: np.ndarray,
     plt.show()
 
 
-def remove_common_items(data: pd.DataFrame, columns: list):
+def remove_common_items(data: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
     """
     Remove rows from input DataFrame.
 
-    Arguments:
-        data {pd.DataFrame} -- [description]
-        columns {list} -- [description]
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input dataframe
+    columns : List[str]
+        Column list to filter
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered DataFrame
+
     """
     filtered_df = data
+    # pylint: disable=cell-var-from-loop
     for col in columns:
         filtered_df = filtered_df.filter(lambda x: (x[col].std() == 0 and
                                                     x[col].count() > 10))

@@ -252,9 +252,6 @@ class IoCExtract:
         if data is None:
             raise Exception('No source data was supplied to extract')
 
-        # Handle DataFrame option
-        assert isinstance(data, pd.DataFrame)
-
         if columns is None:
             raise Exception(
                 'No values where supplied for the columns parameter')

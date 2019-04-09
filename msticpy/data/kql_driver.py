@@ -111,6 +111,7 @@ class KqlSentinelSource(DataSource):
         return Schema(datashape=None, dtype=dtype, shape=shape, npartitions=1)
 
     def _get_partition(self, i):
+        del i
         # Return the appropriate container of data here
         self._kql_result, self._dataframe = self._exec_query(self.query)
         return self._dataframe

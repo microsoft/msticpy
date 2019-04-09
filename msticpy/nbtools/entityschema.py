@@ -326,20 +326,36 @@ class Account(Entity):
         if src_event is not None:
             if role == 'subject' and 'SubjectUserName' in src_event:
                 self.Name = src_event['SubjectUserName']
-                self.NTDomain = src_event['SubjectUserDomain'] if 'SubjectUserDomain' in src_event else None
-                self.Sid = src_event['SubjectUserSid'] if 'SubjectUserSid' in src_event else None
-                self.LogonId = src_event['SubjectLogonId'] if 'SubjectLogonId' in src_event else None
+                self.NTDomain = (src_event['SubjectUserDomain']
+                                 if 'SubjectUserDomain' in src_event
+                                 else None)
+                self.Sid = (src_event['SubjectUserSid']
+                            if 'SubjectUserSid' in src_event
+                            else None)
+                self.LogonId = (src_event['SubjectLogonId']
+                                if 'SubjectLogonId' in src_event
+                                else None)
             if role == 'target' and 'TargetUserName' in src_event:
                 self.Name = src_event['TargetUserName']
-                self.NTDomain = src_event['TargetUserDomain'] if 'TargetUserDomain' in src_event else None
-                self.Sid = src_event['TargetUserSid'] if 'TargetUserSid' in src_event else None
-                self.LogonId = src_event['TargetLogonId'] if 'TargetLogonId' in src_event else None
+                self.NTDomain = (src_event['TargetUserDomain']
+                                 if 'TargetUserDomain' in src_event
+                                 else None)
+                self.Sid = (src_event['TargetUserSid']
+                            if 'TargetUserSid' in src_event
+                            else None)
+                self.LogonId = (src_event['TargetLogonId']
+                                if 'TargetLogonId' in src_event
+                                else None)
 
-            self.AadTenantId = src_event['AadTenantId'] if 'AadTenantId' in src_event else None
-            self.AadUserId = src_event['AadUserId'] if 'AadUserId' in src_event else None
+            self.AadTenantId = (src_event['AadTenantId']
+                                if 'AadTenantId' in src_event else None)
+            self.AadUserId = (src_event['AadUserId']
+                              if 'AadUserId' in src_event else None)
             self.PUID = src_event['PUID'] if 'PUID' in src_event else None
-            self.DisplayName = src_event['DisplayName'] if 'DisplayName' in src_event else None
-            self.UPNSuffix = src_event['UPNSuffix'] if 'UPNSuffix' in src_event else None
+            self.DisplayName = (src_event['DisplayName']
+                                if 'DisplayName' in src_event else None)
+            self.UPNSuffix = (src_event['UPNSuffix']
+                              if 'UPNSuffix' in src_event else None)
 # pylint: enable=locally-disabled, line-too-long
 
     @property

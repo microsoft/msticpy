@@ -85,7 +85,7 @@ def create_alert_graph(alert: SecurityAlert):
 
 @export
 def add_related_alerts(related_alerts: pd.DataFrame,
-                       alertgraph: nx.Graph) ->nx.Graph:
+                       alertgraph: nx.Graph) -> nx.Graph:
     """
     Add related alerts to the graph.
 

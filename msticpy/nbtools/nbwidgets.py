@@ -76,8 +76,10 @@ class Lookback(QueryParamProvider):
     """
 
 # pylint: disable=too-many-arguments
-    def __init__(self, default: int = 4, label: str = 'Select time ({units}) to look back',
-                 origin_time: datetime = None, min_value: int = 1, max_value: int = 240,
+    def __init__(self, default: int = 4,
+                 label: str = 'Select time ({units}) to look back',
+                 origin_time: datetime = None,
+                 min_value: int = 1, max_value: int = 240,
                  units: str = 'hour', auto_display: bool = False):
         """
         Create an instance of the lookback slider widget.
@@ -406,7 +408,8 @@ class AlertSelector(QueryParamProvider):
                                                   width='95%', height='300px'),
                                               style={'description_width': 'initial'})
 
-        self._w_filter_alerts = widgets.Text(value='', description='Filter alerts by title:',
+        self._w_filter_alerts = widgets.Text(value='',
+                                             description='Filter alerts by title:',
                                              style={'description_width': 'initial'})
         self._w_output = widgets.Output(layout={'border': '1px solid black'})
 
@@ -426,16 +429,16 @@ class AlertSelector(QueryParamProvider):
 
     def _alert_summary(self, alert_row):
         """Return summarized string of alert properties."""
-        return '{time}  {alert} ({host}) [id:{id}]'.format(time=alert_row.StartTimeUtc,
-                                                           alert=alert_row.AlertName,
-                                                           host=alert_row.CompromisedEntity,
-                                                           id=alert_row.SystemAlertId)
+        return (f'{alert_row.StartTimeUtc}  {alert_row.AlertName} '
+                + f'({alert_row.CompromisedEntity}) '
+                + f'[id:{alert_row.SystemAlertId}]')
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and 'new' in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change['new'].lower() in i.lower()]
+                i for i in self._select_items
+                if change['new'].lower() in i.lower()]
 
     def _select_alert(self, selection=None):
         """Select action triggered by picking item from list."""
