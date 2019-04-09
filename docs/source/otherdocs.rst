@@ -1,7 +1,12 @@
 Other Documents
 ===============
 
-:doc:`JupyterAndSecurity`
+.. toctree::
+    :maxdepth: 1
+    
+    JupyterAndSecurity.rst
 
-:doc:`JupyterAndAzureSentinel`
+    JupyterAndAzureSentinel.rst
+
+    CollectingLinuxAuditLogs.rst
 

@@ -162,7 +162,7 @@ the notebook Help menu.
    Kql magic Show Schema button
 
 References
-==========
+----------
 
 -  The `msticpy <https://github.com/Microsoft/msticpy>`__ Python package
    containing tools used in these notebooks developed by engineers on the
@@ -184,7 +184,7 @@ References
    retrieve data from Azure Sentinel.
 
 Notebooks
-=========
+---------
 
 -  `Automating Security Operations Using Windows Defender ATP APIs with
    Python and Jupyter
