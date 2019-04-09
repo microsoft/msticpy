@@ -6,7 +6,7 @@
 """KQL Helper functions."""
 import sys
 from functools import partial
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import pandas as pd
 from IPython import get_ipython
@@ -171,6 +171,38 @@ def show_filled_query(query_name: str, **kwargs) -> str:
     replaced_query = replace_prov_query_params(query_name=query_name, **kwargs)
     print_kql(replaced_query)
     return replaced_query
+
+
+@export
+def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame],
+                                           results.ResultSet]:
+    """
+    Execute query string and return DataFrame of results.
+
+    Parameters
+    ----------
+    query : str
+        The kql query to execute
+
+    Returns
+    -------
+    Tuple[Optional[pd.DataFrame], results.ResultSet]
+        Tuple of DataFrame (if successfull) and
+        and Kql ResultSet.
+
+    """
+    result = _ip.run_cell_magic('kql', line='', cell=query)
+    if result is not None and result.completion_query_info['StatusCode'] == 0:
+        data_frame = result.to_dataframe()
+        if result.is_partial_table:
+            print("Warning - query returned partial results.")
+        # Did user want both dataframe and ResultSet
+
+        return data_frame, result
+
+    print("Warning - query did not complete successfully.")
+    print("Kql ResultSet returned - check  \'completion_query_info\' property.")
+    return None, result
 
 
 def _add_queries_to_module(module_name):

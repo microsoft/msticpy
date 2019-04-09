@@ -64,6 +64,23 @@ progression of the queries (e.g. for time ranges, account names, IP
 addresses, etc.) it also makes it much easier to backtrack and re-run
 and to reuse the entire workflow in future investigations.
 
+Scripting and Programming environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In Jupyter you are not limited to querying and viewing results but
+have the full power of a programming language. Although you can do
+a lot in a flexible declarative language like Kql (or others like SQL),
+being able to split your logic into procedural chunks is often helpful
+and sometimes essential. A *declarative* language means that you need
+to encode your logic in a single (possibly complex) statement, while
+*procedural* languages allow you to execute logic in a series of steps.
+
+Being able to use procedural code lets you:
+
+- See and debug intermediate results.
+- Add functionality (such as decoding fields, parsing data) that 
+  may not be available in the query language.
+- Re-use partial results in later processing steps.
+
 Joining to External Data
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -81,8 +98,8 @@ tables but there will often be exceptions:
 Any data that is accessible over your network or from a file can be
 linked with Azure Sentinel data via Python and Jupyter.
 
-Access to Complex Processing and Visualization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Access to Sophisticated Data Processing, Machine Learing and Visualization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Azure Sentinel and the Kusto/Log Analytics data store underlying it have
 a lot of options for visualization and advanced data processing (even
@@ -93,6 +110,14 @@ machine learning libraries or even just data processing and
 transformation facilities not available in the Azure Sentinel platform.
 You can see examples of these in some of the Azure Sentinel sample
 notebooks (see References at the end of the document).
+
+Some well-known examples of these in the Python language are:
+
+- *pandas* for data processing, cleanup and engineering
+- *matplotlib*, *holoviews*, *plotly* and many others for visualization
+- *numpy* and *scipy* for advanced numerical and scientific processing
+- *scikit-learn* for machine learning
+- *tensorflow*, *pytorch*, *keras* for deep learning
 
 Why Python?
 -----------
@@ -145,3 +170,21 @@ the data in python and use JavaScript to render a visualization. In
 practice, this can be a little trickier than it sounds but certainly
 possible with a bit of hand-wiring.
 
+References
+----------
+
+- `jupyter.org <https://jupyter.org>`__
+- `python <https://python.org>`__
+- `PyPi <https://pypi.org>`__
+- `Github <https://github.com/search?q=python>`__
+- `Kusto Query Language <https://kusto.azurewebsites.net/docs/query/index.html>`__
+- `pandas <https://pandas.pydata.org/>`__
+- `matplotlib <https://matplotlib.org>`__
+- `holoviews <https://holoviews.org>`__
+- `plotly <https://plot.ly>`__
+- `numpy <https://www.numpy.org>`__
+- `scipy <https://www.scipy.org>`__
+- `scikit-learn <https://scikit-learn.org/stable/index.html>`__
+- `tensorflow <https://www.tensorflow.org/>`__
+- `pytorch <https://pytorch.org>`__
+- `keras <https://keras.io/>`__
