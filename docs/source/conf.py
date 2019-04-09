@@ -189,4 +189,3 @@ autodoc_default_options = {
 }
 
 autoclass_content = 'both'
-#napoleon_include_init_with_doc = True

@@ -6,6 +6,9 @@
 """Intake kql driver."""
 from typing import Mapping, Tuple
 
+# Need some more work before the use of Intake is ready.
+# Currently pip installing errors out
+# pylint: disable=import-error
 from intake.source.base import DataSource, Schema
 
 import pandas as pd
