@@ -29,8 +29,6 @@ INSTALL_REQUIRES = ['matplotlib>=3.0.0',
 # pylint: disable=locally-disabled, invalid-name
 with open("README.md", "r") as fh:
     long_description = fh.read()
-with open("LICENSE.TXT", "r") as fh:
-    license_txt = fh.read()
 # pylint: enable=locally-disabled, invalid-name
 
 with open("msticpy/_version.py", "r") as fd:
@@ -45,7 +43,6 @@ setuptools.setup(
     description="MSTIC Security Tools",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    license=license_txt,
     url="https://https://github.com/microsoft/msticpy",
     python_requires='>=3.6',
     packages=setuptools.find_packages(exclude=['*.tests']),
@@ -55,6 +52,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=INSTALL_REQUIRES,
-    keywords=['security', 'azure'],
+    keywords=['security', 'azure', 'sentinel'],
     zip_safe=False,
 )
