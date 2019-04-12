@@ -28,23 +28,54 @@ _DATA_ENVIRONMENT_NAME = 'data_environment'
 # utility functions
 @export
 def print_kql(query_string: str):
-    """Print kql query stripped of comments and newline characters."""
-    clean_qry = re.sub(r'(//[^\"\'\n]+)', ' ', query_string, re.MULTILINE).strip()
+    """
+    Print kql query stripped of comments and newline characters.
+
+    Parameters
+    ----------
+    query_string : str
+        The query string to print
+
+    """
+    clean_qry = re.sub(r'(//[^\"\'\n]+)', ' ',
+                       query_string, re.MULTILINE).strip()
     for line in clean_qry.split('\n'):
         print(line.strip())
 
 
 @export
 def clean_kql_query(query_string: str) -> str:
-    """Return kql query stripped of comments and newline characters."""
-    remove_comments = re.sub(r'(//[^\"\'\n]+)', ' ', query_string, re.MULTILINE).strip()
+    """
+    Return kql query stripped of comments and newline characters.
+
+    Parameters
+    ----------
+    query_string : str
+        Input query
+
+    Returns
+    -------
+    str
+        Cleaned query.
+
+    """
+    remove_comments = re.sub(r'(//[^\"\'\n]+)', ' ',
+                             query_string, re.MULTILINE).strip()
     # get rid of newlines and returns
     return re.sub(r'(\s*\n\s*)', ' ', remove_comments)
 
 
 @export
 def query_help(queryname: str):
-    """Print query usage."""
+    """
+    Display help on the named query.
+
+    Parameters
+    ----------
+    queryname : str
+        The name of the query
+
+    """
     if queryname not in query_definitions:
         print('Unknown query: ', queryname)
         return
@@ -73,7 +104,7 @@ def query_help(queryname: str):
 
 
 @export
-def add_query(kql_query: KqlQuery = None, **kwargs):
+def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
     """
     Add a query to the current set.
 
@@ -82,15 +113,21 @@ def add_query(kql_query: KqlQuery = None, **kwargs):
     kql_query : KqlQuery, optional
         KqlQuery object to add
         (the default is None, which prints help)
+    kwargs : Mapping[str, Any]
+        If kql_query is not supplied the kwargs must
+        include `name`, `query` and `data_source`
+        keyword parameters.
 
     """
     if kql_query is None:
         def_data_families = [DataEnvironment.LogAnalytics]
         def_data_environments = [
             DataFamily.WindowsSecurity, DataFamily.LinuxSecurity]
-        if 'name' not in kwargs or 'query' not in kwargs or 'data_source' not in kwargs:
-            raise ValueError(
-                'If kql_query is not supplied the kwargs must include name, query and data_source.')
+        if ('name' not in kwargs
+                or 'query' not in kwargs
+                or 'data_source' not in kwargs):
+            raise ValueError('If kql_query is not supplied the kwargs',
+                             ' must include name, query and data_source.')
         kql_query = KqlQuery(name=kwargs['name'],
                              query=kwargs['query'],
                              description=kwargs.get('description', None),
@@ -108,7 +145,7 @@ def add_query(kql_query: KqlQuery = None, **kwargs):
 
 
 @export
-def list_queries():
+def list_queries() -> List[str]:
     """Return list of currently defined queries."""
     return list(query_definitions.keys())
 
@@ -128,13 +165,11 @@ def replace_query_params(query_name: str, *args, **kwargs) -> str:
     args : Tuple[QueryParamProvider]
         objects that implement QueryParamProvider
         (from which query parameters can be extracted).
-
     provs : Iterable[QueryParamProvider]
         this should be a collection of objects that
         implement QueryParamProvider (from which query
         parameters can be extracted).
-                OR
-    kwargs : Dict[str, Any]
+    kwargs : Mapping[str, Any]
         custom parameter list to populate queries
         (override default values and values extracted
         from QueryParamProviders).
@@ -165,11 +200,12 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
     query_name : str
         The query to use
 
+    Other Parameters
+    ----------------
     provs : Iterable[QueryParamProvider]
         this should be a collection of objects that
         implement QueryParamProvider (from which query
         parameters can be extracted).
-                OR
     kwargs : Dict[str, Any]
         custom parameter list to populate queries
         (override default values and values extracted
@@ -213,7 +249,6 @@ def _get_query_params(kql_query: KqlQuery,
     args : Tuple[QueryParamProvider]
         objects that implement QueryParamProvider
         (from which query parameters can be extracted).
-
     kwargs : Dict[str, Any]
         custom parameter list to populate queries
         (override default values and values extracted
@@ -243,7 +278,9 @@ def _get_query_params(kql_query: KqlQuery,
     if kwargs:
         req_params.update(kwargs)
 
-    data_family, data_environment = _get_data_family_and_env(kql_query, query_providers, kwargs)
+    data_family, data_environment = _get_data_family_and_env(kql_query,
+                                                             query_providers,
+                                                             kwargs)
 
     if not data_family:
         supp_families = ', '.join(DataSchema.get_data_families())
@@ -266,7 +303,8 @@ def _get_query_params(kql_query: KqlQuery,
 
     # If we have missing parameters try to retrieve them
     # as attributes of the object
-    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+    missing_params = [p_name for p_name, p_value in req_params.items()
+                      if not p_value]
     if missing_params:
         _get_missing_params(args, missing_params, req_params, kql_query)
 
@@ -292,11 +330,13 @@ def _get_missing_params(args: Tuple[Any, ...],
         The query object
 
     """
-    for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
+    for other_object in [obj for obj in args
+                         if not isinstance(obj, QueryParamProvider)]:
         for m_param in missing_params:
             if m_param in other_object:
                 req_params[m_param] = getattr(other_object, m_param)
-        missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+        missing_params = [p_name for p_name, p_value in req_params.items()
+                          if not p_value]
 
     if missing_params:
         # check for and remove optional parameters from the missing params list

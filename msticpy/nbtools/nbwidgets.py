@@ -54,16 +54,32 @@ class Lookback(QueryParamProvider):
     """
     ipwidget wrapper to display integer slider.
 
-    Parameters
+    Attributes
     ----------
-    QueryParamProvider : QueryParamProvider
-        Abstract base class
+    before : int
+        The default number of `units` before the `origin_time`
+        (the default is 60)
+    after : int
+        The default number of `units` after the `origin_time`
+        (the default is 10)
+    max_before : int
+        The largest value for `before` (the default is 600)
+    max_after : int
+        The largest value for `after` (the default is 100)
+    origin_time : datetime
+            The origin time (the default is `datetime.utcnow()`)
+    start : datetime
+        Query start time.
+    end : datetime
+        Query end time.
 
     """
 
 # pylint: disable=too-many-arguments
-    def __init__(self, default: int = 4, label: str = 'Select time ({units}) to look back',
-                 origin_time: datetime = None, min_value: int = 1, max_value: int = 240,
+    def __init__(self, default: int = 4,
+                 label: str = 'Select time ({units}) to look back',
+                 origin_time: datetime = None,
+                 min_value: int = 1, max_value: int = 240,
                  units: str = 'hour', auto_display: bool = False):
         """
         Create an instance of the lookback slider widget.
@@ -158,10 +174,25 @@ class QueryTime(QueryParamProvider):
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
-    Parameters
+    Attributes
     ----------
-    QueryParamProvider : QueryParamProvider
-        Abstract base class
+    before : int
+        The default number of `units` before the `origin_time`
+        (the default is 60)
+    after : int
+        The default number of `units` after the `origin_time`
+        (the default is 10)
+    max_before : int
+        The largest value for `before` (the default is 600)
+    max_after : int
+        The largest value for `after` (the default is 100)
+    origin_time : datetime
+            The origin time (the default is `datetime.utcnow()`)
+    start : datetime
+        Query start time.
+    end : datetime
+        Query end time.
+    query_params
 
     """
 
@@ -321,10 +352,17 @@ class AlertSelector(QueryParamProvider):
     Optionally provide and action to call with the selected alert as a parameter
     (typically used to display the alert.)
 
-    Attributes:
-        selected_alert: the selected alert
-        alert_id: the ID of the selected alert
-        alerts: the current alert list (DataFrame)
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame)
+    action : Callable[..., None]
+        The callback action to execute on selection
+        of an alert.
 
     """
 
@@ -370,7 +408,8 @@ class AlertSelector(QueryParamProvider):
                                                   width='95%', height='300px'),
                                               style={'description_width': 'initial'})
 
-        self._w_filter_alerts = widgets.Text(value='', description='Filter alerts by title:',
+        self._w_filter_alerts = widgets.Text(value='',
+                                             description='Filter alerts by title:',
                                              style={'description_width': 'initial'})
         self._w_output = widgets.Output(layout={'border': '1px solid black'})
 
@@ -390,16 +429,16 @@ class AlertSelector(QueryParamProvider):
 
     def _alert_summary(self, alert_row):
         """Return summarized string of alert properties."""
-        return '{time}  {alert} ({host}) [id:{id}]'.format(time=alert_row.StartTimeUtc,
-                                                           alert=alert_row.AlertName,
-                                                           host=alert_row.CompromisedEntity,
-                                                           id=alert_row.SystemAlertId)
+        return (f'{alert_row.StartTimeUtc}  {alert_row.AlertName} '
+                + f'({alert_row.CompromisedEntity}) '
+                + f'[id:{alert_row.SystemAlertId}]')
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and 'new' in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change['new'].lower() in i.lower()]
+                i for i in self._select_items
+                if change['new'].lower() in i.lower()]
 
     def _select_alert(self, selection=None):
         """Select action triggered by picking item from list."""
@@ -470,10 +509,15 @@ class GetSingleAlert(QueryParamProvider):
 
     Try to fetch a single alert by SystemAlertId.
 
-    Attributes:
-        selected_alert: the selected alert
-        alert_id: the ID of the selected alert
-        alerts: the current alert list (DataFrame)
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame).
+        Should always have one member.
 
     """
 
@@ -668,8 +712,12 @@ class SelectString:
     """
     Selection list from list or dict.
 
-    Attributes:
-        value : The selected value.
+    Attributes
+    ----------
+    value : Any
+        The selected value.
+    item_action : Callable[..., None]
+        Action to call for each selection.
 
     """
 

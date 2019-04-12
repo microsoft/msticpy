@@ -152,7 +152,8 @@ class DataSchema:
                                             cwd,
                                             name
                                             | extend TimeCreatedUtc=TimeGenerated '''}
-    _ACCOUNT_LOGON_LX = {'table': 'LinuxAuditD | where EventID == 1100 or EventID == 1112',
+    _ACCOUNT_LOGON_LX = {'table':
+                         'LinuxAuditD | where EventID == 1100 or EventID == 1112',
                          'query_project': '''| project
                                             TenantId,
                                             Account,

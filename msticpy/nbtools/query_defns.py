@@ -34,7 +34,7 @@ class DataFamily(Enum):
     SecurityAlert = 3
 
     @classmethod
-    def parse(cls, value: Union[str, int]):
+    def parse(cls, value: Union[str, int]) -> 'DataFamily':
         """
         Convert string or int to enum.
 
@@ -71,7 +71,7 @@ class DataEnvironment(Enum):
     Kusto = 2
 
     @classmethod
-    def parse(cls, value: Union[str, int]):
+    def parse(cls, value: Union[str, int]) -> 'DataEnvironment':
         """
         Convert string or int to enum.
 

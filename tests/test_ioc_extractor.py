@@ -11,13 +11,13 @@ TEST_CASES = {
     'ipv6_test': r'''c:\one\path\or\another\myprocess -ip6:(2001:0db8:85a3:0000:0000:8a2e:0370:7334,
     2001:db8:85a3:0:0:8a2e:370:7334,2001:db8:85a3::8a2e:370:7334,::ffff:192.0.2.128)''',
     'url_test': r'''c:\one\path\or\another\myprocess /url:https://some.domain.it/thepath?qry1=abc&qry2=xyz
-        /url:https://myuser@some.domain.es:88/thepath?qry1=abc&qry2=xyz''',
+        /url:https://myuser@some.domain.es:88/thepath?qry1=abc&qry2=xyz"<some other trailing stuff''',
     'windows_path_test': r'c:\one\path\or\another\myprocess -file:"..\another\file" -file:"\\uncpath\file"',
     'linux_path_test': r'/bin/bash --file:./bish --file:/bin/bash --file:../../bosh',
-    'md5_hash_test': '00236a2ae558018ed13b5222ef1bd987hash -something-hash=00236a2ae558018ed13b5222ef1bd987hash -something -hash=00236a2ae558018ed13b5222ef1bd987',
-    'sha1_hash_test': '00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001',
-    'sha256_hash_test': '''00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234hash -something
--hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234''',
+    'md5_hash_test': '00236a2ae558018ed13b5222ef1bd987hash -something-hash=00236a2ae558018ed13b5222ef1bd988hash -something -hash=00236a2ae558018ed13b5222ef1bd989',
+    'sha1_hash_test': '00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000002hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000003',
+    'sha256_hash_test': '''00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901235hash -something
+-hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901236''',
     'url2_test': 'curl \'https://www.virustotal.com/en/ip-address/90.156.201.27/information/\''}
 
 

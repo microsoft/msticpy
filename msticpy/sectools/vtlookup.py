@@ -3,8 +3,23 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module for VTLookup class."""
+"""
+Module for VTLookup class.
 
+Wrapper class around `Virus Total
+API <https://www.virustotal.com/en/documentation/public-api/>`__. Input
+can be a single IoC observable or a pandas DataFrame containing multiple
+observables. Processing requires a Virus Total account and API key and
+processing performance is limited to the number of requests per minute
+for the account type that you have. Support IoC Types:
+
+-  Filehash
+-  URL
+-  DNS Domain
+-  IPv4 Address
+
+"""
+# pylint: disable=too-many-lines
 import json
 from json import JSONDecodeError
 import math
@@ -208,7 +223,8 @@ class VTLookup:
         Other Parameters
         ----------------
             key/value pairs of additional mappings to supported IoC type names
-            e.g. ipv4='ipaddress', url='httprequest'. This allows you to specify custom
+            e.g. ipv4='ipaddress', url='httprequest'.
+            This allows you to specify custom
             mappings when the source data is tagged with different names.
 
         Returns
@@ -216,14 +232,21 @@ class VTLookup:
         pd.DataFrame
             Combined results of local pre-processing and VirusTotal Lookups
 
+        Raises
+        ------
+        KeyError
+            Unknown ioc_type
+
         Notes
         -----
             See supported_ioc_types attribute for a list of valid target types.
-            Not all of these types are supported by VirusTotal. See ioc_vt_type_mapping for
-            current mappings. Types mapped to None will not be submitted to VT.
+            Not all of these types are supported by VirusTotal.
+            See ioc_vt_type_mapping for current mappings.
+            Types mapped to None will not be submitted to VT.
 
-            For urls a full http request can be submitted, query string and fragments will be
-            dropped before submitting. Other supported protocols are ftp, telnet, ldap, file
+            For urls a full http request can be submitted, query string
+            and fragments will be dropped before submitting.
+            Other supported protocols are ftp, telnet, ldap, file
             For files MD5, SHA1 and SHA256 hashes are supported.
             For IP addresses only dotted IPv4 addresses are supported.
 
@@ -272,6 +295,11 @@ class VTLookup:
             list{dict}: if output == 'dict'
             pd.DataFrame: otherwise
 
+        Raises
+        ------
+        KeyError
+            Unknown ioc_type
+
         """
         # Check input
         if (observable is None
@@ -313,7 +341,7 @@ class VTLookup:
 
         return self.results
 
-# pylint: disable=too-many-locals, too-many-arguments
+# pylint: disable=too-many-locals
     def _lookup_ioc_type(self,
                          input_frame: pd.DataFrame,
                          ioc_type: str,
@@ -334,11 +362,15 @@ class VTLookup:
         src_index_col : Optional[str]
             SourceIndex column name
 
+        Raises
+        ------
+        KeyError
+            Unknown ioc_type
+
         """
-        assert (
-            ioc_type in self._VT_TYPE_MAP
-            and self._VT_TYPE_MAP[ioc_type] in self._VT_API_TYPES
-        )
+        if ioc_type not in self._VT_TYPE_MAP:
+            raise KeyError(f'Unknown ioc_type "{ioc_type}""')
+
         vt_param = self._VT_API_TYPES[self._VT_TYPE_MAP[ioc_type]]
 
         # Some types support batch lookups so we can assemble them into batches
@@ -371,20 +403,19 @@ class VTLookup:
                 batch_index += 1
 
             # We want to trigger in the following circumstances
-            # 1. if the length of our batch is at the max VT batchsize for this type
-            #   (If the batch size is 1 this will fire for every row)
+            # 1. if the length of our batch is at the max VT batchsize for
+            # this type (If the batch size is 1 this will fire for every row)
             # 2. Or we have reached the end of our row iteration
             # AND
             # 3. The batch is not empty
-            if (len(obs_batch) == vt_param.batch_size or row_num == row_count) and obs_batch:
+            if ((len(obs_batch) == vt_param.batch_size or row_num == row_count)
+                    and obs_batch):
                 obs_submit = vt_param.batch_delimiter.join(obs_batch)
 
-                self._print_status(
-                    'Submitting observables: "{}", type "{}" to VT. (Source index {})'.format(
-                        obs_submit, ioc_type, idx
-                    ),
-                    2,
-                )
+                self._print_status(('Submitting observables: '
+                                    + f'"{obs_submit}", type "{ioc_type}" '
+                                    + 'to VT. (Source index {idx})'),
+                                   2)
                 # Submit the request
                 results, status_code = self._vt_submit_request(obs_submit, vt_param)
 
@@ -416,6 +447,7 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
+# pylint: disable=too-many-arguments
     def _parse_vt_results(self,
                           vt_results: Any,
                           observable: str,
@@ -451,12 +483,10 @@ class VTLookup:
             # single result
             results_to_parse.append(vt_results)
         else:
-            self._print_status(
-                'Error parsing response to JSON: "{}", type "{}". (Source index {})'.format(
-                    observable, ioc_type, source_idx
-                ),
-                1,
-            )
+            self._print_status(('Error parsing response to JSON: '
+                                + f'"{observable}", type "{ioc_type}". '
+                                + f'(Source index {source_idx})'),
+                               1)
 
         if vt_param and vt_param.batch_delimiter:
             observables = observable.split(vt_param.batch_delimiter)
@@ -579,7 +609,8 @@ class VTLookup:
                     if "url" in item
                 ]
                 df_dict_vtresults["DetectedUrls"] = ", ".join(item_list)
-                # positives are listed per detected_url so we need to pull those our and sum them.
+                # positives are listed per detected_url so we need to
+                # pull those our and sum them.
                 positives = sum(
                     [
                         item["positives"]
@@ -627,12 +658,11 @@ class VTLookup:
                 observable, ioc_type, pp_observable.status, idx
             )
             # pylint: disable=locally-disabled, line-too-long
-            self._print_status(
-                'Invalid observable format: "{}", type "{}", status: {} - skipping. (Source index {})'.format(
-                    observable, ioc_type, pp_observable.status, idx
-                ),
-                2,
-            )
+            self._print_status((f'Invalid observable format: "{observable}", '
+                                + f'type "{ioc_type}", '
+                                + f'status: {pp_observable.status} '
+                                + f'- skipping. (Source index {idx})'),
+                               2)
             # pylint: enable=locally-disabled, line-too-long
             return pp_observable
 
@@ -640,12 +670,11 @@ class VTLookup:
         dup_result = self._check_duplicate_submission(observable, ioc_type, idx)
         if dup_result.is_dup:
             # pylint: disable=locally-disabled, line-too-long
-            self._print_status(
-                'Duplicate observable value detected: "{}", type "{}" status: {} - skipping. (Source index {})'.format(
-                    observable, ioc_type, dup_result.status, idx
-                ),
-                2,
-            )
+            self._print_status(('Duplicate observable value detected: '
+                                + f'"{observable}", type "{ioc_type}" '
+                                + f'status: {dup_result.status} '
+                                + f'- skipping. (Source index {idx})'),
+                               2)
             return PreProcessResult(None, dup_result.status)
 
         return pp_observable
@@ -676,8 +705,8 @@ class VTLookup:
 
         # Note duplicate var here can be multiple rows of past results
         duplicate = self.results[self.results["Observable"] == observable].copy()
-        # if this is a file hash we should check for previous results in all of the hash
-        # columns
+        # if this is a file hash we should check for previous results in
+        # all of the hash columns
         if duplicate.shape[0] == 0 and ioc_type in ["md5_hash",
                                                     "sha1_hash",
                                                     "sh256_hash"]:
@@ -685,8 +714,8 @@ class VTLookup:
                 "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
             )
             duplicate = self.results.query(dup_query).copy()
-            # In these cases we want to set the observable to the source value but keep the
-            # rest of the results
+            # In these cases we want to set the observable to the source value
+            # but keep the rest of the results
             if duplicate.shape[0] > 0:
                 duplicate["Observable"] = observable
 
@@ -742,7 +771,8 @@ class VTLookup:
         self.results = new_results
 
     def _vt_submit_request(self, submission_string: str,
-                           vt_param: VTParams) -> Tuple[Optional[Dict[Any, Any]], int]:
+                           vt_param: VTParams) -> Tuple[Optional[Dict[Any, Any]],
+                                                        int]:
         """
         Submit the request to VT.
 

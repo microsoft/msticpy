@@ -3,8 +3,22 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""
+r"""
 eventcluster module.
+
+This module is intended to be used to summarize large numbers of events
+into clusters of different patterns. High volume repeating events can
+often make it difficult to see unique and interesting items.
+
+The module contains functions to generate clusterable features from
+string data. For example, an administration command that does some
+maintenance on thousands of servers with a commandline such as:
+``install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback``\  can
+be collapsed into a single cluster pattern by ignoring the character
+values in the string and using delimiters or tokens to group the values.
+
+This is an unsupervised learning module implemented using SciKit Learn
+DBScan.
 
 Contains:
 dbcluster_events: generic clustering method using DBSCAN designed to summarize
@@ -12,6 +26,7 @@ process events and other similar data by grouping on common features.
 
 add_process_features: derives numerical features from text features such as
 commandline and process path.
+
 """
 from math import log10, floor
 from typing import List, Any, Tuple, Union
@@ -198,9 +213,9 @@ def add_process_features(input_frame: pd.DataFrame,
     input_frame : pd.DataFrame
         The input dataframe
     path_separator : str, optional
-        Path separator - if not supplied, try to determine
-            from 'NewProcessName' column of first 10 rows
-            (the default is None)
+        Path separator. If not supplied, try to determine
+        from 'NewProcessName' column of first 10 rows
+        (the default is None)
     force : bool, optional
         Forces re-calculation of feature columns even if they
         already exist (the default is False)
@@ -213,27 +228,28 @@ def add_process_features(input_frame: pd.DataFrame,
     Notes
     -----
     Features added:
-        processNameLen: length of process file name (inc path)
-        processNameTokens: the number of elements in the path
-        processName: the process file name (minus path)
-        commandlineTokens: number of space-separated tokens in the command line
-        commandlineLen: length of the command line
-        commandlineLogLen: log10 length of commandline
-        isSystemSession: 1 if session Id is 0x3e7 for Windows or -1 for Linux
-        commandlineTokensFull: counts number of token separators in commandline
-            [\s\-\\/\.,"\'|&:;%$()]
-        pathScore: sum of ord() value of characters in path
-        pathLogScore: log10 of pathScore
-        commandlineScore: sum of ord() value of characters in commandline
-        commandlineLogScore: log10 of commandlineScore
+
+    - processNameLen: length of process file name (inc path)
+    - processNameTokens: the number of elements in the path
+    - processName: the process file name (minus path)
+    - commandlineTokens: number of space-separated tokens in the command line
+    - commandlineLen: length of the command line
+    - commandlineLogLen: log10 length of commandline
+    - isSystemSession: 1 if session Id is 0x3e7 for Windows or -1 for Linux
+    - commandlineTokensFull: counts number of token separators in commandline
+      [\\s\-\\/\.,"\'\|&:;%$()]
+    - pathScore: sum of ord() value of characters in path
+    - pathLogScore: log10 of pathScore
+    - commandlineScore: sum of ord() value of characters in commandline
+    - commandlineLogScore: log10 of commandlineScore
 
     """
     output_df = input_frame.copy()
 
     # Set any NaN values to empty string
     if 'NewProcessName' in output_df and 'CommandLine' in output_df:
-        output_df[['NewProcessName', 'CommandLine']] = output_df[['NewProcessName',
-                                                                  'CommandLine']].fillna(value='')
+        output_df[['NewProcessName', 'CommandLine']] = (
+            output_df[['NewProcessName', 'CommandLine']].fillna(value=''))
 
     # try to determine the path separator
     if path_separator is None:
@@ -252,11 +268,11 @@ def add_process_features(input_frame: pd.DataFrame,
         _add_commandline_features(output_df, force, path_separator)
 
     if 'SubjectLogonId' in output_df:
-        if (('isSystemSession' not in output_df or force) and 'SubjectLogonId' in output_df):
-            output_df['isSystemSession'] = output_df.apply(lambda x:
-                                                           True if x.SubjectLogonId == '0x3e7'
-                                                           or x.SubjectLogonId == '-1' else False,
-                                                           axis=1)
+        if (('isSystemSession' not in output_df or force)
+                and 'SubjectLogonId' in output_df):
+            output_df['isSystemSession'] = (
+                output_df.apply(lambda x: True if x.SubjectLogonId in ['0x3e7', '-1']
+                                else False, axis=1))
 
     return output_df
 
@@ -278,29 +294,24 @@ def _add_processname_features(output_df: pd.DataFrame,
 
     """
     if 'processNameLen' not in output_df or force:
-        output_df['processNameLen'] = output_df.apply(lambda x:
-                                                      len(x.NewProcessName),
-                                                      axis=1)
+        output_df['processNameLen'] = (
+            output_df.apply(lambda x: len(x.NewProcessName), axis=1))
     if 'processNameTokens' not in output_df or force:
-        output_df['processNameTokens'] = output_df.apply(lambda x:
-                                                         len(x.NewProcessName.split(
-                                                             path_separator)),
-                                                         axis=1)
+        output_df['processNameTokens'] = (
+            output_df.apply(lambda x: len(x.NewProcessName.split(path_separator)),
+                            axis=1))
     if 'processName' not in output_df or force:
-        output_df['processName'] = output_df.apply(lambda x:
-                                                   x.NewProcessName.split(
-                                                       path_separator)[-1],
-                                                   axis=1)
+        output_df['processName'] = (
+            output_df.apply(lambda x: x.NewProcessName.split(path_separator)[-1],
+                            axis=1))
     if 'pathScore' not in output_df or force:
-        output_df['pathScore'] = output_df.apply(lambda x:
-                                                 _string_score(
-                                                     x.NewProcessName),
-                                                 axis=1)
+        output_df['pathScore'] = (
+            output_df.apply(lambda x: _string_score(x.NewProcessName),
+                            axis=1))
     if 'pathLogScore' not in output_df or force:
-        output_df['pathLogScore'] = output_df.apply(lambda x:
-                                                    log10(x.pathScore)
-                                                    if x.pathScore else 0,
-                                                    axis=1)
+        output_df['pathLogScore'] = (
+            output_df.apply(lambda x: log10(x.pathScore) if x.pathScore else 0,
+                            axis=1))
 
 
 def _add_commandline_features(output_df: pd.DataFrame,
@@ -320,36 +331,32 @@ def _add_commandline_features(output_df: pd.DataFrame,
 
     """
     if 'commandlineTokens' not in output_df or force:
-        output_df['commandlineTokens'] = output_df.apply(lambda x:
-                                                         len(x.CommandLine.split(
-                                                             path_separator)),
-                                                         axis=1)
+        output_df['commandlineTokens'] = (
+            output_df.apply(lambda x: len(x.CommandLine.split(path_separator)),
+                            axis=1))
     if 'commandlineLen' not in output_df or force:
-        output_df['commandlineLen'] = output_df.apply(lambda x:
-                                                      len(x.CommandLine),
-                                                      axis=1)
+        output_df['commandlineLen'] = (
+            output_df.apply(lambda x: len(x.CommandLine),
+                            axis=1))
     if 'commandlineLogLen' not in output_df or force:
-        output_df['commandlineLogLen'] = output_df.apply(lambda x:
-                                                         log10(
-                                                             x.commandlineLen)
-                                                         if x.commandlineLen else 0, axis=1)
+        output_df['commandlineLogLen'] = (
+            output_df.apply(lambda x: log10(x.commandlineLen)
+                            if x.commandlineLen else 0, axis=1))
     if 'commandlineTokensFull' not in output_df or force:
         delim_rgx = r'[\s\-\\/\.,"\'|&:;%$()]'
-        output_df['commandlineTokensFull'] = (output_df[['CommandLine']]
-                                              .apply(lambda x: x.str.count(delim_rgx),
-                                                     axis=1))
+        output_df['commandlineTokensFull'] = (
+            output_df[['CommandLine']].apply(lambda x: x.str.count(delim_rgx),
+                                             axis=1))
 
     if 'commandlineScore' not in output_df or force:
-        output_df['commandlineScore'] = output_df.apply(lambda x:
-                                                        _string_score(
-                                                            x.CommandLine),
-                                                        axis=1)
+        output_df['commandlineScore'] = (
+            output_df.apply(lambda x: _string_score(x.CommandLine),
+                            axis=1))
     if 'commandlineLogScore' not in output_df or force:
-        output_df['commandlineLogScore'] = output_df.apply(lambda x:
-                                                           log10(
-                                                               x.commandlineScore)
-                                                           if x.commandlineScore else 0,
-                                                           axis=1)
+        output_df['commandlineLogScore'] = (
+            output_df.apply(lambda x: log10(x.commandlineScore)
+                            if x.commandlineScore else 0,
+                            axis=1))
 
 
 @export
@@ -366,7 +373,7 @@ def delim_count(input_row: pd.Series,
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\s\-\\/\.,"\'|&:;%$()]')
+        delimiters to use. (the default is r'[\\s\-\\/\.,"\'\|&:;%$()]')
 
     Returns
     -------
@@ -378,7 +385,9 @@ def delim_count(input_row: pd.Series,
 
 
 @export
-def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
+def char_ord_score(input_row: pd.Series,
+                   column: str,
+                   scale: int = 1) -> int:
     """
     Return sum of ord values of characters in string.
 
@@ -414,7 +423,9 @@ def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
 
 
 @export
-def token_count(input_row: pd.Series, column: str, delimiter: str = ' ') -> int:
+def token_count(input_row: pd.Series,
+                column: str,
+                delimiter: str = ' ') -> int:
     """
     Return count of delimiter-separated tokens pd.Series column.
 
@@ -466,7 +477,9 @@ def delim_count_df(data: pd.DataFrame,
     return data[column].str.count(delim_list)
 
 
-def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Series:
+def char_ord_score_df(data: pd.DataFrame,
+                      column: str,
+                      scale: int = 1) -> pd.Series:
     """
     Return sum of ord values of characters in string.
 
@@ -499,10 +512,13 @@ def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Ser
     algorithms.
 
     """
-    return data.apply(lambda x: sum([ord(char) for char in x[column]]) / scale, axis=1)
+    return data.apply(lambda x: sum([ord(char)
+                                     for char in x[column]]) / scale, axis=1)
 
 
-def token_count_df(data: pd.DataFrame, column: str, delimiter: str = ' ') -> pd.Series:
+def token_count_df(data: pd.DataFrame,
+                   column: str,
+                   delimiter: str = ' ') -> pd.Series:
     """
     Return count of delimiter-separated tokens pd.Series column.
 
@@ -562,15 +578,16 @@ def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
         y-axis label (the default is None)
 
     """
+    max_idx = x_predict.shape[1] - 1
     if plot_features[0] >= x_predict.shape[1]:
         raise ValueError("plot_features[0] index must be a value from 0 to {}."
-                         .format(x_predict.shape[1] - 1))
+                         .format(max_idx))
     if plot_features[1] >= x_predict.shape[1]:
         raise ValueError("plot_features[1] index must be a value from 0 to {}."
-                         .format(x_predict.shape[1] - 1))
+                         .format(max_idx))
     if plot_features[0] == plot_features[1]:
-        raise ValueError("plot_features indexes must be 2 different values in range 0 to {}."
-                         .format(x_predict.shape[1] - 1))
+        mssg = "plot_features indexes must be 2 different values in range 0 to"
+        raise ValueError(mssg + f" {max_idx}.")
 
     labels = db_cluster.labels_
     core_samples_mask = np.zeros_like(labels, dtype=bool)

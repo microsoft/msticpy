@@ -259,7 +259,8 @@ class SecurityBase(QueryParamProvider):
                 'account_name': acct_name,
                 'process_name': proc_name,
                 'logon_session_id': self.get_logon_id(),
-                'process_id': (self.primary_process.ProcessId if self.primary_process else None),
+                'process_id': (self.primary_process.ProcessId
+                               if self.primary_process else None),
                 'path_separator': path_separator,
                 'data_family': self.data_family,
                 'data_environment': self.data_environment,
@@ -477,7 +478,7 @@ class SecurityBase(QueryParamProvider):
         return html.escape(str_entity)
 
     def _find_os_family(self):
-        """Work out which OSFamily and path separator to use from entities or file paths."""
+        """Return OSFamily and path separator to use from entities or file paths."""
         # Use OSFamily if any entities have this property set
         os_family_entities = [e for e in self.entities if 'OSFamily' in e]
         if os_family_entities:
