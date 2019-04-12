@@ -12,8 +12,8 @@ and threat investigation. There are three main sub-packages:
 - data - data interfaces specific to Sentinel/Log Analytics
 
 The package is in an early preview mode so there are likely to be bugs and there are several
-that are not yet optimized for performance. We welcome feedback, bug reports and suggestions
-for new features.
+areas that are not yet optimized for performance. 
+We welcome feedback, bug reports and suggestions for new features.
 
 ## Installing
 
@@ -25,12 +25,13 @@ or for the latest dev build
 
 ## Documentation
 
-The public functions, classes and public class methods have docstrings that describe the
-parameters and, for more complex functions give a more detailed description of functionality
-and outputs. We are in the process of producing more formal documentation on read-the-docs.
+Full documentation is on [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/overview.html)
 
-Until then, the functionality is described in the following sections and accompanying notebooks.
-You can also browse through the sample notebooks (especially the *Windows Alert Investigation* notebook)
+A brief summary of the functionality is described in the following sections. 
+
+Sample notebooks for many of the modules are in the [docs/notebooks](./docs/notebooks) folder.and accompanying notebooks.
+
+You can also browse through the sample notebooks referenced at the end of this document (especially the *Windows Alert Investigation* notebook)
 to see some of the functionality used in context.
 
 ---
