@@ -113,11 +113,14 @@ let src_proc = \'{process_name}\';
 | where host_match or acct_match or proc_match
 {add_query_items}
 ''',
-                    description='Retrieves list of alerts with a common host, acount or process',
+                    description='''
+Retrieves list of alerts with a common host, acount or process''',
                     data_source='security_alert',
                     data_families=[DataFamily.SecurityAlert],
                     data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['process_name', 'account_name', 'add_query_items']))
+                    optional_params=['process_name',
+                                     'account_name',
+                                     'add_query_items']))
 
 _add_query(KqlQuery(name='list_related_ip_alerts',
                     query='''
@@ -135,18 +138,24 @@ let ip_extract = materialize(
 | where TimeGenerated >= datetime({start})
 | where TimeGenerated <= datetime({end})
 | project SystemAlertId, ExtendedProperties, Entities
-| extend source_ips_str = extract("\\"Source IPs\\": \\"([^\\"]+)\\"", 1, ExtendedProperties)
-| extend source_ips_1 = iif(isnotempty(source_ips_str), split(source_ips_str, ','), dynamic([]))
-| extend source_ips_2 = extract_all("\\"Address\\": \\"([^\\"]+)\\"", dynamic([1]), Entities)
-| mvexpand alert_ip_1 = source_ips_1 to typeof(string), alert_ip_2 = source_ips_2 to typeof(string)
+| extend source_ips_str =
+    extract("\\"Source IPs\\": \\"([^\\"]+)\\"", 1, ExtendedProperties)
+| extend source_ips_1 =
+    iif(isnotempty(source_ips_str), split(source_ips_str, ','), dynamic([]))
+| extend source_ips_2 =
+    extract_all("\\"Address\\": \\"([^\\"]+)\\"", dynamic([1]), Entities)
+| mvexpand alert_ip_1 =
+    source_ips_1 to typeof(string), alert_ip_2 = source_ips_2 to typeof(string)
 | where isnotempty(alert_ip_1) or isnotempty(alert_ip_2)
 | where alert_ip_1 in (IP_table) or alert_ip_2 in (IP_table)
-| extend matching_ips = case(isnotempty(alert_ip_1) and isnotempty(alert_ip_2), strcat(alert_ip_1, ',', alert_ip_2),
+| extend matching_ips = case(isnotempty(alert_ip_1) and isnotempty(alert_ip_2),
+                                strcat(alert_ip_1, ',', alert_ip_2),
                              isnotempty(alert_ip_1), alert_ip_1,
                              isnotempty(alert_ip_2), alert_ip_2,
                              '')
 | extend MatchingIps = split(matching_ips, ',')
-| project-away source_ips_str, source_ips_1, source_ips_2, alert_ip_1, alert_ip_2, matching_ips
+| project-away source_ips_str, source_ips_1, source_ips_2,
+    alert_ip_1, alert_ip_2, matching_ips
 );
 {table}
 {query_project}
@@ -228,7 +237,8 @@ sourceProcess
     | where TimeGenerated <= parentTimeCreated
     | where (SubjectLogonId == parentLogonId or TargetLogonId == parentLogonId)
     | extend NodeRole = 'parent', Level = 2
-    | join (parentProcess | project ProcessId) on $left.NewProcessId == $right.ProcessId
+    | join (parentProcess | project ProcessId)
+        on $left.NewProcessId == $right.ProcessId
 )
 | union
 (
@@ -241,7 +251,8 @@ sourceProcess
     | where TimeGenerated <= end
     | where SubjectLogonId == sourceLogonId and SubjectLogonId != system_session_id
     | extend NodeRole = 'child', Level = 2
-    | join (childProcesses | project NewProcessId) on $left.ProcessId == $right.NewProcessId
+    | join (childProcesses | project NewProcessId)
+        on $left.ProcessId == $right.NewProcessId
 )
 | union
 (
@@ -321,7 +332,8 @@ let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
 | top 1 by TimeCreatedUtc desc nulls last);
 {add_query_items}
 ''',
-                    description='Retrieves the parent process of a process process',
+                    description='''
+Retrieves the parent process of a process process''',
                     data_source='process_create',
                     data_families=[DataFamily.WindowsSecurity,
                                    DataFamily.LinuxSecurity],
@@ -340,7 +352,8 @@ _add_query(KqlQuery(name='list_hosts_matching_commandline',
 | where CommandLine =~ \'{commandline}\'
 {add_query_items}
 ''',
-                    description='Retrieves processes on other hosts with matching commandline',
+                    description='''
+Retrieves processes on other hosts with matching commandline''',
                     data_source='process_create',
                     data_families=[DataFamily.WindowsSecurity,
                                    DataFamily.LinuxSecurity],
@@ -361,7 +374,8 @@ _add_query(KqlQuery(name='list_processes_in_session',
 | extend commandlinelen = strlen(CommandLine)
 {add_query_items}
 ''',
-                    description='Retrieves all processes on the host for a logon session',
+                    description='''
+Retrieves all processes on the host for a logon session''',
                     data_source='process_create',
                     data_families=[DataFamily.WindowsSecurity,
                                    DataFamily.LinuxSecurity],
@@ -379,7 +393,8 @@ _add_query(KqlQuery(name='get_host_logon',
 | where TargetLogonId == \'{logon_session_id}\'
 {add_query_items}
 ''',
-                    description='Retrieves the logon event for the session id on the host.',
+                    description='''
+Retrieves the logon event for the session id on the host.''',
                     data_source='account_logon',
                     data_families=[DataFamily.WindowsSecurity,
                                    DataFamily.LinuxSecurity],

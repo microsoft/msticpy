@@ -1,0 +1,124 @@
+metadata:
+  version: 1
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+      data_source: 'security_alert'
+      data_families: [DataFamily.SecurityAlert]
+      data_environments: [DataEnvironment.LogAnalytics]
+    driver: kqlsentinel
+    args: # passed to the open() method
+      query: '
+        {{table}}
+        {{query_project}}
+        | where TimeGenerated >= datetime({{start}})
+        | where TimeGenerated <= datetime({{end}})
+        | extend extendedProps = parse_json(ExtendedProperties)
+        | extend CompromisedEntity = tostring(extendedProps[''Compromised Host''])
+        | project-away extendedProps
+        {{add_query_items}}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityAlert'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+  list_alerts_counts:
+    description: Retrieves summary count of alerts by type
+    metadata:
+      data_source: 'security_alert'
+      data_families: [DataFamily.SecurityAlert]
+      data_environments: [DataEnvironment.LogAnalytics]
+    driver: kqlsentinel
+    args: # passed to the open() method
+      query: '
+        {{table}}
+        {{query_project}}
+        | where TimeGenerated >= datetime({{start}})
+        | where TimeGenerated <= datetime({{end}})
+        | summarize alertCount=count(), firstAlert=min(TimeGenerated),
+            lastAlert=max(TimeGenerated) by AlertName
+        | order by alertCount desc
+        {{add_query_items}}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityAlert'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+  get_alert:
+    description: Retrieves a single alert by SystemAlertId
+    metadata:
+      data_source: 'security_alert'
+      data_families: [DataFamily.SecurityAlert]
+      data_environments: [DataEnvironment.LogAnalytics]
+    driver: kqlsentinel
+    args: # passed to the open() method
+      query: '
+        {{table}}
+        {{query_project}}
+        | where TimeGenerated >= datetime({{start}})
+        | where TimeGenerated <= datetime({{end}})
+        | extend extendedProps = parse_json(ExtendedProperties)
+        | extend CompromisedEntity = tostring(extendedProps[''Compromised Host''])
+        | project-away extendedProps
+        | where SystemAlertId == \''{{system_alert_id}}\''
+        {{add_query_items}}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityAlert'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      system_alert_id:
+        description: 'The ID of the alert'
+        type: str        

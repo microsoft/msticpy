@@ -1,0 +1,21 @@
+package:
+  version: '1.0'  # update version number if data contents change
+  name: kqlsentinel
+
+build:
+  number: 0  # update build number for minor catalog fixes
+  noarch: generic
+
+requirements:
+  run:
+    - intake
+    - Kqlmagic
+    # Add additional plugins here
+  build: []
+
+about:
+  description: Kql Sentinel Driver for Log Analytics
+
+extra:
+  maintainers:
+    - Ian Hellen <ianhelle@microsoft.com>

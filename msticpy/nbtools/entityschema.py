@@ -60,14 +60,11 @@ class Entity(ABC):
         if 'AdditionalData' not in self:
             self['AdditionalData'] = {}
 
-        if src_entity is None:
-            return
-
-        self._extract_src_entity(src_entity)
-
-        # add AdditionalData dictionary if it's populated
-        if 'AdditionalData' in src_entity:
-            self['AdditionalData'] = src_entity['AdditionalData']
+        if src_entity is not None:
+            self._extract_src_entity(src_entity)
+            # add AdditionalData dictionary if it's populated
+            if 'AdditionalData' in src_entity:
+                self['AdditionalData'] = src_entity['AdditionalData']
 
         if kwargs:
             self._entity_properties.update(kwargs)
@@ -267,7 +264,35 @@ class Entity(ABC):
 
 @export
 class Account(Entity):
-    """Account Entity class."""
+    """
+    Account Entity class.
+
+    Attributes
+    ----------
+    Name : str
+        Account Name
+    NTDomain : str
+        Account NTDomain
+    UPNSuffix : str
+        Account UPNSuffix
+    Host : Host
+        Account Host
+    LogonId : str
+        Account LogonId (deprecated)
+    Sid : str
+        Account Sid
+    AadTenantId : str
+        Account AadTenantId
+    AadUserId : str
+        Account AadUserId
+    PUID : str
+        Account PUID
+    IsDomainJoined : bool
+        Account IsDomainJoined
+    DisplayName : str
+        Account DisplayName
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None,
                  src_event: Mapping[str, Any] = None,
@@ -301,20 +326,36 @@ class Account(Entity):
         if src_event is not None:
             if role == 'subject' and 'SubjectUserName' in src_event:
                 self.Name = src_event['SubjectUserName']
-                self.NTDomain = src_event['SubjectUserDomain'] if 'SubjectUserDomain' in src_event else None
-                self.Sid = src_event['SubjectUserSid'] if 'SubjectUserSid' in src_event else None
-                self.LogonId = src_event['SubjectLogonId'] if 'SubjectLogonId' in src_event else None
+                self.NTDomain = (src_event['SubjectUserDomain']
+                                 if 'SubjectUserDomain' in src_event
+                                 else None)
+                self.Sid = (src_event['SubjectUserSid']
+                            if 'SubjectUserSid' in src_event
+                            else None)
+                self.LogonId = (src_event['SubjectLogonId']
+                                if 'SubjectLogonId' in src_event
+                                else None)
             if role == 'target' and 'TargetUserName' in src_event:
                 self.Name = src_event['TargetUserName']
-                self.NTDomain = src_event['TargetUserDomain'] if 'TargetUserDomain' in src_event else None
-                self.Sid = src_event['TargetUserSid'] if 'TargetUserSid' in src_event else None
-                self.LogonId = src_event['TargetLogonId'] if 'TargetLogonId' in src_event else None
+                self.NTDomain = (src_event['TargetUserDomain']
+                                 if 'TargetUserDomain' in src_event
+                                 else None)
+                self.Sid = (src_event['TargetUserSid']
+                            if 'TargetUserSid' in src_event
+                            else None)
+                self.LogonId = (src_event['TargetLogonId']
+                                if 'TargetLogonId' in src_event
+                                else None)
 
-            self.AadTenantId = src_event['AadTenantId'] if 'AadTenantId' in src_event else None
-            self.AadUserId = src_event['AadUserId'] if 'AadUserId' in src_event else None
+            self.AadTenantId = (src_event['AadTenantId']
+                                if 'AadTenantId' in src_event else None)
+            self.AadUserId = (src_event['AadUserId']
+                              if 'AadUserId' in src_event else None)
             self.PUID = src_event['PUID'] if 'PUID' in src_event else None
-            self.DisplayName = src_event['DisplayName'] if 'DisplayName' in src_event else None
-            self.UPNSuffix = src_event['UPNSuffix'] if 'UPNSuffix' in src_event else None
+            self.DisplayName = (src_event['DisplayName']
+                                if 'DisplayName' in src_event else None)
+            self.UPNSuffix = (src_event['UPNSuffix']
+                              if 'UPNSuffix' in src_event else None)
 # pylint: enable=locally-disabled, line-too-long
 
     @property
@@ -363,7 +404,19 @@ class Account(Entity):
 
 @export
 class SecurityGroup(Entity):
-    """SecurityGroup Entity class."""
+    """
+    SecurityGroup Entity class.
+
+    Attributes
+    ----------
+    DistinguishedName : str
+        SecurityGroup DistinguishedName
+    SID : str
+        SecurityGroup SID
+    ObjectGuid : str
+        SecurityGroup ObjectGuid
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -402,7 +455,23 @@ class SecurityGroup(Entity):
 
 @export
 class HostLogonSession(Entity):
-    """HostLogonSession Entity class."""
+    """
+    HostLogonSession Entity class.
+
+    Attributes
+    ----------
+    Account : Account
+        HostLogonSession Account
+    StartTimeUtc : datetime
+        HostLogonSession StartTimeUtc
+    EndTimeUtc : datetime
+        HostLogonSession EndTimeUtc
+    Host : Host
+        HostLogonSession Host
+    SessionId : str
+        HostLogonSession SessionId
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None,
                  src_event: Mapping[str, Any] = None, **kwargs):
@@ -435,7 +504,8 @@ class HostLogonSession(Entity):
             elif 'TimeGenerated' in src_event:
                 self.StartTimeUtc = src_event['TimeGenerated']
             self.EndTimeUtc = self.StartTimeUtc
-            self.SessionId = src_event['TargetLogonId'] if 'TargetLogonId' in src_event else None
+            self.SessionId = (src_event['TargetLogonId']
+                              if 'TargetLogonId' in src_event else None)
 
     @property
     def description_str(self) -> str:
@@ -458,7 +528,15 @@ class HostLogonSession(Entity):
 
 @export
 class CloudApplication(Entity):
-    """CloudApplication Entity class."""
+    """
+    CloudApplication Entity class.
+
+    Attributes
+    ----------
+    Name : str
+        CloudApplication Name
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -493,7 +571,21 @@ class CloudApplication(Entity):
 
 @export
 class DnsResolve(Entity):
-    """DNS Resolve Entity class."""
+    """
+    DNS Resolve Entity class.
+
+    Attributes
+    ----------
+    DomainName : str
+        DnsResolve DomainName
+    IpAdresses : List[str]
+        DnsResolve IpAdresses
+    DnsServerIp : IPAddress
+        DnsResolve DnsServerIp
+    HostIpAddress : IPAddress
+        DnsResolve HostIpAddress
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -526,16 +618,42 @@ class DnsResolve(Entity):
         # IpAdresses (type System.Collections.Generic.List`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP])
         'IpAdresses': None,
-        # DnsServerIp (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # DnsServerIp (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'DnsServerIp': 'IPAddress',
-        # HostIpAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # HostIpAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'HostIpAddress': 'IPAddress'
     }
 
 
 @export
 class File(Entity):
-    """File Entity class."""
+    """
+    File Entity class.
+
+    Attributes
+    ----------
+    FullPath : str
+        File FullPath
+    Directory : str
+        File Directory
+    Name : str
+        File Name
+    Md5 : str
+        File Md5
+    Host : str
+        File Host
+    Sha1 : str
+        File Sha1
+    Sha256 : str
+        File Sha256
+    Sha256Ac : str
+        File Sha256Ac
+    FileHashes : List[FileHash]
+        File FileHashes
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None,
                  src_event: Mapping[str, Any] = None,
@@ -599,7 +717,8 @@ class File(Entity):
         'Name': None,
         # Md5 (type System.String)
         'Md5': None,
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Host)
         'Host': None,
         # Sha1 (type System.String)
         'Sha1': None,
@@ -625,7 +744,18 @@ class File(Entity):
 
 @export
 class FileHash(Entity):
-    """File Hash class."""
+    """
+    File Hash class.
+
+    Attributes
+    ----------
+    Algorithm : Algorithm
+        FileHash Algorithm
+    Value : str
+        FileHash Value
+
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -673,7 +803,29 @@ class Algorithm(Enum):
 
 @export
 class Host(Entity):
-    """Host Entity class."""
+    """
+    Host Entity class.
+
+    Attributes
+    ----------
+    DnsDomain : str
+        Host DnsDomain
+    NTDomain : str
+        Host NTDomain
+    HostName : str
+        Host HostName
+    NetBiosName : str
+        Host NetBiosName
+    AzureID : str
+        Host AzureID
+    OMSAgentID : str
+        Host OMSAgentID
+    OSFamily : str
+        Host OSFamily
+    IsDomainJoined : bool
+        Host IsDomainJoined
+
+    """
 
     def __init__(self,
                  src_entity: Mapping[str, Any] = None,
@@ -751,7 +903,19 @@ class Host(Entity):
 
 @export
 class IpAddress(Entity):
-    """IPAddress Entity class."""
+    """
+    IPAddress Entity class.
+
+    Attributes
+    ----------
+    Address : str
+        IpAddress Address
+    Location : GeoLocation
+        IpAddress Location
+    ThreatIntelligence : List[ThreatIntelligence]
+        IpAddress ThreatIntelligence
+
+    """
 
     def __init__(self,
                  src_entity: Mapping[str, Any] = None,
@@ -800,14 +964,35 @@ class IpAddress(Entity):
         # .V3.ContextObjects.GeoLocation)
         'Location': 'GeoLocation',
         # ThreatIntelligence (type System.Collections.Generic.List`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.ContextObjects.ThreatIntelligence])
-        'ThreatIntelligence': None
+        # [Microsoft.Azure.Security.Detection.AlertContracts.V3
+        # .ContextObjects.ThreatIntelligence])
+        'ThreatIntelligence': (list, 'Threatintelligence')
     }
 
 
 @export
 class GeoLocation(Entity):
-    """GeoLocation class."""
+    """
+    GeoLocation class.
+
+    Attributes
+    ----------
+    CountryCode : str
+        GeoLocation CountryCode
+    CountryName : str
+        GeoLocation CountryName
+    State : str
+        GeoLocation State
+    City : str
+        GeoLocation City
+    Longitude : float
+        GeoLocation Longitude
+    Latitude : float
+        GeoLocation Latitude
+    Asn : str
+        GeoLocation Asn
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -854,7 +1039,23 @@ class GeoLocation(Entity):
 
 @export
 class Malware(Entity):
-    """Malware Entity class."""
+    """
+    Malware Entity class.
+
+    Attributes
+    ----------
+    Name : str
+        Malware Name
+    Category : str
+        Malware Category
+    File : File
+        Malware File
+    Files : List[File]
+        Malware Files
+    Processes : List[Process]
+        Malware Processes
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -895,7 +1096,24 @@ class Malware(Entity):
 
 @export
 class NetworkConnection(Entity):
-    """NetworkConnection Entity class."""
+    """
+    NetworkConnection Entity class.
+
+    Attributes
+    ----------
+    SourceAddress : IPAddress
+        NetworkConnection SourceAddress
+    SourcePort : int
+        NetworkConnection SourcePort
+    DestinationAddress : IPAddress
+        NetworkConnection DestinationAddress
+    DestinationPort : int
+        NetworkConnection DestinationPort
+    Protocol : str
+        NetworkConnection Protocol
+
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -928,11 +1146,13 @@ class NetworkConnection(Entity):
         return desc
 
     _entity_schema = {
-        # SourceAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # SourceAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'SourceAddress': 'IPAddress',
         # SourcePort (type System.Nullable`1[System.Int32])
         'SourcePort': None,
-        # DestinationAddress (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP)
+        # DestinationAddress (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.IP)
         'DestinationAddress': 'IPAddress',
         # DestinationPort (type System.Nullable`1[System.Int32])
         'DestinationPort': None,
@@ -943,7 +1163,31 @@ class NetworkConnection(Entity):
 
 @export
 class Process(Entity):
-    """Process Entity class."""
+    """
+    Process Entity class.
+
+    Attributes
+    ----------
+    ProcessId : str
+        Process ProcessId
+    CommandLine : str
+        Process CommandLine
+    ElevationToken : str
+        Process ElevationToken
+    CreationTimeUtc : datetime
+        Process CreationTimeUtc
+    ImageFile : File
+        Process ImageFile
+    Account : Account
+        Process Account
+    ParentProcess : Process
+        Process ParentProcess
+    Host : Host
+        Process Host
+    LogonSession : HostLogonSession
+        Process LogonSession
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None,
                  src_event: Mapping[str, Any] = None, role='new', **kwargs):
@@ -1004,13 +1248,15 @@ class Process(Entity):
                                        if 'effective_user' in src_event else None)
                 self.euid = src_event['euid'] if 'euid' in src_event else None
                 self.effective_group = (src_event['effective_group']
-                                        if 'effective_group' in src_event else None)
+                                        if 'effective_group'
+                                        in src_event else None)
                 self.egid = (src_event['effective_group']
                              if 'effective_group' in src_event else None)
                 self.cwd = src_event['cwd'] if 'cwd' in src_event else None
                 self.name = src_event['cwd'] if 'cwd' in src_event else None
             else:
-                self.ProcessId = src_event['ProcessId'] if 'ProcessId' in src_event else None
+                self.ProcessId = (src_event['ProcessId']
+                                  if 'ProcessId' in src_event else None)
                 self.ImageFile = File(src_event=src_event, role='parent')
 # pylint: enable=locally-disabled, line-too-long
 
@@ -1037,20 +1283,25 @@ class Process(Entity):
         # CommandLine (type System.String)
         'CommandLine': None,
         # ElevationToken (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.ElevationToken])
+        # [Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.ElevationToken])
         'ElevationToken': None,
         # CreationTimeUtc (type System.Nullable`1[System.DateTime])
         'CreationTimeUtc': None,
-        # ImageFile (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.File)
+        # ImageFile (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.File)
         'ImageFile': 'File',
-        # Account (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Account)
+        # Account (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Account)
         'Account': 'Account',
         # ParentProcess (type Microsoft.Azure.Security.Detection.AlertContracts
         # .V3.Entities.Process)
         'ParentProcess': 'Process',
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Host)
         'Host': 'Host',
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.HostLogonSession)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.HostLogonSession)
         'LogonSession': 'HostLogonSession',
     }
 
@@ -1083,7 +1334,17 @@ class RegistryHive(Enum):
 
 @export
 class RegistryKey(Entity):
-    """RegistryKey Entity class."""
+    """
+    RegistryKey Entity class.
+
+    Attributes
+    ----------
+    Hive : RegistryHive
+        RegistryKey Hive
+    Key : str
+        RegistryKey Key
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -1120,7 +1381,21 @@ class RegistryKey(Entity):
 
 
 class RegistryValue(Entity):
-    """RegistryValue Entity class."""
+    """
+    RegistryValue Entity class.
+
+    Attributes
+    ----------
+    Key : str
+        RegistryValue Key
+    Name : str
+        RegistryValue Name
+    Value : str
+        RegistryValue Value
+    ValueType : str
+        RegistryValue ValueType
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -1148,7 +1423,8 @@ class RegistryValue(Entity):
         return f'{self.Name}[{self.ValueType}]:{repr(self.Value)}'
 
     _entity_schema = {
-        # Key (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryKey)
+        # Key (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.RegistryKey)
         'Key': None,
         # Name (type System.String)
         'Name': None,
@@ -1178,7 +1454,20 @@ class ElevationToken(Enum):
 
 @export
 class AzureResource(Entity):
-    """AzureResource Entity class."""
+    """
+    AzureResource Entity class.
+
+    Attributes
+    ----------
+    ResourceId : str
+        AzureResource ResourceId
+    SubscriptionId : str
+        AzureResource SubscriptionId
+    ResourceIdParts : Dict[str, str]
+        AzureResource ResourceIdParts
+
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -1200,6 +1489,7 @@ class AzureResource(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
+    @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return self.ResourceId
@@ -1217,7 +1507,33 @@ class AzureResource(Entity):
 
 @export
 class Alert(Entity):
-    """Alert Entity class."""
+    """
+    Alert Entity class.
+
+    Attributes
+    ----------
+    DisplayName : str
+        Alert DisplayName
+    CompromisedEntity : str
+        Alert CompromisedEntity
+    Count : int
+        Alert Count
+    StartTimeUtc : datetime
+        Alert StartTimeUtc
+    EndTimeUtc : datetime
+        Alert EndTimeUtc
+    Severity : str
+        Alert Severity
+    SystemAlertIds : List[str]
+        Alert SystemAlertIds
+    AlertType : str
+        Alert AlertType
+    VendorName : str
+        Alert VendorName
+    ProviderName : str
+        Alert ProviderName
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -1239,6 +1555,7 @@ class Alert(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
+    @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return f'{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}'
@@ -1270,7 +1587,25 @@ class Alert(Entity):
 
 @export
 class Threatintelligence(Entity):
-    """Threatintelligence Entity class."""
+    """
+    Threatintelligence Entity class.
+
+    Attributes
+    ----------
+    ProviderName : str
+        Threatintelligence ProviderName
+    ThreatType : str
+        Threatintelligence ThreatType
+    ThreatName : str
+        Threatintelligence ThreatName
+    Confidence : str
+        Threatintelligence Confidence
+    ReportLink : str
+        Threatintelligence ReportLink
+    ThreatDescription : str
+        Threatintelligence ThreatDescription
+
+    """
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -1281,14 +1616,15 @@ class Threatintelligence(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
+    @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return f'{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}'
 
     _entity_schema = {
-        # String Name of the provider from whom this Threat Intelligence information was received
+        # String Name of the provider from whom this
+        # Threat Intelligence information was received
         'ProviderName': None,
-
         'ThreatType': None,
         'ThreatName': None,
         'Confidence': None,
@@ -1310,6 +1646,7 @@ class UnknownEntity(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
+    @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return 'OtherEntity'

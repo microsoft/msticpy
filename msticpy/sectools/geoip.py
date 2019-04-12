@@ -4,7 +4,20 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""geoip module using IPStack and Maxmind GeoLite2."""
+"""
+Geoip Lookup module using IPStack and Maxmind GeoLite2.
+
+Geographic location lookup for IP addresses. This module has two classes
+for different services:
+
+-  GeoLiteLookup - Maxmind Geolite (see https://www.maxmind.com)
+-  IPStackLookup - IPStack (see https://ipstack.com) Both services offer
+   a free tier for non-commercial use. However, a paid tier will
+   normally get you more accuracy, more detail and a higher throughput
+   rate. Maxmind geolite uses a downloadable database, while IPStack is
+   an online lookup (API key required).
+
+"""
 # import gzip
 from json import JSONDecodeError
 import math
@@ -33,14 +46,10 @@ class GeoIpLookup(metaclass=ABCMeta):
     """
     Abstract base class for GeoIP Lookup classes.
 
-    Parameters
-    ----------
-    metaclass : ABCMeta, optional
-        Defines class as abstract base class (the default is ABCMeta)
-
-    See Also:
-        IPStackLookup : IPStack GeoIP Implementation
-        GeoLiteLookup : MaxMind GeoIP Implementation
+    See Also
+    --------
+    IPStackLookup : IPStack GeoIP Implementation
+    GeoLiteLookup : MaxMind GeoIP Implementation
 
     """
 
@@ -102,14 +111,10 @@ class IPStackLookup(GeoIpLookup):
     """
     IPStack GeoIP Implementation.
 
-    Parameters
-    ----------
-    GeoIpLookup : GeoIPLookup
-        Abstract base class for IPLookup implementations
-
-    See Also:
-        GeoIpLookup : Abstract base class
-        GeoLiteLookup : MaxMind GeoIP Implementation
+    See Also
+    --------
+    GeoIpLookup : Abstract base class
+    GeoLiteLookup : MaxMind GeoIP Implementation
 
     """
 
@@ -236,9 +241,9 @@ class IPStackLookup(GeoIpLookup):
                         print('Unknown response from IPStack request.')
                         ip_loc_results.append((None, -1))
             return ip_loc_results
-        
+
         submit_url = self._IPSTACK_API.format(iplist=','.join(ip_list),
-                                                access_key=self._api_key)
+                                              access_key=self._api_key)
         response = requests.get(submit_url)
 
         if response.status_code == 200:
@@ -249,9 +254,9 @@ class IPStackLookup(GeoIpLookup):
 
             if 'success' in results and not results["success"]:
                 raise PermissionError('Service unable to complete request. Error: {}'
-                                        .format(results['error']))
+                                      .format(results['error']))
             return [(item, response.status_code) for item in results]
-        
+
         if response:
             try:
                 return [(response.json(), response.status_code)]
@@ -265,14 +270,10 @@ class GeoLiteLookup(GeoIpLookup):
     """
     GeoIP Lookup using MaxMindDB database.
 
-    Parameters
-    ----------
-    GeoIpLookup : GeoIPLookup
-        Abstract base class for IPLookup implementations
-
-    See Also:
-        IPStackLookup : IPStack GeoIP Implementation
-        GeoLiteLookup : MaxMind GeoIP Implementation
+    See Also
+    --------
+    GeoIpLookup : Abstract base class
+    IPStackLookup : IPStack GeoIP Implementation
 
     """
 
@@ -371,7 +372,8 @@ _IPSTACK_LICENSE_HTML = '''
 This library uses services provided by ipstack.
 <a href="https://ipstack.com">https://ipstack.com</a>'''
 
-_IPSTACK_LICENSE_TXT = 'This library uses services provided by ipstack (https://ipstack.com)'
+_IPSTACK_LICENSE_TXT = '''
+This library uses services provided by ipstack (https://ipstack.com)'''
 
 if not get_ipython():
     print(_MM_LICENSE_TXT)
@@ -407,8 +409,10 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
         raise AttributeError(
             'Source and destination entities must have defined Location properties.')
 
-    return geo_distance(origin=(ip_src.Location.Latitude, ip_src.Location.Longitude),
-                        destination=(ip_dest.Location.Latitude, ip_dest.Location.Longitude))
+    return geo_distance(origin=(ip_src.Location.Latitude,
+                                ip_src.Location.Longitude),
+                        destination=(ip_dest.Location.Latitude,
+                                     ip_dest.Location.Longitude))
 
 
 _EARTH_RADIUS_KM = 6371  # km
@@ -448,8 +452,11 @@ def geo_distance(origin: Tuple[float, float],
 
     ang_dist_lat = math.radians(dest_lat - orig_lat)
     ang_dist_lon = math.radians(dest_lon - orig_lon)
-    hav_a = (math.sin(ang_dist_lat / 2) * math.sin(ang_dist_lat / 2) +
-             math.cos(math.radians(orig_lat)) * math.cos(math.radians(dest_lat)) *
-             math.sin(ang_dist_lon / 2) * math.sin(ang_dist_lon / 2))
+    hav_a = ((math.sin(ang_dist_lat / 2)
+              * math.sin(ang_dist_lat / 2))
+             + (math.cos(math.radians(orig_lat))
+                * math.cos(math.radians(dest_lat))
+                * math.sin(ang_dist_lon / 2)
+                * math.sin(ang_dist_lon / 2)))
     hav_c = 2 * math.atan2(math.sqrt(hav_a), math.sqrt(1 - hav_a))
     return _EARTH_RADIUS_KM * hav_c

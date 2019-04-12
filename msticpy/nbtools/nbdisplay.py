@@ -52,7 +52,8 @@ def display_alert(alert: Union[Mapping[str, Any], SecurityAlert],
                   if 'CompromisedEntity' in alert
                   else '')
         title = '''
-            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>, entity=<b>{entity}</b>, id=<b>{id}</b>
+            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
+            entity=<b>{entity}</b>, id=<b>{id}</b>
             '''.format(start=alert['StartTimeUtc'],
                        name=alert['AlertDisplayName'],
                        entity=entity,
@@ -101,9 +102,8 @@ def _print_process(process_row: pd.Series):
     line2 = '(Cmdline: \'{}\') [Account: \'{}\']'.format(
         process_row.CommandLine, process_row.SubjectUserName)
 
-    display(HTML('<div style="margin-left:{indent}px">{txt}<br>{txt2}</div>'.format(indent=spaces,
-                                                                                    txt=line1,
-                                                                                    txt2=line2)))
+    display(HTML(f'<div style="margin-left:{spaces}px">',
+                 f'{line1}<br>{line2}</div>'))
 
 
 @export
@@ -123,8 +123,8 @@ def display_process_tree(process_tree: pd.DataFrame):
 
     """
     tree = process_tree[['TimeCreatedUtc', 'NodeRole', 'Level', 'NewProcessName',
-                         'CommandLine', 'SubjectUserName', 'NewProcessId', 'ProcessId',
-                         'SubjectLogonId', 'TargetLogonId']]
+                         'CommandLine', 'SubjectUserName', 'NewProcessId',
+                         'ProcessId', 'SubjectLogonId', 'TargetLogonId']]
     tree = tree.sort_values(by=['TimeCreatedUtc'], ascending=False)
 
     display(HTML("<h3>Alert process tree:</h3>"))
@@ -258,7 +258,8 @@ def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
         if 'CommandLine' in overlay_colums:
             overlay_df = overlay_data[overlay_colums].copy()
             overlay_df[_WRAP_CMDL] = overlay_df.apply(lambda x:
-                                                      _wrap_text(x.CommandLine, _WRAP),
+                                                      _wrap_text(x.CommandLine,
+                                                                 _WRAP),
                                                       axis=1)
         else:
             overlay_df = overlay_data[overlay_colums].copy()
@@ -290,7 +291,9 @@ def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
 
     # tools = 'pan, box_zoom, wheel_zoom, reset, undo, redo, save, hover'
     plot = figure(min_border_left=50, plot_height=height, plot_width=900,
-                  x_axis_label='Event Time', x_axis_type='datetime', x_minor_ticks=10,
+                  x_axis_label='Event Time',
+                  x_axis_type='datetime',
+                  x_minor_ticks=10,
                   tools=[hover, 'pan', 'xwheel_zoom', 'box_zoom', 'reset'],
                   title=title)
     plot.yaxis.visible = False
@@ -323,10 +326,17 @@ def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
     if alert is not None:
         x_alert_label = pd.Timestamp(alert['StartTimeUtc'])
         plot.line(x=[x_alert_label, x_alert_label], y=[0, y_max + 1])
-        alert_label = Label(x=x_alert_label, y=0, y_offset=10, x_units='data', y_units='data',
-                            text='< Alert time', render_mode='css',
-                            border_line_color='red', border_line_alpha=1.0,
-                            background_fill_color='white', background_fill_alpha=1.0)
+        alert_label = Label(x=x_alert_label,
+                            y=0,
+                            y_offset=10,
+                            x_units='data',
+                            y_units='data',
+                            text='< Alert time',
+                            render_mode='css',
+                            border_line_color='red',
+                            border_line_alpha=1.0,
+                            background_fill_color='white',
+                            background_fill_alpha=1.0)
 
         plot.add_layout(alert_label)
 
@@ -361,11 +371,21 @@ def _wrap_text(source_string, wrap_len):
 
 # Constants for Windows logon
 _WIN_LOGON_TYPE_MAP = {0: 'Unknown',
-                       2: 'Interactive', 3: 'Network', 4: 'Batch', 5: 'Service',
-                       7: 'Unlock', 8: 'NetworkCleartext', 9: 'NewCredentials',
-                       10: 'RemoteInteractive', 11: 'CachedInteractive'}
-_WINDOWS_SID = {'S-1-0-0': 'Null SID', 'S-1-5-18': 'LOCAL_SYSTEM',
-                'S-1-5-19': 'LOCAL_SERVICE', 'S-1-5-20': 'NETWORK_SERVICE'}
+                       2: 'Interactive',
+                       3: 'Network',
+                       4: 'Batch',
+                       5: 'Service',
+                       7: 'Unlock',
+                       8: 'NetworkCleartext',
+                       9: 'NewCredentials',
+                       10: 'RemoteInteractive',
+                       11: 'CachedInteractive',
+                       }
+_WINDOWS_SID = {'S-1-0-0': 'Null SID',
+                'S-1-5-18': 'LOCAL_SYSTEM',
+                'S-1-5-19': 'LOCAL_SERVICE',
+                'S-1-5-20': 'NETWORK_SERVICE',
+                }
 _ADMINISTRATOR_SID = '500'
 _GUEST_SID = '501'
 _DOM_OR_MACHINE_SID = 'S-1-5-21'
@@ -403,7 +423,8 @@ def display_logon_data(logon_event: pd.DataFrame, alert: SecurityAlert = None,
             logon_desc_idx = logon_type
             if logon_type not in _WIN_LOGON_TYPE_MAP:
                 logon_desc_idx = 0
-            print(f'Logon type: {logon_type} ({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})')
+            print(f'Logon type: {logon_type} ',
+                  f'({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})')
 
         account_id = logon_row.TargetUserSid
         print('User Id/SID: ', account_id)

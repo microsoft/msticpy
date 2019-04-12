@@ -3,7 +3,16 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Auditd extractor."""
+"""
+Auditd extractor.
+
+Module to load and decode Linux audit logs. It collapses messages
+sharing the same message ID into single events, decodes hex-encoded data
+fields and performs some event-specific formatting and normalization
+(e.g. for process start events it will re-assemble the process command
+line arguments into a single string). This is still a work-in-progress.
+
+"""
 import codecs
 from datetime import datetime
 from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
@@ -288,15 +297,83 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
     """
     Return a subset of the events matching type event_type.
 
-    Arguments:
-        data {pd.DataFrame} -- The input data
-        event_type {str} -- The event type to select
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input data
+    event_type : str
+        The event type to select
 
-    Returns:
-        pd.DataFrame -- The subset of the data where
-            data['EventType'] == event_type
+    Returns
+    -------
+    pd.DataFrame
+        The subset of the data where
+        data['EventType'] == event_type
 
     """
     return (data[data['EventType'] == event_type]
             .dropna(axis=1, how='all')
             .infer_objects())
+
+
+def read_from_file(filepath: str,
+                   event_type: str = None,
+                   verbose: bool = False,
+                   dummy_sep: str = '\t') -> pd.DataFrame:
+    r"""
+    Extract Audit events from a log file.
+
+    Parameters
+    ----------
+    filepath : str
+        path to the input file
+    event_type : str, optional
+        The type of event to extract if only a subset required.
+        (the default is None, which processes all types)
+    verbose : bool, optional
+        If true more progress messages are output
+        (the default is False)
+    dummpy_sep : str, optional
+        Separator to use for reading the 'csv' file
+        (default is tab - '\t')
+
+    Returns
+    -------
+    pd.DataFrame
+        The output DataFrame
+
+    Notes
+    -----
+    The dummy_sep parameter should be a character that does not
+    occur in an input line. This function uses pandas read_csv
+    to read the audit lines into a single column. Using a separator
+    that does appear in the input (e.g. space or comma) will cause
+    data to be parsed into muliple columns and anything after the
+    first separator in a line will be lost.
+
+    """
+    # read in the file using pd.read_csv() and extract
+    # message type, Id string and content into 3 columns
+    rec_pattern = r'type=([^\s]+)\s+msg=audit\(([^\)]+)\):\s+(.+)$'
+    df_raw = (pd.read_csv(filepath, sep=dummy_sep,
+                          names=['raw_data'],
+                          skip_blank_lines=True,
+                          squeeze=True)
+              .str.extract(rec_pattern)
+              .rename(columns={0: 'mssg_type', 1: 'mssg_id', 2: 'mssg_content'}))
+
+    # Pack message type and content into a dictionary:
+    # {'mssg_type: ['item1=x, item2=y....]}
+    df_raw['AuditdMessage'] = df_raw.apply(lambda x:
+                                           {x.mssg_type: x.mssg_content.split(' ')},
+                                           axis=1)
+    # Group the data by message id string and concatenate the message content
+    # dictionaries in a list.
+    df_grouped_cols = (df_raw.groupby(['mssg_id'])
+                       .agg({'AuditdMessage': list})
+                       .reset_index())
+    # pass this DataFrame to the event extractor.
+    return extract_events_to_df(data=df_grouped_cols,
+                                input_column='AuditdMessage',
+                                event_type=event_type,
+                                verbose=verbose)

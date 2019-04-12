@@ -6,7 +6,7 @@
 """KQL Helper functions."""
 import sys
 from functools import partial
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import pandas as pd
 from IPython import get_ipython
@@ -76,8 +76,9 @@ def _is_kqlmagic_loaded() -> bool:
 
 
 @export
-def exec_query(query_name: str, **kwargs) -> Union[pd.DataFrame,
-                                                   Tuple[pd.DataFrame, results.ResultSet]]:
+def exec_query(query_name: str,
+               **kwargs) -> Union[pd.DataFrame,
+                                  Tuple[pd.DataFrame, results.ResultSet]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 
@@ -88,17 +89,20 @@ def exec_query(query_name: str, **kwargs) -> Union[pd.DataFrame,
 
     Other Parameters
     ----------------
-    kwargs: additional replacable paramters for the query
-        kql_result=True - return (DataFrame, KqlResultSet) tuple.
-        kql_result=False - return DataFrame only (default)
-        provs=Iterable[QueryParamProvider]
-            this should be a collection of objects that
-            implement QueryParamProvider (from which query
-            parameters can be extracted).
-            OR
-        kwargs [str, Any] custom parameter list
-            (override default values and values extracted
-            from QueryParamProviders).
+    kwargs : Mapping[str, Any]
+        additional replacable paramters for the query
+        Parameters supplied here will override default
+        for the query and values and values extracted
+        from QueryParamProviders supplied in the provs
+        kw parameter.
+    kql_result : bool
+        If True - return (DataFrame, KqlResultSet) tuple.
+        If False or not present return DataFrame only (default)
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+
     Returns
     -------
     Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]
@@ -144,17 +148,20 @@ def show_filled_query(query_name: str, **kwargs) -> str:
 
     Other Parameters
     ----------------
-    kwargs: additional replacable paramters for the query
-        kql_result=True - return (DataFrame, KqlResultSet) tuple.
-        kql_result=False - return DataFrame only (default)
-        provs=Iterable[QueryParamProvider]
-            this should be a collection of objects that
-            implement QueryParamProvider (from which query
-            parameters can be extracted).
-            OR
-        kwargs [str, Any] custom parameter list
-            (override default values and values extracted
-            from QueryParamProviders).
+    kwargs : Mapping[str, Any]
+        additional replacable paramters for the query
+        Parameters supplied here will override default
+        for the query and values and values extracted
+        from QueryParamProviders supplied in the provs
+        kw parameter.
+    kql_result : bool
+        If True - return (DataFrame, KqlResultSet) tuple.
+        If False or not present return DataFrame only (default)
+    provs : Iterable[QueryParamProvider]
+        this should be a collection of objects that
+        implement QueryParamProvider (from which query
+        parameters can be extracted).
+
     Returns
     -------
     str
@@ -164,6 +171,38 @@ def show_filled_query(query_name: str, **kwargs) -> str:
     replaced_query = replace_prov_query_params(query_name=query_name, **kwargs)
     print_kql(replaced_query)
     return replaced_query
+
+
+@export
+def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame],
+                                           results.ResultSet]:
+    """
+    Execute query string and return DataFrame of results.
+
+    Parameters
+    ----------
+    query : str
+        The kql query to execute
+
+    Returns
+    -------
+    Tuple[Optional[pd.DataFrame], results.ResultSet]
+        Tuple of DataFrame (if successfull) and
+        and Kql ResultSet.
+
+    """
+    result = _ip.run_cell_magic('kql', line='', cell=query)
+    if result is not None and result.completion_query_info['StatusCode'] == 0:
+        data_frame = result.to_dataframe()
+        if result.is_partial_table:
+            print("Warning - query returned partial results.")
+        # Did user want both dataframe and ResultSet
+
+        return data_frame, result
+
+    print("Warning - query did not complete successfully.")
+    print("Kql ResultSet returned - check  \'completion_query_info\' property.")
+    return None, result
 
 
 def _add_queries_to_module(module_name):
