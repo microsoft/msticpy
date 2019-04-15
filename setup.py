@@ -7,6 +7,7 @@
 
 import re
 import setuptools
+from collections import OrderedDict
 
 INSTALL_REQUIRES = ['matplotlib>=3.0.0',
                     'bokeh>=1.0.2',
