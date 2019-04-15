@@ -6,8 +6,8 @@
 """Setup script for msticpy."""
 
 import re
-
 import setuptools
+from collections import OrderedDict
 
 INSTALL_REQUIRES = ['matplotlib>=3.0.0',
                     'bokeh>=1.0.2',
@@ -43,7 +43,11 @@ setuptools.setup(
     description="MSTIC Security Tools",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://https://github.com/microsoft/msticpy",
+    url="https://github.com/microsoft/msticpy",
+    project_urls=OrderedDict((
+        ("Documentation", "http://msticpy.readthedocs.io"),
+        ("Code", "https://github.com/microsoft/msticpy"),
+    )),
     python_requires='>=3.6',
     packages=setuptools.find_packages(exclude=['*.tests']),
     classifiers=[
