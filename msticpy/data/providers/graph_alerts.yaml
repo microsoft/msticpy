@@ -1,0 +1,199 @@
+metadata:
+  version: 1
+  description: Microsoft Security Graph Alert Queries
+  data_environments: [DataEnvironment.SecurityGraph]
+  data_families: [DataFamily.SecurityGraphAlert]
+  tags: ['alert', 'securityalert']
+defaults:
+  metadata:
+    data_source: 'graph_alert'
+  parameters:
+      path:
+        description: Path name
+        type: str
+        default: '/security/alerts'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()} {add_query_items}'
+      uri: None
+    parameters:
+  get_alert:
+    description: Retrieves a single alert by AlertId
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}/{alert_id}'
+    parameters:
+      alert_id:
+        description: 'The ID of the alert'
+        type: str
+      start:
+        description: Query start time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+      end:
+        description: Query end time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+  list_alerts_for_user:
+    description: Retrieves list of alerts for a user account
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()}
+        and (userStates/any(d:tolower(d/userPrincipalName) eq "{user_principal_name.lower()}")
+        or userStates/any(d:tolower(d/accountName) eq "{account_name.lower()}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      user_principal_name:
+        description: 'The user principal name listed in the alert'
+        type: str
+        default: ''
+      account_name:
+        description: 'The user account name listed in the alert'
+        type: str
+        default: ''
+  list_alerts_for_ip:
+    description: Retrieves list of alerts for a IP Address
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()}
+        and (hostStates/any(d:d/privateIpAddress eq "{ip_address}")
+        or hostStates/any(d:d/publicIpAddress eq "{ip_address}")
+        or networkConnections/any(d:d/destinationAddress eq "{ip_address}")
+        or networkConnections/any(d:d/sourceAddress eq "{ip_address}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      ip_address:
+        description: 'The IP address listed in the alert'
+        type: str
+  list_alerts_for_host:
+    description: Retrieves list of alerts for a hostname or FQDN
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()}
+        and (hostStates/any(d:tolower(d/netBiosName) eq "{host_name.lower()}")
+        or hostStates/any(d:startswith("{host_name.lower()}", tolower(d/fqdn))))
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: 'The host name listed in the alert'
+        type: str
+  list_alerts_for_file:
+    description: Retrieves list of alerts for file name, path or hash
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()}
+        and (fileStates/any(d:tolower(fileHash/hashValue) eq "{file_hash.lower()}")
+        or fileStates/any(d:tolower(name) eq "{file_path.lower()}")
+        or (file_name neq "" and fileStates/any(d:endswith("{file_name.lower()}", tolower(name)))))
+        {add_query_items}'
+      uri: None
+    parameters:
+      file_name:
+        description: 'The (unqualified) file name listed in the alert'
+        type: str
+        default: ''
+      file_hash:
+        description: 'The file hash listed in the alert'
+        type: str
+        default: ''
+      file_path:
+        description: 'The file path listed in the alert'
+        type: str
+        default: ''
+  list_related_alerts:
+    description: Retrieves list of alerts with a common entity
+    metadata:
+      data_source: 'graph_alert'
+    driver: SecurityGraphDriver
+    args:
+      query: '{path}?$filter=createdDateTime ge {start.isoformat()}
+        and createdDateTime le {end.isoformat()}
+        and (hostStates/any(d:d/privateIpAddress eq "{ip_address}")
+        or hostStates/any(d:d/publicIpAddress eq "{ip_address}")
+        or networkConnections/any(d:d/destinationAddress eq "{ip_address}")
+        or networkConnections/any(d:d/sourceAddress eq "{ip_address}")
+        or fileStates/any(d:tolower(fileHash/hashValue) eq "{file_hash.lower()})
+        or fileStates/any(d:tolower(name) eq "{file_name.lower()})
+        or hostStates/any(d:tolower(d/netBiosName) eq "{host_name.lower()}")
+        or hostStates/any(d:startswith("{host_name.lower()}", tolower(d/fqdn)))
+        or userStates/any(d:tolower(d/userPrincipalName) eq "{user_principal_name.lower()}")
+        or userStates/any(d:tolower(d/accountName) eq "{account_name.lower()}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      ip_address:
+        description: 'The host IP address listed in the alert'
+        type: str
+        default: ''
+      host_name:
+        description: The hostname to find
+        type: str
+        default: ''
+      process_name:
+        description: The process name to find
+        type: str
+        default: ''
+      user_principal_name:
+        description: 'The user principal name listed in the alert'
+        type: str
+        default: ''
+      account_name:
+        description: 'The user account name listed in the alert'
+        type: str
+        default: ''
+      file_name:
+        description: 'The file name listed in the alert'
+        type: str
+        default: ''
+      file_hash:
+        description: 'The file hash listed in the alert'
+        type: str
+        default: ''
