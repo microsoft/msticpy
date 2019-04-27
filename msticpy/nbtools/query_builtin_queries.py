@@ -89,7 +89,6 @@ let src_acct = \'{account_name}\';
 let src_proc = \'{process_name}\';
 {table}
 {query_project}
-| where {subscription_filter}
 | where TimeGenerated >= datetime({start})
 | where TimeGenerated <= datetime({end})
 | extend Computer = src_host
@@ -329,7 +328,7 @@ let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
 | where NewProcessId == sourceParentProcessId
 | where NewProcessId == sourceParentProcessId
 | extend NodeRole = 'parent', Level = 1
-| top 1 by TimeCreatedUtc desc nulls last);
+| top 1 by TimeCreatedUtc desc nulls last)
 {add_query_items}
 ''',
                     description='''

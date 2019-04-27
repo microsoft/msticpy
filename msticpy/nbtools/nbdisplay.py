@@ -65,7 +65,24 @@ def display_alert(alert: Union[Mapping[str, Any], SecurityAlert],
             'Unrecognized alert object type ' + str(type(alert)))
 
 
-def _print_process(process_row: pd.Series):
+def _print_process(process_row: pd.Series, fmt: str = 'html') -> str:
+    """
+    Format individual process item as text or html.
+
+    Parameters
+    ----------
+    process_row : pd.Series
+        Process series
+    fmt : str, optional
+        Format ('txt' or 'html')
+        (the default is ' html')
+
+    Returns
+    -------
+    str
+        Formatted process summary.
+
+    """
     if process_row.NodeRole == 'parent':
         if process_row.Level > 1:
             level = 0
@@ -78,38 +95,81 @@ def _print_process(process_row: pd.Series):
     else:
         level = 2
 
-    spaces = 20 * level * 2
-    if process_row.NodeRole == 'source':
-        line1 = '''
-        <span style="color:red;font-weight:bold">[alert:lev{}] {} {}
-        [PID: {}, SubjSess:{}, TargSess:{}]</span>
-        '''.format(process_row.Level,
-                   process_row.TimeCreatedUtc,
-                   process_row.NewProcessName,
-                   process_row.NewProcessId,
-                   process_row.SubjectLogonId,
-                   process_row.TargetLogonId)
+    px_spaces = 20 * level * 2
+    txt_spaces = ' ' * (4 * level)
+
+    font_col = ('red'
+                if process_row.NodeRole == 'source'
+                else 'black')
+
+    if fmt.lower() == 'html':
+        l1_span = f'<span style="color:{font_col};font-size:90%">'
+        line1_tmplt = (l1_span
+                       + '[{NodeRole}:lev{Level}] {TimeGenerated} '
+                       + '<b>{NewProcessName}</b> '
+                       + '[PID: {NewProcessId}, '
+                       + 'SubjSess:{SubjectLogonId}, '
+                       + 'TargSess:{TargetLogonId}]')
+        line2_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]</span>'''
+        output_tmplt = (f'<div style="margin-left:{px_spaces}px">'
+                        + f'{{line1}}<br>{{line2}}</div>')
+
     else:
-        line1 = '[{}:lev{}] {} <b>{}</b> [PID: {}, SubjSess:{}, TargSess:{}]'.format(
-            process_row.NodeRole,
-            process_row.Level,
-            process_row.TimeCreatedUtc,
-            process_row.NewProcessName,
-            process_row.NewProcessId,
-            process_row.SubjectLogonId,
-            process_row.TargetLogonId)
+        line1_tmplt = ('[{NodeRole}:lev{Level}] {TimeGenerated} '
+                       + '{NewProcessName} '
+                       + '[PID: {NewProcessId}, '
+                       + 'SubjSess:{SubjectLogonId}, '
+                       + 'TargSess:{TargetLogonId}]')
+        line2_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]'
+        output_tmplt = f'\n{txt_spaces}{{line1}}\n{txt_spaces}{{line2}}'
+    line1 = line1_tmplt.format(**(process_row.to_dict()))
+    line2 = line2_tmplt.format(**(process_row.to_dict()))
 
-    line2 = '(Cmdline: \'{}\') [Account: \'{}\']'.format(
-        process_row.CommandLine, process_row.SubjectUserName)
+    return output_tmplt.format(line1=line1, line2=line2)
 
-    display(HTML(f'<div style="margin-left:{spaces}px">',
-                 f'{line1}<br>{line2}</div>'))
+
+def format_process_tree(process_tree: pd.DataFrame, fmt: str = 'html'):
+    """
+    Display process tree data frame.
+
+    Parameters
+    ----------
+    process_tree : pd.DataFrame
+        Process tree DataFrame
+    fmt : str, optional
+        Format ('txt' or 'html')
+        (the default is ' html')
+
+    Returns
+    -------
+    str
+        Formatted process tree.
+
+    The display module expects the columns NodeRole and Level to
+    be populated. NoteRole is one of: 'source', 'parent', 'child'
+    or 'sibling'. Level indicates the 'hop' distance from the 'source'
+    node.
+
+    """
+    tree = process_tree.sort_values(by=['TimeCreatedUtc'],
+                                    ascending=True)
+
+    if fmt.lower() == 'html':
+        out_string = '<h3>Alert process tree:</h3>'
+    else:
+        out_string = 'Alert process tree:'
+        out_string = out_string + '\n' + '_' * len(out_string)
+
+    for _, line in tree.iterrows():
+        out_string += _print_process(line, fmt)
+
+    return out_string
 
 
 @export
 def display_process_tree(process_tree: pd.DataFrame):
     """
-    Display process tree data frame.
+    Display process tree data frame. (Deprecated).
 
     Parameters
     ----------
@@ -122,13 +182,7 @@ def display_process_tree(process_tree: pd.DataFrame):
     node.
 
     """
-    tree = process_tree[['TimeCreatedUtc', 'NodeRole', 'Level', 'NewProcessName',
-                         'CommandLine', 'SubjectUserName', 'NewProcessId',
-                         'ProcessId', 'SubjectLogonId', 'TargetLogonId']]
-    tree = tree.sort_values(by=['TimeCreatedUtc'], ascending=False)
-
-    display(HTML("<h3>Alert process tree:</h3>"))
-    tree.sort_values(by=['TimeCreatedUtc']).apply(_print_process, 1)
+    display(HTML(format_process_tree(process_tree)))
 
 
 @export
