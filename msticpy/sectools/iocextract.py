@@ -186,13 +186,11 @@ class IoCExtract:
         """
         return self._content_regex
 
-# pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-locals
     def extract(self, src: str = None,
                 data: pd.DataFrame = None,
                 columns: List[str] = None,
-                os_family='Windows',
-                ioc_types: List[str] = None,
-                include_paths: bool = False) -> Any:
+                **kwargs) -> Any:
         """
         Extract IoCs from either a string or pandas DataFrame.
 
@@ -207,6 +205,9 @@ class IoCExtract:
         columns : list, optional
             The list of columns to use as source strings,
             if the `data` parameter is used. (the default is None)
+
+        Other Parameters
+        ----------------
         os_family : str, optional
             'Linux' or 'Windows' (the default is 'Windows'). This
             is used to toggle between Windows or Linux path matching.
@@ -245,6 +246,10 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
+        os_family = kwargs.get('os_family', 'Windows')
+        ioc_types = kwargs.get('ioc_types', None)
+        include_paths = kwargs.get('include_paths', False)
+
         if src and src.strip():
             return self._scan_for_iocs(src=src, os_family=os_family,
                                        ioc_types=ioc_types)
@@ -254,7 +259,95 @@ class IoCExtract:
 
         if columns is None:
             raise Exception(
-                'No values where supplied for the columns parameter')
+                'No values were supplied for the columns parameter')
+
+        # Use only requested IoC Type patterns
+        if ioc_types:
+            ioc_types_to_use = list(set(ioc_types))
+        else:
+            ioc_types_to_use = list(set(self._content_regex.keys()))
+            if not include_paths:
+                ioc_types_to_use.remove('windows_path')
+                ioc_types_to_use.remove('linux_path')
+
+        col_set = set(columns)
+        if not col_set <= set(data.columns):
+            missing_cols = [
+                elem for elem in col_set if elem not in data.colums]
+            raise Exception('Source column(s) {} not found in supplied DataFrame'
+                            .format(', '.join(missing_cols)))
+
+        result_columns = ['IoCType', 'Observable', 'SourceIndex']
+        result_frame = pd.DataFrame(columns=result_columns)
+        for idx, datarow in data.iterrows():
+            for col in columns:
+                ioc_results = self._scan_for_iocs(
+                    datarow[col], os_family, ioc_types_to_use)
+                for result_type, result_set in ioc_results.items():
+                    if result_set:
+                        for observable in result_set:
+                            result_row = pd.Series(
+                                data=[result_type, observable, idx],
+                                index=result_columns)
+                            result_frame = result_frame.append(
+                                result_row, ignore_index=True)
+
+        return result_frame
+
+    def extract_df(self,
+                   data: pd.DataFrame,
+                   columns: List[str],
+                   **kwargs) -> pd.DataFrame:
+        """
+        Extract IoCs from either a pandas DataFrame.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            input DataFrame from which to read source strings
+        columns : list
+            The list of columns to use as source strings,
+
+        Other Parameters
+        ----------------
+        os_family : str, optional
+            'Linux' or 'Windows' (the default is 'Windows'). This
+            is used to toggle between Windows or Linux path matching.
+        ioc_types : list, optional
+            Restrict matching to just specified types.
+            (default is all types)
+        include_paths : bool, optional
+            Whether to include path matches (which can be noisy)
+            (the default is false - excludes 'windows_path'
+            and 'linux_path'). If `ioc_types` is specified
+            this parameter is ignored.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of observables
+
+        Notes
+        -----
+        Extract takes a pandas DataFrame as input.
+        The results will be returned as a new
+        DataFrame with the following columns:
+        - IoCType: the mnemonic used to distinguish different IoC Types
+        - Observable: the actual value of the observable
+        - SourceIndex: the index of the row in the input DataFrame from
+        which the source for the IoC observable was extracted.
+
+        IoCType Pattern selection
+        The default list is:  ['ipv4', 'ipv6', 'dns', 'url',
+        'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
+        user-defined types.
+        'windows_path', 'linux_path' are excluded unless `include_paths`
+        is True or explicitly included in `ioc_paths`.
+
+        """
+        os_family = kwargs.get('os_family', 'Windows')
+        ioc_types = kwargs.get('ioc_types', None)
+        include_paths = kwargs.get('include_paths', False)
 
         # Use only requested IoC Type patterns
         if ioc_types:
