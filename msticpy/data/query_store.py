@@ -6,7 +6,8 @@
 """QueryStore class - holds a collection of QuerySources."""
 from typing import Dict, Iterable, Set, Union
 from os import path
-from collections import defaultdict
+import re
+from collections import defaultdict, ChainMap
 
 from .data_query_reader import read_query_def_file, find_yaml_files
 from .query_source import QuerySource
