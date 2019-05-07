@@ -6,7 +6,9 @@
 """Data provider loader."""
 from functools import partial
 from os import path
-from typing import Union
+from typing import Union, Any
+
+import pandas as pd
 
 from . providers import DataProviderBase, KqlDriver, SecurityGraphDriver
 from . query_store import QueryStore
@@ -31,7 +33,11 @@ _ENVIRONMENT_PROVIDERS = {
 class AttribHolder:
     """Empty class used to create hierarchical attributes."""
 
-    pass
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __iter__(self):
+        return iter(self.__dict__.items())
 
 
 @export
@@ -67,7 +73,7 @@ class QueryProvider:
         if isinstance(data_environment, str):
             data_environment = DataEnvironment.parse(data_environment)
 
-        self._environment = data_environment
+        self._environment = data_environment.name
 
         if provider is None:
             provider_class = _ENVIRONMENT_PROVIDERS[data_environment]
@@ -75,13 +81,16 @@ class QueryProvider:
                 provider = provider_class()
             else:
                 raise LookupError('Could not find suitable data provider for',
-                                  f' {data_environment}')
+                                  f' {data_environment.name}')
 
         self._query_provider = provider
 
+        # Find the path of this module and build sub-path
+        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
+
         # Load data query definitions for environment
-        data_environments = QueryStore.import_files(source_path=path, recursive=True)
-        self._query_store = data_environments[data_environment]
+        data_environments = QueryStore.import_files(source_path=query_path, recursive=True)
+        self._query_store = data_environments[data_environment.name]
 
         self.all_queries = AttribHolder()
         self._add_query_functions()
@@ -120,23 +129,28 @@ class QueryProvider:
             List of queries
 
         """
-        return self._query_store.query_names()
+        return self._query_store.query_names
 
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
 
-    def _execute_query(self, *args, **kwargs):
+    def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
             raise ValueError('Provider is not loaded.')
         if not self._query_provider.connected:
             raise ValueError('No connection to a data source.',
                              'Please call connect(connection_str) and retry.')
         query_name = kwargs.pop('query_name')
+        family = kwargs.pop('data_family')
 
-        query_source = self._query_store[query_name]
-        params, missing = extract_query_params(query_source, *args, *kwargs)
+        query_source = self._query_store.get_query(data_family=family,
+                                                   query_name=query_name)
+        if 'help' in args or '?' in args:
+            query_source.help()
+            return None
 
+        params, missing = extract_query_params(query_source, *args, **kwargs)
         if missing:
             raise ValueError(f'No values found for these parameters: {missing}')
 
@@ -153,8 +167,12 @@ class QueryProvider:
             query_family = getattr(self, family)
 
             # Create the partial function
-            query_func = partial(self._execute_query, query_name=query_name)
-            query_func.__doc__ = self._query_store[query_name].create_doc_string()
+            query_func = partial(self._execute_query,
+                                 data_family=family,
+                                 query_name=query_name)
+            query_func.__doc__ = (self._query_store
+                                  .get_query(family,
+                                             query_name).create_doc_string())
 
             setattr(query_family, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
