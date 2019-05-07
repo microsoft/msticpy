@@ -32,6 +32,7 @@ class KqlDriver(DataProviderBase):
             Connection string
 
         """
+        self._ip = get_ipython()
         self._debug = kwargs.get('debug', False)
         super().__init__()
 
@@ -40,7 +41,6 @@ class KqlDriver(DataProviderBase):
         if not self._loaded:
             self._load_kql_magic()
 
-        self._ip = get_ipython()
         if connection_str:
             self.current_connection = connection_str
             self.connect(connection_str)

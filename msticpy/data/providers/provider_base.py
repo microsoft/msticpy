@@ -73,7 +73,7 @@ class DataProviderBase(ABC):
             Connect to a data source
 
         """
-        pass
+        return None
 
     @abc.abstractmethod
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
@@ -92,7 +92,6 @@ class DataProviderBase(ABC):
             the underlying provider result if an error.
 
         """
-        pass
 
     @abc.abstractmethod
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame,
@@ -111,4 +110,3 @@ class DataProviderBase(ABC):
             A DataFrame and native results.
 
         """
-        pass

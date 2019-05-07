@@ -1,8 +1,8 @@
 metadata:
   version: 1
   description: Kql Sentinel Windows Process Event Queries
-  data_environments: [DataEnvironment.LogAnalytics]
-  data_families: [DataFamily.WindowsSecurity]
+  data_environments: [LogAnalytics]
+  data_families: [WindowsSecurity]
   tags: ['account', 'windows', 'logon', 'session', 'logonfail']
 defaults:
   metadata:
