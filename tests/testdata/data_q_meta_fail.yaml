@@ -2,7 +2,6 @@ metadata:
   version: 1
   description: Kql Sentinel Alert Queries
   data_environments: [LogAnalytics]
-  data_families: [SecurityAlert]
   tags: ['alert', 'securityalert']
 defaults:
   metadata:

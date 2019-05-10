@@ -54,7 +54,6 @@ defaults:
 sources:
   get_host_logon:
     description: Retrieves the logon event for the session id on the host
-    driver: kqlsentinel
     args:
       query: '
         {table}
@@ -74,7 +73,6 @@ sources:
         type: str
   list_host_logons:
     description: Retrieves the logon events on the host
-    driver: kqlsentinel
     args:
       query: '
         {table}
@@ -90,7 +88,6 @@ sources:
         type: str
   list_host_logon_failures:
     description: Retrieves the logon failure events on the host
-    driver: kqlsentinel
     args:
       query: '
         {table}

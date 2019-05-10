@@ -54,7 +54,6 @@ class Entity(ABC):
             kw arguments.
 
         """
-        self._entity_properties = {}  # type: Dict[str, Any]
         # if we didn't populate AdditionalData, add an empty dict in case it's
         # needed
         if 'AdditionalData' not in self:
@@ -67,7 +66,10 @@ class Entity(ABC):
                 self['AdditionalData'] = src_entity['AdditionalData']
 
         if kwargs:
-            self._entity_properties.update(kwargs)
+            self.__dict__.update(kwargs)
+
+        self.Type = type(self).__name__.lower()
+        self._entity_schema['Type'] = None
 
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
@@ -111,10 +113,6 @@ class Entity(ABC):
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
-        if key == 'Type':
-            return self.Type
-        if key in self._entity_properties:
-            return self._entity_properties[key]
         if key in self.__dict__:
             return self.__dict__[key]
         if key in self._entity_schema:
@@ -123,37 +121,26 @@ class Entity(ABC):
 
     def __setitem__(self, key: str, value: Any):
         """Allow property set using dictionary key syntax."""
-        self._entity_properties[key] = value
+        self.__dict__[key] = value
 
     def __contains__(self, key: str):
         """Allow property in test."""
         # In operator overload
-        return (key == 'Type'
-                or key in self._entity_properties
-                or key in self.__dict__)
+        return key in self.__dict__
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
-        if name in self._entity_properties:
-            return self._entity_properties[name]
         if name in self._entity_schema:
             return None
         raise AttributeError(f'{name} is not a valid attribute.')
 
-    def __setattr__(self, name: str, value: Any):
-        """Set the value of the named property 'name'."""
-        if name == '_entity_properties':
-            self.__dict__[name] = value
-        else:
-            self._entity_properties[name] = value
-
     def __iter__(self):
         """Iterate over entity_properties."""
-        return self._entity_properties.__iter__()
+        return iter(self.properties)
 
     def __len__(self) -> int:
         """Return length/number of entity_properties."""
-        return len(self._entity_properties)
+        return len(self.properties)
 
     def __str__(self) -> str:
         """Return string representation of entity."""
@@ -167,12 +154,11 @@ class Entity(ABC):
         """Return as simple nested dictionary."""
         ent_dict = {}
         for prop, val in entity.properties.items():
-            if val and prop != 'Type':
+            if val:
                 if isinstance(val, Entity):
                     ent_dict[prop] = self._to_dict(val)
                 else:
                     ent_dict[prop] = val
-        ent_dict['Type'] = entity.Type
         return ent_dict
 
     @staticmethod
@@ -185,19 +171,6 @@ class Entity(ABC):
         return o.__dict__
 
     @property
-    def Type(self) -> str:  # noqa: N802
-        """
-        Return the Entity name (class type).
-
-        Returns
-        -------
-        str
-            The Entity name (class type).
-
-        """
-        return type(self).__name__.lower()
-
-    @property
     def properties(self) -> dict:
         """
         Return dictionary properties of entity.
@@ -208,7 +181,9 @@ class Entity(ABC):
             Entity properties.
 
         """
-        return self._entity_properties
+        return {name: value
+                for name, value in self.__dict__.items()
+                if name in self._entity_schema}
 
     @property
     @abstractmethod
@@ -383,7 +358,8 @@ class Account(Entity):
         'NTDomain': None,
         # UPNSuffix (type System.String)
         'UPNSuffix': None,
-        # Host (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.Host)
+        # Host (type Microsoft.Azure.Security.Detection
+        # .AlertContracts.V3.Entities.Host)
         'Host': 'Host',
         # LogonId (type System.String)
         'LogonId': None,
@@ -690,16 +666,17 @@ class File(Entity):
             elif role == 'parent' and 'ParentProcessName' in src_event:
                 self._add_paths(src_event['ParentProcessName'])
 
-        if 'FullPath' not in self._entity_properties:
-            file = self._entity_properties.get('Name', None)
-            directory = self._entity_properties.get('Directory', None)
+        if 'FullPath' not in self:
+            file = self['Name']
+            directory = self['Directory']
             sep = self.path_separator if directory else None
-            self._entity_properties['FullPath'] = f'{directory}{sep}{file}'
+            self['FullPath'] = f'{directory}{sep}{file}'
 
     @property
     def path_separator(self):
         """Return the path separator used by the file."""
-        if '/' in self._entity_properties.get('Directory', ''):
+        directory = self['Directory']
+        if directory and '/' in directory:
             return '/'
         return '\\'
 
@@ -950,7 +927,7 @@ class IpAddress(Entity):
     @property
     def ip_address(self) -> Union[IPv4Address, IPv6Address]:
         """Return a python ipaddress object from the entity property."""
-        return ip_address(self._entity_properties['Address'])
+        return ip_address(self['Address'])
 
     @property
     def description_str(self) -> str:
@@ -1263,13 +1240,13 @@ class Process(Entity):
     @property
     def ProcessName(self) -> str:  # noqa: N802
         """Return the name of the process file."""
-        file = self._entity_properties.get('ImageFile', None)
+        file = self['ImageFile']
         return file.Name if file else None
 
     @property
     def ProcessFilePath(self) -> str:  # noqa: N802
         """Return the name of the process file path."""
-        file = self._entity_properties.get('ImageFile', None)
+        file = self['ImageFile']
         return file.FullPath if file else None
 
     @property

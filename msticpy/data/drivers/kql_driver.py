@@ -10,7 +10,7 @@ import pandas as pd
 from IPython import get_ipython
 from Kqlmagic import results
 
-from . provider_base import DataProviderBase
+from . driver_base import DriverBase
 from ... nbtools.utility import export
 from ... _version import VERSION
 
@@ -19,7 +19,7 @@ __author__ = 'Ian Hellen'
 
 
 @export
-class KqlDriver(DataProviderBase):
+class KqlDriver(DriverBase):
     """KqlDriver class to execute kql queries."""
 
     def __init__(self, connection_str: str = None, **kwargs):

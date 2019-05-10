@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""KQL Helper functions."""
+"""Data driver base class."""
 import abc
 from abc import ABC
 from typing import Tuple, Any, Union
@@ -16,7 +16,7 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
-class DataProviderBase(ABC):
+class DriverBase(ABC):
     """Base class for data providers."""
 
     def __init__(self, **kwargs):

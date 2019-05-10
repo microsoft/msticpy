@@ -8,13 +8,14 @@ import unittest
 from functools import partial
 import json
 import os
+from pathlib import Path
 from typing import Union, Any, Tuple
 
 import pandas as pd
 
-from .. msticpy.data.data_providers import QueryProvider, DataProviderBase
+from .. msticpy.data.data_providers import QueryProvider, DriverBase
 
-class UTDataProvider(DataProviderBase):
+class UTDataDriver(DriverBase):
 
     def __init__(self, **kwargs):
         """Initialize new instance."""
@@ -48,7 +49,7 @@ class TestDataQuery(unittest.TestCase):
     provider = None
 
     def setUp(self):
-        provider = UTDataProvider()
+        provider = UTDataDriver()
         self.assertTrue(provider.loaded)
         provider.connect('testuri')
         self.assertTrue(provider.connected)
@@ -57,9 +58,9 @@ class TestDataQuery(unittest.TestCase):
     def test_load_kql_query_defs(self):
 
         la_provider = QueryProvider(data_environment = 'LogAnalytics',
-                                    provider=self.provider)
+                                    driver=self.provider)
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
-        #                           la_provider     provider='dummy')
+        #                           la_provider     driver='dummy')
         
         # Did we read and process the query definitions OK
         q_sources = la_provider._query_store.data_families
@@ -81,9 +82,9 @@ class TestDataQuery(unittest.TestCase):
     def test_query_create_funcs(self):
         
         la_provider = QueryProvider(data_environment = 'LogAnalytics',
-                                    provider=self.provider)
+                                    driver=self.provider)
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
-        #                           la_provider     provider='dummy')
+        #                           la_provider     driver='dummy')
         
         all_queries = [q for q in dir(la_provider.all_queries) if not q.startswith('__')]
         winsec_queries = [q for q in dir(la_provider.WindowsSecurity) if not q.startswith('__')]
@@ -101,9 +102,9 @@ class TestDataQuery(unittest.TestCase):
     def test_load_query_exec(self):
 
         la_provider = QueryProvider(data_environment = 'LogAnalytics',
-                                    provider=self.provider)
+                                    driver=self.provider)
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
-        #                           la_provider     provider='dummy')
+        #                           la_provider     driver='dummy')
         
         df = la_provider.all_queries.get_alert('help')
         self.assertIsNone(df)
@@ -118,7 +119,7 @@ class TestDataQuery(unittest.TestCase):
 
     def test_load_graph_query_defs(self):
         provider = QueryProvider(data_environment = 'SecurityGraph',
-                                 provider=self.provider)
+                                 driver=self.provider)
         
         # Did we read and process the query definitions OK
         q_sources = provider._query_store.data_families
@@ -139,7 +140,7 @@ class TestDataQuery(unittest.TestCase):
     def test_query_create_funcs(self):
         
         provider = QueryProvider(data_environment = 'SecurityGraph',
-                                       provider=self.provider)
+                                       driver=self.provider)
                 
         all_queries = [q for q in dir(provider.all_queries) if not q.startswith('__')]
         alert_queries = [q for q in dir(provider.SecurityGraphAlert) if not q.startswith('__')]
@@ -155,7 +156,7 @@ class TestDataQuery(unittest.TestCase):
     def test_load_query_exec(self):
 
         provider = QueryProvider(data_environment = 'SecurityGraph',
-                                       provider=self.provider)
+                                       driver=self.provider)
         df = provider.all_queries.get_alert('help')
         self.assertIsNone(df)
 
@@ -168,4 +169,25 @@ class TestDataQuery(unittest.TestCase):
         self.assertIn('/foo', df['query'].iloc[0])
 
     def test_load_yaml_def(self):
-        self.assertTrue(False)
+        la_provider = QueryProvider(data_environment = 'LogAnalytics',
+                                    driver=self.provider)
+        with self.assertRaises((ImportError, ValueError)) as cm:
+            file_path = Path(_TEST_DATA, 'data_q_meta_fail.yaml')
+            la_provider.import_query_file(query_file=file_path)
+            self.assertIn('no data families defined', str(cm.exception))
+
+        with self.assertRaises((ImportError, ValueError)) as cm:
+            file_path = Path(_TEST_DATA, 'data_q_source_fail_param.yaml')
+            la_provider.import_query_file(query_file=file_path)
+            self.assertIn('Missing parameters are', str(cm.exception))
+
+        with self.assertRaises((ImportError, ValueError)) as cm:
+            file_path = Path(_TEST_DATA, 'data_q_source_fail_type.yaml')
+            la_provider.import_query_file(query_file=file_path)
+            self.assertIn('Parameters with missing types', str(cm.exception))
+
+        before_queries = len(list(la_provider.list_queries()))
+        file_path = Path(_TEST_DATA, 'data_q_success.yaml')
+        la_provider.import_query_file(query_file=file_path)
+
+        self.assertEqual(before_queries + 3, len(list(la_provider.list_queries())))

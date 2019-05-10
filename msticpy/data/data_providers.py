@@ -10,7 +10,7 @@ from typing import Union, Any
 
 import pandas as pd
 
-from . providers import DataProviderBase, KqlDriver, SecurityGraphDriver
+from . drivers import DriverBase, KqlDriver, SecurityGraphDriver
 from . query_store import QueryStore
 from . param_extractor import extract_query_params
 from .. nbtools.query_defns import DataEnvironment
@@ -23,7 +23,7 @@ __author__ = 'Ian Hellen'
 _PROVIDER_DIR = 'providers'
 _QUERY_DEF_DIR = 'queries'
 
-_ENVIRONMENT_PROVIDERS = {
+_ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: KqlDriver,
     DataEnvironment.AzureSecurityCenter: KqlDriver,
     DataEnvironment.SecurityGraph: SecurityGraphDriver
@@ -34,9 +34,11 @@ class AttribHolder:
     """Empty class used to create hierarchical attributes."""
 
     def __len__(self):
+        """Retrun number of items in the attribute collection."""
         return len(self.__dict__)
 
     def __iter__(self):
+        """Return iterator over the attributes."""
         return iter(self.__dict__.items())
 
 
@@ -52,7 +54,7 @@ class QueryProvider:
 
     def __init__(self,
                  data_environment: Union[str, DataEnvironment],
-                 provider: DataProviderBase = None):
+                 driver: DriverBase = None):
         """
         Query provider interface to queries.
 
@@ -60,10 +62,10 @@ class QueryProvider:
         ----------
         data_environment : Union[str, DataEnvironment]
             Name or Enum of environment for the QueryProvider
-        provider : DataProviderBase, optional
-            Override the builtin provider (query execution class)
-            and use your own provider (must inherit from
-            `DataProviderBase`)
+        driver : DriverBase, optional
+            Override the builtin driver (query execution class)
+            and use your own driver (must inherit from
+            `DriverBase`)
 
         See Also
         --------
@@ -75,15 +77,15 @@ class QueryProvider:
 
         self._environment = data_environment.name
 
-        if provider is None:
-            provider_class = _ENVIRONMENT_PROVIDERS[data_environment]
-            if issubclass(provider_class, DataProviderBase):
-                provider = provider_class()
+        if driver is None:
+            driver_class = _ENVIRONMENT_DRIVERS[data_environment]
+            if issubclass(driver_class, DriverBase):
+                driver = driver_class()
             else:
                 raise LookupError('Could not find suitable data provider for',
                                   f' {data_environment.name}')
 
-        self._query_provider = provider
+        self._query_provider = driver
 
         # Find the path of this module and build sub-path
         query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
