@@ -42,7 +42,6 @@ sources:
     description: Retrieves list of alerts
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end} {add_query_items}'
@@ -52,7 +51,6 @@ sources:
     description: Retrieves a single alert by AlertId
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}/{alert_id}'
     parameters:
@@ -71,7 +69,6 @@ sources:
     description: Retrieves list of alerts for a user account
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}
@@ -92,7 +89,6 @@ sources:
     description: Retrieves list of alerts for a IP Address
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}
@@ -110,7 +106,6 @@ sources:
     description: Retrieves list of alerts for a hostname or FQDN
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}
@@ -126,7 +121,6 @@ sources:
     description: Retrieves list of alerts for file name, path or hash
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}
@@ -152,7 +146,6 @@ sources:
     description: Retrieves list of alerts with a common entity
     metadata:
       data_source: 'graph_alert'
-    driver: SecurityGraphDriver
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}

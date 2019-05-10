@@ -10,7 +10,7 @@ import urllib
 
 import pandas as pd
 
-from . provider_base import DataProviderBase
+from . driver_base import DriverBase
 from ... nbtools.utility import export
 from ... _version import VERSION
 
@@ -22,7 +22,7 @@ _OAUTH_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 
 
 @export
-class SecurityGraphDriver(DataProviderBase):
+class SecurityGraphDriver(DriverBase):
     """KqlDriver class to execute kql queries."""
 
     _REQ_BODY = {

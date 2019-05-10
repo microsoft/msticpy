@@ -56,7 +56,6 @@ defaults:
 sources:
   list_host_processes:
     description: Retrieves list of processes on a host
-    driver: kqlsentinel
     args:
       query: '
         let start = datetime({start});
@@ -78,7 +77,6 @@ sources:
         default: has
   list_matching_processes:
     description: Retrieves list of processes matching process name
-    driver: kqlsentinel
     args:
       query: '
         let start = datetime({start});
@@ -100,7 +98,6 @@ sources:
         default: has
   get_process_tree:
     description: Retrieves the process tree of a supplied process
-    driver: kqlsentinel
     args:
       query: '
         let start = datetime({start});
@@ -211,7 +208,6 @@ sources:
         type: str
   get_parent_process:
     description: Retrieves the parent process of a supplied process
-    driver: kqlsentinel
     args:
       query: '
         let start = datetime({start});
@@ -266,7 +262,6 @@ sources:
         default: 2
   list_hosts_matching_commandline:
     description: Retrieves processes on hosts with matching commandline
-    driver: kqlsentinel
     args:
       query: '
         {table}
@@ -286,7 +281,6 @@ sources:
         type: str
   list_processes_in_session:
     description: Retrieves all processes on the host for a logon session
-    driver: kqlsentinel
     args:
       query: '
         {table}
