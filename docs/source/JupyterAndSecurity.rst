@@ -150,14 +150,6 @@ One remarkable point here is that pretty much every major python package
 and the core language itself are open source and written and maintained
 by volunteers.
 
-Running Python Code in a Kusto Query
-""""""""""""""""""""""""""""""""""""
-
-An interesting feature for the Azure Sentinel Kusto (a.k.a. Log
-Analytics) data store that was recently released to public preview is
-the ability to run python code as part of a Kusto query. For more
-information see this
-`document <https://kusto.azurewebsites.net/docs/query/pythonplugin.html>`__.
 
 Alternatives to Python
 ^^^^^^^^^^^^^^^^^^^^^^
