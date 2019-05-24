@@ -22,6 +22,7 @@ def _value_or_default(src_dict: Dict, prop_name: str, default: Dict):
     return src_value if src_value is not None else default
 
 
+# pylint: disable=too-many-instance-attributes
 class QuerySource:
     """
     Query definition class for templated queries.
@@ -240,7 +241,8 @@ class QuerySource:
                 param_dict[p_name], datetime
             ):
                 # If this is a datetime and no specific formatting requested,
-                # format as a isoformat (Odata requires strings with no spaces and TZ suffix)
+                # format as a isoformat (Odata requires strings with no
+                # spaces and TZ suffix)
                 param_dict[p_name] = param_dict[p_name].isoformat(sep="T") + "Z"
 
         return self._query.format(**param_dict)
