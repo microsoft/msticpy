@@ -50,7 +50,7 @@ class FoliumMap():
         """
         self.folium_map = folium.Map(
             zoom_start=zoom_start, tiles=tiles, width=width, height=height)
-        self.folium_map.add_tile_layer(name=title)
+        folium.TileLayer(name=title).add_to(self.folium_map)
 
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
