@@ -12,7 +12,7 @@ import folium
 
 # pylint: enable=locally-disabled, unused-import
 from . utility import export
-from . entityschema import IpAddress
+from . entityschema import IpAddress,GeoLocation
 from .. _version import VERSION
 
 __version__ = VERSION
@@ -50,7 +50,7 @@ class FoliumMap():
         """
         self.folium_map = folium.Map(
             zoom_start=zoom_start, tiles=tiles, width=width, height=height)
-        self.folium_map.add_tile_layer(name=title)
+        folium.TileLayer(name=title).add_to(self.folium_map)
 
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
@@ -66,6 +66,18 @@ class FoliumMap():
             kwargs: icon properties to use for displaying this cluster
 
         """
+        geo_entity = GeoLocation()
+        geo_entity.CountryCode = "Unknown"
+        geo_entity.CountryName = "Unknown"
+        geo_entity.State = "Unknown"
+        geo_entity.City = "Unknown"
+        geo_entity.Longitude = 0.0
+        geo_entity.Latitude = 0.0
+
+        for ip_entity in ip_entities:
+            if ip_entity.Location is None:
+                 ip_entity.Location = geo_entity
+        
         for ip_entity in ip_entities:
             if not (isinstance(ip_entity.Location.Latitude, Number)
                     and isinstance(ip_entity.Location.Longitude, Number)):
