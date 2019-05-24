@@ -5,20 +5,22 @@
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
 from typing import Tuple, Union, Any, Dict
-import json
+import re
 import urllib
+
+import requests
 
 import pandas as pd
 
-from . driver_base import DriverBase
-from ... nbtools.utility import export
-from ... _version import VERSION
+from .driver_base import DriverBase
+from ...nbtools.utility import export
+from ..._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
-_OAUTH_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+_OAUTH_URL = "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
 
 
 @export
@@ -26,19 +28,19 @@ class SecurityGraphDriver(DriverBase):
     """KqlDriver class to execute kql queries."""
 
     _REQ_BODY = {
-        'client_id': None,
-        'client_secret': None,
-        'grant_type': 'client_credentials',
-        'scope': 'https://graph.microsoft.com/.default'
+        "client_id": None,
+        "client_secret": None,
+        "grant_type": "client_credentials",
+        "scope": "https://graph.microsoft.com/.default",
     }
     _REQ_HEADER = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': None
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": None,
     }
 
-    _DEF_API_ROOT = 'https://graph.microsoft.com/'
-    _DEF_API_VER = 'v1.0'
+    _DEF_API_ROOT = "https://graph.microsoft.com/"
+    _DEF_API_VER = "v1.0"
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
@@ -50,17 +52,16 @@ class SecurityGraphDriver(DriverBase):
             Connection string
 
         """
+        super().__init__()
         self._loaded = True
         self.aad_token = None
         self.req_headers = None
         self.api_root = None
-        self._debug = kwargs.get('debug', False)
+        self._debug = kwargs.get("debug", False)
 
         if connection_str:
             self.current_connection = connection_str
             self.connect(connection_str)
-
-        super().__init__()
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -75,8 +76,8 @@ class SecurityGraphDriver(DriverBase):
         -----
         Connection string fields:
         tenantId
-        appId
-        appSecret
+        clientId
+        clientSecret
         apiRoot
         apiVersion
 
@@ -87,27 +88,30 @@ class SecurityGraphDriver(DriverBase):
         else:
             cs_dict = kwargs
 
-        req_url = _OAUTH_URL.format(cs_dict['tenantId'])
+        req_url = _OAUTH_URL.format(tenantId=cs_dict["tenantId"])
         req_body = dict(self._REQ_BODY)
-        req_body['client_id'] = cs_dict['appId']
-        req_body['client_secret'] = cs_dict['appSecret']
+        req_body["client_id"] = cs_dict["clientId"]
+        req_body["client_secret"] = cs_dict["clientSecret"]
 
         # authenticate and obtain AAD Token for future calls
         data = urllib.parse.urlencode(req_body).encode("utf-8")
-        req = urllib.request.Request(req_url, data)
-        response = urllib.request.urlopen(req)
-        json_response = json.loads(response.read().decode())
-        self._aad_token = json_response['access_token']
-        self._req_headers = dict(self._REQ_HEADER)
-        self._req_headers['Authorization'] = "Bearer " + self._aad_token
+        response = requests.post(url=req_url, data=data)
+        json_response = response.json()
 
-        self.api_root = (cs_dict.get('apiRoot', self._DEF_API_ROOT)
-                         + cs_dict.get('apiVersion', self._DEF_API_VER))
-
+        self.aad_token = json_response.get("access_token", None)
         if not self.aad_token:
-            print("Connected.")
-            self._connected = True
-        json_response['access_token'] = None
+            raise ConnectionError("Could not obtain access token")
+
+        self.req_headers = dict(self._REQ_HEADER)
+        self.req_headers["Authorization"] = "Bearer " + self.aad_token
+        self.api_root = cs_dict.get("apiRoot", self._DEF_API_ROOT) + cs_dict.get(
+            "apiVersion", self._DEF_API_VER
+        )
+
+        print("Connected.")
+        self._connected = True
+
+        json_response["access_token"] = None
         return json_response
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
@@ -128,8 +132,7 @@ class SecurityGraphDriver(DriverBase):
         """
         return self.query_with_results(query)[0]
 
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame,
-                                                      Any]:
+    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -146,35 +149,41 @@ class SecurityGraphDriver(DriverBase):
 
         """
         if not self.connected:
-            raise ConnectionError('Source is not connected. ',
-                                  'Please call connect() and retry.')
+            self.connect(self.current_connection)
+            if not self.connected:
+                raise ConnectionError(
+                    "Source is not connected. ", "Please call connect() and retry."
+                )
 
         if self._debug:
             print(query)
-        req = urllib.request.Request(query, headers=self.req_headers)
-        try:
-            response = urllib.request.urlopen(req)
-        except urllib.error.HTTPError as http_error:
-            if http_error.code == 401:
-                raise ConnectionRefusedError('Authentication failed - possible ',
-                                             'timeout. Please re-connect.')
-            else:
-                raise http_error
 
-        json_response = json.loads(response.read().decode())
+        req_url = self.api_root + query
+        req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
+        response = requests.get(url=req_url, headers=self.req_headers)
+        if response.status_code != requests.codes["ok"]:
+            if response.status_code == 401:
+                raise ConnectionRefusedError(
+                    "Authentication failed - possible ", "timeout. Please re-connect."
+                )
+            else:
+                response.raise_for_status()
+
+        json_response = response.json()
         if isinstance(json_response, int):
-            print("Warning - query did not complete successfully.",
-                  "Check returned response.")
+            print(
+                "Warning - query did not complete successfully.",
+                "Check returned response.",
+            )
             return None, json_response
 
-        if 'value' in json_response:
+        if "value" in json_response:
             result = json_response["value"]
         else:
             result = json_response
 
         if not result:
-            print("Warning - query did not complete successfully.",
-                  "Check returned response.")
+            print("Warning - query did not return any results.")
             return None, json_response
         return pd.io.json.json_normalize(result), result
 
@@ -193,7 +202,28 @@ class SecurityGraphDriver(DriverBase):
             dict of key/pair values
 
         """
-        cs_items = connection_str.split(';')
-
-        cs_dict = {key.strip(): val.strip() for key, val in cs_items.split('=')}
+        cs_items = connection_str.split(";")
+        cs_dict = {
+            prop[0]: prop[1]
+            for prop in [item.strip().split("=") for item in cs_items]
+            if prop[0] and prop[1]
+        }
         return cs_dict
+
+    def _prepare_param_dict_from_filter(self, filterstr: str) -> Dict[str, str]:
+        """
+        Parse filter string into dictionary.
+
+        Parameters
+        ----------
+        filterstr : str
+            OData filter string
+
+        """
+        get_params = {}
+        for filter_param in re.split(r"[\?\&]+", filterstr):
+            if filter_param:
+                attr = filter_param.split("=")[0]
+                val = filter_param.split("=")[1]
+                get_params[attr] = val
+        return get_params

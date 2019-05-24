@@ -10,10 +10,10 @@ from typing import Tuple, Any, Union
 
 import pandas as pd
 
-from ... _version import VERSION
+from ..._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 class DriverBase(ABC):
@@ -24,6 +24,7 @@ class DriverBase(ABC):
         self._kwargs = kwargs
         self._loaded = False
         self._connected = False
+        self.current_connection = None
 
     @property
     def loaded(self) -> bool:
@@ -94,8 +95,7 @@ class DriverBase(ABC):
         """
 
     @abc.abstractmethod
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame,
-                                                      Any]:
+    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame plus native results.
 

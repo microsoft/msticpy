@@ -39,11 +39,7 @@ class QuerySource:
 
     """
 
-    def __init__(self,
-                 name: str,
-                 source: dict,
-                 defaults: dict,
-                 metadata: dict):
+    def __init__(self, name: str, source: dict, defaults: dict, metadata: dict):
         """
         Initialize query source definition.
 
@@ -74,16 +70,20 @@ class QuerySource:
         # consolidate source metadata - source-specifc
         # overrides global
         # add an empty dict in case neither has defined params
-        self.metadata = ChainMap(_value_or_default(self._source, 'metadata', {}),
-                                 _value_or_default(self.defaults, 'metadata', {}),
-                                 self._global_metadata)
+        self.metadata = ChainMap(
+            _value_or_default(self._source, "metadata", {}),
+            _value_or_default(self.defaults, "metadata", {}),
+            self._global_metadata,
+        )
         # make ChainMap for parameters from with source
         # higher priority than default
         # add an empty dict in case neither has defined params
-        self.params = ChainMap(_value_or_default(self._source, 'parameters', {}),
-                               _value_or_default(self.defaults, 'parameters', {}))
+        self.params = ChainMap(
+            _value_or_default(self._source, "parameters", {}),
+            _value_or_default(self.defaults, "parameters", {}),
+        )
 
-        self._query = self['args.query']
+        self._query = self["args.query"]
 
     def __getitem__(self, key: str):
         """
@@ -95,12 +95,12 @@ class QuerySource:
             The hiearchical path to the property (e.g. `source.description`)
 
         """
-        path_elems = key.split('.')
+        path_elems = key.split(".")
         cur_node = self._source
         for elem in path_elems:
             cur_node = cur_node.get(elem, None)
             if cur_node is None:
-                raise KeyError(f'{elem} value of {key} is not a valid path')
+                raise KeyError(f"{elem} value of {key} is not a valid path")
         return cur_node
 
     @property
@@ -114,7 +114,7 @@ class QuerySource:
             Query description.
 
         """
-        return self['description']
+        return self["description"]
 
     @property
     def query(self) -> str:
@@ -127,7 +127,7 @@ class QuerySource:
             The template query.
 
         """
-        return self['args.query']
+        return self["args.query"]
 
     @property
     def default_params(self) -> Dict[str, dict]:
@@ -140,8 +140,11 @@ class QuerySource:
             List of parameters
 
         """
-        return {p_key: p_props for p_key, p_props in self.params.items()
-                if 'default' in p_props}
+        return {
+            p_key: p_props
+            for p_key, p_props in self.params.items()
+            if "default" in p_props
+        }
 
     @property
     def required_params(self) -> Dict[str, dict]:
@@ -154,8 +157,11 @@ class QuerySource:
             List of parameters
 
         """
-        return {p_key: p_props for p_key, p_props in self.params.items()
-                if 'default' not in p_props}
+        return {
+            p_key: p_props
+            for p_key, p_props in self.params.items()
+            if "default" not in p_props
+        }
 
     @property
     def data_families(self) -> List[str]:
@@ -169,7 +175,7 @@ class QuerySource:
             usually equivalent to a table or entity set.
 
         """
-        return self.metadata['data_families']
+        return self.metadata["data_families"]
 
     def create_query(self, **kwargs) -> str:
         """
@@ -198,44 +204,54 @@ class QuerySource:
         parameter defaults (see `default_params` property).
 
         """
-        param_dict = {name: value.get('default', None)
-                      for name, value in self.params.items()}
+        param_dict = {
+            name: value.get("default", None) for name, value in self.params.items()
+        }
         param_dict.update(kwargs)
-        missing_params = {name: value
-                          for name, value in param_dict.items()
-                          if value is None}
+        missing_params = {
+            name: value for name, value in param_dict.items() if value is None
+        }
         if missing_params:
-            raise ValueError('These required parameters were not set: ',
-                             f'{missing_params.keys()}')
+            raise ValueError(
+                "These required parameters were not set: ", f"{missing_params.keys()}"
+            )
 
+        # Handle formatting for datetimes and cases where a format
+        # template has been supplied
         for p_name, settings in self.params.items():
             # special case of datetime specified as a number - we
             # interpret this as an offset from utcnow
-            if (settings['type'] == 'datetime'
-                    and isinstance(param_dict[p_name], Number)):
+            if settings["type"] == "datetime" and isinstance(
+                param_dict[p_name], Number
+            ):
                 if param_dict[p_name] < 0:
-                    param_dict[p_name] = datetime.utcnow() - timedelta(abs(param_dict[p_name]))
+                    param_dict[p_name] = datetime.utcnow() - timedelta(
+                        abs(param_dict[p_name])
+                    )
                 else:
-                    param_dict[p_name] = datetime.utcnow() + timedelta(abs(param_dict[p_name]))
+                    param_dict[p_name] = datetime.utcnow() + timedelta(
+                        abs(param_dict[p_name])
+                    )
             # if the parameter requires custom formatting
-            fmt_template = settings.get('format', None)
+            fmt_template = settings.get("format", None)
             if fmt_template:
                 param_dict[p_name] = fmt_template.format(param_dict[p_name])
-            elif (settings['type'] == 'datetime'
-                  and isinstance(param_dict[p_name], datetime)):
-                # If this is a datetime and no specific formattin requested,
-                # format as a isoformat (Odata requires strings with no spaces)
-                param_dict[p_name] = param_dict[p_name].isoformat(sep='T')
+            elif settings["type"] == "datetime" and isinstance(
+                param_dict[p_name], datetime
+            ):
+                # If this is a datetime and no specific formatting requested,
+                # format as a isoformat (Odata requires strings with no spaces and TZ suffix)
+                param_dict[p_name] = param_dict[p_name].isoformat(sep="T") + "Z"
 
         return self._query.format(**param_dict)
 
     def help(self):
         """Print help for query."""
-        print('Query: ', self.name)
+        print("Query: ", self.name)
         if self.query_store is not None:
-            print('Data source: ', self.query_store.environment)
+            print("Data source: ", self.query_store.environment)
         print(self.create_doc_string())
-        print('Query:')
+        print("Query:")
         print(self.query)
 
     def create_doc_string(self) -> str:
@@ -249,22 +265,22 @@ class QuerySource:
             created from query definition properties.
 
         """
-        param_block = ['Parameters', '----------']
+        param_block = ["Parameters", "----------"]
         for p_name, p_props in sorted(self.params.items()):
-            if 'default' in p_props:
-                optional = ' (optional)'
-                def_value = p_props['default']
+            if "default" in p_props:
+                optional = " (optional)"
+                def_value = p_props["default"]
                 if isinstance(def_value, str) and len(def_value) > 50:
-                    def_value = def_value[:50] + '...'
+                    def_value = def_value[:50] + "..."
             else:
-                optional = ''
+                optional = ""
                 def_value = None
             param_block.append(f'{p_name}: {p_props.get("type", "Any")}{optional}')
             param_block.append(f'    {p_props.get("description", "no description")}')
             if def_value:
-                param_block.append(f'    (default value is: {def_value})')
-        doc_string = [f'{self.description}', '']
-        return '\n'.join(doc_string + param_block)
+                param_block.append(f"    (default value is: {def_value})")
+        doc_string = [f"{self.description}", ""]
+        return "\n".join(doc_string + param_block)
 
     def validate(self) -> Tuple[bool, List[str]]:
         """Validate the source to ensure that all required properties are present.
@@ -275,20 +291,24 @@ class QuerySource:
             True if validation is successful.
 
         """
-        req_source_items = {'args'}
-        param_pattern = r'{([^}]+)}'
+        req_source_items = {"args"}
+        param_pattern = r"{([^}]+)}"
 
         valid_failures = []
 
         # Need req_source_items AND query item to be present
         source_props = self._source.keys() | self.defaults.keys()
         if not req_source_items.issubset(source_props):
-            msg = (f'Source {self.name} does not have all required '
-                   + f'elements: {req_source_items - source_props}')
+            msg = (
+                f"Source {self.name} does not have all required "
+                + f"elements: {req_source_items - source_props}"
+            )
             valid_failures.append(msg)
         if not self._query:
-            msg = (f'Source {self.name} does not have "query" property '
-                   + 'in args element.')
+            msg = (
+                f'Source {self.name} does not have "query" property '
+                + "in args element."
+            )
             valid_failures.append(msg)
 
         # Now get the query and the parameter definitions from the source and
@@ -299,17 +319,22 @@ class QuerySource:
 
         missing_params = q_params - source_params
         if missing_params:
-            msg = (f'Source {self.name} has parameters that are defined in '
-                   + 'the query but not included in either defaults or '
-                   + 'query-specific parameters element(s)\n'
-                   + f'Missing parameters are {missing_params}')
+            msg = (
+                f"Source {self.name} has parameters that are defined in "
+                + "the query but not included in either defaults or "
+                + "query-specific parameters element(s)\n"
+                + f"Missing parameters are {missing_params}"
+            )
             valid_failures.append(msg)
 
-        missing_types = {p_name for p_name, p_props in self.params.items()
-                         if 'type' not in p_props}
+        missing_types = {
+            p_name for p_name, p_props in self.params.items() if "type" not in p_props
+        }
         if missing_types:
-            msg = (f'Source {self.name} has parameters that are defined in '
-                   + 'the query but do not have a valid "type" property\n'
-                   + f'Parameters with missing types are {missing_types}')
+            msg = (
+                f"Source {self.name} has parameters that are defined in "
+                + 'the query but do not have a valid "type" property\n'
+                + f"Parameters with missing types are {missing_types}"
+            )
             valid_failures.append(msg)
         return (not valid_failures, valid_failures)
