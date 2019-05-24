@@ -13,7 +13,11 @@ import folium
 # pylint: enable=locally-disabled, unused-import
 from . utility import export
 <<<<<<< HEAD
+<<<<<<< HEAD
 from . entityschema import IpAddress, GeoLocation
+=======
+from . entityschema import IpAddress,GeoLocation
+>>>>>>> Added defauly location in case geoip unsucessful
 =======
 from . entityschema import IpAddress,GeoLocation
 >>>>>>> Added defauly location in case geoip unsucessful
