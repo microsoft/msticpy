@@ -166,6 +166,7 @@ class Lookback(QueryParamProvider):
         }
 
 
+# pylint: disable=too-many-instance-attributes
 @export
 class QueryTime(QueryParamProvider):
     """
@@ -343,6 +344,7 @@ class QueryTime(QueryParamProvider):
         }
 
 
+# pylint: disable=too-many-instance-attributes
 @export
 class AlertSelector(QueryParamProvider):
     """
@@ -427,7 +429,8 @@ class AlertSelector(QueryParamProvider):
                               self._w_select_alert,
                               self._w_output]))
 
-    def _alert_summary(self, alert_row):
+    @staticmethod
+    def _alert_summary(alert_row):
         """Return summarized string of alert properties."""
         return (f'{alert_row.StartTimeUtc}  {alert_row.AlertName} '
                 + f'({alert_row.CompromisedEntity}) '
@@ -502,6 +505,7 @@ class AlertSelector(QueryParamProvider):
         }
 
 
+# pylint: disable=too-many-instance-attributes
 @export
 class GetSingleAlert(QueryParamProvider):
     """
@@ -721,7 +725,7 @@ class SelectString:
 
     """
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self,
                  description: str = 'Select an item',
                  item_list: List[str] = None,

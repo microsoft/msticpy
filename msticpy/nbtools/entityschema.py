@@ -23,8 +23,8 @@ __version__ = VERSION
 __author__ = 'Ian Hellen'
 
 
-# pylint: disable=too-many-lines
-# pylint: disable=invalid-name
+# pylint: disable=too-many-lines, invalid-name
+# pylint: disable=too-many-instance-attributes
 @export
 class Entity(ABC):
     """
@@ -34,7 +34,7 @@ class Entity(ABC):
     """
 
     ENTITY_NAME_MAP: Dict[str, Type] = {}
-    _entity_schema = {}  # type: Mapping[str, Any]
+    _entity_schema: Dict[str, Any] = {}
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """

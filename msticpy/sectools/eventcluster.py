@@ -268,11 +268,9 @@ def add_process_features(input_frame: pd.DataFrame,
         _add_commandline_features(output_df, force, path_separator)
 
     if 'SubjectLogonId' in output_df:
-        if (('isSystemSession' not in output_df or force)
-                and 'SubjectLogonId' in output_df):
+        if 'isSystemSession' not in output_df or force:
             output_df['isSystemSession'] = (
-                output_df.apply(lambda x: True if x.SubjectLogonId in ['0x3e7', '-1']
-                                else False, axis=1))
+                output_df['SubjectLogonId'].isin(['0x3e7', '-1']))
 
     return output_df
 
@@ -541,7 +539,7 @@ def token_count_df(data: pd.DataFrame,
     return data.apply(lambda x: len(x[column].split(delimiter)), axis=1)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-statements
 @export
 def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
                  x_predict: np.ndarray,

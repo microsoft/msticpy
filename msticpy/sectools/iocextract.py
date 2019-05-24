@@ -453,8 +453,8 @@ class IoCExtract:
 
         return ioc_results
 
-    def _add_highest_pri_match(self,
-                               iocs_found: dict,
+    @staticmethod
+    def _add_highest_pri_match(iocs_found: dict,
                                current_match: str,
                                current_def: IoCPattern):
         # if we already found a match for this item and the previous
