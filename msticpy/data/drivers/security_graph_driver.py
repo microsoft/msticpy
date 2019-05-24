@@ -56,7 +56,7 @@ class SecurityGraphDriver(DriverBase):
         self._loaded = True
         self.aad_token = None
         self.req_headers = None
-        self.api_root = None
+        self.api_root = ''
         self._debug = kwargs.get("debug", False)
 
         if connection_str:
@@ -166,8 +166,7 @@ class SecurityGraphDriver(DriverBase):
                 raise ConnectionRefusedError(
                     "Authentication failed - possible ", "timeout. Please re-connect."
                 )
-            else:
-                response.raise_for_status()
+            response.raise_for_status()
 
         json_response = response.json()
         if isinstance(json_response, int):
@@ -187,7 +186,8 @@ class SecurityGraphDriver(DriverBase):
             return None, json_response
         return pd.io.json.json_normalize(result), result
 
-    def _parse_connection_str(self, connection_str: str) -> Dict[str, str]:
+    @staticmethod
+    def _parse_connection_str(connection_str: str) -> Dict[str, str]:
         """
         Split connection string components into dictionary.
 
@@ -210,7 +210,8 @@ class SecurityGraphDriver(DriverBase):
         }
         return cs_dict
 
-    def _prepare_param_dict_from_filter(self, filterstr: str) -> Dict[str, str]:
+    @staticmethod
+    def _prepare_param_dict_from_filter(filterstr: str) -> Dict[str, str]:
         """
         Parse filter string into dictionary.
 

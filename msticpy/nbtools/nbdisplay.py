@@ -247,7 +247,9 @@ _WRAP = 50
 _WRAP_CMDL = 'WrapCmdl'
 
 
+# Need to refactor this to allow multiple data sets.
 # pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-statements, too-many-branches
 @export
 def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
                      overlay_data: pd.DataFrame = None,

@@ -28,6 +28,7 @@ _ID_PROPERTIES: List[str] = ['AzSubscriptionId', 'AzResourceId',
                              'ProviderAlertId', 'SystemAlertId', 'ResourceId']
 
 
+# pylint: disable=too-many-public-methods
 @export
 class SecurityBase(QueryParamProvider):
     """
@@ -471,7 +472,8 @@ class SecurityBase(QueryParamProvider):
             html_doc = html_doc + f'<h3>Entity counts: </h3>{e_counts_str}'
         return html_doc
 
-    def _format_entity(self, entity):
+    @staticmethod
+    def _format_entity(entity):
         str_entity = str(entity)
         if str_entity:
             str_entity = str_entity.replace('\n', ', ')

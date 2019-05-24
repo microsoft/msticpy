@@ -447,7 +447,7 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-branches
     def _parse_vt_results(self,
                           vt_results: Any,
                           observable: str,
@@ -827,6 +827,8 @@ class VTLookup:
             return self._preprocess_hash(observable)
         return PreProcessResult(observable, "ok")
 
+# Would complicate code with too many branches
+# pylint: disable=too-many-return-statements
     @classmethod
     def _preprocess_url(cls, url: str) -> PreProcessResult:
         """
@@ -927,6 +929,8 @@ class VTLookup:
 
         return clean_url
 
+# Would complicate code with too many branches
+# pylint: disable=too-many-return-statements
     @classmethod
     def _preprocess_ip4(cls, ipaddress: str):
         """Ensure Ip address is a valid public IPv4 address."""
