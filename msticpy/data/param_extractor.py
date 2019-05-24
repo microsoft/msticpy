@@ -6,20 +6,19 @@
 """Parameter extractor helper functions for use with IPython/Juptyer queries."""
 from typing import List, Dict, Tuple, Any
 
-from . query_store import QuerySource
-from .. nbtools.utility import export
-from .. nbtools.query_defns import QueryParamProvider
-from .. _version import VERSION
+from .query_store import QuerySource
+from ..nbtools.utility import export
+from ..nbtools.query_defns import QueryParamProvider
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 @export
-def extract_query_params(query_source: QuerySource,
-                         *args,
-                         **kwargs) -> Tuple[Dict[str, Any],
-                                            List[str]]:
+def extract_query_params(
+    query_source: QuerySource, *args, **kwargs
+) -> Tuple[Dict[str, Any], List[str]]:
     """
     Get the parameters needed for the query.
 
@@ -62,17 +61,16 @@ def extract_query_params(query_source: QuerySource,
 
     # If we have missing parameters try to retrieve them
     # as attributes of the object
-    missing_params = [p_name for p_name, p_value in req_params.items()
-                      if not p_value]
+    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
     if missing_params:
         _get_missing_params(args, missing_params, req_params)
 
     return req_params, missing_params
 
 
-def _get_missing_params(args: Tuple[Any, ...],
-                        missing_params: List[str],
-                        req_params: Dict[str, Any]):
+def _get_missing_params(
+    args: Tuple[Any, ...], missing_params: List[str], req_params: Dict[str, Any]
+):
     """
     Get missing params from arguments.
 
@@ -86,13 +84,12 @@ def _get_missing_params(args: Tuple[Any, ...],
         Dictionary of required parameters
 
     """
-    for arg_object in [obj for obj in args
-                       if not isinstance(obj, QueryParamProvider)]:
+    for arg_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
         for m_param in missing_params:
-            if (isinstance(arg_object, dict)
-                    and m_param in arg_object):
+            if isinstance(arg_object, dict) and m_param in arg_object:
                 req_params[m_param] = arg_object.get(m_param, None)
             elif hasattr(arg_object, m_param):
                 req_params[m_param] = getattr(arg_object, m_param)
-        missing_params = [p_name for p_name, p_value in req_params.items()
-                          if p_value is not None]
+        missing_params = [
+            p_name for p_name, p_value in req_params.items() if p_value is not None
+        ]

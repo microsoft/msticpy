@@ -10,12 +10,12 @@ import pandas as pd
 from IPython import get_ipython
 from Kqlmagic import results
 
-from . driver_base import DriverBase
-from ... nbtools.utility import export
-from ... _version import VERSION
+from .driver_base import DriverBase
+from ...nbtools.utility import export
+from ..._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 @export
@@ -33,7 +33,7 @@ class KqlDriver(DriverBase):
 
         """
         self._ip = get_ipython()
-        self._debug = kwargs.get('debug', False)
+        self._debug = kwargs.get("debug", False)
         super().__init__()
 
         self._loaded = self._is_kqlmagic_loaded()
@@ -56,7 +56,7 @@ class KqlDriver(DriverBase):
 
         """
         self.current_connection = connection_str
-        result = self._ip.run_cell_magic('kql', line='', cell=connection_str)
+        result = self._ip.run_cell_magic("kql", line="", cell=connection_str)
         self._connected = True
         return result
 
@@ -78,8 +78,7 @@ class KqlDriver(DriverBase):
         """
         return self.query_with_results(query)[0]
 
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame,
-                                                      results.ResultSet]:
+    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, results.ResultSet]:
         """
         Execute query string and return DataFrame of results.
 
@@ -95,32 +94,43 @@ class KqlDriver(DriverBase):
             Kql ResultSet.
 
         """
+        # connect or switch the connection if our connection string
+        # is not the current KqlMagic connection.
+        self.connect(self.current_connection)
         if not self.connected:
-            raise ConnectionError('Source is not connected. Please call connect() and retry.')
+            raise ConnectionError(
+                "Source is not connected. Please call connect() and retry."
+            )
 
         if self._debug:
             print(query)
-        result = self._ip.run_cell_magic('kql', line='', cell=query)
-        if result is not None and result.completion_query_info['StatusCode'] == 0:
-            data_frame = result.to_dataframe()
-            if result.is_partial_table:
-                print("Warning - query returned partial results.")
-            # Did user want both dataframe and ResultSet
-
-            return data_frame, result
+        result = self._ip.run_cell_magic("kql", line="", cell=query)
+        if result is not None:
+            if isinstance(result, pd.DataFrame):
+                return result, None
+            if (
+                isinstance(result, results.ResultSet)
+                and result.completion_query_info["StatusCode"] == 0
+            ):
+                data_frame = result.to_dataframe()
+                if result.is_partial_table:
+                    print("Warning - query returned partial results.")
+                return data_frame, result
 
         print("Warning - query did not complete successfully.")
-        print("Kql ResultSet returned - check  \'completion_query_info\' property.")
+        print("Kql ResultSet returned - check  'completion_query_info' property.")
         return None, result
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
         # KqlMagic
-        print('Please wait. Loading Kqlmagic extension...')
-        self._ip.run_line_magic('reload_ext', 'Kqlmagic')
+        print("Please wait. Loading Kqlmagic extension...")
+
+        self._ip.run_line_magic("reload_ext", "Kqlmagic")
+        self._loaded = True
 
     def _is_kqlmagic_loaded(self) -> bool:
         """Return true if kql magic is loaded."""
         if self._ip is not None:
-            return self._ip.find_magic('kql') is not None
+            return self._ip.find_magic("kql") is not None
         return False
