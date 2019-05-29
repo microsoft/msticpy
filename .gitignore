@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 /msticpy.code-workspace
 /docs/source/_build/**
+**/.vscode*
