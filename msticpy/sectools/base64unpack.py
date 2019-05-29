@@ -32,7 +32,8 @@ import io
 import re
 import tarfile
 # pylint: disable=unused-import
-from typing import Tuple, Any, Set, Mapping, Optional, List
+from typing import (Tuple, Any, Set, Mapping, Optional, List,
+                    Iterable, Dict)
 import zipfile
 from collections import namedtuple
 
@@ -77,23 +78,11 @@ _BASE64_HEADER_OFFSET_TYPES = {
 # Base64 simple regex
 _BASE64_REGEX = '(?P<b64>[A-Za-z0-9+/\\n\\r]{30,}={0,2})'
 BASE64_REGEX_C = re.compile(_BASE64_REGEX, re.I | re.X)
-# '''(?<![A-Za-z0-9+\/])
-#             (?:
-#                 (?:[A-Za-z0-9+\/]{4})*
-#                 (?:
-#                     [A-Za-z0-9+\/]{2} [AEIMQUYcgkosw048] = |
-#                     [A-Za-z0-9+\/] [AQgw] ==
-#                 ) |
-#                 (?:[A-Za-z0-9\/]{4})*
-#                 (?:
-#                     \+ [A-Za-z0-9\/+]{3} |
-#                     [A-Za-z0-9\/] \+ [A-Za-z0-9+\/]{2} |
-#                     [A-Za-z0-9\/]{2} \+ [A-Za-z0-9+\/] |
-#                     [A-Za-z0-9\/]{3} \+
-#                 )
-#                 (?:[A-Za-z0-9+\/]{4})*
-#             )
-#             (?![A-Za-z0-9+\/=])'''
+
+# we use this to store a set of strings that match the B64 regex but
+# that we were unable to decode - so that we don't end up in an
+# infinite loop
+_UNDECODABLE_STRINGS: Set[str] = set()
 
 # When True prints see more verbose execution
 # (set from 'trace' parameter to unpack_items)
@@ -193,6 +182,260 @@ def unpack_items(input_string: str = None,
     return None
 
 
+def unpack(input_string: str,
+           trace: bool = False) -> Tuple[str, Optional[List[BinaryRecord]]]:
+    """
+    Base64 decode an input string.
+
+    Parameters
+    ----------
+    input_string : str, optional
+        single string to decode (the default is None)
+    trace : bool, optional
+        Show additional status (the default is None)
+
+    Returns
+    -------
+    Tuple[str, pd.DataFrame] (if `input_string`)
+        Decoded string and additional metadata
+
+    Notes
+    -----
+    If the input is a dataframe you must supply the name of the column to use.
+
+    Items that decode to utf-8 or utf-16 strings will be returned as decoded
+    strings replaced in the original string. If the encoded string is a
+    known binary type it will identify the file type and return the hashes
+    of the file. If any binary types are known archives (zip, tar, gzip) it
+    will unpack the contents of the archive.
+    For any binary it will return the decoded file as a byte array, and as a
+    printable list of byte values. If the input is a string the function
+    returns:
+
+    - decoded string: this is the input string with any decoded sections
+      replaced by the results of the decoding
+
+    It also returns the data as pandas DataFrame with
+    the following columns:
+
+    - reference : this is an index that matches an index number in the
+      returned string (e.g. <<encoded binary type=pdf index=1.2').
+    - original_string : the string prior to decoding - file_type : the type
+      of file if this could be determined
+    - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
+      are broken out into separate columns)
+    - input_bytes : the binary image as a byte array
+    - decoded_string : printable form of the decoded string (either string
+      or list of hex byte values)
+    - encoding_type : utf-8, utf-16 or binary
+    - md5, sha1, sha256 : the respective hashes of the binary file_type,
+      file_hashes, input_bytes, md5, sha1, sha256 will be null if this item is
+      decoded to a string
+
+    """
+    # pylint: disable=invalid-name, global-statement
+    global _debug_trace
+    _debug_trace = trace
+
+    return _decode_b64_string_recursive(input_string)
+
+
+def unpack_df(data: pd.DataFrame,
+              column: str,
+              trace: bool = False) -> pd.DataFrame:
+    """
+    Base64 decode strings taken from a pandas dataframe.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        dataframe containing column to decode
+    column : str
+        Name of dataframe text column
+    trace : bool, optional
+        Show additional status (the default is None)
+
+    Returns
+    -------
+    pd.DataFrame
+        Decoded stringa and additional metadata in dataframe
+
+    Notes
+    -----
+    Items that decode to utf-8 or utf-16 strings will be returned as decoded
+    strings replaced in the original string. If the encoded string is a
+    known binary type it will identify the file type and return the hashes
+    of the file. If any binary types are known archives (zip, tar, gzip) it
+    will unpack the contents of the archive.
+    For any binary it will return the decoded file as a byte array, and as a
+    printable list of byte values.
+
+    The columns of the output DataFrame are:
+
+    - decoded string: this is the input string with any decoded sections
+      replaced by the results of the decoding
+    - reference : this is an index that matches an index number in the
+      decoded string (e.g. <<encoded binary type=pdf index=1.2').
+    - original_string : the string prior to decoding - file_type : the type
+      of file if this could be determined
+    - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
+      are broken out into separate columns)
+    - input_bytes : the binary image as a byte array
+    - decoded_string : printable form of the decoded string (either string
+      or list of hex byte values)
+    - encoding_type : utf-8, utf-16 or binary
+    - md5, sha1, sha256 : the respective hashes of the binary file_type,
+      file_hashes, input_bytes, md5, sha1, sha256 will be null if this item is
+      decoded to a string
+    - src_index - the index of the source row in the input
+      frame.
+
+    """
+    # pylint: disable=invalid-name, global-statement
+    global _debug_trace
+    _debug_trace = trace
+
+    output_df = pd.DataFrame(columns=_RESULT_FIELDS)
+    row_results: List[pd.DataFrame] = []
+    rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
+    for input_row in rows_with_b64_match[[column]].itertuples():
+        (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
+        output_frame['src_index'] = input_row.Index
+        output_frame['full_decoded_string'] = decoded_string
+        row_results.append(output_frame)
+
+    if row_results:
+        output_df = pd.concat(row_results, ignore_index=True)
+    return output_df
+
+
+# pylint: disable=too-many-locals
+def _decode_b64_string_recursive(input_string: str,
+                                 max_recursion: int = 20,
+                                 current_depth: int = 1,
+                                 item_prefix: str = '') -> Tuple[str, pd.DataFrame]:
+    """Recursively decode and unpack an encoded string."""
+    _debug_print_trace('_decode_b64_string_recursive: ', max_recursion)
+    _debug_print_trace('processing input: ', input_string[:200])
+
+    decoded_string = input_string
+
+    binary_records = pd.DataFrame(columns=_RESULT_FIELDS)
+    fragment_index = 0
+    match_pos = 0
+    something_decoded = False
+
+    while True:
+        # search sequentially through the input string for any strings
+        # that look like base64
+        _debug_print_trace('regex searching ', decoded_string[:200],
+                           ' from pos: ', match_pos, ' bin_index ',
+                           fragment_index)
+        b64match = BASE64_REGEX_C.search(decoded_string, match_pos)
+
+        # _debug_print_trace('groups: ', len(b64match.groupdict()))
+        if b64match is not None:
+            _debug_print_trace('regex found: ', b64match.groupdict()['b64'])
+            # if (in a recursive call) we already know that this string
+            # doesn't decode skip this match
+            if b64match.groupdict()['b64'] in _UNDECODABLE_STRINGS:
+                _debug_print_trace('previous undecodable string')
+                match_pos = b64match.end()
+                continue
+
+            # try to decode
+            fragment_index += 1
+            (decoded_fragment, binary_items) = (
+                _decode_and_format_b64_string(b64match.groupdict()['b64'],
+                                              item_prefix=item_prefix,
+                                              current_index=fragment_index,
+                                              current_depth=current_depth))
+
+            # if the string didn't decode we'll have the same output as input
+            # so add that to our set of undecodable strings (we need to track this
+            # otherwise we will recurse infinitely)
+            something_decoded = (decoded_fragment != b64match.groupdict()['b64'])
+            if something_decoded:
+                # we did decode something so lets put our result this in the output string
+                if binary_items:
+                    new_records = _add_to_results(binary_items,
+                                                  b64match.groupdict()['b64'],
+                                                  current_depth,
+                                                  item_prefix,
+                                                  fragment_index)
+                    binary_records = binary_records.append(new_records,
+                                                           ignore_index=True,
+                                                           sort=False)
+                # replace the decoded fragment in our current results string
+                # (decode_string)
+                decoded_string = (decoded_string
+                                  .replace(b64match.groupdict()['b64'],
+                                           decoded_fragment))
+                _debug_print_trace('Replaced string',
+                                   decoded_string[match_pos:match_pos + 100])
+                match_pos += len(decoded_fragment)
+            else:
+                _UNDECODABLE_STRINGS.add(b64match.groupdict()['b64'])
+                _debug_print_trace('new undecodable string')
+                match_pos = b64match.end()
+
+        else:
+            _debug_print_trace('Pattern not found: ', match_pos)
+            break
+
+        if fragment_index > 50:
+            break
+
+    # if we reach our max recursion depth bail out here
+    if max_recursion == 0:
+        _debug_print_trace('max recursion reached')
+        return decoded_string, binary_records
+
+    if something_decoded:
+        # stuff that we have already decoded may also contain further
+        # base64 encoded strings
+        prefix = (f'{item_prefix}.{fragment_index}.'
+                  if item_prefix else f'{fragment_index}.')
+        next_level_string, child_records = _decode_b64_string_recursive(
+            decoded_string,
+            item_prefix=prefix,
+            max_recursion=max_recursion - 1,
+            current_depth=(current_depth + 1))
+        return next_level_string, binary_records.append(
+            child_records, ignore_index=True, sort=False)
+
+    _debug_print_trace('Nothing left to decode')
+    return decoded_string, binary_records
+
+
+def _add_to_results(binary_items: Iterable[BinaryRecord],
+                    original_str: str,
+                    current_depth: int,
+                    item_prefix: str,
+                    fragment_index: int) -> List[Dict[str, Any]]:
+    """Add current set of decoding results to collection."""
+    new_rows = []
+    for bin_record in binary_items:
+        new_row = bin_record._asdict()
+        new_row['reference'] = (f'{item_prefix}',
+                                f'{current_depth}.',
+                                f'{fragment_index}')
+        new_row['original_string'] = original_str
+        new_row['md5'] = new_row['file_hashes']['md5']
+        new_row['sha1'] = new_row['file_hashes']['sha1']
+        new_row['sha256'] = new_row['file_hashes']['sha256']
+
+        new_rows.append(new_row)
+        # if pd_version_23():
+        #     binary_records = binary_records.append(new_row,
+        #                                            ignore_index=True,
+        #                                            sort=False)
+        # else:
+        #     binary_records = binary_records.append(new_row,
+        #                                            ignore_index=True)
+    return new_rows
+
+
 def _debug_print_trace(*args):
     if _debug_trace:
         for arg in args:
@@ -268,127 +511,7 @@ def _decode_and_format_b64_string(b64encoded_string: str,
         child_index += 1
 
     display_string = display_header + ''.join(child_display_strings) + '</decoded>'
-    return display_string, output_files.values()
-
-
-# pylint: disable=too-many-locals
-def _decode_b64_string_recursive(input_string: str,
-                                 undecodable_strings: Set[str] = None,
-                                 max_recursion: int = 20,
-                                 current_depth: int = 1,
-                                 item_prefix: str = '') -> Tuple[str, pd.DataFrame]:
-    """
-    Recursively decode and unpack an encoded string.
-
-        :rtype: (str, [BinaryRecord]
-    """
-    _debug_print_trace('_decode_b64_string_recursive: ', max_recursion)
-    _debug_print_trace('processing input: ', input_string[:200])
-
-    decoded_string = input_string
-
-    # we use this to store a set of strings that match the B64 regex but
-    # that we were unable to decode - so that we don't end up in an
-    # infinite loop
-    if not undecodable_strings:
-        undecodable_strings = set()
-
-    binary_records = pd.DataFrame(columns=_RESULT_FIELDS)
-    fragment_index = 0
-    match_pos = 0
-    something_decoded = False
-
-    # pylint: disable=too-many-nested-blocks
-    while True:
-        # search sequentially through the input string for any strings
-        # that look like base64
-        _debug_print_trace('regex searching ', decoded_string[:200],
-                           ' from pos: ', match_pos, ' bin_index ',
-                           fragment_index)
-        b64match = BASE64_REGEX_C.search(decoded_string, match_pos)
-
-        # _debug_print_trace('groups: ', len(b64match.groupdict()))
-        if b64match is not None:
-            _debug_print_trace('regex found: ', b64match.groupdict()['b64'])
-            # if (in a recursive call) we already know that this string
-            # doesn't decode skip this match
-            if b64match.groupdict()['b64'] in undecodable_strings:
-                _debug_print_trace('previous undecodable string')
-                match_pos = b64match.end()
-                continue
-
-            # try to decode
-            fragment_index += 1
-            (decoded_fragment, binary_items) = (
-                _decode_and_format_b64_string(b64match.groupdict()['b64'],
-                                              item_prefix=item_prefix,
-                                              current_index=fragment_index,
-                                              current_depth=current_depth))
-
-            # if the string didn't decode we'll have the same output as input
-            # so add that to our set of undecodable strings (we need to track this
-            # otherwise we will recurse infinitely)
-            something_decoded = (decoded_fragment != b64match.groupdict()['b64'])
-            if something_decoded:
-                # we did decode something so lets put our result this in the output string
-                if binary_items:
-                    # if there are one or more binary_items from decoding
-                    # add them to our output DataFrame
-                    for bin_record in binary_items:
-                        new_row = bin_record._asdict()
-                        new_row['reference'] = (f'{item_prefix}',
-                                                f'{current_depth}.',
-                                                f'{fragment_index}')
-                        new_row['original_string'] = b64match.groupdict()['b64']
-                        new_row['md5'] = new_row['file_hashes']['md5']
-                        new_row['sha1'] = new_row['file_hashes']['sha1']
-                        new_row['sha256'] = new_row['file_hashes']['sha256']
-
-                        if pd_version_23():
-                            binary_records = binary_records.append(new_row,
-                                                                   ignore_index=True,
-                                                                   sort=False)
-                        else:
-                            binary_records = binary_records.append(new_row,
-                                                                   ignore_index=True)
-
-                # replace the decoded fragment in our current results string
-                # (decode_string)
-                decoded_string = (decoded_string
-                                  .replace(b64match.groupdict()['b64'],
-                                           decoded_fragment))
-                _debug_print_trace('Replaced string',
-                                   decoded_string[match_pos:match_pos + 100])
-                match_pos += len(decoded_fragment)
-            else:
-                undecodable_strings.add(b64match.groupdict()['b64'])
-                _debug_print_trace('new undecodable string')
-                match_pos = b64match.end()
-
-        else:
-            _debug_print_trace('Regex not found: ', match_pos)
-            break
-
-        if fragment_index > 50:
-            break
-
-    # if we reach our max recursion depth bail out here
-    if max_recursion == 0:
-        _debug_print_trace('max recursion reached')
-        return decoded_string, binary_records
-
-    if something_decoded:
-        # stuff that we have already decoded may also contain further
-        # base64 encoded strings
-        pfx = (f'{item_prefix}.{fragment_index}.'
-               if item_prefix else f'{fragment_index}.')
-        (next_level_string, child_records) = _decode_b64_string_recursive(
-            decoded_string, undecodable_strings, item_prefix=pfx,
-            max_recursion=max_recursion - 1, current_depth=(current_depth + 1))
-        return next_level_string, binary_records.append(
-            child_records, ignore_index=True, sort=False)
-    _debug_print_trace('Nothing left to decode')
-    return decoded_string, binary_records
+    return display_string, list(output_files.values())
 
 
 def _print_bytes(bytes_array):
@@ -621,7 +744,7 @@ def get_items_from_tar(binary: bytes) -> Tuple[str,
         if tar_file:
             archive_dict[item] = tar_file.read()
         else:
-            archive_dict[item] = None
+            archive_dict[item] = b''
     return 'tar', archive_dict
 
 

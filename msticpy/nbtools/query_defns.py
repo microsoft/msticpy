@@ -6,7 +6,7 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Union
+from typing import List, Union, Optional
 
 import attr
 from attr import Factory
@@ -32,9 +32,10 @@ class DataFamily(Enum):
     WindowsSecurity = 1
     LinuxSecurity = 2
     SecurityAlert = 3
+    SecurityGraphAlert = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> 'DataFamily':
+    def parse(cls, value: Union[str, int]) -> Optional['DataFamily']:
         """
         Convert string or int to enum.
 
@@ -69,9 +70,11 @@ class DataEnvironment(Enum):
 
     LogAnalytics = 1
     Kusto = 2
+    AzureSecurityCenter = 3
+    SecurityGraph = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> 'DataEnvironment':
+    def parse(cls, value: Union[str, int]) -> Optional['DataEnvironment']:
         """
         Convert string or int to enum.
 
@@ -95,6 +98,7 @@ class DataEnvironment(Enum):
         return parsed_enum
 
 
+# pylint: disable=too-many-public-methods
 @export
 class QueryParamProvider(ABC):
     """
@@ -121,6 +125,7 @@ class QueryParamProvider(ABC):
 
 
 # Query definition
+# pylint: disable=too-many-public-methods
 @attr.s(auto_attribs=True)
 class KqlQuery():
     """KqlQuery definition."""
