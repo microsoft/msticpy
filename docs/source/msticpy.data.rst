@@ -45,10 +45,51 @@ msticpy.nbtools.security\_event module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.data\_providers module
+-----------------------------------
+.. automodule:: msticpy.data.data_providers
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-msticpy.data.kql\_driver module
--------------------------------
-.. automodule:: msticpy.data.kql_driver
+msticpy.data.data\_query\_reader module
+---------------------------------------
+.. automodule:: msticpy.data.data_query_reader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.param\_extractor module
+------------------------------------
+.. automodule:: msticpy.data.param_extractor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.query\_store module
+--------------------------------
+.. automodule:: msticpy.data.query_store
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.driver\_base module
+----------------------------------------
+.. automodule:: msticpy.data.drivers.driver_base
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.kql\_driver module
+---------------------------------------
+.. automodule:: msticpy.data.drivers.kql_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.security\_graph\_driver module
+---------------------------------------------------
+.. automodule:: msticpy.data.drivers.security_graph_driver
     :members:
     :undoc-members:
     :show-inheritance:
