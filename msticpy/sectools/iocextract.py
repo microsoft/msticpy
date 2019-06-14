@@ -25,22 +25,62 @@ The following types are built-in:
 
 import re
 from collections import namedtuple, defaultdict
+from enum import Enum
 from typing import Any, List, Mapping, Set, Dict, Tuple
 from urllib.parse import unquote
 
 import pandas as pd
-from .. nbtools.utility import export
-from .. _version import VERSION
+from ..nbtools.utility import export
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 def _compile_regex(regex):
     return re.compile(regex, re.I | re.X | re.M)
 
 
-IoCPattern = namedtuple('IoCPattern', ['ioc_type', 'comp_regex', 'priority', 'group'])
+IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
+
+
+@export
+class IoCType(Enum):
+    """Enumeration of IoC Types."""
+
+    unknown = "unknown"
+    ipv4 = "ipv4"
+    ipv6 = "ipv6"
+    dns = "dns"
+    url = "url"
+    md5_hash = "md5_hash"
+    sha1_hash = "sha1_hash"
+    sha256_hash = "sha256_hash"
+    email = "email"
+    windows_path = "windows_path"
+    linux_path = "linux_path"
+
+    @classmethod
+    def parse(cls, value: str) -> "IoCType":
+        """
+        Return parsed IoCType of string.
+
+        Parameters
+        ----------
+        value : str
+            Enumeration name
+
+        Returns
+        -------
+        IoCType
+            IoCType matching name or unknown if no match
+
+        """
+        try:
+            ioc_type = IoCType(value.lower())
+        except ValueError:
+            ioc_type = IoCType.unknown
+        return ioc_type
 
 
 @export
@@ -72,70 +112,69 @@ class IoCExtract:
     possible linux path.
     """
 
-    IPV4_REGEX = r'(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})'
-    IPV6_REGEX = r'(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])'
-    DNS_REGEX = r'((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){2,}[a-z]{2,63}'
+    IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
+    IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])"
+    DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){2,}[a-z]{2,63}"
     # dns_regex =
     #   '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
 
-    URL_REGEX = r'''
+    URL_REGEX = r"""
             (?P<protocol>(https?|ftp|telnet|ldap|file)://)
             (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
             (?P<host>([a-z0-9-._~!$&\'()*+,;=]|%[0-9A-F]{2})*)
             (:(?P<port>\d*))?
             (/(?P<path>([^?\#"<> ]|%[0-9A-F]{2})*/?))?
             (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
-            (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?'''
+            (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?"""
 
-    WINPATH_REGEX = r'''
+    WINPATH_REGEX = r"""
             (?P<root>[a-z]:|\\\\[a-z0-9_.$-]+||[.]+)
             (?P<folder>\\(?:[^\/:*?"\'<>|\r\n]+\\)*)
-            (?P<file>[^\\/*?""<>|\r\n ]+)'''
+            (?P<file>[^\\/*?""<>|\r\n ]+)"""
     # Linux simplified - this ignores some legal linux paths avoid matching too much
     # This also matches URLs but these should be thrown out by priority
     # weighting since URL has a higher priority
-    LXPATH_REGEX = r'''(?P<root>/+||[.]+)
+    LXPATH_REGEX = r"""(?P<root>/+||[.]+)
             (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
-            (?P<file>[^/\0<>|\r\n ]+)'''
+            (?P<file>[^/\0<>|\r\n ]+)"""
 
-    MD5_REGEX = r'(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])'
-    SHA1_REGEX = r'(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])'
-    SHA256_REGEX = r'(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])'
+    MD5_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])"
+    SHA1_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])"
+    SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
 
     _content_regex: Dict[str, IoCPattern] = {}
 
     def __init__(self):
         """Intialize new instance of IoCExtract."""
         # IP Addresses
-        self.add_ioc_type('ipv4', self.IPV4_REGEX, 0, 'ipaddress')
-        self.add_ioc_type('ipv6', self.IPV6_REGEX, 0)
+        self.add_ioc_type(IoCType.ipv4.name, self.IPV4_REGEX, 0, "ipaddress")
+        self.add_ioc_type(IoCType.ipv6.name, self.IPV6_REGEX, 0)
 
         # Dns Domains
         # This also matches IP addresses but IPs have higher
         # priority both matching on the same substring will defer
         # to the IP regex
-        self.add_ioc_type('dns', self.DNS_REGEX, 1)
+        self.add_ioc_type(IoCType.dns.name, self.DNS_REGEX, 1)
 
         # Http requests
-        self.add_ioc_type('url', self.URL_REGEX, 0)
+        self.add_ioc_type(IoCType.url.name, self.URL_REGEX, 0)
 
         # File paths
         # Windows
-        self.add_ioc_type('windows_path', self.WINPATH_REGEX, 2)
+        self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 2)
 
-        self.add_ioc_type('linux_path', self.LXPATH_REGEX, 2)
+        self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 2)
 
         # MD5, SHA1, SHA256 hashes
-        self.add_ioc_type('md5_hash', self.MD5_REGEX, 1, 'hash')
-        self.add_ioc_type('sha1_hash', self.SHA1_REGEX, 1, 'hash')
-        self.add_ioc_type('sha256_hash', self.SHA256_REGEX, 1, 'hash')
+        self.add_ioc_type(IoCType.md5_hash.name, self.MD5_REGEX, 1, "hash")
+        self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
+        self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
     # Public members
 
-    def add_ioc_type(self, ioc_type: str,
-                     ioc_regex: str,
-                     priority: int = 0,
-                     group: str = None):
+    def add_ioc_type(
+        self, ioc_type: str, ioc_regex: str, priority: int = 0, group: str = None
+    ):
         """
         Add an IoC type and regular expression to use to the built-in set.
 
@@ -163,15 +202,16 @@ class IoCExtract:
 
         """
         if ioc_type is None or ioc_type.strip() is None:
-            raise Exception('No value supplied for ioc_type parameter')
+            raise Exception("No value supplied for ioc_type parameter")
         if ioc_regex is None or ioc_regex.strip() is None:
-            raise Exception('No value supplied for ioc_regex parameter')
+            raise Exception("No value supplied for ioc_regex parameter")
 
-        self._content_regex[ioc_type] = IoCPattern(ioc_type=ioc_type,
-                                                   comp_regex=_compile_regex(
-                                                       regex=ioc_regex),
-                                                   priority=priority,
-                                                   group=group)
+        self._content_regex[ioc_type] = IoCPattern(
+            ioc_type=ioc_type,
+            comp_regex=_compile_regex(regex=ioc_regex),
+            priority=priority,
+            group=group,
+        )
 
     @property
     def ioc_types(self) -> dict:
@@ -186,11 +226,14 @@ class IoCExtract:
         """
         return self._content_regex
 
-# pylint: disable=too-many-locals
-    def extract(self, src: str = None,
-                data: pd.DataFrame = None,
-                columns: List[str] = None,
-                **kwargs) -> Any:
+    # pylint: disable=too-many-locals
+    def extract(
+        self,
+        src: str = None,
+        data: pd.DataFrame = None,
+        columns: List[str] = None,
+        **kwargs
+    ) -> Any:
         """
         Extract IoCs from either a string or pandas DataFrame.
 
@@ -246,20 +289,20 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
-        os_family = kwargs.get('os_family', 'Windows')
-        ioc_types = kwargs.get('ioc_types', None)
-        include_paths = kwargs.get('include_paths', False)
+        os_family = kwargs.get("os_family", "Windows")
+        ioc_types = kwargs.get("ioc_types", None)
+        include_paths = kwargs.get("include_paths", False)
 
         if src and src.strip():
-            return self._scan_for_iocs(src=src, os_family=os_family,
-                                       ioc_types=ioc_types)
+            return self._scan_for_iocs(
+                src=src, os_family=os_family, ioc_types=ioc_types
+            )
 
         if data is None:
-            raise Exception('No source data was supplied to extract')
+            raise Exception("No source data was supplied to extract")
 
         if columns is None:
-            raise Exception(
-                'No values were supplied for the columns parameter')
+            raise Exception("No values were supplied for the columns parameter")
 
         # Use only requested IoC Type patterns
         if ioc_types:
@@ -267,37 +310,55 @@ class IoCExtract:
         else:
             ioc_types_to_use = list(set(self._content_regex.keys()))
             if not include_paths:
-                ioc_types_to_use.remove('windows_path')
-                ioc_types_to_use.remove('linux_path')
+                ioc_types_to_use.remove("windows_path")
+                ioc_types_to_use.remove("linux_path")
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [
-                elem for elem in col_set if elem not in data.colums]
-            raise Exception('Source column(s) {} not found in supplied DataFrame'
-                            .format(', '.join(missing_cols)))
+            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            raise Exception(
+                "Source column(s) {} not found in supplied DataFrame".format(
+                    ", ".join(missing_cols)
+                )
+            )
 
-        result_columns = ['IoCType', 'Observable', 'SourceIndex']
-        result_frame = pd.DataFrame(columns=result_columns)
+        result_columns = ["IoCType", "Observable", "SourceIndex"]
+        result_rows = []
         for idx, datarow in data.iterrows():
-            for col in columns:
-                ioc_results = self._scan_for_iocs(
-                    datarow[col], os_family, ioc_types_to_use)
-                for result_type, result_set in ioc_results.items():
-                    if result_set:
-                        for observable in result_set:
-                            result_row = pd.Series(
-                                data=[result_type, observable, idx],
-                                index=result_columns)
-                            result_frame = result_frame.append(
-                                result_row, ignore_index=True)
-
+            result_rows.extend(
+                self._search_in_row(
+                    datarow, idx, columns, result_columns, os_family, ioc_types_to_use
+                )
+            )
+        result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
         return result_frame
 
-    def extract_df(self,
-                   data: pd.DataFrame,
-                   columns: List[str],
-                   **kwargs) -> pd.DataFrame:
+# pylint: disable=too-many-arguments
+    def _search_in_row(
+        self,
+        datarow: pd.Series,
+        idx: Any,
+        columns: List[str],
+        result_columns: List[str],
+        os_family: str,
+        ioc_types_to_use: List[str],
+    ):
+        """Return results for a single input row."""
+        result_rows = []
+        for col in columns:
+            ioc_results = self._scan_for_iocs(datarow[col], os_family, ioc_types_to_use)
+            for result_type, result_set in ioc_results.items():
+                if result_set:
+                    for observable in result_set:
+                        result_row = pd.Series(
+                            data=[result_type, observable, idx], index=result_columns
+                        )
+                        result_rows.append(result_row)
+        return result_rows
+
+    def extract_df(
+        self, data: pd.DataFrame, columns: List[str], **kwargs
+    ) -> pd.DataFrame:
         """
         Extract IoCs from either a pandas DataFrame.
 
@@ -345,9 +406,9 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
-        os_family = kwargs.get('os_family', 'Windows')
-        ioc_types = kwargs.get('ioc_types', None)
-        include_paths = kwargs.get('include_paths', False)
+        os_family = kwargs.get("os_family", "Windows")
+        ioc_types = kwargs.get("ioc_types", None)
+        include_paths = kwargs.get("include_paths", False)
 
         # Use only requested IoC Type patterns
         if ioc_types:
@@ -355,31 +416,27 @@ class IoCExtract:
         else:
             ioc_types_to_use = list(set(self._content_regex.keys()))
             if not include_paths:
-                ioc_types_to_use.remove('windows_path')
-                ioc_types_to_use.remove('linux_path')
+                ioc_types_to_use.remove("windows_path")
+                ioc_types_to_use.remove("linux_path")
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [
-                elem for elem in col_set if elem not in data.colums]
-            raise Exception('Source column(s) {} not found in supplied DataFrame'
-                            .format(', '.join(missing_cols)))
+            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            raise Exception(
+                "Source column(s) {} not found in supplied DataFrame".format(
+                    ", ".join(missing_cols)
+                )
+            )
 
-        result_columns = ['IoCType', 'Observable', 'SourceIndex']
-        result_frame = pd.DataFrame(columns=result_columns)
+        result_columns = ["IoCType", "Observable", "SourceIndex"]
+        result_rows = []
         for idx, datarow in data.iterrows():
-            for col in columns:
-                ioc_results = self._scan_for_iocs(
-                    datarow[col], os_family, ioc_types_to_use)
-                for result_type, result_set in ioc_results.items():
-                    if result_set:
-                        for observable in result_set:
-                            result_row = pd.Series(
-                                data=[result_type, observable, idx],
-                                index=result_columns)
-                            result_frame = result_frame.append(
-                                result_row, ignore_index=True)
-
+            result_rows.extend(
+                self._search_in_row(
+                    datarow, idx, columns, result_columns, os_family, ioc_types_to_use
+                )
+            )
+        result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
         return result_frame
 
     def validate(self, input_str: str, ioc_type: str) -> bool:
@@ -400,27 +457,61 @@ class IoCExtract:
 
         """
         if ioc_type not in self._content_regex:
-            raise KeyError('Unknown type {}. Valid types are: {}'
-                           .format(ioc_type, list(self._content_regex.keys())))
+            raise KeyError(
+                "Unknown type {}. Valid types are: {}".format(
+                    ioc_type, list(self._content_regex.keys())
+                )
+            )
         rgx = self._content_regex[ioc_type]
         return rgx.comp_regex.fullmatch(input_str) is not None
 
+    def get_ioc_type(self, observable: str) -> str:
+        """
+        Return first matching type.
+
+        Parameters
+        ----------
+        observable : str
+            The IoC Observable to check
+
+        Returns
+        -------
+        str
+            The IoC type enumeration (unknown, if no match)
+
+        """
+        results = self._scan_for_iocs(src=observable, os_family="Windows")
+
+        if not results:
+            results = self._scan_for_iocs(
+                src=observable, os_family="Linux", ioc_types=[IoCType.linux_path.name]
+            )
+            if not results:
+                return IoCType.unknown.name
+
+        # get the first value in results
+        first_match = next(iter(results.values()))
+        if not first_match:
+            return IoCType.unknown.name
+        # return the first item in the results set
+        return next(iter(first_match))
+
     # Private methods
-    def _scan_for_iocs(self, src: str,
-                       os_family: str,
-                       ioc_types: List[str] = None) -> Mapping[str, Set[str]]:
+    def _scan_for_iocs(
+        self, src: str, os_family: str, ioc_types: List[str] = None
+    ) -> Mapping[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
         iocs_found: Dict[str, Tuple[str, int]] = {}
 
-# pylint: disable=too-many-nested-blocks
+        # pylint: disable=too-many-nested-blocks
         for (ioc_type, rgx_def) in self._content_regex.items():
             if ioc_types and ioc_type not in ioc_types:
                 continue
 
-            if os_family == 'Linux' and rgx_def.ioc_type == 'windows_path':
+            if os_family == "Linux" and rgx_def.ioc_type == "windows_path":
                 continue
-            elif os_family == 'Windows' and rgx_def.ioc_type == 'linux_path':
+            elif os_family == "Windows" and rgx_def.ioc_type == "linux_path":
                 continue
 
             match_pos = 0
@@ -428,24 +519,15 @@ class IoCExtract:
                 if rgx_match is None:
                     break
                 # If the rgx_def names a group to match on, use that
-                match_str = (rgx_match.groupdict()[rgx_def.group]
-                             if rgx_def.group else rgx_match.group())
+                match_str = (
+                    rgx_match.groupdict()[rgx_def.group]
+                    if rgx_def.group
+                    else rgx_match.group()
+                )
 
-                self._add_highest_pri_match(iocs_found,
-                                            match_str,
-                                            rgx_def)
-                if ioc_type == 'url':
-                    decoded_url = unquote(match_str)
-                    for url_match in rgx_def.comp_regex.finditer(decoded_url,
-                                                                 match_pos):
-                        if url_match is not None:
-                            self._add_highest_pri_match(iocs_found,
-                                                        url_match.group(),
-                                                        rgx_def)
-                            self._add_highest_pri_match(iocs_found,
-                                                        url_match.groupdict()[
-                                                            'host'],
-                                                        self._content_regex['dns'])
+                self._add_highest_pri_match(iocs_found, match_str, rgx_def)
+                if ioc_type == "url":
+                    self._check_decode_url(match_str, rgx_def, match_pos, iocs_found)
                 match_pos = rgx_match.end()
 
         for ioc, ioc_result in iocs_found.items():
@@ -453,15 +535,32 @@ class IoCExtract:
 
         return ioc_results
 
+    def _check_decode_url(self, match_str, rgx_def, match_pos, iocs_found):
+        """Get any other IoCs from decoded URL."""
+        decoded_url = unquote(match_str)
+        for url_match in rgx_def.comp_regex.finditer(
+            decoded_url, match_pos
+        ):
+            if url_match is not None:
+                self._add_highest_pri_match(
+                    iocs_found, url_match.group(), rgx_def
+                )
+                self._add_highest_pri_match(
+                    iocs_found,
+                    url_match.groupdict()["host"],
+                    self._content_regex["dns"],
+                )
+
     @staticmethod
-    def _add_highest_pri_match(iocs_found: dict,
-                               current_match: str,
-                               current_def: IoCPattern):
+    def _add_highest_pri_match(
+        iocs_found: dict, current_match: str, current_def: IoCPattern
+    ):
         # if we already found a match for this item and the previous
         # ioc type is more specific then don't add this to the results
-        if (current_match in iocs_found
-                and current_def.priority >= iocs_found[current_match][1]):
+        if (
+            current_match in iocs_found
+            and current_def.priority >= iocs_found[current_match][1]
+        ):
             return
 
-        iocs_found[current_match] = (
-            current_def.ioc_type, current_def.priority)
+        iocs_found[current_match] = (current_def.ioc_type, current_def.priority)

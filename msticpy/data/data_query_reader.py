@@ -16,7 +16,8 @@ __author__ = "Ian Hellen"
 
 
 def find_yaml_files(source_path: str, recursive: bool = False) -> Iterable[Path]:
-    """Return iterable of yaml files found in `source_path`.
+    """
+    Return iterable of yaml files found in `source_path`.
 
     Parameters
     ----------
@@ -73,7 +74,8 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
 
 
 def validate_query_defs(query_def_dict: Dict[str, Any]) -> bool:
-    """Validate content of query definition.
+    """
+    Validate content of query definition.
 
     Parameters
     ----------

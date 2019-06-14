@@ -10,6 +10,8 @@ import re
 from typing import (Union, List, Iterable, Mapping, Dict,
                     Tuple, Any, Optional)
 
+from deprecated import deprecated
+
 from . query_schema import DataSchema
 from . query_builtin_queries import query_definitions
 from . query_defns import (KqlQuery, QueryParamProvider,
@@ -26,6 +28,7 @@ _DATA_ENVIRONMENT_NAME = 'data_environment'
 
 
 # utility functions
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def print_kql(query_string: str):
     """
@@ -43,6 +46,7 @@ def print_kql(query_string: str):
         print(line.strip())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def clean_kql_query(query_string: str) -> str:
     """
@@ -65,6 +69,7 @@ def clean_kql_query(query_string: str) -> str:
     return re.sub(r'(\s*\n\s*)', ' ', remove_comments)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def query_help(queryname: str):
     """
@@ -103,6 +108,7 @@ def query_help(queryname: str):
     print_kql(kql_query.query)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
     """
@@ -144,12 +150,14 @@ def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
         _add_queries_to_module(kql_modules[0])
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def list_queries() -> List[str]:
     """Return list of currently defined queries."""
     return list(query_definitions.keys())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_query_params(query_name: str, *args, **kwargs) -> str:
     """
@@ -190,6 +198,7 @@ def replace_query_params(query_name: str, *args, **kwargs) -> str:
                                      **kwargs)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_prov_query_params(query_name: str, **kwargs) -> str:
     """
@@ -429,6 +438,7 @@ def _get_env_and_family(params: Mapping[str, Any]) -> Tuple[Optional[DataFamily]
     return family, environment
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     """

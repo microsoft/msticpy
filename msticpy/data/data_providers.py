@@ -6,7 +6,7 @@
 """Data provider loader."""
 from functools import partial
 from os import path
-from typing import Union, Any
+from typing import Union, Any, List
 
 import pandas as pd
 
@@ -125,6 +125,19 @@ class QueryProvider:
         """
         self._query_store.import_file(query_file)
 
+    @classmethod
+    def list_data_environments(cls) -> List[str]:
+        """
+        Return list of current data environments.
+
+        Returns
+        -------
+        List[str]
+            List of current data environments
+
+        """
+        return list(DataEnvironment.__members__)
+
     def list_queries(self):
         """
         Return list of family.query in the store.
@@ -140,6 +153,24 @@ class QueryProvider:
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
+
+    def exec_query(self, query: str) -> Union[pd.DataFrame, Any]:
+        """
+        Execute simple query string.
+
+        Parameters
+        ----------
+        query : str
+            [description]
+
+        Returns
+        -------
+        Union[pd.DataFrame, Any]
+            Query results - a DataFrame if successful
+            or a KqlResult if unsuccessful.
+
+        """
+        return self._query_provider.query(query)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:

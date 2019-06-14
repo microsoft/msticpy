@@ -9,6 +9,7 @@ from functools import partial
 from typing import Tuple, Union, Optional
 
 import pandas as pd
+from deprecated import deprecated
 from IPython import get_ipython
 from Kqlmagic import results
 
@@ -52,6 +53,7 @@ def load_kql():
 _KQL_LOADER = load_kql()
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def load_kql_magic():
     """Load KqlMagic if not loaded."""
@@ -75,6 +77,7 @@ def _is_kqlmagic_loaded() -> bool:
     return False
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def exec_query(query_name: str,
                **kwargs) -> Union[pd.DataFrame,
@@ -136,6 +139,7 @@ def exec_query(query_name: str,
     raise ValueError('Could not resolve query or query parameters.')
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def show_filled_query(query_name: str, **kwargs) -> str:
     """
@@ -173,6 +177,7 @@ def show_filled_query(query_name: str, **kwargs) -> str:
     return replaced_query
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame],
                                            results.ResultSet]:
