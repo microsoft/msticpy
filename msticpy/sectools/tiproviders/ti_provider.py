@@ -22,7 +22,7 @@ import re
 from typing import List, Mapping, Any, Tuple, Union, Iterable, Set, Optional
 
 # from collections import namedtuple, Counter, abc
-from ipaddress import IPv4Address, ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import warnings
 
 import socket
@@ -72,7 +72,7 @@ class TIProvider(ABC):
         self._supported_types: Set[IoCType] = set()
 
     @abc.abstractmethod
-    def lookup_ioc(self, ioc: str, ioc_type: str = None) -> Tuple[bool, str]:
+    def lookup_ioc(self, ioc: str, ioc_type: str = None) -> Tuple[bool, str, str]:
         """Lookup a single IoC observable."""
         pass
 
@@ -244,6 +244,7 @@ class TIProvider(ABC):
         return ioc_type in self._supported_types
 
 
+# pylint: disable=too-many-return-statements
 def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
     """
     Preprocesses and checks validity of observable against declared IoC type.
@@ -259,7 +260,9 @@ def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
     if ioc_type == "url":
         return _preprocess_url(observable)
     if ioc_type == "ipv4":
-        return _preprocess_ip4(observable)
+        return _preprocess_ip(observable, version=4)
+    if ioc_type == "ipv6":
+        return _preprocess_ip(observable, version=6)
     if ioc_type == "dns":
         return _preprocess_dns(observable)
     if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash"]:
@@ -384,25 +387,20 @@ def _clean_url(url: str) -> Optional[str]:
 
 # Would complicate code with too many branches
 # pylint: disable=too-many-return-statements
-def _preprocess_ip4(ipaddress: str):
+def _preprocess_ip(ipaddress: str, version=4):
     """Ensure Ip address is a valid public IPv4 address."""
     try:
         addr = ip_address(ipaddress)
     except ValueError:
         return SanitizedObservable(None, "IP address is invalid format")
 
-    if not isinstance(addr, IPv4Address):
+    if version == 4 and not isinstance(addr, IPv4Address):
         return SanitizedObservable(None, "Not an IPv4 address")
+    if version == 6 and not isinstance(addr, IPv6Address):
+        return SanitizedObservable(None, "Not an IPv6 address")
     if addr.is_global:
         return SanitizedObservable(ipaddress, "ok")
-    if addr.is_private:
-        return SanitizedObservable(None, "IP is private address")
-    if addr.is_loopback:
-        return SanitizedObservable(None, "IP is loopback address")
-    if addr.is_reserved:
-        return SanitizedObservable(None, "IP is reserved address")
-    if addr.is_multicast:
-        return SanitizedObservable(None, "IP is multicast address")
+
     return SanitizedObservable(None, "IP address is not global")
 
 

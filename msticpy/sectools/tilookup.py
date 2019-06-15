@@ -73,7 +73,7 @@ class TILookup:
 
     def lookup_ioc(
         self, observable: str, ioc_type: str = None, primary: bool = True
-    ) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+    ) -> Tuple[bool, List[Tuple[str, bool, str, str]]]:
         """
         Lookup single IoC in active providers.
 
@@ -90,7 +90,7 @@ class TILookup:
 
         Returns
         -------
-        Tuple[bool, List[Tuple[str, bool, str]]]
+        Tuple[bool, List[Tuple[str, bool, str, str]]]
             The result returned as a tuple(bool, list):
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
