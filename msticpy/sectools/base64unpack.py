@@ -790,5 +790,5 @@ def _b64_string_pad(string):
     else:
         string = string.rstrip('=')
         while len(string) % 4 != 0:
-            string = string = 'A'
+            string = string + 'A'
         return string
