@@ -124,6 +124,7 @@ class QueryProvider:
 
         """
         self._query_store.import_file(query_file)
+        self._add_query_functions()
 
     def list_queries(self):
         """
