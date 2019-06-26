@@ -1,1 +1,1 @@
-include queries/*.yaml
+include data/queries/*.yaml
