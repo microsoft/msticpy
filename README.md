@@ -2,14 +2,14 @@
 
 Microsoft Threat Intelligence Python Security Tools.
 
-The **msticpy** package was initially developed to supported Jupyter Notebook
+The **msticpy** package was initially developed to support [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/What%20is%20the%20Jupyter%20Notebook.html)
 authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
-However, many of the components can be used in other security scenarios for threat hunting
+Many of the included tools can be used in other security scenarios for threat hunting
 and threat investigation. There are three main sub-packages:
 
 - sectools - python security tools to help with data analysis or investigation
-- nbtools - Jupyter-specific UI tools such as widgets and data display
-- data - data interfaces specific to Sentinel/Log Analytics
+- nbtools  - Jupyter-specific UI tools such as widgets and data display
+- data     - data interfaces specific to Sentinel/Log Analytics
 
 The package is in an early preview mode so there are likely to be bugs and there are several
 areas that are not yet optimized for performance. 
@@ -25,21 +25,18 @@ or for the latest dev build
 
 ## Documentation
 
-Full documentation is on [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/overview.html)
+Full documentation is at [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/overview.html)
 
-A brief summary of the functionality is described in the following sections. 
+Sample notebooks for many of the modules are in the [docs/notebooks](./docs/notebooks) folder and accompanying notebooks.
 
-Sample notebooks for many of the modules are in the [docs/notebooks](./docs/notebooks) folder.and accompanying notebooks.
-
-You can also browse through the sample notebooks referenced at the end of this document (especially the *Windows Alert Investigation* notebook)
-to see some of the functionality used in context.
+You can also browse through the sample notebooks referenced at the end of this document
+(especially the *Windows Alert Investigation* notebook) to see some of the functionality used in context.
 
 ---
 
 ## Security Tools Sub-package - `sectools`
 
-This subpackage contains several modules helpful for working on security
-investigations and hunting:
+This subpackage contains several modules helpful for working on security investigations and hunting:
 
 ### base64unpack
 
@@ -106,25 +103,23 @@ while IPStack is an online lookup (API key required).
 
 This module is intended to be used to summarize large numbers of
 events into clusters of different patterns. High volume repeating
-events can often make it difficult to see unique and interesting
-items.
+events can often make it difficult to see unique and interesting items.
+
+This is an unsupervised learning module implemented using SciKit Learn DBScan.
 
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that
-does some maintenance on thousands of servers with a commandline such as:
+does some maintenance on thousands of servers with a commandline can be
+collapsed into a single cluster pattern by ignoring the character values
+in the string and using delimiters or tokens to group the values.
 
 ```bash
 install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
 ```
 
-can be collapsed into a single cluster pattern by ignoring the character values
-in the string and using delimiters or tokens to group the values.
-
-This is an unsupervised learning module implemented using SciKit Learn DBScan.
-
 ### outliers
 
-Similar to the eventcluster module but a little bit more experimental (read 'less tested').
+Similar to the eventcluster module, but a little bit more experimental (read 'less tested').
 It uses SkLearn Isolation Forest to identify outlier events in a single data set or using
 one data set as training data and another on which to predict outliers.
 
@@ -133,18 +128,22 @@ one data set as training data and another on which to predict outliers.
 Module to load and decode Linux audit logs. It collapses messages sharing the same
 message ID into single events, decodes hex-encoded data fields and performs some
 event-specific formatting and normalization (e.g. for process start events it will
-re-assemble the process command line arguments into a single string). This is still
-a work-in-progress.
+re-assemble the process command line arguments into a single string).
+
+This is still a work-in-progress.
 
 ## Notebook tools sub-package - `nbtools`
 
-This is a collection of display and utility modules
-designed to make working with security data in Jupyter notebooks
-quicker and easier.
+This is a collection of display and utility modules designed to make working
+with security data in Jupyter notebooks quicker and easier.
 
-- nbwidgets - groups common functionality such as list pickers, time boundary settings, saving and retrieving environment variables into a single line callable command.
-- nbdisplay - functions that implement common display of things like alerts, events in a slightly more consumable way than print()
-- entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in Log Analytics alerts and in many of these modules. Each entity encaspulates one or more properties related to the entity.
+- nbwidgets - groups common functionality such as list pickers, time boundary settings,
+saving and retrieving environment variables into a single line callable command.
+- nbdisplay - functions that implement common display of things like alerts, events
+in a slightly more consumable way than print()
+- entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in
+Log Analytics alerts and in many of these modules. Each entity encaspulates one or
+more properties related to the entity.
 
 [Notebooks Tools](./docs/notebooks/NotebookWidgets.ipynb)
 
@@ -153,35 +152,52 @@ quicker and easier.
 These components are currently still part of the nbtools sub-package but will be
 refactored to separate them into their own package.
 
-- query manager - collection of modules that implement common kql/Log Analytics queries using KqlMagic
-- security_alert and security_event - encapsulation classes for alerts and events. Each has a standard 'entities' property reflecting the entities found in the alert or event. These can also be used as meta-parameters for many of the queries. For example the query: `qry.list_host_logons(provs==[query_times, alert])` will extract the value for the `hostname` query parameter from the alert.
+- query manager - collection of modules that implement common kql/Log Analytics queries
+using KqlMagic
+- security_alert and security_event - encapsulation classes for alerts and events.
+Each has a standard 'entities' property reflecting the entities found in the alert or event.
+These can also be used as meta-parameters for many of the queries.
+For example, the following query will extract the value for the `hostname` query parameter
+from the alert:
+
+`qry.list_host_logons(provs==[query_times, alert])` 
 
 ---
 
 ## Clone the notebooks in this repo to Azure Notebooks
 
 Requires sign-in to Azure Notebooks
-<a href="https://notebooks.azure.com/import/gh/Microsoft/msticpy"><img src="https://notebooks.azure.com/launch.png" /></a>
+<a href="https://notebooks.azure.com/import/gh/Microsoft/msticpy">
+  <img src="https://notebooks.azure.com/launch.png" />
+</a>
 
 ## More Notebook Examples
 
 See the following notebooks for more examples of the use of this package in practice:
 
-- Windows Alert Investigation in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-- Windows Host Explorer in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
-- Office 365 Exploration in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-- Cross-Network Hunting in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
+- Windows Alert Investigation in
+[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
+or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
+- Windows Host Explorer in
+[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
+or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
+- Office 365 Exploration in
+[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
+or [NbViewer](https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
+- Cross-Network Hunting in
+[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
+or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
 
 ## To-Do Items
 
-- Refactor data modules into separate package.
+- Refactor data modules into separate package(s).
 - Replace custom data schema with [Intake](https://intake.readthedocs.io/en/latest/).
 - Add additional notebooks to document use of the tools.
 
 ## Supported Platforms and Packages
 
 - msticpy is OS-independent
-- Requires Python 3.6 or later
+- Requires [Python 3.6 or later](https://www.python.org/dev/peps/pep-0494/)
 - Requires the following python packages: pandas, bokeh, matplotlib, seaborn, setuptools, urllib3, ipywidgets, numpy, attrs, requests, networkx, ipython, scikit_learn, typing
 - The following packages are recommended and needed for some specific functionality: Kqlmagic, maxminddb_geolite2, folium, dnspython, ipwhois
 
