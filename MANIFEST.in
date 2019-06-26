@@ -1,1 +1,1 @@
-include data\\queries\\*.yaml
+include msticpy/data/queries/*.yaml
