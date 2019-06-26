@@ -58,5 +58,5 @@ setuptools.setup(
     install_requires=INSTALL_REQUIRES,
     keywords=['security', 'azure', 'sentinel'],
     zip_safe=False,
-    include_package_data=True,
+    include_package_data=True
 )
