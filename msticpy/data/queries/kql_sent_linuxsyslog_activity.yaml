@@ -95,7 +95,7 @@ sources:
       host_name:
         description: Hostname to query for
         type: str
-  all_sylog:
+  all_syslog:
     description: Returns all syslog activity for a host
     args:
       query: '
