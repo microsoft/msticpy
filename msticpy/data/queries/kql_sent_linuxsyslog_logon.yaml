@@ -69,7 +69,7 @@ sources:
                                                 (ProcessName == "su" and SyslogMessage contains "Successful"), "Sucess", "Unknown"
                                     )
                                 )
-        | extend User = extract("(for |user |user=)([[:alnum:]]+)",2,SyslogMessage), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)'
+        | extend User = extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)'
     parameters:
       host_name:
         description: Hostname to query for
