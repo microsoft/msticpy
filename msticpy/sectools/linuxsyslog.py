@@ -58,6 +58,10 @@ class KQLDataError(KQLError):
     """Raised when there is an error related to the data returned by KQL"""
     pass
 
+class LogonDataError(Error):
+    """Raised when there is an error related to logon data"""
+    pass
+
 def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     """
     Takes in an IP Address string and converts it to an IP Entitity
@@ -322,28 +326,30 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
 def cluster_syslog_logons(logon_events: pd.DataFrame):
     logon_sessions = []
     ses_close_time =  datetime.now()
-    logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
-    logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
     ses_opened=0
     ses_closed=0
-    i= 0
-    while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
-        ses_start = (logons_opened.iloc[ses_opened]).name
-        user = (logons_opened.iloc[ses_opened]).User
-        if ses_start > ses_close_time or ses_opened == 0:
-            pass
-        else:
-            ses_opened += 1
-            continue
-        ses_end = (logons_closed.iloc[ses_closed]).name
-        if ses_end < ses_start:
-            ses_closed += 1
-            continue
-        logon_sessions.append({'start':ses_start, 'end':ses_end, 'user':user})
-        ses_close_time = ses_end
-        ses_closed=ses_closed+1
-        ses_opened=ses_opened+1
-    return logon_sessions
+    logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
+    logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
+    if len(logons_opened.index) == 0 or len(logons_closed.index) == 0:
+        raise LogonDataError("No logon sessions were found in the data set")
+    else:
+        while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
+            ses_start = (logons_opened.iloc[ses_opened]).name
+            user = (logons_opened.iloc[ses_opened]).User
+            if ses_start.to_pydatetime() > ses_close_time or ses_opened == 0:
+                pass
+            else:
+                ses_opened += 1
+                continue
+            ses_end = (logons_closed.iloc[ses_closed]).name
+            if ses_end.to_pydatetime() < ses_start.to_pydatetime():
+                ses_closed += 1
+                continue
+            logon_sessions.append({'start':ses_start, 'end':ses_end, 'user':user})
+            ses_close_time = ses_end
+            ses_closed=ses_closed+1
+            ses_opened=ses_opened+1
+        return logon_sessions
 
 @export
 def get_failed_logons_syslog(hostname: str, start: datetime , end: datetime) -> Tuple[pd.DataFrame]:   
