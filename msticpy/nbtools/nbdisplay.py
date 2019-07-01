@@ -257,6 +257,7 @@ def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
                      time_column: str = 'TimeGenerated',
                      source_columns: list = None,
                      overlay_colums: list = None,
+                     overlay_color: str = 'green',
                      height: int = 300):
     """
     Display a timeline of events.
@@ -369,7 +370,7 @@ def display_timeline(data: pd.DataFrame, alert: SecurityAlert = None,
 
     if overlay_data is not None:
         overlay_source = ColumnDataSource(overlay_df)
-        plot.circle(x=time_column, y='y_index', color='green',
+        plot.circle(x=time_column, y='y_index', color=overlay_color,
                     alpha=0.5, size=10, source=overlay_source)
 
     # Adding data labels stops everything working!
