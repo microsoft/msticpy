@@ -58,9 +58,6 @@ class KQLDataError(KQLError):
     """Raised when there is an error related to the data returned by KQL"""
     pass
 
-class LogonDataError(Error):
-    """Raised when there is an error related to logon data"""
-    pass
 
 def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     """
@@ -323,7 +320,27 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
         raise KQLDataError("No Logon Events Found for Host")
   
 @export
-def cluster_syslog_logons(logon_events: pd.DataFrame):
+def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
+    """
+    Clusters logon sessions observed in syslog by start and end time based on PAM events.
+    Will return a LogonDataError if supplied dataframe does not contain complete logon sessions.
+
+    Parameters:
+    ----------
+    logon_events: pd.DataFrame
+        A DataFrame of all syslog logon events (can be generated with LinuxSyslog.user_logon query)
+    
+    Returns
+    ----------
+    logon_sessions: namedTuple
+        A dictionary of logon sessions including start and end times and logged on user
+
+     Raises
+    ----------
+    KQLDataError
+        There are no logon sessions in the supplied data set
+    """
+
     logon_sessions = []
     ses_close_time =  datetime.now()
     ses_opened=0
@@ -331,7 +348,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame):
     logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
     logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
     if len(logons_opened.index) == 0 or len(logons_closed.index) == 0:
-        raise LogonDataError("No logon sessions were found in the data set")
+        raise KQLDataError("There are no logon sessions in the supplied data set")
     else:
         while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
             ses_start = (logons_opened.iloc[ses_opened]).name
