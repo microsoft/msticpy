@@ -21,10 +21,7 @@ syslog_volume_graph - displays a graph of syslog message volume over time
 from datetime import datetime
 import pandas as pd
 import numpy as np
-<<<<<<< HEAD
 from datetime import datetime
-=======
->>>>>>> e4c13e44106ac42a461504796adc47daa5aec523
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from .geoip import GeoLiteLookup
 from .eventcluster import dbcluster_events, add_process_features, _string_score
@@ -91,11 +88,8 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
             ip_entities.append(ip_entity)
     return ip_entities
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> e4c13e44106ac42a461504796adc47daa5aec523
 @export
 def syslog_host_picker(time: int =90) -> List[str]:
     """
