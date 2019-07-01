@@ -320,14 +320,10 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
   
 @export
 def cluster_syslog_logons(logon_events: pd.DataFrame):
-    logon_session = []
+    logon_sessions = []
     ses_close_time =  datetime.now()
     logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
     logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
-    if len(logons_opened.index) < len(logons_closed.index):
-        sessions = len(logons_opened.index)
-    else:
-        sessions = len(logons_closed.index)
     ses_opened=0
     ses_closed=0
     i= 0
@@ -340,10 +336,10 @@ def cluster_syslog_logons(logon_events: pd.DataFrame):
             ses_opened += 1
             continue
         ses_end = (logons_closed.iloc[ses_closed]).name
-        if se_end < ses_start:
+        if ses_end < ses_start:
             ses_closed += 1
             continue
-        logon_sessions.append({'start':start, 'end':end, 'user':user})
+        logon_sessions.append({'start':ses_start, 'end':ses_end, 'user':user})
         ses_close_time = ses_end
         ses_closed=ses_closed+1
         ses_opened=ses_opened+1
