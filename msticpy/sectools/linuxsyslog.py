@@ -21,6 +21,7 @@ syslog_volume_graph - displays a graph of syslog message volume over time
 from datetime import datetime
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from .geoip import GeoLiteLookup
 from .eventcluster import dbcluster_events, add_process_features, _string_score
@@ -86,6 +87,8 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
             iplocation.lookup_ip(ip_entity=ip_entity)
             ip_entities.append(ip_entity)
     return ip_entities
+
+
 
 @export
 def syslog_host_picker(time: int =90) -> List[str]:
@@ -315,7 +318,37 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
     else:
         raise KQLDataError("No Logon Events Found for Host")
   
-    
+@export
+def cluster_syslog_logons(logon_events: pd.DataFrame):
+    logon_session = []
+    ses_close_time =  datetime.now()
+    logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
+    logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
+    if len(logons_opened.index) < len(logons_closed.index):
+        sessions = len(logons_opened.index)
+    else:
+        sessions = len(logons_closed.index)
+    ses_opened=0
+    ses_closed=0
+    i= 0
+    while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
+        ses_start = (logons_opened.iloc[ses_opened]).name
+        user = (logons_opened.iloc[ses_opened]).User
+        if ses_start > ses_close_time or ses_opened == 0:
+            pass
+        else:
+            ses_opened += 1
+            continue
+        ses_end = (logons_closed.iloc[ses_closed]).name
+        if se_end < ses_start:
+            ses_closed += 1
+            continue
+        logon_sessions.append({'start':start, 'end':end, 'user':user})
+        ses_close_time = ses_end
+        ses_closed=ses_closed+1
+        ses_opened=ses_opened+1
+    return logon_sessions
+
 @export
 def get_failed_logons_syslog(hostname: str, start: datetime , end: datetime) -> Tuple[pd.DataFrame]:   
     """
