@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  description: Linux Syslog Queries
+  description: Linux Syslog Logon Data Queries
   data_environments: [LogAnalytics]
   data_families: [LinuxSyslog]
   tags: ['linux', 'syslog']
