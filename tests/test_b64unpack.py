@@ -49,6 +49,7 @@ class TestB64Unpack(unittest.TestCase):
             self.assertIsNotNone(input_txt)
 
             result_str, result_df = b64.unpack_items(input_string=input_txt, trace=True)
+            #nosec
             assert result_df.shape == (8, 12)
             self.assertIsNotNone(result_str)
             self.assertIsNotNone(result_df)
@@ -70,6 +71,7 @@ class TestB64Unpack(unittest.TestCase):
             result_df = b64.unpack_items(data=input_df, column='input', trace=True)
             # we should get 2x the rows as the previous test (since data is duplicated)
             # plus 2 added columns
+            #nosec
             assert result_df.shape == (16, 14)
             self.assertIsNotNone(result_df)
 
