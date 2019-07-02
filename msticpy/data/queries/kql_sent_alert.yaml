@@ -1,0 +1,213 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Alert Queries
+  data_environments: [LogAnalytics]
+  data_families: [SecurityAlert]
+  tags: ['alert', 'securityalert']
+defaults:
+  metadata:
+    data_source: 'security_alert'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityAlert'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend extendedProps = parse_json(ExtendedProperties)
+        | extend CompromisedEntity = tostring(extendedProps["Compromised Host"])
+        | project-away extendedProps
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_alerts_counts:
+    description: Retrieves summary count of alerts by type
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | summarize alertCount=count(), firstAlert=min(TimeGenerated),
+            lastAlert=max(TimeGenerated) by AlertName
+        | order by alertCount desc
+        {add_query_items}'
+    parameters:
+  get_alert:
+    description: Retrieves a single alert by SystemAlertId
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | extend extendedProps = parse_json(ExtendedProperties)
+        | extend CompromisedEntity = tostring(extendedProps["Compromised Host"])
+        | project-away extendedProps
+        | where SystemAlertId == "{system_alert_id}"
+        {add_query_items}'
+    parameters:
+      system_alert_id:
+        description: 'The ID of the alert'
+        type: str
+      start:
+        description: Query start time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+      end:
+        description: Query end time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+  list_related_alerts:
+    description: Retrieves list of alerts with a common host, acount or process
+    metadata:
+    args:
+      query: '
+        let src_host = "{host_name}";
+        let src_acct = "{account_name}";
+        let src_proc = "{process_name}";
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend Computer = src_host
+        | extend src_hostname = tostring(split(src_host, ".")[0])
+        | extend src_accountname = iif(src_acct contains "\\\\",
+                                      tostring(split(src_acct, "\\\\")[-1]),
+                                      tostring(split(src_acct, "@")[0]))
+        | extend src_procname = tostring(split(src_proc, "{path_separator}")[-1])
+        | extend host_match = iif(isnotempty(src_host) and
+            (Entities has src_hostname or Entities has src_host
+            or ExtendedProperties has src_hostname
+            or ExtendedProperties has src_host), true, false)
+        | extend acct_match = iif(isnotempty(src_acct)
+            and (Entities has src_accountname or Entities has src_acct
+            or ExtendedProperties has src_accountname
+            or ExtendedProperties has src_acct), true, false)
+        | extend proc_match = iif(isnotempty(src_acct)
+            and (Entities has src_procname or Entities has src_proc
+            or ExtendedProperties has src_procname
+            or ExtendedProperties has src_proc), true, false)
+        | where host_match or acct_match or proc_match
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: The hostname to find
+        type: str
+      account_name:
+        description: The account name to find
+        type: str
+        default: ''
+      process_name:
+        description: The process name to find
+        type: str
+        default: ''
+  list_alerts_for_ip:
+    description: Retrieves list of alerts with a common IP Address
+    metadata:
+    args:
+      query: '
+        let src_ips = "{source_ip_list}";
+        let src_ips_arr = split(src_ips, ",");
+        let IP_table = toscalar(range idx from 0 to array_length(src_ips_arr) - 1 step 1
+        | extend ip = trim(@"\\s*", tostring(src_ips_arr[idx]))
+        | project ip
+        | distinct ip
+        | summarize makeset(ip) );
+        let ip_extract = materialize(
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | project SystemAlertId, ExtendedProperties, Entities
+        | extend source_ips_str =
+            extract("\\"Source IPs\\": \\"([^\\"]+)\\"", 1, ExtendedProperties)
+        | extend source_ips_1 =
+            iif(isnotempty(source_ips_str), split(source_ips_str, ","), dynamic([]))
+        | extend source_ips_2 =
+            extract_all("\\"Address\\": \\"([^\\"]+)\\"", dynamic([1]), Entities)
+        | mvexpand alert_ip_1 =
+            source_ips_1 to typeof(string), alert_ip_2 = source_ips_2 to typeof(string)
+        | where isnotempty(alert_ip_1) or isnotempty(alert_ip_2)
+        | where alert_ip_1 in (IP_table) or alert_ip_2 in (IP_table)
+        | extend matching_ips = case(isnotempty(alert_ip_1) and isnotempty(alert_ip_2),
+                                        strcat(alert_ip_1, ",", alert_ip_2),
+                                    isnotempty(alert_ip_1), alert_ip_1,
+                                    isnotempty(alert_ip_2), alert_ip_2,
+                                    "")
+        | extend MatchingIps = split(matching_ips, ",")
+        | project-away source_ips_str, source_ips_1, source_ips_2,
+            alert_ip_1, alert_ip_2, matching_ips
+        );
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | join (ip_extract) on SystemAlertId
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityAlert'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      source_ip_list:
+        description: List of one or more IPs to match
+        type: str

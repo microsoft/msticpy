@@ -188,7 +188,8 @@ class IPStackLookup(GeoIpLookup):
 
         return results, output_entities
 
-    def _create_ip_entity(self, ip_loc: dict, ip_entity) -> IpAddress:
+    @staticmethod
+    def _create_ip_entity(ip_loc: dict, ip_entity) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc['ip']
@@ -338,7 +339,8 @@ class GeoLiteLookup(GeoIpLookup):
 
         return output_raw, output_entities
 
-    def _create_ip_entity(self, ip_address, geo_match: dict, ip_entity) -> IpAddress:
+    @staticmethod
+    def _create_ip_entity(ip_address, geo_match: dict, ip_entity) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_address

@@ -1,0 +1,309 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Windows Process Event Queries
+  data_environments: [LogAnalytics]
+  data_families: [WindowsSecurity]
+  tags: ['account', 'windows', 'logon', 'session', 'logonfail']
+defaults:
+  metadata:
+    data_source: 'security_event'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityEvent | where EventID == 4688'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project
+            TenantId,
+            Account,
+            EventID,
+            TimeGenerated,
+            Computer,
+            SubjectUserSid,
+            SubjectUserName,
+            SubjectDomainName,
+            SubjectLogonId,
+            NewProcessId,
+            NewProcessName,
+            TokenElevationType,
+            ProcessId,
+            CommandLine,
+            ParentProcessName,
+            TargetLogonId,
+            SourceComputerId
+          | extend TimeCreatedUtc=TimeGenerated'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
+sources:
+  list_host_processes:
+    description: Retrieves list of processes on a host
+    args:
+      query: '
+        let start = datetime({start});
+        let end = datetime({end});
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Computer {host_op} "{host_name}"
+        | where TimeGenerated >= start
+        | where TimeGenerated <= end
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  list_matching_processes:
+    description: Retrieves list of processes matching process name
+    args:
+      query: '
+        let start = datetime({start});
+        let end = datetime({end});
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where NewProcessName {proc_op} "{process_name}"
+        | where TimeGenerated >= start
+        | where TimeGenerated <= end
+        {add_query_items}'
+    parameters:
+      process_name:
+        description: Name of process
+        type: str
+      proc_op:
+        description: The process name match operator
+        type: str
+        default: has
+  get_process_tree:
+    description: Retrieves the process tree of a supplied process
+    args:
+      query: '
+        let start = datetime({start});
+        let end = datetime({end});
+        let sourceProcessId = "{process_id}";
+        let sourceLogonId = "{logon_session_id}";
+        let sourceProcess =
+        materialize(
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start
+            | where TimeGenerated <= end
+            | where SubjectLogonId == sourceLogonId
+            | where NewProcessId == sourceProcessId
+            | where NewProcessName =~ "{process_name}"
+            | extend NodeRole = "source", Level = 0
+            | top 1 by TimeCreatedUtc desc nulls last);
+        let sourceTimeCreatedUtc = toscalar(sourceProcess | project TimeCreatedUtc);
+        let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
+        let system_session_id = "0x3e7";
+        let parentProcess = // Parent Process
+        materialize(
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start - time(1d)
+            | where TimeGenerated <= end
+            | where TimeGenerated <= sourceTimeCreatedUtc
+            | where (SubjectLogonId == sourceLogonId or TargetLogonId == sourceLogonId)
+            | where NewProcessId == sourceParentProcessId
+            | extend NodeRole = "parent", Level = 1
+            | top 1 by TimeCreatedUtc desc nulls last);
+        let parentLogonId = toscalar(sourceProcess | project SubjectLogonId);
+        let parentTimeCreated = toscalar(sourceProcess | project TimeCreatedUtc);
+        let childProcesses = // Child Process
+        materialize(
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start
+            | where TimeGenerated <= end
+            | where SubjectLogonId == sourceLogonId
+            | where ProcessId == sourceProcessId
+            | extend NodeRole = "child", Level = 1);
+        sourceProcess
+        | union (parentProcess)
+        | union (childProcesses)
+        | union
+        (
+            // GrandParent Process (we ignore this if this is the system logonId)
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start - time(1d)
+            | where TimeGenerated <= end
+            | where TimeGenerated <= parentTimeCreated
+            | where (SubjectLogonId == parentLogonId or TargetLogonId == parentLogonId)
+            | extend NodeRole = "parent", Level = 2
+            | join (parentProcess | project ProcessId)
+                on $left.NewProcessId == $right.ProcessId
+        )
+        | union
+        (
+            // GrandChild Process (we ignore this if this is the system logonId)
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start
+            | where TimeGenerated <= end
+            | where SubjectLogonId == sourceLogonId and SubjectLogonId != system_session_id
+            | extend NodeRole = "child", Level = 2
+            | join (childProcesses | project NewProcessId)
+                on $left.ProcessId == $right.NewProcessId
+        )
+        | union
+        (
+            // Sibling Process
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start
+            | where TimeGenerated <= end
+            | where SubjectLogonId == sourceLogonId
+            | where ProcessId == sourceParentProcessId
+            | where NewProcessId != sourceProcessId
+            | extend NodeRole = "sibling", Level = 1
+        )
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      process_name:
+        description: Name of process
+        type: str
+      process_id:
+        description: The process ID of the source process
+        type: str
+      logon_session_id:
+        description: The logon session ID of the source process
+        type: str
+  get_parent_process:
+    description: Retrieves the parent process of a supplied process
+    args:
+      query: '
+        let start = datetime({start});
+        let end = datetime({end});
+        let sourceProcessId = "{process_id}";
+        let sourceLogonId = "{logon_session_id}";
+        let sourceProcess =
+        materialize(
+            {table}
+            {query_project}
+            | where {subscription_filter}
+            | where Computer has "{host_name}"
+            | where TimeGenerated >= start
+            | where TimeGenerated <= end
+            | where SubjectLogonId == sourceLogonId
+            | where NewProcessId == sourceProcessId
+            | where NewProcessName =~ "{process_name}"
+            | extend NodeRole = "source", Level = 0
+            | top 1 by TimeCreatedUtc desc nulls last);
+        let sourceTimeCreatedUtc = toscalar(sourceProcess | project TimeCreatedUtc );
+        let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
+        // Parent Process
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Computer has "{host_name}"
+        | where TimeGenerated >= start - time({parent_lookback}h)
+        | where TimeGenerated <= end
+        | where TimeGenerated <= sourceTimeCreatedUtc
+        | where (SubjectLogonId == sourceLogonId or TargetLogonId == sourceLogonId)
+        | where NewProcessId == sourceParentProcessId
+        | where NewProcessId == sourceParentProcessId
+        | extend NodeRole = "parent", Level = 1
+        | top 1 by TimeCreatedUtc desc nulls last)
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      process_name:
+        description: Name of process
+        type: str
+      process_id:
+        description: The process ID of the source process
+        type: str
+      logon_session_id:
+        description: The logon session ID of the source process
+        type: str
+      parent_lookback:
+        description: The number of hours to look back for parent process
+        type: int
+        default: 2
+  list_hosts_matching_commandline:
+    description: Retrieves processes on hosts with matching commandline
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where NewProcessName endswith "{process_name}"
+        | where CommandLine =~ "{commandline}"
+        {add_query_items}'
+    parameters:
+      process_name:
+        description: Name of process
+        type: str
+      commandline:
+        description: The command line of the source process
+        type: str
+  list_processes_in_session:
+    description: Retrieves all processes on the host for a logon session
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Computer has "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where SubjectLogonId == "{logon_session_id}"
+        | extend processName = tostring(split(NewProcessName, "{path_separator}")[-1])
+        | extend commandlineparts = arraylength(split(CommandLine, " "))
+        | extend commandlinelen = strlen(CommandLine)
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      process_name:
+        description: Name of process
+        type: str
+      process_id:
+        description: The process ID of the source process
+        type: str
+      logon_session_id:
+        description: The logon session ID of the source process
+        type: str

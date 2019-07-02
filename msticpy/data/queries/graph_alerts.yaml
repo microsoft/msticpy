@@ -1,0 +1,185 @@
+metadata:
+  version: 1
+  description: Microsoft Security Graph Alert Queries
+  data_environments: [SecurityGraph]
+  data_families: [SecurityGraphAlert]
+  tags: ['alert', 'securityalert']
+defaults:
+  metadata:
+    data_source: 'graph_alert'
+  parameters:
+      path:
+        description: Path name
+        type: str
+        default: '/security/alerts'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end} {add_query_items}'
+      uri: None
+    parameters:
+  get_alert:
+    description: Retrieves a single alert by AlertId
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}/{alert_id}'
+    parameters:
+      alert_id:
+        description: 'The ID of the alert'
+        type: str
+      start:
+        description: Query start time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+      end:
+        description: Query end time
+        type: datetime
+        default: 0  # fake default to prevent this being viewed as required
+  list_alerts_for_user:
+    description: Retrieves list of alerts for a user account
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end}
+        and (userStates/any(d:tolower(d/userPrincipalName) eq tolower("{user_principal_name}")
+        or userStates/any(d:tolower(d/accountName) eq tolower("{account_name}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      user_principal_name:
+        description: 'The user principal name listed in the alert'
+        type: str
+        default: ''
+      account_name:
+        description: 'The user account name listed in the alert'
+        type: str
+        default: ''
+  list_alerts_for_ip:
+    description: Retrieves list of alerts for a IP Address
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end}
+        and (hostStates/any(d:d/privateIpAddress eq "{ip_address}")
+        or hostStates/any(d:d/publicIpAddress eq "{ip_address}")
+        or networkConnections/any(d:d/destinationAddress eq "{ip_address}")
+        or networkConnections/any(d:d/sourceAddress eq "{ip_address}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      ip_address:
+        description: 'The IP address listed in the alert'
+        type: str
+  list_alerts_for_host:
+    description: Retrieves list of alerts for a hostname or FQDN
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end}
+        and (hostStates/any(d:tolower(d/netBiosName) eq tolower("{host_name}")
+        or hostStates/any(d:startswith(tolower("{host_name}"), tolower(d/fqdn))))
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: 'The host name listed in the alert'
+        type: str
+  list_alerts_for_file:
+    description: Retrieves list of alerts for file name, path or hash
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end}
+        and (fileStates/any(d:tolower(fileHash/hashValue) eq tolower("{file_hash}")
+        or fileStates/any(d:tolower(name) eq tolower("{file_path}")
+        or (file_name neq "" and fileStates/any(d:endswith(tolower("{file_name}"), tolower(name)))))
+        {add_query_items}'
+      uri: None
+    parameters:
+      file_name:
+        description: 'The (unqualified) file name listed in the alert'
+        type: str
+        default: ''
+      file_hash:
+        description: 'The file hash listed in the alert'
+        type: str
+        default: ''
+      file_path:
+        description: 'The file path listed in the alert'
+        type: str
+        default: ''
+  list_related_alerts:
+    description: Retrieves list of alerts with a common entity
+    metadata:
+      data_source: 'graph_alert'
+    args:
+      query: '{path}?$filter=createdDateTime ge {start}
+        and createdDateTime le {end}
+        and (hostStates/any(d:d/privateIpAddress eq "{ip_address}")
+        or hostStates/any(d:d/publicIpAddress eq "{ip_address}")
+        or networkConnections/any(d:d/destinationAddress eq "{ip_address}")
+        or networkConnections/any(d:d/sourceAddress eq "{ip_address}")
+        or fileStates/any(d:tolower(fileHash/hashValue) eq tolower("{file_hash}")
+        or fileStates/any(d:tolower(name) eq tolower("{file_name}")
+        or hostStates/any(d:tolower(d/netBiosName) eq tolower("{host_name}")
+        or hostStates/any(d:startswith(tolower("{host_name}"), tolower(d/fqdn)))
+        or userStates/any(d:tolower(d/userPrincipalName) eq tolower("{user_principal_name}")
+        or userStates/any(d:tolower(d/accountName) eq tolower("{account_name}"))
+        {add_query_items}'
+      uri: None
+    parameters:
+      ip_address:
+        description: 'The host IP address listed in the alert'
+        type: str
+        default: ''
+      host_name:
+        description: The hostname to find
+        type: str
+        default: ''
+      process_name:
+        description: The process name to find
+        type: str
+        default: ''
+      user_principal_name:
+        description: 'The user principal name listed in the alert'
+        type: str
+        default: ''
+      account_name:
+        description: 'The user account name listed in the alert'
+        type: str
+        default: ''
+      file_name:
+        description: 'The file name listed in the alert'
+        type: str
+        default: ''
+      file_hash:
+        description: 'The file hash listed in the alert'
+        type: str
+        default: ''
