@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  description: Linux Syslog Queries
+  description: Linux Syslog Host Activity Queries
   data_environments: [LogAnalytics]
   data_families: [LinuxSyslog]
   tags: ['linux', 'syslog']
@@ -52,6 +52,7 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | where Computer == "{host_name}"
+        | where SyslogMessage contains "{user}" or Sudoer contains "{user}"
         | where ProcessName == "sudo"
         | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
         | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)'
@@ -59,6 +60,10 @@ sources:
       host_name:
         description: Hostname to query for
         type: str
+      user:
+        description: Username to filter the search by
+        type: str
+        default: ''
   cron_activity:
     description: All cron activity
     args:
