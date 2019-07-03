@@ -12,24 +12,17 @@ import pandas as pd
 from IPython import get_ipython
 from Kqlmagic import results
 
-from .query_builtin_queries import query_definitions
-
+from . query_builtin_queries import query_definitions
 # pylint: disable=locally-disabled, unused-import
 # (list_queries not used here but want to bring in into module namespace)
-from .query_mgr import (
-    replace_prov_query_params,
-    list_queries,  # noqa: F401
-    clean_kql_query,
-    query_help,
-    print_kql,
-)  # noqa: F401
-
+from . query_mgr import (replace_prov_query_params, list_queries,  # noqa: F401
+                         clean_kql_query, query_help, print_kql)  # noqa: F401
 # pylint: enable=locally-disabled, unused-import
-from .utility import export
-from .._version import VERSION
+from . utility import export
+from .. _version import VERSION
 
 __version__ = VERSION
-__author__ = "Ian Hellen"
+__author__ = 'Ian Hellen'
 
 # pylint: disable=locally-disabled, invalid-name
 _kql_magic_loaded = False
@@ -46,7 +39,7 @@ def load_kql():
         if _is_loaded:
             return True
 
-        print("Loading kql")
+        print('Loading kql')
         _load_kql_magic()
         _is_loaded = _is_kqlmagic_loaded()
         if _is_loaded:
@@ -64,28 +57,28 @@ def load_kql_magic():
     """Load KqlMagic if not loaded."""
     # KqlMagic
     if not _KQL_LOADER():
-        raise EnvironmentError("Kqlmagic did not load correctly.")
+        raise EnvironmentError('Kqlmagic did not load correctly.')
 
 
 def _load_kql_magic():
     """Load KqlMagic if not loaded."""
     # KqlMagic
-    print("Please wait. Loading Kqlmagic extension...")
-    get_ipython().run_line_magic("reload_ext", "Kqlmagic")
+    print('Please wait. Loading Kqlmagic extension...')
+    get_ipython().run_line_magic('reload_ext', 'Kqlmagic')
 
 
 def _is_kqlmagic_loaded() -> bool:
     """Return true if kql magic is loaded."""
     if _ip is not None:
-        return _ip.find_magic("kql") is not None
+        return _ip.find_magic('kql') is not None
 
     return False
 
 
 @export
-def exec_query(
-    query_name: str, **kwargs
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]]:
+def exec_query(query_name: str,
+               **kwargs) -> Union[pd.DataFrame,
+                                  Tuple[pd.DataFrame, results.ResultSet]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 
@@ -118,16 +111,16 @@ def exec_query(
         just dataframe.
 
     """
-    if "kql_result" in kwargs:
-        kql_result = kwargs.pop("kql_result")
+    if 'kql_result' in kwargs:
+        kql_result = kwargs.pop('kql_result')
     else:
         kql_result = False
 
     replaced_query = replace_prov_query_params(query_name=query_name, **kwargs)
     replaced_query = clean_kql_query(replaced_query)
     if replaced_query:
-        result = _ip.run_cell_magic("kql", line="", cell=replaced_query)
-        if result is not None and result.completion_query_info["StatusCode"] == 0:
+        result = _ip.run_cell_magic('kql', line='', cell=replaced_query)
+        if result is not None and result.completion_query_info['StatusCode'] == 0:
             data_frame = result.to_dataframe()
             if result.is_partial_table:
                 print("Warning - query returned partial results.")
@@ -138,9 +131,9 @@ def exec_query(
             return data_frame, result
 
         print("Warning - query did not complete successfully.")
-        print("Kql ResultSet returned - check  'completion_query_info' property.")
+        print("Kql ResultSet returned - check  \'completion_query_info\' property.")
         return result
-    raise ValueError("Could not resolve query or query parameters.")
+    raise ValueError('Could not resolve query or query parameters.')
 
 
 @export
@@ -181,7 +174,8 @@ def show_filled_query(query_name: str, **kwargs) -> str:
 
 
 @export
-def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.ResultSet]:
+def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame],
+                                           results.ResultSet]:
     """
     Execute query string and return DataFrame of results.
 
@@ -197,8 +191,8 @@ def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.Resul
         and Kql ResultSet.
 
     """
-    result = _ip.run_cell_magic("kql", line="", cell=query)
-    if result is not None and result.completion_query_info["StatusCode"] == 0:
+    result = _ip.run_cell_magic('kql', line='', cell=query)
+    if result is not None and result.completion_query_info['StatusCode'] == 0:
         data_frame = result.to_dataframe()
         if result.is_partial_table:
             print("Warning - query returned partial results.")
@@ -207,14 +201,14 @@ def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.Resul
         return data_frame, result
 
     print("Warning - query did not complete successfully.")
-    print("Kql ResultSet returned - check  'completion_query_info' property.")
+    print("Kql ResultSet returned - check  \'completion_query_info\' property.")
     return None, result
 
 
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
-        raise LookupError(f"Module {module_name} was not found sys.modules")
+        raise LookupError(f'Module {module_name} was not found sys.modules')
     for query_name in query_definitions:
         module = sys.modules[module_name]
         query_func = partial(exec_query, query_name=query_name)
@@ -223,5 +217,5 @@ def _add_queries_to_module(module_name):
 
 
 # Add all queries defined in builtin queries module as functions
-if __name__ != "__main__":
+if __name__ != '__main__':
     _add_queries_to_module(__name__)

@@ -9,12 +9,12 @@ import json
 from typing import Dict, Any
 from .utility import export
 
-__version__ = "0.1"
-__author__ = "Ian Hellen"
+__version__ = '0.1'
+__author__ = 'Ian Hellen'
 
 
 @export
-class WorkspaceConfig:
+class WorkspaceConfig():
     """Workspace configuration class."""
 
     # Constants
@@ -47,7 +47,9 @@ class WorkspaceConfig:
     def __contains__(self, key: str):
         """Allow property in test."""
         # In operator overload
-        return key == "Type" or key in self._config or key in self.__dict__
+        return (key == 'Type'
+                or key in self._config
+                or key in self.__dict__)
 
     @classmethod
     def _read_config_values(cls, file_path: str) -> Dict[str, str]:
