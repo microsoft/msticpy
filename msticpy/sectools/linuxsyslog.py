@@ -372,7 +372,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     
     Returns
     ----------
-    logon_sessions: namedTuple
+    logon_sessions: dict
         A dictionary of logon sessions including start and end times and logged on user
 
      Raises
@@ -381,7 +381,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
         There are no logon sessions in the supplied data set
     """
 
-    logon_sessions = []
+    logon_sessions = {}
     ses_close_time = datetime.now()
     ses_opened = 0
     ses_closed = 0
@@ -420,7 +420,8 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             if ses_end.to_pydatetime() < ses_start.to_pydatetime():
                 ses_closed += 1
                 continue
-            logon_sessions.append({"start": ses_start, "end": ses_end, "user": user})
+            logon_string = f'Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}'
+            logon_sessions[logon_string] = {"start": ses_start, "end": ses_end, "user": user}
             ses_close_time = ses_end
             ses_closed = ses_closed + 1
             ses_opened = ses_opened + 1
