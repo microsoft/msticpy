@@ -10,27 +10,32 @@ import os
 
 import pandas as pd
 
-from .. msticpy.sectools.eventcluster import *
-from .. msticpy.sectools.eventcluster import (token_count_df, delim_count_df,
-                                              char_ord_score_df)
+from ..msticpy.sectools.eventcluster import *
+from ..msticpy.sectools.eventcluster import (
+    token_count_df,
+    delim_count_df,
+    char_ord_score_df,
+)
 
 
-_test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('/tests/testdata')]
+_test_data_folders = [
+    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
+]
 if len(_test_data_folders) == 1:
     _TEST_DATA = _test_data_folders[0]
 else:
-    _TEST_DATA = './tests/testdata'
+    _TEST_DATA = "./tests/testdata"
 
 
 class TestEventCluster(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
-        input_file = os.path.join(_TEST_DATA, 'processes_on_host.csv')
+        input_file = os.path.join(_TEST_DATA, "processes_on_host.csv")
         self.input_df = pd.read_csv(input_file)
 
     def test_cluster_features(self):
-        out_df = add_process_features(input_frame=self.input_df, path_separator='\\')
+        out_df = add_process_features(input_frame=self.input_df, path_separator="\\")
 
         # processNameLen: length of process file name (inc path)
         # processNameTokens: the number of elements in the path
@@ -60,30 +65,41 @@ class TestEventCluster(unittest.TestCase):
 
     def test_custom_features(self):
 
-        input_str = 'The quick & sly (as all foxes might be/or not) fox, jumped over a frog.'
-        test_df = pd.DataFrame(data=[input_str], columns=['input'], index=[0])
-        
-        test_df['tok_count'] = token_count_df(data=test_df, column='input')
-        test_df['char_score'] = char_ord_score_df(data=test_df, column='input')
-        test_df['delim_count'] = delim_count_df(data=test_df, column='input')
-        self.assertEqual(test_df['tok_count'].iloc[0], 15)
-        self.assertEqual(test_df['char_score'].iloc[0], 6199.0)
-        self.assertEqual(test_df['delim_count'].iloc[0], 20)
+        input_str = (
+            "The quick & sly (as all foxes might be/or not) fox, jumped over a frog."
+        )
+        test_df = pd.DataFrame(data=[input_str], columns=["input"], index=[0])
 
-        self.assertEqual(test_df.apply(lambda x: token_count(x, column='input'), axis=1).iloc[0], 15)
-        self.assertEqual(test_df.apply(lambda x: delim_count(x, column='input'), axis=1).iloc[0], 20)
-        self.assertEqual(test_df.apply(lambda x: char_ord_score(x, column='input'), axis=1).iloc[0], 6199.0)
+        test_df["tok_count"] = token_count_df(data=test_df, column="input")
+        test_df["char_score"] = char_ord_score_df(data=test_df, column="input")
+        test_df["delim_count"] = delim_count_df(data=test_df, column="input")
+        self.assertEqual(test_df["tok_count"].iloc[0], 15)
+        self.assertEqual(test_df["char_score"].iloc[0], 6199.0)
+        self.assertEqual(test_df["delim_count"].iloc[0], 20)
+
+        self.assertEqual(
+            test_df.apply(lambda x: token_count(x, column="input"), axis=1).iloc[0], 15
+        )
+        self.assertEqual(
+            test_df.apply(lambda x: delim_count(x, column="input"), axis=1).iloc[0], 20
+        )
+        self.assertEqual(
+            test_df.apply(lambda x: char_ord_score(x, column="input"), axis=1).iloc[0],
+            6199.0,
+        )
 
     def test_clustering(self):
-        out_df = add_process_features(input_frame=self.input_df, path_separator='\\')
+        out_df = add_process_features(input_frame=self.input_df, path_separator="\\")
 
-        output = dbcluster_events(data=out_df,
-                                  cluster_columns=['pathScore', 'commandlineTokensFull', 'isSystemSession'],
-                                  verbose=False,
-                                  normalize=True,
-                                  time_column='TimeGenerated',
-                                  max_cluster_distance=0.01,
-                                  min_cluster_samples=2)
+        output = dbcluster_events(
+            data=out_df,
+            cluster_columns=["pathScore", "commandlineTokensFull", "isSystemSession"],
+            verbose=False,
+            normalize=True,
+            time_column="TimeGenerated",
+            max_cluster_distance=0.01,
+            min_cluster_samples=2,
+        )
         out_df2, dbscan, model = output
 
         self.assertIsNotNone(out_df2)
