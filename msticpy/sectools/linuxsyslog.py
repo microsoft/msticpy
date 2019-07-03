@@ -34,28 +34,36 @@ from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 from pandas.plotting import register_matplotlib_converters
 
 
-from .. _version import VERSION
-from .. nbtools.utility import export
+from .._version import VERSION
+from ..nbtools.utility import export
 
 __version__ = VERSION
-__author__ = 'Pete Bryan'
+__author__ = "Pete Bryan"
 
-WIDGET_DEFAULTS = {'layout': widgets.Layout(width='95%'),
-                   'style': {'description_width': 'initial'}}
+WIDGET_DEFAULTS = {
+    "layout": widgets.Layout(width="95%"),
+    "style": {"description_width": "initial"},
+}
 iplocation = GeoLiteLookup()
 _ip = get_ipython()
 register_matplotlib_converters()
 
+
 class Error(Exception):
-   """Base class for other exceptions"""
-   pass
+    """Base class for other exceptions"""
+
+    pass
+
 
 class KQLError(Error):
-   """Raised whent there is an error related to KQL"""
-   pass
+    """Raised whent there is an error related to KQL"""
+
+    pass
+
 
 class KQLDataError(KQLError):
     """Raised when there is an error related to the data returned by KQL"""
+
     pass
 
 
@@ -75,13 +83,13 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     """
     ip_entities = []
     if ip_str:
-        if ',' in ip_str:
-            addrs = ip_str.split(',')
-        elif ' ' in ip_str:
-            addrs = ip_str.split(' ')
+        if "," in ip_str:
+            addrs = ip_str.split(",")
+        elif " " in ip_str:
+            addrs = ip_str.split(" ")
         else:
             addrs = [ip_str]
-    
+
         for addr in addrs:
             ip_entity = IpAddress()
             ip_entity.Address = addr.strip()
@@ -90,9 +98,8 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     return ip_entities
 
 
-
 @export
-def syslog_host_picker(time: int =90) -> List[str]:
+def syslog_host_picker(time: int = 90) -> List[str]:
     """
     Returns a list of Computer names that have generated Syslog messages within the last 90 days
 
@@ -112,26 +119,29 @@ def syslog_host_picker(time: int =90) -> List[str]:
         There are no hosts which have generated syslog messages within the last the last 90 days.
 
     """
-    syslog_hosts_query= f''' Syslog 
+    syslog_hosts_query = f""" Syslog 
     | where TimeGenerated > ago({time}d) 
-    | summarize SyslogCount=count(SyslogMessage) by Computer'''
-    kql_raw_results =_ip.magic('kql -query syslog_hosts_query')
-    if kql_raw_results.completion_query_info['StatusCode'] == 0:
+    | summarize SyslogCount=count(SyslogMessage) by Computer"""
+    kql_raw_results = _ip.magic("kql -query syslog_hosts_query")
+    if kql_raw_results.completion_query_info["StatusCode"] == 0:
         syslog_hosts = kql_raw_results.to_dataframe()
 
     if syslog_hosts.empty:
-        raise KQLDataError("There are no hosts which have generated syslog messages within the last the last 90 days.")
-        
+        raise KQLDataError(
+            "There are no hosts which have generated syslog messages within the last the last 90 days."
+        )
+
     else:
-        display(Markdown(f'### Hosts With Syslog Generated Within the Previous {time} Days'))
-        items = (syslog_hosts['Computer'].values.tolist())
-        
+        display(
+            Markdown(f"### Hosts With Syslog Generated Within the Previous {time} Days")
+        )
+        items = syslog_hosts["Computer"].values.tolist()
+
     return items
 
 
 @export
-def get_syslog_host_data(hostname: str, time: int,
-                         table_index: pd.DataFrame) -> Host:
+def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame) -> Host:
     """
     Generate host_entity record for selected computer
 
@@ -155,60 +165,65 @@ def get_syslog_host_data(hostname: str, time: int,
         Could not find any data for the computer in the time window
 
     """
-    host_syslog_check= f'''
+    host_syslog_check = f"""
     Syslog
     | where TimeGenerated > ago({time}d)
     | where Computer has '{hostname}'
     | top 1 by TimeGenerated desc nulls last
-    '''
-    
-    kql_raw_result = _ip.magic('kql -query host_syslog_check')
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    """
+
+    kql_raw_result = _ip.magic("kql -query host_syslog_check")
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         host_syslog_df = kql_raw_result.to_dataframe()
 
     if host_syslog_df.empty:
-        raise KQLDataError(f'Could not find any Syslog events for {hostname} in the last {time} days')
+        raise KQLDataError(
+            f"Could not find any Syslog events for {hostname} in the last {time} days"
+        )
     else:
         host_entity = Host(src_event=host_syslog_df.iloc[0])
-    
 
-    if 'Heartbeat' in table_index:
-        heartbeat_query = f'''
+    if "Heartbeat" in table_index:
+        heartbeat_query = f"""
             Heartbeat 
             | where Computer == '{hostname}' 
             | where TimeGenerated > ago({time}d)
             | top 1 by TimeGenerated desc nulls last
-            '''
+            """
 
-        print('Getting host data...')
-        kql_raw_result = _ip.magic('kql -query heartbeat_query')
-        if kql_raw_result.completion_query_info['StatusCode'] == 0:
+        print("Getting host data...")
+        kql_raw_result = _ip.magic("kql -query heartbeat_query")
+        if kql_raw_result.completion_query_info["StatusCode"] == 0:
             host_hb = kql_raw_result.to_dataframe()
-        
+
         if host_hb.empty:
-            raise LookupError(f'Could find any heartbeat data for {hostname} in the last {time} days')
+            raise LookupError(
+                f"Could find any heartbeat data for {hostname} in the last {time} days"
+            )
         else:
             host_hb = host_hb.iloc[0]
-            host_entity.SourceComputerId = host_hb['SourceComputerId']
-            host_entity.OSType = host_hb['OSType']
-            host_entity.OSName = host_hb['OSName']
-            host_entity.OSVMajorersion = host_hb['OSMajorVersion'] 
-            host_entity.OSVMinorVersion = host_hb['OSMinorVersion']     
-            host_entity.ComputerEnvironment = host_hb['ComputerEnvironment']
-            host_entity.OmsSolutions = [sol.strip() for sol in host_hb['Solutions'].split(',')]
-            host_entity.VMUUID = host_hb['VMUUID']
+            host_entity.SourceComputerId = host_hb["SourceComputerId"]
+            host_entity.OSType = host_hb["OSType"]
+            host_entity.OSName = host_hb["OSName"]
+            host_entity.OSVMajorersion = host_hb["OSMajorVersion"]
+            host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]
+            host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]
+            host_entity.OmsSolutions = [
+                sol.strip() for sol in host_hb["Solutions"].split(",")
+            ]
+            host_entity.VMUUID = host_hb["VMUUID"]
             ip_entity = IpAddress()
-            ip_entity.Address = host_hb['ComputerIP']                                                                
+            ip_entity.Address = host_hb["ComputerIP"]
             geoloc_entity = GeoLocation()
-            geoloc_entity.CountryName = host_hb['RemoteIPCountry']                                                               
-            geoloc_entity.Longitude = host_hb['RemoteIPLongitude']
-            geoloc_entity.Latitude = host_hb['RemoteIPLatitude']
+            geoloc_entity.CountryName = host_hb["RemoteIPCountry"]
+            geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
+            geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
             ip_entity.Location = geoloc_entity
             host_entity.IPAddress = ip_entity
-     
-    if 'AzureNetworkAnalytics_CL' in table_index:
-        print('Looking for IP addresses in network flows...')
-        aznet_query = f'''
+
+    if "AzureNetworkAnalytics_CL" in table_index:
+        print("Looking for IP addresses in network flows...")
+        aznet_query = f"""
             AzureNetworkAnalytics_CL
             | where TimeGenerated > ago({time}d)
             | where VirtualMachine_s has '{hostname}'
@@ -216,35 +231,41 @@ def get_syslog_host_data(hostname: str, time: int,
             | top 1 by TimeGenerated desc
             | project PrivateIPAddresses = PrivateIPAddresses_s, 
             PublicIPAddresses = PublicIPAddresses_s
-            '''
-        kql_raw_result = _ip.magic('kql -query aznet_query')
-        if kql_raw_result.completion_query_info['StatusCode'] == 0:
+            """
+        kql_raw_result = _ip.magic("kql -query aznet_query")
+        if kql_raw_result.completion_query_info["StatusCode"] == 0:
             az_net_df = kql_raw_result.to_dataframe()
 
-        
         if len(az_net_df) == 1:
-            priv_addr_str = az_net_df['PrivateIPAddresses'].loc[0]
-            host_entity.properties['private_ips'] = convert_to_ip_entities(priv_addr_str)
-            pub_addr_str = az_net_df['PublicIPAddresses'].loc[0]
-            host_entity.properties['public_ips'] = convert_to_ip_entities(pub_addr_str)
-            
+            priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
+            host_entity.properties["private_ips"] = convert_to_ip_entities(
+                priv_addr_str
+            )
+            pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
+            host_entity.properties["public_ips"] = convert_to_ip_entities(pub_addr_str)
+
         else:
-            if 'private_ips' not in host_entity.properties:
-                host_entity.properties['private_ips'] = []
-            if 'public_ips' not in host_entity.properties:
-                host_entity.properties['public_ips'] = []
-        
-    display(Markdown('***Host Details***\n\n'
-                 f'**Hostname**: {host_entity.computer} \n\n'
-                 f'**OS**: {host_entity.OSType} {host_entity.OSName}\n\n'
-                 f'**IP Address**: {ip_entity.Address}\n\n'
-                 f'**Location**: {geoloc_entity.CountryName}\n\n'
-                ))   
+            if "private_ips" not in host_entity.properties:
+                host_entity.properties["private_ips"] = []
+            if "public_ips" not in host_entity.properties:
+                host_entity.properties["public_ips"] = []
+
+    display(
+        Markdown(
+            "***Host Details***\n\n"
+            f"**Hostname**: {host_entity.computer} \n\n"
+            f"**OS**: {host_entity.OSType} {host_entity.OSName}\n\n"
+            f"**IP Address**: {ip_entity.Address}\n\n"
+            f"**Location**: {geoloc_entity.CountryName}\n\n"
+        )
+    )
     return host_entity
-   
+
 
 @export
-def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -> Tuple[pd.DataFrame, List]:
+def get_sucessful_logons_syslog(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame, List]:
     """
     Collects and returns data on all the sucessful logons to the computer defined the the time window specified
 
@@ -267,8 +288,8 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
     ----------
     KQLDataError
         No Logon Events Found for Host
-    """    
-    syslog_logon_query =f'''Syslog
+    """
+    syslog_logon_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
@@ -276,49 +297,68 @@ def get_sucessful_logons_syslog(hostname: str, start: datetime, end: datetime) -
     | where Computer == "{hostname}"
     | where SyslogMessage contains "Accepted" or (ProcessName == "su" and SyslogMessage contains "Successful")
     | extend User = extract("for ([[:alnum:]]+)",1,SyslogMessage), SourceIP = extract("from (([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("by ([[:alnum:]]+)$",1,SyslogMessage)
-    '''
+    """
 
-    kql_raw_result = _ip.magic('kql -query syslog_logon_query')
+    kql_raw_result = _ip.magic("kql -query syslog_logon_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         host_logons = kql_raw_result.to_dataframe()
 
     if host_logons is not None and not host_logons.empty:
         logon_features = host_logons.copy()
-        logon_features['AccountNum'] = host_logons.apply(lambda x: _string_score(x.User), axis=1)
-        logon_features['TargetUserSid'] = host_logons.UID
-        logon_features['SubjectUserSid'] = host_logons.UID
-        logon_features['audit_user'] = host_logons.User
-        logon_features['LogonType'] = host_logons.apply(lambda x: _string_score(x.ProcessName), axis=1)
-        logon_features['LogonHour'] = host_logons.apply(lambda x: x.TimeGenerated.hour, axis=1)
-        logon_features['TargetUserName'] = host_logons.User
-        logon_features['SubjectUserName'] = host_logons.User
-        logon_features['TargetDomainName'] = host_logons.Computer
-        logon_features['SubjectDomainName'] = host_logons.Computer
-        logon_features['TargetLogonId'] = 0
-        logon_features['LogonProcessName'] = host_logons.ProcessName
-        logon_features['UserNum'] = host_logons.apply(lambda x: _string_score(x.User), axis=1)
-        logon_features['ProcessNum'] = host_logons.apply(lambda x: _string_score(x.ProcessName), axis=1)
-        
-        (clus_logons, _, _) = dbcluster_events(data=logon_features, time_column='TimeGenerated',
-                                           cluster_columns=['UserNum',
-                                                            'ProcessNum'],
-                                           max_cluster_distance=0.0001)
+        logon_features["AccountNum"] = host_logons.apply(
+            lambda x: _string_score(x.User), axis=1
+        )
+        logon_features["TargetUserSid"] = host_logons.UID
+        logon_features["SubjectUserSid"] = host_logons.UID
+        logon_features["audit_user"] = host_logons.User
+        logon_features["LogonType"] = host_logons.apply(
+            lambda x: _string_score(x.ProcessName), axis=1
+        )
+        logon_features["LogonHour"] = host_logons.apply(
+            lambda x: x.TimeGenerated.hour, axis=1
+        )
+        logon_features["TargetUserName"] = host_logons.User
+        logon_features["SubjectUserName"] = host_logons.User
+        logon_features["TargetDomainName"] = host_logons.Computer
+        logon_features["SubjectDomainName"] = host_logons.Computer
+        logon_features["TargetLogonId"] = 0
+        logon_features["LogonProcessName"] = host_logons.ProcessName
+        logon_features["UserNum"] = host_logons.apply(
+            lambda x: _string_score(x.User), axis=1
+        )
+        logon_features["ProcessNum"] = host_logons.apply(
+            lambda x: _string_score(x.ProcessName), axis=1
+        )
 
-        dist_logons = clus_logons.sort_values('TimeGenerated')[['User', 'TimeGenerated', 
-                                                        'LastEventTime', 'ProcessName', 
-                                                        'ClusterSize']]
-        logon_items = dist_logons.apply(lambda x: (f'{x.User}:    '
-                                     f'(logontype={x.ProcessName})   '
-                                     f'timerange={x.TimeGenerated} - {x.LastEventTime}    '
-                                     f'count={x.ClusterSize}'),
-                          axis=1).values.tolist()
-        sucess_logons = collections.namedtuple('sucess_logons', ['host_logons', 'logon_items'])
+        (clus_logons, _, _) = dbcluster_events(
+            data=logon_features,
+            time_column="TimeGenerated",
+            cluster_columns=["UserNum", "ProcessNum"],
+            max_cluster_distance=0.0001,
+        )
+
+        dist_logons = clus_logons.sort_values("TimeGenerated")[
+            ["User", "TimeGenerated", "LastEventTime", "ProcessName", "ClusterSize"]
+        ]
+        logon_items = dist_logons.apply(
+            lambda x: (
+                f"{x.User}:    "
+                f"(logontype={x.ProcessName})   "
+                f"timerange={x.TimeGenerated} - {x.LastEventTime}    "
+                f"count={x.ClusterSize}"
+            ),
+            axis=1,
+        ).values.tolist()
+        sucess_logons = collections.namedtuple(
+            "sucess_logons", ["host_logons", "logon_items"]
+        )
         return sucess_logons(host_logons, logon_items)
-        
+
     else:
         raise KQLDataError("No Logon Events Found for Host")
-  
+
+
 @export
 def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     """
@@ -342,15 +382,33 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     """
 
     logon_sessions = []
-    ses_close_time =  datetime.now()
-    ses_opened=0
-    ses_closed=0
-    logons_opened = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session opened')]).set_index('TimeGenerated').sort_index(ascending=True)
-    logons_closed = (logon_events[logon_events['SyslogMessage'].str.contains('pam_unix.+session closed')]).set_index('TimeGenerated').sort_index(ascending=True)
+    ses_close_time = datetime.now()
+    ses_opened = 0
+    ses_closed = 0
+    logons_opened = (
+        (
+            logon_events[
+                logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
+            ]
+        )
+        .set_index("TimeGenerated")
+        .sort_index(ascending=True)
+    )
+    logons_closed = (
+        (
+            logon_events[
+                logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
+            ]
+        )
+        .set_index("TimeGenerated")
+        .sort_index(ascending=True)
+    )
     if len(logons_opened.index) == 0 or len(logons_closed.index) == 0:
         raise KQLDataError("There are no logon sessions in the supplied data set")
     else:
-        while ses_opened < len(logons_opened.index) and ses_closed < len(logons_closed.index):
+        while ses_opened < len(logons_opened.index) and ses_closed < len(
+            logons_closed.index
+        ):
             ses_start = (logons_opened.iloc[ses_opened]).name
             user = (logons_opened.iloc[ses_opened]).User
             if ses_start.to_pydatetime() > ses_close_time or ses_opened == 0:
@@ -362,14 +420,17 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             if ses_end.to_pydatetime() < ses_start.to_pydatetime():
                 ses_closed += 1
                 continue
-            logon_sessions.append({'start':ses_start, 'end':ses_end, 'user':user})
+            logon_sessions.append({"start": ses_start, "end": ses_end, "user": user})
             ses_close_time = ses_end
-            ses_closed=ses_closed+1
-            ses_opened=ses_opened+1
+            ses_closed = ses_closed + 1
+            ses_opened = ses_opened + 1
         return logon_sessions
 
+
 @export
-def get_failed_logons_syslog(hostname: str, start: datetime , end: datetime) -> Tuple[pd.DataFrame]:   
+def get_failed_logons_syslog(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame]:
     """
     Collects and returns data on unsucessful logon attempts to the computer defined the the time window specified
     
@@ -393,8 +454,8 @@ def get_failed_logons_syslog(hostname: str, start: datetime , end: datetime) -> 
     KQLDataError
         There are no logon failures
 
-    """     
-    failed_Logons_query = f'''Syslog
+    """
+    failed_Logons_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
@@ -402,24 +463,28 @@ def get_failed_logons_syslog(hostname: str, start: datetime , end: datetime) -> 
     | where (Facility == "auth" and (SyslogMessage contains "failure" or SyslogMessage contains "invalid" or SyslogMessage contains "Uanble to negotiate" or SyslogMessage contains "Did not receive identification" or SyslogMessage contains " Bad protocol version identification" or SyslogMessage matches regex "^Connection closed .* [preauth]")) or (Facility == "authpriv" and ProcessName == "su" and SyslogMessage contains "FAILED" and SyslogMessage !contains "pam_") 
     | where ProcessName != "sudo"
     | extend User = extract("for ([[:alnum:]]+)",1,SyslogMessage), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage), SourceUser=extract("by ([[:alnum:]]+)$",1,SyslogMessage)
-    '''
+    """
 
-    kql_raw_result = _ip.magic('kql -query failed_Logons_query')
+    kql_raw_result = _ip.magic("kql -query failed_Logons_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         failed_logons = kql_raw_result.to_dataframe()
-    
-    failed_logons.loc[failed_logons['User']=="", 'User'] = 'Unknown'
+
+    failed_logons.loc[failed_logons["User"] == "", "User"] = "Unknown"
 
     if failed_logons.empty:
-        raise KQLDataError(f'No logon failures recorded for {hostname} between {start} and {end}')
+        raise KQLDataError(
+            f"No logon failures recorded for {hostname} between {start} and {end}"
+        )
     else:
-        fail_logons = collections.namedtuple('fail_logons', ['failed_logons'])
-        return fail_logons(failed_logons)   
+        fail_logons = collections.namedtuple("fail_logons", ["failed_logons"])
+        return fail_logons(failed_logons)
 
 
-@export            
-def get_sudo_activity_syslog(hostname: str, start: datetime, end: datetime) -> Tuple[pd.DataFrame, pd.DataFrame, int, int, pd.DataFrame]:
+@export
+def get_sudo_activity_syslog(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame, pd.DataFrame, int, int, pd.DataFrame]:
     """
     Collects and returns sudo activity fromt the computer defined, in the timewindow specified
     Parameters
@@ -446,51 +511,71 @@ def get_sudo_activity_syslog(hostname: str, start: datetime, end: datetime) -> T
     KQLDataError
         No sudo activity found
 
-    """    
-    sudo_activity_query = f'''Syslog
+    """
+    sudo_activity_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
     | where Computer == "{hostname}"
     | where ProcessName == "sudo"
     | extend Sudoer = extract("by ([A-Z,a-z,0-9]+)",1,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
-    '''
+    """
 
-    failed_sudo_query = f'''Syslog
+    failed_sudo_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
     | where Computer == "{hostname}"
     | where ProcessName == "sudo" and SyslogMessage contains "authentication failure"
     | extend Sudoer = extract("user=([[:alnum:]]+)",1,SyslogMessage)
-    '''
+    """
 
-    kql_raw_result = _ip.magic('kql -query sudo_activity_query')
+    kql_raw_result = _ip.magic("kql -query sudo_activity_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         sudo_activity_events = kql_raw_result.to_dataframe()
-    
-    sudo_activity_events.loc[sudo_activity_events['CommandCall']=="", 'CommandCall'] = np.nan
-    sudo_activity_events.loc[sudo_activity_events['Command']=="", 'Command'] = np.nan    
-    sudo_session_data=sudo_activity_events[sudo_activity_events['SyslogMessage'].str.contains('session')]
-    sudo_activity_count_unique = len(sudo_activity_events['Command'].unique())
-    sudo_activity_count_total = len(sudo_activity_events['Command'])
-        
-    kql_raw_result = _ip.magic('kql -query failed_sudo_query ')
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
-        failed_sudo_activity = kql_raw_result.to_dataframe() 
-    
+    sudo_activity_events.loc[
+        sudo_activity_events["CommandCall"] == "", "CommandCall"
+    ] = np.nan
+    sudo_activity_events.loc[sudo_activity_events["Command"] == "", "Command"] = np.nan
+    sudo_session_data = sudo_activity_events[
+        sudo_activity_events["SyslogMessage"].str.contains("session")
+    ]
+    sudo_activity_count_unique = len(sudo_activity_events["Command"].unique())
+    sudo_activity_count_total = len(sudo_activity_events["Command"])
+
+    kql_raw_result = _ip.magic("kql -query failed_sudo_query ")
+
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
+        failed_sudo_activity = kql_raw_result.to_dataframe()
+
     if sudo_activity_events.empty and failed_sudo_activity.empty:
-         raise KQLDataError(f'No sudo activity for {hostname} between {start} and {end}')
+        raise KQLDataError(f"No sudo activity for {hostname} between {start} and {end}")
     else:
-        sudo_act = collections.namedtuple('sudo_act', ['sudo_activity_events', 'failed_sudo_activity','sudo_activity_count_unique', 'sudo_activity_count_total', 'sudo_session_data'])
-        return sudo_act(sudo_activity_events, failed_sudo_activity, sudo_activity_count_unique, sudo_activity_count_total, sudo_session_data)
+        sudo_act = collections.namedtuple(
+            "sudo_act",
+            [
+                "sudo_activity_events",
+                "failed_sudo_activity",
+                "sudo_activity_count_unique",
+                "sudo_activity_count_total",
+                "sudo_session_data",
+            ],
+        )
+        return sudo_act(
+            sudo_activity_events,
+            failed_sudo_activity,
+            sudo_activity_count_unique,
+            sudo_activity_count_total,
+            sudo_session_data,
+        )
 
 
-
-@export           
-def get_cron_activity_syslog(hostname: str, start: datetime, end: datetime) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+@export
+def get_cron_activity_syslog(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Collects and returns data on syslog messages related to cron activity on the computer defined in the time window specified
     Parameters
@@ -514,35 +599,40 @@ def get_cron_activity_syslog(hostname: str, start: datetime, end: datetime) -> T
     ----------
     KQLDataError
         No cron activity found
-    """      
-    cron_activity_query = f'''Syslog
+    """
+    cron_activity_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
     | where Computer == "{hostname}"
     | where ProcessName == "CRON" or Facility == "cron"
     | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)
-    '''
+    """
 
-    kql_raw_result = _ip.magic('kql -query cron_activity_query')
+    kql_raw_result = _ip.magic("kql -query cron_activity_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         all_cron_events = kql_raw_result.to_dataframe()
-    if  all_cron_events.empty:
-        raise KQLDataError(f'No cron activity for {hostname} between {start} and {end}')
+    if all_cron_events.empty:
+        raise KQLDataError(f"No cron activity for {hostname} between {start} and {end}")
     else:
-        all_cron_events.loc[all_cron_events['User']=="", 'User'] = np.nan
-        all_cron_events.loc[all_cron_events['CronUser']=="", 'CronUser'] = np.nan
-        all_cron_events.loc[all_cron_events['CMD']=="", 'CMD'] = np.nan
-        cron_edits= all_cron_events[all_cron_events['SyslogMessage'].str.contains('EDIT')]
-        cron_executions = (all_cron_events[['TimeGenerated','CMD','CronUser']].dropna())
-        cron_act = collections.namedtuple('cron_act', ['all_cron_events', 'cron_edits','cron_executions'])
+        all_cron_events.loc[all_cron_events["User"] == "", "User"] = np.nan
+        all_cron_events.loc[all_cron_events["CronUser"] == "", "CronUser"] = np.nan
+        all_cron_events.loc[all_cron_events["CMD"] == "", "CMD"] = np.nan
+        cron_edits = all_cron_events[
+            all_cron_events["SyslogMessage"].str.contains("EDIT")
+        ]
+        cron_executions = all_cron_events[["TimeGenerated", "CMD", "CronUser"]].dropna()
+        cron_act = collections.namedtuple(
+            "cron_act", ["all_cron_events", "cron_edits", "cron_executions"]
+        )
         return cron_act(all_cron_events, cron_edits, cron_executions)
 
 
-
 @export
-def get_user_mods_syslog(hostname: str, start: datetime, end: datetime) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, List, List, List]:
+def get_user_mods_syslog(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, List, List, List]:
     """
     Collects and returns data on all user and group creations, deletions and modifications on the computer defined, in the time window specified
 
@@ -570,8 +660,8 @@ def get_user_mods_syslog(hostname: str, start: datetime, end: datetime) -> Tuple
     ----------
     KQLDataError
         No user or group modifications found
-    """       
-    add_query = f'''Syslog
+    """
+    add_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
@@ -579,9 +669,9 @@ def get_user_mods_syslog(hostname: str, start: datetime, end: datetime) -> Tuple
     | where Facility == "authpriv"
     | where SyslogMessage contains "new"
     | extend User=extract("user: name=([[:alnum:]]+)",1,SyslogMessage), Group=extract("group: name=([[:alnum:]]+)",1,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)
-    '''
+    """
 
-    del_query = f'''Syslog
+    del_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
@@ -589,9 +679,9 @@ def get_user_mods_syslog(hostname: str, start: datetime, end: datetime) -> Tuple
     | where Facility == "authpriv"
     | where (SyslogMessage contains "delete" or SyslogMessage contains "removed") and ProcessName == "userdel"
     | extend User=extract("user '([[:alnum:]]+)",1,SyslogMessage),Group=extract("group '([[:alnum:]]+)",1,SyslogMessage)
-    '''
+    """
 
-    mod_query = f'''Syslog
+    mod_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
@@ -599,54 +689,68 @@ def get_user_mods_syslog(hostname: str, start: datetime, end: datetime) -> Tuple
     | where Facility == "authpriv"
     | where ProcessName == "usermod"
     | extend User=extract("user '([[:alnum:]]+)",1,SyslogMessage)
-    '''
+    """
 
-    kql_raw_result = _ip.magic('kql -query add_query')
+    kql_raw_result = _ip.magic("kql -query add_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         add_events = kql_raw_result.to_dataframe()
 
-    kql_raw_result = _ip.magic('kql -query del_query')
+    kql_raw_result = _ip.magic("kql -query del_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         del_events = kql_raw_result.to_dataframe()
 
-    kql_raw_result = _ip.magic('kql -query mod_query')
+    kql_raw_result = _ip.magic("kql -query mod_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         mod_events = kql_raw_result.to_dataframe()
 
     if add_events.empty and del_events.empty and mod_events.empty:
-        raise KQLDataError(f'No user or group modications on {hostname}')
+        raise KQLDataError(f"No user or group modications on {hostname}")
     else:
         if add_events.empty:
             add_users = []
             pass
         else:
-            add_events.loc[add_events['User']=="", 'User'] = np.nan
-            add_users = add_events['User'].dropna().unique()
-            add_users = ', '.join(add_users)
+            add_events.loc[add_events["User"] == "", "User"] = np.nan
+            add_users = add_events["User"].dropna().unique()
+            add_users = ", ".join(add_users)
         if del_events.empty:
-            del_users=[]
+            del_users = []
             pass
-            
+
         else:
-            del_events.loc[del_events['User']=="", 'User'] = np.nan
-            del_users = del_events['User'].dropna().unique()
-            del_users = ', '.join(del_users)
+            del_events.loc[del_events["User"] == "", "User"] = np.nan
+            del_users = del_events["User"].dropna().unique()
+            del_users = ", ".join(del_users)
         if mod_events.empty:
-            mod_users=[]
+            mod_users = []
             pass
         else:
-            mod_events.loc[mod_events['User']=="", 'User'] = np.nan
-            mod_users = del_events['User'].dropna().unique()
-            mod_users = ', '.join(mod_users)
-        user_mods = collections.namedtuple('user_mods', ['add_events', 'del_events','mod_events', 'add_users', 'del_users', 'mod_users'])
-        return user_mods(add_events, del_events, mod_events, add_users, del_users, mod_users)
+            mod_events.loc[mod_events["User"] == "", "User"] = np.nan
+            mod_users = del_events["User"].dropna().unique()
+            mod_users = ", ".join(mod_users)
+        user_mods = collections.namedtuple(
+            "user_mods",
+            [
+                "add_events",
+                "del_events",
+                "mod_events",
+                "add_users",
+                "del_users",
+                "mod_users",
+            ],
+        )
+        return user_mods(
+            add_events, del_events, mod_events, add_users, del_users, mod_users
+        )
 
 
 @export
-def get_syslog_events(hostname: str, start: datetime, end: datetime) -> Tuple[pd.DataFrame, pd.DataFrame, List]:
+def get_syslog_events(
+    hostname: str, start: datetime, end: datetime
+) -> Tuple[pd.DataFrame, pd.DataFrame, List]:
     """
     Collects and returns all syslog events, a count of the number of events returned and the syslog facilities observed
 
@@ -671,35 +775,37 @@ def get_syslog_events(hostname: str, start: datetime, end: datetime) -> Tuple[pd
     ----------
     KQLDataError
         No syslog data found
-    """    
+    """
     all_syslog_query = f'''Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
     | where Computer == "{hostname}"'''
 
-    syslog_volume_query = f'''Syslog
+    syslog_volume_query = f"""Syslog
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
     | extend StartTimeUtc = TimeGenerated
     | where Computer == "{hostname}"
-    | summarize LogCount=count(SyslogMessage) by bin(TimeGenerated, 1h)'''
+    | summarize LogCount=count(SyslogMessage) by bin(TimeGenerated, 1h)"""
 
-    kql_raw_result = _ip.magic('kql -query all_syslog_query')
+    kql_raw_result = _ip.magic("kql -query all_syslog_query")
 
-    if kql_raw_result.completion_query_info['StatusCode'] == 0:
+    if kql_raw_result.completion_query_info["StatusCode"] == 0:
         all_syslog_events = kql_raw_result.to_dataframe()
 
     if all_syslog_events.empty:
-        raise KQLDataError('No syslog data found')
+        raise KQLDataError("No syslog data found")
     else:
-        kql_raw_result = _ip.magic('kql -query syslog_volume_query')
+        kql_raw_result = _ip.magic("kql -query syslog_volume_query")
 
-        if kql_raw_result.completion_query_info['StatusCode'] == 0:
+        if kql_raw_result.completion_query_info["StatusCode"] == 0:
             syslog_volume = kql_raw_result.to_dataframe()
-        
-        syslog_facilities = (all_syslog_events['Facility'].unique())
-        syslog_data = collections.namedtuple('syslog_data', ['all_syslog_events', 'syslog_volume', 'syslog_facilities'])
+
+        syslog_facilities = all_syslog_events["Facility"].unique()
+        syslog_data = collections.namedtuple(
+            "syslog_data", ["all_syslog_events", "syslog_volume", "syslog_facilities"]
+        )
         return syslog_data(all_syslog_events, syslog_volume, syslog_facilities)
 
 
@@ -714,13 +820,13 @@ def syslog_volume_graph(syslog_volume: pd.DataFrame):
             A Panda DataFrame containing a count of total Syslog Messages in 1 hour bins
 
     """
-    time = pd.to_datetime(syslog_volume['TimeGenerated']).dt.to_pydatetime()
-    data = syslog_volume['LogCount']
-    display(Markdown('### Volume of Syslog Messages Generated Per Hour'))
-    plt.rcParams['figure.figsize'] = (17, 4)
-    ax = plt.subplot(111)  
-    ax.bar(time, data, width=0.025)  
+    time = pd.to_datetime(syslog_volume["TimeGenerated"]).dt.to_pydatetime()
+    data = syslog_volume["LogCount"]
+    display(Markdown("### Volume of Syslog Messages Generated Per Hour"))
+    plt.rcParams["figure.figsize"] = (17, 4)
+    ax = plt.subplot(111)
+    ax.bar(time, data, width=0.025)
     ax.xaxis_date()
-    ax.set_xlabel('Time Generated')
-    ax.set_ylabel('Volume of Syslog Messages Generated')
+    ax.set_xlabel("Time Generated")
+    ax.set_ylabel("Volume of Syslog Messages Generated")
     plt.show()
