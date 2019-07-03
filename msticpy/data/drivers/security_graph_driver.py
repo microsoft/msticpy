@@ -56,7 +56,7 @@ class SecurityGraphDriver(DriverBase):
         self._loaded = True
         self.aad_token = None
         self.req_headers = None
-        self.api_root = ''
+        self.api_root = ""
         self._debug = kwargs.get("debug", False)
 
         if connection_str:

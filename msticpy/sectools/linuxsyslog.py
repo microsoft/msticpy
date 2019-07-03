@@ -420,8 +420,12 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             if ses_end.to_pydatetime() < ses_start.to_pydatetime():
                 ses_closed += 1
                 continue
-            logon_string = f'Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}'
-            logon_sessions[logon_string] = {"start": ses_start, "end": ses_end, "user": user}
+            logon_string = f"Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}"
+            logon_sessions[logon_string] = {
+                "start": ses_start,
+                "end": ses_end,
+                "user": user,
+            }
             ses_close_time = ses_end
             ses_closed = ses_closed + 1
             ses_opened = ses_opened + 1
