@@ -10,29 +10,24 @@ import os
 
 import pandas as pd
 
-from ..msticpy.sectools.eventcluster import *
-from ..msticpy.sectools.eventcluster import (
-    token_count_df,
-    delim_count_df,
-    char_ord_score_df,
-)
-from ..msticpy.nbtools import SecurityEvent
+from .. msticpy.sectools.eventcluster import *
+from .. msticpy.sectools.eventcluster import (token_count_df, delim_count_df,
+                                              char_ord_score_df)
+from .. msticpy.nbtools import SecurityEvent
 
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
+_test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('/tests/testdata')]
 if len(_test_data_folders) == 1:
     _TEST_DATA = _test_data_folders[0]
 else:
-    _TEST_DATA = "./tests/testdata"
+    _TEST_DATA = './tests/testdata'
 
 
 class TestSecurity(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
-        input_file = os.path.join(_TEST_DATA, "processes_on_host.csv")
+        input_file = os.path.join(_TEST_DATA, 'processes_on_host.csv')
         self.input_df = pd.read_csv(input_file)
 
     def test_4688_events(self):
