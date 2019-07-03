@@ -19,46 +19,75 @@ from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 
 import pandas as pd
 
-from .. _version import VERSION
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 # Constants
 # Fields that we know are frequently encoded
 _ENCODED_PARAMS: Dict[str, Set[str]] = {
-    'EXECVE': {'a0', 'a1', 'a2', 'a3', 'arch'},
-    'PROCTITLE': {'proctitle'},
-    'USER_CMD': {'cmd'},
+    "EXECVE": {"a0", "a1", "a2", "a3", "arch"},
+    "PROCTITLE": {"proctitle"},
+    "USER_CMD": {"cmd"},
 }
 
 # USER_START message schema
 _USER_START: Dict[str, Optional[str]] = {
-    'pid': 'int', 'uid': 'int', 'auid': 'int',
-    'ses': 'int', 'msg': None, 'acct': None, 'exe': None,
-    'hostname': None, 'addr': None, 'terminal': None,
-    'res': None,
+    "pid": "int",
+    "uid": "int",
+    "auid": "int",
+    "ses": "int",
+    "msg": None,
+    "acct": None,
+    "exe": None,
+    "hostname": None,
+    "addr": None,
+    "terminal": None,
+    "res": None,
 }
 
 # Message types schema
 _FIELD_DEFS: Dict[str, Dict[str, Optional[str]]] = {
-    'SYSCALL': {'success': None, 'ppid': 'int', 'pid': 'int',
-                'auid': 'int', 'uid': 'int', 'gid': 'int',
-                'euid': 'int', 'egid': 'int', 'ses': 'int',
-                'exe': None, 'com': None},
-    'CWD': {'cwd': None},
-    'PROCTITLE': {'proctitle': None},
-    'LOGIN': {'pid': 'int', 'uid': 'int', 'tty': None, 'old-ses': 'int',
-              'ses': 'int', 'res': None},
-    'EXECVE': {'argc': 'int', 'a0': None, 'a1': None, 'a2': None},
-    '_USER_START': _USER_START,
-    'USER_END': _USER_START,
-    'CRED_DISP': _USER_START,
-    'USER_ACCT': _USER_START,
-    'CRED_ACQ': _USER_START,
-    'USER_CMD': {'pid': 'int', 'uid': 'int', 'auid': 'int',
-                 'ses': 'int', 'msg': None, 'cmd': None,
-                 'terminal': None, 'res': None},
+    "SYSCALL": {
+        "success": None,
+        "ppid": "int",
+        "pid": "int",
+        "auid": "int",
+        "uid": "int",
+        "gid": "int",
+        "euid": "int",
+        "egid": "int",
+        "ses": "int",
+        "exe": None,
+        "com": None,
+    },
+    "CWD": {"cwd": None},
+    "PROCTITLE": {"proctitle": None},
+    "LOGIN": {
+        "pid": "int",
+        "uid": "int",
+        "tty": None,
+        "old-ses": "int",
+        "ses": "int",
+        "res": None,
+    },
+    "EXECVE": {"argc": "int", "a0": None, "a1": None, "a2": None},
+    "_USER_START": _USER_START,
+    "USER_END": _USER_START,
+    "CRED_DISP": _USER_START,
+    "USER_ACCT": _USER_START,
+    "CRED_ACQ": _USER_START,
+    "USER_CMD": {
+        "pid": "int",
+        "uid": "int",
+        "auid": "int",
+        "ses": "int",
+        "msg": None,
+        "cmd": None,
+        "terminal": None,
+        "res": None,
+    },
 }
 
 
@@ -91,13 +120,16 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
             encoded_fields_map = _ENCODED_PARAMS.get(rec_key, None)
             for rec_item in rec_val:
                 # for each mssg item, split into k/v pair
-                rec_split = rec_item.split('=', maxsplit=1)
+                rec_split = rec_item.split("=", maxsplit=1)
                 if len(rec_split) == 1:
                     rec_dict[rec_split[0]] = None
                     continue
-                if (not encoded_fields_map or rec_split[1].startswith('"') or
-                        rec_split[0] not in encoded_fields_map):
-                    field_value = rec_split[1].strip('\"')
+                if (
+                    not encoded_fields_map
+                    or rec_split[1].startswith('"')
+                    or rec_split[0] not in encoded_fields_map
+                ):
+                    field_value = rec_split[1].strip('"')
                 else:
                     try:
                         # Try to decode this from hex-string to text
@@ -105,12 +137,18 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
                         # incorrectly issues a type warning - in this case it
                         # will return a bytes string.
                         field_value = codecs.decode(
-                            bytes(rec_split[1], 'utf-8'), 'hex').decode('utf-8')
+                            bytes(rec_split[1], "utf-8"), "hex"
+                        ).decode("utf-8")
                     except ValueError:
                         field_value = rec_split[1]
                         print(rec_val)
-                        print('ERR:', rec_key,
-                              rec_split[0], rec_split[1], type(rec_split[1]))
+                        print(
+                            "ERR:",
+                            rec_key,
+                            rec_split[0],
+                            rec_split[1],
+                            type(rec_split[1]),
+                        )
                 rec_dict[rec_split[0]] = field_value
             event_dict[rec_key] = rec_dict
 
@@ -133,22 +171,21 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 
     """
     # Handle process executions specially
-    if 'SYSCALL' in message_dict and 'EXECVE' in message_dict:
+    if "SYSCALL" in message_dict and "EXECVE" in message_dict:
         proc_create_dict: Dict[str, Any] = {}
-        for mssg_type in ['SYSCALL', 'CWD', 'EXECVE', 'PROCTITLE']:
-            if (mssg_type not in message_dict or
-                    mssg_type not in _FIELD_DEFS):
+        for mssg_type in ["SYSCALL", "CWD", "EXECVE", "PROCTITLE"]:
+            if mssg_type not in message_dict or mssg_type not in _FIELD_DEFS:
                 continue
             _extract_mssg_value(mssg_type, message_dict, proc_create_dict)
 
-            if mssg_type == 'EXECVE':
-                args = int(proc_create_dict.get('argc', 1))
+            if mssg_type == "EXECVE":
+                args = int(proc_create_dict.get("argc", 1))
                 arg_strs = []
                 for arg_idx in range(0, args):
-                    arg_strs.append(proc_create_dict.get(f'a{arg_idx}', ''))
+                    arg_strs.append(proc_create_dict.get(f"a{arg_idx}", ""))
 
-                proc_create_dict['cmdline'] = ' '.join(arg_strs)
-        return 'SYSCALL_EXECVE', proc_create_dict
+                proc_create_dict["cmdline"] = " ".join(arg_strs)
+        return "SYSCALL_EXECVE", proc_create_dict
 
     event_dict: Dict[str, Any] = {}
     for mssg_type, _ in message_dict.items():
@@ -162,9 +199,11 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
     return list(message_dict.keys())[0], event_dict
 
 
-def _extract_mssg_value(mssg_type: str,
-                        message_dict: Mapping[str, Mapping[str, Any]],
-                        event_dict: Dict[str, Any]):
+def _extract_mssg_value(
+    mssg_type: str,
+    message_dict: Mapping[str, Mapping[str, Any]],
+    event_dict: Dict[str, Any],
+):
     """
     Extract field/value from the message dictionary.
 
@@ -185,12 +224,12 @@ def _extract_mssg_value(mssg_type: str,
         if not value:
             return
         if conv:
-            if conv == 'int':
+            if conv == "int":
                 value = int(value)
                 if value == 4294967295:
                     value = -1
         if fieldname in event_dict:
-            event_dict[f'{fieldname}_{mssg_type}'] = value
+            event_dict[f"{fieldname}_{mssg_type}"] = value
         else:
             event_dict[fieldname] = value
 
@@ -212,14 +251,15 @@ def _move_cols_to_front(data: pd.DataFrame, column_count: int = 1) -> pd.DataFra
         DataFrame with `column_count` columns shifted to front
 
     """
-    return data[list(data.columns[-column_count:]) +
-                list(data.columns[:-column_count])]
+    return data[list(data.columns[-column_count:]) + list(data.columns[:-column_count])]
 
 
-def extract_events_to_df(data: pd.DataFrame,
-                         input_column: str = 'AuditdMessage',
-                         event_type: str = None,
-                         verbose: bool = False) -> pd.DataFrame:
+def extract_events_to_df(
+    data: pd.DataFrame,
+    input_column: str = "AuditdMessage",
+    event_type: str = None,
+    verbose: bool = False,
+) -> pd.DataFrame:
     """
     Extract auditd raw messages into a dataframe.
 
@@ -243,52 +283,59 @@ def extract_events_to_df(data: pd.DataFrame,
     """
     if verbose:
         start_time = datetime.utcnow()
-        print(f'Unpacking auditd messages for {len(data)} events...')
+        print(f"Unpacking auditd messages for {len(data)} events...")
 
     # Our first pandas expression does most of the work - unpacking the
     # column contents, then extracting these into a two columns
     # EventType (the main auditd mssg type) and a dict of k/v values
     # EventData
-    tmp_df = (data.apply(lambda x: _extract_event(unpack_auditd(x[input_column])),
-                         axis=1, result_type='expand')
-              .rename(columns={0: 'EventType',
-                               1: 'EventData'})
-              )
+    tmp_df = data.apply(
+        lambda x: _extract_event(unpack_auditd(x[input_column])),
+        axis=1,
+        result_type="expand",
+    ).rename(columns={0: "EventType", 1: "EventData"})
     # if only one type of event is requested
     if event_type:
-        tmp_df = tmp_df[tmp_df['EventType'] == event_type]
+        tmp_df = tmp_df[tmp_df["EventType"] == event_type]
         if verbose:
-            print(f'Event subset = ', event_type, ' (events: {len(tmp_df)})')
+            print(f"Event subset = ", event_type, " (events: {len(tmp_df)})")
 
     if verbose:
-        print('Building output dataframe...')
+        print("Building output dataframe...")
 
     # We convert the EventData dict into a series,
     # then merge with:
     # First - the intermediate input DF to add back the EventType column
     # Second - the original input DF to add back metadata columns like Computer
     # Finally get rid of any empty columns
-    tmp_df = (tmp_df.apply(lambda x: pd.Series(x.EventData), axis=1)
-              .merge(tmp_df[['EventType']], left_index=True, right_index=True)
-              .merge(data.drop([input_column], axis=1),
-                     how='inner', left_index=True, right_index=True)
-              .dropna(axis=1, how='all'))
+    tmp_df = (
+        tmp_df.apply(lambda x: pd.Series(x.EventData), axis=1)
+        .merge(tmp_df[["EventType"]], left_index=True, right_index=True)
+        .merge(
+            data.drop([input_column], axis=1),
+            how="inner",
+            left_index=True,
+            right_index=True,
+        )
+        .dropna(axis=1, how="all")
+    )
 
     if verbose:
-        print('Fixing timestamps...')
+        print("Fixing timestamps...")
 
     # extract real timestamp from mssg_id
-    tmp_df['TimeStamp'] = (tmp_df.apply(lambda x:
-                                        datetime.utcfromtimestamp(
-                                            float(x.mssg_id.split(':')[0])),
-                                        axis=1))
-    tmp_df = (tmp_df.drop(['TimeGenerated'], axis=1)
-              .rename(columns={'TimeStamp': 'TimeGenerated'})
-              .pipe(_move_cols_to_front, column_count=5))
+    tmp_df["TimeStamp"] = tmp_df.apply(
+        lambda x: datetime.utcfromtimestamp(float(x.mssg_id.split(":")[0])), axis=1
+    )
+    tmp_df = (
+        tmp_df.drop(["TimeGenerated"], axis=1)
+        .rename(columns={"TimeStamp": "TimeGenerated"})
+        .pipe(_move_cols_to_front, column_count=5)
+    )
     if verbose:
-        print(f'Complete. {len(tmp_df)} output rows', end=' ')
+        print(f"Complete. {len(tmp_df)} output rows", end=" ")
         delta = datetime.utcnow() - start_time
-        print(f'time: {delta.seconds + delta.microseconds/1_000_000} sec')
+        print(f"time: {delta.seconds + delta.microseconds/1_000_000} sec")
 
     return tmp_df
 
@@ -311,15 +358,14 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
         data['EventType'] == event_type
 
     """
-    return (data[data['EventType'] == event_type]
-            .dropna(axis=1, how='all')
-            .infer_objects())
+    return (
+        data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
+    )
 
 
-def read_from_file(filepath: str,
-                   event_type: str = None,
-                   verbose: bool = False,
-                   dummy_sep: str = '\t') -> pd.DataFrame:
+def read_from_file(
+    filepath: str, event_type: str = None, verbose: bool = False, dummy_sep: str = "\t"
+) -> pd.DataFrame:
     r"""
     Extract Audit events from a log file.
 
@@ -354,26 +400,33 @@ def read_from_file(filepath: str,
     """
     # read in the file using pd.read_csv() and extract
     # message type, Id string and content into 3 columns
-    rec_pattern = r'type=([^\s]+)\s+msg=audit\(([^\)]+)\):\s+(.+)$'
-    df_raw = (pd.read_csv(filepath, sep=dummy_sep,
-                          names=['raw_data'],
-                          skip_blank_lines=True,
-                          squeeze=True)
-              .str.extract(rec_pattern)
-              .rename(columns={0: 'mssg_type', 1: 'mssg_id', 2: 'mssg_content'}))
+    rec_pattern = r"type=([^\s]+)\s+msg=audit\(([^\)]+)\):\s+(.+)$"
+    df_raw = (
+        pd.read_csv(
+            filepath,
+            sep=dummy_sep,
+            names=["raw_data"],
+            skip_blank_lines=True,
+            squeeze=True,
+        )
+        .str.extract(rec_pattern)
+        .rename(columns={0: "mssg_type", 1: "mssg_id", 2: "mssg_content"})
+    )
 
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}
-    df_raw['AuditdMessage'] = df_raw.apply(lambda x:
-                                           {x.mssg_type: x.mssg_content.split(' ')},
-                                           axis=1)
+    df_raw["AuditdMessage"] = df_raw.apply(
+        lambda x: {x.mssg_type: x.mssg_content.split(" ")}, axis=1
+    )
     # Group the data by message id string and concatenate the message content
     # dictionaries in a list.
-    df_grouped_cols = (df_raw.groupby(['mssg_id'])
-                       .agg({'AuditdMessage': list})
-                       .reset_index())
+    df_grouped_cols = (
+        df_raw.groupby(["mssg_id"]).agg({"AuditdMessage": list}).reset_index()
+    )
     # pass this DataFrame to the event extractor.
-    return extract_events_to_df(data=df_grouped_cols,
-                                input_column='AuditdMessage',
-                                event_type=event_type,
-                                verbose=verbose)
+    return extract_events_to_df(
+        data=df_grouped_cols,
+        input_column="AuditdMessage",
+        event_type=event_type,
+        verbose=verbose,
+    )
