@@ -39,22 +39,16 @@ class TestQuerySchema(unittest.TestCase):
     def test_WindowsSecurity(self):
         for src in ["process_create", "account_logon"]:
             schema = DataSchema(
-                environment="LogAnalytics",
-                data_family="WindowsSecurity",
-                data_source=src,
+                environment="LogAnalytics", data_family="WindowsSecurity", data_source=src
             )
             self.assertTrue("table" in schema)
             self.assertTrue("query_project" in schema)
             if src == "proc_create":
                 self.assertGreaterEqual(len(schema["query_project"].split(",")), 17)
-                self.assertEqual(
-                    schema["table"], "SecurityEvent | where EventID == 4688"
-                )
+                self.assertEqual(schema["table"], "SecurityEvent | where EventID == 4688")
             elif src == "account_logon":
                 self.assertGreaterEqual(len(schema["query_project"].split(",")), 19)
-                self.assertEqual(
-                    schema["table"], "SecurityEvent | where EventID == 4624"
-                )
+                self.assertEqual(schema["table"], "SecurityEvent | where EventID == 4624")
 
     def test_LinuxSecurity(self):
         for src in ["process_create", "account_logon"]:
@@ -65,9 +59,7 @@ class TestQuerySchema(unittest.TestCase):
             self.assertTrue("query_project" in schema)
             if src == "proc_create":
                 self.assertGreaterEqual(len(schema["query_project"].split(",")), 17)
-                self.assertEqual(
-                    schema["table"], "LinuxAuditD | where EventID == 14688"
-                )
+                self.assertEqual(schema["table"], "LinuxAuditD | where EventID == 14688")
             elif src == "account_logon":
                 self.assertGreaterEqual(len(schema["query_project"].split(",")), 19)
                 self.assertEqual(
@@ -83,14 +75,12 @@ class TestQuerySchema(unittest.TestCase):
         self.assertIsNotNone(schemas)
         self.assertGreaterEqual(len(schemas), 2)
         schemas = DataSchema.default_schemas(
-            environment=DataEnvironment.LogAnalytics,
-            data_family=DataFamily.LinuxSecurity,
+            environment=DataEnvironment.LogAnalytics, data_family=DataFamily.LinuxSecurity
         )
         self.assertIsNotNone(schemas)
         self.assertGreaterEqual(len(schemas), 2)
         schemas = DataSchema.default_schemas(
-            environment=DataEnvironment.LogAnalytics,
-            data_family=DataFamily.SecurityAlert,
+            environment=DataEnvironment.LogAnalytics, data_family=DataFamily.SecurityAlert
         )
         self.assertIsNotNone(schemas)
         self.assertGreaterEqual(len(schemas), 1)
