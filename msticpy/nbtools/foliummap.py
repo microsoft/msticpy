@@ -105,9 +105,7 @@ class FoliumMap:
             popup_text = "{loc_props}<br>{IP}".format(
                 IP=ip_entity.Address, loc_props=loc_props
             )
-            tooltip_text = "{City}, {CountryName}".format(
-                **ip_entity.Location.properties
-            )
+            tooltip_text = "{City}, {CountryName}".format(**ip_entity.Location.properties)
 
             if ip_entity.AdditionalData:
                 addl_props = ", ".join(

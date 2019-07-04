@@ -75,8 +75,7 @@ class QueryStore:
                 family = family.split(".")[1]
 
             for q_name in [
-                f"{family}.{query}"
-                for query in sorted(self.data_families[family].keys())
+                f"{family}.{query}" for query in sorted(self.data_families[family].keys())
             ]:
                 yield q_name
 

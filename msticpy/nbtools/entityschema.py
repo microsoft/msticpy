@@ -313,14 +313,10 @@ class Account(Entity):
                     else None
                 )
                 self.Sid = (
-                    src_event["SubjectUserSid"]
-                    if "SubjectUserSid" in src_event
-                    else None
+                    src_event["SubjectUserSid"] if "SubjectUserSid" in src_event else None
                 )
                 self.LogonId = (
-                    src_event["SubjectLogonId"]
-                    if "SubjectLogonId" in src_event
-                    else None
+                    src_event["SubjectLogonId"] if "SubjectLogonId" in src_event else None
                 )
             if role == "target" and "TargetUserName" in src_event:
                 self.Name = src_event["TargetUserName"]
@@ -339,16 +335,12 @@ class Account(Entity):
             self.AadTenantId = (
                 src_event["AadTenantId"] if "AadTenantId" in src_event else None
             )
-            self.AadUserId = (
-                src_event["AadUserId"] if "AadUserId" in src_event else None
-            )
+            self.AadUserId = src_event["AadUserId"] if "AadUserId" in src_event else None
             self.PUID = src_event["PUID"] if "PUID" in src_event else None
             self.DisplayName = (
                 src_event["DisplayName"] if "DisplayName" in src_event else None
             )
-            self.UPNSuffix = (
-                src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
-            )
+            self.UPNSuffix = src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
 
     # pylint: enable=locally-disabled, line-too-long
 
@@ -1264,9 +1256,7 @@ class Process(Entity):
                 self.group = src_event["group"] if "group" in src_event else None
                 self.gid = src_event["gid"] if "gid" in src_event else None
                 self.effective_user = (
-                    src_event["effective_user"]
-                    if "effective_user" in src_event
-                    else None
+                    src_event["effective_user"] if "effective_user" in src_event else None
                 )
                 self.euid = src_event["euid"] if "euid" in src_event else None
                 self.effective_group = (
