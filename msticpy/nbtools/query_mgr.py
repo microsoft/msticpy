@@ -332,15 +332,11 @@ def _get_missing_params(
         The query object
 
     """
-    for other_object in [
-        obj for obj in args if not isinstance(obj, QueryParamProvider)
-    ]:
+    for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
         for m_param in missing_params:
             if m_param in other_object:
                 req_params[m_param] = getattr(other_object, m_param)
-        missing_params = [
-            p_name for p_name, p_value in req_params.items() if not p_value
-        ]
+        missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
 
     if missing_params:
         # check for and remove optional parameters from the missing params list
@@ -348,9 +344,7 @@ def _get_missing_params(
             if m_param in kql_query.optional_params:
                 req_params[m_param] = ""
         missing_params = [
-            p_name
-            for p_name in missing_params
-            if p_name not in kql_query.optional_params
+            p_name for p_name in missing_params if p_name not in kql_query.optional_params
         ]
 
     if missing_params:

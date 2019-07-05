@@ -236,9 +236,7 @@ class IPStackLookup(GeoIpLookup):
                 else:
                     if response:
                         try:
-                            ip_loc_results.append(
-                                (response.json(), response.status_code)
-                            )
+                            ip_loc_results.append((response.json(), response.status_code))
                             continue
                         except JSONDecodeError:
                             ip_loc_results.append((None, response.status_code))
@@ -426,9 +424,7 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
 _EARTH_RADIUS_KM = 6371  # km
 
 
-def geo_distance(
-    origin: Tuple[float, float], destination: Tuple[float, float]
-) -> float:
+def geo_distance(origin: Tuple[float, float], destination: Tuple[float, float]) -> float:
     """
     Calculate the Haversine distance.
 
