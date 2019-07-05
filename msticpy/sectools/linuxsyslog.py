@@ -36,7 +36,7 @@ from pandas.plotting import register_matplotlib_converters
 
 from .._version import VERSION
 from ..nbtools.utility import export
-from ..data import QueryProvider
+from ..data.data_providers import QueryProvider
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
