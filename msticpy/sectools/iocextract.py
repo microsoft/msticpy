@@ -254,9 +254,7 @@ class IoCExtract:
         include_paths = kwargs.get("include_paths", False)
 
         if src and src.strip():
-            return self._scan_for_iocs(
-                src=src, os_family=os_family, ioc_types=ioc_types
-            )
+            return self._scan_for_iocs(src=src, os_family=os_family, ioc_types=ioc_types)
 
         if data is None:
             raise Exception("No source data was supplied to extract")
@@ -293,8 +291,7 @@ class IoCExtract:
                     if result_set:
                         for observable in result_set:
                             result_row = pd.Series(
-                                data=[result_type, observable, idx],
-                                index=result_columns,
+                                data=[result_type, observable, idx], index=result_columns
                             )
                             result_frame = result_frame.append(
                                 result_row, ignore_index=True
@@ -385,8 +382,7 @@ class IoCExtract:
                     if result_set:
                         for observable in result_set:
                             result_row = pd.Series(
-                                data=[result_type, observable, idx],
-                                index=result_columns,
+                                data=[result_type, observable, idx], index=result_columns
                             )
                             result_frame = result_frame.append(
                                 result_row, ignore_index=True
@@ -452,9 +448,7 @@ class IoCExtract:
                 self._add_highest_pri_match(iocs_found, match_str, rgx_def)
                 if ioc_type == "url":
                     decoded_url = unquote(match_str)
-                    for url_match in rgx_def.comp_regex.finditer(
-                        decoded_url, match_pos
-                    ):
+                    for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
                         if url_match is not None:
                             self._add_highest_pri_match(
                                 iocs_found, url_match.group(), rgx_def

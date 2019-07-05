@@ -44,9 +44,7 @@ class SecurityAlert(SecurityBase):
                     self.extended_properties = src_row.ExtendedProperties
                 elif isinstance(src_row.ExtendedProperties, str):
                     try:
-                        self.extended_properties = json.loads(
-                            src_row.ExtendedProperties
-                        )
+                        self.extended_properties = json.loads(src_row.ExtendedProperties)
                     except JSONDecodeError:
                         pass
         else:
@@ -70,10 +68,7 @@ class SecurityAlert(SecurityBase):
 
         """
         params_dict = super().query_params
-        if (
-            "system_alert_id" not in params_dict
-            or params_dict["system_alert_id"] is None
-        ):
+        if "system_alert_id" not in params_dict or params_dict["system_alert_id"] is None:
             params_dict["system_alert_id"] = self._ids["SystemAlertId"]
         return params_dict
 

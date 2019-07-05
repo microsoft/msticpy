@@ -329,9 +329,7 @@ def display_timeline(
     # if we have an overlay - add this data and shift the y co-ordinates to
     # show on two separate lines
     if overlay_data is not None:
-        overlay_colums = (
-            overlay_colums if overlay_colums is not None else source_columns
-        )
+        overlay_colums = overlay_colums if overlay_colums is not None else source_columns
         if time_column not in overlay_colums:
             overlay_colums.append(time_column)
         if "CommandLine" in overlay_colums:
