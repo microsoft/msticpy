@@ -36,6 +36,7 @@ from pandas.plotting import register_matplotlib_converters
 
 from .._version import VERSION
 from ..nbtools.utility import export
+from ..data import QueryProvider
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -141,7 +142,7 @@ def syslog_host_picker(time: int = 90) -> List[str]:
 
 
 @export
-def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame) -> Host:
+def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, query_provider: QueryProvider) -> Host:
     """
     Generate host_entity record for selected computer
 
@@ -172,7 +173,9 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame) ->
     | top 1 by TimeGenerated desc nulls last
     """
 
-    kql_raw_result = _ip.magic("kql -query host_syslog_check")
+    #replace with new query from TI Branch
+    kql_raw_result = query_provider._query_provider.query(query=host_syslog_check)
+    #kql_raw_result = _ip.magic("kql -query host_syslog_check")
     if kql_raw_result.completion_query_info["StatusCode"] == 0:
         host_syslog_df = kql_raw_result.to_dataframe()
 
@@ -238,17 +241,17 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame) ->
 
         if len(az_net_df) == 1:
             priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
-            host_entity.properties["private_ips"] = convert_to_ip_entities(
+            host_entity["private_ips"] = convert_to_ip_entities(
                 priv_addr_str
             )
             pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
-            host_entity.properties["public_ips"] = convert_to_ip_entities(pub_addr_str)
+            host_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
 
         else:
-            if "private_ips" not in host_entity.properties:
-                host_entity.properties["private_ips"] = []
-            if "public_ips" not in host_entity.properties:
-                host_entity.properties["public_ips"] = []
+            if "private_ips" not in host_entity:
+                host_entity["private_ips"] = []
+            if "public_ips" not in host_entity:
+                host_entity["public_ips"] = []
 
     display(
         Markdown(
