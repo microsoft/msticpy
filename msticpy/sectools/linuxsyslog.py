@@ -175,9 +175,6 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, qu
 
     #replace with new query from TI Branch
     host_syslog_df = query_provider._query_provider.query(query=host_syslog_check)
-    #kql_raw_result = _ip.magic("kql -query host_syslog_check")
-    #if kql_raw_result.completion_query_info["StatusCode"] == 0:
-    #host_syslog_df = kql_raw_result.to_dataframe()
 
     if host_syslog_df.empty:
         raise KQLDataError(
@@ -195,6 +192,7 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, qu
             """
 
         print("Getting host data...")
+        #replace with new query from TI Branch
         host_hb = query_provider._query_provider.query(query=heartbeat_query)
 
         if host_hb.empty:
@@ -233,6 +231,7 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, qu
             | project PrivateIPAddresses = PrivateIPAddresses_s, 
             PublicIPAddresses = PublicIPAddresses_s
             """
+        #replace with new query from TI Branch
         az_net_df = query_provider._query_provider.query(query=aznet_query)
 
         if len(az_net_df) == 1:
