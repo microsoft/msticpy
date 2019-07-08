@@ -142,18 +142,19 @@ def syslog_host_picker(time: int = 90) -> List[str]:
 
 
 @export
-def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, query_provider: QueryProvider) -> Host:
+def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None) -> Host:
+    # remove queries from function and push to notebook.
     """
     Generate host_entity record for selected computer
 
     Parameters
     ----------
-    hostname : str
-        The Computer name to create the host_entity for
-    time : int
-        Number of days previous from which to collect host data from. Default is 90
-    table_index : pd.DataFrame
-        A Panda DataFrame containing tables avaliable for querying of data regarding the computer
+    syslog_df : pd.DataFrame
+        A dataframe of all syslog events for the host in the time window requried
+    heartbeat_df : pd.DataFrame
+        A dataframe of heartbeat data for the host
+    az_net_df : pd.DataFrame
+        Option dataframe of Azure network data for the host
 
     Returns
     ----------
@@ -166,95 +167,53 @@ def get_syslog_host_data(hostname: str, time: int, table_index: pd.DataFrame, qu
         Could not find any data for the computer in the time window
 
     """
-    host_syslog_check = f"""
-    Syslog
-    | where TimeGenerated > ago({time}d)
-    | where Computer has '{hostname}'
-    | top 1 by TimeGenerated desc nulls last
-    """
-
-    #replace with new query from TI Branch
-    host_syslog_df = query_provider._query_provider.query(query=host_syslog_check)
-
-    if host_syslog_df.empty:
+    
+    if syslog_df.empty:
         raise KQLDataError(
-            f"Could not find any Syslog events for {hostname} in the last {time} days"
+            f"No syslog data provided"
         )
     else:
-        host_entity = Host(src_event=host_syslog_df.iloc[0])
+        host_entity = Host(src_event=syslog_df.iloc[0])
 
-    if "Heartbeat" in table_index:
-        heartbeat_query = f"""
-            Heartbeat 
-            | where Computer == '{hostname}' 
-            | where TimeGenerated > ago({time}d)
-            | top 1 by TimeGenerated desc nulls last
-            """
+    if heartbeat_df.empty:
+        raise KQLDataError(
+            f"No heartbeat data provided"
+        )
+    else:
+        host_hb = heartbeat_df.iloc[0]
+        host_entity.SourceComputerId = host_hb["SourceComputerId"]
+        host_entity.OSType = host_hb["OSType"]
+        host_entity.OSName = host_hb["OSName"]
+        host_entity.OSVMajorersion = host_hb["OSMajorVersion"]
+        host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]
+        host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]
+        host_entity.OmsSolutions = [
+            sol.strip() for sol in host_hb["Solutions"].split(",")
+        ]
+        host_entity.VMUUID = host_hb["VMUUID"]
+        ip_entity = IpAddress()
+        ip_entity.Address = host_hb["ComputerIP"]
+        geoloc_entity = GeoLocation()
+        geoloc_entity.CountryName = host_hb["RemoteIPCountry"]
+        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
+        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
+        ip_entity.Location = geoloc_entity
+        host_entity.IPAddress = ip_entity
 
-        print("Getting host data...")
-        #replace with new query from TI Branch
-        host_hb = query_provider._query_provider.query(query=heartbeat_query)
-
-        if host_hb.empty:
-            raise LookupError(
-                f"Could find any heartbeat data for {hostname} in the last {time} days"
-            )
-        else:
-            host_hb = host_hb.iloc[0]
-            host_entity.SourceComputerId = host_hb["SourceComputerId"]
-            host_entity.OSType = host_hb["OSType"]
-            host_entity.OSName = host_hb["OSName"]
-            host_entity.OSVMajorersion = host_hb["OSMajorVersion"]
-            host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]
-            host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]
-            host_entity.OmsSolutions = [
-                sol.strip() for sol in host_hb["Solutions"].split(",")
-            ]
-            host_entity.VMUUID = host_hb["VMUUID"]
-            ip_entity = IpAddress()
-            ip_entity.Address = host_hb["ComputerIP"]
-            geoloc_entity = GeoLocation()
-            geoloc_entity.CountryName = host_hb["RemoteIPCountry"]
-            geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
-            geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
-            ip_entity.Location = geoloc_entity
-            host_entity.IPAddress = ip_entity
-
-    if "AzureNetworkAnalytics_CL" in table_index:
-        print("Looking for IP addresses in network flows...")
-        aznet_query = f"""
-            AzureNetworkAnalytics_CL
-            | where TimeGenerated > ago({time}d)
-            | where VirtualMachine_s has '{hostname}'
-            | where ResourceType == 'NetworkInterface'
-            | top 1 by TimeGenerated desc
-            | project PrivateIPAddresses = PrivateIPAddresses_s, 
-            PublicIPAddresses = PublicIPAddresses_s
-            """
-        #replace with new query from TI Branch
-        az_net_df = query_provider._query_provider.query(query=aznet_query)
-
+    if az_net_df.empty:
+        pass
+    else:
         if len(az_net_df) == 1:
             priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
-            host_entity.properties["private_ips"] = convert_to_ip_entities(priv_addr_str)
+            host_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
             pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
             host_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
-
         else:
             if "private_ips" not in host_entity:
                 host_entity["private_ips"] = []
             if "public_ips" not in host_entity:
                 host_entity["public_ips"] = []
 
-    display(
-        Markdown(
-            "***Host Details***\n\n"
-            f"**Hostname**: {host_entity.computer} \n\n"
-            f"**OS**: {host_entity.OSType} {host_entity.OSName}\n\n"
-            f"**IP Address**: {ip_entity.Address}\n\n"
-            f"**Location**: {geoloc_entity.CountryName}\n\n"
-        )
-    )
     return host_entity
 
 
