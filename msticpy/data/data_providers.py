@@ -187,3 +187,19 @@ class QueryProvider:
 
             setattr(query_family, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
+
+    def run_query(self, query: str) -> pd.DataFrame:
+        """
+        Execute an ad-hoc query string.
+
+        Parameters
+        ----------
+        query : str
+            The query you want to run
+
+        Returns
+        -------
+        pd.DataFrame
+            Query results - a DataFrame of results
+        """
+        return self._query_provider.query(query)
