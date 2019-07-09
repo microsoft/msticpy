@@ -16,7 +16,7 @@ from typing import List, Mapping, Dict, Tuple, Union, Iterable, Optional
 
 import pandas as pd
 
-from .tiproviders.ti_provider import TIProvider
+from .tiproviders.ti_provider_base import TIProvider
 from ..nbtools.utility import export
 from .._version import VERSION
 

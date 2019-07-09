@@ -15,15 +15,16 @@ requests per minute for the account type that you have.
 import abc
 from abc import ABC
 from collections import namedtuple, Counter
+
 # import json
 # from json import JSONDecodeError
+from functools import singledispatch
 import math
 import re
-from typing import List, Mapping, Any, Tuple, Union, Iterable, Set, Optional
+from typing import List, Dict, Any, Tuple, Union, Iterable, Set, Optional
 
 # from collections import namedtuple, Counter, abc
 from ipaddress import IPv4Address, IPv6Address, ip_address
-import warnings
 
 import socket
 from socket import gaierror
@@ -74,12 +75,10 @@ class TIProvider(ABC):
     @abc.abstractmethod
     def lookup_ioc(self, ioc: str, ioc_type: str = None) -> Tuple[bool, str, str]:
         """Lookup a single IoC observable."""
-        pass
 
-    @abc.abstractmethod
     def lookup_iocs(
         self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
         obs_col: str = None,
         ioc_type_col: str = None,
     ) -> pd.DataFrame:
@@ -88,11 +87,11 @@ class TIProvider(ABC):
 
         Parameters
         ----------
-        data : Union[pd.DataFrame,Mapping[str, str], Iterable[str]]
+        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
-            2. Mapping (e.g. a dict) of observable, IoCType
+            2. Dict of observable, IoCType
             3. Iterable of observables - IoCTypes will be inferred
         obs_col : str, optional
             DataFrame column to use for observables, by default None
@@ -105,7 +104,15 @@ class TIProvider(ABC):
             DataFrame of results.
 
         """
-        pass
+        results = []
+        for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
+            try:
+                item_result = self.lookup_ioc(ioc=observable, ioc_type=ioc_type)
+                results.append(item_result)
+            except NotImplementedError as err:
+                results.append((False, str(err), None))
+
+        return pd.DataFrame(data=results, columns=["Result", "Details", "RawResult"])
 
     @abc.abstractmethod
     @staticmethod
@@ -124,7 +131,6 @@ class TIProvider(ABC):
             True if a positive match
 
         """
-        pass
 
     @abc.abstractmethod
     @staticmethod
@@ -143,37 +149,6 @@ class TIProvider(ABC):
             Object with match details
 
         """
-        pass
-
-    def add_supported_type(self, ioc_type: Union[str, IoCType]):
-        """
-        Add an IoCType to list of supported types.
-
-        Parameters
-        ----------
-        ioc_type : Union[str, IoCType]
-            IoCType name or IoCType instance
-
-        """
-        if isinstance(ioc_type, str):
-            parsed_ioc_type = IoCType.parse(ioc_type)
-        if parsed_ioc_type != IoCType.unknown:
-            self._supported_types.add(parsed_ioc_type)
-        else:
-            warnings.warn(f"Unknown IoCType {ioc_type}")
-
-    def add_supported_types(self, ioc_types: Iterable[Union[str, IoCType]]):
-        """
-        Add a collection of supported IoC Types.
-
-        Parameters
-        ----------
-        ioc_types : Iterable[Union[str, IoCType]]
-            Iterable of IoCTypes to add.
-
-        """
-        for supp_type in ioc_types:
-            self.add_supported_type(supp_type)
 
     @property
     def supported_types(self) -> List[str]:
@@ -295,9 +270,7 @@ def _preprocess_url(url: str) -> SanitizedObservable:
     try:
         addr = ip_address(host)
         if addr.is_private:
-            return SanitizedObservable(
-                None, "Host part of URL is a private IP address"
-            )
+            return SanitizedObservable(None, "Host part of URL is a private IP address")
         if addr.is_loopback:
             return SanitizedObservable(
                 None, "Host part of URL is a loopback IP address"
@@ -314,9 +287,7 @@ def _preprocess_url(url: str) -> SanitizedObservable:
     return SanitizedObservable(clean_url, "ok")
 
 
-def get_schema_and_host(
-    url: str
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def get_schema_and_host(url: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Return URL scheme and host and cleaned URL.
 
@@ -439,3 +410,51 @@ def entropy(input_str: str) -> float:
             Counter(input_str).values(),
         )
     )
+
+
+@singledispatch
+def generate_items(
+    data: Any, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
+) -> Tuple[str, str]:
+    """
+    Generator of item pairs from different input types.
+
+    Parameters
+    ----------
+    data : Any
+        DataFrame, dictionary or iterable
+    obs_col : Optional[str]
+        If `data` is a DataFrame, the column containing the observable value.
+    ioc_type_col : Optional[str]
+        If `data` is a DataFrame, the column containing the observable type.
+
+    Returns
+    -------
+    Tuple[str, str] - a tuple of Observable/Type.
+
+    """
+    del data, obs_col, ioc_type_col
+    yield None, None
+
+
+@generate_items.register(pd.DataFrame)
+def _(data: pd.DataFrame, obs_col: str, ioc_type_col: Optional[str] = None):
+    for _, row in data.iterrows():
+        if ioc_type_col is None:
+            yield row[obs_col], None
+        else:
+            yield row[obs_col], row[ioc_type_col]
+
+
+@generate_items.register(dict)
+def _(data: dict, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None):
+    for obs, ioc_type in data.items():
+        yield obs, ioc_type
+
+
+@generate_items.register(Iterable)
+def _(
+    data: Iterable, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
+):
+    for item in data:
+        yield item, None
