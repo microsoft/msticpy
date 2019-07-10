@@ -305,14 +305,14 @@ class GeoLiteLookup(GeoIpLookup):
             print(f'Other error occurred: {err}')
         else:
             print('Downloading GeoLite DB archive from MaxMind.....')
-            with open(_DB_ARCHIVE, 'wb') as fd:
+            with open(self._DB_ARCHIVE, 'wb') as fd:
                 print('Saving Downloaded archive.....')
                 for chunk in response.iter_content(chunk_size=10000):
                     fd.write(chunk)
             try:
-                tar = tarfile.open(_DB_ARCHIVE)
+                tar = tarfile.open(self._DB_ARCHIVE)
             except IOError as err:
-                print('{} {}'.format(_DB_ARCHIVE, err))
+                print('{} {}'.format(self._DB_ARCHIVE, err))
             else:
                 print('Extracting archive to current directory.....')
                 tar.extractall()
@@ -375,12 +375,12 @@ class GeoLiteLookup(GeoIpLookup):
                     _db_age = datetime.utcnow() - _last_mod_time
                     if _db_age > timedelta(30):
                         print('Latest DB is older than 30 days. Downloading new archive ...')
-                        self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                        self.download_and_extract_archive(self._MAXMIND_DOWNLOAD)
                     else:
                         while True:
                             cmd = input('Do you want to force update of GeoLite Database [y] or [n]? :\t')
                             if cmd =='y':
-                                self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                                self.download_and_extract_archive(self._MAXMIND_DOWNLOAD)
                             elif cmd =='n':
                                 print('Using archive downloaded in last 30 days')
                             break
@@ -388,7 +388,7 @@ class GeoLiteLookup(GeoIpLookup):
                     _latest_db_path = _list_of_db_paths[0]
         else:
             print('No DB found. Downloading new archive ...')
-            self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
+            self.download_and_extract_archive(self._MAXMIND_DOWNLOAD)
             _list_of_db_paths = glob.glob(_db_folder + '/*/*.mmdb')
             _latest_db_path = _list_of_db_paths[0]
 
