@@ -22,7 +22,7 @@ INSTALL_REQUIRES = ['matplotlib>=3.0.0',
                     'ipython>=7.1.1',
                     'Kqlmagic>=0.1.90',
                     'scikit_learn>=0.20.2',
-                    'maxminddb_geolite2>=2018.0',
+                    'geoip2>=2.9.0',
                     'typing>=3.6.6']
 
 
