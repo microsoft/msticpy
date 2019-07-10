@@ -288,8 +288,8 @@ class GeoLiteLookup(GeoIpLookup):
     _DB_ARCHIVE = 'GeoLite2-City.tar.gz'
     _DB_FILE = 'GeoLite2-City.mmdb'
 
-    def download_and_extract_archive(url):
-        """Download file from the given URL and extract if it is archive
+    def download_and_extract_archive(self,url):
+        """Helper function to download file from the given URL and extract if it is archive
 
         Parameters
         ----------
@@ -319,8 +319,8 @@ class GeoLiteLookup(GeoIpLookup):
                 print('Extraction complete.....')
                 tar.close()
 
-    def cleanup_folder(folder):
-            """Clean up old directiories containing Maxmind DB files, keeping latest one.
+    def cleanup_folder(self,folder):
+            """Helper function to clean up old directiories containing Maxmind DB files, keeping latest one.
 
             Parameters
             ----------
@@ -343,7 +343,7 @@ class GeoLiteLookup(GeoIpLookup):
                     print('No cleanup operation required')
                 break
     
-    def get_geolite_dbpath():
+    def get_geolite_dbpath(self):
         """ get the correct path containing GeoLite City Database
 
         Returns
@@ -367,7 +367,7 @@ class GeoLiteLookup(GeoIpLookup):
         
         if _list_of_db_paths:
                 if(len(_list_of_db_paths) > 1):
-                    cleanup_folder(_list_of_db_paths)
+                    self.cleanup_folder(_list_of_db_paths)
                     _latest_db_path= max(_list_of_db_paths, key=os.path.getmtime)
                     print('DB already present. Check for out of date DB file with latest available...')
                     # Check for out of date DB file with latest available
@@ -375,12 +375,12 @@ class GeoLiteLookup(GeoIpLookup):
                     _db_age = datetime.utcnow() - _last_mod_time
                     if _db_age > timedelta(30):
                         print('Latest DB is older than 30 days. Downloading new archive ...')
-                        download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                        self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
                     else:
                         while True:
                             cmd = input('Do you want to force update of GeoLite Database [y] or [n]? :\t')
                             if cmd =='y':
-                                download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                                self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
                             elif cmd =='n':
                                 print('Using archive downloaded in last 30 days')
                             break
@@ -388,7 +388,7 @@ class GeoLiteLookup(GeoIpLookup):
                     _latest_db_path = _list_of_db_paths[0]
         else:
             print('No DB found. Downloading new archive ...')
-            download_and_extract_archive(_MAXMIND_DOWNLOAD)
+            self.download_and_extract_archive(_MAXMIND_DOWNLOAD)
             _list_of_db_paths = glob.glob(_db_folder + '/*/*.mmdb')
             _latest_db_path = _list_of_db_paths[0]
 
@@ -396,8 +396,8 @@ class GeoLiteLookup(GeoIpLookup):
 
     def __init__(self):
         """Return new instance of GeoLiteLookup class."""
-        self.dbpath = get_geolite_dbpath()
-        self._reader = geoip2.database.Reader(self.dbpath)
+        self._dbpath = self.get_geolite_dbpath()
+        self._reader = geoip2.database.Reader(self._dbpath)
 
     def lookup_ip(self, ip_address: str = None,
                   ip_addr_list: Iterable = None,
