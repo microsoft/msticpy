@@ -31,8 +31,14 @@ from IPython.display import display, HTML
 
 import pandas as pd
 import requests
+import tarfile
+import shutil
+import os
+from requests.exceptions import HTTPError
+import glob
+import geoip2.database
+from datetime import datetime, timedelta
 
-from geolite2 import geolite2
 
 from .. nbtools.entityschema import GeoLocation, IpAddress
 from .. nbtools.utility import export
@@ -278,22 +284,120 @@ class GeoLiteLookup(GeoIpLookup):
 
     """
 
-    _MAXMIND_DOWNLOAD = 'https://dev.maxmind.com/geoip/geoip2/geolite2/#Downloads'
+    _MAXMIND_DOWNLOAD = 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
+    _DB_ARCHIVE = 'GeoLite2-City.tar.gz'
     _DB_FILE = 'GeoLite2-City.mmdb'
 
-    # Check for out of date file
-    _last_mod_time = datetime.fromtimestamp(
-        os.path.getmtime(geolite2.filename))
-    _db_age = datetime.utcnow() - _last_mod_time
-    if _db_age > timedelta(40):
-        print(
-            f'{_DB_FILE} is over one month old. Update the maxminddb package')
-        print(
-            f'to refresh or download a new version from {_MAXMIND_DOWNLOAD}')
+    def download_and_extract_archive(url):
+        """Download file from the given URL and extract if it is archive
+
+        Parameters
+        ----------
+        url : str
+            Web URL location to the file
+        """
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            print(f'HTTP error occurred: {http_err}')
+        except Exception as err:
+            print(f'Other error occurred: {err}')
+        else:
+            print('Downloading GeoLite DB archive from MaxMind.....')
+            with open(_DB_ARCHIVE, 'wb') as fd:
+                print('Saving Downloaded archive.....')
+                for chunk in response.iter_content(chunk_size=10000):
+                    fd.write(chunk)
+            try:
+                tar = tarfile.open(_DB_ARCHIVE)
+            except IOError as err:
+                print('{} {}'.format(_DB_ARCHIVE, err))
+            else:
+                print('Extracting archive to current directory.....')
+                tar.extractall()
+                print('Extraction complete.....')
+                tar.close()
+
+    def cleanup_folder(folder):
+            """Clean up old directiories containing Maxmind DB files, keeping latest one.
+
+            Parameters
+            ----------
+            folder : list
+                list of multiple absolute paths containing maxmind db files. List can be populated by file pattern matching of *.mmdb.
+            """
+            while(len(folder) > 1):
+                cmd = input('Found multiple folders containing Maxmind Database. Do you want to delete older DB folders and keep latest one [y] or [n]?:\t')
+                _latest_folder= max(folder, key=os.path.getctime)
+                if cmd =='y':
+                    for path in folder:
+                        if path is not _latest_folder:
+                            print('Deleting folder {}'.format(path))
+                            try:
+                                shutil.rmtree(os.path.dirname(path))
+                                folder.remove(path)
+                            except IOError as err:
+                                print('{} {}'.format(path, err))
+                elif cmd =='n':
+                    print('No cleanup operation required')
+                break
+    
+    def get_geolite_dbpath():
+        """ get the correct path containing GeoLite City Database
+
+        Returns
+        -------
+        str
+            Returns the final path after control flow logic of local maxmind geolite city database.
+
+        """        
+        # Ask user to either specify the folders with maxmind DB or use current directory to searchfor DB files.
+        while True:
+                    cmd = input('Do you want to specify GeoLite DB location [y] or [n]?:\t')
+                    if cmd =='y':
+                        _db_folder = input("Please provide absolute path to the folder containing MMDB file (e.g. '/usr/home' or 'C:\maxmind') :\t")
+                        print("{} folder will be used to search/download GeoLite DB files".format(_db_folder))
+                    elif cmd =='n':
+                        print('Current folder will be used to search/download GeoLite DB files')
+                        _db_folder = os.path.dirname(__file__)
+                    break
+                    
+        _list_of_db_paths = glob.glob(_db_folder + '/*/*.mmdb')
+        
+        if _list_of_db_paths:
+                if(len(_list_of_db_paths) > 1):
+                    cleanup_folder(_list_of_db_paths)
+                    _latest_db_path= max(_list_of_db_paths, key=os.path.getmtime)
+                    print('DB already present. Check for out of date DB file with latest available...')
+                    # Check for out of date DB file with latest available
+                    _last_mod_time = datetime.fromtimestamp(os.path.getmtime(_latest_db_path))
+                    _db_age = datetime.utcnow() - _last_mod_time
+                    if _db_age > timedelta(30):
+                        print('Latest DB is older than 30 days. Downloading new archive ...')
+                        download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                    else:
+                        while True:
+                            cmd = input('Do you want to force update of GeoLite Database [y] or [n]? :\t')
+                            if cmd =='y':
+                                download_and_extract_archive(_MAXMIND_DOWNLOAD)
+                            elif cmd =='n':
+                                print('Using archive downloaded in last 30 days')
+                            break
+                else:
+                    _latest_db_path = _list_of_db_paths[0]
+        else:
+            print('No DB found. Downloading new archive ...')
+            download_and_extract_archive(_MAXMIND_DOWNLOAD)
+            _list_of_db_paths = glob.glob(_db_folder + '/*/*.mmdb')
+            _latest_db_path = _list_of_db_paths[0]
+
+        return _latest_db_path
 
     def __init__(self):
         """Return new instance of GeoLiteLookup class."""
-        self._reader = geolite2.reader()
+        self.dbpath = get_geolite_dbpath()
+        self._reader = geoip2.database.Reader(self.dbpath)
 
     def lookup_ip(self, ip_address: str = None,
                   ip_addr_list: Iterable = None,
