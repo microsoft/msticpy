@@ -18,28 +18,34 @@ get_user_mods_syslog - collects and returns data on all user and group additions
 get_syslog_events - collects and retunrs all syslog messages for the host being investigated along with a list of the facilities present
 syslog_volume_graph - displays a graph of syslog message volume over time
 """
-from datetime import datetime
-import pandas as pd
-import numpy as np
-from datetime import datetime
-from ..nbtools.entityschema import GeoLocation, Host, IpAddress
-from .geoip import GeoLiteLookup
-from .eventcluster import dbcluster_events, add_process_features, _string_score
-from IPython import get_ipython
-from IPython.display import display, HTML, Markdown
-import matplotlib.pyplot as plt
 import collections
+import datetime as dt
+import os
+import re
+from datetime import datetime
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
+
 import ipywidgets as widgets
-from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
+import matplotlib.pyplot as plt
+
+import numpy as np
+import pandas as pd
+from IPython import get_ipython
+from IPython.display import HTML, Markdown, display
 from pandas.plotting import register_matplotlib_converters
 
-
 from .._version import VERSION
-from ..nbtools.utility import export
 from ..data.data_providers import QueryProvider
+from ..nbtools.entityschema import GeoLocation, Host, IpAddress
+from ..nbtools.utility import export
+from .eventcluster import _string_score, add_process_features, dbcluster_events
+from .geoip import GeoLiteLookup
+from .base64unpack import unpack
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+_DETECTIONS_DEF_DIR = "detections"
 
 WIDGET_DEFAULTS = {
     "layout": widgets.Layout(width="95%"),
@@ -365,14 +371,19 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             logons_closed.index
         ):
             ses_start = (logons_opened.iloc[ses_opened]).name
+            ses_end = (logons_closed.iloc[ses_closed]).name
             user = (logons_opened.iloc[ses_opened]).User
-            if ses_start.to_pydatetime() > ses_close_time or ses_opened == 0:
+            if isinstance(ses_start, datetime) == False:
+                ses_start = datetime.strptime(ses_start,"%Y-%m-%d %H:%M:%S")
+                ses_end = datetime.strptime(ses_end,"%Y-%m-%d %H:%M:%S")
+            else:
+                pass
+            if ses_start > ses_close_time or ses_opened == 0:
                 pass
             else:
                 ses_opened += 1
                 continue
-            ses_end = (logons_closed.iloc[ses_closed]).name
-            if ses_end.to_pydatetime() < ses_start.to_pydatetime():
+            if ses_end < ses_start:
                 ses_closed += 1
                 continue
             logon_string = f"Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}"
@@ -790,3 +801,56 @@ def syslog_volume_graph(syslog_volume: pd.DataFrame):
     ax.set_xlabel("Time Generated")
     ax.set_ylabel("Volume of Syslog Messages Generated")
     plt.show()
+
+
+
+@export
+def sudo_risk_actions(sudo_events:pd.DataFrame, risky_stuff:str = os.path.join(os.path.join(os.path.dirname(__file__), _DETECTIONS_DEF_DIR), 'sudo_cmd_line.txt')):
+    if 'Command' not in sudo_events.columns:
+        print("DataFrame must contain column of commands run called 'Command'")
+    else:
+        pass
+    risky_actions = []
+    sudo_events['Command'].replace('', np.nan, inplace=True)
+    sudo_actions = sudo_events['Command'].dropna().to_dict()
+    risky_lines = [line.rstrip('\n') for line in open(risky_stuff)]
+    for line in risky_lines:
+        for action in sudo_actions:
+            if re.match("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", sudo_actions[action]):
+                b64match = re.search("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", sudo_actions[action])
+                b64string = unpack(input_string=b64match[1])
+                b64string = b64string[1]['decoded_string'].to_string()
+                if re.match(line, sudo_actions[action]):
+                    risky_actions.append(sudo_actions[action])
+                else:
+                    pass
+            else:
+                if re.match(line, sudo_actions[action]):
+                    risky_actions.append(sudo_actions[action])
+                else:
+                    pass
+    return risky_actions
+
+@export
+def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5):
+    if 'Command' not in sudo_events.columns:
+        print("DataFrame must contain column of commands run called 'Command'")
+    elif isinstance(sudo_events["TimeGenerated"][0], datetime) == False:
+        print("TimeGenerated is not a datetime format")
+    else:
+        pass
+    suspicious_actions = []
+    sudo_events['Command'].replace('', np.nan, inplace=True)
+    sudo_actions = sudo_events.dropna(subset=['Command']).reset_index()
+    df_len = len(sudo_actions.index) - (events+1)
+    while df_len >= 0:
+        if isinstance(sudo_actions['TimeGenerated'][(df_len+events)], datetime) == False:
+            delta = datetime.strptime(sudo_events["TimeGenerated"][(df_len+events)],"%Y-%m-%dT%H:%M:%S.%fZ") - datetime.strptime(sudo_events["TimeGenerated"][(df_len)],"%Y-%m-%dT%H:%M:%S.%fZ")
+        else:
+            delta = sudo_actions['TimeGenerated'][(df_len+events)] - sudo_actions['TimeGenerated'][df_len]
+        if delta < dt.timedelta(seconds = time):
+            suspicious_actions.append({df_len:[sudo_actions[df_len:(df_len+events)],delta]})
+        else:
+            pass
+        df_len = df_len-1
+    return suspicious_actions
