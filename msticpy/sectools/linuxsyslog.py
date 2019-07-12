@@ -807,6 +807,7 @@ def syslog_volume_graph(syslog_volume: pd.DataFrame):
 @export
 def sudo_risk_actions(sudo_events:pd.DataFrame, risky_stuff:str = os.path.join(os.path.join(os.path.dirname(__file__), _DETECTIONS_DEF_DIR), 'sudo_cmd_line.txt')):
     if 'Command' not in sudo_events.columns:
+        #make exception
         print("DataFrame must contain column of commands run called 'Command'")
     else:
         pass
@@ -834,6 +835,7 @@ def sudo_risk_actions(sudo_events:pd.DataFrame, risky_stuff:str = os.path.join(o
 @export
 def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5):
     if 'Command' not in sudo_events.columns:
+        #make exception
         print("DataFrame must contain column of commands run called 'Command'")
     elif isinstance(sudo_events["TimeGenerated"][0], datetime) == False:
         print("TimeGenerated is not a datetime format")
