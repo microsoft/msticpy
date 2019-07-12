@@ -274,7 +274,12 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
         ):
             ses_start = (logons_opened.iloc[ses_opened]).name
             ses_end = (logons_closed.iloc[ses_closed]).name
-            user = (logons_opened.iloc[ses_opened]).User
+            if "User" in logons_opened.columns:
+                user = (logons_opened.iloc[ses_opened]).User
+            elif "Sudoer" in logons_opened.columns:
+                user = (logons_opened.iloc[ses_opened]).Sudoer
+            else:
+                user = "Unknown"
             if isinstance(ses_start, datetime) == False:
                 ses_start = datetime.strptime(ses_start,"%Y-%m-%d %H:%M:%S")
                 ses_end = datetime.strptime(ses_end,"%Y-%m-%d %H:%M:%S")

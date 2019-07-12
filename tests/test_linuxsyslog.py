@@ -6,7 +6,6 @@
 
 import os
 import pandas as pd
-from ..msticpy.data.data_providers import QueryProvider
 from ..msticpy.nbtools.entityschema import Host
 from ..msticpy.sectools import linuxsyslog as ls
 
@@ -59,8 +58,8 @@ def test_speed():
     assert len(output) >= 1
     assert type(output[0]) == dict
 
-def cluster_sudo_sessions():
+def test_cluster_sudo_sessions():
     input_file = os.path.join(_TEST_DATA, 'sudo_events.csv')
     input_df = pd.read_csv(input_file)
     output = ls.cluster_syslog_logons(input_df)
-    assert len(output) >= 1 
+    assert len(output) >= 1
