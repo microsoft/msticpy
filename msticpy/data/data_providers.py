@@ -138,6 +138,19 @@ class QueryProvider:
         """
         return self._query_store.query_names
 
+@classmethod
+    def list_data_environments(cls) -> List[str]:
+        """
+        Return list of current data environments.
+
+        Returns
+        -------
+        List[str]
+            List of current data environments
+
+        """
+        return list(DataEnvironment.__members__)
+
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
