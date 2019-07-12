@@ -6,7 +6,7 @@
 """Data provider loader."""
 from functools import partial
 from os import path
-from typing import Union, Any
+from typing import Union, Any, List
 
 import pandas as pd
 
@@ -138,7 +138,7 @@ class QueryProvider:
         """
         return self._query_store.query_names
 
-@classmethod
+    @classmethod
     def list_data_environments(cls) -> List[str]:
         """
         Return list of current data environments.
