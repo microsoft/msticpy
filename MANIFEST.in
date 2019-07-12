@@ -1,2 +1,2 @@
 include msticpy/data/queries/*.yaml
-include msticpy/sectoosl/detections/*.txt
+include msticpy/sectools/detections/*.txt
