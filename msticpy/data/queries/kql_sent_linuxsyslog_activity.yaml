@@ -55,7 +55,7 @@ sources:
         | where ProcessName == "sudo"
         | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
         | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
-        | where SyslogMessage contains "{user}" or Sudoer contains "{user}" or SyslogMessage contians "session closed for user root"'
+        | where SyslogMessage contains "{user}" or Sudoer contains "{user}" or SyslogMessage contains "session closed for user root"'
     parameters:
       host_name:
         description: Hostname to query for
