@@ -53,7 +53,7 @@ class QueryProvider:
     """
 
     def __init__(
-        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
+        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None, query_path: str = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
     ):
         """
         Query provider interface to queries.
@@ -66,6 +66,9 @@ class QueryProvider:
             Override the builtin driver (query execution class)
             and use your own driver (must inherit from
             `DriverBase`)
+        query_path: str, optional
+            Override the default location for query files to import
+            a custom set of query definitions at initialization.
 
         See Also
         --------
@@ -88,9 +91,6 @@ class QueryProvider:
                 )
 
         self._query_provider = driver
-
-        # Find the path of this module and build sub-path
-        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
 
         # Load data query definitions for environment
         data_environments = QueryStore.import_files(
