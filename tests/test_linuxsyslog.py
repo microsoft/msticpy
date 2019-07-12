@@ -58,3 +58,9 @@ def test_speed():
     output = ls.sudo_actions_speed(input_df)
     assert len(output) >= 1
     assert type(output[0]) == dict
+
+def cluster_sudo_sessions():
+    input_file = os.path.join(_TEST_DATA, 'sudo_events.csv')
+    input_df = pd.read_csv(input_file)
+    output = ls.cluster_syslog_logons(input_df)
+    assert len(output) >= 1 
