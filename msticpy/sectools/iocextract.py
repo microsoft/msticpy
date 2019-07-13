@@ -56,6 +56,7 @@ class IoCType(Enum):
     md5_hash = "md5_hash"
     sha1_hash = "sha1_hash"
     sha256_hash = "sha256_hash"
+    file_hash = "file_hash"
     email = "email"
     windows_path = "windows_path"
     linux_path = "linux_path"
