@@ -1,0 +1,13 @@
+QueryDefinitions:
+  Default:
+    - "msticpy/data/queries"
+  Custom:
+    - ""
+TIProviders:
+  OTX:
+    ApiID: "123456789"
+    AuthKey: "987654321"
+    Primary: True
+    Provider: "OTX"
+  VirusTotal:
+  AzureSentinel:

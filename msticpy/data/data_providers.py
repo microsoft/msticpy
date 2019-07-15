@@ -73,14 +73,18 @@ class QueryProvider:
 
         """
         if isinstance(data_environment, str):
-            data_environment = DataEnvironment.parse(data_environment)
+            data_env = DataEnvironment.parse(data_environment)
+            if data_env:
+                data_environment = data_env
+            else:
+                raise TypeError(f"Unknown data environment {data_environment}")
 
         self._environment = data_environment.name
 
         if driver is None:
             driver_class = _ENVIRONMENT_DRIVERS[data_environment]
             if issubclass(driver_class, DriverBase):
-                driver = driver_class()
+                driver = driver_class()  # type: ignore
             else:
                 raise LookupError(
                     "Could not find suitable data provider for",
