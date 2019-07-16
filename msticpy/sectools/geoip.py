@@ -331,16 +331,16 @@ class GeoLiteLookup(GeoIpLookup):
         else:
             print("Downloading GeoLite DB archive from MaxMind....")
             with open(_DB_ARCHIVE_PATH, "wb") as fd:
-                print(f"Downloaded archive location :: {_DB_ARCHIVE_PATH}")
                 for chunk in response.iter_content(chunk_size=10000):
                     fd.write(chunk)
+                print(f"Downloaded archive location :: {_DB_ARCHIVE_PATH}")
             try:
                 with gzip.open(_DB_ARCHIVE_PATH, "rb") as f_in:
                     print(f"Extracting city database...")
                     with open(_DB_FILE_PATH, "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
                         print(
-                            f"Extraction complete. Local Maxmind city DB:: {_DB_FILE_PATH}"
+                            f"Extraction complete. Local Maxmind city DB :: {_DB_FILE_PATH}"
                         )
             except IOError as err:
                 print(f"{_DB_ARCHIVE_PATH} {err}")
@@ -394,7 +394,7 @@ class GeoLiteLookup(GeoIpLookup):
                     )
         else:
             print(
-                "No local Maxmind City Database found. Downloading new database to {db_folder}"
+                f"No local Maxmind City Database found. Downloading new database to {db_folder}"
             )
             self.download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
             _list_of_db_paths = glob.glob(db_folder + "/*.mmdb")
