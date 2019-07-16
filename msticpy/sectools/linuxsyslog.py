@@ -181,7 +181,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
     else:
         host_entity = Host(src_event=syslog_df.iloc[0])
         applications = []
-        _apps = syslog_df['ProcessName'].unique().to_list()
+        _apps = syslog_df['ProcessName'].unique().tolist()
         for app in _apps:
             if app not in ("CRON", "systemd-resolved", "systemd", "crontab", "systemd-timesyncd", "systemd-logind"):
                 applications.append(app)
@@ -592,10 +592,7 @@ def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5
     sudo_actions = sudo_events.dropna(subset=['Command']).reset_index()
     df_len = len(sudo_actions.index) - (events+1)
     while df_len >= 0:
-        if isinstance(sudo_actions['TimeGenerated'][(df_len+events)], datetime) == False:
-            delta = datetime.strptime(sudo_events["TimeGenerated"][(df_len+events)],"%Y-%m-%dT%H:%M:%S.%fZ") - datetime.strptime(sudo_events["TimeGenerated"][(df_len)],"%Y-%m-%dT%H:%M:%S.%fZ")
-        else:
-            delta = sudo_actions['TimeGenerated'][(df_len+events)] - sudo_actions['TimeGenerated'][df_len]
+        delta = sudo_actions['TimeGenerated'][(df_len+events)] - sudo_actions['TimeGenerated'][df_len]
         if delta < dt.timedelta(seconds = time):
             suspicious_actions.append({df_len:[sudo_actions[df_len:(df_len+events)],delta]})
         else:
