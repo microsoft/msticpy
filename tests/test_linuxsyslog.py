@@ -16,15 +16,14 @@ else:
     _TEST_DATA = './tests/testdata'
 
 def test_cluster_syslog_logons():
-    #How to get realistic test data (with correct time stamps)?
     input_file = os.path.join(_TEST_DATA, 'linux_logons.csv')
-    input_df = pd.read_csv(input_file)
+    input_df = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
     output = ls.cluster_syslog_logons(input_df)
     assert len(output) >= 1 
 
 def test_host_data():
     syslog_file = os.path.join(_TEST_DATA, 'syslog_data.csv')
-    syslog_df = pd.read_csv(syslog_file , parse_dates = True)
+    syslog_df = pd.read_csv(syslog_file, parse_dates = ["TimeGenerated"])
     heartbeat_file = os.path.join(_TEST_DATA, 'host_hb.csv')
     heartbeat_df = pd.read_csv(heartbeat_file)
     az_net_file = os.path.join(_TEST_DATA, 'az_net.csv')
@@ -37,19 +36,19 @@ def test_host_data():
 def test_sudo_risk_actions():
     input_file = os.path.join(_TEST_DATA, 'sudo_data.csv')
     risky_stuff = os.path.join(_TEST_DATA, 'risky_stuff_custom.txt')
-    input_df = pd.read_csv(input_file)
+    input_df = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
     output = ls.sudo_risk_actions(input_df, risky_stuff)
     assert len(output) >= 1
-    assert type(output[1]) == str
-    assert output[0] == '/usr/sbin/squid'
+    assert type(output) == dict
+    #assert output['2019-07-10T15:13:25.813Z'] == '/usr/sbin/squid'
 
 def test_sudo_risk_actions_default():
     input_file = os.path.join(_TEST_DATA, 'sudo_data.csv')
     input_df = pd.read_csv(input_file)
     output = ls.sudo_risk_actions(input_df)
     assert len(output) >= 1
-    assert type(output[0]) == str
-    assert output[0] == '/bin/bash'
+    assert type(output) == dict
+    assert output['2019-07-05T18:19:52.873Z'] == '/bin/bash'
 
 def test_speed():
     input_file = os.path.join(_TEST_DATA, 'sudo_data_speed.csv')
@@ -60,6 +59,6 @@ def test_speed():
 
 def test_cluster_sudo_sessions():
     input_file = os.path.join(_TEST_DATA, 'sudo_events.csv')
-    input_df = pd.read_csv(input_file)
+    input_df = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
     output = ls.cluster_syslog_logons(input_df)
     assert len(output) >= 1
