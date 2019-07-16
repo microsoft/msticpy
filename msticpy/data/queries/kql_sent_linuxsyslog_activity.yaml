@@ -91,7 +91,7 @@ sources:
         | where Facility == "authpriv"
         | extend UserGroupAction = iif((ProcessName == "groupadd" or ProcessName == "useradd") and (SyslogMessage contains "new group" or SyslogMessage contains "new user"), "Add",
                                     iif((ProcessName == "groupdel" or ProcessName == "userdel") and (SyslogMessage contains "delete user" or SyslogMessage matches regex "(removed group|removed$)"), "Delete",
-                                        iif(ProcessName == "usermod", "Modify", "")    
+                                    iif(ProcessName == "usermod" or ProcessName == "gpasswd", "Modify", "")    
                                         ) 
                                     )
         | extend User=extract("(user: name=|user '')([[:alnum:]]+)",2,SyslogMessage), Group=extract("(group: name=|group '')([[:alnum:]]+)",2,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)

@@ -180,6 +180,13 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
         )
     else:
         host_entity = Host(src_event=syslog_df.iloc[0])
+        applications = []
+        _apps = syslog_df['ProcessName'].unique().to_list()
+        for app in _apps:
+            if app not in ("CRON", "systemd-resolved", "systemd", "crontab", "systemd-timesyncd", "systemd-logind"):
+                applications.append(app)
+            else:
+                pass
 
     if heartbeat_df.empty:
         raise KQLDataError(
@@ -196,6 +203,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
         host_entity.OmsSolutions = [
             sol.strip() for sol in host_hb["Solutions"].split(",")
         ]
+        host_entity.Applications = applications
         host_entity.VMUUID = host_hb["VMUUID"]
         ip_entity = IpAddress()
         ip_entity.Address = host_hb["ComputerIP"]
