@@ -24,7 +24,7 @@ def test_cluster_syslog_logons():
 
 def test_host_data():
     syslog_file = os.path.join(_TEST_DATA, 'syslog_data.csv')
-    syslog_df = pd.read_csv(syslog_file)
+    syslog_df = pd.read_csv(syslog_file , parse_dates = True)
     heartbeat_file = os.path.join(_TEST_DATA, 'host_hb.csv')
     heartbeat_df = pd.read_csv(heartbeat_file)
     az_net_file = os.path.join(_TEST_DATA, 'az_net.csv')
@@ -53,7 +53,7 @@ def test_sudo_risk_actions_default():
 
 def test_speed():
     input_file = os.path.join(_TEST_DATA, 'sudo_data_speed.csv')
-    input_df = pd.read_csv(input_file)
+    input_df = pd.read_csv(input_file, parse_dates = ['TimeGenerated'])
     output = ls.sudo_actions_speed(input_df)
     assert len(output) >= 1
     assert type(output[0]) == dict
