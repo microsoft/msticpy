@@ -7,7 +7,7 @@
 import os
 import pandas as pd
 from ..msticpy.nbtools.entityschema import Host
-from ..msticpy.sectools import linuxsyslog as ls
+from ..msticpy.sectools import syslog_utils as ls
 
 _test_data_folders = [d for d, _, _ in os.walk(os.getcwd()) if d.endswith('/tests/testdata')]
 if len(_test_data_folders) == 1:
