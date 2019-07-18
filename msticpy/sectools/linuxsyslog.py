@@ -23,6 +23,7 @@ import os
 import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
+import pytz
 
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
@@ -216,24 +217,12 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     ses_close_time = datetime.now()
     ses_opened = 0
     ses_closed = 0
-    logons_opened = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
-            ]
-        )
+    logons_opened = ((logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")])
         .set_index("TimeGenerated")
-        .sort_index(ascending=True)
-    )
-    logons_closed = (
-        (
-            logon_events[
-                logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
-            ]
-        )
+        .sort_index(ascending=True))
+    logons_closed = ((logon_events[logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")])
         .set_index("TimeGenerated")
-        .sort_index(ascending=True)
-    )
+        .sort_index(ascending=True))
     if len(logons_opened.index) == 0 or len(logons_closed.index) == 0:
         raise KQLDataError("There are no logon sessions in the supplied data set")
     else:
@@ -315,3 +304,47 @@ def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5
             pass
         df_len = df_len-1
     return suspicious_actions
+
+@export
+def risky_sudo_sessions(risky_actions: dict, sudo_sessions: dict, suspicious_events: list):
+    risky_sessions = {}
+    if not risky_actions and not suspicious_events:
+        raise DataError(f" No suspicious Sudo commands provided")
+    elif risky_actions and not suspicious_events:
+        for key, value in risky_actions.items():
+            for sess_key, sess_val in sudo_sessions.items():
+                if _normalize_to_utc(sess_val['start']) <= _normalize_to_utc(key) <= _normalize_to_utc(sess_val['end']):
+                    risky_sessions.update({sess_key : value})
+                else:
+                    pass
+    elif suspicious_events and not risky_actions:
+        for event in suspicious_events:
+            for key, value in event.items():
+                for sess_key, sess_val in sudo_sessions.items():
+                    if _normalize_to_utc(sess_val['start']) <= _normalize_to_utc(value[0]['TimeGenerated'].iloc[1]) <= _normalize_to_utc(sess_val['end']):
+                        risky_sessions.update({sess_key : "Suspicious event pattern"})
+                    else:
+                        pass
+    else:
+        for key, value in risky_actions.items():
+            for sess_key, sess_val in sudo_sessions.items():
+                if _normalize_to_utc(sess_val['start']) <= _normalize_to_utc(key) <= _normalize_to_utc(sess_val['end']):
+                    risky_sessions.update({sess_key : value})
+                else:
+                    pass
+        for event in suspicious_events:
+            for key, value in event.items():
+                for sess_key, sess_val in sudo_sessions.items():
+                    if _normalize_to_utc(sess_val['start']) <= _normalize_to_utc(value[0]['TimeGenerated'].iloc[1]) <= _normalize_to_utc(sess_val['end']):
+                        risky_sessions.update({sess_key : "Suspicious event pattern"})
+                    else:
+                        pass
+    return risky_sessions
+
+def _normalize_to_utc(time_stamp: datetime):
+    if time_stamp.tzinfo is None or time_stamp.tzinfo.utcoffset(time_stamp) is None:
+        time_stamp = time_stamp.replace(tzinfo=pytz.UTC)
+        return time_stamp
+    else:
+        time_stamp = time_stamp.astimezone(pytz.utc)
+        return time_stamp

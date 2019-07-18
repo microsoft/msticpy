@@ -62,3 +62,13 @@ def test_cluster_sudo_sessions():
     input_df = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
     output = ls.cluster_syslog_logons(input_df)
     assert len(output) >= 1
+
+def test_risky_sudo_sessions():
+    input_file = os.path.join(_TEST_DATA, 'sudo_session_test.csv')
+    sudo_events = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
+    risky_actions = ls.sudo_risk_actions(sudo_events=sudo_events)
+    suspicious_events = ls.sudo_actions_speed(sudo_events=sudo_events, time=60, events=2)
+    sudo_sessions = ls.cluster_syslog_logons(logon_events=sudo_events)
+    output = ls.risky_sudo_sessions(risky_actions=risky_actions, suspicious_events=suspicious_events, sudo_sessions=sudo_sessions)
+    assert len(output) == 2
+    assert type(output) == dict
