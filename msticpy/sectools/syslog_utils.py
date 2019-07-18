@@ -288,7 +288,7 @@ def sudo_risk_actions(sudo_events:pd.DataFrame, risky_stuff:str = os.path.join(o
 def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5):
     if 'Command' not in sudo_events.columns:
         raise DataError("DataFrame must contain column of commands run called 'Command'")
-    elif isinstance(sudo_events["TimeGenerated"][0], datetime) == False:
+    elif isinstance(sudo_events["TimeGenerated"].iloc[0], datetime) == False:
         print("TimeGenerated is not a datetime format")
     else:
         pass
