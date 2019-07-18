@@ -60,6 +60,7 @@ sources:
       host_name:
         description: Hostname to query for
         type: str
+        default: ''
       user:
         description: Username to filter the search by
         type: str
