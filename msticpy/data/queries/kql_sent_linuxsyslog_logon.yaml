@@ -79,4 +79,7 @@ sources:
       host_name:
         description: Hostname to query for
         type: str
-      
+      user:
+        description: Optional user to filter on
+        type: str
+        defualt: ''
