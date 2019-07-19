@@ -222,7 +222,9 @@ class QuerySource:
         for p_name, settings in self.params.items():
             # special case of datetime specified as a number - we
             # interpret this as an offset from utcnow
-            if settings["type"] == "datetime" and isinstance(param_dict[p_name], Number):
+            if settings["type"] == "datetime" and isinstance(
+                param_dict[p_name], Number
+            ):
                 if param_dict[p_name] < 0:
                     param_dict[p_name] = datetime.utcnow() - timedelta(
                         abs(param_dict[p_name])
@@ -306,7 +308,8 @@ class QuerySource:
             valid_failures.append(msg)
         if not self._query:
             msg = (
-                f'Source {self.name} does not have "query" property ' + "in args element."
+                f'Source {self.name} does not have "query" property '
+                + "in args element."
             )
             valid_failures.append(msg)
 
