@@ -21,7 +21,7 @@ defaults:
       user:
         description: Optional user to filter on
         type: str
-        defualt: ''
+        default: ''
       add_query_items:
         description: Additional query clauses
         type: str
@@ -79,7 +79,3 @@ sources:
       host_name:
         description: Hostname to query for
         type: str
-      user:
-        description: Optional user to filter on
-        type: str
-        defualt: ''
