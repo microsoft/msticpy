@@ -8,14 +8,14 @@
 
 # pylint: disable=W0401
 from . import query_builtin_queries
-from .nbwidgets import *
-from .entityschema import *
+from . nbwidgets import *
+from . entityschema import *
 from . import kql as qry
-from .security_alert import *
-from .security_event import *
-from .security_alert_graph import *
+from . security_alert import *
+from . security_event import *
+from . security_alert_graph import *
 from . import utility as util
-from .query_mgr import *
+from . query_mgr import *
 from . import query_builtin_queries as qrydef
 from . import nbdisplay as disp
 
