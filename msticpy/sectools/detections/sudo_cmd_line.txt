@@ -2,4 +2,4 @@
 .*(wget|curl).*\|?.*sh.*
 .*(:\(\){:\|:&};:).*
 .*(mv.*\/dev\/null).*
-.*\/bin\/bash$
+.*\/bin\/bash.*

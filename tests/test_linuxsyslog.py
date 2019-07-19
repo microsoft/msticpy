@@ -32,20 +32,10 @@ def test_host_data():
     assert type(host_record) == Host
     assert host_record.OSType == "Linux"
 
-
-def test_sudo_risk_actions():
-    input_file = os.path.join(_TEST_DATA, 'sudo_data.csv')
-    risky_stuff = os.path.join(_TEST_DATA, 'risky_stuff_custom.txt')
-    input_df = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
-    output = ls.sudo_risk_actions(input_df, risky_stuff)
-    assert len(output) >= 1
-    assert type(output) == dict
-    #assert output['2019-07-10T15:13:25.813Z'] == '/usr/sbin/squid'
-
-def test_sudo_risk_actions_default():
+def test_sudo_risky_actions_default():
     input_file = os.path.join(_TEST_DATA, 'sudo_data.csv')
     input_df = pd.read_csv(input_file)
-    output = ls.sudo_risk_actions(input_df)
+    output = ls.risky_actions(input_df)
     assert len(output) >= 1
     assert type(output) == dict
     assert output['2019-07-05T18:19:52.873Z'] == '/bin/bash'
@@ -66,9 +56,17 @@ def test_cluster_sudo_sessions():
 def test_risky_sudo_sessions():
     input_file = os.path.join(_TEST_DATA, 'sudo_session_test.csv')
     sudo_events = pd.read_csv(input_file, parse_dates = ["TimeGenerated"])
-    risky_actions = ls.sudo_risk_actions(sudo_events=sudo_events)
+    risky_actions = ls.risky_actions(events=sudo_events)
     suspicious_events = ls.sudo_actions_speed(sudo_events=sudo_events, time=60, events=2)
     sudo_sessions = ls.cluster_syslog_logons(logon_events=sudo_events)
     output = ls.risky_sudo_sessions(risky_actions=risky_actions, suspicious_events=suspicious_events, sudo_sessions=sudo_sessions)
     assert len(output) == 2
+    assert type(output) == dict
+
+def test_syslog_risky_actions():
+    input_file = os.path.join(_TEST_DATA, 'syslog_data.csv')
+    input_df = pd.read_csv(input_file)
+    risky_stuff = os.path.join(_TEST_DATA, 'risky_stuff_custom.txt')
+    output = ls.risky_actions(input_df, risky_stuff)
+    assert len(output) >= 1
     assert type(output) == dict
