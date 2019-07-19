@@ -74,7 +74,7 @@ sources:
                                     )
                                 )
         | extend User = iif(SyslogMessage contains "publickey", extract("(for )([[:alnum:]]+)",2,SyslogMessage), extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
-        | where User == "{user}"'
+        | where User contains "{user}"'
     parameters:
       host_name:
         description: Hostname to query for
