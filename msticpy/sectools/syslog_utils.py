@@ -257,29 +257,32 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
         return logon_sessions
 
 
-@export
-def sudo_risk_actions(sudo_events:pd.DataFrame, risky_stuff:str = os.path.join(os.path.join(os.path.dirname(__file__), _DETECTIONS_DEF_DIR), 'sudo_cmd_line.txt')):
-    if 'Command' not in sudo_events.columns:
-        raise DataError("DataFrame must contain column of commands run called 'Command'")
+def risky_actions(events:pd.DataFrame, risky_stuff:str = os.path.join(os.path.join(os.path.dirname(__file__), _DETECTIONS_DEF_DIR), 'sudo_cmd_line.txt')):
+    if 'SyslogMessage' not in events.columns:
+        raise DataError("This function currently only supports Syslog")
     else:
         pass
     risky_actions = {}
-    sudo_events['Command'].replace('', np.nan, inplace=True)
-    sudo_actions = sudo_events[['Command','TimeGenerated']].dropna().set_index('TimeGenerated').to_dict()
+    if 'Command' in events.columns:
+        events['Command'].replace('', np.nan, inplace=True)
+        syslog_actions = events[['TimeGenerated','Command']].rename(columns={"Command": "Message"}).dropna().set_index('TimeGenerated').to_dict()
+    else:
+        events['SyslogMessage'].replace('', np.nan, inplace=True)
+        syslog_actions = events[['TimeGenerated', 'SyslogMessage']].rename(columns={"SyslogMessage": "Message"}).dropna().set_index('TimeGenerated').to_dict()
     risky_lines = [line.rstrip('\n') for line in open(risky_stuff)]
     for line in risky_lines:
-        for date, command in sudo_actions['Command'].items():
-            if re.match("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", command):
-                b64match = re.search("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", command)
+        for date, message in syslog_actions['Message'].items():
+            if re.match("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", message):
+                b64match = re.search("(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)", message)
                 b64string = unpack(input_string=b64match[1])
                 b64string = b64string[1]['decoded_string'].to_string()
-                if re.match(line, command):
-                    risky_actions.update({date:command})
+                if re.match(line, message):
+                    risky_actions.update({date:message})
                 else:
                     pass
             else:
-                if re.match(line, command):
-                    risky_actions.update({date:command})
+                if re.match(line, message):
+                    risky_actions.update({date:message})
                 else:
                     pass
     return risky_actions
