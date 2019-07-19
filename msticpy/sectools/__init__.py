@@ -7,3 +7,4 @@
 
 # flake8: noqa: F403
 from . import base64unpack as b64
+from . import iocextract

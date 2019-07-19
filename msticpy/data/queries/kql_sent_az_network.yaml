@@ -59,6 +59,7 @@ sources:
       query: '
         {table}
         | where SubType_s == "FlowLog"
+        | where VM_s contains "{host_name}"
         | where FlowStartTime_t >= datetime({start})
         | where FlowEndTime_t <= datetime({end})
         | where Computer == "{host_name}"
@@ -66,10 +67,15 @@ sources:
                          iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
                          )
         | project-away ExtIP
-        | mvexpand AllExtIPs'
+        | mvexpand AllExtIPs
+        {where_clause}'
     parameters:
       host_name:
         description: Hostname to query for
+        type: str
+        default: ''
+      where_clause:
+        description: Optional additional filter clauses
         type: str
         default: ''
    
