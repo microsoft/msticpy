@@ -26,6 +26,10 @@ defaults:
         description: Optional subscription/tenant filter expression
         type: str
         default: 'true'
+      user:
+        description: Username to filter the search by
+        type: str
+        default: ''
       query_project:
         description: Column project statement
         type: str
