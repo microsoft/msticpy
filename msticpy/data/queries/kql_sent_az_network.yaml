@@ -35,13 +35,13 @@ defaults:
             FlowEndTime = FlowEndTime_t, 
             FlowIntervalEndTime = FlowIntervalEndTime_t, 
             FlowType = FlowType_s,
-            ResourceGroup = split(VM_s, '/')[0],
-            VMName = split(VM_s, '/')[1],
+            ResourceGroup = split(VM_s, "/")[0],
+            VMName = split(VM_s, "/")[1],
             VMIPAddress = VMIP_s, 
             PublicIPs = extractall(@"([\d\.]+)[|\d]+", dynamic([1]), PublicIPs_s),
             SrcIP = SrcIP_s,
             DestIP = DestIP_s,
-            ExtIP = iif(FlowDirection_s == 'I', SrcIP_s, DestIP_s),
+            ExtIP = iif(FlowDirection_s == "I", SrcIP_s, DestIP_s),
             L4Protocol = L4Protocol_s, 
             L7Protocol = L7Protocol_s, 
             DestPort = DestPort_d, 
@@ -62,7 +62,6 @@ sources:
         | where VM_s contains "{host_name}"
         | where FlowStartTime_t >= datetime({start})
         | where FlowEndTime_t <= datetime({end})
-        | where Computer == "{host_name}"
         | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP), 
                          iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
                          )
