@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """default queries module ."""
-from . query_defns import KqlQuery, DataFamily, DataEnvironment
+from .query_defns import KqlQuery, DataFamily, DataEnvironment
 
 # Module level variable that holds dictionary of queries
 # indexed by name
@@ -13,16 +13,30 @@ query_definitions = dict()
 # pylint: enable=invalid-name
 
 
-KNOWN_PARAM_NAMES = ['table', 'query_project', 'start', 'end',
-                     'system_alert_id', 'subscription_filter',
-                     'host_filter_eq', 'host_filter_neq', 'host_name',
-                     'account_name', 'process_name', 'process_id',
-                     'logon_session_id', 'path_separator', 'commandline',
-                     'source_ip_list', 'add_query_items']
+KNOWN_PARAM_NAMES = [
+    "table",
+    "query_project",
+    "start",
+    "end",
+    "system_alert_id",
+    "subscription_filter",
+    "host_filter_eq",
+    "host_filter_neq",
+    "host_name",
+    "account_name",
+    "process_name",
+    "process_id",
+    "logon_session_id",
+    "path_separator",
+    "commandline",
+    "source_ip_list",
+    "add_query_items",
+]
 
 
 def _add_query(kql_query):
     query_definitions[kql_query.name] = kql_query
+
 
 # ------------------------------------------------------------------------
 # Do Not edit above this line
@@ -30,8 +44,10 @@ def _add_query(kql_query):
 
 
 # Predefined queries
-_add_query(KqlQuery(name='list_alerts_counts',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_alerts_counts",
+        query="""
 {table}
 {query_project}
 | where TimeGenerated >= datetime({start})
@@ -40,15 +56,19 @@ _add_query(KqlQuery(name='list_alerts_counts',
     lastAlert=max(TimeGenerated) by AlertName
 | order by alertCount desc
 {add_query_items}
-''',
-                    description='Retrieves summary of current alerts',
-                    data_source='security_alert',
-                    data_families=[DataFamily.SecurityAlert],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves summary of current alerts",
+        data_source="security_alert",
+        data_families=[DataFamily.SecurityAlert],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_alerts',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_alerts",
+        query="""
 {table}
 {query_project}
 | where TimeGenerated >= datetime({start})
@@ -57,15 +77,19 @@ _add_query(KqlQuery(name='list_alerts',
 | extend CompromisedEntity = tostring(extendedProps['Compromised Host'])
 | project-away extendedProps
 {add_query_items}
-''',
-                    description='Retrieves list of current alerts',
-                    data_source='security_alert',
-                    data_families=[DataFamily.SecurityAlert],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves list of current alerts",
+        data_source="security_alert",
+        data_families=[DataFamily.SecurityAlert],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='get_alert',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="get_alert",
+        query="""
 {table}
 {query_project}
 | where TimeGenerated >= datetime({start})
@@ -75,15 +99,19 @@ _add_query(KqlQuery(name='get_alert',
 | project-away extendedProps
 | where SystemAlertId == \'{system_alert_id}\'
 {add_query_items}
-''',
-                    description='Retrieves an alert by alert Id',
-                    data_source='security_alert',
-                    data_families=[DataFamily.SecurityAlert],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves an alert by alert Id",
+        data_source="security_alert",
+        data_families=[DataFamily.SecurityAlert],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_related_alerts',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_related_alerts",
+        query="""
 let src_host = \'{host_name}\';
 let src_acct = \'{account_name}\';
 let src_proc = \'{process_name}\';
@@ -111,18 +139,20 @@ let src_proc = \'{process_name}\';
      or ExtendedProperties has src_proc), true, false)
 | where host_match or acct_match or proc_match
 {add_query_items}
-''',
-                    description='''
-Retrieves list of alerts with a common host, acount or process''',
-                    data_source='security_alert',
-                    data_families=[DataFamily.SecurityAlert],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['process_name',
-                                     'account_name',
-                                     'add_query_items']))
+""",
+        description="""
+Retrieves list of alerts with a common host, acount or process""",
+        data_source="security_alert",
+        data_families=[DataFamily.SecurityAlert],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["process_name", "account_name", "add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_related_ip_alerts',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_related_ip_alerts",
+        query="""
 let src_ips = \'{source_ip_list}\';
 let src_ips_arr = split(src_ips, ',');
 let IP_table = toscalar(range idx from 0 to array_length(src_ips_arr) - 1 step 1
@@ -163,15 +193,19 @@ let ip_extract = materialize(
 | where TimeGenerated <= datetime({end})
 | join (ip_extract) on SystemAlertId
 {add_query_items}
-''',
-                    description='Retrieves list of alerts with a common IP Address',
-                    data_source='security_alert',
-                    data_families=[DataFamily.SecurityAlert],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves list of alerts with a common IP Address",
+        data_source="security_alert",
+        data_families=[DataFamily.SecurityAlert],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='get_process_tree',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="get_process_tree",
+        query="""
 let start = datetime({start});
 let end = datetime({end});
 let sourceProcessId = \'{process_id}\';
@@ -268,16 +302,19 @@ sourceProcess
     | extend NodeRole = 'sibling', Level = 1
 )
 {add_query_items}
-''',
-                    description='Retrieves process tree for a process.',
-                    data_source='process_create',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves process tree for a process.",
+        data_source="process_create",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_processes',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_processes",
+        query="""
 let start = datetime({start});
 let end = datetime({end});
 {table}
@@ -287,16 +324,19 @@ let end = datetime({end});
 | where TimeGenerated >= start
 | where TimeGenerated <= end
 {add_query_items}
-''',
-                    description='Retrieves processes for a host.',
-                    data_source='process_create',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves processes for a host.",
+        data_source="process_create",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='get_process_parent',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="get_process_parent",
+        query="""
 let start = datetime({start});
 let end = datetime({end});
 let sourceProcessId = \'{process_id}\';
@@ -330,17 +370,20 @@ let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
 | extend NodeRole = 'parent', Level = 1
 | top 1 by TimeCreatedUtc desc nulls last)
 {add_query_items}
-''',
-                    description='''
-Retrieves the parent process of a process process''',
-                    data_source='process_create',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="""
+Retrieves the parent process of a process process""",
+        data_source="process_create",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_hosts_matching_commandline',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_hosts_matching_commandline",
+        query="""
 {table}
 {query_project}
 | where {subscription_filter}
@@ -350,17 +393,20 @@ _add_query(KqlQuery(name='list_hosts_matching_commandline',
 | where NewProcessName endswith \'{process_name}\'
 | where CommandLine =~ \'{commandline}\'
 {add_query_items}
-''',
-                    description='''
-Retrieves processes on other hosts with matching commandline''',
-                    data_source='process_create',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="""
+Retrieves processes on other hosts with matching commandline""",
+        data_source="process_create",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_processes_in_session',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_processes_in_session",
+        query="""
 {table}
 {query_project}
 | where {subscription_filter}
@@ -372,17 +418,20 @@ _add_query(KqlQuery(name='list_processes_in_session',
 | extend commandlineparts = arraylength(split(CommandLine, ' '))
 | extend commandlinelen = strlen(CommandLine)
 {add_query_items}
-''',
-                    description='''
-Retrieves all processes on the host for a logon session''',
-                    data_source='process_create',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="""
+Retrieves all processes on the host for a logon session""",
+        data_source="process_create",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='get_host_logon',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="get_host_logon",
+        query="""
 {table}
 {query_project}
 | where {subscription_filter}
@@ -391,17 +440,20 @@ _add_query(KqlQuery(name='get_host_logon',
 | where TimeGenerated <= datetime({end})
 | where TargetLogonId == \'{logon_session_id}\'
 {add_query_items}
-''',
-                    description='''
-Retrieves the logon event for the session id on the host.''',
-                    data_source='account_logon',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="""
+Retrieves the logon event for the session id on the host.""",
+        data_source="account_logon",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_host_logons',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_host_logons",
+        query="""
 {table}
 {query_project}
 | where {subscription_filter}
@@ -409,16 +461,19 @@ _add_query(KqlQuery(name='list_host_logons',
 | where TimeGenerated >= datetime({start})
 | where TimeGenerated <= datetime({end})
 {add_query_items}
-''',
-                    description='Retrieves the logon events on the host.',
-                    data_source='account_logon',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves the logon events on the host.",
+        data_source="account_logon",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
 
-_add_query(KqlQuery(name='list_host_logon_failures',
-                    query='''
+_add_query(
+    KqlQuery(
+        name="list_host_logon_failures",
+        query="""
 {table}
 {query_project}
 | where {subscription_filter}
@@ -426,10 +481,11 @@ _add_query(KqlQuery(name='list_host_logon_failures',
 | where TimeGenerated >= datetime({start})
 | where TimeGenerated <= datetime({end})
 {add_query_items}
-''',
-                    description='Retrieves the logon failure events on the host.',
-                    data_source='account_logon_fail',
-                    data_families=[DataFamily.WindowsSecurity,
-                                   DataFamily.LinuxSecurity],
-                    data_environments=[DataEnvironment.LogAnalytics],
-                    optional_params=['add_query_items']))
+""",
+        description="Retrieves the logon failure events on the host.",
+        data_source="account_logon_fail",
+        data_families=[DataFamily.WindowsSecurity, DataFamily.LinuxSecurity],
+        data_environments=[DataEnvironment.LogAnalytics],
+        optional_params=["add_query_items"],
+    )
+)
