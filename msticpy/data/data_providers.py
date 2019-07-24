@@ -203,7 +203,7 @@ class QueryProvider:
 
     def run_query(self, query: str) -> pd.DataFrame:
         """
-        Execute an ad-hoc query string.
+        Execute a custom query string.
 
         Parameters
         ----------
