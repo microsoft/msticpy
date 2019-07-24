@@ -99,7 +99,7 @@ class DataEnvironment(Enum):
         return parsed_enum
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-few-public-methods
 @export
 class QueryParamProvider(ABC):
     """
@@ -126,7 +126,7 @@ class QueryParamProvider(ABC):
 
 
 # Query definition
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-few-public-methods
 @attr.s(auto_attribs=True)
 class KqlQuery:
     """KqlQuery definition."""
