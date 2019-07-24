@@ -19,7 +19,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-few-public-methods
 @export
 class FoliumMap:
     """Wrapper class for Folium/Leaflet mapping."""
