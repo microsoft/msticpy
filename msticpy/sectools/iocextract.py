@@ -550,7 +550,7 @@ class IoCExtract:
 
         """
         try:
-            tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.xxx"
+            tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
             temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
             return set(temp_df["TLD"])
         except HTTPError:
@@ -560,12 +560,9 @@ class IoCExtract:
     @classmethod
     def _read_tld_seed_file(cls) -> Set[str]:
         """Read TLD seed list from seed file."""
-        seed_file = "sectools/tld_seed.txt"
-        conf_file = pkg_resources.resource_filename("msticpy", seed_file)
-        if not Path(conf_file).is_file():
-            conf_file = pkg_resources.resource_filename(
-                "msticpy", "msticpy/" + seed_file
-            )
+        seed_file = "tld_seed.txt"
+        conf_file = pkg_resources.resource_filename(__name__, seed_file)
+
         if not Path(conf_file).is_file():
             # if all else fails we try to find the package default config somewhere
             # in the package tree - we use the first one we find

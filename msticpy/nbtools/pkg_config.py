@@ -90,20 +90,26 @@ def _override_config(base_config: Dict[str, Any], new_config: Dict[str, Any]):
 
 
 def _get_default_config():
-    # Depending on how this is executed resource_filename may
+    # When called from a unit test msticpy is a level above the package root
+    # so the first call produces an invalid path
     # return the actual path - pkgpath/msticpy/filename.yaml or just
     # pkgpath/filename.yaml. So we test it as we go
-    conf_file = pkg_resources.resource_filename("msticpy", _CONFIG_FILE)
-    if not Path(conf_file).is_file():
-        conf_file = pkg_resources.resource_filename(
-            "msticpy", "msticpy/" + _CONFIG_FILE
-        )
-    if not Path(conf_file).is_file():
+    conf_file = None
+    top_module = _get_top_module()
+    try:
+        conf_file = pkg_resources.resource_filename("foo", _CONFIG_FILE)
+        if not Path(conf_file).is_file():
+            conf_file = pkg_resources.resource_filename(
+                top_module, "msticpy/" + _CONFIG_FILE
+            )
+    except ModuleNotFoundError:
+        pass
+    if not conf_file or not Path(conf_file).is_file():
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
-        pkg_paths = sys.modules["msticpy"]
+        pkg_paths = sys.modules[top_module]
         if pkg_paths:
-            conf_file = next(Path(pkg_paths.__path__[0][0]).glob(_CONFIG_FILE))
+            conf_file = next(Path(pkg_paths.__path__[0]).glob("**/" + _CONFIG_FILE))
     if conf_file:
         return _read_config_file(conf_file)
     return {}
@@ -118,6 +124,17 @@ def _get_custom_config():
         return _read_config_file(_CONFIG_FILE)
     return {}
 
+
+def _get_top_module():
+    module_path = __name__.split(".")
+    top_module = __name__
+    for idx in range(1, len(module_path)):
+        test_module = ".".join(module_path[:-idx])
+        if test_module in sys.modules:
+            top_module = test_module
+        else:
+            break
+    return top_module
 
 # read initial config when first imported.
 refresh_config()
