@@ -73,11 +73,13 @@ class TestTIProviders(unittest.TestCase):
         mocked_result = {
             "response": "Found stuff",
             "pulse_info": {
-                "pulses": [{
-                    "name": ["somename"],
-                    "tags": ["bad", "good", "ugly"],
-                    "references": ["url1", "url2"],
-                }]
+                "pulses": [
+                    {
+                        "name": ["somename"],
+                        "tags": ["bad", "good", "ugly"],
+                        "references": ["url1", "url2"],
+                    }
+                ]
             },
         }
         expected_params = ["headers"]
@@ -108,19 +110,18 @@ class TestTIProviders(unittest.TestCase):
             "reason": "no reason really",
             "reasonDescription": "what does it mean?",
             "tags": ["bad", "good", "ugly"],
-            "malware":
-            {
+            "malware": {
                 "risk": "high",
-                "family": {"type": "trojan", "name": "mybadfile"}
+                "family": {"type": "trojan", "name": "mybadfile"},
             },
             "total_rows": 4,
             "categoryDescriptions": ["desc1", "desc2"],
-            "contact":  [
+            "contact": [
                 {
-                "type": "registrant",
-                "name": "Domain Administrator",
-                "organization": "Microsoft Corporation",
-                "country": "United States",
+                    "type": "registrant",
+                    "name": "Domain Administrator",
+                    "organization": "Microsoft Corporation",
+                    "country": "United States",
                 }
             ],
         }

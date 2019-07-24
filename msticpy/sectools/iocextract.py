@@ -24,14 +24,19 @@ The following types are built-in:
 """
 
 import re
-from collections import namedtuple, defaultdict
+import sys
+from collections import defaultdict, namedtuple
 from enum import Enum
-from typing import Any, List, Mapping, Set, Dict, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Set, Tuple
+from urllib.error import HTTPError
 from urllib.parse import unquote
 
 import pandas as pd
-from ..nbtools.utility import export
+import pkg_resources
+
 from .._version import VERSION
+from ..nbtools.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -172,7 +177,7 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
-        self.tld_index = self.get_tlds()
+        self.__class__.tld_index = self.get_tlds()
 
     # Public members
     def add_ioc_type(
@@ -525,20 +530,13 @@ class IoCExtract:
             if not results:
                 return IoCType.unknown.name
 
-        if not results:
-            return IoCType.unknown.name
-        if len(results) == 1:
-            return next(iter(results))
+        # we need to select the type that is an exact match for the whole
+        # observable string (_scan_for_iocs will return matching substrings)
+        for ioc_type, match_set in results.items():
+            if observable in match_set:
+                return ioc_type
 
-        # if more than one type, return the longest matching item in the results set
-        max_len = 0
-        max_len_type = ""
-        for i_type, s_set in results.items():
-            longest = sorted(s_set, key=len, reverse=True)[0]
-            if len(longest) > max_len:
-                max_len = len(longest)
-                max_len_type = i_type
-        return max_len_type
+        return IoCType.unknown.name
 
     @classmethod
     def get_tlds(cls) -> Set[str]:
@@ -551,9 +549,44 @@ class IoCExtract:
             Set of top level domains.
 
         """
-        tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
-        temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
-        return set(temp_df["TLD"])
+        try:
+            tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.xxx"
+            temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
+            return set(temp_df["TLD"])
+        except HTTPError:
+            # if we failed to get the list try to read from a seed file
+            return cls._read_tld_seed_file()
+
+    @classmethod
+    def _read_tld_seed_file(cls) -> Set[str]:
+        """Read TLD seed list from seed file."""
+        seed_file = "sectools/tld_seed.txt"
+        conf_file = pkg_resources.resource_filename("msticpy", seed_file)
+        if not Path(conf_file).is_file():
+            conf_file = pkg_resources.resource_filename(
+                "msticpy", "msticpy/" + seed_file
+            )
+        if not Path(conf_file).is_file():
+            # if all else fails we try to find the package default config somewhere
+            # in the package tree - we use the first one we find
+            pkg_paths = sys.modules["msticpy"]
+            if pkg_paths:
+                conf_file = next(Path(pkg_paths.__path__[0]).glob(seed_file))
+
+        if conf_file:
+            with open(conf_file, "r") as file_handle:
+                tld_txt = file_handle.read()
+                tld_set = set(tld_txt.split("\n"))
+            return tld_set
+        return set()
+
+    @classmethod
+    def _write_tld_seed_file(cls):
+        """Write existing TLD list to a text file."""
+        if cls.tld_index:
+            seed_file = "tld_seed.txt"
+            with open(seed_file, "w") as file_handle:
+                file_handle.write("\n".join(sorted(cls.tld_index)))
 
     def _domain_has_valid_tld(self, domain: str) -> bool:
         """

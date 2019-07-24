@@ -101,6 +101,25 @@ class TILookup:
         ]
         return prim + sec
 
+    def provider_usage(self):
+        """Print usage of loaded providers."""
+        print("Primary providers")
+        print("-----------------")
+        if self._providers:
+            for prov_name, prov in self._providers.items():
+                print(f"\nProvider class: {prov_name}")
+                prov.usage()
+        else:
+            print("none")
+        print("\nSecondary providers")
+        print("-------------------")
+        if self._secondary_providers:
+            for prov_name, prov in self._secondary_providers.items():
+                print(f"\nProvider class: {prov_name}")
+                prov.usage()
+        else:
+            print("none")
+
     @classmethod
     def reload_provider_settings(cls):
         """Reload provider settings from config."""

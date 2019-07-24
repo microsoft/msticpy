@@ -95,13 +95,15 @@ def _get_default_config():
     # pkgpath/filename.yaml. So we test it as we go
     conf_file = pkg_resources.resource_filename("msticpy", _CONFIG_FILE)
     if not Path(conf_file).is_file():
-        conf_file = pkg_resources.resource_filename("msticpy", "msticpy/" + _CONFIG_FILE)
+        conf_file = pkg_resources.resource_filename(
+            "msticpy", "msticpy/" + _CONFIG_FILE
+        )
     if not Path(conf_file).is_file():
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
         pkg_paths = sys.modules["msticpy"]
         if pkg_paths:
-            conf_file = next(Path(pkg_paths[0]).glob(_CONFIG_FILE))
+            conf_file = next(Path(pkg_paths.__path__[0][0]).glob(_CONFIG_FILE))
     if conf_file:
         return _read_config_file(conf_file)
     return {}

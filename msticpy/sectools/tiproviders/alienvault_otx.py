@@ -42,12 +42,18 @@ class OTX(HttpProvider):
     _IOC_QUERIES = {
         "ipv4": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/general"),
         "ipv6": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/general"),
-        "ipv4-passivedns": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/passive_dns"),
-        "ipv6-passivedns": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/passive_dns"),
+        "ipv4-passivedns": _OTXParams(
+            path="/api/v1/indicators/IPv4/{observable}/passive_dns"
+        ),
+        "ipv6-passivedns": _OTXParams(
+            path="/api/v1/indicators/IPv6/{observable}/passive_dns"
+        ),
         "ipv4-geo": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/geo"),
         "ipv6-geo": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/geo"),
         "dns": _OTXParams(path="/api/v1/indicators/domain/{observable}/general"),
-        "dns-passivedns": _OTXParams(path="/api/v1/indicators/domain/{observable}/passive_dns"),
+        "dns-passivedns": _OTXParams(
+            path="/api/v1/indicators/domain/{observable}/passive_dns"
+        ),
         "dns-geo": _OTXParams(path="/api/v1/indicators/domain/{observable}/geo"),
         "hostname": _OTXParams(path="/api/v1/indicators/hostname/{observable}/general"),
         "file_hash": _OTXParams(path="/api/v1/indicators/file/{observable}/general"),
@@ -79,12 +85,15 @@ class OTX(HttpProvider):
             return False, "Not found."
         if "pulse_info" in response.raw_result:
             pulses = response.raw_result["pulse_info"].get("pulses", {})
-            return True, {
-                "pulse_count": len(pulses),
-                "names": [p.get("name") for p in pulses],
-                "tags": [p.get("tags") for p in pulses],
-                "references": [p.get("references") for p in pulses],
-            }
+            return (
+                True,
+                {
+                    "pulse_count": len(pulses),
+                    "names": [p.get("name") for p in pulses],
+                    "tags": [p.get("tags") for p in pulses],
+                    "references": [p.get("references") for p in pulses],
+                },
+            )
         if not response.query_subtype:
             return True, {}
         return False, {}

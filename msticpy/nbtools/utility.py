@@ -6,7 +6,6 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
-import warnings
 from typing import Callable, Optional, Any
 
 from IPython.core.display import display, HTML
@@ -167,29 +166,3 @@ def get_notebook_query_string():
     </script>
     """
     )
-
-
-def deprecated(message: str) -> Callable:
-    """
-    Decorate function to issue deprecation warning.
-
-    Parameters
-    ----------
-    message : str
-        Deprecation warning
-
-    Returns : Callable
-        The decorated function
-
-    """
-
-    def deprecated_decorator(func):
-        def deprecated_func(*args, **kwargs):
-            mssg = f"{func.__name__} is a deprecated function. {message}"
-            warnings.warn(mssg, category=DeprecationWarning, stacklevel=2)
-            warnings.simplefilter("default", DeprecationWarning)
-            return func(*args, **kwargs)
-
-        return deprecated_func
-
-    return deprecated_decorator

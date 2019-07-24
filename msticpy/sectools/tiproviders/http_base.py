@@ -79,16 +79,12 @@ class HttpProvider(TIProvider):
         """
         Lookup a single IoC observable.
 
-        Note: this method uses memoization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
-        the same item.
-
         Parameters
         ----------
         ioc : str
             IoC observable
         ioc_type : str, optional
-            IocType, by default None
+            IocType, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the IoC type
@@ -108,6 +104,12 @@ class HttpProvider(TIProvider):
         NotImplementedError
             If attempting to use an HTTP method or authentication
             protocol that is not supported.
+
+        Notes
+        -----
+        Note: this method uses memoization (lru_cache) to cache results
+        for a particular observable to try avoid repeated network calls for
+        the same item.
 
         """
         err_result = LookupResult(
@@ -221,6 +223,19 @@ class HttpProvider(TIProvider):
             else:
                 raise NotImplementedError(f"Unknown auth type {src.auth_type}")
         return src.verb, req_dict
+
+    @classmethod
+    def usage(cls):
+        """Print usage of provider."""
+        print(f"{cls.__doc__} Supported query types:")
+        for ioc_key in sorted(cls._IOC_QUERIES):
+            ioc_key_elems = ioc_key.split("-", maxsplit=1)
+            if len(ioc_key_elems) == 1:
+                print(f"\tioc_type={ioc_key_elems[0]}")
+            if len(ioc_key_elems) == 2:
+                print(
+                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
+                )
 
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:

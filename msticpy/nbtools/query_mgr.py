@@ -9,7 +9,7 @@ from functools import partial
 import re
 from typing import Union, List, Iterable, Mapping, Dict, Tuple, Any, Optional
 
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 from .query_schema import DataSchema
 from .query_builtin_queries import query_definitions

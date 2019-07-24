@@ -218,6 +218,11 @@ class TIProvider(ABC):
         """
         return ioc_type in IoCType.__members__ and ioc_type != "unknown"
 
+    @classmethod
+    @abc.abstractmethod
+    def usage(cls):
+        """Print usage of provider."""
+
     def is_supported_type(self, ioc_type: Union[str, IoCType]) -> bool:
         """
         Return True if the passed type is supported.

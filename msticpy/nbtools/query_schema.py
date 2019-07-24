@@ -9,8 +9,7 @@ eventschema.
 Module for DataSchema class
 """
 from typing import Dict
-
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 from .query_defns import DataFamily, DataEnvironment
 from .utility import export
@@ -20,7 +19,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
+# @deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 class DataSchema:
     """DataSchema class for Log Analytics Queries."""

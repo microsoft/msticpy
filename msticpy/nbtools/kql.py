@@ -6,12 +6,11 @@
 """KQL Helper functions."""
 import sys
 from functools import partial
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Any
 
 import pandas as pd
-from deprecated import deprecated
 from IPython import get_ipython
-from Kqlmagic import results
+from deprecated.sphinx import deprecated
 
 from .query_builtin_queries import query_definitions
 
@@ -88,7 +87,7 @@ def _is_kqlmagic_loaded() -> bool:
 @export
 def exec_query(
     query_name: str, **kwargs
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]]:
+) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Any]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 
@@ -186,7 +185,7 @@ def show_filled_query(query_name: str, **kwargs) -> str:
 
 @deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
-def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.ResultSet]:
+def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], Any]:
     """
     Execute query string and return DataFrame of results.
 
