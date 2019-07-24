@@ -5,6 +5,6 @@
 # --------------------------------------------------------------------------
 """Data provider sub-package."""
 # flake8: noqa: F403
-from . driver_base import DriverBase
-from . kql_driver import KqlDriver
-from . security_graph_driver import SecurityGraphDriver
+from .driver_base import DriverBase
+from .kql_driver import KqlDriver
+from .security_graph_driver import SecurityGraphDriver
