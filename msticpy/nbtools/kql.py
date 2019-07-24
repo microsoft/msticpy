@@ -16,13 +16,13 @@ from .query_builtin_queries import query_definitions
 
 # pylint: disable=locally-disabled, unused-import
 # (list_queries not used here but want to bring in into module namespace)
-from .query_mgr import (
+from .query_mgr import (  # noqa: F401
     replace_prov_query_params,
-    list_queries,  # noqa: F401
+    list_queries,
     clean_kql_query,
     query_help,
     print_kql,
-)  # noqa: F401
+)
 
 # pylint: enable=locally-disabled, unused-import
 from .utility import export

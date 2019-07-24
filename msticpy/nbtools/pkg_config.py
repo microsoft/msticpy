@@ -136,5 +136,6 @@ def _get_top_module():
             break
     return top_module
 
+
 # read initial config when first imported.
 refresh_config()
