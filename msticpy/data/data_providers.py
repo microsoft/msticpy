@@ -6,11 +6,7 @@
 """Data provider loader."""
 from functools import partial
 from os import path
-<<<<<<< HEAD
 from typing import Union, Any, List
-=======
-from typing import Union, Any
->>>>>>> DataLibrary
 
 import pandas as pd
 
@@ -57,11 +53,7 @@ class QueryProvider:
     """
 
     def __init__(
-<<<<<<< HEAD
         self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None, query_path: str = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
-=======
-        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
->>>>>>> DataLibrary
     ):
         """
         Query provider interface to queries.
@@ -74,12 +66,9 @@ class QueryProvider:
             Override the builtin driver (query execution class)
             and use your own driver (must inherit from
             `DriverBase`)
-<<<<<<< HEAD
         query_path: str, optional
             Override the default location for query files to import
             a custom set of query definitions at initialization.
-=======
->>>>>>> DataLibrary
 
         See Also
         --------
@@ -103,12 +92,6 @@ class QueryProvider:
 
         self._query_provider = driver
 
-<<<<<<< HEAD
-=======
-        # Find the path of this module and build sub-path
-        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
-
->>>>>>> DataLibrary
         # Load data query definitions for environment
         data_environments = QueryStore.import_files(
             source_path=query_path, recursive=True
@@ -141,10 +124,7 @@ class QueryProvider:
 
         """
         self._query_store.import_file(query_file)
-<<<<<<< HEAD
         self._add_query_functions()
-=======
->>>>>>> DataLibrary
 
     def list_queries(self):
         """
@@ -158,7 +138,6 @@ class QueryProvider:
         """
         return self._query_store.query_names
 
-<<<<<<< HEAD
     @classmethod
     def list_data_environments(cls) -> List[str]:
         """
@@ -172,8 +151,6 @@ class QueryProvider:
         """
         return list(DataEnvironment.__members__)
 
-=======
->>>>>>> DataLibrary
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
@@ -223,7 +200,6 @@ class QueryProvider:
 
             setattr(query_family, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
-<<<<<<< HEAD
 
     def run_query(self, query: str) -> pd.DataFrame:
         """
@@ -240,5 +216,3 @@ class QueryProvider:
             Query results - a DataFrame of results
         """
         return self._query_provider.query(query)
-=======
->>>>>>> DataLibrary
