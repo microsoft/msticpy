@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  description: Linux Syslog Queries
+  description: Linux Syslog Host Activity Queries
   data_environments: [LogAnalytics]
   data_families: [LinuxSyslog]
   tags: ['linux', 'syslog']
@@ -54,11 +54,17 @@ sources:
         | where Computer == "{host_name}"
         | where ProcessName == "sudo"
         | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
-        | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)'
+        | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
+        | where SyslogMessage contains "{user}" or Sudoer contains "{user}" or SyslogMessage contains "session closed for user root"'
     parameters:
       host_name:
         description: Hostname to query for
         type: str
+        default: ''
+      user:
+        description: Username to filter the search by
+        type: str
+        default: ''
   cron_activity:
     description: All cron activity
     args:
@@ -86,7 +92,7 @@ sources:
         | where Facility == "authpriv"
         | extend UserGroupAction = iif((ProcessName == "groupadd" or ProcessName == "useradd") and (SyslogMessage contains "new group" or SyslogMessage contains "new user"), "Add",
                                     iif((ProcessName == "groupdel" or ProcessName == "userdel") and (SyslogMessage contains "delete user" or SyslogMessage matches regex "(removed group|removed$)"), "Delete",
-                                        iif(ProcessName == "usermod", "Modify", "")    
+                                    iif(ProcessName == "usermod" or ProcessName == "gpasswd", "Modify", "")    
                                         ) 
                                     )
         | extend User=extract("(user: name=|user '')([[:alnum:]]+)",2,SyslogMessage), Group=extract("(group: name=|group '')([[:alnum:]]+)",2,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)
@@ -107,5 +113,4 @@ sources:
     parameters:
       host_name:
         description: Hostname to query for
-        type: str 
-  
+        type: str
