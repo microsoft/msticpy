@@ -127,13 +127,8 @@ class TestDataQuery(unittest.TestCase):
 
         # pick one item and check properties
         get_alert_q = q_sources['SecurityGraphAlert']['get_alert']
-<<<<<<< HEAD
         self.assertEqual(len(get_alert_q.default_params), 6)
         self.assertEqual(len(get_alert_q.params), 7)
-=======
-        self.assertEqual(len(get_alert_q.default_params), 7)
-        self.assertEqual(len(get_alert_q.params), 8)
->>>>>>> DataLibrary
         self.assertEqual(len(get_alert_q.required_params), 1)
         self.assertEqual(len(get_alert_q.metadata), 6)
         self.assertIn('data_families', get_alert_q.metadata)
