@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  description: Linux Syslog Queries
+  description: Linux Syslog Logon Data Queries
   data_environments: [LogAnalytics]
   data_families: [LinuxSyslog]
   tags: ['linux', 'syslog']
@@ -18,6 +18,10 @@ defaults:
       end:
         description: Query end time
         type: datetime
+      user:
+        description: Optional user to filter on
+        type: str
+        default: ''
       add_query_items:
         description: Additional query clauses
         type: str
@@ -66,10 +70,11 @@ sources:
                                  "Failure", 
                                  iif(
                                                 SyslogMessage contains "Accepted" or 
-                                                (ProcessName == "su" and SyslogMessage contains "Successful"), "Sucess", "Unknown"
+                                                (ProcessName == "su" and SyslogMessage contains "Successful"), "Success", "Unknown"
                                     )
                                 )
-        | extend User = extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)'
+        | extend User = iif(SyslogMessage contains "publickey", extract("(for )([[:alnum:]]+)",2,SyslogMessage), extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
+        | where User contains "{user}"'
     parameters:
       host_name:
         description: Hostname to query for
