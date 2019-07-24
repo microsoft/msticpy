@@ -53,7 +53,10 @@ class QueryProvider:
     """
 
     def __init__(
-        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None, query_path: str = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
+        self,
+        data_environment: Union[str, DataEnvironment],
+        driver: DriverBase = None,
+        query_path: str = path.join(path.dirname(__file__), _QUERY_DEF_DIR),
     ):
         """
         Query provider interface to queries.
