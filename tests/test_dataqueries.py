@@ -6,7 +6,6 @@
 """datq query test class."""
 import unittest
 from functools import partial
-import json
 import os
 from pathlib import Path
 from typing import Union, Any, Tuple
