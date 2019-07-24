@@ -20,7 +20,7 @@ from .query_mgr import (
     replace_prov_query_params,
     list_queries,  # noqa: F401
     clean_kql_query,
-    query_help,
+    query_help, # noqa: F401
     print_kql,
 )  # noqa: F401
 
