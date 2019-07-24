@@ -14,31 +14,24 @@ requests per minute for the account type that you have.
 """
 import abc
 from abc import ABC
-from collections import namedtuple, Counter
-
-# import json
-# from json import JSONDecodeError
-from functools import singledispatch
 import math
 import re
-from typing import List, Dict, Any, Tuple, Union, Iterable, Set, Optional
+from collections import Counter, namedtuple
 
-# from collections import namedtuple, Counter, abc
+from functools import singledispatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
-
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 import socket
 from socket import gaierror
 
+import attr
 import pandas as pd
-
-# import requests
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
-from ..iocextract import IoCExtract, IoCType
-
-from ...nbtools.utility import export
 from ..._version import VERSION
+from ...nbtools.utility import export
+from ..iocextract import IoCExtract, IoCType
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -47,18 +40,32 @@ __author__ = "Ian Hellen"
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 
-_IOC_EXTRACT = IoCExtract()
-# slightly stricter than normal URL regex to exclude '() from host string
-_HTTP_STRICT_REGEX = r"""
-    (?P<protocol>(https?|ftp|telnet|ldap|file)://)
-    (?P<userinfo>([a-z0-9-._~!$&*+,;=:]|%[0-9A-F]{2})*@)?
-    (?P<host>([a-z0-9-._~!$&\*+,;=]|%[0-9A-F]{2})*)
-    (:(?P<port>\d*))?
-    (/(?P<path>([^?\#| ]|%[0-9A-F]{2})*))?
-    (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
-    (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
+# pylint: disable=too-few-public-methods
+@attr.s(auto_attribs=True)
+class LookupResult:
+    """Lookup result for IoCs."""
 
-_HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
+    ioc: str
+    ioc_type: str
+    query_subtype: str = None
+    result: bool = False
+    details: Any = None
+    raw_result: Optional[str] = None
+    reference: Optional[str] = None
+    status: int = 0
+
+
+# Mapping for DataFrame columns
+_DF_COLUMNS_MAP: Dict[str, str] = {
+    "ioc": "Ioc",
+    "ioc_type": "IocType",
+    "query_subtype": "QuerySubtype",
+    "result": "Result",
+    "details": "Details",
+    "raw_result": "RawResult",
+    "reference": "Reference",
+    "status": "Status",
+}
 
 
 @export
@@ -71,16 +78,39 @@ class TIProvider(ABC):
     def __init__(self, **kwargs):
         """Initialize the provider."""
         self._supported_types: Set[IoCType] = set()
+        self.description: Optional[str] = None
 
     @abc.abstractmethod
-    def lookup_ioc(self, ioc: str, ioc_type: str = None) -> Tuple[bool, str, str]:
-        """Lookup a single IoC observable."""
+    def lookup_ioc(
+        self, ioc: str, ioc_type: str = None, query_type: str = None
+    ) -> LookupResult:
+        """
+        Lookup a single IoC observable.
+
+        Parameters
+        ----------
+        ioc : str
+            IoC Observable value
+        ioc_type : str, optional
+            IoC Type, by default None (type will be inferred)
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
+
+        Returns
+        -------
+        LookupResult
+            The returned results.
+
+        """
 
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
         obs_col: str = None,
         ioc_type_col: str = None,
+        query_type: str = None,
     ) -> pd.DataFrame:
         """
         Lookup collection of IoC observables.
@@ -97,6 +127,10 @@ class TIProvider(ABC):
             DataFrame column to use for observables, by default None
         ioc_type_col : str, optional
             DataFrame column to use for IoCTypes, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
 
         Returns
         -------
@@ -106,46 +140,31 @@ class TIProvider(ABC):
         """
         results = []
         for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
-            try:
-                item_result = self.lookup_ioc(ioc=observable, ioc_type=ioc_type)
-                results.append(item_result)
-            except NotImplementedError as err:
-                results.append((False, str(err), None))
+            item_result = self.lookup_ioc(
+                ioc=observable, ioc_type=ioc_type, query_type=query_type
+            )
+            results.append(pd.Series(attr.asdict(item_result)))
 
-        return pd.DataFrame(data=results, columns=["Result", "Details", "RawResult"])
-
-    @abc.abstractmethod
-    @staticmethod
-    def get_result(response: Any) -> bool:
-        """
-        Return True if the response indicates a hit.
-
-        Parameters
-        ----------
-        response : Any
-            The returned data response
-
-        Returns
-        -------
-        bool
-            True if a positive match
-
-        """
+        return (
+            pd.DataFrame(data=results)
+            .rename(columns=_DF_COLUMNS_MAP)
+            .drop(columns=["status"])
+        )
 
     @abc.abstractmethod
-    @staticmethod
-    def get_result_details(response: Any) -> Any:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : Any
+        response : LookupResult
             The returned data response
 
         Returns
         -------
-        Any
+        Tuple[bool, Any]
+            bool = positive or negative hit
             Object with match details
 
         """
@@ -216,7 +235,21 @@ class TIProvider(ABC):
         """
         if isinstance(ioc_type, str):
             ioc_type = IoCType.parse(ioc_type)
-        return ioc_type in self._supported_types
+        return ioc_type.name in self.supported_types
+
+
+_IOC_EXTRACT = IoCExtract()
+# slightly stricter than normal URL regex to exclude '() from host string
+_HTTP_STRICT_REGEX = r"""
+    (?P<protocol>(https?|ftp|telnet|ldap|file)://)
+    (?P<userinfo>([a-z0-9-._~!$&*+,;=:]|%[0-9A-F]{2})*@)?
+    (?P<host>([a-z0-9-._~!$&\*+,;=]|%[0-9A-F]{2})*)
+    (:(?P<port>\d*))?
+    (/(?P<path>([^?\#| ]|%[0-9A-F]{2})*))?
+    (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
+    (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
+
+_HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
 
 
 # pylint: disable=too-many-return-statements
@@ -228,7 +261,11 @@ def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
         :param ioc_type: the IoC type
     """
     observable = observable.strip()
-    if not _IOC_EXTRACT.validate(observable, ioc_type):
+    try:
+        validated = _IOC_EXTRACT.validate(observable, ioc_type)
+    except KeyError:
+        validated = False
+    if not validated:
         return SanitizedObservable(
             None, "Observable does not match expected pattern for " + ioc_type
         )
@@ -238,9 +275,9 @@ def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
         return _preprocess_ip(observable, version=4)
     if ioc_type == "ipv6":
         return _preprocess_ip(observable, version=6)
-    if ioc_type == "dns":
+    if ioc_type in ["dns", "hostname"]:
         return _preprocess_dns(observable)
-    if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash"]:
+    if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash", "file_hash"]:
         return _preprocess_hash(observable)
     return SanitizedObservable(observable, "ok")
 
@@ -417,7 +454,7 @@ def generate_items(
     data: Any, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
 ) -> Tuple[str, str]:
     """
-    Generator of item pairs from different input types.
+    Generate item pairs from different input types.
 
     Parameters
     ----------
@@ -433,7 +470,10 @@ def generate_items(
     Tuple[str, str] - a tuple of Observable/Type.
 
     """
-    del data, obs_col, ioc_type_col
+    del obs_col, ioc_type_col
+    if isinstance(data, Iterable):
+        for item in data:
+            yield item, None
     yield None, None
 
 
@@ -450,11 +490,3 @@ def _(data: pd.DataFrame, obs_col: str, ioc_type_col: Optional[str] = None):
 def _(data: dict, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None):
     for obs, ioc_type in data.items():
         yield obs, ioc_type
-
-
-@generate_items.register(Iterable)
-def _(
-    data: Iterable, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
-):
-    for item in data:
-        yield item, None

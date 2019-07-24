@@ -1,0 +1,2 @@
+include msticpy/data/queries/*.yaml
+include msticpy/msticpyconfig.yaml

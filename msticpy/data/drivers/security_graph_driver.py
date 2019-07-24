@@ -56,7 +56,7 @@ class SecurityGraphDriver(DriverBase):
         self._loaded = True
         self.aad_token = None
         self.req_headers = None
-        self.api_root = ''
+        self.api_root = ""
         self._debug = kwargs.get("debug", False)
 
         if connection_str:
@@ -132,7 +132,7 @@ class SecurityGraphDriver(DriverBase):
         """
         return self.query_with_results(query)[0]
 
-# pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -186,7 +186,8 @@ class SecurityGraphDriver(DriverBase):
             print("Warning - query did not return any results.")
             return None, json_response
         return pd.io.json.json_normalize(result), result
-# pylint: enable=too-many-branches
+
+    # pylint: enable=too-many-branches
 
     @staticmethod
     def _parse_connection_str(connection_str: str) -> Dict[str, str]:

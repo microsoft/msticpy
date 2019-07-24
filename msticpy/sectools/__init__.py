@@ -7,4 +7,4 @@
 
 # flake8: noqa: F403
 # pylint: disable=W0401
-from . iocextract import IoCExtract
+from .iocextract import IoCExtract

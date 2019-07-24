@@ -1,13 +1,39 @@
 QueryDefinitions:
-  Default:
-    - "msticpy/data/queries"
   Custom:
-    - ""
+    - "tests/testdata"
+    - "tests"
 TIProviders:
   OTX:
-    ApiID: "123456789"
-    AuthKey: "987654321"
+    Args:
+      ApiID: "123456789"
+      AuthKey: "987654321"
     Primary: True
-    Provider: "OTX"
+    Provider: "OTX" # Explicitly name provider to override
+    LookupCategories:
+      - IPv4
+      - FileHash
+      - Public
   VirusTotal:
+    Args:
+      ApiID:
+        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+      AuthKey:
+        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+    Primary: True
+    Provider: "VirusTotal"
+  XForce:
+    Args:
+      ApiID:
+        EnvironmentVar: "XFORCE_ID"
+      AuthKey:
+        EnvironmentVar: "XFORCE_KEY"
+    Primary: False
+    Provider: "XForce"
   AzureSentinel:
+    Args:
+      ApiID:
+        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+      AuthKey:
+        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+    Primary: True
+    Provider: "BYOTI"

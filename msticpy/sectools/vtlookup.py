@@ -22,18 +22,11 @@ for the account type that you have. Support IoC Types:
 # pylint: disable=too-many-lines
 import json
 from json import JSONDecodeError
-import math
-import re
 from typing import List, Mapping, Any, Dict, Optional, Tuple
-from collections import namedtuple, Counter
-from ipaddress import IPv4Address, ip_address
-import socket
-from socket import gaierror
+from collections import namedtuple
 
 import pandas as pd
 import requests
-from urllib3.exceptions import LocationParseError
-from urllib3.util import parse_url
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable

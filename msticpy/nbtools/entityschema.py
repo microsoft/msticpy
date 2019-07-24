@@ -95,7 +95,7 @@ class Entity(ABC):
                 try:
                     # If the property is an enum
                     if v in _ENTITY_ENUMS:
-                        self[k] = _ENTITY_ENUMS[v](src_entity[k])
+                        self[k] = _ENTITY_ENUMS[v][src_entity[k]]
                         continue
                 except KeyError:
                     # Catch key errors from invalid enum values
@@ -184,7 +184,7 @@ class Entity(ABC):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith('_')
+            if not name.startswith("_")
         }
 
     @property

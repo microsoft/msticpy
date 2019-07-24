@@ -60,6 +60,7 @@ class IoCType(Enum):
     email = "email"
     windows_path = "windows_path"
     linux_path = "linux_path"
+    hostname = "hostname"
 
     @classmethod
     def parse(cls, value: str) -> "IoCType":
@@ -115,7 +116,7 @@ class IoCExtract:
 
     IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
     IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])"
-    DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){2,}[a-z]{2,63}"
+    DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){1,126}[a-z]{2,63}"
     # dns_regex =
     #   '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
 
@@ -171,8 +172,9 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
-    # Public members
+        self.tld_index = self.get_tlds()
 
+    # Public members
     def add_ioc_type(
         self, ioc_type: str, ioc_regex: str, priority: int = 0, group: str = None
     ):
@@ -334,7 +336,7 @@ class IoCExtract:
         result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
         return result_frame
 
-# pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     def _search_in_row(
         self,
         datarow: pd.Series,
@@ -457,14 +459,47 @@ class IoCExtract:
             True if match.
 
         """
-        if ioc_type not in self._content_regex:
+        if ioc_type == IoCType.file_hash.name:
+            val_type = self.file_hash_type(input_str).name
+        elif ioc_type == IoCType.hostname.name:
+            val_type = "dns"
+        else:
+            val_type = ioc_type
+        if val_type not in self._content_regex:
             raise KeyError(
                 "Unknown type {}. Valid types are: {}".format(
                     ioc_type, list(self._content_regex.keys())
                 )
             )
-        rgx = self._content_regex[ioc_type]
-        return rgx.comp_regex.fullmatch(input_str) is not None
+        rgx = self._content_regex[val_type]
+        pattern_match = rgx.comp_regex.fullmatch(input_str)
+        if val_type == "dns":
+            return self._domain_has_valid_tld(input_str) and pattern_match
+        return pattern_match is not None
+
+    @staticmethod
+    def file_hash_type(file_hash: str) -> IoCType:
+        """
+        Return specific IoCType based on hash length.
+
+        Parameters
+        ----------
+        file_hash : str
+            File hash string
+
+        Returns
+        -------
+        IoCType
+            Specific hash type or unknown.
+
+        """
+        hashsize_map = {
+            32: IoCType.md5_hash,
+            40: IoCType.sha1_hash,
+            64: IoCType.sha256_hash,
+        }
+        hashsize = len(file_hash.strip())
+        return hashsize_map.get(hashsize, IoCType.unknown)
 
     def get_ioc_type(self, observable: str) -> str:
         """
@@ -490,12 +525,57 @@ class IoCExtract:
             if not results:
                 return IoCType.unknown.name
 
-        # get the first value in results
-        first_match = next(iter(results.values()))
-        if not first_match:
+        if not results:
             return IoCType.unknown.name
-        # return the first item in the results set
-        return next(iter(first_match))
+        if len(results) == 1:
+            return next(iter(results))
+
+        # if more than one type, return the longest matching item in the results set
+        max_len = 0
+        max_len_type = ""
+        for i_type, s_set in results.items():
+            longest = sorted(s_set, key=len, reverse=True)[0]
+            if len(longest) > max_len:
+                max_len = len(longest)
+                max_len_type = i_type
+        return max_len_type
+
+    @classmethod
+    def get_tlds(cls) -> Set[str]:
+        """
+        Return IANA Top Level Domains.
+
+        Returns
+        -------
+        Set[str]
+            Set of top level domains.
+
+        """
+        tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
+        temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
+        return set(temp_df["TLD"])
+
+    def _domain_has_valid_tld(self, domain: str) -> bool:
+        """
+        Return True if last component of `domain` is a valid TLD.
+
+        Parameters
+        ----------
+        domain : str
+            Domain string to test
+
+        Returns
+        -------
+        bool
+            True if valid Top Level Domain
+
+        """
+        if not self.tld_index:
+            self.tld_index = self.get_tlds()
+        if not self.tld_index:
+            return True
+        dom_suffix = domain.split(".")[-1].upper()
+        return dom_suffix in self.tld_index
 
     # Private methods
     def _scan_for_iocs(
@@ -526,6 +606,9 @@ class IoCExtract:
                     else rgx_match.group()
                 )
 
+                if ioc_type == "dns" and not self._domain_has_valid_tld(match_str):
+                    continue
+
                 self._add_highest_pri_match(iocs_found, match_str, rgx_def)
                 if ioc_type == "url":
                     self._check_decode_url(match_str, rgx_def, match_pos, iocs_found)
@@ -539,13 +622,9 @@ class IoCExtract:
     def _check_decode_url(self, match_str, rgx_def, match_pos, iocs_found):
         """Get any other IoCs from decoded URL."""
         decoded_url = unquote(match_str)
-        for url_match in rgx_def.comp_regex.finditer(
-            decoded_url, match_pos
-        ):
+        for url_match in rgx_def.comp_regex.finditer(decoded_url, match_pos):
             if url_match is not None:
-                self._add_highest_pri_match(
-                    iocs_found, url_match.group(), rgx_def
-                )
+                self._add_highest_pri_match(iocs_found, url_match.group(), rgx_def)
                 self._add_highest_pri_match(
                     iocs_found,
                     url_match.groupdict()["host"],

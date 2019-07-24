@@ -12,28 +12,26 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import List, Optional, Tuple, Dict, Any
-
+import abc
 from functools import lru_cache
-
-# from socket import gaierror
+from json import JSONDecodeError
+import traceback
+from typing import Any, Dict, List, Tuple
 
 import attr
 from attr import Factory
 import requests
-from requests.exceptions import HTTPError
 
-# from urllib3.exceptions import LocationParseError
-# from urllib3.util import parse_url
-
-from .ti_provider_base import TIProvider, preprocess_observable
-from ...nbtools.utility import export
 from ..._version import VERSION
+from ...nbtools.utility import export
+from ..iocextract import IoCType
+from .ti_provider_base import LookupResult, TIProvider, preprocess_observable
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
 class IoCLookupParams:
     """IoC HTTP Lookup Params definition."""
@@ -46,11 +44,12 @@ class IoCLookupParams:
     data: Dict[str, str] = Factory(dict)
     auth_type: str = ""
     auth_str: List[str] = Factory(list)
+    sub_type: str = ""
 
 
 @export
 class HttpProvider(TIProvider):
-    """AlientVault OTX Lookup."""
+    """HTTP TI provider base class."""
 
     _BASE_URL = ""
 
@@ -60,17 +59,23 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
+        self._supported_types = {
+            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
+        }
+        if IoCType.unknown in self._supported_types:
+            self._supported_types.remove(IoCType.unknown)
+
         self._requests_session = requests.Session()
         self._request_params = {}
-        if "api_key" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("api_key")
-        if "api_pwd" in kwargs:
-            self._request_params["API_PWD"] = kwargs.pop("api_pwd")
+        if "ApiID" in kwargs:
+            self._request_params["API_ID"] = kwargs.pop("ApiID")
+        if "AuthKey" in kwargs:
+            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=256)
     def lookup_ioc(
-        self, ioc: str, ioc_type: str = None
-    ) -> Tuple[bool, Any, Optional[str]]:
+        self, ioc: str, ioc_type: str = None, query_type: str = None
+    ) -> LookupResult:
         """
         Lookup a single IoC observable.
 
@@ -84,14 +89,19 @@ class HttpProvider(TIProvider):
             IoC observable
         ioc_type : str, optional
             IocType, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
 
         Returns
         -------
-        Tuple[bool, Any, Optional[str]
+        LookupResult
             The lookup result:
-            Positive/Negative,
-            Lookup Details (or status if failure),
-            Raw Response
+            result - Positive/Negative,
+            details - Lookup Details (or status if failure),
+            raw_result - Raw Response
+            reference - URL of IoC
 
         Raises
         ------
@@ -100,29 +110,58 @@ class HttpProvider(TIProvider):
             protocol that is not supported.
 
         """
+        err_result = LookupResult(
+            ioc=ioc,
+            ioc_type=ioc_type,
+            query_subtype=query_type,
+            result=False,
+            details="",
+            raw_result=None,
+            reference=None,
+        )
+
         if not ioc_type:
             ioc_type = self.resolve_ioc_type(ioc)
         if not self.is_supported_type(ioc_type):
-            return False, f"IoC type {ioc_type} not supported.", None
+            err_result.details = f"IoC type {ioc_type} not supported."
+            return err_result
 
         clean_ioc = preprocess_observable(ioc, ioc_type)
         if clean_ioc.status != "ok":
-            return False, clean_ioc.status, None, None
+            err_result.details = clean_ioc.status
+            return err_result
 
-        verb, req_params = self._substitute_parms(clean_ioc.observable, ioc_type)
         try:
+            verb, req_params = self._substitute_parms(
+                clean_ioc.observable, ioc_type, query_type
+            )
             if verb == "GET":
                 response = self._requests_session.get(**req_params)
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
-            results = response.json()
-            verdict = self.get_result(results)
-            desc = self.get_result_details(results)
-            return verdict, desc, results
-        except HTTPError as http_err:
-            return False, str(http_err), str(http_err)
+            result = LookupResult(ioc=ioc, ioc_type=ioc_type, query_subtype=query_type)
+            result.raw_result = response.json()
+            result.status = response.status_code
+            result.result, result.details = self.parse_results(result)
+            result.reference = req_params["url"]
+            return result
+        except (
+            LookupError,
+            JSONDecodeError,
+            NotImplementedError,
+            ConnectionError,
+        ) as err:
+            url = req_params.get("url", None) if req_params else None
+            err_result.details = err.args
+            err_result.raw_result = (
+                type(err) + "\n" + str(err) + "\n" + traceback.format_exc()
+            )
+            err_result.reference = url
+            return err_result
 
-    def _substitute_parms(self, ioc: str, ioc_type: str) -> Tuple[str, Dict[str, Any]]:
+    def _substitute_parms(
+        self, ioc: str, ioc_type: str, query_type: str = None
+    ) -> Tuple[str, Dict[str, Any]]:
         """
         Create requests parameters collection.
 
@@ -132,6 +171,10 @@ class HttpProvider(TIProvider):
             IoC observable
         ioc_type : str, optional
             IocType, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
 
         Returns
         -------
@@ -141,7 +184,14 @@ class HttpProvider(TIProvider):
         """
         req_params = {"observable": ioc}
         req_params.update(self._request_params)
-        src = self._IOC_QUERIES[ioc_type]
+        if query_type:
+            ioc_key = ioc_type + "-" + query_type
+        else:
+            ioc_key = ioc_type
+
+        src = self._IOC_QUERIES.get(ioc_key, None)
+        if not src:
+            raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         # create a parameter dictionary to pass to requests
         req_dict = {}
@@ -172,38 +222,20 @@ class HttpProvider(TIProvider):
                 raise NotImplementedError(f"Unknown auth type {src.auth_type}")
         return src.verb, req_dict
 
-    @staticmethod
-    def get_result(response: Any) -> bool:
-        """
-        Return True if the response indicates a hit.
-
-        Parameters
-        ----------
-        response : Any
-            The returned data response
-
-        Returns
-        -------
-        bool
-            True if a positive match
-
-        """
-        return False
-
-    @staticmethod
-    def get_result_details(response: Any) -> Any:
+    @abc.abstractmethod
+    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : Any
+        response : LookupResult
             The returned data response
 
         Returns
         -------
-        Any
+        Tuple[bool, Any]
+            bool = positive or negative hit
             Object with match details
 
         """
-        return None
