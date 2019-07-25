@@ -57,7 +57,9 @@ class TestDataQuery(unittest.TestCase):
 
     def test_load_kql_query_defs(self):
 
-        la_provider = QueryProvider(data_environment="LogAnalytics", driver=self.provider)
+        la_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=self.provider
+        )
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
         #                           la_provider     driver='dummy')
 
@@ -80,11 +82,15 @@ class TestDataQuery(unittest.TestCase):
 
     def test_query_create_funcs(self):
 
-        la_provider = QueryProvider(data_environment="LogAnalytics", driver=self.provider)
+        la_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=self.provider
+        )
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
         #                           la_provider     driver='dummy')
 
-        all_queries = [q for q in dir(la_provider.all_queries) if not q.startswith("__")]
+        all_queries = [
+            q for q in dir(la_provider.all_queries) if not q.startswith("__")
+        ]
         winsec_queries = [
             q for q in dir(la_provider.WindowsSecurity) if not q.startswith("__")
         ]
@@ -103,7 +109,9 @@ class TestDataQuery(unittest.TestCase):
 
     def test_load_query_exec(self):
 
-        la_provider = QueryProvider(data_environment="LogAnalytics", driver=self.provider)
+        la_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=self.provider
+        )
         # graph_provider = QueryProvider(data_environment = 'SecurityGraph',
         #                           la_provider     driver='dummy')
 
@@ -169,7 +177,9 @@ class TestDataQuery(unittest.TestCase):
         self.assertIn("/foo", df["query"].iloc[0])
 
     def test_load_yaml_def(self):
-        la_provider = QueryProvider(data_environment="LogAnalytics", driver=self.provider)
+        la_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=self.provider
+        )
         with self.assertRaises((ImportError, ValueError)) as cm:
             file_path = Path(_TEST_DATA, "data_q_meta_fail.yaml")
             la_provider.import_query_file(query_file=file_path)

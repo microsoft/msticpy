@@ -14,7 +14,6 @@ requests per minute for the account type that you have.
 """
 from typing import Any, Tuple
 
-# pylint: disable=duplicate-code
 from .ti_provider_base import LookupResult
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
@@ -22,7 +21,6 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-# pylint: enable=duplicate-code
 
 
 _DEF_HEADERS = {"User-Agent": "VirusTotal", "Content-Type": "application/json"}

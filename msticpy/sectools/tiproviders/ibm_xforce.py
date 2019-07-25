@@ -16,7 +16,6 @@ from typing import Any, Tuple
 
 import attr
 
-# pylint: disable=duplicate-code
 from .ti_provider_base import LookupResult
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
@@ -24,7 +23,6 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-# pylint: enable=duplicate-code
 
 
 # pylint: disable=too-few-public-methods

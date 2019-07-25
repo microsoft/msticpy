@@ -36,9 +36,9 @@ def identify_outliers(
 
     Arguments
     ---------
-    X : np.ndarray
+    x : np.ndarray
             Input data
-    X_predict : np.ndarray
+    x_predict : np.ndarray
         Model (default: {None})
     contamination : float
         Percentage contamination (default: {0.05})
@@ -90,11 +90,11 @@ def plot_outlier_results(
     ----------
     clf : IsolationForest
         Isolation Forest model
-    X : np.ndarray
+    x : np.ndarray
         Input data
-    X_predict : np.ndarray
+    x_predict : np.ndarray
         Prediction
-    X_outliers : np.ndarray
+    x_outliers : np.ndarray
         Set of outliers
     feature_columns : List[int]
         list of feature columns to display
@@ -110,14 +110,14 @@ def plot_outlier_results(
     xx, yy = np.meshgrid(
         np.linspace(x_min_x, x_max_x, 100), np.linspace(x_min_y, x_max_y, 100)
     )
-    Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
+    z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    z = z.reshape(xx.shape)
 
     plt.rcParams["figure.figsize"] = (20, 10)
 
     plt.title(plt_title)
     # pylint: disable=no-member
-    plt.contourf(xx, yy, Z, cmap=plt.cm.Blues_r)
+    plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)
 
     b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
     b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")

@@ -160,7 +160,9 @@ class TILookup:
                 provider=provider_instance, name=provider_name, primary=settings.primary
             )
 
-    def add_provider(self, provider: TIProvider, name: str = None, primary: bool = True):
+    def add_provider(
+        self, provider: TIProvider, name: str = None, primary: bool = True
+    ):
         """
         Add a TI provider to the current collection.
 

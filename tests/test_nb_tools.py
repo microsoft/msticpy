@@ -8,7 +8,14 @@ import unittest
 import json
 import os
 
-from ..msticpy.nbtools.entityschema import Entity, Account, Host, Process, File, IpAddress
+from ..msticpy.nbtools.entityschema import (
+    Entity,
+    Account,
+    Host,
+    Process,
+    File,
+    IpAddress,
+)
 from ..msticpy.nbtools.wsconfig import WorkspaceConfig
 from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment
 
@@ -83,7 +90,9 @@ class Testnbtools(unittest.TestCase):
         # WindowsSecurity = 1
         # LinuxSecurity = 2
         # SecurityAlert = 3
-        self.assertEqual(DataFamily.WindowsSecurity, DataFamily.parse("WindowsSecurity"))
+        self.assertEqual(
+            DataFamily.WindowsSecurity, DataFamily.parse("WindowsSecurity")
+        )
         self.assertEqual(DataFamily.LinuxSecurity, DataFamily.parse("LinuxSecurity"))
         self.assertEqual(DataFamily.SecurityAlert, DataFamily.parse("SecurityAlert"))
         self.assertEqual(DataFamily.WindowsSecurity, DataFamily.parse(1))

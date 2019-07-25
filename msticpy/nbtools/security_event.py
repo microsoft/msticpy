@@ -8,7 +8,6 @@ from typing import List, Dict, Any
 
 import pandas as pd
 
-# pylint: disable=duplicate-code
 from .entityschema import Entity, Host, Process, Account, IpAddress, HostLogonSession
 from .security_base import SecurityBase
 from .utility import export
@@ -16,7 +15,6 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-# pylint: enable=duplicate-code
 
 
 @export

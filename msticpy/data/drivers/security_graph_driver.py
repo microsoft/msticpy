@@ -12,14 +12,12 @@ import requests
 
 import pandas as pd
 
-# pylint: disable=duplicate-code
 from .driver_base import DriverBase
 from ...nbtools.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-# pylint: enable=duplicate-code
 
 _OAUTH_URL = "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
 

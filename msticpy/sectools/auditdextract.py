@@ -358,7 +358,9 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
         data['EventType'] == event_type
 
     """
-    return data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
+    return (
+        data[data["EventType"] == event_type].dropna(axis=1, how="all").infer_objects()
+    )
 
 
 def read_from_file(

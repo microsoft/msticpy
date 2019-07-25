@@ -109,7 +109,9 @@ def add_related_alerts(related_alerts: pd.DataFrame, alertgraph: nx.Graph) -> nx
     related_alerts.apply(lambda x: _add_alert_node(related_alerts_graph, x), axis=1)
     if alert_host_node:
         related_alerts.apply(
-            lambda x: _add_related_alert_edges(related_alerts_graph, x, alert_host_node),
+            lambda x: _add_related_alert_edges(
+                related_alerts_graph, x, alert_host_node
+            ),
             axis=1,
         )
     return related_alerts_graph
@@ -119,14 +121,18 @@ def _add_related_alert_edges(related_alerts_graph, alert_row, default_node):
     related_alert = SecurityAlert(alert_row)
     if related_alert.primary_account is not None:
         acct_node = _find_graph_node(
-            related_alerts_graph, "account", related_alert.primary_account.qualified_name
+            related_alerts_graph,
+            "account",
+            related_alert.primary_account.qualified_name,
         )
         if acct_node is not None:
             _add_related_alert_edge(related_alerts_graph, acct_node, related_alert)
 
     if related_alert.primary_process is not None:
         proc_node = _find_graph_node(
-            related_alerts_graph, "process", related_alert.primary_process.ProcessFilePath
+            related_alerts_graph,
+            "process",
+            related_alert.primary_process.ProcessFilePath,
         )
         if proc_node is not None:
             _add_related_alert_edge(related_alerts_graph, proc_node, related_alert)
@@ -180,7 +186,9 @@ def _add_related_alert_edge(nx_graph, source, target):
         current_count = 0
     current_count += 1
 
-    description = "Related alert: {}  Count:{}".format(target["AlertType"], current_count)
+    description = "Related alert: {}  Count:{}".format(
+        target["AlertType"], current_count
+    )
     node_attrs = {target_node: {"count": current_count, "description": description}}
     nx.set_node_attributes(nx_graph, node_attrs)
     nx_graph.add_edge(source, target_node, weight=0.7, description="Related Alert")
@@ -318,6 +326,8 @@ def _get_host_name_desc(entity, os_family):
         domain_joined = "false"
     if "OSFamily" in entity:
         os_family = entity["OSFamily"]
-    e_description = "{}\n({}, Domain-joined: {})".format(e_name, os_family, domain_joined)
+    e_description = "{}\n({}, Domain-joined: {})".format(
+        e_name, os_family, domain_joined
+    )
 
     return e_name, e_description

@@ -205,10 +205,14 @@ class HttpProvider(TIProvider):
             else src.path.format(observable=ioc)
         )
         if src.headers:
-            headers = {key: val.format(**req_params) for key, val in src.headers.items()}
+            headers = {
+                key: val.format(**req_params) for key, val in src.headers.items()
+            }
             req_dict["headers"] = headers
         if src.params:
-            q_params = {key: val.format(**req_params) for key, val in src.params.items()}
+            q_params = {
+                key: val.format(**req_params) for key, val in src.params.items()
+            }
             req_dict["params"] = q_params
         if src.data:
             q_data = {key: val.format(**req_params) for key, val in src.data.items()}
@@ -230,7 +234,9 @@ class HttpProvider(TIProvider):
             if len(ioc_key_elems) == 1:
                 print(f"\tioc_type={ioc_key_elems[0]}")
             if len(ioc_key_elems) == 2:
-                print(f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}")
+                print(
+                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
+                )
 
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:

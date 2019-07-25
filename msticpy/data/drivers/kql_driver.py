@@ -9,14 +9,12 @@ from typing import Tuple, Union, Any
 import pandas as pd
 from IPython import get_ipython
 
-# pylint: disable=duplicate-code
 from .driver_base import DriverBase
 from ...nbtools.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-# pylint: disable=duplicate-code
 
 
 @export

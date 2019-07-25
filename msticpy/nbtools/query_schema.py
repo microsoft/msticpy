@@ -24,10 +24,9 @@ __author__ = "Ian Hellen"
 class DataSchema:
     """DataSchema class for Log Analytics Queries."""
 
-    DATA_MAPPINGS: Dict[DataEnvironment, Dict[DataFamily, Dict[str, Dict[str, str]]]] = {
-        DataEnvironment.LogAnalytics: {},
-        DataEnvironment.Kusto: {},
-    }
+    DATA_MAPPINGS: Dict[
+        DataEnvironment, Dict[DataFamily, Dict[str, Dict[str, str]]]
+    ] = {DataEnvironment.LogAnalytics: {}, DataEnvironment.Kusto: {}}
     DATA_MAPPINGS[DataEnvironment.LogAnalytics] = {
         DataFamily.WindowsSecurity: {},
         DataFamily.LinuxSecurity: {},

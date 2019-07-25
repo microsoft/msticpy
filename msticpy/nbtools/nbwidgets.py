@@ -270,7 +270,9 @@ class QueryTime(QueryParamProvider):
             description="Origin Date", disabled=False, value=self.origin_time.date()
         )
         self._w_origin_tm = widgets.Text(
-            description="Time (24hr)", disabled=False, value=str(self.origin_time.time())
+            description="Time (24hr)",
+            disabled=False,
+            value=str(self.origin_time.time()),
         )
 
         range_desc = "Time Range ({}):".format(self._time_unit.name)
@@ -314,7 +316,9 @@ class QueryTime(QueryParamProvider):
         display(widgets.HTML("<h4>{}</h4>".format(self._label)))
         display(widgets.HBox([self._w_origin_dt, self._w_origin_tm]))
         display(
-            widgets.VBox([self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt])
+            widgets.VBox(
+                [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+            )
         )
 
     def _update_origin(self, change):
@@ -415,7 +419,12 @@ class AlertSelector(QueryParamProvider):
         self.alert_action = action
 
         if not columns:
-            columns = ["StartTimeUtc", "AlertName", "CompromisedEntity", "SystemAlertId"]
+            columns = [
+                "StartTimeUtc",
+                "AlertName",
+                "CompromisedEntity",
+                "SystemAlertId",
+            ]
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
@@ -726,7 +735,9 @@ class GetEnvironmentKey:
             value=True, description="Save as environment var", disabled=False
         )
         self._w_save_button.on_click(self._on_save_button_clicked)
-        self._hbox = widgets.HBox([self._w_text, self._w_save_button, self._w_check_save])
+        self._hbox = widgets.HBox(
+            [self._w_text, self._w_save_button, self._w_check_save]
+        )
 
         if auto_display:
             self.display()

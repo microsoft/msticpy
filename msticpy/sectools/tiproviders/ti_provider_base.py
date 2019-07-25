@@ -314,7 +314,9 @@ def _preprocess_url(url: str) -> SanitizedObservable:
         if addr.is_private:
             return SanitizedObservable(None, "Host part of URL is a private IP address")
         if addr.is_loopback:
-            return SanitizedObservable(None, "Host part of URL is a loopback IP address")
+            return SanitizedObservable(
+                None, "Host part of URL is a loopback IP address"
+            )
     except ValueError:
         pass
 
@@ -377,7 +379,10 @@ def _clean_url(url: str) -> Optional[str]:
     """
     # Try to clean URL and re-check
     match_url = _HTTP_STRICT_RGXC.search(url)
-    if match_url.groupdict()["protocol"] is None or match_url.groupdict()["host"] is None:
+    if (
+        match_url.groupdict()["protocol"] is None
+        or match_url.groupdict()["host"] is None
+    ):
         return None
 
     # build the URL dropping the query string and fragments
@@ -442,7 +447,10 @@ def entropy(input_str: str) -> float:
     """Compute entropy of input string."""
     str_len = float(len(input_str))
     return -sum(
-        map(lambda a: (a / str_len) * math.log2(a / str_len), Counter(input_str).values())
+        map(
+            lambda a: (a / str_len) * math.log2(a / str_len),
+            Counter(input_str).values(),
+        )
     )
 
 

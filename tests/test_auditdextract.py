@@ -56,7 +56,9 @@ class TestAuditdExtract(unittest.TestCase):
             "Expected EXECVE events",
         )
         self.assertGreaterEqual(
-            len(output_df[output_df["EventType"] == "LOGIN"]), 1, "Expected LOGIN events"
+            len(output_df[output_df["EventType"] == "LOGIN"]),
+            1,
+            "Expected LOGIN events",
         )
         self.assertGreaterEqual(
             len(output_df[output_df["EventType"] == "USER_CMD"]),

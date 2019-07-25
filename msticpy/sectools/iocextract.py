@@ -302,7 +302,9 @@ class IoCExtract:
         include_paths = kwargs.get("include_paths", False)
 
         if src and src.strip():
-            return self._scan_for_iocs(src=src, os_family=os_family, ioc_types=ioc_types)
+            return self._scan_for_iocs(
+                src=src, os_family=os_family, ioc_types=ioc_types
+            )
 
         if data is None:
             raise Exception("No source data was supplied to extract")
@@ -654,7 +656,9 @@ class IoCExtract:
             if url_match is not None:
                 self._add_highest_pri_match(iocs_found, url_match.group(), rgx_def)
                 self._add_highest_pri_match(
-                    iocs_found, url_match.groupdict()["host"], self._content_regex["dns"]
+                    iocs_found,
+                    url_match.groupdict()["host"],
+                    self._content_regex["dns"],
                 )
 
     @staticmethod
