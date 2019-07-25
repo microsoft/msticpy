@@ -24,15 +24,15 @@ else:
 
 
 _TEST_FIELDS = {
-            "caption",
-            "description",
-            "data",
-            "data_type",
-            "link",
-            "score",
-            "tags",
-            "additional_properties",
-        }
+    "caption",
+    "description",
+    "data",
+    "data_type",
+    "link",
+    "score",
+    "tags",
+    "additional_properties",
+}
 
 
 class TestObservations(unittest.TestCase):
