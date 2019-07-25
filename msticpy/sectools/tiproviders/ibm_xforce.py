@@ -16,6 +16,7 @@ from typing import Any, Tuple
 
 import attr
 
+# pylint: disable=duplicate-code
 from .ti_provider_base import LookupResult
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
@@ -23,6 +24,7 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+# pylint: enable=duplicate-code
 
 
 # pylint: disable=too-few-public-methods
@@ -66,6 +68,7 @@ class XForce(HttpProvider):
     _IOC_QUERIES["hostname-whois"] = _IOC_QUERIES["ipv4-whois"]
     _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["ipv4-whois"]
 
+    # pylint: disable=too-many-branches
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
         Return the details of the response.

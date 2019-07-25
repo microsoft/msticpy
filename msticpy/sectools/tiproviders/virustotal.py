@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 from typing import Any, Tuple
 
+# pylint: disable=duplicate-code
 from .ti_provider_base import LookupResult
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
@@ -21,6 +22,7 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+# pylint: enable=duplicate-code
 
 
 _DEF_HEADERS = {"User-Agent": "VirusTotal", "Content-Type": "application/json"}
@@ -57,6 +59,7 @@ class VirusTotal(HttpProvider):
         ),
     }
 
+    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
@@ -113,3 +116,5 @@ class VirusTotal(HttpProvider):
             result_dict["positives"] = positives
 
         return result_dict["positives"] > 0, result_dict
+
+    # pylint: enable=duplicate-code

@@ -30,8 +30,11 @@ class WorkspaceConfig:
         """
         Load current Azure Notebooks configuration for Log Analytics.
 
-        Arguments:
-            config_file {str} -- path to the configuration file.
+        Arguments
+        ---------
+            config_file : str
+                path to the configuration file.
+
         """
         self._config_file = config_file
         self._config = self._read_config_values(config_file)

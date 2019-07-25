@@ -80,9 +80,7 @@ class TestVTLookup(unittest.TestCase):
             result, status = preprocess_observable(test_case[1], "url")
             print(test_case[0], status)
             self.assertEqual(
-                result,
-                test_case[2],
-                f"Failed on test case {test_case} ({test_case[1]})",
+                result, test_case[2], f"Failed on test case {test_case} ({test_case[1]})"
             )
 
     def test_parse_file_results(self):

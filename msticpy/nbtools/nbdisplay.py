@@ -15,12 +15,14 @@ from bokeh.plotting import figure, reset_output
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
 
+# pylint: disable=duplicate-code
 from .security_alert import SecurityAlert
 from .utility import export
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+# pylint: enable=duplicate-code
 
 
 @export
@@ -268,7 +270,7 @@ _WRAP_CMDL = "WrapCmdl"
 # Need to refactor this to allow multiple data sets.
 # pylint: disable=too-many-arguments, too-many-locals
 # pylint: disable=too-many-statements, too-many-branches
-@export
+@export  # noqa: C901, MC0001
 def display_timeline(
     data: pd.DataFrame,
     alert: SecurityAlert = None,
@@ -328,9 +330,7 @@ def display_timeline(
     # if we have an overlay - add this data and shift the y co-ordinates to
     # show on two separate lines
     if overlay_data is not None:
-        overlay_colums = (
-            overlay_colums if overlay_colums is not None else source_columns
-        )
+        overlay_colums = overlay_colums if overlay_colums is not None else source_columns
         if time_column not in overlay_colums:
             overlay_colums.append(time_column)
         if "CommandLine" in overlay_colums:

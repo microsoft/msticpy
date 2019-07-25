@@ -215,6 +215,7 @@ def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], Any]:
     return None, result
 
 
+# pylint: disable=duplicate-code
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
@@ -224,6 +225,9 @@ def _add_queries_to_module(module_name):
         query_func = partial(exec_query, query_name=query_name)
         query_func.__doc__ = exec_query.__doc__
         setattr(module, query_name, query_func)
+
+
+# pylint: enable=duplicate-code
 
 
 # Add all queries defined in builtin queries module as functions

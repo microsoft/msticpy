@@ -63,6 +63,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
     ],
     install_requires=INSTALL_REQUIRES,
     keywords=["security", "azure", "sentinel"],

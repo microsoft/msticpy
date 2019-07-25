@@ -204,9 +204,7 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertEqual(3, len(alert.get_entities_of_type(entity_type="file")))
         self.assertEqual(2, len(alert.get_entities_of_type(entity_type="process")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="filehash")))
-        self.assertEqual(
-            2, len(alert.get_entities_of_type(entity_type="registryvalue"))
-        )
+        self.assertEqual(2, len(alert.get_entities_of_type(entity_type="registryvalue")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="registrykey")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="account")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="host")))

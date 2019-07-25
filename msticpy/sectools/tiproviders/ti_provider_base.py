@@ -257,7 +257,7 @@ _HTTP_STRICT_REGEX = r"""
 _HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
 
 
-# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-return-statements, too-many-branches
 def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
     """
     Preprocesses and checks validity of observable against declared IoC type.
@@ -314,9 +314,7 @@ def _preprocess_url(url: str) -> SanitizedObservable:
         if addr.is_private:
             return SanitizedObservable(None, "Host part of URL is a private IP address")
         if addr.is_loopback:
-            return SanitizedObservable(
-                None, "Host part of URL is a loopback IP address"
-            )
+            return SanitizedObservable(None, "Host part of URL is a loopback IP address")
     except ValueError:
         pass
 
@@ -379,10 +377,7 @@ def _clean_url(url: str) -> Optional[str]:
     """
     # Try to clean URL and re-check
     match_url = _HTTP_STRICT_RGXC.search(url)
-    if (
-        match_url.groupdict()["protocol"] is None
-        or match_url.groupdict()["host"] is None
-    ):
+    if match_url.groupdict()["protocol"] is None or match_url.groupdict()["host"] is None:
         return None
 
     # build the URL dropping the query string and fragments
@@ -447,10 +442,7 @@ def entropy(input_str: str) -> float:
     """Compute entropy of input string."""
     str_len = float(len(input_str))
     return -sum(
-        map(
-            lambda a: (a / str_len) * math.log2(a / str_len),
-            Counter(input_str).values(),
-        )
+        map(lambda a: (a / str_len) * math.log2(a / str_len), Counter(input_str).values())
     )
 
 
@@ -491,7 +483,7 @@ def _(data: pd.DataFrame, obs_col: str, ioc_type_col: Optional[str] = None):
             yield row[obs_col], row[ioc_type_col]
 
 
-@generate_items.register(dict)
+@generate_items.register(dict)  # noqa: F811
 def _(data: dict, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None):
     for obs, ioc_type in data.items():
         yield obs, ioc_type

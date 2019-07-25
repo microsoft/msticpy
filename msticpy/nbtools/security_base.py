@@ -507,6 +507,9 @@ class SecurityBase(QueryParamProvider):
 
     def _find_os_family(self):
         """Return OSFamily and path separator to use from entities or file paths."""
+        self.path_separator = "\\"
+        self.os_family = "Windows"
+
         # Use OSFamily if any entities have this property set
         os_family_entities = [e for e in self.entities if "OSFamily" in e]
         if os_family_entities:

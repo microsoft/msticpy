@@ -130,11 +130,7 @@ def dbcluster_events(
     cluster_set, counts = np.unique(labels, return_counts=True)
     if verbose:
         print(
-            "Clustering for set size ",
-            len(x_norm),
-            " - ",
-            len(cluster_set),
-            " clusters",
+            "Clustering for set size ", len(x_norm), " - ", len(cluster_set), " clusters"
         )
         print("Individual cluster sizes: ", ", ".join([str(c) for c in counts]))
 
@@ -290,9 +286,7 @@ def add_process_features(
     return output_df
 
 
-def _add_processname_features(
-    output_df: pd.DataFrame, force: bool, path_separator: str
-):
+def _add_processname_features(output_df: pd.DataFrame, force: bool, path_separator: str):
     """
     Add process name default features.
 
@@ -328,9 +322,7 @@ def _add_processname_features(
         )
 
 
-def _add_commandline_features(
-    output_df: pd.DataFrame, force: bool, path_separator: str
-):
+def _add_commandline_features(output_df: pd.DataFrame, force: bool, path_separator: str):
     """
     Add commandline default features.
 
@@ -546,7 +538,7 @@ def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.
 
 
 # pylint: disable=too-many-arguments, too-many-statements
-@export
+@export  # noqa: C901, MC0001
 def plot_cluster(
     db_cluster: DBSCAN,
     data: pd.DataFrame,

@@ -241,6 +241,7 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
     return kql_query.query.format(**query_params)
 
 
+# pylint: disable=duplicate-code
 def _get_query_params(kql_query: KqlQuery, *args, **kwargs) -> Dict[str, Any]:
     """
     Get the parameters needed for the query.
@@ -320,6 +321,9 @@ def _get_query_params(kql_query: KqlQuery, *args, **kwargs) -> Dict[str, Any]:
     return req_params
 
 
+# pylint: enable=duplicate-code
+
+
 def _get_missing_params(
     args: Tuple[Any, ...],
     missing_params: List[str],
@@ -341,15 +345,11 @@ def _get_missing_params(
         The query object
 
     """
-    for other_object in [
-        obj for obj in args if not isinstance(obj, QueryParamProvider)
-    ]:
+    for other_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
         for m_param in missing_params:
             if m_param in other_object:
                 req_params[m_param] = getattr(other_object, m_param)
-        missing_params = [
-            p_name for p_name, p_value in req_params.items() if not p_value
-        ]
+        missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
 
     if missing_params:
         # check for and remove optional parameters from the missing params list
@@ -357,9 +357,7 @@ def _get_missing_params(
             if m_param in kql_query.optional_params:
                 req_params[m_param] = ""
         missing_params = [
-            p_name
-            for p_name in missing_params
-            if p_name not in kql_query.optional_params
+            p_name for p_name in missing_params if p_name not in kql_query.optional_params
         ]
 
     if missing_params:
@@ -372,7 +370,7 @@ def _get_missing_params(
         raise ValueError(mssg)
 
 
-def _get_data_family_and_env(
+def _get_data_family_and_env(  # noqa: C901
     kql_query: KqlQuery,
     providers: Iterable[QueryParamProvider],
     custom_params: Mapping[str, Any],
@@ -473,6 +471,7 @@ def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     return list(set(re.findall(param_pattern, query_string)))
 
 
+# pylint: disable=duplicate-code
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
@@ -482,6 +481,9 @@ def _add_queries_to_module(module_name):
         query_func = partial(replace_prov_query_params, query_name=query_name)
         query_func.__doc__ = replace_prov_query_params.__doc__
         setattr(module, query_name, query_func)
+
+
+# pylint: disable=duplicate-code
 
 
 # Add all queries defined in builtin queries module as functions

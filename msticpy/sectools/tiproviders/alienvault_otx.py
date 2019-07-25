@@ -16,6 +16,7 @@ from typing import Any, Tuple
 
 import attr
 
+# pylint: disable=duplicate-code
 from .ti_provider_base import LookupResult
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
@@ -23,6 +24,7 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+# pylint: enable=duplicate-code
 
 
 # pylint: disable=too-few-public-methods
@@ -60,6 +62,7 @@ class OTX(HttpProvider):
         "url": _OTXParams(path="/api/v1/indicators/url/{observable}/general"),
     }
 
+    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
@@ -97,3 +100,5 @@ class OTX(HttpProvider):
         if not response.query_subtype:
             return True, {}
         return False, {}
+
+    # pylint: enable=duplicate-code

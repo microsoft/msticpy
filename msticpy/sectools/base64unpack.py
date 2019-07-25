@@ -391,7 +391,7 @@ def _decode_b64_string_recursive(
                     b64match.groupdict()["b64"], decoded_fragment
                 )
                 _debug_print_trace(
-                    "Replaced string", decoded_string[match_pos: match_pos + 100]
+                    "Replaced string", decoded_string[match_pos : match_pos + 100]
                 )
                 match_pos += len(decoded_fragment)
             else:
