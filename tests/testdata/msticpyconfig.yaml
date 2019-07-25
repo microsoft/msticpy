@@ -9,16 +9,12 @@ TIProviders:
       AuthKey: "987654321"
     Primary: True
     Provider: "OTX" # Explicitly name provider to override
-    LookupCategories:
-      - IPv4
-      - FileHash
-      - Public
   VirusTotal:
     Args:
       ApiID:
-        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
       AuthKey:
-        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
     Primary: True
     Provider: "VirusTotal"
   XForce:
@@ -32,8 +28,8 @@ TIProviders:
   AzureSentinel:
     Args:
       ApiID:
-        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
       AuthKey:
-        KeyVaultURI: "https://scubadevsecrets.vault.azure.net/secrets/kvname/kvsecretId"
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
     Primary: True
     Provider: "BYOTI"
