@@ -812,7 +812,6 @@ def _binary_to_bytesio(binary):
         return binary.getbuffer()
     return io.BytesIO(binary).getbuffer()
 
-
 def _b64_string_pad(string):
     if len(string) % 4 == 0:
         return string
