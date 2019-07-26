@@ -94,18 +94,15 @@ class QueryProvider:
         self._query_provider = driver
         
         settings = config.settings.get("QueryDefinitions")
-        query_path = path.join(path.dirname(__file__), settings.get("Default"))
-        # Load data query definitions for environment
-        data_environments = QueryStore.import_files(
-            source_path=query_path, recursive=True
-        )
-        
+        query_paths = [path.join(path.dirname(__file__), settings.get("Default"))]      
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
-                custom_data_environments = QueryStore.import_files(
-                source_path=custom_path, recursive=True)
-                data_environments.update(custom_data_environments)
-        
+                query_path.append(custom_path)
+                
+        data_environments = QueryStore.import_files(
+            source_path=query_paths, recursive=True
+        )
+                
         self._query_store = data_environments[data_environment.name]
 
         self.all_queries = AttribHolder()

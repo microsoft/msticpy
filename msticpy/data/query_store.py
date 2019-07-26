@@ -130,7 +130,7 @@ class QueryStore:
 
     @classmethod
     def import_files(
-        cls, source_path: str, recursive: bool = False
+        cls, source_path: list, recursive: bool = False
     ) -> Dict[str, "QueryStore"]:
         """
         Import multiple query definition files from directory path.
@@ -156,25 +156,25 @@ class QueryStore:
             a source file.
 
         """
-        if not path.isdir(source_path):
-            raise ImportError(f"{source_path} is not a directory")
-
         env_stores = dict()
-        for file_path in find_yaml_files(source_path, recursive):
-            sources, defaults, metadata = read_query_def_file(file_path)
+        for query_dir in source_path:
+            if not path.isdir(query_dir):
+            raise ImportError(f"{query_dir} is not a directory")
+            for file_path in find_yaml_files(query_dir, recursive):
+                sources, defaults, metadata = read_query_def_file(file_path)
 
-            for env_value in metadata["data_environments"]:
-                if "." in env_value:
-                    env_value = env_value.split(".")[1]
-                environment = DataEnvironment.parse(env_value)
-                if not environment:
-                    raise ValueError(f"Unknown environment {env_value}")
+                for env_value in metadata["data_environments"]:
+                    if "." in env_value:
+                        env_value = env_value.split(".")[1]
+                    environment = DataEnvironment.parse(env_value)
+                    if not environment:
+                        raise ValueError(f"Unknown environment {env_value}")
 
-                if environment.name not in env_stores:
-                    env_stores[environment.name] = cls(environment=environment.name)
-                for source_name, source in sources.items():
-                    new_source = QuerySource(source_name, source, defaults, metadata)
-                    env_stores[environment.name].add_data_source(new_source)
+                    if environment.name not in env_stores:
+                        env_stores[environment.name] = cls(environment=environment.name)
+                    for source_name, source in sources.items():
+                        new_source = QuerySource(source_name, source, defaults, metadata)
+                        env_stores[environment.name].add_data_source(new_source)
 
         return env_stores
 
