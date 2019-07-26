@@ -1,5 +1,4 @@
 QueryDefinitions:
-  Default:
-    - "msticpy/data/queries"
+  Default: "queries"
   Custom:
 TIProviders:

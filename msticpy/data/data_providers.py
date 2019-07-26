@@ -15,13 +15,13 @@ from .query_store import QueryStore
 from .param_extractor import extract_query_params
 from ..nbtools.query_defns import DataEnvironment
 from ..nbtools.utility import export
+from ..nbtools import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _PROVIDER_DIR = "providers"
-_QUERY_DEF_DIR = "queries"
 
 _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: KqlDriver,
@@ -93,8 +93,11 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        # Find the path of this module and build sub-path
-        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
+        settings = config.settings.get("QueryDefinitions")
+        if settings.get("Custom") is None:
+            query_path = path.join(path.dirname(__file__), settings.get("Default"))
+        else:
+            query_path = settings.get("Custom")
 
         # Load data query definitions for environment
         data_environments = QueryStore.import_files(
@@ -200,6 +203,9 @@ class QueryProvider:
             raise ValueError(f"No values found for these parameters: {missing}")
 
         query_str = query_source.create_query(**params)
+        if "print" in args:
+            return query_str
+
         return self._query_provider.query(query_str)
 
     def _add_query_functions(self):
