@@ -53,10 +53,7 @@ class QueryProvider:
     """
 
     def __init__(
-        self,
-        data_environment: Union[str, DataEnvironment],
-        driver: DriverBase = None,
-        query_path: str = path.join(path.dirname(__file__), _QUERY_DEF_DIR),
+        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
     ):
         """
         Query provider interface to queries.
@@ -98,18 +95,21 @@ class QueryProvider:
                 )
 
         self._query_provider = driver
-        
+
         settings = config.settings.get("QueryDefinitions")
-        query_paths = [Path(__file__).resolve().parent.joinpath(settings.get("Default"))]  
+        query_paths = [
+            Path(__file__).resolve().parent.joinpath(settings.get("Default"))
+        ]
+
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
                 query_paths.append(custom_path)
-                
-        data_environments = QueryStore.import_files(
-            source_path=query_paths, recursive=True)
-                
-        self._query_store = data_environments[data_environment.name]
 
+        data_environments = QueryStore.import_files(
+            source_path=query_paths, recursive=True
+        )
+
+        self._query_store = data_environments[data_environment.name]
         self.all_queries = AttribHolder()
         self._add_query_functions()
 
@@ -163,19 +163,6 @@ class QueryProvider:
         """
         return self._query_store.query_names
 
-    @classmethod
-    def list_data_environments(cls) -> List[str]:
-        """
-        Return list of current data environments.
-
-        Returns
-        -------
-        List[str]
-            List of current data environments
-
-        """
-        return list(DataEnvironment.__members__)
-
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
@@ -211,11 +198,11 @@ class QueryProvider:
 
         query_source = self._query_store.get_query(
             data_family=family, query_name=query_name
-        )     
+        )
         if "help" in args or "?" in args:
             query_source.help()
-            return None          
-        
+            return None
+
         params, missing = extract_query_params(query_source, *args, **kwargs)
         if missing:
             query_source.help()
