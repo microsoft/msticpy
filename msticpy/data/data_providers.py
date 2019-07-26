@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Data provider loader."""
 from functools import partial
-from os import path
+from pathlib import Path
 from typing import Union, Any, List
 
 import pandas as pd
@@ -94,7 +94,7 @@ class QueryProvider:
         self._query_provider = driver
         
         settings = config.settings.get("QueryDefinitions")
-        query_paths = [path.join(path.dirname(__file__), settings.get("Default"))]  
+        query_paths = [Path().absolute().joinpath(settings.get("Default"))]  
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
                 query_paths.append(custom_path)
