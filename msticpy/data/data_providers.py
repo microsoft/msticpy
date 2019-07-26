@@ -160,8 +160,8 @@ class QueryProvider:
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
-
-    def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
+ 
+     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
             raise ValueError("Provider is not loaded.")
         if not self._query_provider.connected:
@@ -174,17 +174,20 @@ class QueryProvider:
 
         query_source = self._query_store.get_query(
             data_family=family, query_name=query_name
-        )
+        )     
         if "help" in args or "?" in args:
             query_source.help()
-            return None
-
+            return None          
+        
         params, missing = extract_query_params(query_source, *args, **kwargs)
         if missing:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
         query_str = query_source.create_query(**params)
+        if "print" in args:
+            return query_str
+        
         return self._query_provider.query(query_str)
 
     def _add_query_functions(self):
@@ -206,19 +209,3 @@ class QueryProvider:
 
             setattr(query_family, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
-
-    def run_query(self, query: str) -> pd.DataFrame:
-        """
-        Execute a custom query string.
-
-        Parameters
-        ----------
-        query : str
-            The query you want to run
-
-        Returns
-        -------
-        pd.DataFrame
-            Query results - a DataFrame of results
-        """
-        return self._query_provider.query(query)
