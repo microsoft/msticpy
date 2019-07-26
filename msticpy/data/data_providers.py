@@ -79,14 +79,18 @@ class QueryProvider:
 
         """
         if isinstance(data_environment, str):
-            data_environment = DataEnvironment.parse(data_environment)
+            data_env = DataEnvironment.parse(data_environment)
+            if data_env:
+                data_environment = data_env
+            else:
+                raise TypeError(f"Unknown data environment {data_environment}")
 
         self._environment = data_environment.name
 
         if driver is None:
             driver_class = _ENVIRONMENT_DRIVERS[data_environment]
             if issubclass(driver_class, DriverBase):
-                driver = driver_class()
+                driver = driver_class()  # type: ignore
             else:
                 raise LookupError(
                     "Could not find suitable data provider for",
@@ -129,6 +133,19 @@ class QueryProvider:
         self._query_store.import_file(query_file)
         self._add_query_functions()
 
+    @classmethod
+    def list_data_environments(cls) -> List[str]:
+        """
+        Return list of current data environments.
+
+        Returns
+        -------
+        List[str]
+            List of current data environments
+
+        """
+        return list(DataEnvironment.__members__)
+
     def list_queries(self):
         """
         Return list of family.query in the store.
@@ -157,8 +174,26 @@ class QueryProvider:
     def query_help(self, query_name):
         """Print help for query."""
         self._query_store[query_name].help()
- 
-     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
+
+    def exec_query(self, query: str) -> Union[pd.DataFrame, Any]:
+        """
+        Execute simple query string.
+
+        Parameters
+        ----------
+        query : str
+            [description]
+
+        Returns
+        -------
+        Union[pd.DataFrame, Any]
+            Query results - a DataFrame if successful
+            or a KqlResult if unsuccessful.
+
+        """
+        return self._query_provider.query(query)
+
+    def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
             raise ValueError("Provider is not loaded.")
         if not self._query_provider.connected:

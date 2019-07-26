@@ -163,7 +163,8 @@ class Lookback(QueryParamProvider):
         """
         Query parameters derived from alert.
 
-        Returns:
+        Returns
+        -------
             dict(str, str) -- Dictionary of parameter names
 
         """
@@ -355,7 +356,8 @@ class QueryTime(QueryParamProvider):
         """
         Query parameters derived from alert.
 
-        Returns:
+        Returns
+        -------
             dict(str, str) -- Dictionary of parameter names
 
         """
@@ -530,7 +532,8 @@ class AlertSelector(QueryParamProvider):
         """
         Query parameters derived from alert.
 
-        Returns:
+        Returns
+        -------
             dict(str, str) -- Dictionary of parameter names
 
         """
@@ -626,7 +629,8 @@ class GetSingleAlert(QueryParamProvider):
         """
         Query parameters derived from alert.
 
-        Returns:
+        Returns
+        -------
             dict(str, str) -- Dictionary of parameter names
 
         """

@@ -130,40 +130,6 @@ class SecurityAlert(SecurityBase):
                     if entity_id in self._src_entities:
                         entity[prop_name] = self._src_entities[entity_id]
 
-    def _find_os_family(self):
-        """Discover OSFamily and path separator from entities or file paths."""
-        self.path_separator = "\\"
-        self.os_family = "Windows"
-
-        # Use OSFamily if any entities have this property set
-        os_family_entities = [e for e in self.entities if "OSFamily" in e]
-        if os_family_entities:
-            for os_entity in os_family_entities:
-                if os_entity["OSFamily"] == "Linux":
-                    self.os_family = "Linux"
-                    self.path_separator = "/"
-                    break
-        else:
-            # Otherwise try to infer from the file paths
-            files = [e for e in self.entities if e["Type"] == "file"]
-            if files:
-                for file in files:
-                    if "Directory" in file and "/" in file["Directory"]:
-                        self.os_family = "Linux"
-                        self.path_separator = "/"
-                        break
-            else:
-                for proc in [
-                    e
-                    for e in self.entities
-                    if e["Type"] == "process" and "ImageFile" in e
-                ]:
-                    file = proc["ImageFile"]
-                    if "Directory" in file and "/" in file["Directory"]:
-                        self.os_family = "Linux"
-                        self.path_separator = "/"
-                        break
-
     def _extract_entities(self, src_row):
         input_entities = []
         if isinstance(src_row.Entities, str):

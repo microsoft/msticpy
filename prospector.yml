@@ -1,0 +1,37 @@
+# prospector configuration file
+
+---
+
+output-format: grouped
+
+strictness: veryhigh
+doc-warnings: true
+test-warnings: true
+member-warnings: false
+
+ignore-paths:
+  - docs
+  - tests
+
+pyroma:
+    run: true
+
+pep8:
+    full: true
+    disable: [
+      E501  # Line length handled by Black
+    ]
+
+pep257:
+    disable: [
+        # Disable because not part of PEP257 official convention:
+        # see http://pep257.readthedocs.io/en/latest/error_codes.html
+        D203,  # 1 blank line required before class docstring
+        D212,  # Multi-line docstring summary should start at the first line
+        D404,  # First word of the docstring should not be This
+        D416,  # Using numpy docstring standards
+    ]
+
+pylint:
+    disable:
+      - bad-continuation  # conflicts with Black formatting

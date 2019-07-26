@@ -59,6 +59,10 @@ class FoliumMap:
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
 
+    def __repr__(self):
+        """Return folium map."""
+        return self.folium_map
+
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
         Add a collection of IP Entities to the map.

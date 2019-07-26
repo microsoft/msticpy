@@ -9,7 +9,9 @@ import json
 from typing import Dict, Any
 from .utility import export
 
-__version__ = "0.1"
+from .._version import VERSION
+
+__version__ = VERSION
 __author__ = "Ian Hellen"
 
 
@@ -28,8 +30,11 @@ class WorkspaceConfig:
         """
         Load current Azure Notebooks configuration for Log Analytics.
 
-        Arguments:
-            config_file {str} -- path to the configuration file.
+        Arguments
+        ---------
+            config_file : str
+                path to the configuration file.
+
         """
         self._config_file = config_file
         self._config = self._read_config_values(config_file)

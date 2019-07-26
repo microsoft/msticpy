@@ -23,6 +23,18 @@ else:
     _TEST_DATA = "./tests/testdata"
 
 
+_TEST_FIELDS = {
+    "caption",
+    "description",
+    "data",
+    "data_type",
+    "link",
+    "score",
+    "tags",
+    "additional_properties",
+}
+
+
 class TestObservations(unittest.TestCase):
     """Unit test class."""
 
@@ -32,16 +44,8 @@ class TestObservations(unittest.TestCase):
         self.assertIn("data", Observation.required_fields())
 
         fields_set = set(Observation.all_fields())
-        test_set = {
-            "caption",
-            "description",
-            "data",
-            "data_type",
-            "link",
-            "tags",
-            "additional_properties",
-        }
-        self.assertEqual(len(fields_set.symmetric_difference(test_set)), 0)
+
+        self.assertEqual(len(fields_set.symmetric_difference(_TEST_FIELDS)), 0)
 
         # Shouldn't be able to create an observation without required
         # properties
@@ -69,21 +73,12 @@ class TestObservations(unittest.TestCase):
     def test_create_observations(self):
         obs_list = Observations()
 
-        test_set = {
-            "caption",
-            "description",
-            "data",
-            "data_type",
-            "link",
-            "tags",
-            "additional_properties",
-        }
-        obs = Observation(caption="My caption", data=test_set)
+        obs = Observation(caption="My caption", data=_TEST_FIELDS)
 
         ob1 = Observation(
             caption="O1",
             description="Description1",
-            data=test_set,
+            data=_TEST_FIELDS,
             data_type="object",
             tags=["t1", "t2", "t3"],
         )
@@ -95,7 +90,7 @@ class TestObservations(unittest.TestCase):
         ob2 = Observation(
             caption="O1",
             description="Description2",
-            data=test_set,
+            data=_TEST_FIELDS,
             data_type="object",
             tags=["t1", "t2", "t3"],
         )
@@ -108,7 +103,7 @@ class TestObservations(unittest.TestCase):
         obs_list.add_observation(
             caption="O3",
             description="Description1",
-            data=test_set,
+            data=_TEST_FIELDS,
             data_type="object",
             tags=["t1", "t2", "t3"],
             foo="some extra data",

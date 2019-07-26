@@ -41,6 +41,9 @@ class Observation:
         Link (usually a document-local link) to the
         originating section of the notebook.
         (default is None)
+    score : int
+        The risk score associated with the observation.
+        (default is 0)
     tags : List[str]
         Optional list of tags.
     additional_properties Dict[str, Any]
@@ -54,6 +57,7 @@ class Observation:
     description: Optional[str] = None
     data_type: Optional[str] = None
     link: Optional[str] = None
+    score: int = 0
     tags: List[str] = Factory(list)
     additional_properties: Dict[str, Any] = Factory(dict)
 
@@ -120,6 +124,7 @@ class Observations:
         for observation in self.observation_list.values():
             display(Markdown(f"### {observation.caption}"))
             display(Markdown(observation.description))
+            display(Markdown(f"Score: {observation.score}"))
             if observation.link:
                 display(Markdown(f"[Go to details](#{observation.link})"))
             if observation.tags:

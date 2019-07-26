@@ -6,11 +6,9 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
-import warnings
 from typing import Callable, Optional, Any
 
 from IPython.core.display import display, HTML
-
 import pandas as pd
 
 from .._version import VERSION
@@ -69,7 +67,12 @@ _TOGGLE_CODE_PREPARE_STR = """
     </script>
 
 """
-display(HTML(_TOGGLE_CODE_PREPARE_STR))
+
+
+@export
+def enable_toggle_code():
+    """Load JS Function to enable code toggle button."""
+    display(HTML(_TOGGLE_CODE_PREPARE_STR))
 
 
 @export
@@ -110,11 +113,13 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     """
     Get a url query parameter from the search string.
 
-    Arguments:
+    Parameters
+    ----------
         nb_url_search {str} -- The URL search string
         param {str} -- The parameter name to search for
 
-    Returns:
+    Returns
+    -------
         value of the query string parameter or None if not found.
 
     """
@@ -161,29 +166,3 @@ def get_notebook_query_string():
     </script>
     """
     )
-
-
-def deprecated(message: str) -> Callable:
-    """
-    Decorate function to issue deprecation warning.
-
-    Parameters
-    ----------
-    message : str
-        Deprecation warning
-
-    Returns : Callable
-        The decorated function
-
-    """
-
-    def deprecated_decorator(func):
-        def deprecated_func(*args, **kwargs):
-            mssg = f"{func.__name__} is a deprecated function. {message}"
-            warnings.warn(mssg, category=DeprecationWarning, stacklevel=2)
-            warnings.simplefilter("default", DeprecationWarning)
-            return func(*args, **kwargs)
-
-        return deprecated_func
-
-    return deprecated_decorator

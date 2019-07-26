@@ -224,28 +224,8 @@ class IPStackLookup(GeoIpLookup):
             List of response, status code pairs
 
         """
-        ip_loc_results = []
         if not self.bulk_lookup:
-            for ip_addr in ip_list:
-                submit_url = self._IPSTACK_API.format(
-                    iplist=ip_addr, access_key=self._api_key
-                )
-                response = requests.get(submit_url)
-                if response.status_code == 200:
-                    ip_loc_results.append((response.json(), response.status_code))
-                else:
-                    if response:
-                        try:
-                            ip_loc_results.append(
-                                (response.json(), response.status_code)
-                            )
-                            continue
-                        except JSONDecodeError:
-                            ip_loc_results.append((None, response.status_code))
-                    else:
-                        print("Unknown response from IPStack request.")
-                        ip_loc_results.append((None, -1))
-            return ip_loc_results
+            return self._lookup_ip_list(ip_list)
 
         submit_url = self._IPSTACK_API.format(
             iplist=",".join(ip_list), access_key=self._api_key
@@ -272,6 +252,31 @@ class IPStackLookup(GeoIpLookup):
             except JSONDecodeError:
                 pass
         return [({}, response.status_code)]
+
+    def _lookup_ip_list(self, ip_list: List[str]):
+        """Lookup IP Addresses one-by-one."""
+        ip_loc_results = []
+        with requests.Session() as session:
+            for ip_addr in ip_list:
+                submit_url = self._IPSTACK_API.format(
+                    iplist=ip_addr, access_key=self._api_key
+                )
+                response = session.get(submit_url)
+                if response.status_code == 200:
+                    ip_loc_results.append((response.json(), response.status_code))
+                else:
+                    if response:
+                        try:
+                            ip_loc_results.append(
+                                (response.json(), response.status_code)
+                            )
+                            continue
+                        except JSONDecodeError:
+                            ip_loc_results.append((None, response.status_code))
+                    else:
+                        print("Unknown response from IPStack request.")
+                        ip_loc_results.append((None, -1))
+        return ip_loc_results
 
 
 @export
@@ -390,6 +395,7 @@ else:
     display(HTML(_IPSTACK_LICENSE_HTML))
 
 
+@export
 def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
     """
     Return distance between two IP Entities.
@@ -426,6 +432,7 @@ def entity_distance(ip_src: IpAddress, ip_dest: IpAddress) -> float:
 _EARTH_RADIUS_KM = 6371  # km
 
 
+@export
 def geo_distance(
     origin: Tuple[float, float], destination: Tuple[float, float]
 ) -> float:

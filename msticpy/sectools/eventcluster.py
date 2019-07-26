@@ -546,7 +546,7 @@ def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.
 
 
 # pylint: disable=too-many-arguments, too-many-statements
-@export
+@export  # noqa: C901, MC0001
 def plot_cluster(
     db_cluster: DBSCAN,
     data: pd.DataFrame,

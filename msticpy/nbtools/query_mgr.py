@@ -9,6 +9,8 @@ from functools import partial
 import re
 from typing import Union, List, Iterable, Mapping, Dict, Tuple, Any, Optional
 
+from deprecated.sphinx import deprecated
+
 from .query_schema import DataSchema
 from .query_builtin_queries import query_definitions
 from .query_defns import KqlQuery, QueryParamProvider, DataFamily, DataEnvironment
@@ -24,6 +26,7 @@ _DATA_ENVIRONMENT_NAME = "data_environment"
 
 
 # utility functions
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def print_kql(query_string: str):
     """
@@ -40,6 +43,7 @@ def print_kql(query_string: str):
         print(line.strip())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def clean_kql_query(query_string: str) -> str:
     """
@@ -61,6 +65,7 @@ def clean_kql_query(query_string: str) -> str:
     return re.sub(r"(\s*\n\s*)", " ", remove_comments)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def query_help(queryname: str):
     """
@@ -102,6 +107,7 @@ def query_help(queryname: str):
     print_kql(kql_query.query)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
     """
@@ -142,12 +148,14 @@ def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
         _add_queries_to_module(kql_modules[0])
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def list_queries() -> List[str]:
     """Return list of currently defined queries."""
     return list(query_definitions.keys())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_query_params(query_name: str, *args, **kwargs) -> str:
     """
@@ -186,6 +194,7 @@ def replace_query_params(query_name: str, *args, **kwargs) -> str:
     return replace_prov_query_params(query_name=query_name, provs=args, **kwargs)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_prov_query_params(query_name: str, **kwargs) -> str:
     """
@@ -232,6 +241,7 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
     return kql_query.query.format(**query_params)
 
 
+# pylint: disable=duplicate-code
 def _get_query_params(kql_query: KqlQuery, *args, **kwargs) -> Dict[str, Any]:
     """
     Get the parameters needed for the query.
@@ -311,6 +321,9 @@ def _get_query_params(kql_query: KqlQuery, *args, **kwargs) -> Dict[str, Any]:
     return req_params
 
 
+# pylint: enable=duplicate-code
+
+
 def _get_missing_params(
     args: Tuple[Any, ...],
     missing_params: List[str],
@@ -363,7 +376,7 @@ def _get_missing_params(
         raise ValueError(mssg)
 
 
-def _get_data_family_and_env(
+def _get_data_family_and_env(  # noqa: C901
     kql_query: KqlQuery,
     providers: Iterable[QueryParamProvider],
     custom_params: Mapping[str, Any],
@@ -439,6 +452,7 @@ def _get_env_and_family(
     return family, environment
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     """
@@ -463,6 +477,7 @@ def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     return list(set(re.findall(param_pattern, query_string)))
 
 
+# pylint: disable=duplicate-code
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
@@ -472,6 +487,9 @@ def _add_queries_to_module(module_name):
         query_func = partial(replace_prov_query_params, query_name=query_name)
         query_func.__doc__ = replace_prov_query_params.__doc__
         setattr(module, query_name, query_func)
+
+
+# pylint: disable=duplicate-code
 
 
 # Add all queries defined in builtin queries module as functions

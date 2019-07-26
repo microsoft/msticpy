@@ -10,6 +10,7 @@ from os import path
 
 import pandas as pd
 from ..msticpy.sectools.vtlookup import VTLookup
+from ..msticpy.sectools.tiproviders.ti_provider_base import preprocess_observable
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
@@ -54,7 +55,7 @@ class TestVTLookup(unittest.TestCase):
         ]
 
         for test_case in test_ips:
-            result, status = vtlookup._preprocess_observable(test_case[1], "ipv4")
+            result, status = preprocess_observable(test_case[1], "ipv4")
             self.assertEqual(result, test_case[2])
             print(test_case[0], status)
 
@@ -76,7 +77,7 @@ class TestVTLookup(unittest.TestCase):
         ]
 
         for test_case in test_urls:
-            result, status = vtlookup._preprocess_observable(test_case[1], "url")
+            result, status = preprocess_observable(test_case[1], "url")
             print(test_case[0], status)
             self.assertEqual(
                 result,

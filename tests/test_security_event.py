@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""query_schema test class."""
+"""Security Event test class."""
 import unittest
 import json
 import os
@@ -16,7 +16,7 @@ from ..msticpy.sectools.eventcluster import (
     delim_count_df,
     char_ord_score_df,
 )
-from ..msticpy.nbtools import SecurityEvent
+from ..msticpy.nbtools.security_event import SecurityEvent
 
 
 _test_data_folders = [
