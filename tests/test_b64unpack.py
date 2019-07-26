@@ -98,7 +98,7 @@ class TestB64Unpack(unittest.TestCase):
             self.assertEqual(result_df.shape, (16, 14))
             self.assertIsNotNone(result_df)
 
-            result_df = b64.unpack_df(data=input_df, column='input', trace=True)
+            result_df = b64.unpack_df(data=input_df, column="input", trace=True)
             # we should get 2x the rows as the previous test (since data is duplicated)
             # plus 2 added columns
             self.assertEqual(result_df.shape, (16, 14))

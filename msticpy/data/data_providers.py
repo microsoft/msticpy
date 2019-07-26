@@ -95,9 +95,6 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        # Find the path of this module and build sub-path
-        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
-
         # Load data query definitions for environment
         data_environments = QueryStore.import_files(
             source_path=query_path, recursive=True
