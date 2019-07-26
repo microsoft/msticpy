@@ -1,7 +1,8 @@
 QueryDefinitions:
+  Default: 'testdata'
   Custom:
-    - "tests/testdata"
-    - "tests"
+    - 'C:\\queries'
+    - 'C:\\queries2'
 TIProviders:
   OTX:
     Args:
