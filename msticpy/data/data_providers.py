@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Data provider loader."""
 from functools import partial
-from os import path
+from pathlib import Path
 from typing import Union, Any, List
 
 import pandas as pd
@@ -15,13 +15,13 @@ from .query_store import QueryStore
 from .param_extractor import extract_query_params
 from ..nbtools.query_defns import DataEnvironment
 from ..nbtools.utility import export
+from ..nbtools import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _PROVIDER_DIR = "providers"
-_QUERY_DEF_DIR = "queries"
 
 _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: KqlDriver,
@@ -98,11 +98,16 @@ class QueryProvider:
                 )
 
         self._query_provider = driver
-
-        # Load data query definitions for environment
+        
+        settings = config.settings.get("QueryDefinitions")
+        query_paths = [Path(__file__).resolve().parent.joinpath(settings.get("Default"))]  
+        if settings.get("Custom") is not None:
+            for custom_path in settings.get("Custom"):
+                query_paths.append(custom_path)
+                
         data_environments = QueryStore.import_files(
-            source_path=query_path, recursive=True
-        )
+            source_path=query_paths, recursive=True)
+                
         self._query_store = data_environments[data_environment.name]
 
         self.all_queries = AttribHolder()
@@ -219,7 +224,6 @@ class QueryProvider:
         query_str = query_source.create_query(**params)
         if "print" in args:
             return query_str
-        
         return self._query_provider.query(query_str)
 
     def _add_query_functions(self):
