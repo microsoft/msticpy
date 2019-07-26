@@ -101,9 +101,9 @@ class QueryProvider:
         )
         
         if settings.get("Custom") is not None:
-            for path in settings.get("Custom"):
+            for custom_path in settings.get("Custom"):
                 custom_data_environments = QueryStore.import_files(
-                source_path=path, recursive=True)
+                source_path=custom_path, recursive=True)
                 custom_data_environments.update(data_environments)
         
         self._query_store = custom_data_environments[data_environment.name]
