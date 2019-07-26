@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """security_alert test class."""
 import unittest
+
 # import pandas as pd
 
 # from IPython import get_ipython, embed_kernel
@@ -17,11 +18,11 @@ import unittest
 class TestKqlMagic(unittest.TestCase):
     """Unit test class."""
 
-    _WS = '802d39e1-9d70-404d-832c-2de5e2478eda'
-    query = '''
+    _WS = "802d39e1-9d70-404d-832c-2de5e2478eda"
+    query = """
 SecurityAlert
 | take 1
-    '''
+    """
 
     def setUp(self):
         """Run query using KqlMagic."""

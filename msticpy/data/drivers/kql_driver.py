@@ -8,7 +8,6 @@ from typing import Tuple, Union, Any
 
 import pandas as pd
 from IPython import get_ipython
-from Kqlmagic import results
 
 from .driver_base import DriverBase
 from ...nbtools.utility import export
@@ -78,7 +77,7 @@ class KqlDriver(DriverBase):
         """
         return self.query_with_results(query)[0]
 
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, results.ResultSet]:
+    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -108,10 +107,7 @@ class KqlDriver(DriverBase):
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
-            if (
-                isinstance(result, results.ResultSet)
-                and result.completion_query_info["StatusCode"] == 0
-            ):
+            if result and result.completion_query_info["StatusCode"] == 0:
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:
                     print("Warning - query returned partial results.")

@@ -1,0 +1,5 @@
+QueryDefinitions:
+  Default:
+    - "msticpy/data/queries"
+  Custom:
+TIProviders:
