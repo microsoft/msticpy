@@ -159,7 +159,7 @@ class QueryStore:
         env_stores = dict()
         for query_dir in source_path:
             if not path.isdir(query_dir):
-            raise ImportError(f"{query_dir} is not a directory")
+                raise ImportError(f"{query_dir} is not a directory")
             for file_path in find_yaml_files(query_dir, recursive):
                 sources, defaults, metadata = read_query_def_file(file_path)
 
