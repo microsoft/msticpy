@@ -94,7 +94,7 @@ class QueryProvider:
         self._query_provider = driver
         
         settings = config.settings.get("QueryDefinitions")
-        query_paths = [Path().absolute().joinpath(settings.get("Default"))]  
+        query_paths = [Path(__file__).resolve().joinpath(settings.get("Default"))]  
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
                 query_paths.append(custom_path)
