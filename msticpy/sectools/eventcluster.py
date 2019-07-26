@@ -38,23 +38,25 @@ from sklearn.preprocessing import Normalizer
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from .. nbtools.utility import export
-from .. _version import VERSION
+from ..nbtools.utility import export
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 # pylint: disable=too-many-arguments, too-many-locals
 @export
-def dbcluster_events(data: Any,
-                     cluster_columns: List[Any] = None,
-                     verbose: bool = False,
-                     normalize: bool = True,
-                     time_column: str = 'TimeCreatedUtc',
-                     max_cluster_distance: float = 0.01,
-                     min_cluster_samples: int = 2,
-                     **kwargs) -> Tuple[pd.DataFrame, DBSCAN, np.ndarray]:
+def dbcluster_events(
+    data: Any,
+    cluster_columns: List[Any] = None,
+    verbose: bool = False,
+    normalize: bool = True,
+    time_column: str = "TimeCreatedUtc",
+    max_cluster_distance: float = 0.01,
+    min_cluster_samples: int = 2,
+    **kwargs,
+) -> Tuple[pd.DataFrame, DBSCAN, np.ndarray]:
     """
     Cluster data set according to cluster_columns features.
 
@@ -105,15 +107,15 @@ def dbcluster_events(data: Any,
             x_input = data[:, cluster_columns].values
 
     if x_input is None:
-        mssg = 'Input data not in expected format.\n{} is not one of allowed types {}'
-        type_list = ', '.join([str(t) for t in allowed_types])
+        mssg = "Input data not in expected format.\n{} is not one of allowed types {}"
+        type_list = ", ".join([str(t) for t in allowed_types])
         mssg = mssg.format(str(type(data)), type_list)
         raise ValueError(mssg)
 
     # Create DBSCAN cluster object
-    db_cluster = DBSCAN(eps=max_cluster_distance,
-                        min_samples=min_cluster_samples,
-                        **kwargs)
+    db_cluster = DBSCAN(
+        eps=max_cluster_distance, min_samples=min_cluster_samples, **kwargs
+    )
 
     # Normalize the data (most clustering algorithms don't do well with
     # unnormalized data)
@@ -127,27 +129,32 @@ def dbcluster_events(data: Any,
     labels = db_cluster.labels_
     cluster_set, counts = np.unique(labels, return_counts=True)
     if verbose:
-        print('Clustering for set size ', len(x_norm),
-              ' - ', len(cluster_set), ' clusters')
-        print('Individual cluster sizes: ',
-              ', '.join([str(c) for c in counts]))
+        print(
+            "Clustering for set size ",
+            len(x_norm),
+            " - ",
+            len(cluster_set),
+            " clusters",
+        )
+        print("Individual cluster sizes: ", ", ".join([str(c) for c in counts]))
 
-    clustered_events = _merge_clustered_items(cluster_set,
-                                              labels, data,
-                                              time_column,
-                                              counts)
+    clustered_events = _merge_clustered_items(
+        cluster_set, labels, data, time_column, counts
+    )
 
     if verbose:
-        print('Cluster output rows: ', len(clustered_events))
+        print("Cluster output rows: ", len(clustered_events))
 
     return clustered_events, db_cluster, x_norm
 
 
-def _merge_clustered_items(cluster_set: np.array,
-                           labels: np.array,
-                           data: Union[pd.DataFrame, np.array],
-                           time_column: str,
-                           counts: np.array) -> pd.DataFrame:
+def _merge_clustered_items(
+    cluster_set: np.array,
+    labels: np.array,
+    data: Union[pd.DataFrame, np.array],
+    time_column: str,
+    counts: np.array,
+) -> pd.DataFrame:
     """
     Merge outliers and core clusters into single DataFrame.
 
@@ -185,26 +192,32 @@ def _merge_clustered_items(cluster_set: np.array,
         if cluster_id == -1:
             # 'Noise' events are individual items that could not be assigned
             # to a cluster and so are unique
-            cluster_list.append(data[class_members]
-                                .assign(Clustered=False,
-                                        ClusterId=cluster_id,
-                                        ClusterSize=1,
-                                        LastEventTime=last_event_time))
+            cluster_list.append(
+                data[class_members].assign(
+                    Clustered=False,
+                    ClusterId=cluster_id,
+                    ClusterSize=1,
+                    LastEventTime=last_event_time,
+                )
+            )
         else:
             # Otherwise, just choose the first example of the cluster set
-            cluster_list.append(data[class_members]
-                                .assign(Clustered=True,
-                                        ClusterId=cluster_id,
-                                        ClusterSize=counts[idx],
-                                        LastEventTime=last_event_time)[0:1])
+            cluster_list.append(
+                data[class_members].assign(
+                    Clustered=True,
+                    ClusterId=cluster_id,
+                    ClusterSize=counts[idx],
+                    LastEventTime=last_event_time,
+                )[0:1]
+            )
     # pylint: enable=consider-using-enumerate
     return pd.concat(cluster_list)
 
 
 @export
-def add_process_features(input_frame: pd.DataFrame,
-                         path_separator: str = None,
-                         force: bool = False) -> pd.DataFrame:
+def add_process_features(
+    input_frame: pd.DataFrame, path_separator: str = None, force: bool = False
+) -> pd.DataFrame:
     r"""
     Add numerical features based on patterns of command line and process name.
 
@@ -247,37 +260,39 @@ def add_process_features(input_frame: pd.DataFrame,
     output_df = input_frame.copy()
 
     # Set any NaN values to empty string
-    if 'NewProcessName' in output_df and 'CommandLine' in output_df:
-        output_df[['NewProcessName', 'CommandLine']] = (
-            output_df[['NewProcessName', 'CommandLine']].fillna(value=''))
+    if "NewProcessName" in output_df and "CommandLine" in output_df:
+        output_df[["NewProcessName", "CommandLine"]] = output_df[
+            ["NewProcessName", "CommandLine"]
+        ].fillna(value="")
 
     # try to determine the path separator
     if path_separator is None:
         sample_df = output_df.head(10)
-        lx_path = len(sample_df[sample_df['NewProcessName'].str.contains('/')])
+        lx_path = len(sample_df[sample_df["NewProcessName"].str.contains("/")])
         if lx_path:
-            path_separator = '/'
+            path_separator = "/"
         else:
-            path_separator = '\\'
+            path_separator = "\\"
 
     # Create features from process name and command line
-    if 'NewProcessName' in output_df:
+    if "NewProcessName" in output_df:
         _add_processname_features(output_df, force, path_separator)
 
-    if 'CommandLine' in output_df:
+    if "CommandLine" in output_df:
         _add_commandline_features(output_df, force, path_separator)
 
-    if 'SubjectLogonId' in output_df:
-        if 'isSystemSession' not in output_df or force:
-            output_df['isSystemSession'] = (
-                output_df['SubjectLogonId'].isin(['0x3e7', '-1']))
+    if "SubjectLogonId" in output_df:
+        if "isSystemSession" not in output_df or force:
+            output_df["isSystemSession"] = output_df["SubjectLogonId"].isin(
+                ["0x3e7", "-1"]
+            )
 
     return output_df
 
 
-def _add_processname_features(output_df: pd.DataFrame,
-                              force: bool,
-                              path_separator: str):
+def _add_processname_features(
+    output_df: pd.DataFrame, force: bool, path_separator: str
+):
     """
     Add process name default features.
 
@@ -291,30 +306,31 @@ def _add_processname_features(output_df: pd.DataFrame,
         Path separator for OS
 
     """
-    if 'processNameLen' not in output_df or force:
-        output_df['processNameLen'] = (
-            output_df.apply(lambda x: len(x.NewProcessName), axis=1))
-    if 'processNameTokens' not in output_df or force:
-        output_df['processNameTokens'] = (
-            output_df.apply(lambda x: len(x.NewProcessName.split(path_separator)),
-                            axis=1))
-    if 'processName' not in output_df or force:
-        output_df['processName'] = (
-            output_df.apply(lambda x: x.NewProcessName.split(path_separator)[-1],
-                            axis=1))
-    if 'pathScore' not in output_df or force:
-        output_df['pathScore'] = (
-            output_df.apply(lambda x: _string_score(x.NewProcessName),
-                            axis=1))
-    if 'pathLogScore' not in output_df or force:
-        output_df['pathLogScore'] = (
-            output_df.apply(lambda x: log10(x.pathScore) if x.pathScore else 0,
-                            axis=1))
+    if "processNameLen" not in output_df or force:
+        output_df["processNameLen"] = output_df.apply(
+            lambda x: len(x.NewProcessName), axis=1
+        )
+    if "processNameTokens" not in output_df or force:
+        output_df["processNameTokens"] = output_df.apply(
+            lambda x: len(x.NewProcessName.split(path_separator)), axis=1
+        )
+    if "processName" not in output_df or force:
+        output_df["processName"] = output_df.apply(
+            lambda x: x.NewProcessName.split(path_separator)[-1], axis=1
+        )
+    if "pathScore" not in output_df or force:
+        output_df["pathScore"] = output_df.apply(
+            lambda x: _string_score(x.NewProcessName), axis=1
+        )
+    if "pathLogScore" not in output_df or force:
+        output_df["pathLogScore"] = output_df.apply(
+            lambda x: log10(x.pathScore) if x.pathScore else 0, axis=1
+        )
 
 
-def _add_commandline_features(output_df: pd.DataFrame,
-                              force: bool,
-                              path_separator: str):
+def _add_commandline_features(
+    output_df: pd.DataFrame, force: bool, path_separator: str
+):
     """
     Add commandline default features.
 
@@ -328,39 +344,38 @@ def _add_commandline_features(output_df: pd.DataFrame,
         Path separator for OS
 
     """
-    if 'commandlineTokens' not in output_df or force:
-        output_df['commandlineTokens'] = (
-            output_df.apply(lambda x: len(x.CommandLine.split(path_separator)),
-                            axis=1))
-    if 'commandlineLen' not in output_df or force:
-        output_df['commandlineLen'] = (
-            output_df.apply(lambda x: len(x.CommandLine),
-                            axis=1))
-    if 'commandlineLogLen' not in output_df or force:
-        output_df['commandlineLogLen'] = (
-            output_df.apply(lambda x: log10(x.commandlineLen)
-                            if x.commandlineLen else 0, axis=1))
-    if 'commandlineTokensFull' not in output_df or force:
+    if "commandlineTokens" not in output_df or force:
+        output_df["commandlineTokens"] = output_df.apply(
+            lambda x: len(x.CommandLine.split(path_separator)), axis=1
+        )
+    if "commandlineLen" not in output_df or force:
+        output_df["commandlineLen"] = output_df.apply(
+            lambda x: len(x.CommandLine), axis=1
+        )
+    if "commandlineLogLen" not in output_df or force:
+        output_df["commandlineLogLen"] = output_df.apply(
+            lambda x: log10(x.commandlineLen) if x.commandlineLen else 0, axis=1
+        )
+    if "commandlineTokensFull" not in output_df or force:
         delim_rgx = r'[\s\-\\/\.,"\'|&:;%$()]'
-        output_df['commandlineTokensFull'] = (
-            output_df[['CommandLine']].apply(lambda x: x.str.count(delim_rgx),
-                                             axis=1))
+        output_df["commandlineTokensFull"] = output_df[["CommandLine"]].apply(
+            lambda x: x.str.count(delim_rgx), axis=1
+        )
 
-    if 'commandlineScore' not in output_df or force:
-        output_df['commandlineScore'] = (
-            output_df.apply(lambda x: _string_score(x.CommandLine),
-                            axis=1))
-    if 'commandlineLogScore' not in output_df or force:
-        output_df['commandlineLogScore'] = (
-            output_df.apply(lambda x: log10(x.commandlineScore)
-                            if x.commandlineScore else 0,
-                            axis=1))
+    if "commandlineScore" not in output_df or force:
+        output_df["commandlineScore"] = output_df.apply(
+            lambda x: _string_score(x.CommandLine), axis=1
+        )
+    if "commandlineLogScore" not in output_df or force:
+        output_df["commandlineLogScore"] = output_df.apply(
+            lambda x: log10(x.commandlineScore) if x.commandlineScore else 0, axis=1
+        )
 
 
 @export
-def delim_count(input_row: pd.Series,
-                column: str,
-                delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int:
+def delim_count(
+    input_row: pd.Series, column: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]'
+) -> int:
     r"""
     Count the delimiters in input column.
 
@@ -383,9 +398,7 @@ def delim_count(input_row: pd.Series,
 
 
 @export
-def char_ord_score(input_row: pd.Series,
-                   column: str,
-                   scale: int = 1) -> int:
+def char_ord_score(input_row: pd.Series, column: str, scale: int = 1) -> int:
     """
     Return sum of ord values of characters in string.
 
@@ -421,9 +434,7 @@ def char_ord_score(input_row: pd.Series,
 
 
 @export
-def token_count(input_row: pd.Series,
-                column: str,
-                delimiter: str = ' ') -> int:
+def token_count(input_row: pd.Series, column: str, delimiter: str = " ") -> int:
     """
     Return count of delimiter-separated tokens pd.Series column.
 
@@ -451,9 +462,9 @@ def _string_score(input_str):
     return sum([ord(x) for x in input_str])
 
 
-def delim_count_df(data: pd.DataFrame,
-                   column: str,
-                   delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> pd.Series:
+def delim_count_df(
+    data: pd.DataFrame, column: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]'
+) -> pd.Series:
     r"""
     Count the delimiters in input column.
 
@@ -475,9 +486,7 @@ def delim_count_df(data: pd.DataFrame,
     return data[column].str.count(delim_list)
 
 
-def char_ord_score_df(data: pd.DataFrame,
-                      column: str,
-                      scale: int = 1) -> pd.Series:
+def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Series:
     """
     Return sum of ord values of characters in string.
 
@@ -510,13 +519,10 @@ def char_ord_score_df(data: pd.DataFrame,
     algorithms.
 
     """
-    return data.apply(lambda x: sum([ord(char)
-                                     for char in x[column]]) / scale, axis=1)
+    return data.apply(lambda x: sum([ord(char) for char in x[column]]) / scale, axis=1)
 
 
-def token_count_df(data: pd.DataFrame,
-                   column: str,
-                   delimiter: str = ' ') -> pd.Series:
+def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.Series:
     """
     Return count of delimiter-separated tokens pd.Series column.
 
@@ -540,14 +546,18 @@ def token_count_df(data: pd.DataFrame,
 
 
 # pylint: disable=too-many-arguments, too-many-statements
-@export
-def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
-                 x_predict: np.ndarray,
-                 plot_label: str = None,
-                 plot_features: Tuple[int, int] = (0, 1),
-                 verbose: bool = False,
-                 cut_off: int = 3,
-                 xlabel: str = None, ylabel: str = None):
+@export  # noqa: C901, MC0001
+def plot_cluster(
+    db_cluster: DBSCAN,
+    data: pd.DataFrame,
+    x_predict: np.ndarray,
+    plot_label: str = None,
+    plot_features: Tuple[int, int] = (0, 1),
+    verbose: bool = False,
+    cut_off: int = 3,
+    xlabel: str = None,
+    ylabel: str = None,
+):
     """
     Plot clustered data as scatter chart.
 
@@ -578,11 +588,13 @@ def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
     """
     max_idx = x_predict.shape[1] - 1
     if plot_features[0] >= x_predict.shape[1]:
-        raise ValueError("plot_features[0] index must be a value from 0 to {}."
-                         .format(max_idx))
+        raise ValueError(
+            "plot_features[0] index must be a value from 0 to {}.".format(max_idx)
+        )
     if plot_features[1] >= x_predict.shape[1]:
-        raise ValueError("plot_features[1] index must be a value from 0 to {}."
-                         .format(max_idx))
+        raise ValueError(
+            "plot_features[1] index must be a value from 0 to {}.".format(max_idx)
+        )
     if plot_features[0] == plot_features[1]:
         mssg = "plot_features indexes must be 2 different values in range 0 to"
         raise ValueError(mssg + f" {max_idx}.")
@@ -597,16 +609,15 @@ def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
 
     # pylint: disable=no-member
     # Spectral color map does exist
-    colors = [cm.Spectral(each)
-              for each in np.linspace(0, 1, len(unique_labels))]
+    colors = [cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]
     # Number of clusters in labels, ignoring noise if present.
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
     _, counts = np.unique(labels, return_counts=True)
 
     if verbose:
-        print('Estimated number of clusters: %d' % n_clusters_)
-        print('Estimated number of noise points: %d' % n_noise_)
+        print("Estimated number of clusters: %d" % n_clusters_)
+        print("Estimated number of noise points: %d" % n_noise_)
         # print("Silhouette Coefficient: %0.3f"
         #       % metrics.silhouette_score(x_predict, labels))
 
@@ -620,38 +631,44 @@ def plot_cluster(db_cluster: DBSCAN, data: pd.DataFrame,
         if cluster_id == -1:
             # Black used for noise.
             color = [0, 0, 0, 1]
-        class_member_mask = (labels == cluster_id)
+        class_member_mask = labels == cluster_id
 
         cluster_size = counts[cluster_id]
         marker_size = cluster_size
-        marker = 'o'
-        font_size = 'small'
+        marker = "o"
+        font_size = "small"
         alpha = 0.4
 
         if cluster_size < cut_off:
-            marker = '+'
+            marker = "+"
             marker_size = 10
-            font_size = 'large'
+            font_size = "large"
             alpha = 1.0
         first_row = data[class_member_mask].iloc[0]
         xy_pos = x_predict[class_member_mask & core_samples_mask]
-        plt.plot(xy_pos[:, plot_features[0]], xy_pos[:, plot_features[1]], marker,
-                 markerfacecolor=tuple(color),
-                 markersize=marker_size)
+        plt.plot(
+            xy_pos[:, plot_features[0]],
+            xy_pos[:, plot_features[1]],
+            marker,
+            markerfacecolor=tuple(color),
+            markersize=marker_size,
+        )
 
         if plot_label:
             if not first_row.empty and plot_label in first_row:
                 p_label = first_row[plot_label]
                 try:
-                    plt.annotate(s=p_label,
-                                 xy=(xy_pos[0, plot_features[0]],
-                                     xy_pos[0, plot_features[1]]),
-                                 fontsize=font_size, alpha=alpha)
+                    plt.annotate(
+                        s=p_label,
+                        xy=(xy_pos[0, plot_features[0]], xy_pos[0, plot_features[1]]),
+                        fontsize=font_size,
+                        alpha=alpha,
+                    )
                 except IndexError:
                     pass
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title('Estimated number of clusters: %d' % n_clusters_)
+    plt.title("Estimated number of clusters: %d" % n_clusters_)
     plt.show()
     return plt

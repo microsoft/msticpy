@@ -6,7 +6,5 @@
 """MSTIC Security Tools."""
 
 # flake8: noqa: F403
-from . import base64unpack as b64
-from . iocextract import *
-from . vtlookup import *
-from . eventcluster import *
+# pylint: disable=W0401
+from .iocextract import IoCExtract
