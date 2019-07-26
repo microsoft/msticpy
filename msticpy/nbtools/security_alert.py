@@ -16,7 +16,7 @@ from .security_base import SecurityBase
 from .utility import export
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 @export
@@ -36,15 +36,17 @@ class SecurityAlert(SecurityBase):
         self._src_entities: Dict[int, Entity] = dict()
 
         if src_row is not None:
-            if 'Entities' in src_row:
+            if "Entities" in src_row:
                 self._extract_entities(src_row)
 
-            if 'ExtendedProperties' in src_row:
+            if "ExtendedProperties" in src_row:
                 if isinstance(src_row.ExtendedProperties, dict):
                     self.extended_properties = src_row.ExtendedProperties
                 elif isinstance(src_row.ExtendedProperties, str):
                     try:
-                        self.extended_properties = json.loads(src_row.ExtendedProperties)
+                        self.extended_properties = json.loads(
+                            src_row.ExtendedProperties
+                        )
                     except JSONDecodeError:
                         pass
         else:
@@ -68,26 +70,28 @@ class SecurityAlert(SecurityBase):
 
         """
         params_dict = super().query_params
-        if ('system_alert_id' not in params_dict
-                or params_dict['system_alert_id'] is None):
-            params_dict['system_alert_id'] = self._ids['SystemAlertId']
+        if (
+            "system_alert_id" not in params_dict
+            or params_dict["system_alert_id"] is None
+        ):
+            params_dict["system_alert_id"] = self._ids["SystemAlertId"]
         return params_dict
 
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
-        if (self.properties is not None
-                and not self.properties.empty):
-            title = '''
+        if self.properties is not None and not self.properties.empty:
+            title = """
             <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
             entity=<b>{entity}</b>, id=<b>{id}</b>
             <br/>
-            '''.format(start=self.properties['StartTimeUtc'],
-                       name=self.properties['AlertDisplayName'],
-                       entity=self.properties.get('CompromisedEntity',
-                                                  'unknown'),
-                       id=self.properties['SystemAlertId'])
+            """.format(
+                start=self.properties["StartTimeUtc"],
+                name=self.properties["AlertDisplayName"],
+                entity=self.properties.get("CompromisedEntity", "unknown"),
+                id=self.properties["SystemAlertId"],
+            )
         else:
-            title = 'Alert has no data.'
+            title = "Alert has no data."
         return title + super().to_html(show_entities)
 
     # Public methods
@@ -96,9 +100,11 @@ class SecurityAlert(SecurityBase):
         alert_props = str(super().__str__())
 
         if self.extended_properties:
-            str_rep = [f'ExtProp: {prop}: {val}' for prop, val in
-                       self.extended_properties.items()]
-            alert_props = alert_props + '\n' + '\n'.join(str_rep)
+            str_rep = [
+                f"ExtProp: {prop}: {val}"
+                for prop, val in self.extended_properties.items()
+            ]
+            alert_props = alert_props + "\n" + "\n".join(str_rep)
 
         return alert_props
 
@@ -119,47 +125,16 @@ class SecurityAlert(SecurityBase):
             if not isinstance(entity, Entity):
                 continue
             for prop_name, prop_val in entity.properties.items():
-                if isinstance(prop_val, dict) and '$ref' in prop_val:
-                    entity_id = prop_val['$ref']
+                if isinstance(prop_val, dict) and "$ref" in prop_val:
+                    entity_id = prop_val["$ref"]
                     if entity_id in self._src_entities:
                         entity[prop_name] = self._src_entities[entity_id]
-
-    def _find_os_family(self):
-        """Discover OSFamily and path separator from entities or file paths."""
-        self.path_separator = '\\'
-        self.os_family = 'Windows'
-
-        # Use OSFamily if any entities have this property set
-        os_family_entities = [e for e in self.entities if 'OSFamily' in e]
-        if os_family_entities:
-            for os_entity in os_family_entities:
-                if os_entity['OSFamily'] == 'Linux':
-                    self.os_family = 'Linux'
-                    self.path_separator = '/'
-                    break
-        else:
-            # Otherwise try to infer from the file paths
-            files = [e for e in self.entities if e['Type'] == 'file']
-            if files:
-                for file in files:
-                    if 'Directory' in file and '/' in file['Directory']:
-                        self.os_family = 'Linux'
-                        self.path_separator = '/'
-                        break
-            else:
-                for proc in [e for e in self.entities
-                             if e['Type'] == 'process' and 'ImageFile' in e]:
-                    file = proc['ImageFile']
-                    if 'Directory' in file and '/' in file['Directory']:
-                        self.os_family = 'Linux'
-                        self.path_separator = '/'
-                        break
 
     def _extract_entities(self, src_row):
         input_entities = []
         if isinstance(src_row.Entities, str):
             try:
-                input_entities = json.loads(src_row['Entities'])
+                input_entities = json.loads(src_row["Entities"])
             except json.JSONDecodeError:
                 pass
         elif isinstance(src_row.Entities, list):
@@ -172,7 +147,7 @@ class SecurityAlert(SecurityBase):
                 # if we didn't instantiate a known entity
                 # just add it as it is
                 entity = UnknownEntity(**ent)
-            if '$id' in ent:
-                self._src_entities[ent['$id']] = entity
+            if "$id" in ent:
+                self._src_entities[ent["$id"]] = entity
 
         self._resolve_entity_refs()

@@ -48,7 +48,7 @@ def extract_query_params(
 
     # Iterate through required parameters. If any are set in the supplied
     # provider objects, assign them to our output dictionary
-    query_providers = [prov for prov in args if isinstance(prov, QueryParamProvider)]
+    query_providers = [prov for prov in args if hasattr(prov, "query_params")]
     for provider in query_providers:
         for param in req_param_names:
             if param in provider.query_params:

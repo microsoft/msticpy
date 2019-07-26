@@ -7,25 +7,26 @@
 import sys
 from functools import partial
 import re
-from typing import (Union, List, Iterable, Mapping, Dict,
-                    Tuple, Any, Optional)
+from typing import Union, List, Iterable, Mapping, Dict, Tuple, Any, Optional
 
-from . query_schema import DataSchema
-from . query_builtin_queries import query_definitions
-from . query_defns import (KqlQuery, QueryParamProvider,
-                           DataFamily, DataEnvironment)
-from . utility import export
-from .. _version import VERSION
+from deprecated.sphinx import deprecated
+
+from .query_schema import DataSchema
+from .query_builtin_queries import query_definitions
+from .query_defns import KqlQuery, QueryParamProvider, DataFamily, DataEnvironment
+from .utility import export
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 # module constants
-_DATA_FAMILY_NAME = 'data_family'
-_DATA_ENVIRONMENT_NAME = 'data_environment'
+_DATA_FAMILY_NAME = "data_family"
+_DATA_ENVIRONMENT_NAME = "data_environment"
 
 
 # utility functions
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def print_kql(query_string: str):
     """
@@ -37,12 +38,12 @@ def print_kql(query_string: str):
         The query string to print
 
     """
-    clean_qry = re.sub(r'(//[^\"\'\n]+)', ' ',
-                       query_string, re.MULTILINE).strip()
-    for line in clean_qry.split('\n'):
+    clean_qry = re.sub(r"(//[^\"\'\n]+)", " ", query_string, re.MULTILINE).strip()
+    for line in clean_qry.split("\n"):
         print(line.strip())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def clean_kql_query(query_string: str) -> str:
     """
@@ -59,12 +60,12 @@ def clean_kql_query(query_string: str) -> str:
         Cleaned query.
 
     """
-    remove_comments = re.sub(r'(//[^\"\'\n]+)', ' ',
-                             query_string, re.MULTILINE).strip()
+    remove_comments = re.sub(r"(//[^\"\'\n]+)", " ", query_string, re.MULTILINE).strip()
     # get rid of newlines and returns
-    return re.sub(r'(\s*\n\s*)', ' ', remove_comments)
+    return re.sub(r"(\s*\n\s*)", " ", remove_comments)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def query_help(queryname: str):
     """
@@ -77,32 +78,36 @@ def query_help(queryname: str):
 
     """
     if queryname not in query_definitions:
-        print('Unknown query: ', queryname)
+        print("Unknown query: ", queryname)
         return
 
     kql_query = query_definitions[queryname]
-    print('Query: ', queryname)
+    print("Query: ", queryname)
     print(query_definitions[queryname].description)
-    print('Designed to be executed with data_source: ',
-          kql_query.data_source)
-    print('Supported data families: ',
-          ', '.join([str(fam) for fam in kql_query.data_families]))
-    print('Supported data environments: ',
-          ', '.join([str(env) for env in kql_query.data_environments]))
+    print("Designed to be executed with data_source: ", kql_query.data_source)
+    print(
+        "Supported data families: ",
+        ", ".join([str(fam) for fam in kql_query.data_families]),
+    )
+    print(
+        "Supported data environments: ",
+        ", ".join([str(env) for env in kql_query.data_environments]),
+    )
 
     req_params = required_params(kql_query.query)
-    req_params.remove('table')
-    req_params.remove('query_project')
+    req_params.remove("table")
+    req_params.remove("query_project")
 
-    print('Query parameters:')
+    print("Query parameters:")
     print(req_params)
     if kql_query.optional_params:
-        print('Optional parameters:')
-        print(', '.join([str(param) for param in kql_query.optional_params]))
-    print('Query:')
+        print("Optional parameters:")
+        print(", ".join([str(param) for param in kql_query.optional_params]))
+    print("Query:")
     print_kql(kql_query.query)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
     """
@@ -121,35 +126,36 @@ def add_query(kql_query: Optional[KqlQuery] = None, **kwargs):
     """
     if kql_query is None:
         def_data_families = [DataEnvironment.LogAnalytics]
-        def_data_environments = [
-            DataFamily.WindowsSecurity, DataFamily.LinuxSecurity]
-        if ('name' not in kwargs
-                or 'query' not in kwargs
-                or 'data_source' not in kwargs):
-            raise ValueError('If kql_query is not supplied the kwargs',
-                             ' must include name, query and data_source.')
-        kql_query = KqlQuery(name=kwargs['name'],
-                             query=kwargs['query'],
-                             description=kwargs.get('description', None),
-                             data_source=kwargs['data_source'],
-                             data_families=kwargs.get(
-                                 'data_families', def_data_families),
-                             data_environments=kwargs.get('data_environments',
-                                                          def_data_environments))
+        def_data_environments = [DataFamily.WindowsSecurity, DataFamily.LinuxSecurity]
+        if "name" not in kwargs or "query" not in kwargs or "data_source" not in kwargs:
+            raise ValueError(
+                "If kql_query is not supplied the kwargs",
+                " must include name, query and data_source.",
+            )
+        kql_query = KqlQuery(
+            name=kwargs["name"],
+            query=kwargs["query"],
+            description=kwargs.get("description", None),
+            data_source=kwargs["data_source"],
+            data_families=kwargs.get("data_families", def_data_families),
+            data_environments=kwargs.get("data_environments", def_data_environments),
+        )
     query_definitions[kql_query.name] = kql_query
     _add_queries_to_module(__name__)
 
-    kql_modules = [m for m in sys.modules if m.endswith('msticpy.nbtools.kql')]
+    kql_modules = [m for m in sys.modules if m.endswith("msticpy.nbtools.kql")]
     if len(kql_modules) == 1:
         _add_queries_to_module(kql_modules[0])
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def list_queries() -> List[str]:
     """Return list of currently defined queries."""
     return list(query_definitions.keys())
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_query_params(query_name: str, *args, **kwargs) -> str:
     """
@@ -185,11 +191,10 @@ def replace_query_params(query_name: str, *args, **kwargs) -> str:
         query_name cannot be found
 
     """
-    return replace_prov_query_params(query_name=query_name,
-                                     provs=args,
-                                     **kwargs)
+    return replace_prov_query_params(query_name=query_name, provs=args, **kwargs)
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def replace_prov_query_params(query_name: str, **kwargs) -> str:
     """
@@ -228,16 +233,16 @@ def replace_prov_query_params(query_name: str, **kwargs) -> str:
         raise LookupError(f'Unknown query "{query_name}"')
 
     kql_query = query_definitions[query_name]
-    if 'provs' in kwargs:
-        p_args = kwargs.pop('provs')
+    if "provs" in kwargs:
+        p_args = kwargs.pop("provs")
         query_params = _get_query_params(kql_query, *p_args, **kwargs)
     else:
         query_params = _get_query_params(kql_query, **kwargs)
     return kql_query.query.format(**query_params)
 
 
-def _get_query_params(kql_query: KqlQuery,
-                      *args, **kwargs) -> Dict[str, Any]:
+# pylint: disable=duplicate-code
+def _get_query_params(kql_query: KqlQuery, *args, **kwargs) -> Dict[str, Any]:
     """
     Get the parameters needed for the query.
 
@@ -278,24 +283,30 @@ def _get_query_params(kql_query: KqlQuery,
     if kwargs:
         req_params.update(kwargs)
 
-    data_family, data_environment = _get_data_family_and_env(kql_query,
-                                                             query_providers,
-                                                             kwargs)
+    data_family, data_environment = _get_data_family_and_env(
+        kql_query, query_providers, kwargs
+    )
 
     if not data_family:
-        supp_families = ', '.join(DataSchema.get_data_families())
-        raise LookupError('Could not find a valid data_family value. '
-                          f'Valid families are: {supp_families}')
+        supp_families = ", ".join(DataSchema.get_data_families())
+        raise LookupError(
+            "Could not find a valid data_family value. "
+            f"Valid families are: {supp_families}"
+        )
     if not data_environment:
-        supp_envs = ', '.join(DataSchema.get_data_environments())
-        raise LookupError('Could not find a valid data_environment value. '
-                          f'Valid environments are: {supp_envs}')
+        supp_envs = ", ".join(DataSchema.get_data_environments())
+        raise LookupError(
+            "Could not find a valid data_environment value. "
+            f"Valid environments are: {supp_envs}"
+        )
 
     # Create the data schema and get any unset parameters from
     # the data schema
-    data_schema = DataSchema(environment=data_environment,
-                             data_family=data_family,
-                             data_source=kql_query.data_source)
+    data_schema = DataSchema(
+        environment=data_environment,
+        data_family=data_family,
+        data_source=kql_query.data_source,
+    )
 
     for param, value in req_params.items():
         if not value and param in data_schema:
@@ -303,18 +314,22 @@ def _get_query_params(kql_query: KqlQuery,
 
     # If we have missing parameters try to retrieve them
     # as attributes of the object
-    missing_params = [p_name for p_name, p_value in req_params.items()
-                      if not p_value]
+    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
     if missing_params:
         _get_missing_params(args, missing_params, req_params, kql_query)
 
     return req_params
 
 
-def _get_missing_params(args: Tuple[Any, ...],
-                        missing_params: List[str],
-                        req_params: Dict[str, Any],
-                        kql_query: KqlQuery):
+# pylint: enable=duplicate-code
+
+
+def _get_missing_params(
+    args: Tuple[Any, ...],
+    missing_params: List[str],
+    req_params: Dict[str, Any],
+    kql_query: KqlQuery,
+):
     """
     Get missing params from arguments.
 
@@ -330,35 +345,42 @@ def _get_missing_params(args: Tuple[Any, ...],
         The query object
 
     """
-    for other_object in [obj for obj in args
-                         if not isinstance(obj, QueryParamProvider)]:
+    for other_object in [
+        obj for obj in args if not isinstance(obj, QueryParamProvider)
+    ]:
         for m_param in missing_params:
             if m_param in other_object:
                 req_params[m_param] = getattr(other_object, m_param)
-        missing_params = [p_name for p_name, p_value in req_params.items()
-                          if not p_value]
+        missing_params = [
+            p_name for p_name, p_value in req_params.items() if not p_value
+        ]
 
     if missing_params:
         # check for and remove optional parameters from the missing params list
         for m_param in missing_params:
             if m_param in kql_query.optional_params:
-                req_params[m_param] = ''
-        missing_params = [p_name for p_name in missing_params
-                          if p_name not in kql_query.optional_params]
+                req_params[m_param] = ""
+        missing_params = [
+            p_name
+            for p_name in missing_params
+            if p_name not in kql_query.optional_params
+        ]
 
     if missing_params:
         # If still have missing params then we error out
         query_help(kql_query.name)
-        mssg = ('The following required parameters for this query were not set:',
-                ', '.join(missing_params))
+        mssg = (
+            "The following required parameters for this query were not set:",
+            ", ".join(missing_params),
+        )
         raise ValueError(mssg)
 
 
-def _get_data_family_and_env(
-        kql_query: KqlQuery,
-        providers: Iterable[QueryParamProvider],
-        custom_params: Mapping[str, Any]) -> Tuple[Optional[DataFamily],
-                                                   Optional[DataEnvironment]]:
+def _get_data_family_and_env(  # noqa: C901
+    kql_query: KqlQuery,
+    providers: Iterable[QueryParamProvider],
+    custom_params: Mapping[str, Any],
+) -> Tuple[Optional[DataFamily], Optional[DataEnvironment]]:
     """Get the data_family and environment."""
     data_family = None  # type: Optional[DataFamily]
     data_environment = None  # type: Optional[DataEnvironment]
@@ -403,8 +425,9 @@ def _get_data_family_and_env(
     return data_family, data_environment
 
 
-def _get_env_and_family(params: Mapping[str, Any]) -> Tuple[Optional[DataFamily],
-                                                            Optional[DataEnvironment]]:
+def _get_env_and_family(
+    params: Mapping[str, Any]
+) -> Tuple[Optional[DataFamily], Optional[DataEnvironment]]:
     """
     Extract environment and family from params dictionary.
 
@@ -429,6 +452,7 @@ def _get_env_and_family(params: Mapping[str, Any]) -> Tuple[Optional[DataFamily]
     return family, environment
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
     """
@@ -449,19 +473,23 @@ def required_params(kql_query: Union[KqlQuery, str]) -> List[str]:
         query_string = kql_query.query
     else:
         query_string = kql_query
-    param_pattern = r'{([\w\d_-]+)}'
+    param_pattern = r"{([\w\d_-]+)}"
     return list(set(re.findall(param_pattern, query_string)))
 
 
+# pylint: disable=duplicate-code
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
-        raise LookupError(f'Module {module_name} was not found sys.modules')
+        raise LookupError(f"Module {module_name} was not found sys.modules")
     for query_name in query_definitions:
         module = sys.modules[module_name]
         query_func = partial(replace_prov_query_params, query_name=query_name)
         query_func.__doc__ = replace_prov_query_params.__doc__
         setattr(module, query_name, query_func)
+
+
+# pylint: disable=duplicate-code
 
 
 # Add all queries defined in builtin queries module as functions
