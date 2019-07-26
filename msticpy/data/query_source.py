@@ -285,7 +285,8 @@ class QuerySource:
         return "\n".join(doc_string + param_block)
 
     def validate(self) -> Tuple[bool, List[str]]:
-        """Validate the source to ensure that all required properties are present.
+        """
+        Validate the source to ensure that all required properties are present.
 
         Returns
         -------

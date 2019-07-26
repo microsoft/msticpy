@@ -29,16 +29,16 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=invalid-name
 def identify_outliers(
-    X: np.ndarray, X_predict: np.ndarray = None, contamination: float = 0.05
+    x: np.ndarray, x_predict: np.ndarray = None, contamination: float = 0.05
 ) -> Tuple[IsolationForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
 
     Arguments
     ---------
-    X : np.ndarray
+    x : np.ndarray
             Input data
-    X_predict : np.ndarray
+    x_predict : np.ndarray
         Model (default: {None})
     contamination : float
         Percentage contamination (default: {0.05})
@@ -54,7 +54,7 @@ def identify_outliers(
     rng = np.random.RandomState(42)
 
     # fit the model
-    rows, cols = X.shape
+    rows, cols = x.shape
     max_samples = min(100, cols)
     max_features = math.floor(math.sqrt(rows))
     clf = IsolationForest(
@@ -65,21 +65,21 @@ def identify_outliers(
     )
 
     # fit and train the model
-    clf.fit(X)
-    clf.predict(X)
+    clf.fit(x)
+    clf.predict(x)
 
-    y_pred_outliers = clf.predict(X_predict)
+    y_pred_outliers = clf.predict(x_predict)
 
-    X_outliers = X_predict[y_pred_outliers == -1]
-    return clf, X_outliers, y_pred_outliers
+    x_outliers = x_predict[y_pred_outliers == -1]
+    return clf, x_outliers, y_pred_outliers
 
 
 # pylint: disable=too-many-arguments, too-many-locals
 def plot_outlier_results(
     clf: IsolationForest,
-    X: np.ndarray,
-    X_predict: np.ndarray,
-    X_outliers: np.ndarray,
+    x: np.ndarray,
+    x_predict: np.ndarray,
+    x_outliers: np.ndarray,
     feature_columns: List[int],
     plt_title: str,
 ):
@@ -90,11 +90,11 @@ def plot_outlier_results(
     ----------
     clf : IsolationForest
         Isolation Forest model
-    X : np.ndarray
+    x : np.ndarray
         Input data
-    X_predict : np.ndarray
+    x_predict : np.ndarray
         Prediction
-    X_outliers : np.ndarray
+    x_outliers : np.ndarray
         Set of outliers
     feature_columns : List[int]
         list of feature columns to display
@@ -103,33 +103,33 @@ def plot_outlier_results(
 
     """
     # plot the line, the samples, and the nearest vectors to the plane
-    x_max_x = X[:, 0].max() + (X[:, 0].max() / 10)
-    x_min_x = -X[:, 0].max() / 10
-    x_max_y = X[:, 1].max() + (X[:, 1].max() / 10)
-    x_min_y = -X[:, 1].max() / 10
+    x_max_x = x[:, 0].max() + (x[:, 0].max() / 10)
+    x_min_x = -x[:, 0].max() / 10
+    x_max_y = x[:, 1].max() + (x[:, 1].max() / 10)
+    x_min_y = -x[:, 1].max() / 10
     xx, yy = np.meshgrid(
         np.linspace(x_min_x, x_max_x, 100), np.linspace(x_min_y, x_max_y, 100)
     )
-    Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
+    z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    z = z.reshape(xx.shape)
 
     plt.rcParams["figure.figsize"] = (20, 10)
 
     plt.title(plt_title)
     # pylint: disable=no-member
-    plt.contourf(xx, yy, Z, cmap=plt.cm.Blues_r)
+    plt.contourf(xx, yy, z, cmap=plt.cm.Blues_r)
 
-    b1 = plt.scatter(X[:, 0], X[:, 1], c="white", s=20, edgecolor="k")
-    b2 = plt.scatter(X_predict[:, 0], X_predict[:, 1], c="green", s=40, edgecolor="k")
+    b1 = plt.scatter(x[:, 0], x[:, 1], c="white", s=20, edgecolor="k")
+    b2 = plt.scatter(x_predict[:, 0], x_predict[:, 1], c="green", s=40, edgecolor="k")
     c = plt.scatter(
-        X_outliers[:, 0], X_outliers[:, 1], c="red", marker="x", s=200, edgecolor="k"
+        x_outliers[:, 0], x_outliers[:, 1], c="red", marker="x", s=200, edgecolor="k"
     )
     plt.axis("tight")
 
-    xp_max_x = X_predict[:, 0].max() + (X_predict[:, 0].max() / 10)
-    xp_min_x = -X_predict[:, 0].max() / 10
-    xp_max_y = X_predict[:, 1].max() + (X_predict[:, 1].max() / 10)
-    xp_min_y = -X_predict[:, 1].max() / 10
+    xp_max_x = x_predict[:, 0].max() + (x_predict[:, 0].max() / 10)
+    xp_min_x = -x_predict[:, 0].max() / 10
+    xp_max_y = x_predict[:, 1].max() + (x_predict[:, 1].max() / 10)
+    xp_min_y = -x_predict[:, 1].max() / 10
 
     plt.xlim((xp_min_x, xp_max_x))
     plt.ylim((xp_min_y, xp_max_y))

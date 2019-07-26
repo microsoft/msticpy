@@ -24,6 +24,9 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+_ENTITY_ENUMS: Dict[str, type] = {}
+
+
 # pylint: disable=too-many-lines, invalid-name
 # pylint: disable=too-many-instance-attributes
 @export
@@ -91,26 +94,22 @@ class Entity(ABC):
             if v is not None:
                 try:
                     # If the property is an enum
-                    if v == RegistryHive.__name__:
-                        self[k] = RegistryHive[src_entity[k]]
-                    elif v == OSFamily.__name__:
-                        self[k] = OSFamily[src_entity[k]]
-                    elif v == ElevationToken.__name__:
-                        self[k] = ElevationToken[src_entity[k]]
-                    elif v == Algorithm.__name__:
-                        self[k] = Algorithm[src_entity[k]]
-                    elif isinstance(v, tuple):
-                        # if the property is a collection
-                        entity_list = []
-                        for col_entity in src_entity[k]:
-                            entity_list.append(Entity.instantiate_entity(col_entity))
-                        self[k] = entity_list
-                    else:
-                        # else try to instantiate an entity
-                        self[k] = Entity.instantiate_entity(src_entity[k])
+                    if v in _ENTITY_ENUMS:
+                        self[k] = _ENTITY_ENUMS[v][src_entity[k]]
+                        continue
                 except KeyError:
                     # Catch key errors from invalid enum values
                     self[k] = None
+
+                if isinstance(v, tuple):
+                    # if the property is a collection
+                    entity_list = []
+                    for col_entity in src_entity[k]:
+                        entity_list.append(Entity.instantiate_entity(col_entity))
+                    self[k] = entity_list
+                else:
+                    # else try to instantiate an entity
+                    self[k] = Entity.instantiate_entity(src_entity[k])
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -185,7 +184,7 @@ class Entity(ABC):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if name in self._entity_schema
+            if not name.startswith("_")
         }
 
     @property
@@ -205,9 +204,8 @@ class Entity(ABC):
         return self.Type
 
     # pylint: disable=bad-continuation, too-many-branches
-    # noqa: MC0001
     @classmethod
-    def instantiate_entity(
+    def instantiate_entity(  # noqa: C901
         cls, raw_entity: Mapping[str, Any]
     ) -> Union["Entity", Mapping[str, Any]]:
         """
@@ -806,6 +804,9 @@ class Algorithm(Enum):
     SHA256AC = 4
 
 
+_ENTITY_ENUMS[Algorithm.__name__] = Algorithm
+
+
 @export
 class Host(Entity):
     """
@@ -1361,6 +1362,9 @@ class RegistryHive(Enum):
     HKEY_CURRENT_USER = 9
 
 
+_ENTITY_ENUMS[RegistryHive.__name__] = RegistryHive
+
+
 @export
 class RegistryKey(Entity):
     """
@@ -1472,6 +1476,9 @@ class OSFamily(Enum):
     Windows = 1
 
 
+_ENTITY_ENUMS[OSFamily.__name__] = OSFamily
+
+
 @export
 class ElevationToken(Enum):
     """ElevationToken enumeration."""
@@ -1479,6 +1486,9 @@ class ElevationToken(Enum):
     Default = 0
     Full = 1
     Limited = 2
+
+
+_ENTITY_ENUMS[ElevationToken.__name__] = ElevationToken
 
 
 @export

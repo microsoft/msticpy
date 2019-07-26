@@ -6,11 +6,11 @@
 """KQL Helper functions."""
 import sys
 from functools import partial
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Any
 
 import pandas as pd
 from IPython import get_ipython
-from Kqlmagic import results
+from deprecated.sphinx import deprecated
 
 from .query_builtin_queries import query_definitions
 
@@ -18,11 +18,11 @@ from .query_builtin_queries import query_definitions
 # (list_queries not used here but want to bring in into module namespace)
 from .query_mgr import (  # noqa: F401
     replace_prov_query_params,
-    list_queries,  # noqa: F401
+    list_queries,
     clean_kql_query,
-    query_help,  # noqa: F401
+    query_help,
     print_kql,
-)  # noqa: F401
+)
 
 # pylint: enable=locally-disabled, unused-import
 from .utility import export
@@ -59,6 +59,7 @@ def load_kql():
 _KQL_LOADER = load_kql()
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def load_kql_magic():
     """Load KqlMagic if not loaded."""
@@ -82,10 +83,11 @@ def _is_kqlmagic_loaded() -> bool:
     return False
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def exec_query(
     query_name: str, **kwargs
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, results.ResultSet]]:
+) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Any]]:
     """
     Execute kql query with optional parameters and return a Dataframe.
 
@@ -143,6 +145,7 @@ def exec_query(
     raise ValueError("Could not resolve query or query parameters.")
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def show_filled_query(query_name: str, **kwargs) -> str:
     """
@@ -180,8 +183,9 @@ def show_filled_query(query_name: str, **kwargs) -> str:
     return replaced_query
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
-def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.ResultSet]:
+def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], Any]:
     """
     Execute query string and return DataFrame of results.
 
@@ -211,6 +215,7 @@ def exec_query_string(query: str) -> Tuple[Optional[pd.DataFrame], results.Resul
     return None, result
 
 
+# pylint: disable=duplicate-code
 def _add_queries_to_module(module_name):
     """Add queries to the module as callable methods."""
     if module_name not in sys.modules:
@@ -220,6 +225,9 @@ def _add_queries_to_module(module_name):
         query_func = partial(exec_query, query_name=query_name)
         query_func.__doc__ = exec_query.__doc__
         setattr(module, query_name, query_func)
+
+
+# pylint: enable=duplicate-code
 
 
 # Add all queries defined in builtin queries module as functions

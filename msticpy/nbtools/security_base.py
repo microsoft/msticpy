@@ -11,11 +11,12 @@ from collections import Counter
 from typing import List, Dict, Any, Optional, Union, Mapping
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 
 from .entityschema import Entity, Process, Account, Host
 from .query_defns import QueryParamProvider, DataFamily, DataEnvironment
 from .utility import is_not_empty, escape_windows_path
-from .utility import export, deprecated
+from .utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -144,7 +145,7 @@ class SecurityBase(QueryParamProvider):
     @property
     def hostname(self) -> str:
         """Return the Hostname (not FQDN) of the host associated with the alert."""
-        return self.get_entity_property(entity_type="host", entity_property="HostName")
+        return self.primary_host.HostName if self.primary_host is not None else None
 
     @property
     def computer(self) -> Optional[str]:
@@ -389,6 +390,7 @@ class SecurityBase(QueryParamProvider):
 
         If `process` is not supplied, return the filename
         of the first process entity.
+
         Parameters
         ----------
         process : Process
@@ -505,6 +507,9 @@ class SecurityBase(QueryParamProvider):
 
     def _find_os_family(self):
         """Return OSFamily and path separator to use from entities or file paths."""
+        self.path_separator = "\\"
+        self.os_family = "Windows"
+
         # Use OSFamily if any entities have this property set
         os_family_entities = [e for e in self.entities if "OSFamily" in e]
         if os_family_entities:

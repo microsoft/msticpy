@@ -134,8 +134,8 @@ class TestDataQuery(unittest.TestCase):
 
         # pick one item and check properties
         get_alert_q = q_sources["SecurityGraphAlert"]["get_alert"]
-        self.assertEqual(len(get_alert_q.default_params), 7)
-        self.assertEqual(len(get_alert_q.params), 8)
+        self.assertEqual(len(get_alert_q.default_params), 6)
+        self.assertEqual(len(get_alert_q.params), 7)
         self.assertEqual(len(get_alert_q.required_params), 1)
         self.assertEqual(len(get_alert_q.metadata), 6)
         self.assertIn("data_families", get_alert_q.metadata)
@@ -144,7 +144,7 @@ class TestDataQuery(unittest.TestCase):
         self.assertEqual(get_alert_q.name, "get_alert")
         self.assertIn("Retrieves", get_alert_q.description)
 
-    def test_query_create_funcs(self):
+    def test_graph_query_create_funcs(self):
 
         provider = QueryProvider(data_environment="SecurityGraph", driver=self.provider)
 
@@ -161,7 +161,7 @@ class TestDataQuery(unittest.TestCase):
             self.assertTrue(len(func.__doc__))
             self.assertIn("Parameters", func.__doc__)
 
-    def test_load_query_exec(self):
+    def test_graph_load_query_exec(self):
 
         provider = QueryProvider(data_environment="SecurityGraph", driver=self.provider)
         df = provider.all_queries.get_alert("help")

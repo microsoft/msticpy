@@ -22,20 +22,14 @@ for the account type that you have. Support IoC Types:
 # pylint: disable=too-many-lines
 import json
 from json import JSONDecodeError
-import math
-import re
 from typing import List, Mapping, Any, Dict, Optional, Tuple
-from collections import namedtuple, Counter
-from ipaddress import IPv4Address, ip_address
-import socket
-from socket import gaierror
+from collections import namedtuple
 
 import pandas as pd
 import requests
-from urllib3.exceptions import LocationParseError
-from urllib3.util import parse_url
 
 from .iocextract import IoCExtract
+from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
 from ..nbtools.utility import export, pd_version_23
 from .._version import VERSION
 
@@ -56,7 +50,6 @@ VTParams = namedtuple(
 )
 
 DuplicateStatus = namedtuple("DuplicateStatus", ["is_dup", "status"])
-PreProcessResult = namedtuple("PreProcessResult", ["observable", "status"])
 
 
 @export
@@ -217,7 +210,7 @@ class VTLookup:
         src_index_col : str, optional
             The name of the column to use as source index. If not
             specified this defaults to 'SourceIndex'. If this (or the supplied value)
-            is not in the source dataframe the index of the source dataframe will
+            is not in the source dataframe, the index of the source dataframe will
             be used. This is retained in the output so that you can join the results
             back to the original data.
             (the default is 'SourceIndex')
@@ -312,7 +305,7 @@ class VTLookup:
         ):
             raise SyntaxError("Invalid value for observable or ioc_type")
 
-        observable, status = self._preprocess_observable(observable, ioc_type)
+        observable, status = preprocess_observable(observable, ioc_type)
         if observable is None:
             raise SyntaxError(
                 "{} for observable value {}".format(status, observable), 1
@@ -459,7 +452,7 @@ class VTLookup:
                 obs_batch = []
 
     # pylint: disable=too-many-arguments, too-many-branches
-    def _parse_vt_results(
+    def _parse_vt_results(  # noqa: C901
         self,
         vt_results: Any,
         observable: str,
@@ -549,17 +542,9 @@ class VTLookup:
                         observables[result_idx]
                     ]
 
-            if pd_version_23():
-                new_results = pd.concat(
-                    objs=[self.results, df_dict_vtresults],
-                    ignore_index=True,
-                    sort=False,
-                    axis=0,
-                )
-            else:
-                new_results = pd.concat(
-                    objs=[self.results, df_dict_vtresults], ignore_index=True, axis=0
-                )
+            new_results = pd.concat(
+                objs=[self.results, df_dict_vtresults], ignore_index=True, axis=0
+            )
 
             self.results = new_results
         # pylint enable=locally-disabled, C0200
@@ -647,7 +632,7 @@ class VTLookup:
 
     def _validate_observable(
         self, observable: str, ioc_type: str, idx: Any
-    ) -> PreProcessResult:
+    ) -> SanitizedObservable:
         """
         Validate observable for format and duplicates of existing results.
 
@@ -662,7 +647,7 @@ class VTLookup:
 
         Returns
         -------
-        PreProcessResult
+        SanitizedObservable
             The Pre-processed result
 
         """
@@ -670,11 +655,11 @@ class VTLookup:
             status = "Failed: Empty or missing observable value"
             self._add_invalid_input_result(observable, ioc_type, status, idx)
             self._print_status(status + " (Source index {})".format(idx), 1)
-            return PreProcessResult(None, status)
+            return SanitizedObservable(None, status)
 
         # Check that observable is of the correct format for this type
         # and do any cleaning up required
-        pp_observable = self._preprocess_observable(observable, ioc_type)
+        pp_observable = preprocess_observable(observable, ioc_type)
         if pp_observable.observable is None:
             self._add_invalid_input_result(
                 observable, ioc_type, pp_observable.status, idx
@@ -705,7 +690,7 @@ class VTLookup:
                 ),
                 2,
             )
-            return PreProcessResult(None, dup_result.status)
+            return SanitizedObservable(None, dup_result.status)
 
         return pp_observable
 
@@ -835,193 +820,6 @@ class VTLookup:
             except JSONDecodeError:
                 pass
         return None, response.status_code
-
-    def _preprocess_observable(self, observable, ioc_type) -> PreProcessResult:
-        """
-        Preprocesses and checks validity of observable against declared IoC type.
-
-            :param observable: the value of the IoC
-            :param ioc_type: the IoC type
-        """
-        observable = observable.strip()
-        if not self._ioc_extract.validate(observable, ioc_type):
-            return PreProcessResult(
-                None, "Observable does not match expected pattern for " + ioc_type
-            )
-        if ioc_type == "url":
-            return self._preprocess_url(observable)
-        if ioc_type == "ipv4":
-            return self._preprocess_ip4(observable)
-        if ioc_type == "dns":
-            return self._preprocess_dns(observable)
-        if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash"]:
-            return self._preprocess_hash(observable)
-        return PreProcessResult(observable, "ok")
-
-    # Would complicate code with too many branches
-    # pylint: disable=too-many-return-statements
-    @classmethod
-    def _preprocess_url(cls, url: str) -> PreProcessResult:
-        """
-        Check that URL can be parsed.
-
-        Parameters
-        ----------
-        url : str
-            the URL to check
-
-        Returns
-        -------
-        PreProcessResult
-            Pre-processed result
-
-        """
-        try:
-            scheme, _, host, _, _, _, _ = parse_url(url)
-            clean_url = url
-        except LocationParseError:
-            # Try to clean URL and re-check
-            cleaned_url = cls._clean_url(url)
-            if cleaned_url is None:
-                return PreProcessResult(None, "Could not parse as valid URL")
-            try:
-                scheme, _, host, _, _, _, _ = parse_url(cleaned_url)
-                clean_url = cleaned_url
-            except LocationParseError:
-                return PreProcessResult(None, "Could not parse as valid URL")
-
-        if scheme is None or host is None:
-            return PreProcessResult(None, f"url scheme or host missing from {url}")
-        # get rid of some obvious false positives (localhost, local hostnames)
-        try:
-            addr = ip_address(host)
-            if addr.is_private:
-                return PreProcessResult(
-                    None, "Host part of URL is a private IP address"
-                )
-            if addr.is_loopback:
-                return PreProcessResult(
-                    None, "Host part of URL is a loopback IP address"
-                )
-        except ValueError:
-            pass
-
-        if "." not in host:
-            return PreProcessResult(None, "Host is unqualified domain name")
-
-        if scheme.lower() in ["file"]:
-            return PreProcessResult(None, f"{scheme} URL scheme is not supported")
-
-        return PreProcessResult(clean_url, "ok")
-
-    @classmethod
-    def _clean_url(cls, url: str) -> Optional[str]:
-        """
-        Clean URL to remove query params and fragments and any trailing stuff.
-
-        Parameters
-        ----------
-        url : str
-            the URL to check
-
-        Returns
-        -------
-        Optional[str]
-            Cleaned URL or None if the input was not a valid URL
-
-        """
-        # slightly stricter than normal URL regex to exclude '() from host string
-        http_strict_regex = r"""
-            (?P<protocol>(https?|ftp|telnet|ldap|file)://)
-            (?P<userinfo>([a-z0-9-._~!$&*+,;=:]|%[0-9A-F]{2})*@)?
-            (?P<host>([a-z0-9-._~!$&\*+,;=]|%[0-9A-F]{2})*)
-            (:(?P<port>\d*))?
-            (/(?P<path>([^?\#| ]|%[0-9A-F]{2})*))?
-            (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
-            (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
-        if cls._http_strict_rgxc is None:
-            cls._http_strict_rgxc = re.compile(http_strict_regex, re.I | re.X | re.M)
-
-        # Try to clean URL and re-check
-        match_url = cls._http_strict_rgxc.search(url)
-        if (
-            match_url.groupdict()["protocol"] is None
-            or match_url.groupdict()["host"] is None
-        ):
-            return None
-
-        # build the URL dropping the query string and fragments
-        clean_url = match_url.groupdict()["protocol"]
-        if match_url.groupdict()["userinfo"]:
-            clean_url += match_url.groupdict()["userinfo"]
-        clean_url += match_url.groupdict()["host"]
-        if match_url.groupdict()["port"]:
-            clean_url += ":" + match_url.groupdict()["port"]
-        if match_url.groupdict()["path"]:
-            clean_url += "/" + match_url.groupdict()["path"]
-
-        return clean_url
-
-    # Would complicate code with too many branches
-    # pylint: disable=too-many-return-statements
-    @classmethod
-    def _preprocess_ip4(cls, ipaddress: str):
-        """Ensure Ip address is a valid public IPv4 address."""
-        try:
-            addr = ip_address(ipaddress)
-        except ValueError:
-            return PreProcessResult(None, "IP address is invalid format")
-
-        if not isinstance(addr, IPv4Address):
-            return PreProcessResult(None, "Not an IPv4 address")
-        if addr.is_global:
-            return PreProcessResult(ipaddress, "ok")
-        if addr.is_private:
-            return PreProcessResult(None, "IP is private address")
-        if addr.is_loopback:
-            return PreProcessResult(None, "IP is loopback address")
-        if addr.is_reserved:
-            return PreProcessResult(None, "IP is reserved address")
-        if addr.is_multicast:
-            return PreProcessResult(None, "IP is multicast address")
-        return PreProcessResult(None, "IP address is not global")
-
-    @classmethod
-    def _preprocess_dns(cls, domain: str) -> PreProcessResult:
-        """Ensure DNS is a valid-looking domain."""
-        if "." not in domain:
-            return PreProcessResult(None, "Domain is unqualified domain name")
-        try:
-            addr = ip_address(domain)
-            del addr
-            return PreProcessResult(None, "Domain is an IP address")
-        except ValueError:
-            pass
-        try:
-            socket.gethostbyname(domain)
-        except gaierror:
-            return PreProcessResult(None, "Domain not resolvable")
-
-        return PreProcessResult(domain, "ok")
-
-    @classmethod
-    def _preprocess_hash(cls, hash_str: str) -> PreProcessResult:
-        """Ensure Hash has minimum entropy (rather than a string of 'x')."""
-        str_entropy = cls.entropy(hash_str)
-        if str_entropy < 3.0:
-            return PreProcessResult(None, "String has too low an entropy to be a hash")
-        return PreProcessResult(hash_str, "ok")
-
-    @classmethod
-    def entropy(cls, input_str: str) -> float:
-        """Compute entropy of input string."""
-        str_len = float(len(input_str))
-        return -sum(
-            map(
-                lambda a: (a / str_len) * math.log2(a / str_len),
-                Counter(input_str).values(),
-            )
-        )
 
     @classmethod
     def _get_vt_api_url(cls, api_type: str) -> str:

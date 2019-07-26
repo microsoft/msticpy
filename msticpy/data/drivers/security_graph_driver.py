@@ -19,7 +19,6 @@ from ..._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
 _OAUTH_URL = "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
 
 
@@ -132,6 +131,7 @@ class SecurityGraphDriver(DriverBase):
         """
         return self.query_with_results(query)[0]
 
+    # pylint: disable=too-many-branches
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -185,6 +185,8 @@ class SecurityGraphDriver(DriverBase):
             print("Warning - query did not return any results.")
             return None, json_response
         return pd.io.json.json_normalize(result), result
+
+    # pylint: enable=too-many-branches
 
     @staticmethod
     def _parse_connection_str(connection_str: str) -> Dict[str, str]:

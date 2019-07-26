@@ -6,31 +6,34 @@
 """Setup script for msticpy."""
 
 import re
-import setuptools
 from collections import OrderedDict
+import setuptools
 
 INSTALL_REQUIRES = [
-    "matplotlib>=3.0.0",
-    "bokeh>=1.0.2",
-    "setuptools>=40.6.2",
     "attrs>=18.2.0",
-    "pandas>=0.23.0",
-    "requests>=2.20.1",
+    "bokeh>=1.0.2",
+    "deprecated>=1.2.4",
+    "ipython>=7.1.1",
+    "ipywidgets>=7.4.2",
+    "Kqlmagic>=0.1.94",
+    "matplotlib>=3.0.0",
+    "maxminddb_geolite2>=2018.0",
     "networkx>=2.2",
     "numpy>=1.12.0",
-    "urllib3>=1.24.0",
-    "ipywidgets>=7.4.2",
-    "ipython>=7.1.1",
-    "Kqlmagic>=0.1.90",
+    "pandas>=0.23.0",
+    "requests>=2.20.1",
     "scikit_learn>=0.20.2",
-    "maxminddb_geolite2>=2018.0",
+    "setuptools>=40.6.2",
     "typing>=3.6.6",
+    "urllib3>=1.24.0",
 ]
 
 
 # pylint: disable=locally-disabled, invalid-name
 with open("README.md", "r") as fh:
     long_description = fh.read()
+with open("LICENSE.TXT", "r") as fh:
+    license_txt = fh.read()
 # pylint: enable=locally-disabled, invalid-name
 
 with open("msticpy/_version.py", "r") as fd:
@@ -44,6 +47,7 @@ setuptools.setup(
     author="Ian Hellen",
     author_email="ianhelle@microsoft.com",
     description="MSTIC Security Tools",
+    license=license_txt,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/msticpy",
@@ -59,6 +63,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
     ],
     install_requires=INSTALL_REQUIRES,
     keywords=["security", "azure", "sentinel"],

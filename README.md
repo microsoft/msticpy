@@ -137,30 +137,26 @@ This is still a work-in-progress.
 This is a collection of display and utility modules designed to make working
 with security data in Jupyter notebooks quicker and easier.
 
-- nbwidgets - groups common functionality such as list pickers, time boundary settings,
-saving and retrieving environment variables into a single line callable command.
-- nbdisplay - functions that implement common display of things like alerts, events
-in a slightly more consumable way than print()
-- entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in
-Log Analytics alerts and in many of these modules. Each entity encaspulates one or
-more properties related to the entity.
+- nbwidgets - groups common functionality such as list pickers, time boundary settings, saving and retrieving environment variables into a single line callable command.
+- nbdisplay - functions that implement common display of things like alerts, events in a slightly more consumable way than print()
+- entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in Log Analytics alerts and in many of these modules. Each entity encaspulates one or more properties related to the entity.
 
-[Notebooks Tools](./docs/notebooks/NotebookWidgets.ipynb)
+[Notebook Tools Notebook](./docs/notebooks/NotebookWidgets.ipynb)
 
 ## Data sub-package - `data`
 
 These components are currently still part of the nbtools sub-package but will be
 refactored to separate them into their own package.
 
-- query manager - collection of modules that implement common kql/Log Analytics queries
-using KqlMagic
+- query manager - collection of modules that implement common kql/Log Analytics queries using KqlMagic
 - security_alert and security_event - encapsulation classes for alerts and events.
+
 Each has a standard 'entities' property reflecting the entities found in the alert or event.
 These can also be used as meta-parameters for many of the queries.
 For example, the following query will extract the value for the `hostname` query parameter
 from the alert:
 
-`qry.list_host_logons(provs==[query_times, alert])` 
+`qry.list_host_logons(provs==[query_times, alert])`
 
 ---
 
@@ -168,25 +164,17 @@ from the alert:
 
 Requires sign-in to Azure Notebooks
 <a href="https://notebooks.azure.com/import/gh/Microsoft/msticpy">
-  <img src="https://notebooks.azure.com/launch.png" />
+<img src="https://notebooks.azure.com/launch.png" />
 </a>
 
 ## More Notebook Examples
 
 See the following notebooks for more examples of the use of this package in practice:
 
-- Windows Alert Investigation in
-[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-- Windows Host Explorer in
-[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
-or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
-- Office 365 Exploration in
-[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-or [NbViewer](https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-- Cross-Network Hunting in
-[github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
-or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
+- Windows Alert Investigation in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
+- Windows Host Explorer in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
+- Office 365 Exploration in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
+- Cross-Network Hunting in [github](https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
 
 ## To-Do Items
 
