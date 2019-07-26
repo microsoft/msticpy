@@ -104,9 +104,9 @@ class QueryProvider:
             for custom_path in settings.get("Custom"):
                 custom_data_environments = QueryStore.import_files(
                 source_path=custom_path, recursive=True)
-                custom_data_environments.update(data_environments)
+                data_environments.update(custom_data_environments)
         
-        self._query_store = custom_data_environments[data_environment.name]
+        self._query_store = data_environments[data_environment.name]
 
         self.all_queries = AttribHolder()
         self._add_query_functions()
