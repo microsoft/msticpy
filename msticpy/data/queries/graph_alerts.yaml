@@ -12,13 +12,6 @@ defaults:
         description: Path name
         type: str
         default: '/security/alerts'
-      query_project:
-        description: Column project statement
-        type: str
-        default: '
-          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
-          AlertDisplayName = DisplayName, Severity = AlertSeverity
-          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
       start:
         description: Query start time
         type: datetime
