@@ -11,13 +11,13 @@ from typing import List, Union, Optional
 import attr
 from attr import Factory
 
-from . utility import export
-from .. _version import VERSION
+from .utility import export
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
-__all__ = ['KqlQuery']
+__all__ = ["KqlQuery"]
 
 
 @export
@@ -35,7 +35,7 @@ class DataFamily(Enum):
     SecurityGraphAlert = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional['DataFamily']:
+    def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
         """
         Convert string or int to enum.
 
@@ -74,7 +74,7 @@ class DataEnvironment(Enum):
     SecurityGraph = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional['DataEnvironment']:
+    def parse(cls, value: Union[str, int]) -> Optional["DataEnvironment"]:
         """
         Convert string or int to enum.
 
@@ -98,7 +98,7 @@ class DataEnvironment(Enum):
         return parsed_enum
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-few-public-methods
 @export
 class QueryParamProvider(ABC):
     """
@@ -117,7 +117,8 @@ class QueryParamProvider(ABC):
         These parameters are sourced in the object
         implementing this method.
 
-        Returns:
+        Returns
+        -------
             dict -- dictionary of query parameter values.
 
         """
@@ -125,15 +126,15 @@ class QueryParamProvider(ABC):
 
 
 # Query definition
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
-class KqlQuery():
+class KqlQuery:
     """KqlQuery definition."""
 
-    name: str = ''
-    query: str = ''
-    description: str = ''
-    data_source: str = ''
+    name: str = ""
+    query: str = ""
+    description: str = ""
+    data_source: str = ""
     data_families: List[DataFamily] = Factory(list)
     data_environments: List[DataEnvironment] = Factory(list)
     optional_params: List[str] = Factory(list)

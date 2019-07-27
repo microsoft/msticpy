@@ -1,0 +1,35 @@
+QueryDefinitions:
+  Custom:
+    - "tests/testdata"
+    - "tests"
+TIProviders:
+  OTX:
+    Args:
+      ApiID: "123456789"
+      AuthKey: "987654321"
+    Primary: True
+    Provider: "OTX" # Explicitly name provider to override
+  VirusTotal:
+    Args:
+      ApiID:
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+      AuthKey:
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+    Primary: True
+    Provider: "VirusTotal"
+  XForce:
+    Args:
+      ApiID:
+        EnvironmentVar: "XFORCE_ID"
+      AuthKey:
+        EnvironmentVar: "XFORCE_KEY"
+    Primary: False
+    Provider: "XForce"
+  AzureSentinel:
+    Args:
+      ApiID:
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+      AuthKey:
+        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+    Primary: True
+    Provider: "BYOTI"

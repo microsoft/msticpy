@@ -33,8 +33,7 @@ import re
 import tarfile
 
 # pylint: disable=unused-import
-from typing import (Tuple, Any, Set, Mapping, Optional, List,
-                    Iterable, Dict)
+from typing import Tuple, Any, Set, Mapping, Optional, List, Iterable, Dict
 import zipfile
 from collections import namedtuple
 
@@ -195,8 +194,9 @@ def unpack_items(
     return None
 
 
-def unpack(input_string: str,
-           trace: bool = False) -> Tuple[str, Optional[List[BinaryRecord]]]:
+def unpack(
+    input_string: str, trace: bool = False
+) -> Tuple[str, Optional[List[BinaryRecord]]]:
     """
     Base64 decode an input string.
 
@@ -253,9 +253,7 @@ def unpack(input_string: str,
     return _decode_b64_string_recursive(input_string)
 
 
-def unpack_df(data: pd.DataFrame,
-              column: str,
-              trace: bool = False) -> pd.DataFrame:
+def unpack_df(data: pd.DataFrame, column: str, trace: bool = False) -> pd.DataFrame:
     """
     Base64 decode strings taken from a pandas dataframe.
 
@@ -313,8 +311,8 @@ def unpack_df(data: pd.DataFrame,
     rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
     for input_row in rows_with_b64_match[[column]].itertuples():
         (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
-        output_frame['src_index'] = input_row.Index
-        output_frame['full_decoded_string'] = decoded_string
+        output_frame["src_index"] = input_row.Index
+        output_frame["full_decoded_string"] = decoded_string
         row_results.append(output_frame)
 
     if row_results:
@@ -323,13 +321,15 @@ def unpack_df(data: pd.DataFrame,
 
 
 # pylint: disable=too-many-locals
-def _decode_b64_string_recursive(input_string: str,
-                                 max_recursion: int = 20,
-                                 current_depth: int = 1,
-                                 item_prefix: str = '') -> Tuple[str, pd.DataFrame]:
+def _decode_b64_string_recursive(
+    input_string: str,
+    max_recursion: int = 20,
+    current_depth: int = 1,
+    item_prefix: str = "",
+) -> Tuple[str, pd.DataFrame]:
     """Recursively decode and unpack an encoded string."""
-    _debug_print_trace('_decode_b64_string_recursive: ', max_recursion)
-    _debug_print_trace('processing input: ', input_string[:200])
+    _debug_print_trace("_decode_b64_string_recursive: ", max_recursion)
+    _debug_print_trace("processing input: ", input_string[:200])
 
     decoded_string = input_string
 
@@ -356,8 +356,8 @@ def _decode_b64_string_recursive(input_string: str,
             _debug_print_trace("regex found: ", b64match.groupdict()["b64"])
             # if (in a recursive call) we already know that this string
             # doesn't decode skip this match
-            if b64match.groupdict()['b64'] in _UNDECODABLE_STRINGS:
-                _debug_print_trace('previous undecodable string')
+            if b64match.groupdict()["b64"] in _UNDECODABLE_STRINGS:
+                _debug_print_trace("previous undecodable string")
                 match_pos = b64match.end()
                 continue
 
@@ -377,30 +377,33 @@ def _decode_b64_string_recursive(input_string: str,
             if something_decoded:
                 # we did decode something so lets put our result this in the output string
                 if binary_items:
-                    new_records = _add_to_results(binary_items,
-                                                  b64match.groupdict()['b64'],
-                                                  current_depth,
-                                                  item_prefix,
-                                                  fragment_index)
-                    binary_records = binary_records.append(new_records,
-                                                           ignore_index=True,
-                                                           sort=False)
+                    new_records = _add_to_results(
+                        binary_items,
+                        b64match.groupdict()["b64"],
+                        current_depth,
+                        item_prefix,
+                        fragment_index,
+                    )
+                    binary_records = binary_records.append(
+                        new_records, ignore_index=True, sort=False
+                    )
                 # replace the decoded fragment in our current results string
                 # (decode_string)
                 decoded_string = decoded_string.replace(
                     b64match.groupdict()["b64"], decoded_fragment
                 )
                 _debug_print_trace(
-                    "Replaced string", decoded_string[match_pos : match_pos + 100]
+                    "Replaced string",
+                    decoded_string[match_pos : match_pos + 100],  # noqa: E203
                 )
                 match_pos += len(decoded_fragment)
             else:
-                _UNDECODABLE_STRINGS.add(b64match.groupdict()['b64'])
-                _debug_print_trace('new undecodable string')
+                _UNDECODABLE_STRINGS.add(b64match.groupdict()["b64"])
+                _debug_print_trace("new undecodable string")
                 match_pos = b64match.end()
 
         else:
-            _debug_print_trace('Pattern not found: ', match_pos)
+            _debug_print_trace("Pattern not found: ", match_pos)
             break
 
         if fragment_index > 50:
@@ -414,36 +417,44 @@ def _decode_b64_string_recursive(input_string: str,
     if something_decoded:
         # stuff that we have already decoded may also contain further
         # base64 encoded strings
-        prefix = (f'{item_prefix}.{fragment_index}.'
-                  if item_prefix else f'{fragment_index}.')
+        prefix = (
+            f"{item_prefix}.{fragment_index}." if item_prefix else f"{fragment_index}."
+        )
         next_level_string, child_records = _decode_b64_string_recursive(
             decoded_string,
             item_prefix=prefix,
             max_recursion=max_recursion - 1,
-            current_depth=(current_depth + 1))
-        return next_level_string, binary_records.append(
-            child_records, ignore_index=True, sort=False)
+            current_depth=(current_depth + 1),
+        )
+        return (
+            next_level_string,
+            binary_records.append(child_records, ignore_index=True, sort=False),
+        )
 
-    _debug_print_trace('Nothing left to decode')
+    _debug_print_trace("Nothing left to decode")
     return decoded_string, binary_records
 
 
-def _add_to_results(binary_items: Iterable[BinaryRecord],
-                    original_str: str,
-                    current_depth: int,
-                    item_prefix: str,
-                    fragment_index: int) -> List[Dict[str, Any]]:
+def _add_to_results(
+    binary_items: Iterable[BinaryRecord],
+    original_str: str,
+    current_depth: int,
+    item_prefix: str,
+    fragment_index: int,
+) -> List[Dict[str, Any]]:
     """Add current set of decoding results to collection."""
     new_rows = []
     for bin_record in binary_items:
         new_row = bin_record._asdict()
-        new_row['reference'] = (f'{item_prefix}',
-                                f'{current_depth}.',
-                                f'{fragment_index}')
-        new_row['original_string'] = original_str
-        new_row['md5'] = new_row['file_hashes']['md5']
-        new_row['sha1'] = new_row['file_hashes']['sha1']
-        new_row['sha256'] = new_row['file_hashes']['sha256']
+        new_row["reference"] = (
+            f"{item_prefix}",
+            f"{current_depth}.",
+            f"{fragment_index}",
+        )
+        new_row["original_string"] = original_str
+        new_row["md5"] = new_row["file_hashes"]["md5"]
+        new_row["sha1"] = new_row["file_hashes"]["sha1"]
+        new_row["sha256"] = new_row["file_hashes"]["sha256"]
 
         new_rows.append(new_row)
         # if pd_version_23():
@@ -459,20 +470,21 @@ def _add_to_results(binary_items: Iterable[BinaryRecord],
 def _debug_print_trace(*args):
     if _debug_trace:
         for arg in args:
-            print(arg, end='')
+            print(arg, end="")
         print()
 
 
 # pylint: disable=too-many-locals
-def _decode_and_format_b64_string(b64encoded_string: str,
-                                  item_prefix: str = None,
-                                  current_depth: int = 1,
-                                  current_index: int = 1
-                                  ) -> Tuple[str, Optional[List[BinaryRecord]]]:
+def _decode_and_format_b64_string(
+    b64encoded_string: str,
+    item_prefix: str = None,
+    current_depth: int = 1,
+    current_index: int = 1,
+) -> Tuple[str, Optional[List[BinaryRecord]]]:
     """Decode string and return displayable content plus list of decoded artifacts."""
     # Check if we recognize this as a known file type
     (_, f_type) = _is_known_b64_prefix(b64encoded_string)
-    _debug_print_trace('Found type: ', f_type)
+    _debug_print_trace("Found type: ", f_type)
     output_files = _decode_b64_binary(b64encoded_string, f_type)
     if not output_files:
         return b64encoded_string, None
@@ -480,57 +492,67 @@ def _decode_and_format_b64_string(b64encoded_string: str,
     if len(output_files) == 1:
         # get the first (only) item
         out_name, out_record = list(output_files.items())[0]
-        _debug_print_trace('_decode_b64_binary returned a single record')
-        _debug_print_trace('record:', out_record)
+        _debug_print_trace("_decode_b64_binary returned a single record")
+        _debug_print_trace("record:", out_record)
 
         # Build display string
         # If a string, include the decoded item in the output
-        if out_record.encoding_type in ['utf-8', 'utf-16']:
-            display_string = (f'<decoded type=\'string\' name=\'{out_name}\' '
-                              f'index=\'{item_prefix}{current_index}\' '
-                              f'depth=\'{current_depth}\'>'
-                              f'{out_record.decoded_string}</decoded>')
+        if out_record.encoding_type in ["utf-8", "utf-16"]:
+            display_string = (
+                f"<decoded type='string' name='{out_name}' "
+                f"index='{item_prefix}{current_index}' "
+                f"depth='{current_depth}'>"
+                f"{out_record.decoded_string}</decoded>"
+            )
             return display_string, [out_record]
 
         # if a binary include printable bytes
-        display_string = (f'<decoded value=\'binary\'  name=\'{out_name}\' '
-                          f'type=\'{out_record.file_type}\' '
-                          f'index=\'{item_prefix}{current_index}\' '
-                          f'depth=\'{current_depth}\'>'
-                          f'{out_record.printable_bytes}</decoded>')
+        display_string = (
+            f"<decoded value='binary'  name='{out_name}' "
+            f"type='{out_record.file_type}' "
+            f"index='{item_prefix}{current_index}' "
+            f"depth='{current_depth}'>"
+            f"{out_record.printable_bytes}</decoded>"
+        )
         return display_string, [out_record]
 
     # Build header display string
-    display_header = (f'<decoded value=\'multiple binary\' type=\'multiple\' '
-                      f'index=\'{item_prefix}{current_index}\' '
-                      f'depth=\'{current_depth}\'>')
+    display_header = (
+        f"<decoded value='multiple binary' type='multiple' "
+        f"index='{item_prefix}{current_index}' "
+        f"depth='{current_depth}'>"
+    )
     child_display_strings = []
     child_index = 1
     child_depth = current_depth + 1
-    _debug_print_trace('_decode_b64_binary returned multiple records')
+    _debug_print_trace("_decode_b64_binary returned multiple records")
 
     # Build child display strings
     for child_name, child_rec in output_files.items():
-        _debug_print_trace('Child_decode: ', child_rec)
-        child_index_string = f'{item_prefix}{current_index}.{child_index}'
+        _debug_print_trace("Child_decode: ", child_rec)
+        child_index_string = f"{item_prefix}{current_index}.{child_index}"
 
-        if child_rec.encoding_type in ['utf-8', 'utf-16']:
+        if child_rec.encoding_type in ["utf-8", "utf-16"]:
             # If a string, include the decoded item in the output
-            child_display_string = (f'<decoded type=\'string\' name=\'{child_name}\' '
-                                    f'index=\'{child_index_string}\' '
-                                    f'depth=\'{child_depth}\'>'
-                                    f'{child_rec.decoded_string}</decoded>')
+            child_display_string = (
+                f"<decoded type='string' name='{child_name}' "
+                f"index='{child_index_string}' "
+                f"depth='{child_depth}'>"
+                f"{child_rec.decoded_string}</decoded>"
+            )
         else:
             # if a binary just record its presence
-            child_display_string = (f'<decoded type=\'{child_rec.file_type}\' '
-                                    f'name=\'{child_name}\' '
-                                    f'index=\'{child_index_string}\' '
-                                    f'depth=\'{child_depth}\'>'
-                                    f'{child_rec.printable_bytes}</decoded>')
+            child_display_string = (
+                f"<decoded type='{child_rec.file_type}' "
+                f"name='{child_name}' "
+                f"index='{child_index_string}' "
+                f"depth='{child_depth}'>"
+                f"{child_rec.printable_bytes}</decoded>"
+            )
         child_display_strings.append(child_display_string)
         child_index += 1
 
-    display_string = display_header + ''.join(child_display_strings) + '</decoded>'
+    display_string = display_header + "".join(child_display_strings) + "</decoded>"
     return display_string, list(output_files.values())
 
 
@@ -774,8 +796,8 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Mapping[str, Optional[bytes]
         if tar_file:
             archive_dict[item] = tar_file.read()
         else:
-            archive_dict[item] = b''
-    return 'tar', archive_dict
+            archive_dict[item] = b""
+    return "tar", archive_dict
 
 
 @export

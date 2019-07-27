@@ -9,29 +9,33 @@ eventschema.
 Module for DataSchema class
 """
 from typing import Dict
-from . query_defns import DataFamily, DataEnvironment
-from . utility import export
-from .. _version import VERSION
+from deprecated.sphinx import deprecated
+
+from .query_defns import DataFamily, DataEnvironment
+from .utility import export
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
+@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 class DataSchema:
     """DataSchema class for Log Analytics Queries."""
 
-    DATA_MAPPINGS: Dict[DataEnvironment,
-                        Dict[DataFamily,
-                             Dict[str,
-                                  Dict[str, str]]]] = {DataEnvironment.LogAnalytics: {},
-                                                       DataEnvironment.Kusto: {}}
-    DATA_MAPPINGS[DataEnvironment.LogAnalytics] = {DataFamily.WindowsSecurity: {},
-                                                   DataFamily.LinuxSecurity: {},
-                                                   DataFamily.SecurityAlert: {}}
+    DATA_MAPPINGS: Dict[
+        DataEnvironment, Dict[DataFamily, Dict[str, Dict[str, str]]]
+    ] = {DataEnvironment.LogAnalytics: {}, DataEnvironment.Kusto: {}}
+    DATA_MAPPINGS[DataEnvironment.LogAnalytics] = {
+        DataFamily.WindowsSecurity: {},
+        DataFamily.LinuxSecurity: {},
+        DataFamily.SecurityAlert: {},
+    }
 
-    _SECURITY_ALERT = {'table': 'SecurityAlert',
-                       'query_project': '''| project
+    _SECURITY_ALERT = {
+        "table": "SecurityAlert",
+        "query_project": """| project
                                             TenantId,
                                             StartTimeUtc = StartTime,
                                             EndTimeUtc = EndTime,
@@ -54,10 +58,12 @@ class DataSchema:
                                             WorkspaceResourceGroup,
                                             TimeGenerated,
                                             ResourceId,
-                                            SourceComputerId '''}
+                                            SourceComputerId """,
+    }
 
-    _PROC_CREATE_WIN = {'table': 'SecurityEvent | where EventID == 4688',
-                        'query_project': '''| project
+    _PROC_CREATE_WIN = {
+        "table": "SecurityEvent | where EventID == 4688",
+        "query_project": """| project
                                             TenantId,
                                             Account,
                                             EventID,
@@ -75,10 +81,12 @@ class DataSchema:
                                             ParentProcessName,
                                             TargetLogonId,
                                             SourceComputerId
-                                            | extend TimeCreatedUtc=TimeGenerated '''}
+                                            | extend TimeCreatedUtc=TimeGenerated """,
+    }
 
-    _ACCOUNT_LOGON_WIN = {'table': 'SecurityEvent | where EventID == 4624',
-                          'query_project': '''| project
+    _ACCOUNT_LOGON_WIN = {
+        "table": "SecurityEvent | where EventID == 4624",
+        "query_project": """| project
                                             TenantId,
                                             Account,
                                             EventID,
@@ -97,10 +105,12 @@ class DataSchema:
                                             AuthenticationPackageName,
                                             Status,
                                             IpAddress,
-                                            WorkstationName'''}
+                                            WorkstationName""",
+    }
 
-    _ACCOUNT_LOGON_FAIL_WIN = {'table': 'SecurityEvent | where EventID == 4625',
-                               'query_project': '''| project
+    _ACCOUNT_LOGON_FAIL_WIN = {
+        "table": "SecurityEvent | where EventID == 4625",
+        "query_project": """| project
                                             TenantId,
                                             Account,
                                             EventID,
@@ -119,10 +129,12 @@ class DataSchema:
                                             AuthenticationPackageName,
                                             Status,
                                             IpAddress,
-                                            WorkstationName'''}
+                                            WorkstationName""",
+    }
 
-    _PROC_CREATE_LX = {'table': 'LinuxAuditD | where EventID == 14688',
-                       'query_project': '''| project
+    _PROC_CREATE_LX = {
+        "table": "LinuxAuditD | where EventID == 14688",
+        "query_project": """| project
                                             TenantId,
                                             Account,
                                             EventID,
@@ -151,10 +163,11 @@ class DataSchema:
                                             egid,
                                             cwd,
                                             name
-                                            | extend TimeCreatedUtc=TimeGenerated '''}
-    _ACCOUNT_LOGON_LX = {'table':
-                         'LinuxAuditD | where EventID == 1100 or EventID == 1112',
-                         'query_project': '''| project
+                                            | extend TimeCreatedUtc=TimeGenerated """,
+    }
+    _ACCOUNT_LOGON_LX = {
+        "table": "LinuxAuditD | where EventID == 1100 or EventID == 1112",
+        "query_project": """| project
                                             TenantId,
                                             Account,
                                             EventID,
@@ -174,19 +187,28 @@ class DataSchema:
                                             Status=res,
                                             audit_user,
                                             IpAddress=addr,
-                                            WorkstationName=hostname'''}
+                                            WorkstationName=hostname""",
+    }
     # Add to the main dictionaries
     DATA_MAPPINGS[DataEnvironment.LogAnalytics][DataFamily.SecurityAlert] = {
-        'security_alert': _SECURITY_ALERT}
+        "security_alert": _SECURITY_ALERT
+    }
     DATA_MAPPINGS[DataEnvironment.LogAnalytics][DataFamily.WindowsSecurity] = {
-        'process_create': _PROC_CREATE_WIN, 'account_logon': _ACCOUNT_LOGON_WIN,
-        'account_logon_fail': _ACCOUNT_LOGON_FAIL_WIN}
+        "process_create": _PROC_CREATE_WIN,
+        "account_logon": _ACCOUNT_LOGON_WIN,
+        "account_logon_fail": _ACCOUNT_LOGON_FAIL_WIN,
+    }
     DATA_MAPPINGS[DataEnvironment.LogAnalytics][DataFamily.LinuxSecurity] = {
-        'process_create': _PROC_CREATE_LX, 'account_logon': _ACCOUNT_LOGON_LX}
+        "process_create": _PROC_CREATE_LX,
+        "account_logon": _ACCOUNT_LOGON_LX,
+    }
 
-    def __init__(self, environment: DataEnvironment = DataEnvironment.LogAnalytics,
-                 data_family: DataFamily = DataFamily.WindowsSecurity,
-                 data_source: str = 'security_alert'):
+    def __init__(
+        self,
+        environment: DataEnvironment = DataEnvironment.LogAnalytics,
+        data_family: DataFamily = DataFamily.WindowsSecurity,
+        data_source: str = "security_alert",
+    ):
         """
         Create a new instance of the DataSchema object.
 
@@ -201,8 +223,10 @@ class DataSchema:
             except KeyError:
                 pass
         if environment not in DataSchema.DATA_MAPPINGS:
-            raise LookupError(f'Unknown environment {environment}. '
-                              'Valid environments are:\n{self.environments}')
+            raise LookupError(
+                f"Unknown environment {environment}. "
+                "Valid environments are:\n{self.environments}"
+            )
 
         if isinstance(data_family, str):
             try:
@@ -210,12 +234,16 @@ class DataSchema:
             except KeyError:
                 pass
         if data_family not in DataSchema.DATA_MAPPINGS[environment]:
-            raise LookupError(f'Unknown data_family {data_family}. '
-                              'Valid families are:\n{self.data_families}')
+            raise LookupError(
+                f"Unknown data_family {data_family}. "
+                "Valid families are:\n{self.data_families}"
+            )
 
         if data_source not in DataSchema.DATA_MAPPINGS[environment][data_family]:
-            raise LookupError(f'Unknown data_source {data_family}. '
-                              'Valid data sources are:\n{self.data_source_types}')
+            raise LookupError(
+                f"Unknown data_source {data_family}. "
+                "Valid data sources are:\n{self.data_source_types}"
+            )
 
         self.current = DataSchema.DATA_MAPPINGS[environment][data_family][data_source]
 
@@ -223,7 +251,7 @@ class DataSchema:
         """Index operator overload."""
         if self.current is not None and key is not None and key in self.current:
             return self.current[key]
-        raise KeyError('{} has no attribute {}'.format(str(type(self)), key))
+        raise KeyError("{} has no attribute {}".format(str(type(self)), key))
 
     def __contains__(self, key):
         """In operator overload."""
@@ -267,13 +295,19 @@ class DataSchema:
                 LinuxSecurity, Office365)
         """
         if environment is None or environment not in DataSchema.DATA_MAPPINGS:
-            raise LookupError('Invalid value for environment. Expected one of {}'
-                              .format(', '.join(cls.get_data_environments())))
+            raise LookupError(
+                "Invalid value for environment. Expected one of {}".format(
+                    ", ".join(cls.get_data_environments())
+                )
+            )
 
         env = DataSchema.DATA_MAPPINGS[environment]
         if data_family is None or data_family not in env:
-            raise LookupError('Invalid value for data_family. Expected one of {}'
-                              .format(', '.join(cls.get_data_families())))
+            raise LookupError(
+                "Invalid value for data_family. Expected one of {}".format(
+                    ", ".join(cls.get_data_families())
+                )
+            )
 
         return env[data_family]
 

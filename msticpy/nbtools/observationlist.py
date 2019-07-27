@@ -11,15 +11,15 @@ import attr
 from attr import Factory
 from IPython.display import display, Markdown
 
-from .. _version import VERSION
+from .._version import VERSION
 
 __version__ = VERSION
-__author__ = 'Ian Hellen'
+__author__ = "Ian Hellen"
 
 
 # Query definition
 @attr.s(auto_attribs=True)
-class Observation():
+class Observation:
     """
     Observation definition.
 
@@ -41,6 +41,9 @@ class Observation():
         Link (usually a document-local link) to the
         originating section of the notebook.
         (default is None)
+    score : int
+        The risk score associated with the observation.
+        (default is 0)
     tags : List[str]
         Optional list of tags.
     additional_properties Dict[str, Any]
@@ -54,6 +57,7 @@ class Observation():
     description: Optional[str] = None
     data_type: Optional[str] = None
     link: Optional[str] = None
+    score: int = 0
     tags: List[str] = Factory(list)
     additional_properties: Dict[str, Any] = Factory(dict)
 
@@ -68,7 +72,7 @@ class Observation():
             List of field names.
 
         """
-        return ['caption', 'data']
+        return ["caption", "data"]
 
     @classmethod
     def all_fields(cls) -> List[str]:
@@ -87,7 +91,7 @@ class Observation():
 class Observations:
     """Class to collect and display investigation observations."""
 
-    def __init__(self, observationlist: 'Observations' = None):
+    def __init__(self, observationlist: "Observations" = None):
         """
         Create an observation list.
 
@@ -118,17 +122,18 @@ class Observations:
     def display_observations(self):
         """Display the current observations using IPython.display."""
         for observation in self.observation_list.values():
-            display(Markdown(f'### {observation.caption}'))
+            display(Markdown(f"### {observation.caption}"))
             display(Markdown(observation.description))
+            display(Markdown(f"Score: {observation.score}"))
             if observation.link:
-                display(Markdown(f'[Go to details](#{observation.link})'))
+                display(Markdown(f"[Go to details](#{observation.link})"))
             if observation.tags:
                 display(Markdown(f'tags: {", ".join(observation.tags)}'))
             display(observation.data)
             if observation.additional_properties:
-                display(Markdown('### Additional Properties'))
+                display(Markdown("### Additional Properties"))
                 for key, val in observation.additional_properties.items():
-                    display(Markdown(f'**{key}**: {val}'))
+                    display(Markdown(f"**{key}**: {val}"))
 
     def add_observation(self, observation: Observation = None, **kwargs):
         """
@@ -158,16 +163,18 @@ class Observations:
             req_fields = set(Observation.required_fields())
             missing_fields = req_fields.difference(kwargs.keys())
             if missing_fields:
-                raise ValueError(f'The following fields are required',
-                                 f'in an Observation: {missing_fields}')
+                raise ValueError(
+                    f"The following fields are required",
+                    f"in an Observation: {missing_fields}",
+                )
 
-            core_fields = {k: v
-                           for k, v in kwargs.items()
-                           if k in Observation.all_fields()}
+            core_fields = {
+                k: v for k, v in kwargs.items() if k in Observation.all_fields()
+            }
             new_observation = Observation(**core_fields)
-            addl_fields = {k: v
-                           for k, v in kwargs.items()
-                           if k not in Observation.all_fields()}
+            addl_fields = {
+                k: v for k, v in kwargs.items() if k not in Observation.all_fields()
+            }
             # pylint: disable=no-member
             new_observation.additional_properties.update(addl_fields)
             self.observation_list[new_observation.caption] = new_observation
