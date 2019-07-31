@@ -1,4 +1,5 @@
 QueryDefinitions:
-  Default: "queries"
+  Default:
+    - 'queries'
   Custom:
 TIProviders:
