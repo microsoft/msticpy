@@ -18,7 +18,7 @@ defaults:
       end:
         description: Query end time
         type: datetime
-      user:
+      account_name:
         description: Optional user to filter on
         type: str
         default: ''
@@ -55,7 +55,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer == "{host_name}"
+        | where Computer has "{host_name}"
         | where Facility == "auth" or Facility == "authpriv"
         | where ProcessName != "sudo" and ProcessName != "CRON"
         | extend LogonResult = iif(
@@ -74,7 +74,7 @@ sources:
                                     )
                                 )
         | extend User = iif(SyslogMessage contains "publickey", extract("(for )([[:alnum:]]+)",2,SyslogMessage), extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
-        | where User contains "{user}"'
+        | where User contains "{account_name}"'
     parameters:
       host_name:
         description: Hostname to query for
