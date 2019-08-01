@@ -6,8 +6,7 @@
 """QueryStore class - holds a collection of QuerySources."""
 from typing import Dict, Iterable, Set, Union
 from os import path
-import re
-from collections import defaultdict, ChainMap
+from collections import defaultdict
 
 from .data_query_reader import read_query_def_file, find_yaml_files
 from .query_source import QuerySource
@@ -174,7 +173,9 @@ class QueryStore:
                     if environment.name not in env_stores:
                         env_stores[environment.name] = cls(environment=environment.name)
                     for source_name, source in sources.items():
-                        new_source = QuerySource(source_name, source, defaults, metadata)
+                        new_source = QuerySource(
+                            source_name, source, defaults, metadata
+                        )
                         env_stores[environment.name].add_data_source(new_source)
 
         return env_stores

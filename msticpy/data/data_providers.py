@@ -103,7 +103,9 @@ class QueryProvider:
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
-                query_paths.append(Path(__file__).resolve().parent.joinpath(custom_path))
+                query_paths.append(
+                    Path(__file__).resolve().parent.joinpath(custom_path)
+                )
 
         data_environments = QueryStore.import_files(
             source_path=query_paths, recursive=True
