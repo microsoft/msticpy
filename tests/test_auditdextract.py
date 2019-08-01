@@ -6,7 +6,6 @@
 """auditd extract test class."""
 import ast
 import unittest
-import json
 import os
 
 import pandas as pd

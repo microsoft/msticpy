@@ -67,6 +67,11 @@ class TestB64Unpack(unittest.TestCase):
             self.assertIsNotNone(result_str)
             self.assertIsNotNone(result_df)
 
+            result_str, result_df = b64.unpack(input_string=input_txt, trace=True)
+            self.assertEqual(result_df.shape, (8, 12))
+            self.assertIsNotNone(result_str)
+            self.assertIsNotNone(result_df)
+
         except FileNotFoundError as ex:
             self.fail(msg="Exception {}".format(str(ex)))
 
