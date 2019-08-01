@@ -6,7 +6,6 @@
 """datq query test class."""
 import unittest
 from functools import partial
-import json
 import os
 from pathlib import Path
 from typing import Union, Any, Tuple
@@ -67,6 +66,7 @@ class TestDataQuery(unittest.TestCase):
         q_sources = la_provider._query_store.data_families
         self.assertGreaterEqual(len(q_sources["WindowsSecurity"]), 9)
         self.assertGreaterEqual(len(q_sources["SecurityAlert"]), 5)
+        self.assertGreaterEqual(len(q_sources["LinuxSyslog"]), 5)
 
         # pick one item and check properties
         get_alert_q = q_sources["SecurityAlert"]["get_alert"]

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Data provider loader."""
 from functools import partial
-from os import path
+from pathlib import Path
 from typing import Union, Any, List
 
 import pandas as pd
@@ -15,13 +15,13 @@ from .query_store import QueryStore
 from .param_extractor import extract_query_params
 from ..nbtools.query_defns import DataEnvironment
 from ..nbtools.utility import export
+from ..nbtools import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _PROVIDER_DIR = "providers"
-_QUERY_DEF_DIR = "queries"
 
 _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: KqlDriver,
@@ -66,6 +66,9 @@ class QueryProvider:
             Override the builtin driver (query execution class)
             and use your own driver (must inherit from
             `DriverBase`)
+        query_path: str, optional
+            Override the default location for query files to import
+            a custom set of query definitions at initialization.
 
         See Also
         --------
@@ -93,15 +96,20 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        # Find the path of this module and build sub-path
-        query_path = path.join(path.dirname(__file__), _QUERY_DEF_DIR)
+        settings = config.settings.get("QueryDefinitions")
+        query_paths = []
+        for default_path in settings.get("Default"):
+            query_paths.append(Path(__file__).resolve().parent.joinpath(default_path))
 
-        # Load data query definitions for environment
+        if settings.get("Custom") is not None:
+            for custom_path in settings.get("Custom"):
+                query_paths.append(Path(__file__).resolve().parent.joinpath(custom_path))
+
         data_environments = QueryStore.import_files(
-            source_path=query_path, recursive=True
+            source_path=query_paths, recursive=True
         )
-        self._query_store = data_environments[data_environment.name]
 
+        self._query_store = data_environments[data_environment.name]
         self.all_queries = AttribHolder()
         self._add_query_functions()
 
@@ -128,6 +136,7 @@ class QueryProvider:
 
         """
         self._query_store.import_file(query_file)
+        self._add_query_functions()
 
     @classmethod
     def list_data_environments(cls) -> List[str]:
@@ -200,6 +209,8 @@ class QueryProvider:
             raise ValueError(f"No values found for these parameters: {missing}")
 
         query_str = query_source.create_query(**params)
+        if "print" in args:
+            return query_str
         return self._query_provider.query(query_str)
 
     def _add_query_functions(self):
