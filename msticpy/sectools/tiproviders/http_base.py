@@ -142,10 +142,15 @@ class HttpProvider(TIProvider):
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
             result = LookupResult(ioc=ioc, ioc_type=ioc_type, query_subtype=query_type)
-            result.raw_result = response.json()
             result.status = response.status_code
-            result.result, result.details = self.parse_results(result)
             result.reference = req_params["url"]
+            if result.status == 200:
+                result.raw_result = response.json()
+                result.result, result.details = self.parse_results(result)
+            else:
+                result.raw_result = str(response)
+                result.result = False
+                result.details = "No response from provider."
             return result
         except (
             LookupError,

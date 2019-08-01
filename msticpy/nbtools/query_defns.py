@@ -29,6 +29,7 @@ class DataFamily(Enum):
     data sources.
     """
 
+    Unknown = 0
     WindowsSecurity = 1
     LinuxSecurity = 2
     SecurityAlert = 3
@@ -53,9 +54,16 @@ class DataFamily(Enum):
             try:
                 parsed_enum = cls[value]
             except KeyError:
-                pass
+                # match to value if case is incorrect
+                for e_name, e_val in cls.__members__.items():
+                    if e_name.upper() == value.upper():
+                        return e_val
+                return cls.Unknown
         if isinstance(value, int):
-            parsed_enum = cls(value)
+            try:
+                parsed_enum = cls(value)
+            except ValueError:
+                parsed_enum = cls.Unknown
         return parsed_enum
 
 

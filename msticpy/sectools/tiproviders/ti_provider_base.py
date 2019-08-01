@@ -54,6 +54,17 @@ class LookupResult:
     reference: Optional[str] = None
     status: int = 0
 
+    @property
+    def summary(self):
+        """Print a summary of the Lookup Result."""
+        print("ioc:", self.ioc, "(", self.ioc_type, ")")
+        print("result:", self.result)
+        if isinstance(self.details, dict):
+            for name, details in self.details.items():
+                print(name, ":", details)
+        else:
+            print(self.details)
+
 
 # Mapping for DataFrame columns
 _DF_COLUMNS_MAP: Dict[str, str] = {

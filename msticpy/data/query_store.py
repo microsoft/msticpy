@@ -198,8 +198,10 @@ class QueryStore:
 
         """
         if isinstance(data_family, str) and "." not in data_family:
-            data_family = DataFamily.parse(data_family)
-        return self.data_families[data_family.name][query_name]
+            parsed_data_family = DataFamily.parse(data_family)
+        if parsed_data_family != DataFamily.Unknown:
+            data_family = parsed_data_family.name
+        return self.data_families[data_family][query_name]
 
     def find_query(self, query_name: str) -> Set["QuerySource"]:
         """

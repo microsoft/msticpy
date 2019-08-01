@@ -120,7 +120,7 @@ sources:
         let sourceTimeCreatedUtc = toscalar(sourceProcess | project TimeCreatedUtc);
         let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
         let system_session_id = "0x3e7";
-        let parentProcess = // Parent Process
+        let parentProcess =
         materialize(
             {table}
             {query_project}
@@ -135,7 +135,7 @@ sources:
             | top 1 by TimeCreatedUtc desc nulls last);
         let parentLogonId = toscalar(sourceProcess | project SubjectLogonId);
         let parentTimeCreated = toscalar(sourceProcess | project TimeCreatedUtc);
-        let childProcesses = // Child Process
+        let childProcesses =
         materialize(
             {table}
             {query_project}
@@ -151,7 +151,6 @@ sources:
         | union (childProcesses)
         | union
         (
-            // GrandParent Process (we ignore this if this is the system logonId)
             {table}
             {query_project}
             | where {subscription_filter}
@@ -166,7 +165,6 @@ sources:
         )
         | union
         (
-            // GrandChild Process (we ignore this if this is the system logonId)
             {table}
             {query_project}
             | where {subscription_filter}
@@ -180,7 +178,6 @@ sources:
         )
         | union
         (
-            // Sibling Process
             {table}
             {query_project}
             | where {subscription_filter}
@@ -229,7 +226,6 @@ sources:
             | top 1 by TimeCreatedUtc desc nulls last);
         let sourceTimeCreatedUtc = toscalar(sourceProcess | project TimeCreatedUtc );
         let sourceParentProcessId = toscalar(sourceProcess | project ProcessId);
-        // Parent Process
         {table}
         {query_project}
         | where {subscription_filter}

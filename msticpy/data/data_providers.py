@@ -117,6 +117,32 @@ class QueryProvider:
         """
         return self._query_provider.connect(connection_str=connection_str, **kwargs)
 
+    @property
+    def connected(self) -> bool:
+        """
+        Return True if the provider is connected.
+
+        Returns
+        -------
+        bool
+            True if the provider is connected.
+
+        """
+        return self._query_provider.connected
+
+    @property
+    def connection_string(self) -> str:
+        """
+        Return provider connection string.
+
+        Returns
+        -------
+        str
+            Provider connection string.
+
+        """
+        return self._query_provider.current_connection
+
     def import_query_file(self, query_file: str):
         """
         Import a yaml data source definition.

@@ -43,7 +43,7 @@ def print_kql(query_string: str):
         print(line.strip())
 
 
-@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
+# @deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def clean_kql_query(query_string: str) -> str:
     """
