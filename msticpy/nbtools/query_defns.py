@@ -34,6 +34,7 @@ class DataFamily(Enum):
     LinuxSecurity = 2
     SecurityAlert = 3
     SecurityGraphAlert = 4
+    LinuxSyslog = 5
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
