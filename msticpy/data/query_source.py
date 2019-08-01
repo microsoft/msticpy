@@ -350,7 +350,7 @@ class QuerySource:
 
     def _replace_query_macros(self):
         """Replace any macro strings in the query with substitutions."""
-        replace_keys = re.findall(r"\$\{([^}]+)\}\$?", self._query)
+        replace_keys = re.findall(r"\$\<([^}]+)\>\$?", self._query)
         if not replace_keys:
             return
         replace_values = {}
@@ -361,5 +361,5 @@ class QuerySource:
         for key in replace_keys:
             if key in replace_keys:
                 replacement = replace_values.get(key, "")
-                self._query = self._query.replace(f"${{{key}}}$", replacement)
+                self._query = self._query.replace(f"$<{key}>$", replacement)
         self._query = re.sub("\n{2,}", "\n", self._query)

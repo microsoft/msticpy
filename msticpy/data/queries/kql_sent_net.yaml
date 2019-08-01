@@ -32,7 +32,7 @@ metadata:
         | where SubType_s == "FlowLog"
         | where FlowStartTime_t >= datetime({start})
         | where FlowEndTime_t <= datetime({end})
-        ${query_condition}$
+        $<query_condition>$
         | where (AllowedOutFlows_d > 0 or AllowedInFlows_d > 0)
         {query_project}
         | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP), 
