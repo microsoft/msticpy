@@ -1,7 +1,8 @@
 QueryDefinitions:
+  Default: 
+    - 'queries'
   Custom:
-    - "tests/testdata"
-    - "tests"
+    - 'testdata'
 TIProviders:
   OTX:
     Args:
