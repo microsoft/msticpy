@@ -107,11 +107,15 @@ class KqlDriver(DriverBase):
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
-        auto_dataframe = self._ip.run_line_magic("config", line="Kqlmagic.auto_dataframe")
+        auto_dataframe = self._ip.run_line_magic(
+            "config", line="Kqlmagic.auto_dataframe"
+        )
         self._ip.run_line_magic("config", line="Kqlmagic.auto_dataframe=False")
         # run the query
         result = self._ip.run_cell_magic("kql", line="", cell=query)
-        self._ip.run_line_magic("config", line=f"Kqlmagic.auto_dataframe={auto_dataframe}")
+        self._ip.run_line_magic(
+            "config", line=f"Kqlmagic.auto_dataframe={auto_dataframe}"
+        )
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None

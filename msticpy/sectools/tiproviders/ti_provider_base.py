@@ -20,7 +20,7 @@ from collections import Counter, namedtuple
 
 from functools import singledispatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, Generator
 import socket
 from socket import gaierror
 
@@ -46,8 +46,8 @@ class LookupResult:
     """Lookup result for IoCs."""
 
     ioc: str
-    ioc_type: str
-    query_subtype: str = None
+    ioc_type: Optional[str]
+    query_subtype: Optional[str] = None
     result: bool = False
     details: Any = None
     raw_result: Optional[str] = None
@@ -391,7 +391,8 @@ def _clean_url(url: str) -> Optional[str]:
     # Try to clean URL and re-check
     match_url = _HTTP_STRICT_RGXC.search(url)
     if (
-        match_url.groupdict()["protocol"] is None
+        not match_url
+        or match_url.groupdict()["protocol"] is None
         or match_url.groupdict()["host"] is None
     ):
         return None
@@ -468,7 +469,7 @@ def entropy(input_str: str) -> float:
 @singledispatch
 def generate_items(
     data: Any, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
-) -> Tuple[str, str]:
+) -> Generator:
     """
     Generate item pairs from different input types.
 
@@ -483,7 +484,7 @@ def generate_items(
 
     Returns
     -------
-    Tuple[str, str] - a tuple of Observable/Type.
+    Generator[Tuple[str, str]] - a tuple of Observable/Type.
 
     """
     del obs_col, ioc_type_col

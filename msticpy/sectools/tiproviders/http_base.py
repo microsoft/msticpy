@@ -72,6 +72,7 @@ class HttpProvider(TIProvider):
         if "AuthKey" in kwargs:
             self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
+    # pylint: disable=too-many-branches
     @lru_cache(maxsize=256)
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None
@@ -161,7 +162,7 @@ class HttpProvider(TIProvider):
             url = req_params.get("url", None) if req_params else None
             err_result.details = err.args
             err_result.raw_result = (
-                type(err) + "\n" + str(err) + "\n" + traceback.format_exc()
+                type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
             )
             err_result.reference = url
             return err_result
@@ -202,7 +203,7 @@ class HttpProvider(TIProvider):
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         # create a parameter dictionary to pass to requests
-        req_dict = {}
+        req_dict: Dict[str, Any] = {}
         # substitute any parameter value from our req_params dict
         req_dict["url"] = (
             self._BASE_URL + src.path.format(**req_params)
@@ -210,20 +211,22 @@ class HttpProvider(TIProvider):
             else src.path.format(observable=ioc)
         )
         if src.headers:
-            headers = {
+            headers: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.headers.items()
             }
             req_dict["headers"] = headers
         if src.params:
-            q_params = {
+            q_params: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.params.items()
             }
             req_dict["params"] = q_params
         if src.data:
-            q_data = {key: val.format(**req_params) for key, val in src.data.items()}
+            q_data: Dict[str, Any] = {
+                key: val.format(**req_params) for key, val in src.data.items()
+            }
             req_dict["data"] = q_data
         if src.auth_type and src.auth_str:
-            auth_strs = tuple([p.format(**req_params) for p in src.auth_str])
+            auth_strs: Tuple = tuple([p.format(**req_params) for p in src.auth_str])
             if src.auth_type == "HTTPBasic":
                 req_dict["auth"] = auth_strs
             else:

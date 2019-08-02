@@ -28,7 +28,7 @@ import sys
 from collections import defaultdict, namedtuple
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Union
 from urllib.error import HTTPError
 from urllib.parse import unquote
 
@@ -177,7 +177,7 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
-        self.__class__.tld_index = self.get_tlds()
+        self.__class__.tld_index: Set[str] = self.get_tlds()
 
     # Public members
     def add_ioc_type(
@@ -241,7 +241,7 @@ class IoCExtract:
         data: pd.DataFrame = None,
         columns: List[str] = None,
         **kwargs,
-    ) -> Any:
+    ) -> Union[Dict[str, Set[str]], pd.DataFrame]:
         """
         Extract IoCs from either a string or pandas DataFrame.
 
@@ -331,7 +331,7 @@ class IoCExtract:
             )
 
         result_columns = ["IoCType", "Observable", "SourceIndex"]
-        result_rows = []
+        result_rows: List[pd.Series] = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
                 self._search_in_row(
@@ -350,7 +350,7 @@ class IoCExtract:
         result_columns: List[str],
         os_family: str,
         ioc_types_to_use: List[str],
-    ):
+    ) -> List[pd.Series]:
         """Return results for a single input row."""
         result_rows = []
         for col in columns:
@@ -568,7 +568,7 @@ class IoCExtract:
             # in the package tree - we use the first one we find
             pkg_paths = sys.modules["msticpy"]
             if pkg_paths:
-                conf_file = next(Path(pkg_paths.__path__[0]).glob(seed_file))
+                conf_file = str(next(Path(pkg_paths.__path__[0]).glob(seed_file)))
 
         if conf_file:
             with open(conf_file, "r") as file_handle:
@@ -610,7 +610,7 @@ class IoCExtract:
     # Private methods
     def _scan_for_iocs(
         self, src: str, os_family: str, ioc_types: List[str] = None
-    ) -> Mapping[str, Set[str]]:
+    ) -> Dict[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
         iocs_found: Dict[str, Tuple[str, int]] = {}

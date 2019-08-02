@@ -83,8 +83,13 @@ class XForce(HttpProvider):
             Object with match details
 
         """
-        if response.status == 404:
-            return {}
+        if (
+            response.status == 404
+            or not response.raw_result
+            or not response.raw_result
+            or not isinstance(response.raw_result, dict)
+        ):
+            return False, "Not found."
         result = False
         result_dict = {}
         if response.ioc_type in ["ipv4", "ipv6"] and not response.query_subtype:

@@ -6,7 +6,7 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Union, Optional
+from typing import List, Union
 
 import attr
 from attr import Factory
@@ -37,7 +37,7 @@ class DataFamily(Enum):
     LinuxSyslog = 5
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
+    def parse(cls, value: Union[str, int]) -> "DataFamily":
         """
         Convert string or int to enum.
 
@@ -83,7 +83,7 @@ class DataEnvironment(Enum):
     SecurityGraph = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional["DataEnvironment"]:
+    def parse(cls, value: Union[str, int]) -> "DataEnvironment":
         """
         Convert string or int to enum.
 

@@ -4,15 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """QueryStore class - holds a collection of QuerySources."""
-from typing import Dict, Iterable, Set, Union
+from collections import defaultdict
 from os import path
-import re
-from collections import defaultdict, ChainMap
+from typing import Any, Dict, Iterable, Set, Union
 
-from .data_query_reader import read_query_def_file, find_yaml_files
-from .query_source import QuerySource
-from ..nbtools.query_defns import DataFamily, DataEnvironment
 from .._version import VERSION
+from ..nbtools.query_defns import DataEnvironment, DataFamily
+from .data_query_reader import find_yaml_files, read_query_def_file
+from .query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -52,9 +51,9 @@ class QueryStore:
             The data environment
 
         """
-        self.environment = environment  # str
-        self.data_families = defaultdict(dict)  # Dict[str, Dict[str, 'QuerySource']
-        self.data_family_defaults = defaultdict(dict)  # Dict[str, Dict[str, Any]
+        self.environment: str = environment
+        self.data_families: Dict[str, Dict[str, QuerySource]] = defaultdict(dict)
+        self.data_family_defaults: Dict[str, Dict[str, Any]] = defaultdict(dict)
 
     def __getattr__(self, name: str):
         """Return the item in dot-separated path `name`."""
@@ -81,7 +80,7 @@ class QueryStore:
             ]:
                 yield q_name
 
-    def add_data_source(self, source: "QuerySource"):
+    def add_data_source(self, source: QuerySource):
         """
         Add a datasource/query to the store.
 
@@ -157,12 +156,12 @@ class QueryStore:
             a source file.
 
         """
-        env_stores = dict()
+        env_stores: Dict[str, QueryStore] = dict()
         for query_dir in source_path:
             if not path.isdir(query_dir):
                 raise ImportError(f"{query_dir} is not a directory")
             for file_path in find_yaml_files(query_dir, recursive):
-                sources, defaults, metadata = read_query_def_file(file_path)
+                sources, defaults, metadata = read_query_def_file(str(file_path))
 
                 for env_value in metadata["data_environments"]:
                     if "." in env_value:
@@ -174,7 +173,9 @@ class QueryStore:
                     if environment.name not in env_stores:
                         env_stores[environment.name] = cls(environment=environment.name)
                     for source_name, source in sources.items():
-                        new_source = QuerySource(source_name, source, defaults, metadata)
+                        new_source = QuerySource(
+                            source_name, source, defaults, metadata
+                        )
                         env_stores[environment.name].add_data_source(new_source)
 
         return env_stores
@@ -204,7 +205,7 @@ class QueryStore:
             data_family = parsed_data_family.name
         return self.data_families[data_family][query_name]
 
-    def find_query(self, query_name: str) -> Set["QuerySource"]:
+    def find_query(self, query_name: str) -> Set[QuerySource]:
         """
         Return set of queries with name `query_name`.
 
@@ -219,8 +220,8 @@ class QueryStore:
             Set (distinct) queries matching name.
 
         """
-        return (
+        return {
             query_dict.get(query_name)
             for family, query_dict in self.data_families.items()
             if query_name in query_dict
-        )
+        }

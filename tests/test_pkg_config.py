@@ -33,9 +33,11 @@ class TestPkgConfig(unittest.TestCase):
         self.assertEqual(1, len(settings["QueryDefinitions"]["Default"]))
         for path in settings["QueryDefinitions"]["Default"]:
             self.assertTrue(type(path), str)
-            path = 'msticpy/data/' + path
-            self.assertTrue(Path(__file__).resolve().parent.parent.joinpath(path).is_dir())
-            
+            path = "msticpy/data/" + path
+            self.assertTrue(
+                Path(__file__).resolve().parent.parent.joinpath(path).is_dir()
+            )
+
     def test_custom_config(self):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)

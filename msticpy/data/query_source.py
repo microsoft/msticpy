@@ -237,7 +237,9 @@ class QuerySource:
 
             if settings["type"] == "list":
                 if isinstance(param_dict[p_name], list):
-                    param_dict[p_name] = ",".join([f"'{item}''" for item in param_dict[p_name]])
+                    param_dict[p_name] = ",".join(
+                        [f"'{item}''" for item in param_dict[p_name]]
+                    )
 
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)
@@ -355,9 +357,10 @@ class QuerySource:
             return
         replace_values = {}
         if "query_macros" in self._source:
-            replace_values = {name: properties.get("value", "")
-                              for name, properties
-                              in self["query_macros"].items()}
+            replace_values = {
+                name: properties.get("value", "")
+                for name, properties in self["query_macros"].items()
+            }
         for key in replace_keys:
             if key in replace_keys:
                 replacement = replace_values.get(key, "")
