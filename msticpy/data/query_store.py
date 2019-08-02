@@ -167,7 +167,7 @@ class QueryStore:
                     if "." in env_value:
                         env_value = env_value.split(".")[1]
                     environment = DataEnvironment.parse(env_value)
-                    if not environment:
+                    if environment == DataEnvironment.Unknown:
                         raise ValueError(f"Unknown environment {env_value}")
 
                     if environment.name not in env_stores:

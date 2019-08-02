@@ -50,7 +50,7 @@ class DataFamily(Enum):
         if isinstance(value, cls):
             return value
 
-        parsed_enum = None
+        parsed_enum = cls.Unknown
         if isinstance(value, str):
             try:
                 parsed_enum = cls[value]
@@ -77,6 +77,7 @@ class DataEnvironment(Enum):
     data sources.
     """
 
+    Unknown = 0
     LogAnalytics = 1
     Kusto = 2
     AzureSecurityCenter = 3
@@ -96,7 +97,7 @@ class DataEnvironment(Enum):
         if isinstance(value, cls):
             return value
 
-        parsed_enum = None
+        parsed_enum = cls.Unknown
         if isinstance(value, str):
             try:
                 parsed_enum = cls[value]

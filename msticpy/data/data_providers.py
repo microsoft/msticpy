@@ -77,7 +77,7 @@ class QueryProvider:
         """
         if isinstance(data_environment, str):
             data_env = DataEnvironment.parse(data_environment)
-            if data_env:
+            if data_env != DataEnvironment.Unknown:
                 data_environment = data_env
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
@@ -96,7 +96,9 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        settings: Dict[str, str] = config.settings.get("QueryDefinitions")
+        settings: Dict[str, str] = config.settings.get(  # type: ignore
+            "QueryDefinitions"
+        )  # type: ignore
         query_paths = []
         for default_path in settings.get("Default"):
             query_paths.append(Path(__file__).resolve().parent.joinpath(default_path))
