@@ -27,46 +27,31 @@ class TestPkgConfig(unittest.TestCase):
         self.assertTrue(hasattr(pkg_config, "settings"))
         self.assertTrue(hasattr(pkg_config, "default_settings"))
         self.assertTrue(hasattr(pkg_config, "custom_settings"))
-
         settings = pkg_config.settings
         self.assertIn("QueryDefinitions", settings)
         self.assertIn("Default", settings["QueryDefinitions"])
-
+        self.assertEqual(1, len(settings["QueryDefinitions"]["Default"]))
         for path in settings["QueryDefinitions"]["Default"]:
-            self.assertTrue(Path(path).is_dir())
-            yml_files = list(Path(path).glob("*.yaml"))
-            self.assertGreaterEqual(len(yml_files), 4)
-
+            self.assertTrue(type(path), str)
+            path = 'msticpy/data/' + path
+            self.assertTrue(Path(__file__).resolve().parent.parent.joinpath(path).is_dir())
+            
     def test_custom_config(self):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
-
         pkg_config.refresh_config()
-
         self.assertTrue(hasattr(pkg_config, "settings"))
         self.assertTrue(hasattr(pkg_config, "default_settings"))
         self.assertTrue(hasattr(pkg_config, "custom_settings"))
-
         settings = pkg_config.settings
 
         # Query Definitions
         self.assertIn("QueryDefinitions", settings)
         self.assertIn("Default", settings["QueryDefinitions"])
-
-        for path in settings["QueryDefinitions"]["Default"]:
-            self.assertTrue(Path(path).is_dir())
-            yml_files = list(Path(path).glob("*.yaml"))
-            self.assertGreaterEqual(len(yml_files), 4)
-
-        self.assertEqual(2, len(settings["QueryDefinitions"]["Custom"]))
-
+        self.assertEqual(1, len(settings["QueryDefinitions"]["Custom"]))
         for path in settings["QueryDefinitions"]["Custom"]:
-            self.assertTrue(Path(path).is_dir())
-            yml_files = list(Path(path).glob("*.yaml"))
-            if path.endswith("testdata"):
-                self.assertGreaterEqual(len(yml_files), 5)
-            else:
-                self.assertEqual(len(yml_files), 0)
+            self.assertTrue(type(path), str)
+            self.assertTrue(Path(__file__).resolve().parent.joinpath(path).is_dir())
 
         # TI Providers
         self.assertEqual(4, len(settings["TIProviders"]))
