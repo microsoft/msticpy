@@ -88,8 +88,8 @@ def _fetch_setting(config_setting: Dict[str, Any]) -> str:
         env_value = environ.get(item_settings["EnvironmentVar"])
         if not env_value:
             warnings.warn(
-                f"Environment variable {item_settings['EnvironmentVar']} ",
-                "was not set",
+                f"Environment variable {item_settings['EnvironmentVar']} "
+                + " was not set"
             )
         return env_value
     if "KeyVaultURI" in item_settings:

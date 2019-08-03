@@ -8,3 +8,7 @@
 # flake8: noqa: F403
 # pylint: disable=W0401
 from .iocextract import IoCExtract
+
+from .._version import VERSION
+
+__version__ = VERSION

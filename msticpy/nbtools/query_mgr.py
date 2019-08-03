@@ -43,7 +43,7 @@ def print_kql(query_string: str):
         print(line.strip())
 
 
-@deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
+# @deprecated(reason="Superceded by msticpy.data.QueryProvider", version="0.2.0")
 @export
 def clean_kql_query(query_string: str) -> str:
     """
@@ -398,9 +398,9 @@ def _get_data_family_and_env(  # noqa: C901
     candidate_environments = set()
     for provider in providers:
         family, env = _get_env_and_family(provider.query_params)
-        if family:
+        if family != DataFamily.Unknown:
             candidate_families.add(family)
-        if env:
+        if env != DataEnvironment.Unknown:
             candidate_environments.add(env)
 
     if custom_params:
@@ -408,9 +408,9 @@ def _get_data_family_and_env(  # noqa: C901
         # try to get this from one of custom_params
         family, env = _get_env_and_family(custom_params)
 
-        if family:
+        if family != DataFamily.Unknown:
             candidate_families.add(family)
-        if env:
+        if env != DataEnvironment.Unknown:
             candidate_environments.add(env)
 
     # get the intersection of families and environments that we found and those

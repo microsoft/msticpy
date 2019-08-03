@@ -82,7 +82,7 @@ class OTX(HttpProvider):
             Object with match details
 
         """
-        if response.status == 404:
+        if self._failed_response(response):
             return False, "Not found."
         if "pulse_info" in response.raw_result:
             pulses = response.raw_result["pulse_info"].get("pulses", {})
