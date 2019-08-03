@@ -6,7 +6,7 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Union, Optional
+from typing import List, Union
 
 import attr
 from attr import Factory
@@ -29,6 +29,7 @@ class DataFamily(Enum):
     data sources.
     """
 
+    Unknown = 0
     WindowsSecurity = 1
     LinuxSecurity = 2
     SecurityAlert = 3
@@ -36,7 +37,7 @@ class DataFamily(Enum):
     LinuxSyslog = 5
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
+    def parse(cls, value: Union[str, int]) -> "DataFamily":
         """
         Convert string or int to enum.
 
@@ -49,14 +50,21 @@ class DataFamily(Enum):
         if isinstance(value, cls):
             return value
 
-        parsed_enum = None
+        parsed_enum = cls.Unknown
         if isinstance(value, str):
             try:
                 parsed_enum = cls[value]
             except KeyError:
-                pass
+                # match to value if case is incorrect
+                for e_name, e_val in cls.__members__.items():
+                    if e_name.upper() == value.upper():
+                        return e_val
+                return cls.Unknown
         if isinstance(value, int):
-            parsed_enum = cls(value)
+            try:
+                parsed_enum = cls(value)
+            except ValueError:
+                parsed_enum = cls.Unknown
         return parsed_enum
 
 
@@ -69,13 +77,14 @@ class DataEnvironment(Enum):
     data sources.
     """
 
+    Unknown = 0
     LogAnalytics = 1
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional["DataEnvironment"]:
+    def parse(cls, value: Union[str, int]) -> "DataEnvironment":
         """
         Convert string or int to enum.
 
@@ -88,7 +97,7 @@ class DataEnvironment(Enum):
         if isinstance(value, cls):
             return value
 
-        parsed_enum = None
+        parsed_enum = cls.Unknown
         if isinstance(value, str):
             try:
                 parsed_enum = cls[value]

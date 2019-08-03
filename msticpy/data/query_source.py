@@ -85,6 +85,7 @@ class QuerySource:
         )
 
         self._query = self["args.query"]
+        self._replace_query_macros()
 
     def __getitem__(self, key: str):
         """
@@ -233,6 +234,13 @@ class QuerySource:
                     param_dict[p_name] = datetime.utcnow() + timedelta(
                         abs(param_dict[p_name])
                     )
+
+            if settings["type"] == "list":
+                if isinstance(param_dict[p_name], list):
+                    param_dict[p_name] = ",".join(
+                        [f"'{item}''" for item in param_dict[p_name]]
+                    )
+
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)
             if fmt_template:
@@ -341,3 +349,20 @@ class QuerySource:
             )
             valid_failures.append(msg)
         return (not valid_failures, valid_failures)
+
+    def _replace_query_macros(self):
+        """Replace any macro strings in the query with substitutions."""
+        replace_keys = re.findall(r"\$\<([^}]+)\>\$?", self._query)
+        if not replace_keys:
+            return
+        replace_values = {}
+        if "query_macros" in self._source:
+            replace_values = {
+                name: properties.get("value", "")
+                for name, properties in self["query_macros"].items()
+            }
+        for key in replace_keys:
+            if key in replace_keys:
+                replacement = replace_values.get(key, "")
+                self._query = self._query.replace(f"$<{key}>$", replacement)
+        self._query = re.sub("\n{2,}", "\n", self._query)

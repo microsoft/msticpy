@@ -6,7 +6,7 @@
 """Data provider loader."""
 from functools import partial
 from pathlib import Path
-from typing import Union, Any, List
+from typing import Union, Any, List, Dict
 
 import pandas as pd
 
@@ -77,7 +77,7 @@ class QueryProvider:
         """
         if isinstance(data_environment, str):
             data_env = DataEnvironment.parse(data_environment)
-            if data_env:
+            if data_env != DataEnvironment.Unknown:
                 data_environment = data_env
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
@@ -96,14 +96,18 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        settings = config.settings.get("QueryDefinitions")
+        settings: Dict[str, str] = config.settings.get(  # type: ignore
+            "QueryDefinitions"
+        )  # type: ignore
         query_paths = []
         for default_path in settings.get("Default"):
             query_paths.append(Path(__file__).resolve().parent.joinpath(default_path))
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):
-                query_paths.append(Path(__file__).resolve().parent.joinpath(custom_path))
+                query_paths.append(
+                    Path(__file__).resolve().parent.joinpath(custom_path)
+                )
 
         data_environments = QueryStore.import_files(
             source_path=query_paths, recursive=True
@@ -124,6 +128,32 @@ class QueryProvider:
 
         """
         return self._query_provider.connect(connection_str=connection_str, **kwargs)
+
+    @property
+    def connected(self) -> bool:
+        """
+        Return True if the provider is connected.
+
+        Returns
+        -------
+        bool
+            True if the provider is connected.
+
+        """
+        return self._query_provider.connected
+
+    @property
+    def connection_string(self) -> str:
+        """
+        Return provider connection string.
+
+        Returns
+        -------
+        str
+            Provider connection string.
+
+        """
+        return self._query_provider.current_connection
 
     def import_query_file(self, query_file: str):
         """

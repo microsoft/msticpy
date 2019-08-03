@@ -1,0 +1,179 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Network Queries
+  data_environments: [LogAnalytics]
+  data_families: [Network]
+  tags: ['network', 'heartbeat']
+  aliases:
+    - &azure_network_project '| project TenantId, TimeGenerated, 
+        FlowStartTime = FlowStartTime_t, 
+        FlowEndTime = FlowEndTime_t, 
+        FlowIntervalEndTime = FlowIntervalEndTime_t, 
+        FlowType = FlowType_s,
+        ResourceGroup = split(VM_s, "/")[0],
+        VMName = split(VM_s, "/")[1],
+        VMIPAddress = VMIP_s, 
+        PublicIPs = extractall(@"([\d\.]+)[|\d]+", dynamic([1]), PublicIPs_s),
+        SrcIP = SrcIP_s,
+        DestIP = DestIP_s,
+        ExtIP = iif(FlowDirection_s == "I", SrcIP_s, DestIP_s),
+        L4Protocol = L4Protocol_s, 
+        L7Protocol = L7Protocol_s, 
+        DestPort = DestPort_d, 
+        FlowDirection = FlowDirection_s,
+        AllowedOutFlows = AllowedOutFlows_d, 
+        AllowedInFlows = AllowedInFlows_d,
+        DeniedInFlows = DeniedInFlows_d, 
+        DeniedOutFlows = DeniedOutFlows_d,
+        RemoteRegion = AzureRegion_s,
+        VMRegion = Region_s'
+    - &azure_network_base_query '
+        {table}
+        | where SubType_s == "FlowLog"
+        | where FlowStartTime_t >= datetime({start})
+        | where FlowEndTime_t <= datetime({end})
+        $<query_condition>$
+        | where (AllowedOutFlows_d > 0 or AllowedInFlows_d > 0)
+        {query_project}
+        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP), 
+                         iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
+                         )
+        | project-away ExtIP
+        | mvexpand AllExtIPs
+        {add_query_items}'
+defaults:
+  metadata:
+    data_source: 'network'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'AzureNetworkAnalytics_CL'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
+          AlertDisplayName = DisplayName, Severity = AlertSeverity
+          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      host_name:
+        description: Name of host
+        type: str
+      ip_address:
+        description: IP Address
+        type: str
+sources:
+  get_ips_for_host:
+    description: Gets the latest AzureNetworkAnalytics interface event for a host.
+    metadata:
+    args:
+      query: '
+        {table}
+        | where VirtualMachine_s has "{host_name}"
+        | where ResourceType == "NetworkInterface"
+        | top 1 by TimeGenerated desc
+        | project PrivateIPAddresses = PrivateIPAddresses_s, 
+        PublicIPAddresses = PublicIPAddresses_s
+        {add_query_items}'
+    parameters:
+  get_host_for_ip:
+    description: Gets the latest AzureNetworkAnalytics interface event for a host.
+    metadata:
+    args:
+      query: '
+        {table}
+        | where PrivateIPAddresses_s has "{ip_address}"
+          or PublicIPAddresses_s has "{ip_address}"
+        | where ResourceType == "NetworkInterface"
+        | top 1 by TimeGenerated desc
+        | project PrivateIPAddresses = PrivateIPAddresses_s, 
+        PublicIPAddresses = PublicIPAddresses_s, VirtualMachine = VirtualMachine_s
+        | extend Computer = split(VirtualMachine_s, "/")[-1]
+        {add_query_items}'
+    parameters:
+  get_heartbeat_for_host:
+    description: Retrieves latest OMS Heartbeat event for host.
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where Computer has "{host_name}"
+        | top 1 by TimeGenerated desc nulls last
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'Heartbeat'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project ComputerIP, OSType, OSMajorVersion, OSMinorVersion, ResourceId, RemoteIPCountry, 
+          RemoteIPLatitude, RemoteIPLongitude, SourceComputerId, SubscriptionId, ManagementGroupName'
+  get_heartbeat_for_ip:
+    description: Retrieves latest OMS Heartbeat event for ip address.
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where ComputerIP == "{ip_address}"
+        | top 1 by TimeGenerated desc nulls last
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'Heartbeat'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project ComputerIP, OSType, OSMajorVersion, OSMinorVersion, ResourceId, RemoteIPCountry, 
+          RemoteIPLatitude, RemoteIPLongitude, SourceComputerId, SubscriptionId, ManagementGroupName'
+  list_azure_network_flows_by_ip:
+    description: Retrieves Azure network analytics flow events.
+    metadata:
+    args:
+      query: *azure_network_base_query
+    parameters:
+      query_project:
+        description: Column project statement
+        type: str
+        default: *azure_network_project
+      ip_address_list:
+        description: Column project statement
+        type: list
+    query_macros:
+      query_condition:
+        description: Query-specific where clause
+        value: '| where (VMIP_s in ({ip_address_list}) 
+           or SrcIP_s in ({ip_address_list}) 
+           or DestIP_s in ({ip_address_list}) 
+          )'
+  list_azure_network_flows_by_host:
+    description: Retrieves Azure network analytics flow events.
+    metadata:
+    args:
+      query: *azure_network_base_query
+    parameters:
+      query_project:
+        description: Column project statement
+        type: str
+        default: *azure_network_project
+    query_macros:
+      query_condition:
+        description: Query-specific where clause
+        value: '| where VM_s has {host_name}'

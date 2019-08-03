@@ -8,7 +8,7 @@ import html
 import re
 from datetime import datetime
 from collections import Counter
-from typing import List, Dict, Any, Optional, Union, Mapping
+from typing import List, Dict, Any, Optional, Union
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -130,13 +130,13 @@ class SecurityBase(QueryParamProvider):
         return self._entities
 
     @property
-    def properties(self) -> Mapping[str, Any]:
+    def properties(self) -> Dict[str, Any]:
         """
         Return a dictionary of the Alert or Event properties.
 
         Returns
         -------
-        Mapping[str, Any]
+        Dict[str, Any]
             dictionary of the Alert or Event properties.
 
         """
