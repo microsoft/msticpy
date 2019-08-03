@@ -168,6 +168,7 @@ def unpack_items(
     _debug_trace = trace
 
     if input_string is not None:
+        input_string = _b64_string_pad(input_string)
         return _decode_b64_string_recursive(input_string)
     if data is not None:
         if not column:
@@ -176,7 +177,8 @@ def unpack_items(
         output_df = None
         rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
         for input_row in rows_with_b64_match[[column]].itertuples():
-            (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
+            input_string = _b64_string_pad(input_row[1])
+            (decoded_string, output_frame) = _decode_b64_string_recursive(input_string)
             output_frame["src_index"] = input_row.Index
             output_frame["full_decoded_string"] = decoded_string
             if output_df is None:
@@ -831,3 +833,13 @@ def _binary_to_bytesio(binary):
     if isinstance(binary, io.BytesIO):
         return binary.getbuffer()
     return io.BytesIO(binary).getbuffer()
+
+
+def _b64_string_pad(string):
+    if len(string) % 4 == 0:
+        return string
+
+    string = string.rstrip("=")
+    while len(string) % 4 != 0:
+        string = string + "A"
+    return string
