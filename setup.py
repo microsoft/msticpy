@@ -9,6 +9,7 @@ import re
 from collections import OrderedDict
 import setuptools
 
+
 INSTALL_REQUIRES = [
     "attrs>=18.2.0",
     "bokeh>=1.0.2",
@@ -17,7 +18,7 @@ INSTALL_REQUIRES = [
     "ipywidgets>=7.4.2",
     "Kqlmagic>=0.1.94",
     "matplotlib>=3.0.0",
-    "maxminddb_geolite2>=2018.0",
+    "geoip2>=2.9.0",
     "networkx>=2.2",
     "numpy>=1.12.0",
     "pandas>=0.23.0",
