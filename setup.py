@@ -14,6 +14,7 @@ INSTALL_REQUIRES = [
     "attrs>=18.2.0",
     "bokeh>=1.0.2",
     "deprecated>=1.2.4",
+    "folium>=0.9.0"
     "ipython>=7.1.1",
     "ipywidgets>=7.4.2",
     "Kqlmagic>=0.1.94",
