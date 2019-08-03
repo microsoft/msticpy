@@ -79,12 +79,7 @@ class VirusTotal(HttpProvider):
             Object with match details
 
         """
-        if (
-            response.status == 404
-            or not response.raw_result
-            or not response.raw_result
-            or not isinstance(response.raw_result, dict)
-        ):
+        if self._failed_response(response):
             return False, "Not found."
 
         result_dict = {}

@@ -263,3 +263,26 @@ class HttpProvider(TIProvider):
             Object with match details
 
         """
+
+    @staticmethod
+    def _failed_response(response: LookupResult) -> bool:
+        """
+        Return True if negative response.
+
+        Parameters
+        ----------
+        response : LookupResult
+            The returned data response
+
+        Returns
+        -------
+        bool
+            True if the response indicated failure.
+
+        """
+        return (
+            response.status == 404
+            or not response.raw_result
+            or not response.raw_result
+            or not isinstance(response.raw_result, dict)
+        )
