@@ -35,6 +35,7 @@ class SecurityAlert(SecurityBase):
         # add entities to dictionary to remove dups
         self._src_entities: Dict[int, Entity] = dict()
 
+        self.extended_properties: Dict[str, Any] = {}
         if src_row is not None:
             if "Entities" in src_row:
                 self._extract_entities(src_row)
@@ -49,8 +50,6 @@ class SecurityAlert(SecurityBase):
                         )
                     except JSONDecodeError:
                         pass
-        else:
-            self.extended_properties: Dict[str, Any] = {}
         self._find_os_family()
 
     @property
@@ -79,7 +78,7 @@ class SecurityAlert(SecurityBase):
 
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
-        if self.properties is not None and not self.properties.empty:
+        if self.properties is not None and not self.properties.any():
             title = """
             <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
             entity=<b>{entity}</b>, id=<b>{id}</b>

@@ -374,7 +374,8 @@ class GeoLiteLookup(GeoIpLookup):
                     with open(db_file_path, "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
                         print(
-                            f"Extraction complete. Local Maxmind city DB :: {db_file_path}"
+                            "Extraction complete. Local Maxmind city DB:",
+                            f"{db_file_path}",
                         )
             except IOError as err:
                 print(f"{db_archive_path} {err}")

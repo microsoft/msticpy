@@ -29,7 +29,7 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=invalid-name
 def identify_outliers(
-    x: np.ndarray, x_predict: np.ndarray = None, contamination: float = 0.05
+    x: np.ndarray, x_predict: np.ndarray, contamination: float = 0.05
 ) -> Tuple[IsolationForest, np.ndarray, np.ndarray]:
     """
     Identify outlier items using SkLearn IsolationForest.
@@ -39,7 +39,7 @@ def identify_outliers(
     x : np.ndarray
             Input data
     x_predict : np.ndarray
-        Model (default: {None})
+        Model
     contamination : float
         Percentage contamination (default: {0.05})
 

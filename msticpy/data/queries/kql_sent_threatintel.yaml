@@ -1,0 +1,130 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Threat Indicator Queries
+  data_environments: [LogAnalytics]
+  data_families: [ThreatIntelligence]
+  tags: ['threatintel', 'indicator', 'TI', 'ioc']
+defaults:
+  metadata:
+    data_source: 'threat_intel'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'ThreatIntelligenceIndicator'
+      query_project:
+        description: Project clause to limit/change return column names
+        type: str
+        default: ''
+      start:
+        description: Query start time
+        type: datetime
+        default: -365
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      observables:
+        description: List of observables
+        type: list
+sources:
+  list_indicators:
+    description: Retrieves list of all current indicators.
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_indicators_by_ip:
+    description: Retrieves list of indicators by IP Address
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where NetworkIP in ({observables})
+          or NetworkDestinationIP in ({observables})
+          or NetworkSourceIP in ({observables})
+          or EmailSourceIpAddress in ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+    parameters:
+  list_indicators_by_hash:
+    description: Retrieves list of indicators by file hash
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where FileHashValue in~ ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+    parameters:
+  list_indicators_by_filepath:
+    description: Retrieves list of indicators by file path
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where FilePath in~ ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+  list_indicators_by_domain:
+    description: Retrieves list of indicators by domain
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where DomainName in~ ({observables})
+          or EmailSourceDomain in ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+    parameters:
+  list_indicators_by_email:
+    description: Retrieves list of indicators by email address
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where EmailRecipient~ in ({observables})
+          or EmailSenderAddress in ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+    parameters:
+  list_indicators_by_url:
+    description: Retrieves list of indicators by URL
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where url~ in ({observables})
+        | summarize arg_max(TimeGenerated, *) by IndicatorId
+        {add_query_items}'
+    parameters:
+    

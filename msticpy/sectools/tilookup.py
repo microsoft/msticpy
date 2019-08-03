@@ -178,7 +178,7 @@ class TILookup:
 
         """
         if not name:
-            name = provider.__name__
+            name = provider.__class__.__name__
         if primary:
             self._providers[name] = provider
         else:
@@ -192,7 +192,7 @@ class TILookup:
         ioc_query_type: str = None,
         providers: List[str] = None,
         prov_scope: str = "primary",
-    ) -> Tuple[bool, List[LookupResult]]:
+    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
         """
         Lookup single IoC in active providers.
 
@@ -212,7 +212,7 @@ class TILookup:
 
         Returns
         -------
-        Tuple[bool, List[LookupResult]]
+        Tuple[bool, List[Tuple[str, LookupResult]]]
             The result returned as a tuple(bool, list):
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
@@ -281,13 +281,15 @@ class TILookup:
         return pd.concat(result_list)
 
     @staticmethod
-    def result_to_df(ioc_lookup: Tuple[bool, List[LookupResult]]) -> pd.DataFrame:
+    def result_to_df(
+        ioc_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
+    ) -> pd.DataFrame:
         """
         Return DataFrame representation of IoC Lookup response.
 
         Parameters
         ----------
-        ioc_lookup : Tuple[bool, List[LookupResult]]
+        ioc_lookup : Tuple[bool, List[Tuple[str, LookupResult]]]
             Output from `lookup_ioc`
 
         Returns

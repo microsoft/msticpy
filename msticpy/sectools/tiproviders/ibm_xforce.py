@@ -52,6 +52,7 @@ class XForce(HttpProvider):
         "url-malware": _XForceParams(path="/url/malware/{observable}"),
     }
 
+    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
     _IOC_QUERIES["ipv6-rep"] = _IOC_QUERIES["ipv4-rep"]
@@ -83,8 +84,8 @@ class XForce(HttpProvider):
             Object with match details
 
         """
-        if response.status == 404:
-            return {}
+        if self._failed_response(response):
+            return False, "Not found."
         result = False
         result_dict = {}
         if response.ioc_type in ["ipv4", "ipv6"] and not response.query_subtype:
