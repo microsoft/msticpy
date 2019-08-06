@@ -6,7 +6,6 @@
 """Setup script for msticpy."""
 
 import re
-from collections import OrderedDict
 import setuptools
 
 
