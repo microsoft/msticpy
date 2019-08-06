@@ -351,6 +351,8 @@ class GeoLiteLookup(GeoIpLookup):
         if db_folder is None:
             db_folder = self._PKG_DIR
 
+        if not os.path.exists(db_folder):
+            os.mkdir(db_folder)
         db_archive_path = os.path.join(db_folder, self._DB_ARCHIVE)
         db_file_path = os.path.join(db_folder, self._DB_FILE)
 
