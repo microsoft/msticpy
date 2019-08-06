@@ -49,12 +49,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/msticpy",
-    project_urls=OrderedDict(
-        (
-            ("Documentation", "http://msticpy.readthedocs.io"),
-            ("Code", "https://github.com/microsoft/msticpy"),
-        )
-    ),
+    project_urls={
+        "Documentation": "https://msticpy.readthedocs.io",
+        "Code": "https://github.com/microsoft/msticpy",
+    },
     python_requires=">=3.6",
     packages=setuptools.find_packages(exclude=["*.tests"]),
     classifiers=[
