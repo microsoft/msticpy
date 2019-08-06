@@ -33,10 +33,8 @@ INSTALL_REQUIRES = [
 # pylint: disable=locally-disabled, invalid-name
 with open("README.md", "r") as fh:
     long_description = fh.read()
-with open("LICENSE.TXT", "r") as fh:
-    license_txt = fh.read()
-# pylint: enable=locally-disabled, invalid-name
 
+# pylint: enable=locally-disabled, invalid-name
 with open("msticpy/_version.py", "r") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
@@ -47,7 +45,7 @@ setuptools.setup(
     author="Ian Hellen",
     author_email="ianhelle@microsoft.com",
     description="MSTIC Security Tools",
-    license=license_txt,
+    license="MIT License",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/msticpy",
