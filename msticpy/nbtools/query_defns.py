@@ -35,9 +35,10 @@ class DataFamily(Enum):
     SecurityAlert = 3
     SecurityGraphAlert = 4
     LinuxSyslog = 5
+    AzureNetwork = 6
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> "DataFamily":
+    def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
         """
         Convert string or int to enum.
 

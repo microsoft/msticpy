@@ -1,0 +1,5 @@
+.*authorized_keys.*
+.*(wget|curl).*\|?.*sh.*
+.*(:\(\){:\|:&};:).*
+.*(mv.*\/dev\/null).*
+.*\/bin\/bash.*

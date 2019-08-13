@@ -354,7 +354,6 @@ def _get_missing_params(
         missing_params = [
             p_name for p_name, p_value in req_params.items() if not p_value
         ]
-
     if missing_params:
         # check for and remove optional parameters from the missing params list
         for m_param in missing_params:
