@@ -38,7 +38,7 @@ class DataFamily(Enum):
     AzureNetwork = 6
 
     @classmethod
-    def parse(cls, value: Union[str, int]) -> Optional["DataFamily"]:
+    def parse(cls, value: Union[str, int]) -> "DataFamily":
         """
         Convert string or int to enum.
 
