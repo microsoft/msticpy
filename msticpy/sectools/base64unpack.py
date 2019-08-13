@@ -177,8 +177,7 @@ def unpack_items(
         output_df = None
         rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
         for input_row in rows_with_b64_match[[column]].itertuples():
-            input_string = _b64_string_pad(input_row[1])
-            (decoded_string, output_frame) = _decode_b64_string_recursive(input_string)
+            (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
             output_frame["src_index"] = input_row.Index
             output_frame["full_decoded_string"] = decoded_string
             if output_df is None:

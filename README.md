@@ -132,6 +132,12 @@ re-assemble the process command line arguments into a single string).
 
 This is still a work-in-progress.
 
+### linuxsyslog
+
+A series of queries and data maniuplation packages to support an investigation of a 
+linux host with only syslog logging enabled. Some of data collection elements of this
+will be moved to the data subpackage as it is developed.
+
 ## Notebook tools sub-package - `nbtools`
 
 This is a collection of display and utility modules designed to make working
