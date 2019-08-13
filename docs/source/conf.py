@@ -182,7 +182,7 @@ epub_exclude_files = ["search.html"]
 
 
 # -- Extension configuration -------------------------------------------------
-utodoc_default_options = {
+autodoc_default_options = {
     "members": None,
     "inherited-members": None,
     "ignore-module-all": None,
