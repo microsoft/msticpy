@@ -34,7 +34,7 @@ class AttribHolder:
     """Empty class used to create hierarchical attributes."""
 
     def __len__(self):
-        """Retrun number of items in the attribute collection."""
+        """Return number of items in the attribute collection."""
         return len(self.__dict__)
 
     def __iter__(self):

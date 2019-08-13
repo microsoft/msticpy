@@ -253,6 +253,51 @@ class TIProvider(ABC):
             ioc_type = IoCType.parse(ioc_type)
         return ioc_type.name in self.supported_types
 
+    def _check_ioc_type(
+        self, ioc: str, ioc_type: str = None, query_subtype: str = None
+    ) -> LookupResult:
+        """
+        Checks IoC Type and cleans up observable.
+
+        Parameters
+        ----------
+        ioc : str
+            IoC observable
+        ioc_type : str, optional
+            IoC type, by default None
+        query_subtype : str, optional
+            Query sub-type, if any, by default None
+
+        Returns
+        -------
+        LookupResult
+            Lookup result with resolved ioc_type and pre-processed
+            observable.
+            LookupResult.status == -1 on failure.
+        """
+        result = LookupResult(
+            ioc=ioc,
+            ioc_type=ioc_type,
+            query_subtype=query_subtype,
+            result=False,
+            details="",
+            raw_result=None,
+            reference=None,
+        )
+
+        if not ioc_type:
+            result.ioc_type = self.resolve_ioc_type(ioc)
+        if not self.is_supported_type(ioc_type):
+            result.details = f"IoC type {ioc_type} not supported."
+            result.status = -1
+
+        clean_ioc = preprocess_observable(ioc, ioc_type)
+        if clean_ioc.status != "ok":
+            result.details = clean_ioc.status
+            result.status = -1
+
+        return result
+
 
 _IOC_EXTRACT = IoCExtract()
 # slightly stricter than normal URL regex to exclude '() from host string

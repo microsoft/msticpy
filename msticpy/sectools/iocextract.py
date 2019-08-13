@@ -25,11 +25,12 @@ The following types are built-in:
 
 import re
 import sys
+import warnings
 from collections import defaultdict, namedtuple
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple, Union
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import unquote
 
 import pandas as pd
@@ -553,9 +554,18 @@ class IoCExtract:
             tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
             temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
             return set(temp_df["TLD"])
-        except HTTPError:
-            # if we failed to get the list try to read from a seed file
-            return cls._read_tld_seed_file()
+        except (HTTPError, URLError):
+            pass
+        # pylint: disable=broad-except
+        except Exception as err:
+            warnings.warn(
+                "Exception detected trying to retrieve IANA top-level domain list."
+                + "Falling back to builtin seed list. "
+                + err.args,
+                RuntimeWarning,
+            )
+        # if we failed to get the list try to read from a seed file
+        return cls._read_tld_seed_file()
 
     @classmethod
     def _read_tld_seed_file(cls) -> Set[str]:

@@ -25,7 +25,7 @@ import requests
 from ..._version import VERSION
 from ...nbtools.utility import export
 from ..iocextract import IoCType
-from .ti_provider_base import LookupResult, TIProvider, preprocess_observable
+from .ti_provider_base import LookupResult, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -113,36 +113,21 @@ class HttpProvider(TIProvider):
         the same item.
 
         """
-        err_result = LookupResult(
-            ioc=ioc,
-            ioc_type=ioc_type,
-            query_subtype=query_type,
-            result=False,
-            details="",
-            raw_result=None,
-            reference=None,
+        result = self._check_ioc_type(
+            ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
-        if not ioc_type:
-            ioc_type = self.resolve_ioc_type(ioc)
-        if not self.is_supported_type(ioc_type):
-            err_result.details = f"IoC type {ioc_type} not supported."
-            return err_result
-
-        clean_ioc = preprocess_observable(ioc, ioc_type)
-        if clean_ioc.status != "ok":
-            err_result.details = clean_ioc.status
-            return err_result
+        if result.status:
+            return result
 
         try:
             verb, req_params = self._substitute_parms(
-                clean_ioc.observable, ioc_type, query_type
+                result.ioc, result.ioc_type, query_type
             )
             if verb == "GET":
                 response = self._requests_session.get(**req_params)
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
-            result = LookupResult(ioc=ioc, ioc_type=ioc_type, query_subtype=query_type)
             result.status = response.status_code
             result.reference = req_params["url"]
             if result.status == 200:
@@ -160,12 +145,12 @@ class HttpProvider(TIProvider):
             ConnectionError,
         ) as err:
             url = req_params.get("url", None) if req_params else None
-            err_result.details = err.args
-            err_result.raw_result = (
+            result.details = err.args
+            result.raw_result = (
                 type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
             )
-            err_result.reference = url
-            return err_result
+            result.reference = url
+            return result
 
     # pylint: disable=too-many-branches
     def _substitute_parms(

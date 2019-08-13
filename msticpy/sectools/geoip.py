@@ -23,6 +23,7 @@ import math
 import os
 import shutil
 import site
+import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -328,6 +329,8 @@ class GeoLiteLookup(GeoIpLookup):
         self._auto_update = auto_update
         self._check_and_update_db(db_folder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(db_folder)
+        if not self._dbpath:
+            raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
 
     def _download_and_extract_gzip(self, url: str = None, db_folder: str = None):
@@ -360,16 +363,22 @@ class GeoLiteLookup(GeoIpLookup):
             response = requests.get(url, stream=True)
             response.raise_for_status()
         except HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
+            warnings.warn(
+                f"HTTP error occurred trying to download GeoLite DB: {http_err}",
+                RuntimeError,
+            )
+        # pylint: disable=broad-except
         except Exception as err:
-            print(f"Other error occurred: {err}")
-            raise
+            warnings.warn(
+                f"Other error occurred trying to download GeoLite DB: {err}",
+                RuntimeError,
+            )
+        # pylint: enable=broad-except
         else:
             print("Downloading GeoLite DB archive from MaxMind....")
             with open(db_archive_path, "wb") as file_hdl:
                 for chunk in response.iter_content(chunk_size=10000):
                     file_hdl.write(chunk)
-                print(f"Downloaded archive location :: {db_archive_path}")
             try:
                 with gzip.open(db_archive_path, "rb") as f_in:
                     print(f"Extracting city database...")
@@ -380,7 +389,7 @@ class GeoLiteLookup(GeoIpLookup):
                             f"{db_file_path}",
                         )
             except IOError as err:
-                print(f"{db_archive_path} {err}")
+                warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
 
     @staticmethod
     def _get_geoip_dbpath(db_folder: str = None) -> str:
@@ -445,7 +454,7 @@ class GeoLiteLookup(GeoIpLookup):
         if geoip_db_path is None:
             print(
                 "No local Maxmind City Database found. ",
-                f"Downloading new database to {db_folder}",
+                f"Attempting to downloading new database to {db_folder}",
             )
             self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
         else:
@@ -458,13 +467,13 @@ class GeoLiteLookup(GeoIpLookup):
             if db_age > timedelta(30) and auto_update:
                 print(
                     "Latest local Maxmind City Database present is older than 30 days.",
-                    f"Downloading new database to {db_folder}",
+                    f"Attempting to download new database to {db_folder}",
                 )
                 self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
-                    f"Downloading new database to {db_folder}",
+                    f"Attempting to download new database to {db_folder}",
                 )
                 self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
 
