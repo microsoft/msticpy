@@ -278,6 +278,7 @@ def display_timeline(
     source_columns: list = None,
     overlay_colums: list = None,
     height: int = 300,
+    overlay_color: str = "green",
 ):
     """
     Display a timeline of events.
@@ -399,7 +400,7 @@ def display_timeline(
         plot.circle(
             x=time_column,
             y="y_index",
-            color="green",
+            color=overlay_color,
             alpha=0.5,
             size=10,
             source=overlay_source,
