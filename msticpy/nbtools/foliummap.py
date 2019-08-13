@@ -12,7 +12,7 @@ import folium
 
 # pylint: enable=locally-disabled, unused-import
 from .utility import export
-from .entityschema import IpAddress, GeoLocation
+from .entityschema import IpAddress
 from .._version import VERSION
 
 __version__ = VERSION

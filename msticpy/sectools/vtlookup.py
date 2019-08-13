@@ -39,7 +39,14 @@ __author__ = "Ian Hellen"
 # VirusTotal parameter collection
 VTParams = namedtuple(
     "VTParams",
-    ["api_type", "batch_size", "batch_delimiter", "http_verb", "api_var_name", "headers"],
+    [
+        "api_type",
+        "batch_size",
+        "batch_delimiter",
+        "http_verb",
+        "api_var_name",
+        "headers",
+    ],
 )
 
 DuplicateStatus = namedtuple("DuplicateStatus", ["is_dup", "status"])
@@ -300,7 +307,9 @@ class VTLookup:
 
         observable, status = preprocess_observable(observable, ioc_type)
         if observable is None:
-            raise SyntaxError("{} for observable value {}".format(status, observable), 1)
+            raise SyntaxError(
+                "{} for observable value {}".format(status, observable), 1
+            )
 
         if ioc_type not in self._VT_TYPE_MAP:
             raise LookupError(
@@ -601,7 +610,9 @@ class VTLookup:
                 df_dict_vtresults["ResolvedIPs"] = ", ".join(item_list)
             if "detected_urls" in results_dict:
                 item_list = [
-                    item["url"] for item in results_dict["detected_urls"] if "url" in item
+                    item["url"]
+                    for item in results_dict["detected_urls"]
+                    if "url" in item
                 ]
                 df_dict_vtresults["DetectedUrls"] = ", ".join(item_list)
                 # positives are listed per detected_url so we need to
@@ -733,7 +744,10 @@ class VTLookup:
             duplicate["Status"] = "Duplicate"
             if pd_version_23():
                 new_results = pd.concat(
-                    objs=[self.results, duplicate], ignore_index=True, sort=False, axis=0
+                    objs=[self.results, duplicate],
+                    ignore_index=True,
+                    sort=False,
+                    axis=0,
                 )
             else:
                 new_results = pd.concat(
@@ -821,7 +835,9 @@ class VTLookup:
     @classmethod
     def _get_supported_vt_ioc_types(cls) -> List[str]:
         """Return the subset of IoC types supported by VT."""
-        return [t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None]
+        return [
+            t for t in cls._SUPPORTED_INPUT_TYPES if cls._VT_TYPE_MAP[t] is not None
+        ]
 
     def _print_status(self, message: str, verbosity_level: int):
         """
