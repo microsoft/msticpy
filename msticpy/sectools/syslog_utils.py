@@ -15,7 +15,6 @@ from typing import Tuple
 import pytz
 
 import ipywidgets as widgets
-import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -159,7 +158,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
         ip_entity.Location = geoloc_entity
         host_entity.IPAddress = ip_entity
 
-    if az_net_df.empty or az_net_df == None:
+    if az_net_df.empty:
         pass
     else:
         if len(az_net_df) == 1:
