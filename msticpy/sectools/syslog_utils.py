@@ -6,23 +6,12 @@
 """
 Contains a series of functions required to correct collect, parse and visualise linux syslog data. 
 Specifically designed to support standard linux syslog for investigations where auditd is not avalaible.
-
-It has the following functions:
-syslog_host_picker - returns a list of hosts with syslog messages within the time period set
-get_syslog_host_data - collects data on the host being investigated and returns it as a Host record
-get_sucessful_logons_syslog - collects sucessful logon events, clusters them into sessions and returns the raw events and list of sessions
-get_failed_logons_syslog - collects and returns all syslog messages associated with failed logon attempts
-get_sudo_activity_syslog - collects data on all sudo activity on the host being investigated including sucessful and unsucessful sudo attempts, execution activity, and counts of commands executed via sudo
-get_cron_activity_syslog - collects and returns data on cron execution and cron edit events
-get_user_mods_syslog - collects and returns data on all user and group additions, deletions, and modifications
-get_syslog_events - collects and retunrs all syslog messages for the host being investigated along with a list of the facilities present
-syslog_volume_graph - displays a graph of syslog message volume over time
 """
 import datetime as dt
 import os
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Tuple
 import pytz
 
 import ipywidgets as widgets
@@ -31,11 +20,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython import get_ipython
-from IPython.display import HTML, Markdown, display
 from pandas.plotting import register_matplotlib_converters
 
 from .._version import VERSION
-from ..data.data_providers import QueryProvider
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from ..nbtools.utility import export
 from .eventcluster import _string_score, add_process_features, dbcluster_events
@@ -59,24 +46,18 @@ register_matplotlib_converters()
 class Error(Exception):
     """Base class for other exceptions"""
 
-    pass
-
 class DataError(Error):
     """Raised when thereis a data input error"""
-
-    pass
 
 
 class KQLError(Error):
     """Raised whent there is an error related to KQL"""
 
-    pass
 
 
 class KQLDataError(KQLError):
     """Raised when there is an error related to the data returned by KQL"""
 
-    pass
 
 
 def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
@@ -178,7 +159,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
         ip_entity.Location = geoloc_entity
         host_entity.IPAddress = ip_entity
 
-    if az_net_df.empty:
+    if az_net_df.empty or az_net_df == None:
         pass
     else:
         if len(az_net_df) == 1:
