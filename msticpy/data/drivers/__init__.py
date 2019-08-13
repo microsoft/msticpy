@@ -8,3 +8,7 @@
 from .driver_base import DriverBase
 from .kql_driver import KqlDriver
 from .security_graph_driver import SecurityGraphDriver
+
+from ..._version import VERSION
+
+__version__ = VERSION
