@@ -15,7 +15,6 @@ requests per minute for the account type that you have.
 import abc
 from collections import defaultdict
 from functools import lru_cache
-import traceback
 from typing import Any, Dict, Tuple, Union, Iterable
 
 import attr
@@ -23,6 +22,8 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...nbtools.utility import export
+from ...nbtools.wsconfig import WorkspaceConfig
+from ...data import QueryProvider
 from ..iocextract import IoCType
 from .ti_provider_base import LookupResult, TIProvider, generate_items
 
@@ -34,7 +35,9 @@ __author__ = "Ian Hellen"
 class KqlTIProvider(TIProvider):
     """HTTP TI provider base class."""
 
-    _IOC_QUERIES: Dict[str, str] = {}
+    _IOC_QUERIES: Dict[str, tuple] = {
+        "ipv4": ("query_name", {"ioc": "observables"})
+    }
 
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
@@ -48,6 +51,19 @@ class KqlTIProvider(TIProvider):
 
         if "query_provider" in kwargs:
             self._query_provider = kwargs.pop("query_provider")
+        else:
+            ws_config = WorkspaceConfig("foo")  # TODO
+            if "workspace_id" in kwargs:
+                workspace_id = kwargs.pop("query_provider")
+            else:
+                workspace_id = ws_config["workspace_id"]
+            if "tenant_id" in kwargs:
+                tenant_id = kwargs.pop("tenant_id")
+            else:
+                tenant_id = ws_config["tenant_id"]
+            connect_str = f"la://{tenant_id}{workspace_id}"  # TODO
+            self._query_provider = QueryProvider("LogAnalytics")
+            self._query_provider.connect(connect_str)
 
     @lru_cache(maxsize=256)
     def lookup_ioc(
