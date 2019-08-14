@@ -131,7 +131,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
                 applications.append(app)
             else:
                 pass
-
+    
     if heartbeat_df.empty:
         raise KQLDataError(
             f"No heartbeat data provided"
@@ -158,7 +158,7 @@ def create_host_record(syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_n
         ip_entity.Location = geoloc_entity
         host_entity.IPAddress = ip_entity
 
-    if az_net_df.empty:
+    if az_net_df.empty or az_net_df == None:
         pass
     else:
         if len(az_net_df) == 1:
