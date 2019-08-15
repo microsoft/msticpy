@@ -229,7 +229,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
         .set_index("TimeGenerated")
         .sort_index(ascending=True)
     )
-    if not logons_opened.index or not logons_closed.index:
+    if logons_opened.empty or logons_closed.empty:
         raise KQLDataError("There are no logon sessions in the supplied data set")
     else:
         while ses_opened < len(logons_opened.index) and ses_closed < len(
