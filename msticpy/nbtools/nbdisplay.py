@@ -278,6 +278,7 @@ def display_timeline(
     source_columns: list = None,
     overlay_colums: list = None,
     height: int = 300,
+    color: int = "navy",
     overlay_color: str = "green",
 ):
     """
@@ -306,7 +307,8 @@ def display_timeline(
     height : int, optional
         the height of the plot figure (under 300 limits access
         to Bokeh tools)(the default is 300)
-
+    overlay_color: str, optional
+        the colour of the data points in the overlap data
     """
     reset_output()
     output_notebook()
@@ -392,7 +394,7 @@ def display_timeline(
 
     plot.xaxis[0].formatter = tick_format
     plot.circle(
-        x=time_column, y="y_index", color="navy", alpha=0.5, size=10, source=source
+        x=time_column, y="y_index", color=color, alpha=0.5, size=10, source=source
     )
 
     if overlay_data is not None:
