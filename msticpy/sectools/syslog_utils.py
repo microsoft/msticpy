@@ -153,9 +153,7 @@ def create_host_record(
     host_entity.OSVMajorersion = host_hb["OSMajorVersion"]
     host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]
     host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]
-    host_entity.OmsSolutions = [
-        sol.strip() for sol in host_hb["Solutions"].split(",")
-    ]
+    host_entity.OmsSolutions = [sol.strip() for sol in host_hb["Solutions"].split(",")]
     host_entity.Applications = applications
     host_entity.VMUUID = host_hb["VMUUID"]
     ip_entity = IpAddress()
@@ -297,7 +295,7 @@ def risky_actions(
     risky_lines = [line.rstrip("\n") for line in open(risky_stuff)]
     for line in risky_lines:
         for date, message in syslog_actions["Message"].items():
-            #TODO regex compile
+            # TODO regex compile
             if re.match(
                 "(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)",
                 message,
@@ -341,7 +339,7 @@ def sudo_actions_speed(sudo_events: pd.DataFrame, time: int = 5, events: int = 5
         )
         if delta < dt.timedelta(seconds=time):
             suspicious_actions.append(
-                {df_len: [sudo_actions[df_len: (df_len + events)], delta]}
+                {df_len: [sudo_actions[df_len : (df_len + events)], delta]}
             )
         else:
             pass

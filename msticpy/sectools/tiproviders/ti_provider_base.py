@@ -159,7 +159,7 @@ class TIProvider(ABC):
         return (
             pd.DataFrame(data=results)
             .rename(columns=_DF_COLUMNS_MAP)
-            .drop(columns=["status"])
+            .drop(columns=["Status"])
         )
 
     @abc.abstractmethod

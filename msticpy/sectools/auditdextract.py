@@ -14,10 +14,12 @@ line arguments into a single string). This is still a work-in-progress.
 
 """
 import codecs
+import re
 from datetime import datetime
 from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 
 import pandas as pd
+
 
 from .._version import VERSION
 
@@ -107,9 +109,9 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
 
     """
     event_dict: Dict[str, Dict[str, Any]] = {}
-
-    # The audit_str is a list of dicts - '{EXECVE : {'p1': 'foo', p2: 'bar'...},
+    # The audit_str should be a list of dicts - '{EXECVE : {'p1': 'foo', p2: 'bar'...},
     #                                      PATH: {'a1': 'xyz',....}}
+
     for record in audit_str:
         # process a single message type, splitting into type name
         # and contents
@@ -285,6 +287,16 @@ def extract_events_to_df(
         start_time = datetime.utcnow()
         print(f"Unpacking auditd messages for {len(data)} events...")
 
+    # If the provided table has auditd messages as a string format and
+    # extract key elements.
+    if isinstance(data[input_column].head(1)[0], str):
+        data["mssg_id"] = data.apply(
+            lambda x: _extract_timestamp(x[input_column]), axis=1
+        )
+        data[input_column] = data.apply(
+            lambda x: _parse_audit_message(x[input_column]), axis=1
+        )
+
     # Our first pandas expression does most of the work - unpacking the
     # column contents, then extracting these into a two columns
     # EventType (the main auditd mssg type) and a dict of k/v values
@@ -325,7 +337,7 @@ def extract_events_to_df(
 
     # extract real timestamp from mssg_id
     tmp_df["TimeStamp"] = tmp_df.apply(
-        lambda x: datetime.utcfromtimestamp(float(x.mssg_id.split(":")[0])), axis=1
+        lambda x: datetime.utcfromtimestamp(float(x["mssg_id"].split(":")[0])), axis=1
     )
     tmp_df = (
         tmp_df.drop(["TimeGenerated"], axis=1)
@@ -398,26 +410,21 @@ def read_from_file(
     first separator in a line will be lost.
 
     """
-    # read in the file using pd.read_csv() and extract
-    # message type, Id string and content into 3 columns
-    rec_pattern = r"type=([^\s]+)\s+msg=audit\(([^\)]+)\):\s+(.+)$"
-    df_raw = (
-        pd.read_csv(
-            filepath,
-            sep=dummy_sep,
-            names=["raw_data"],
-            skip_blank_lines=True,
-            squeeze=True,
-        )
-        .str.extract(rec_pattern)
-        .rename(columns={0: "mssg_type", 1: "mssg_id", 2: "mssg_content"})
+    # read in the file using pd.read_csv()
+    df_raw = pd.read_csv(
+        filepath, sep=dummy_sep, names=["raw_data"], skip_blank_lines=True, squeeze=True
     )
 
+    # extract message ID into seperate column
+    df_raw["mssg_id"] = df_raw.apply(
+        lambda x: _extract_timestamp(x["raw_data"]), axis=1
+    )
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}
     df_raw["AuditdMessage"] = df_raw.apply(
-        lambda x: {x.mssg_type: x.mssg_content.split(" ")}, axis=1
+        lambda x: _parse_audit_message(x["raw_data"]), axis=1
     )
+
     # Group the data by message id string and concatenate the message content
     # dictionaries in a list.
     df_grouped_cols = (
@@ -430,3 +437,47 @@ def read_from_file(
         event_type=event_type,
         verbose=verbose,
     )
+
+
+def _parse_audit_message(audit_str: str) -> List[Dict[str, str]]:
+    """
+    Parse an auditd message string into List format required by unpack_auditd.
+
+    Parameters
+    ----------
+    audit_str : str
+        The Audit message
+
+    Returns
+    -------
+    List[Dict[str, str]]
+        The extracted message values
+
+    """
+    audit_message = audit_str.rstrip().split(": ")
+    audit_headers = audit_message[0]
+    audit_headers = re.match(r"type=([^\s]+)", audit_headers)
+    audit_str = [{audit_headers.group(1): audit_message[1].split(" ")}]
+    return audit_str
+
+
+def _extract_timestamp(audit_str: str) -> str:
+    """
+    Parse an auditd message string and extract the message time.
+
+    Parameters
+    ----------
+    audit_str : str
+        The Audit message
+
+    Returns
+    -------
+    str
+        The extracted message time string
+
+    """
+    audit_message = audit_str.rstrip().split(": ")
+    audit_headers = audit_message[0]
+    audit_headers = re.match(r".*msg=audit\(([^\)]+)\)", audit_headers)
+    time_stamp = audit_headers.group(1).split(":")[0]
+    return time_stamp
