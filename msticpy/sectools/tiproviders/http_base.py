@@ -159,6 +159,9 @@ class HttpProvider(TIProvider):
             NotImplementedError,
             ConnectionError,
         ) as err:
+            verb, req_params = self._substitute_parms(
+                clean_ioc.observable, ioc_type, query_type
+            )
             url = req_params.get("url", None) if req_params else None
             err_result.details = err.args
             err_result.raw_result = (
