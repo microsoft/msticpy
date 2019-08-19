@@ -46,6 +46,7 @@ class TISeverity(Enum):
     Threat intelligence report severity
 
     """
+
     Information = 1
     Warning = 2
     High = 3

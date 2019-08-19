@@ -41,10 +41,11 @@ def mocked_requests_get(*args, **kwargs):
 
     if args[0].startswith("https://otx.alienvault.com"):
         return MockResponse({"key1": "value1"}, 200)
-    elif args[0] == 'http://someotherurl.com/anothertest.json':
+    elif args[0] == "http://someotherurl.com/anothertest.json":
         return MockResponse({"key2": "value2"}, 200)
 
     return MockResponse(None, 404)
+
 
 class TestTIProviders(unittest.TestCase):
     """Unit test class."""

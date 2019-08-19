@@ -332,9 +332,9 @@ class KqlTIProvider(TIProvider):
         combined_df = input_df.copy()
         combined_df["IoCKey"] = input_df["IoC"].str.lower()
         cleaned_results_df = cleaned_results_df.rename(columns={ioc_key: "IoCKey"})
-        combined_df = combined_df.merge(right=cleaned_results_df, how="left", on="IoCKey").drop(
-            columns="IoCKey"
-        )
+        combined_df = combined_df.merge(
+            right=cleaned_results_df, how="left", on="IoCKey"
+        ).drop(columns="IoCKey")
         # Fill in any NaN values from the merge
         combined_df["Result"] = combined_df["Result"].fillna(False)
         combined_df["Details"] = combined_df["Details"].fillna("0 rows returned.")

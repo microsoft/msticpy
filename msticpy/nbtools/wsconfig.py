@@ -124,7 +124,9 @@ class WorkspaceConfig:
             and self.PKG_CONF_WS_KEY in selected_workspace
             and self.PKG_CONF_TENANT_KEY in selected_workspace
         ):
-            self._config[self.CONF_WS_ID_KEY] = selected_workspace.get(self.PKG_CONF_WS_KEY)
+            self._config[self.CONF_WS_ID_KEY] = selected_workspace.get(
+                self.PKG_CONF_WS_KEY
+            )
             self._config[self.CONF_TENANT_ID_KEY] = selected_workspace.get(
                 self.PKG_CONF_TENANT_KEY
             )

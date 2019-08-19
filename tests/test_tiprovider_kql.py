@@ -22,7 +22,7 @@ from ..msticpy.sectools.tiproviders import (
     get_provider_settings,
     preprocess_observable,
     LookupResult,
-    AzureSentinelByoti
+    AzureSentinelByoti,
 )
 
 _test_data_folders = [
@@ -60,7 +60,7 @@ class KqlTestDriver(DriverBase):
         return self._schema
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
-        
+
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
         if "where NetworkIP" in query:
             result_df = self.ip_df[self.ip_df["IoC"].isin(query_toks)]
@@ -73,8 +73,10 @@ class KqlTestDriver(DriverBase):
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         pass
 
+
 test_data_provider = KqlTestDriver()
 qry_prov = QueryProvider(data_environment="LogAnalytics", driver=test_data_provider)
+
 
 class TestASKqlTIProvider(unittest.TestCase):
     """Unit test class."""
@@ -128,18 +130,32 @@ class TestASKqlTIProvider(unittest.TestCase):
         ]
         ioc_ip = "91.219.31.18"
         ioc_ips = [
-            "185.92.220.35", "213.159.214.86", "77.222.54.202", "91.219.29.81",
-            "193.9.28.254", "89.108.83.196", "91.219.28.44", "188.127.231.124",
-            "192.42.116.41", "91.219.31.18", "46.4.239.76", "188.166.168.250",
-            "195.154.241.208", "51.255.172.55", "93.170.169.52",
-            "104.215.148.63", "13.77.161.179", "40.76.4.15",  # benign
-            "40.112.72.205", "40.113.200.201"  # benign
+            "185.92.220.35",
+            "213.159.214.86",
+            "77.222.54.202",
+            "91.219.29.81",
+            "193.9.28.254",
+            "89.108.83.196",
+            "91.219.28.44",
+            "188.127.231.124",
+            "192.42.116.41",
+            "91.219.31.18",
+            "46.4.239.76",
+            "188.166.168.250",
+            "195.154.241.208",
+            "51.255.172.55",
+            "93.170.169.52",
+            "104.215.148.63",
+            "13.77.161.179",
+            "40.76.4.15",  # benign
+            "40.112.72.205",
+            "40.113.200.201",  # benign
         ]
 
         result = ti_lookup.lookup_ioc(observable=ioc_url, start=start, end=end)
         self.assertIsNotNone(result)
         ioc_lookups = result[1]
-        
+
         self.assertGreaterEqual(1, len(ioc_lookups))
         self.assertEqual(ioc_lookups[0][0], "AzureSentinelByoti")
         azs_result = ioc_lookups[0][1]
@@ -154,7 +170,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         self.assertIsInstance(res_df, pd.DataFrame)
         self.assertIsInstance(azs_result.reference, str)
         self.assertTrue("ThreatIntelligenceIndicator  | where" in azs_result.reference)
-        
+
         # Bulk URL Lookups
         results = ti_lookup.lookup_iocs(data=ioc_urls, start=start, end=end)
         self.assertIsNotNone(results)
@@ -165,7 +181,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         result = ti_lookup.lookup_ioc(observable=ioc_ip, start=start, end=end)
         self.assertIsNotNone(result)
         ioc_lookups = result[1]
-        
+
         self.assertGreaterEqual(1, len(ioc_lookups))
         self.assertEqual(ioc_lookups[0][0], "AzureSentinelByoti")
         azs_result = ioc_lookups[0][1]
