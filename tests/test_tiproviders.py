@@ -5,11 +5,13 @@
 # --------------------------------------------------------------------------
 """TIProviders test class."""
 import unittest
+from unittest import mock
 import os
 from pathlib import Path
 from typing import Union, Any, Tuple
 
 from ..msticpy.nbtools import pkg_config
+from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
     TIProviderSettings,
@@ -27,6 +29,23 @@ else:
     _TEST_DATA = "./tests/testdata"
 
 
+# This method will be used by the mock to replace requests.get
+def mocked_requests_get(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def json(self):
+            return self.json_data
+
+    if args[0].startswith("https://otx.alienvault.com"):
+        return MockResponse({"key1": "value1"}, 200)
+    elif args[0] == 'http://someotherurl.com/anothertest.json':
+        return MockResponse({"key2": "value2"}, 200)
+
+    return MockResponse(None, 404)
+
 class TestTIProviders(unittest.TestCase):
     """Unit test class."""
 
@@ -39,7 +58,7 @@ class TestTIProviders(unittest.TestCase):
         ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
-        self.assertEqual(4, len(ti_settings))
+        self.assertGreaterEqual(4, len(ti_settings))
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class
@@ -162,6 +181,7 @@ class TestTIProviders(unittest.TestCase):
         self, provider, test_iocs, test_results, expected_req_param, unsupported_iocs
     ):
 
+        ioc_extract = IoCExtract()
         for ioc, (ioc_type, sub_type) in test_iocs.items():
             resolved_type = provider.resolve_ioc_type(ioc)
             if ioc_type == "file_hash":
@@ -182,7 +202,7 @@ class TestTIProviders(unittest.TestCase):
 
             self.assertEqual("GET", verb)
             self.assertIn("url", req_params)
-            self.assertTrue(provider._ioc_extract.validate(req_params["url"], "url"))
+            self.assertTrue(ioc_extract.validate(req_params["url"], "url"))
             for param in expected_req_param:
                 self.assertIn(param, req_params)
 

@@ -561,7 +561,7 @@ class IoCExtract:
             warnings.warn(
                 "Exception detected trying to retrieve IANA top-level domain list."
                 + "Falling back to builtin seed list. "
-                + err.args,
+                + f"{err.args}",
                 RuntimeWarning,
             )
         # if we failed to get the list try to read from a seed file
@@ -578,7 +578,9 @@ class IoCExtract:
             # in the package tree - we use the first one we find
             pkg_paths = sys.modules["msticpy"]
             if pkg_paths:
-                conf_file = str(next(Path(pkg_paths.__path__[0]).glob(seed_file)))
+                conf_file = str(
+                    next(Path(pkg_paths.__path__[0]).glob(seed_file))  # type: ignore
+                )
 
         if conf_file:
             with open(conf_file, "r") as file_handle:
@@ -610,7 +612,7 @@ class IoCExtract:
             True if valid Top Level Domain
 
         """
-        if not self.tld_index:
+        if not self.tld_index:  # type: ignore
             self.tld_index = self.get_tlds()
         if not self.tld_index:
             return True

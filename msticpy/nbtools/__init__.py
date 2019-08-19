@@ -7,7 +7,7 @@
 # flake8: noqa: F403
 
 # pylint: disable=W0401
-from . import nbwidgets as widgets
+from . import nbwidgets
 
 from . import entityschema as entities
 from .security_alert import SecurityAlert

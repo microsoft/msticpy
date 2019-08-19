@@ -7,7 +7,7 @@
 from datetime import datetime, timedelta
 from numbers import Number
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from collections import ChainMap
 
 from .._version import VERSION
@@ -66,7 +66,7 @@ class QuerySource:
         self._source = source
         self.defaults = defaults
         self._global_metadata = dict(metadata) if metadata else dict()
-        self.query_store = None  # Optional[QueryStore]
+        self.query_store: Optional["QueryStore"] = None  # type: ignore
 
         # consolidate source metadata - source-specifc
         # overrides global
@@ -238,8 +238,10 @@ class QuerySource:
             if settings["type"] == "list":
                 if isinstance(param_dict[p_name], list):
                     param_dict[p_name] = ",".join(
-                        [f"'{item}''" for item in param_dict[p_name]]
+                        [f"'{item}'" for item in param_dict[p_name]]
                     )
+                else:
+                    param_dict[p_name] = f"'{param_dict[p_name]}'"
 
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)

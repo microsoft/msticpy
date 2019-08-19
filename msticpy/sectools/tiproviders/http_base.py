@@ -67,15 +67,15 @@ class HttpProvider(TIProvider):
 
         self._requests_session = requests.Session()
         self._request_params = {}
-        if "ApiID" in kwargs:
-            self._request_params["API_ID"] = kwargs.pop("ApiID")
-        if "AuthKey" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
+        if "api_id" in kwargs:
+            self._request_params["API_ID"] = kwargs.pop("api_id")
+        if "auth_key" in kwargs:
+            self._request_params["API_KEY"] = kwargs.pop("auth_key")
 
     # pylint: disable=too-many-branches
     @lru_cache(maxsize=256)
-    def lookup_ioc(
-        self, ioc: str, ioc_type: str = None, query_type: str = None
+    def lookup_ioc(  # type: ignore
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> LookupResult:
         """
         Lookup a single IoC observable.
@@ -113,6 +113,7 @@ class HttpProvider(TIProvider):
         the same item.
 
         """
+        # TODO - move this into TILookup class
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
@@ -144,12 +145,13 @@ class HttpProvider(TIProvider):
             NotImplementedError,
             ConnectionError,
         ) as err:
-            url = req_params.get("url", None) if req_params else None
             result.details = err.args
             result.raw_result = (
                 type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
             )
-            result.reference = url
+            if not isinstance(err, LookupError):
+                url = req_params.get("url", None) if req_params else None
+                result.reference = url
             return result
 
     # pylint: disable=too-many-branches
@@ -218,19 +220,6 @@ class HttpProvider(TIProvider):
                 raise NotImplementedError(f"Unknown auth type {src.auth_type}")
         return src.verb, req_dict
 
-    @classmethod
-    def usage(cls):
-        """Print usage of provider."""
-        print(f"{cls.__doc__} Supported query types:")
-        for ioc_key in sorted(cls._IOC_QUERIES):
-            ioc_key_elems = ioc_key.split("-", maxsplit=1)
-            if len(ioc_key_elems) == 1:
-                print(f"\tioc_type={ioc_key_elems[0]}")
-            if len(ioc_key_elems) == 2:
-                print(
-                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
-                )
-
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
@@ -267,7 +256,6 @@ class HttpProvider(TIProvider):
         """
         return (
             response.status == 404
-            or not response.raw_result
             or not response.raw_result
             or not isinstance(response.raw_result, dict)
         )

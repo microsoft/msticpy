@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
-from typing import Tuple, Union, Any
+from typing import Tuple, Union, Any, Dict
 
 import pandas as pd
 from IPython import get_ipython
@@ -44,6 +44,8 @@ class KqlDriver(DriverBase):
             self.current_connection = connection_str
             self.connect(connection_str)
 
+        self._schema: Dict[str, Any] = {}
+
     def connect(self, connection_str: str, **kwargs):
         """
         Connect to data source.
@@ -57,7 +59,21 @@ class KqlDriver(DriverBase):
         self.current_connection = connection_str
         result = self._ip.run_cell_magic("kql", line="", cell=connection_str)
         self._connected = True
+        self._schema = self._get_schema()
         return result
+
+    @property
+    def schema(self) -> Dict[str, Dict]:
+        """
+        Return current data schema of connection.
+
+        Returns
+        -------
+        Dict[str, Dict]
+            Data schema of current connection.
+
+        """
+        return self._schema
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
         """
@@ -142,3 +158,6 @@ class KqlDriver(DriverBase):
         if self._ip is not None:
             return self._ip.find_magic("kql") is not None
         return False
+
+    def _get_schema(self) -> Dict[str, Dict]:
+        return self._ip.run_line_magic("kql", line="--schema")

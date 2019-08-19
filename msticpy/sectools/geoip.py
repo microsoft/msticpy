@@ -17,10 +17,10 @@ for different services:
    an online lookup (API key required).
 
 """
-import glob
 import gzip
 import math
 import os
+from pathlib import Path
 import shutil
 import site
 import warnings
@@ -28,14 +28,14 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import pandas as pd
 import requests
 from requests.exceptions import HTTPError
 from IPython import get_ipython
 from IPython.display import HTML, display
-import geoip2.database
+import geoip2.database  # type: ignore
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
@@ -201,15 +201,15 @@ class IPStackLookup(GeoIpLookup):
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc["ip"]
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = ip_loc["country_code"]
+        geo_entity.CountryCode = ip_loc["country_code"]  # type: ignore
 
-        geo_entity.CountryName = ip_loc["country_name"]
-        geo_entity.State = ip_loc["region_name"]
-        geo_entity.City = ip_loc["city"]
-        geo_entity.Longitude = ip_loc["longitude"]
-        geo_entity.Latitude = ip_loc["latitude"]
+        geo_entity.CountryName = ip_loc["country_name"]  # type: ignore
+        geo_entity.State = ip_loc["region_name"]  # type: ignore
+        geo_entity.City = ip_loc["city"]  # type: ignore
+        geo_entity.Longitude = ip_loc["longitude"]  # type: ignore
+        geo_entity.Latitude = ip_loc["latitude"]  # type: ignore
         if "connection" in ip_loc:
-            geo_entity.Asn = ip_loc["connection"]["asn"]
+            geo_entity.Asn = ip_loc["connection"]["asn"]  # type: ignore
         ip_entity.Location = geo_entity
         return ip_entity
 
@@ -365,13 +365,13 @@ class GeoLiteLookup(GeoIpLookup):
         except HTTPError as http_err:
             warnings.warn(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}",
-                RuntimeError,
+                RuntimeWarning,
             )
         # pylint: disable=broad-except
         except Exception as err:
             warnings.warn(
                 f"Other error occurred trying to download GeoLite DB: {err}",
-                RuntimeError,
+                RuntimeWarning,
             )
         # pylint: enable=broad-except
         else:
@@ -392,7 +392,7 @@ class GeoLiteLookup(GeoIpLookup):
                 warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
 
     @staticmethod
-    def _get_geoip_dbpath(db_folder: str = None) -> str:
+    def _get_geoip_dbpath(db_folder: str = None) -> Optional[str]:
         r"""
         Get the correct path containing GeoLite City Database.
 
@@ -406,19 +406,21 @@ class GeoLiteLookup(GeoIpLookup):
 
         Returns
         -------
-        str
-            Returns the absoulte path of local maxmind geolite city
+        Optional[str]
+            Returns the absolute path of local maxmind geolite city
             database after control flow logic.
 
         """
-        list_of_db_paths = glob.glob(db_folder + "/*.mmdb")
+        if not db_folder:
+            db_folder = "."
+        list_of_db_paths = [str(db) for db in Path(db_folder).glob("*.mmdb")]
 
         if len(list_of_db_paths) > 1:
             latest_db_path = max(list_of_db_paths, key=os.path.getmtime)
         elif len(list_of_db_paths) == 1:
             latest_db_path = list_of_db_paths[0]
         else:
-            latest_db_path = None
+            return None
 
         return latest_db_path
 
@@ -530,16 +532,26 @@ class GeoLiteLookup(GeoIpLookup):
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
-        geo_entity.CountryName = (
+        geo_entity.CountryCode = geo_match.get("country", {}).get(  # type: ignore
+            "iso_code", None
+        )
+        geo_entity.CountryName = (  # type: ignore
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
         subdivs = geo_match.get("subdivisions", [])
         if subdivs:
-            geo_entity.State = subdivs[0].get("names", {}).get("en", None)
-        geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
-        geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)
-        geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
+            geo_entity.State = (  # type: ignore
+                subdivs[0].get("names", {}).get("en", None)
+            )
+        geo_entity.City = (  # type: ignore
+            geo_match.get("city", {}).get("names", {}).get("en", None)
+        )
+        geo_entity.Longitude = geo_match.get("location", {}).get(  # type: ignore
+            "longitude", None
+        )
+        geo_entity.Latitude = geo_match.get("location", {}).get(  # type: ignore
+            "latitude", None
+        )
         ip_entity.Location = geo_entity
         return ip_entity
 

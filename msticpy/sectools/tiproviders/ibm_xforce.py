@@ -84,7 +84,7 @@ class XForce(HttpProvider):
             Object with match details
 
         """
-        if self._failed_response(response):
+        if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, "Not found."
         result = False
         result_dict = {}
