@@ -128,7 +128,7 @@ class TILookup:
         return providers
 
     @property
-    def list_available_providers(self, show_query_types=False):
+    def list_available_providers(self, show_query_types=False):  # type: ignore
         """
         Print a list of builtin providers with optional usage.
 
@@ -230,7 +230,7 @@ class TILookup:
     # pylint: disable=too-many-arguments
     def lookup_ioc(
         self,
-        observable: str,
+        observable: str = None,
         ioc_type: str = None,
         ioc_query_type: str = None,
         providers: List[str] = None,
@@ -244,6 +244,7 @@ class TILookup:
         ----------
         observable : str
             IoC observable
+            (`ioc` is also an alias for observable)
         ioc_type : str, optional
             One of IoCExtract.IoCType, by default None
             If none, the IoC type will be inferred
@@ -264,6 +265,11 @@ class TILookup:
             list has an entry for each provider result
 
         """
+        if not observable and "ioc" in kwargs:
+            observable = kwargs["ioc"]
+        if not observable:
+            raise ValueError("observable or ioc parameter must be supplied.")
+
         result_list: List[Tuple[str, LookupResult]] = []
         selected_providers = self._select_providers(providers, prov_scope)
 

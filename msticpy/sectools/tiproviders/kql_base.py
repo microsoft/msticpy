@@ -24,7 +24,6 @@ from ..._version import VERSION
 from ...nbtools.utility import export
 from ...nbtools.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
-from ..iocextract import IoCType
 from .ti_provider_base import LookupResult, TIProvider, generate_items
 
 __version__ = VERSION
@@ -44,12 +43,6 @@ class KqlTIProvider(TIProvider):
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
-
-        self._supported_types = {
-            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
-        }
-        if IoCType.unknown in self._supported_types:
-            self._supported_types.remove(IoCType.unknown)
 
         if "query_provider" in kwargs and isinstance(
             kwargs["query_provider"], QueryProvider
@@ -127,6 +120,7 @@ class KqlTIProvider(TIProvider):
         result.reference = query_obj("query", **query_params)
         return result
 
+    # pylint: disable=too-many-locals, too-many-branches
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
@@ -215,19 +209,6 @@ class KqlTIProvider(TIProvider):
 
         return pd.concat(all_results, ignore_index=True, axis=0)
 
-    @classmethod
-    def usage(cls):
-        """Print usage of provider."""
-        print(f"{cls.__doc__} Supported query types:")
-        for ioc_key in sorted(cls._IOC_QUERIES):
-            ioc_key_elems = ioc_key.split("-", maxsplit=1)
-            if len(ioc_key_elems) == 1:
-                print(f"\tioc_type={ioc_key_elems[0]}")
-            if len(ioc_key_elems) == 2:
-                print(
-                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
-                )
-
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
@@ -275,8 +256,13 @@ class KqlTIProvider(TIProvider):
         query_provider.connect(connect_str)
         return query_provider
 
+    # pylint: disable=too-many-branches
     def _get_query_and_params(
-        self, ioc: str, ioc_type: str, query_type: str = None, **kwargs
+        self,
+        ioc: Union[str, List[str]],
+        ioc_type: str,
+        query_type: str = None,
+        **kwargs,
     ) -> Tuple[Callable, Dict[str, Any]]:
 
         if query_type:

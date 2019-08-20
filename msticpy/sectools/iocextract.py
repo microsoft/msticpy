@@ -556,7 +556,7 @@ class IoCExtract:
             return set(temp_df["TLD"])
         except (HTTPError, URLError):
             pass
-        # pylint: disable=broad-except
+        # pylint: disable=broad-except, W0703
         except Exception as err:
             warnings.warn(
                 "Exception detected trying to retrieve IANA top-level domain list."
@@ -564,6 +564,7 @@ class IoCExtract:
                 + f"{err.args}",
                 RuntimeWarning,
             )
+        # pylint: enable=broad-except, W0703
         # if we failed to get the list try to read from a seed file
         return cls._read_tld_seed_file()
 

@@ -40,12 +40,10 @@ __author__ = "Ian Hellen"
 
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
+
 # pylint: disable=too-few-public-methods
 class TISeverity(Enum):
-    """
-    Threat intelligence report severity
-
-    """
+    """Threat intelligence report severity."""
 
     Information = 1
     Warning = 2
@@ -108,11 +106,19 @@ _IOC_EXTRACT = IoCExtract()
 class TIProvider(ABC):
     """Abstract base class for Threat Intel providers."""
 
+    _IOC_QUERIES: Dict[str, Any] = {}
+
     # pylint: disable=unused-argument
     def __init__(self, **kwargs):
         """Initialize the provider."""
         self._supported_types: Set[IoCType] = set()
         self.description: Optional[str] = None
+
+        self._supported_types = {
+            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
+        }
+        if IoCType.unknown in self._supported_types:
+            self._supported_types.remove(IoCType.unknown)
 
     @abc.abstractmethod
     def lookup_ioc(

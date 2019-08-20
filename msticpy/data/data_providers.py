@@ -53,7 +53,7 @@ class QueryProvider:
 
     """
 
-    def __init__(
+    def __init__(  # noqa: MC001
         self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
     ):
         """

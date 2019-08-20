@@ -24,7 +24,6 @@ import requests
 
 from ..._version import VERSION
 from ...nbtools.utility import export
-from ..iocextract import IoCType
 from .ti_provider_base import LookupResult, TIProvider
 
 __version__ = VERSION
@@ -58,12 +57,6 @@ class HttpProvider(TIProvider):
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
-
-        self._supported_types = {
-            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
-        }
-        if IoCType.unknown in self._supported_types:
-            self._supported_types.remove(IoCType.unknown)
 
         self._requests_session = requests.Session()
         self._request_params = {}
@@ -113,7 +106,6 @@ class HttpProvider(TIProvider):
         the same item.
 
         """
-        # TODO - move this into TILookup class
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
