@@ -154,7 +154,7 @@ class Lookback(QueryParamProvider):
 
     def _time_range_change(self, change):
         del change
-        self.start = self.origin_time + timedelta(
+        self.start = self.origin_time - timedelta(
             0, self._lookback_wgt.value * self._time_unit.value
         )
 
