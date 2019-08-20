@@ -94,6 +94,7 @@ class KqlDriver(DriverBase):
         data, result = self.query_with_results(query)
         return data if data is not None else result
 
+    # pylint: disable=too-many-branches
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -142,7 +143,8 @@ class KqlDriver(DriverBase):
                 return data_frame, result
 
         print("Warning - query did not complete successfully.")
-        print("Kql ResultSet returned - check  'completion_query_info' property.")
+        if hasattr(result, "completion_query_info"):
+            print(result.completion_query_info)
         return None, result
 
     def _load_kql_magic(self):

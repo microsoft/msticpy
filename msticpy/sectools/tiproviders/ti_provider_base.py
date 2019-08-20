@@ -16,6 +16,7 @@ import abc
 from abc import ABC
 from enum import Enum
 import math
+import pprint
 import re
 from collections import Counter, namedtuple
 
@@ -75,15 +76,18 @@ class LookupResult:
     @property
     def summary(self):
         """Print a summary of the Lookup Result."""
+        p_pr = pprint.PrettyPrinter(indent=4)
         print("ioc:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
         # print("severity:", self.severity)
-        if isinstance(self.details, dict):
-            for name, details in self.details.items():
-                print(name, ":", details)
-        else:
-            print(self.details)
+        p_pr.pprint(self.details)
         print("reference: ", self.reference)
+
+    @property
+    def raw_result_fmtd(self):
+        """Print raw results of the Lookup Result."""
+        p_pr = pprint.PrettyPrinter(indent=4)
+        p_pr.pprint(self.raw_result)
 
 
 # Mapping for DataFrame columns

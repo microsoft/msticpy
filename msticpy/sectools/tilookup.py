@@ -121,7 +121,7 @@ class TILookup:
                 continue
             # if it is a class - we only want to show concrete classes
             # that are sub-classes of TIProvider
-            if issubclass(provider_class, tiproviders.TIProvider) and bool(
+            if issubclass(provider_class, tiproviders.TIProvider) and not bool(
                 getattr(provider_class, "__abstractmethods__", False)
             ):
                 providers.append(provider_class.__name__)
@@ -253,7 +253,7 @@ class TILookup:
         providers: List[str]
             Explicit list of providers to use
         prov_scope : str, optional
-            Use primary, secondary or all providers, by default "primary"
+            Use "primary", "secondary" or "all" providers, by default "primary"
         kwargs :
             Additional arguments passed to the underlying provider(s)
 
@@ -312,7 +312,7 @@ class TILookup:
         providers: List[str]
             Explicit list of providers to use
         prov_scope : str, optional
-            Use primary, secondary or all providers, by default "primary"
+            Use "primary", "secondary" or "all" providers, by default "primary"
         kwargs :
             Additional arguments passed to the underlying provider(s)
 
@@ -335,7 +335,7 @@ class TILookup:
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
 
-        return pd.concat(result_list)
+        return pd.concat(result_list, sort=False)
 
     @staticmethod
     def result_to_df(

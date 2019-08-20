@@ -100,16 +100,21 @@ class KqlTIProvider(TIProvider):
         if result.status:
             return result
 
-        query_obj, query_params = self._get_query_and_params(
-            ioc=ioc, ioc_type=result.ioc_type, query_type=query_type, **kwargs
-        )
+        try:
+            query_obj, query_params = self._get_query_and_params(
+                ioc=ioc, ioc_type=result.ioc_type, query_type=query_type, **kwargs
+            )
+        except LookupError as err:
+            result.details = err.args
+            result.raw_result = type(err).__name__ + "\n" + str(err) + "\n"
+            return result
 
         if not query_obj:
             raise LookupError(
                 f"Could not find query for {ioc} ({ioc_type}, {query_type})"
             )
         data_result = query_obj(**query_params)
-        if data_result.empty:
+        if not isinstance(data_result, pd.DataFrame) or data_result.empty:
             result.details = "0 rows returned."
             result.status = -1
             return result
@@ -167,20 +172,35 @@ class KqlTIProvider(TIProvider):
 
         all_results = []
         for ioc_type, obs_set in ioc_groups.items():
-            query_obj, query_params = self._get_query_and_params(
-                ioc=list(obs_set), ioc_type=ioc_type, query_type=query_type, **kwargs
-            )
-
+            try:
+                query_obj, query_params = self._get_query_and_params(
+                    ioc=list(obs_set),
+                    ioc_type=ioc_type,
+                    query_type=query_type,
+                    **kwargs,
+                )
+            except LookupError:
+                pass
             if not query_obj:
                 warnings.warn(f"Could not find query for {ioc_type}, {query_type}")
                 continue
 
             # run the query
             data_result = query_obj(**query_params)
-            if data_result is not None:
+            if isinstance(data_result, pd.DataFrame):
                 data_result = data_result.copy()
             else:
-                raise RuntimeError("No results return from data provider.")
+                if (
+                    hasattr(data_result, "completion_query_info")
+                    and data_result.completion_query_info["StatusCode"] == 0
+                    and data_result.records_count == 0
+                ):
+                    warnings.warn("No results return from data provider.")
+                else:
+                    warnings.warn(
+                        "No results return from data provider."
+                        + str(data_result.completion_query_info)
+                    )
 
             src_ioc_frame = pd.DataFrame(obs_set, columns=["IoC"])
             src_ioc_frame["IoCType"] = ioc_type
@@ -189,7 +209,7 @@ class KqlTIProvider(TIProvider):
 
             # If no results, add the empty dataframe to the combined results
             # and continue
-            if data_result.empty:
+            if not isinstance(data_result, pd.DataFrame) or data_result.empty:
                 src_ioc_frame["Result"] = False
                 src_ioc_frame["Details"] = "0 rows returned."
                 src_ioc_frame["Status"] = -1
