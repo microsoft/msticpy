@@ -36,6 +36,7 @@ from requests.exceptions import HTTPError
 from IPython import get_ipython
 from IPython.display import HTML, display
 import geoip2.database  # type: ignore
+from geoip2.errors import AddressNotFoundError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
@@ -517,7 +518,11 @@ class GeoLiteLookup(GeoIpLookup):
         output_raw = []
         output_entities = []
         for ip_input in ip_list:
-            geo_match = self._reader.city(ip_input).raw
+            geo_match = None
+            try:
+                geo_match = self._reader.city(ip_input).raw
+            except (AddressNotFoundError, AttributeError):
+                continue
             if geo_match:
                 output_raw.append(geo_match)
                 output_entities.append(

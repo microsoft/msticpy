@@ -105,7 +105,7 @@ The list below shows the current set of providers.
 
 .. parsed-literal::
 
-    ['AzureSentinelByoti', 'OTX', 'VirusTotal', 'XForce']
+    ['AzSTI', 'OTX', 'VirusTotal', 'XForce']
 
 
 
@@ -160,7 +160,7 @@ missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
           workspace_id: "your-azure-sentinel-workspace-id"
           tenant_id: "your-azure-sentinel-tenant-id"
         Primary: True
-        Provider: "AzureSentinelByoti"
+        Provider: "AzSTI"
 
 .. code:: ipython3
 
@@ -173,7 +173,7 @@ missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
     ['OTX - AlientVault OTX Lookup. (primary)',
      'VirusTotal - VirusTotal Lookup. (primary)',
      'XForce - IBM XForce Lookup. (primary)',
-     'AzureSentinelByoti - Azure Sentinel TI provider class. (primary)']
+     'AzSTI - Azure Sentinel TI provider class. (primary)']
 
 
 
@@ -517,7 +517,7 @@ Lookup using all primary providers
           <td>200</td>
         </tr>
         <tr>
-          <th>AzureSentinelByoti</th>
+          <th>AzSTI</th>
           <td>38.75.137.9</td>
           <td>ipv4</td>
           <td>None</td>
@@ -602,7 +602,7 @@ such as geo-ip and passive-dns
     	ioc_type=url
     	ioc_type=url, ioc_query_type=malware
     
-    Provider class: AzureSentinelByoti
+    Provider class: AzSTI
     Azure Sentinel TI provider class. Supported query types:
     	ioc_type=dns
     	ioc_type=file_hash
@@ -734,7 +734,7 @@ lookup_iocs
         "40.113.200.201",
     ]
     
-    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzureSentinelByoti")
+    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI")
 
 
 .. raw:: html
@@ -779,7 +779,7 @@ lookup_iocs
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>1</th>
@@ -791,7 +791,7 @@ lookup_iocs
           <td>-1.0</td>
           <td>0 rows returned.</td>
           <td>NaN</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>2</th>
@@ -803,7 +803,7 @@ lookup_iocs
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>3</th>
@@ -815,7 +815,7 @@ lookup_iocs
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>4</th>
@@ -827,7 +827,7 @@ lookup_iocs
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
       </tbody>
     </table>
@@ -899,7 +899,7 @@ Output sorted by IoC
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': 'FAE39C007D6554822504A1E0BDFD788E27DDC748ED63B258651DE52E4FA6D511', 'TimeGenerat...</td>
           <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:41.900764Z) | w...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
           <td>0.0</td>
         </tr>
         <tr>
@@ -959,7 +959,7 @@ Output sorted by IoC
 Specifying Time Ranges
 ----------------------
 
-Some providers (currently only AzureSentinelByoti) support time ranges
+Some providers (currently only AzSTI) support time ranges
 so that you can specify specific periods to search for.
 
 If a provider does not support time ranges, the parameters will be
@@ -972,7 +972,7 @@ ignored
     q_times = nbwidgets.QueryTime(units="hour", auto_display=True, origin_time=search_origin, max_after=24, max_before=24)
 
     # Using this data range returned no results
-    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzureSentinelByoti", start=q_times.start, end=q_times.end).head()
+    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI", start=q_times.start, end=q_times.end).head()
 
 
 .. raw:: html
@@ -1015,7 +1015,7 @@ ignored
           <td>False</td>
           <td>0 rows returned.</td>
           <td>-1</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>1</th>
@@ -1026,7 +1026,7 @@ ignored
           <td>False</td>
           <td>0 rows returned.</td>
           <td>-1</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>2</th>
@@ -1037,7 +1037,7 @@ ignored
           <td>False</td>
           <td>0 rows returned.</td>
           <td>-1</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>3</th>
@@ -1048,7 +1048,7 @@ ignored
           <td>False</td>
           <td>0 rows returned.</td>
           <td>-1</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>4</th>
@@ -1059,7 +1059,7 @@ ignored
           <td>False</td>
           <td>0 rows returned.</td>
           <td>-1</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
       </tbody>
     </table>
@@ -1074,7 +1074,7 @@ ignored
     q_times = nbwidgets.QueryTime(units="day", auto_display=True, origin_time=search_origin, max_after=24, max_before=24)
 
     # Using a wider ranges produces results
-    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzureSentinelByoti", start=q_times.start, end=q_times.end)
+    ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI", start=q_times.start, end=q_times.end)
 
 
 
@@ -1121,7 +1121,7 @@ ignored
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>1</th>
@@ -1133,7 +1133,7 @@ ignored
           <td>-1.0</td>
           <td>0 rows returned.</td>
           <td>NaN</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>2</th>
@@ -1145,7 +1145,7 @@ ignored
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>3</th>
@@ -1157,7 +1157,7 @@ ignored
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
         <tr>
           <th>4</th>
@@ -1169,7 +1169,7 @@ ignored
           <td>0.0</td>
           <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
           <td>{'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...</td>
-          <td>AzureSentinelByoti</td>
+          <td>AzSTI</td>
         </tr>
       </tbody>
     </table>

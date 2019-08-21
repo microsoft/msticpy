@@ -2,7 +2,7 @@
 from .alienvault_otx import OTX  # noqa:F401
 from .ibm_xforce import XForce  # noqa:F401
 from .virustotal import VirusTotal  # noqa:F401
-from .azure_sent_byoti import AzureSentinelByoti  # noqa:F401
+from .azure_sent_byoti import AzSTI  # noqa:F401
 from .ti_provider_base import (  # noqa:F401
     TIProvider,
     preprocess_observable,

@@ -22,7 +22,7 @@ from ..msticpy.sectools.tiproviders import (
     get_provider_settings,
     preprocess_observable,
     LookupResult,
-    AzureSentinelByoti,
+    AzSTI,
 )
 
 _test_data_folders = [
@@ -94,7 +94,7 @@ class TestASKqlTIProvider(unittest.TestCase):
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class
-        as_byoti_prov = AzureSentinelByoti(query_provider=qry_prov)
+        as_byoti_prov = AzSTI(query_provider=qry_prov)
         ti_lookup = TILookup(primary_providers=[as_byoti_prov])
 
         # should have 2 succesfully loaded providers
@@ -107,7 +107,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
 
         pkg_config.refresh_config()
-        as_byoti_prov = AzureSentinelByoti(query_provider=qry_prov)
+        as_byoti_prov = AzSTI(query_provider=qry_prov)
         return TILookup(primary_providers=[as_byoti_prov])
 
     def test_ASByoti_provider(self):
@@ -157,7 +157,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         ioc_lookups = result[1]
 
         self.assertGreaterEqual(1, len(ioc_lookups))
-        self.assertEqual(ioc_lookups[0][0], "AzureSentinelByoti")
+        self.assertEqual(ioc_lookups[0][0], "AzSTI")
         azs_result = ioc_lookups[0][1]
         self.assertEqual(azs_result.ioc.lower(), ioc_url.lower())
         self.assertEqual(azs_result.ioc_type, "url")
@@ -183,7 +183,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         ioc_lookups = result[1]
 
         self.assertGreaterEqual(1, len(ioc_lookups))
-        self.assertEqual(ioc_lookups[0][0], "AzureSentinelByoti")
+        self.assertEqual(ioc_lookups[0][0], "AzSTI")
         azs_result = ioc_lookups[0][1]
         self.assertEqual(azs_result.ioc, ioc_ip)
         self.assertEqual(azs_result.ioc_type, "ipv4")

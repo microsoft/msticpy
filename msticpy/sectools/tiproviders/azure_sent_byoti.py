@@ -26,7 +26,7 @@ __author__ = "Ian Hellen"
 
 
 @export
-class AzureSentinelByoti(KqlTIProvider):
+class AzSTI(KqlTIProvider):
     """Azure Sentinel TI provider class."""
 
     _IOC_QUERIES: Dict[str, tuple] = {
