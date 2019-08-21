@@ -94,7 +94,6 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     return ip_entities
 
 
-@export
 def create_host_record(
     syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
 ) -> Host:
@@ -228,7 +227,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
         .sort_index(ascending=True)
     )
     if logons_opened.empty or logons_closed.empty:
-        raise KQLDataError("There are no logon sessions in the supplied data set")
+        print("There are no logon sessions in the supplied data set")
     else:
         while ses_opened < len(logons_opened.index) and ses_closed < len(
             logons_closed.index
@@ -409,3 +408,4 @@ def _normalize_to_utc(time_stamp: dt.datetime):
     else:
         time_stamp = time_stamp.astimezone(pytz.utc)
         return time_stamp
+
