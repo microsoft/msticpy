@@ -27,10 +27,11 @@ class FoliumMap:
     def __init__(
         self,
         title: str = "layer1",
-        zoom_start: int = 7,
+        zoom_start: float = 2.5,
         tiles=None,
         width: str = "100%",
         height: str = "100%",
+        location: list = [47.67, -122.13]
     ):
         """
         Create an instance of the folium map.
@@ -55,7 +56,7 @@ class FoliumMap:
 
         """
         self.folium_map = folium.Map(
-            zoom_start=zoom_start, tiles=tiles, width=width, height=height
+            zoom_start=zoom_start, tiles=tiles, width=width, height=height, location=location
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
 
