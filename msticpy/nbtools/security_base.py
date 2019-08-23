@@ -140,7 +140,7 @@ class SecurityBase(QueryParamProvider):
             dictionary of the Alert or Event properties.
 
         """
-        return self._source_data
+        return self._source_data.to_dict()
 
     @property
     def hostname(self) -> str:

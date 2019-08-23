@@ -78,7 +78,7 @@ class SecurityAlert(SecurityBase):
 
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
-        if self.properties is not None and not self.properties.any():
+        if self.properties:
             title = """
             <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
             entity=<b>{entity}</b>, id=<b>{id}</b>

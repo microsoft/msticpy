@@ -17,24 +17,26 @@ for different services:
    an online lookup (API key required).
 
 """
-import glob
 import gzip
 import math
 import os
+from pathlib import Path
 import shutil
 import site
+import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import pandas as pd
 import requests
 from requests.exceptions import HTTPError
 from IPython import get_ipython
 from IPython.display import HTML, display
-import geoip2.database
+import geoip2.database  # type: ignore
+from geoip2.errors import AddressNotFoundError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
@@ -200,15 +202,15 @@ class IPStackLookup(GeoIpLookup):
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc["ip"]
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = ip_loc["country_code"]
+        geo_entity.CountryCode = ip_loc["country_code"]  # type: ignore
 
-        geo_entity.CountryName = ip_loc["country_name"]
-        geo_entity.State = ip_loc["region_name"]
-        geo_entity.City = ip_loc["city"]
-        geo_entity.Longitude = ip_loc["longitude"]
-        geo_entity.Latitude = ip_loc["latitude"]
+        geo_entity.CountryName = ip_loc["country_name"]  # type: ignore
+        geo_entity.State = ip_loc["region_name"]  # type: ignore
+        geo_entity.City = ip_loc["city"]  # type: ignore
+        geo_entity.Longitude = ip_loc["longitude"]  # type: ignore
+        geo_entity.Latitude = ip_loc["latitude"]  # type: ignore
         if "connection" in ip_loc:
-            geo_entity.Asn = ip_loc["connection"]["asn"]
+            geo_entity.Asn = ip_loc["connection"]["asn"]  # type: ignore
         ip_entity.Location = geo_entity
         return ip_entity
 
@@ -328,6 +330,8 @@ class GeoLiteLookup(GeoIpLookup):
         self._auto_update = auto_update
         self._check_and_update_db(db_folder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(db_folder)
+        if not self._dbpath:
+            raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
 
     def _download_and_extract_gzip(self, url: str = None, db_folder: str = None):
@@ -360,16 +364,22 @@ class GeoLiteLookup(GeoIpLookup):
             response = requests.get(url, stream=True)
             response.raise_for_status()
         except HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
+            warnings.warn(
+                f"HTTP error occurred trying to download GeoLite DB: {http_err}",
+                RuntimeWarning,
+            )
+        # pylint: disable=broad-except
         except Exception as err:
-            print(f"Other error occurred: {err}")
-            raise
+            warnings.warn(
+                f"Other error occurred trying to download GeoLite DB: {err}",
+                RuntimeWarning,
+            )
+        # pylint: enable=broad-except
         else:
             print("Downloading GeoLite DB archive from MaxMind....")
             with open(db_archive_path, "wb") as file_hdl:
                 for chunk in response.iter_content(chunk_size=10000):
                     file_hdl.write(chunk)
-                print(f"Downloaded archive location :: {db_archive_path}")
             try:
                 with gzip.open(db_archive_path, "rb") as f_in:
                     print(f"Extracting city database...")
@@ -380,10 +390,10 @@ class GeoLiteLookup(GeoIpLookup):
                             f"{db_file_path}",
                         )
             except IOError as err:
-                print(f"{db_archive_path} {err}")
+                warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
 
     @staticmethod
-    def _get_geoip_dbpath(db_folder: str = None) -> str:
+    def _get_geoip_dbpath(db_folder: str = None) -> Optional[str]:
         r"""
         Get the correct path containing GeoLite City Database.
 
@@ -397,19 +407,21 @@ class GeoLiteLookup(GeoIpLookup):
 
         Returns
         -------
-        str
-            Returns the absoulte path of local maxmind geolite city
+        Optional[str]
+            Returns the absolute path of local maxmind geolite city
             database after control flow logic.
 
         """
-        list_of_db_paths = glob.glob(db_folder + "/*.mmdb")
+        if not db_folder:
+            db_folder = "."
+        list_of_db_paths = [str(db) for db in Path(db_folder).glob("*.mmdb")]
 
         if len(list_of_db_paths) > 1:
             latest_db_path = max(list_of_db_paths, key=os.path.getmtime)
         elif len(list_of_db_paths) == 1:
             latest_db_path = list_of_db_paths[0]
         else:
-            latest_db_path = None
+            return None
 
         return latest_db_path
 
@@ -445,7 +457,7 @@ class GeoLiteLookup(GeoIpLookup):
         if geoip_db_path is None:
             print(
                 "No local Maxmind City Database found. ",
-                f"Downloading new database to {db_folder}",
+                f"Attempting to downloading new database to {db_folder}",
             )
             self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
         else:
@@ -458,13 +470,13 @@ class GeoLiteLookup(GeoIpLookup):
             if db_age > timedelta(30) and auto_update:
                 print(
                     "Latest local Maxmind City Database present is older than 30 days.",
-                    f"Downloading new database to {db_folder}",
+                    f"Attempting to download new database to {db_folder}",
                 )
                 self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
-                    f"Downloading new database to {db_folder}",
+                    f"Attempting to download new database to {db_folder}",
                 )
                 self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
 
@@ -506,7 +518,11 @@ class GeoLiteLookup(GeoIpLookup):
         output_raw = []
         output_entities = []
         for ip_input in ip_list:
-            geo_match = self._reader.city(ip_input).raw
+            geo_match = None
+            try:
+                geo_match = self._reader.city(ip_input).raw
+            except (AddressNotFoundError, AttributeError):
+                continue
             if geo_match:
                 output_raw.append(geo_match)
                 output_entities.append(
@@ -521,16 +537,26 @@ class GeoLiteLookup(GeoIpLookup):
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
-        geo_entity.CountryName = (
+        geo_entity.CountryCode = geo_match.get("country", {}).get(  # type: ignore
+            "iso_code", None
+        )
+        geo_entity.CountryName = (  # type: ignore
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
         subdivs = geo_match.get("subdivisions", [])
         if subdivs:
-            geo_entity.State = subdivs[0].get("names", {}).get("en", None)
-        geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
-        geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)
-        geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
+            geo_entity.State = (  # type: ignore
+                subdivs[0].get("names", {}).get("en", None)
+            )
+        geo_entity.City = (  # type: ignore
+            geo_match.get("city", {}).get("names", {}).get("en", None)
+        )
+        geo_entity.Longitude = geo_match.get("location", {}).get(  # type: ignore
+            "longitude", None
+        )
+        geo_entity.Latitude = geo_match.get("location", {}).get(  # type: ignore
+            "latitude", None
+        )
         ip_entity.Location = geo_entity
         return ip_entity
 

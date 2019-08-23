@@ -6,7 +6,7 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, Tuple
 
 from IPython.core.display import display, HTML
 import pandas as pd
@@ -166,3 +166,25 @@ def get_notebook_query_string():
     </script>
     """
     )
+
+
+@export
+def check_py_version(min_ver: Tuple = (3, 6)):
+    """
+    Check that the current python version is not less than `min_ver`.
+
+    Parameters
+    ----------
+    min_ver : Tuple, optional
+        Minimum required version, by default (3,6)
+
+    """
+    if isinstance(min_ver, (float, str)):
+        min_ver_list = str(min_ver).split(".")
+        min_ver = (min_ver_list[0], min_ver_list[1])
+    if sys.version_info < min_ver:
+        print("Check the Kernel->Change Kernel menu and ensure that Python 3.6")
+        print("or later is selected as the active kernel.")
+        raise SystemExit(
+            "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
+        )

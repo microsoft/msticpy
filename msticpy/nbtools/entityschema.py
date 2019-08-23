@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 # pylint: disable=locally-disabled, unused-import
-from typing import Mapping, Any, Union, Dict, Type  # noqa: F401
+from typing import Mapping, Any, Union, Dict, Type
 
 from .utility import export
 from .._version import VERSION
@@ -24,7 +24,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, type] = {}
+_ENTITY_ENUMS: Dict[str, Type] = {}
 
 
 # pylint: disable=too-many-lines, invalid-name
