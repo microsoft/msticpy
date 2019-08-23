@@ -82,7 +82,7 @@ class OTX(HttpProvider):
             Object with match details
 
         """
-        if self._failed_response(response):
+        if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, "Not found."
         if "pulse_info" in response.raw_result:
             pulses = response.raw_result["pulse_info"].get("pulses", {})
