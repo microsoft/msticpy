@@ -332,6 +332,7 @@ class TIProvider(ABC):
         if not self.is_supported_type(result.ioc_type):
             result.details = f"IoC type {result.ioc_type} not supported."
             result.status = -1
+            return result
 
         clean_ioc = preprocess_observable(ioc, result.ioc_type)
         if clean_ioc.status != "ok":

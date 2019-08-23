@@ -253,19 +253,22 @@ class KqlTIProvider(TIProvider):
         pass
 
     def _create_query_provider(self, **kwargs):
-        # These usually won't be set WorkspaceConfig does
-        # the right thing if these are None
-        config_file = kwargs.get("config_file")
-        workspace = kwargs.get("workspace")
-        ws_config = WorkspaceConfig(config_file=config_file, workspace=workspace)
-
+        workspace_id = None
+        tenant_id = None
         if "workspace_id" in kwargs:
             workspace_id = kwargs.pop("workspace_id")
-        else:
-            workspace_id = ws_config["workspace_id"]
         if "tenant_id" in kwargs:
             tenant_id = kwargs.pop("tenant_id")
-        else:
+
+        if not workspace_id or not tenant_id:
+            # If there are no TI-Provider specific kwargs
+            # WorkspaceConfig should be able to get these global values
+            # If a config file or a workspace name is passed we'll use
+            # those in case there are multiple workspaces set globally.
+            config_file = kwargs.get("config_file")
+            workspace = kwargs.get("workspace")
+            ws_config = WorkspaceConfig(config_file=config_file, workspace=workspace)
+            workspace_id = ws_config["workspace_id"]
             tenant_id = ws_config["tenant_id"]
         # Either the format or connect() call will fail if these values are
         # not set or invalid.

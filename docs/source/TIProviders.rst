@@ -134,6 +134,12 @@ Delete any provider entries that you do not want to use and add the
 missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
 
 
+.. note:: If you have your Azure Sentinel workspace and tenant IDs configured
+  either in a config.json file or in the `AzureSentinel` configuration section
+  of the `msticpyconfig.yaml` you do not need to set these values for the
+  provider here. They will be inherited from the global configuration.
+
+
 .. code:: yaml
 
     QueryDefinitions:
@@ -146,7 +152,7 @@ missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
         Provider: "OTX" # Explicitly name provider to override
       VirusTotal:
         Args:
-          AuthKey: "your-otx-key"
+          AuthKey: "your-vt-key"
         Primary: True
         Provider: "VirusTotal"
       XForce:
@@ -157,8 +163,8 @@ missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
         Provider: "XForce"
       AzureSentinel:
         Args:
-          workspace_id: "your-azure-sentinel-workspace-id"
-          tenant_id: "your-azure-sentinel-tenant-id"
+          WorkspaceID: "your-azure-sentinel-workspace-id"
+          TenantID: "your-azure-sentinel-tenant-id"
         Primary: True
         Provider: "AzSTI"
 

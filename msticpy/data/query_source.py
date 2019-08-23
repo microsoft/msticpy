@@ -129,7 +129,7 @@ class QuerySource:
             The template query.
 
         """
-        return self["args.query"]
+        return self._query
 
     @property
     def default_params(self) -> Dict[str, dict]:
@@ -354,7 +354,7 @@ class QuerySource:
 
     def _replace_query_macros(self):
         """Replace any macro strings in the query with substitutions."""
-        replace_keys = re.findall(r"\$\<([^}]+)\>\$?", self._query)
+        replace_keys = re.findall(r"\$\<([^>]+)\>\$?", self._query)
         if not replace_keys:
             return
         replace_values = {}

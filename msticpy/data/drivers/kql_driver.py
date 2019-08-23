@@ -136,7 +136,10 @@ class KqlDriver(DriverBase):
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
-            if result and result.completion_query_info["StatusCode"] == 0:
+            if (
+                hasattr(result, "completion_query_info")
+                and result.completion_query_info["StatusCode"] == 0
+            ):
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:
                     print("Warning - query returned partial results.")
@@ -144,7 +147,10 @@ class KqlDriver(DriverBase):
 
         print("Warning - query did not complete successfully.")
         if hasattr(result, "completion_query_info"):
-            print(result.completion_query_info)
+            print(
+                result.completion_query_info["StatusCode"],
+                "(code: {}".format(result.completion_query_info["StatusCode"]),
+            )
         return None, result
 
     def _load_kql_magic(self):

@@ -103,7 +103,7 @@ class TestASKqlTIProvider(unittest.TestCase):
 
     @staticmethod
     def load_ti_lookup():
-        test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml")
+        test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
 
         pkg_config.refresh_config()
