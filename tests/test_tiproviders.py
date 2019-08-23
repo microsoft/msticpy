@@ -5,17 +5,20 @@
 # --------------------------------------------------------------------------
 """TIProviders test class."""
 import unittest
+from unittest import mock
 import os
 from pathlib import Path
 from typing import Union, Any, Tuple
 
 from ..msticpy.nbtools import pkg_config
+from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
     TIProviderSettings,
     get_provider_settings,
     preprocess_observable,
     LookupResult,
+    HttpProvider,
 )
 
 _test_data_folders = [
@@ -27,19 +30,132 @@ else:
     _TEST_DATA = "./tests/testdata"
 
 
+ioc_ips = [
+    "185.92.220.35",
+    "213.159.214.86",
+    "77.222.54.202",
+    "91.219.29.81",
+    "193.9.28.254",
+    "89.108.83.196",
+    "91.219.28.44",
+    "188.127.231.124",
+    "192.42.116.41",
+    "91.219.31.18",
+    "46.4.239.76",
+    "188.166.168.250",
+    "195.154.241.208",
+    "51.255.172.55",
+    "93.170.169.52",
+    "104.215.148.63",
+    "13.77.161.179",
+]
+ioc_benign_iocs = ["40.76.4.15", "40.112.72.205", "40.113.200.201"]  # benign
+
+
+def is_benign_ioc(request_item):
+    if isinstance(request_item, str):
+        return any([item for item in ioc_benign_iocs if item in request_item])
+    if isinstance(request_item, dict):
+        return any([item for item in ioc_benign_iocs if item in request_item.values()])
+    return False
+
+
+def mocked_session(*args, **kwargs):
+    return mock_req_session()
+
+
+# This class will requests.Session()
+class mock_req_session:
+    def get(self, *args, **kwargs):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+        if "url" not in kwargs:
+            return MockResponse(None, 404)
+        if kwargs["url"].startswith("https://otx.alienvault.com"):
+            if is_benign_ioc(kwargs["url"]):
+                return MockResponse(None, 404)
+            mocked_result = {
+                "response": "Found stuff",
+                "pulse_info": {
+                    "pulses": [
+                        {
+                            "name": ["somename"],
+                            "tags": ["bad", "good", "ugly"],
+                            "references": ["url1", "url2"],
+                        }
+                    ]
+                },
+            }
+            return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://api.xforce.ibmcloud.com"):
+            if is_benign_ioc(kwargs["url"]):
+                return MockResponse(None, 404)
+            mocked_result = {
+                "score": 1,
+                "cats": ["one", "two"],
+                "reason": "no reason really",
+                "reasonDescription": "what does it mean?",
+                "tags": ["bad", "good", "ugly"],
+                "malware": {
+                    "risk": "high",
+                    "family": {"type": "trojan", "name": "mybadfile"},
+                },
+                "total_rows": 4,
+                "categoryDescriptions": ["desc1", "desc2"],
+                "contact": [
+                    {
+                        "type": "registrant",
+                        "name": "Domain Administrator",
+                        "organization": "Microsoft Corporation",
+                        "country": "United States",
+                    }
+                ],
+            }
+            return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://www.virustotal.com/"):
+            if is_benign_ioc(kwargs["params"]):
+                return MockResponse(None, 404)
+            mocked_result = {
+                "resource": "ioc",
+                "permalink": "https://virustotal.com/report.html",
+                "positives": 1,
+                "detected_urls": [{"url": "http://bad.com/foo", "positives": 1}],
+                "verbose_msg": "A long description....",
+                "response_code": 1,
+            }
+            return MockResponse(mocked_result, 200)
+        return MockResponse(None, 404)
+
+
 class TestTIProviders(unittest.TestCase):
     """Unit test class."""
 
-    def test_ti_config_and_load(self):
+    ti_lookup = None
+
+    def setUp(self):
+        self.ti_lookup = self.load_ti_lookup()
+
+    @staticmethod
+    def load_ti_lookup():
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
 
         pkg_config.refresh_config()
+        return TILookup()
+
+    def test_ti_config_and_load(self):
+        self.load_ti_lookup()
 
         ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
-        self.assertEqual(4, len(ti_settings))
+        self.assertGreaterEqual(4, len(ti_settings))
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class
@@ -50,155 +166,59 @@ class TestTIProviders(unittest.TestCase):
         self.assertGreaterEqual(3, len(ti_lookup.loaded_providers))
         self.assertGreaterEqual(3, len(ti_lookup.provider_status))
 
-    @staticmethod
-    def load_ti_lookup():
-        test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+    def test_xforce(self):
+        self.exercise_provider("XForce")
 
-        pkg_config.refresh_config()
-        return TILookup()
+    def test_otx(self):
+        self.exercise_provider("OTX")
 
-    def test_OTX_provider(self):
-        ti_lookup = self.load_ti_lookup()
+    def test_virus_total(self):
+        self.exercise_provider("VirusTotal")
 
-        otx_provider = ti_lookup.loaded_providers["OTX"]
+    def exercise_provider(self, provider_name):
+        ti_lookup = self.ti_lookup
+
+        ti_provider = ti_lookup.loaded_providers[provider_name]
+        saved_session = ti_provider._requests_session
+        ti_provider._requests_session = mock_req_session()
+
         iocs = {
             "124.5.6.7": ("ipv4", None),
-            "office.microsoft.com": ("dns", None),
-            "https://badplace.net/path1/path2?x=1": ("url", None),
-            "7657fcb7d772448a6d8504e4b20168b7": ("file_hash", None),
-            "7657fcb7d772448a6d8504e4b20168b8": ("md5_hash", None),
-            "www.microsoft.com": ("hostname", None),
-        }
-        mocked_result = {
-            "response": "Found stuff",
-            "pulse_info": {
-                "pulses": [
-                    {
-                        "name": ["somename"],
-                        "tags": ["bad", "good", "ugly"],
-                        "references": ["url1", "url2"],
-                    }
-                ]
-            },
-        }
-        expected_params = ["headers"]
-
-        ioc_unsupported = {"124.5.6.7": "ipv7"}
-        self._run_http_provider_tests(
-            otx_provider, iocs, mocked_result, expected_params, ioc_unsupported
-        )
-
-    def test_XForce_provider(self):
-        ti_lookup = self.load_ti_lookup()
-
-        provider = ti_lookup.loaded_providers["XForce"]
-        iocs = {
-            "124.5.6.7": ("ipv4", None),
-            "124.5.6.7": ("ipv4", "rep"),
-            "124.5.6.7": ("ipv4", "malware"),
-            "124.5.6.7": ("ipv4", "whois"),
+            "124.5.6.8": ("ipv4", "rep"),
+            "124.5.6.9": ("ipv4", "malware"),
+            "124.5.6.10": ("ipv4", "whois"),
             "office.microsoft.com": ("dns", "info"),
             "https://badplace.net/path1/path2?x=1": ("url", None),
             "7657fcb7d772448a6d8504e4b20168b7": ("file_hash", None),
             "7657fcb7d772448a6d8504e4b20168b8": ("md5_hash", None),
             "www.microsoft.com": ("hostname", "whois"),
         }
-        mocked_result = {
-            "score": 1,
-            "cats": ["one", "two"],
-            "reason": "no reason really",
-            "reasonDescription": "what does it mean?",
-            "tags": ["bad", "good", "ugly"],
-            "malware": {
-                "risk": "high",
-                "family": {"type": "trojan", "name": "mybadfile"},
-            },
-            "total_rows": 4,
-            "categoryDescriptions": ["desc1", "desc2"],
-            "contact": [
-                {
-                    "type": "registrant",
-                    "name": "Domain Administrator",
-                    "organization": "Microsoft Corporation",
-                    "country": "United States",
-                }
-            ],
-        }
-        expected_params = ["auth"]
 
-        ioc_unsupported = {"124.5.6.7": "ipv7"}
-        self._run_http_provider_tests(
-            provider, iocs, mocked_result, expected_params, ioc_unsupported
-        )
-
-    def test_VirusTotal_provider(self):
-        ti_lookup = self.load_ti_lookup()
-
-        provider = ti_lookup.loaded_providers["VirusTotal"]
-        iocs = {
-            "124.5.6.7": ("ipv4", None),
-            "office.microsoft.com": ("dns", None),
-            "https://badplace.net/path1/path2?x=1": ("url", None),
-            "7657fcb7d772448a6d8504e4b20168b7": ("file_hash", None),
-            "7657fcb7d772448a6d8504e4b20168b8": ("md5_hash", None),
-        }
-        mocked_result = {
-            "resource": "ioc",
-            "permalink": "https://virustotal.com/report.html",
-            "positives": 1,
-            "detected_urls": [{"url": "http://bad.com/foo", "positives": 1}],
-            "verbose_msg": "A long description....",
-            "response_code": 1,
-        }
-        expected_params = ["params", "headers"]
-
-        ioc_unsupported = {"124.5.6.7": "ipv7"}
-        self._run_http_provider_tests(
-            provider, iocs, mocked_result, expected_params, ioc_unsupported
-        )
-
-    def _run_http_provider_tests(
-        self, provider, test_iocs, test_results, expected_req_param, unsupported_iocs
-    ):
-
-        for ioc, (ioc_type, sub_type) in test_iocs.items():
-            resolved_type = provider.resolve_ioc_type(ioc)
-            if ioc_type == "file_hash":
-                self.assertIn(resolved_type, ["md5_hash", "sha1_hash", "sha256_hash"])
-            elif ioc_type == "hostname":
-                self.assertEqual(resolved_type, "dns")
-            else:
-                self.assertEqual(resolved_type, ioc_type)
-
-            self.assertTrue(provider.is_supported_type(resolved_type))
-            self.assertTrue(provider.is_supported_type(ioc_type))
-            clean_ioc = preprocess_observable(ioc, ioc_type)
-            self.assertEqual(clean_ioc.status, "ok")
-
-            verb, req_params = provider._substitute_parms(
-                ioc=clean_ioc.observable, ioc_type=ioc_type, query_type=sub_type
+        # Lookup multiple IoCs
+        for ioc, ioc_params in iocs.items():
+            result = ti_lookup.lookup_ioc(
+                observable=ioc,
+                ioc_type=ioc_params[0],
+                ioc_query_type=ioc_params[1],
+                providers=[provider_name],
             )
+            self.verify_result(result)
 
-            self.assertEqual("GET", verb)
-            self.assertIn("url", req_params)
-            self.assertTrue(provider._ioc_extract.validate(req_params["url"], "url"))
-            for param in expected_req_param:
-                self.assertIn(param, req_params)
+        results_df = ti_lookup.lookup_iocs(
+            data=(ioc_ips + ioc_benign_iocs), providers=[provider_name]
+        )
+        self.assertEqual(20, len(results_df))
+        self.assertEqual(17, len(results_df[results_df["Result"] == True]))
 
-            # Create LookupResult
-            result = LookupResult(ioc=ioc, ioc_type=ioc_type, query_subtype=sub_type)
-            result.raw_result = test_results
-            result.status = 200
-            result.result, result.details = provider.parse_results(result)
-            result.reference = req_params["url"]
+        ti_provider._requests_session = saved_session
 
-            self.assertTrue(result.result)
-
-        for ioc, ioc_type in unsupported_iocs.items():
-            resolved_type = provider.resolve_ioc_type(ioc)
-            self.assertNotEqual(resolved_type, ioc_type)
-
-            self.assertFalse(provider.is_supported_type(ioc_type))
-            clean_ioc = preprocess_observable(ioc, ioc_type)
-            self.assertNotEqual(clean_ioc.status, "ok")
+    def verify_result(self, result):
+        self.assertIsNotNone(result)
+        for prov, lu_result in result[1]:
+            self.assertIn(prov, ["OTX", "XForce", "VirusTotal"])
+            self.assertIsNotNone(lu_result.ioc)
+            self.assertIsNotNone(lu_result.ioc_type)
+            if lu_result.result:
+                self.assertIsNotNone(lu_result.details)
+                self.assertIsNotNone(lu_result.raw_result)
+                self.assertIsNotNone(lu_result.reference)

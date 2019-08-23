@@ -60,7 +60,7 @@ _RESULT_FIELDS = [
     "printable_bytes",
 ]  # List[str]
 
-BinaryRecord = namedtuple("BinaryRecord", _RESULT_FIELDS)
+BinaryRecord = namedtuple("BinaryRecord", _RESULT_FIELDS)  # type: ignore
 
 # pylint: disable=locally-disabled, line-too-long
 _BASE64_HEADER_TYPES = {
@@ -829,13 +829,13 @@ def get_hashes(binary: bytes) -> Mapping[str, str]:
     return hash_dict
 
 
-def _binary_to_bytesio(binary):
+def _binary_to_bytesio(binary: io.BytesIO):
     if isinstance(binary, io.BytesIO):
         return binary.getbuffer()
     return io.BytesIO(binary).getbuffer()
 
 
-def _b64_string_pad(string):
+def _b64_string_pad(string: str) -> str:
     if len(string) % 4 == 0:
         return string
 

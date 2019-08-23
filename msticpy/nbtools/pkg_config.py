@@ -97,7 +97,7 @@ def _get_default_config():
     conf_file = None
     top_module = _get_top_module()
     try:
-        conf_file = pkg_resources.resource_filename("foo", _CONFIG_FILE)
+        conf_file = pkg_resources.resource_filename(top_module, _CONFIG_FILE)
         if not Path(conf_file).is_file():
             conf_file = pkg_resources.resource_filename(
                 top_module, "msticpy/" + _CONFIG_FILE

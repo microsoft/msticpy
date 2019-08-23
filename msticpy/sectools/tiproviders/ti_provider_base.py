@@ -14,11 +14,13 @@ requests per minute for the account type that you have.
 """
 import abc
 from abc import ABC
+from enum import Enum
 import math
+import pprint
 import re
 from collections import Counter, namedtuple
 
-from functools import singledispatch
+from functools import singledispatch, lru_cache
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, Generator
 import socket
@@ -41,35 +43,57 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 
 
 # pylint: disable=too-few-public-methods
+class TISeverity(Enum):
+    """Threat intelligence report severity."""
+
+    Information = 1
+    Warning = 2
+    High = 3
+
+
+# pylint: disable=too-few-public-methods
+# TODO implement severity scoring
 @attr.s(auto_attribs=True)
 class LookupResult:
     """Lookup result for IoCs."""
 
     ioc: str
-    ioc_type: Optional[str]
+    ioc_type: str
     query_subtype: Optional[str] = None
     result: bool = False
+    # severity: str = attr.ib(default="Information")
     details: Any = None
-    raw_result: Optional[str] = None
+    raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
     status: int = 0
+
+    # @severity.validator
+    # def _check_severity(self, attribute, value):
+    #     del attribute
+    #     if value not in TISeverity.__members__:
+    #         self.severity = "Information"
 
     @property
     def summary(self):
         """Print a summary of the Lookup Result."""
+        p_pr = pprint.PrettyPrinter(indent=4)
         print("ioc:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
-        if isinstance(self.details, dict):
-            for name, details in self.details.items():
-                print(name, ":", details)
-        else:
-            print(self.details)
+        # print("severity:", self.severity)
+        p_pr.pprint(self.details)
+        print("reference: ", self.reference)
+
+    @property
+    def raw_result_fmtd(self):
+        """Print raw results of the Lookup Result."""
+        p_pr = pprint.PrettyPrinter(indent=4)
+        p_pr.pprint(self.raw_result)
 
 
 # Mapping for DataFrame columns
-_DF_COLUMNS_MAP: Dict[str, str] = {
-    "ioc": "Ioc",
-    "ioc_type": "IocType",
+DF_COLUMNS_MAP: Dict[str, str] = {
+    "ioc": "IoC",
+    "ioc_type": "IoCType",
     "query_subtype": "QuerySubtype",
     "result": "Result",
     "details": "Details",
@@ -79,11 +103,14 @@ _DF_COLUMNS_MAP: Dict[str, str] = {
 }
 
 
+_IOC_EXTRACT = IoCExtract()
+
+
 @export
 class TIProvider(ABC):
     """Abstract base class for Threat Intel providers."""
 
-    _ioc_extract = IoCExtract()
+    _IOC_QUERIES: Dict[str, Any] = {}
 
     # pylint: disable=unused-argument
     def __init__(self, **kwargs):
@@ -91,9 +118,15 @@ class TIProvider(ABC):
         self._supported_types: Set[IoCType] = set()
         self.description: Optional[str] = None
 
+        self._supported_types = {
+            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
+        }
+        if IoCType.unknown in self._supported_types:
+            self._supported_types.remove(IoCType.unknown)
+
     @abc.abstractmethod
     def lookup_ioc(
-        self, ioc: str, ioc_type: str = None, query_type: str = None
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> LookupResult:
         """
         Lookup a single IoC observable.
@@ -122,6 +155,7 @@ class TIProvider(ABC):
         obs_col: str = None,
         ioc_type_col: str = None,
         query_type: str = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup collection of IoC observables.
@@ -158,8 +192,8 @@ class TIProvider(ABC):
 
         return (
             pd.DataFrame(data=results)
-            .rename(columns=_DF_COLUMNS_MAP)
-            .drop(columns=["status"])
+            .rename(columns=DF_COLUMNS_MAP)
+            .drop(columns=["Status"])
         )
 
     @abc.abstractmethod
@@ -194,24 +228,6 @@ class TIProvider(ABC):
         return [ioc.name for ioc in self._supported_types]
 
     @classmethod
-    def resolve_ioc_type(cls, observable: str) -> str:
-        """
-        Return IoCType determined by IoCExtract.
-
-        Parameters
-        ----------
-        observable : str
-            IoC observable string
-
-        Returns
-        -------
-        str
-            IoC Type (or unknown if type could not be determined)
-
-        """
-        return cls._ioc_extract.get_ioc_type(observable)
-
-    @classmethod
     def is_known_type(cls, ioc_type: str) -> bool:
         """
         Return True if this a known IoC Type.
@@ -230,9 +246,17 @@ class TIProvider(ABC):
         return ioc_type in IoCType.__members__ and ioc_type != "unknown"
 
     @classmethod
-    @abc.abstractmethod
     def usage(cls):
         """Print usage of provider."""
+        print(f"{cls.__doc__} Supported query types:")
+        for ioc_key in sorted(cls._IOC_QUERIES):
+            ioc_key_elems = ioc_key.split("-", maxsplit=1)
+            if len(ioc_key_elems) == 1:
+                print(f"\tioc_type={ioc_key_elems[0]}")
+            if len(ioc_key_elems) == 2:
+                print(
+                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
+                )
 
     def is_supported_type(self, ioc_type: Union[str, IoCType]) -> bool:
         """
@@ -253,8 +277,71 @@ class TIProvider(ABC):
             ioc_type = IoCType.parse(ioc_type)
         return ioc_type.name in self.supported_types
 
+    @staticmethod
+    @lru_cache(maxsize=1024)
+    def resolve_ioc_type(observable: str) -> str:
+        """
+        Return IoCType determined by IoCExtract.
 
-_IOC_EXTRACT = IoCExtract()
+        Parameters
+        ----------
+        observable : str
+            IoC observable string
+
+        Returns
+        -------
+        str
+            IoC Type (or unknown if type could not be determined)
+
+        """
+        return _IOC_EXTRACT.get_ioc_type(observable)
+
+    def _check_ioc_type(
+        self, ioc: str, ioc_type: str = None, query_subtype: str = None
+    ) -> LookupResult:
+        """
+        Check IoC Type and cleans up observable.
+
+        Parameters
+        ----------
+        ioc : str
+            IoC observable
+        ioc_type : str, optional
+            IoC type, by default None
+        query_subtype : str, optional
+            Query sub-type, if any, by default None
+
+        Returns
+        -------
+        LookupResult
+            Lookup result with resolved ioc_type and pre-processed
+            observable.
+            LookupResult.status == -1 on failure.
+
+        """
+        result = LookupResult(
+            ioc=ioc,
+            ioc_type=ioc_type if ioc_type else self.resolve_ioc_type(ioc),
+            query_subtype=query_subtype,
+            result=False,
+            details="",
+            raw_result=None,
+            reference=None,
+        )
+
+        if not self.is_supported_type(result.ioc_type):
+            result.details = f"IoC type {result.ioc_type} not supported."
+            result.status = -1
+            return result
+
+        clean_ioc = preprocess_observable(ioc, result.ioc_type)
+        if clean_ioc.status != "ok":
+            result.details = clean_ioc.status
+            result.status = -1
+
+        return result
+
+
 # slightly stricter than normal URL regex to exclude '() from host string
 _HTTP_STRICT_REGEX = r"""
     (?P<protocol>(https?|ftp|telnet|ldap|file)://)
@@ -490,20 +577,23 @@ def generate_items(
     del obs_col, ioc_type_col
     if isinstance(data, Iterable):
         for item in data:
-            yield item, None
-    yield None, None
+            yield item, TIProvider.resolve_ioc_type(item)
+    else:
+        yield None, None
 
 
 @generate_items.register(pd.DataFrame)
 def _(data: pd.DataFrame, obs_col: str, ioc_type_col: Optional[str] = None):
     for _, row in data.iterrows():
         if ioc_type_col is None:
-            yield row[obs_col], None
+            yield row[obs_col], TIProvider.resolve_ioc_type(row[obs_col])
         else:
             yield row[obs_col], row[ioc_type_col]
 
 
-@generate_items.register(dict)  # noqa: F811
+@generate_items.register(dict)  # type: ignore
 def _(data: dict, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None):
     for obs, ioc_type in data.items():
+        if not ioc_type:
+            ioc_type = TIProvider.resolve_ioc_type(obs)
         yield obs, ioc_type

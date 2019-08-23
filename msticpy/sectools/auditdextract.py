@@ -136,7 +136,7 @@ def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, 
                         # Mypy thinks codecs.decode returns a str so
                         # incorrectly issues a type warning - in this case it
                         # will return a bytes string.
-                        field_value = codecs.decode(
+                        field_value = codecs.decode(  # type: ignore
                             bytes(rec_split[1], "utf-8"), "hex"
                         ).decode("utf-8")
                     except ValueError:
