@@ -13,7 +13,7 @@ INSTALL_REQUIRES = [
     "attrs>=18.2.0",
     "bokeh>=1.0.2",
     "deprecated>=1.2.4",
-    "folium>=0.9.0"
+    "folium>=0.9.0",
     "ipython>=7.1.1",
     "ipywidgets>=7.4.2",
     "Kqlmagic>=0.1.94",
@@ -34,10 +34,10 @@ INSTALL_REQUIRES = [
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# pylint: enable=locally-disabled, invalid-name
 with open("msticpy/_version.py", "r") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
+# pylint: enable=locally-disabled, invalid-name
 
 setuptools.setup(
     name="msticpy",

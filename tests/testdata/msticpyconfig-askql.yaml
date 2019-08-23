@@ -1,0 +1,17 @@
+AzureSentinel:
+  Workspaces:
+    Default:
+      WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf0"
+      TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+QueryDefinitions:
+  Default: 
+    - 'queries'
+  Custom:
+    - 'testdata'
+TIProviders:
+  AzureSentinel:
+    Args:
+      WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+    Primary: True
+    Provider: "AzSTI"

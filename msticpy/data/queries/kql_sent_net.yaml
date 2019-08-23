@@ -49,29 +49,10 @@ defaults:
         description: Table name
         type: str
         default: 'AzureNetworkAnalytics_CL'
-      query_project:
-        description: Column project statement
-        type: str
-        default: '
-          | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
-          AlertDisplayName = DisplayName, Severity = AlertSeverity
-          | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
-      start:
-        description: Query start time
-        type: datetime
-      end:
-        description: Query end time
-        type: datetime
       add_query_items:
         description: Additional query clauses
         type: str
         default: ''
-      host_name:
-        description: Name of host
-        type: str
-      ip_address:
-        description: IP Address
-        type: str
 sources:
   get_ips_for_host:
     description: Gets the latest AzureNetworkAnalytics interface event for a host.
@@ -86,6 +67,9 @@ sources:
         PublicIPAddresses = PublicIPAddresses_s
         {add_query_items}'
     parameters:
+      host_name:
+        description: Name of host
+        type: str
   get_host_for_ip:
     description: Gets the latest AzureNetworkAnalytics interface event for a host.
     metadata:
@@ -101,48 +85,43 @@ sources:
         | extend Computer = split(VirtualMachine_s, "/")[-1]
         {add_query_items}'
     parameters:
+      ip_address:
+        description: IP Address
+        type: str
   get_heartbeat_for_host:
     description: Retrieves latest OMS Heartbeat event for host.
     metadata:
     args:
       query: '
         {table}
-        {query_project}
         | where Computer has "{host_name}"
         | top 1 by TimeGenerated desc nulls last
         {add_query_items}'
     parameters:
+      host_name:
+        description: Name of host
+        type: str
       table:
         description: Table name
         type: str
         default: 'Heartbeat'
-      query_project:
-        description: Column project statement
-        type: str
-        default: '
-          | project ComputerIP, OSType, OSMajorVersion, OSMinorVersion, ResourceId, RemoteIPCountry, 
-          RemoteIPLatitude, RemoteIPLongitude, SourceComputerId, SubscriptionId, ManagementGroupName'
   get_heartbeat_for_ip:
     description: Retrieves latest OMS Heartbeat event for ip address.
     metadata:
     args:
       query: '
         {table}
-        {query_project}
         | where ComputerIP == "{ip_address}"
         | top 1 by TimeGenerated desc nulls last
         {add_query_items}'
     parameters:
+      ip_address:
+        description: IP Address
+        type: str
       table:
         description: Table name
         type: str
         default: 'Heartbeat'
-      query_project:
-        description: Column project statement
-        type: str
-        default: '
-          | project ComputerIP, OSType, OSMajorVersion, OSMinorVersion, ResourceId, RemoteIPCountry, 
-          RemoteIPLatitude, RemoteIPLongitude, SourceComputerId, SubscriptionId, ManagementGroupName'
   list_azure_network_flows_by_ip:
     description: Retrieves Azure network analytics flow events.
     metadata:
@@ -156,6 +135,12 @@ sources:
       ip_address_list:
         description: Column project statement
         type: list
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
     query_macros:
       query_condition:
         description: Query-specific where clause
@@ -169,10 +154,19 @@ sources:
     args:
       query: *azure_network_base_query
     parameters:
+      host_name:
+        description: Name of host
+        type: str
       query_project:
         description: Column project statement
         type: str
         default: *azure_network_project
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
     query_macros:
       query_condition:
         description: Query-specific where clause

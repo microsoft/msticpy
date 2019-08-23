@@ -24,8 +24,7 @@ import requests
 
 from ..._version import VERSION
 from ...nbtools.utility import export
-from ..iocextract import IoCType
-from .ti_provider_base import LookupResult, TIProvider, preprocess_observable
+from .ti_provider_base import LookupResult, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -59,23 +58,17 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
-        self._supported_types = {
-            IoCType.parse(ioc_type.split("-")[0]) for ioc_type in self._IOC_QUERIES
-        }
-        if IoCType.unknown in self._supported_types:
-            self._supported_types.remove(IoCType.unknown)
-
         self._requests_session = requests.Session()
         self._request_params = {}
-        if "ApiID" in kwargs:
-            self._request_params["API_ID"] = kwargs.pop("ApiID")
-        if "AuthKey" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
+        if "api_id" in kwargs:
+            self._request_params["API_ID"] = kwargs.pop("api_id")
+        if "auth_key" in kwargs:
+            self._request_params["API_KEY"] = kwargs.pop("auth_key")
 
     # pylint: disable=too-many-branches
     @lru_cache(maxsize=256)
-    def lookup_ioc(
-        self, ioc: str, ioc_type: str = None, query_type: str = None
+    def lookup_ioc(  # type: ignore
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> LookupResult:
         """
         Lookup a single IoC observable.
@@ -113,36 +106,21 @@ class HttpProvider(TIProvider):
         the same item.
 
         """
-        err_result = LookupResult(
-            ioc=ioc,
-            ioc_type=ioc_type,
-            query_subtype=query_type,
-            result=False,
-            details="",
-            raw_result=None,
-            reference=None,
+        result = self._check_ioc_type(
+            ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
-        if not ioc_type:
-            ioc_type = self.resolve_ioc_type(ioc)
-        if not self.is_supported_type(ioc_type):
-            err_result.details = f"IoC type {ioc_type} not supported."
-            return err_result
-
-        clean_ioc = preprocess_observable(ioc, ioc_type)
-        if clean_ioc.status != "ok":
-            err_result.details = clean_ioc.status
-            return err_result
+        if result.status:
+            return result
 
         try:
             verb, req_params = self._substitute_parms(
-                clean_ioc.observable, ioc_type, query_type
+                result.ioc, result.ioc_type, query_type
             )
             if verb == "GET":
                 response = self._requests_session.get(**req_params)
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
-            result = LookupResult(ioc=ioc, ioc_type=ioc_type, query_subtype=query_type)
             result.status = response.status_code
             result.reference = req_params["url"]
             if result.status == 200:
@@ -159,16 +137,14 @@ class HttpProvider(TIProvider):
             NotImplementedError,
             ConnectionError,
         ) as err:
-            verb, req_params = self._substitute_parms(
-                clean_ioc.observable, ioc_type, query_type
-            )
-            url = req_params.get("url", None) if req_params else None
-            err_result.details = err.args
-            err_result.raw_result = (
+            result.details = err.args
+            result.raw_result = (
                 type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
             )
-            err_result.reference = url
-            return err_result
+            if not isinstance(err, LookupError):
+                url = req_params.get("url", None) if req_params else None
+                result.reference = url
+            return result
 
     # pylint: disable=too-many-branches
     def _substitute_parms(
@@ -236,19 +212,6 @@ class HttpProvider(TIProvider):
                 raise NotImplementedError(f"Unknown auth type {src.auth_type}")
         return src.verb, req_dict
 
-    @classmethod
-    def usage(cls):
-        """Print usage of provider."""
-        print(f"{cls.__doc__} Supported query types:")
-        for ioc_key in sorted(cls._IOC_QUERIES):
-            ioc_key_elems = ioc_key.split("-", maxsplit=1)
-            if len(ioc_key_elems) == 1:
-                print(f"\tioc_type={ioc_key_elems[0]}")
-            if len(ioc_key_elems) == 2:
-                print(
-                    f"\tioc_type={ioc_key_elems[0]}, ioc_query_type={ioc_key_elems[1]}"
-                )
-
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
@@ -285,7 +248,6 @@ class HttpProvider(TIProvider):
         """
         return (
             response.status == 404
-            or not response.raw_result
             or not response.raw_result
             or not isinstance(response.raw_result, dict)
         )
