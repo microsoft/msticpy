@@ -6,7 +6,8 @@
 """Data provider loader."""
 from functools import partial
 from pathlib import Path
-from typing import Union, Any, List, Dict
+from typing import Union, Any, List, Dict, Optional
+import warnings
 
 import pandas as pd
 
@@ -34,7 +35,7 @@ class AttribHolder:
     """Empty class used to create hierarchical attributes."""
 
     def __len__(self):
-        """Retrun number of items in the attribute collection."""
+        """Return number of items in the attribute collection."""
         return len(self.__dict__)
 
     def __iter__(self):
@@ -52,7 +53,7 @@ class QueryProvider:
 
     """
 
-    def __init__(
+    def __init__(  # noqa: MC001
         self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
     ):
         """
@@ -96,19 +97,26 @@ class QueryProvider:
 
         self._query_provider = driver
 
-        settings: Dict[str, str] = config.settings.get(  # type: ignore
+        settings: Dict[str, Any] = config.settings.get(  # type: ignore
             "QueryDefinitions"
         )  # type: ignore
         query_paths = []
-        for default_path in settings.get("Default"):
-            query_paths.append(Path(__file__).resolve().parent.joinpath(default_path))
+        for default_path in settings.get("Default"):  # type: ignore
+            qry_path = self._resolve_path(default_path)
+            if qry_path:
+                query_paths.append(qry_path)
 
         if settings.get("Custom") is not None:
-            for custom_path in settings.get("Custom"):
-                query_paths.append(
-                    Path(__file__).resolve().parent.joinpath(custom_path)
-                )
+            for custom_path in settings.get("Custom"):  # type: ignore
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    query_paths.append(qry_path)
 
+        if not query_paths:
+            raise RuntimeError(
+                "No valid query definition files found. "
+                + "Please check your msticpyconfig.yaml settings."
+            )
         data_environments = QueryStore.import_files(
             source_path=query_paths, recursive=True
         )
@@ -116,6 +124,15 @@ class QueryProvider:
         self._query_store = data_environments[data_environment.name]
         self.all_queries = AttribHolder()
         self._add_query_functions()
+
+    def __getattr__(self, name):
+        """Return the value of the named property 'name'."""
+        if "." in name:
+            parent_name, child_name = name.split(".", maxsplit=1)
+            parent = getattr(self, parent_name, None)
+            if parent:
+                return getattr(parent, child_name)
+        raise AttributeError(f"{name} is not a valid attribute.")
 
     def connect(self, connection_str: str, **kwargs):
         """
@@ -155,6 +172,32 @@ class QueryProvider:
         """
         return self._query_provider.current_connection
 
+    @property
+    def schema(self) -> Dict[str, Dict]:
+        """
+        Return current data schema of connection.
+
+        Returns
+        -------
+        Dict[str, Dict]
+            Data schema of current connection.
+
+        """
+        return self._query_provider.schema
+
+    @property
+    def schema_tables(self) -> List[str]:
+        """
+        Return list of tables in the data schema of the connection.
+
+        Returns
+        -------
+        List[str]
+            Tables in the of current connection.
+
+        """
+        return list(self._query_provider.schema.keys())
+
     def import_query_file(self, query_file: str):
         """
         Import a yaml data source definition.
@@ -179,9 +222,9 @@ class QueryProvider:
             List of current data environments
 
         """
-        return list(DataEnvironment.__members__)
+        return [env for env in DataEnvironment.__members__ if env != "Unknown"]
 
-    def list_queries(self):
+    def list_queries(self) -> List[str]:
         """
         Return list of family.query in the store.
 
@@ -191,7 +234,7 @@ class QueryProvider:
             List of queries
 
         """
-        return self._query_store.query_names
+        return list(self._query_store.query_names)
 
     def query_help(self, query_name):
         """Print help for query."""
@@ -239,7 +282,7 @@ class QueryProvider:
             raise ValueError(f"No values found for these parameters: {missing}")
 
         query_str = query_source.create_query(**params)
-        if "print" in args:
+        if "print" in args or "query" in args:
             return query_str
         return self._query_provider.query(query_str)
 
@@ -257,8 +300,17 @@ class QueryProvider:
                 self._execute_query, data_family=family, query_name=query_name
             )
             query_func.__doc__ = self._query_store.get_query(
-                family, query_name
+                data_family=family, query_name=query_name
             ).create_doc_string()
 
             setattr(query_family, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
+
+    @classmethod
+    def _resolve_path(cls, config_path: str) -> Optional[str]:
+        if not Path(config_path).is_absolute():
+            config_path = str(Path(__file__).resolve().parent.joinpath(config_path))
+        if not Path(config_path).is_dir():
+            warnings.warn(f"Custom query definitions path {config_path} not found")
+            return None
+        return config_path

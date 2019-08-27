@@ -10,3 +10,5 @@ Other Documents
 
     CollectingLinuxAuditLogs.rst
 
+    TIProviders.rst
+

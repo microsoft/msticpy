@@ -63,12 +63,10 @@ class TestPkgConfig(unittest.TestCase):
             self.assertIn("Primary", prov)
             self.assertIn("Provider", prov)
             self.assertIsInstance(prov["Args"], dict)
-            self.assertIn("ApiID", prov["Args"])
-            self.assertIn("AuthKey", prov["Args"])
-            if isinstance(prov["Args"]["ApiID"], dict):
+            for arg_name, arg_val in prov["Args"].items():
+                self.assertIn(arg_name, ["ApiID", "AuthKey", "WorkspaceID", "TenantID"])
                 self.assertTrue(
-                    "EnvironmentVar" in prov["Args"]["ApiID"]
-                    or "KeyVaultURI" in prov["Args"]["ApiID"]
+                    isinstance(arg_val, str)
+                    or "EnvironmentVar" in arg_val
+                    or "KeyVaultURI" in arg_val
                 )
-            else:
-                self.assertIsInstance(prov["Args"]["ApiID"], str)

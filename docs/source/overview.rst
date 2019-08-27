@@ -76,6 +76,22 @@ DataFrame (for dataframe input).
 
 `IoCExtract Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/IoCExtract.ipynb>`__
 
+tiproviders
+~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.tilookup`
+
+The TILookup class can lookup IoCs across multiple TI providers. builtin
+providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
+
+The input can be a single IoC observable or a pandas DataFrame containing
+multiple observables. Depending on the provider, you may require an account
+and an API key. Some providers also enforce throttling (especially for free
+tiers), which might affect performing bulk lookups.
+
+For more details see `TIProviders.rst <TIProviders.rst>`__ and
+`TILookup Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/TIProviders.ipynb>`__
+
 vtlookup
 ~~~~~~~~
 
@@ -191,9 +207,6 @@ will be refactored to separate them into their own sub-package.
 To-Do Items
 -----------
 
--  Refactor data modules into separate package.
--  Replace custom data schema with
-   `Intake <https://intake.readthedocs.io/en/latest/>`__.
 -  Add additional notebooks to document use of the tools.
 
 Supported Platforms and Packages
