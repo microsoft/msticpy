@@ -19,7 +19,7 @@ defaults:
       start:
         description: Query start time
         type: datetime
-        default: -365
+        default: -30
       end:
         description: Query end time
         type: datetime
@@ -45,6 +45,18 @@ sources:
         {add_query_items}'
       uri: None
     parameters:
+      start:
+        description: Query start time
+        type: datetime
+        default: -1
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      observables:
+        description: List of observables
+        type: list
+        default: ""
   list_indicators_by_ip:
     description: Retrieves list of indicators by IP Address
     metadata:
@@ -58,6 +70,15 @@ sources:
           or NetworkDestinationIP in ({observables})
           or NetworkSourceIP in ({observables})
           or EmailSourceIpAddress in ({observables})
+        | extend IoC = tolower(
+            iff(isnotempty(NetworkIP) and NetworkIP in ({observables}), NetworkIP,
+              iff(isnotempty(NetworkDestinationIP) and NetworkDestinationIP in ({observables}), NetworkDestinationIP,
+                iff(isnotempty(NetworkSourceIP) and NetworkSourceIP in ({observables}), NetworkSourceIP,
+                  iff(isnotempty(EmailSourceIpAddress) and EmailSourceIpAddress in ({observables}), EmailSourceIpAddress, "")
+                  )
+                )
+              )
+            )
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
     parameters:
@@ -71,6 +92,7 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | where FileHashValue in~ ({observables})
+        | extend IoC = tolower(FileHashValue)
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
     parameters:
@@ -84,6 +106,7 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | where FilePath in~ ({observables})
+        | extend IoC = tolower(FilePath)
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
   list_indicators_by_domain:
@@ -96,7 +119,12 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | where DomainName in~ ({observables})
-          or EmailSourceDomain in ({observables})
+          or EmailSourceDomain in~ ({observables})
+        | extend IoC = tolower(
+            iff(isnotempty(DomainName) and DomainName in~ ({observables}), DomainName,
+              iff(isnotempty(EmailSourceDomain) and EmailSourceDomain in~ ({observables}), EmailSourceDomain, "")
+              )
+            )
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
     parameters:
@@ -109,8 +137,13 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where EmailRecipient~ in ({observables})
-          or EmailSenderAddress in ({observables})
+        | where EmailRecipient in~ ({observables})
+          or EmailSenderAddress in~ ({observables})
+        | extend IoC = tolower(
+            iff(isnotempty(EmailRecipient) and EmailRecipient in~ ({observables}), EmailRecipient,
+              iff(isnotempty(EmailSenderAddress) and EmailSenderAddress in~ ({observables}), EmailSenderAddress, "")
+              )
+            )
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
     parameters:
@@ -123,7 +156,8 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where url~ in ({observables})
+        | where Url in~ ({observables})
+        | extend IoC = tolower(Url)
         | summarize arg_max(TimeGenerated, *) by IndicatorId
         {add_query_items}'
     parameters:

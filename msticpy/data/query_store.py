@@ -6,7 +6,7 @@
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
 from os import path
-from typing import Any, Dict, Iterable, Set, Union
+from typing import Any, Dict, Iterable, Set, Union, Optional
 
 from .._version import VERSION
 from ..nbtools.query_defns import DataEnvironment, DataFamily
@@ -17,7 +17,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def _get_dot_path(elem_path: str, data_map: dict) -> str:
+def _get_dot_path(elem_path: str, data_map: dict) -> Any:
     path_elems = elem_path.split(".")
     cur_node = data_map
     for elem in path_elems:
@@ -58,6 +58,10 @@ class QueryStore:
     def __getattr__(self, name: str):
         """Return the item in dot-separated path `name`."""
         return _get_dot_path(elem_path=name, data_map=self.data_families)
+
+    def __getitem__(self, key: str):
+        """Allow query retrieval using dotted key path."""
+        return _get_dot_path(elem_path=key, data_map=self.data_families)
 
     @property
     def query_names(self) -> Iterable[str]:
@@ -181,17 +185,17 @@ class QueryStore:
         return env_stores
 
     def get_query(
-        self, data_family: Union[str, DataFamily], query_name: str
+        self, query_name: str, data_family: Union[str, DataFamily] = None
     ) -> "QuerySource":
         """
         Return query with name `data_family` and `query_name`.
 
         Parameters
         ----------
-        data_family: Union[str, DataFamily]
-            The data family for the query
         query_name: str
             Name of the query
+        data_family: Union[str, DataFamily]
+            The data family for the query
 
         Returns
         -------
@@ -199,13 +203,15 @@ class QueryStore:
             Query matching name and family.
 
         """
-        if isinstance(data_family, str) and "." not in data_family:
-            parsed_data_family = DataFamily.parse(data_family)
-        if parsed_data_family != DataFamily.Unknown:
-            data_family = parsed_data_family.name
+        if isinstance(query_name, str) and "." in query_name:
+            data_family, query_name = query_name.split(".", maxsplit=1)
+        if not data_family:
+            raise LookupError("No data family specified.")
+        if isinstance(data_family, DataFamily):
+            data_family = data_family.name
         return self.data_families[data_family][query_name]
 
-    def find_query(self, query_name: str) -> Set[QuerySource]:
+    def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
         """
         Return set of queries with name `query_name`.
 

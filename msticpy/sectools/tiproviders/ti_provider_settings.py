@@ -66,22 +66,23 @@ def reload_settings():
 
 def _get_setting_args(prov_args: Dict[str, Any]) -> Dict[str, Any]:
     """Extract the provider args from the settings."""
-    arg_dict = {}
-    if "ApiID" in prov_args:
-        if isinstance(prov_args["ApiID"], str):
-            arg_dict["api_id"] = prov_args["ApiID"]
-        else:
-            arg_dict["api_id"] = _fetch_setting(prov_args["ApiID"])
+    arg_dict: Dict[str, Any] = prov_args.copy()
+    name_map = {
+        "ApiID": "api_id",
+        "AuthKey": "auth_key",
+        "WorkspaceID": "workspace_id",
+        "TenantID": "tenant_id",
+    }
+    for arg_name, arg_value in prov_args.items():
+        target_name = name_map.get(arg_name, arg_name)
+        if isinstance(arg_value, str):
+            arg_dict[target_name] = arg_value
+        elif isinstance(arg_value, dict):
+            arg_dict[target_name] = _fetch_setting(arg_value)  # type: ignore
+    return arg_dict
 
-    if "AuthKey" in prov_args:
-        if isinstance(prov_args["AuthKey"], str):
-            arg_dict["auth_key"] = prov_args["AuthKey"]
-        else:
-            arg_dict["auth_key"] = _fetch_setting(prov_args["AuthKey"])
-    return prov_args
 
-
-def _fetch_setting(config_setting: Dict[str, Any]) -> str:
+def _fetch_setting(config_setting: Dict[str, Any]) -> Optional[str]:
     """Return required value for indirect settings (e.g. getting env var)."""
     item_settings = next(iter(config_setting.values()))
     if "EnvironmentVar" in item_settings:

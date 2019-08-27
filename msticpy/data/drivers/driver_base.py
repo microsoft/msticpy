@@ -6,7 +6,7 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union
+from typing import Tuple, Any, Union, Dict
 
 import pandas as pd
 
@@ -62,6 +62,19 @@ class DriverBase(ABC):
 
         """
         return self._loaded
+
+    @property
+    def schema(self) -> Dict[str, Dict]:
+        """
+        Return current data schema of connection.
+
+        Returns
+        -------
+        Dict[str, Dict]
+            Data schema of current connection.
+
+        """
+        return {}
 
     @abc.abstractmethod
     def connect(self, connection_str: str, **kwargs):
