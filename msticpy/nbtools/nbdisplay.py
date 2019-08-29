@@ -95,7 +95,7 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
         level = 2
 
     px_spaces = 20 * level * 2
-    txt_spaces = " " * (4 * level)
+    txt_spaces = " " * (4 * int(level))
 
     font_col = "red" if process_row.NodeRole == "source" else "white"
 
@@ -421,7 +421,12 @@ def display_timeline(
 
     plot.xaxis[0].formatter = tick_format
     plot.circle(
-        x=time_column, y="y_index", color=color, alpha=0.5, size=10, source=source
+        x=time_column,
+        y="y_index",
+        color=color,
+        alpha=0.5,
+        size=10,
+        source=source
     )
 
     if overlay_data is not None:
@@ -432,7 +437,7 @@ def display_timeline(
             color=overlay_color,
             alpha=0.5,
             size=10,
-            source=overlay_source,
+            source=overlay_source
         )
 
     # Adding data labels stops everything working!

@@ -335,7 +335,10 @@ class TILookup:
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
 
-        return pd.concat(result_list, sort=False)
+        if len(result_list) > 0:
+            return pd.concat(result_list, sort=False)
+        else:
+            print('No IoC matches')
 
     @staticmethod
     def result_to_df(
