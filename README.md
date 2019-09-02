@@ -13,7 +13,7 @@ and threat investigation. There are three main sub-packages:
 
 The package is in an early preview mode so there are likely to be bugs and there are several
 areas that are not yet optimized for performance. 
-We welcome feedback, bug reports and suggestions for new features.
+We welcome feedback, bug reports, suggestions for new features and contributions.
 
 ## Installing
 
@@ -69,6 +69,19 @@ Output is a dictionary of matches (for single string input) or a DataFrame (for 
 
 [Base64Unpack Notebook](./docs/notebooks/IoCExtract.ipynb)
 
+### tiproviders
+
+The TILookup class can lookup IoCs across multiple TI providers. builtin
+providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
+
+The input can be a single IoC observable or a pandas DataFrame containing
+multiple observables. Depending on the provider, you may require an account
+and an API key. Some providers also enforce throttling (especially for free
+tiers), which might affect performing bulk lookups.
+
+For more details see :doc:`TIProviders` and
+[TILookup Usage Notebook](./docs/notebooks/TIProviders.ipynb)
+
 ### vtlookup
 
 Wrapper class around [Virus Total API](https://www.virustotal.com/en/documentation/public-api/).
@@ -109,13 +122,16 @@ This is an unsupervised learning module implemented using SciKit Learn DBScan.
 
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that
-does some maintenance on thousands of servers with a commandline can be
-collapsed into a single cluster pattern by ignoring the character values
-in the string and using delimiters or tokens to group the values.
-
+does some maintenance on thousands of servers with a commandline like the following
 ```bash
 install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
 ```
+can be collapsed into a single cluster pattern by ignoring the character 
+values of the host and guids in the string and using delimiters or tokens to
+group the values. This allows you to more easily see distinct patterns of 
+activity.
+
+
 
 ### outliers
 
@@ -178,8 +194,7 @@ See the following notebooks for more examples of the use of this package in prac
 
 ## To-Do Items
 
-- Refactor data modules into separate package(s).
-- Replace custom data schema with [Intake](https://intake.readthedocs.io/en/latest/).
+- Refactor data modules into separate sub-package(s).
 - Add additional notebooks to document use of the tools.
 
 ## Supported Platforms and Packages

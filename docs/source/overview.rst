@@ -49,7 +49,7 @@ base64 content and will recurse down up to 20 levels (default can be
 overridden). Output is to a decoded string (for single string input) or
 a DataFrame (for dataframe input).
 
-`Base64Unpack Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/Base64Unpack.ipynb>`__
+`Base64Unpack Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb>`__
 
 iocextract
 ~~~~~~~~~~
@@ -74,7 +74,7 @@ The following types are built-in:
 Output is a dictionary of matches (for single string input) or a
 DataFrame (for dataframe input).
 
-`IoCExtract Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/IoCExtract.ipynb>`__
+`IoCExtract Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb>`__
 
 tiproviders
 ~~~~~~~~~~~
@@ -89,8 +89,8 @@ multiple observables. Depending on the provider, you may require an account
 and an API key. Some providers also enforce throttling (especially for free
 tiers), which might affect performing bulk lookups.
 
-For more details see `TIProviders.rst <TIProviders.rst>`__ and
-`TILookup Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/TIProviders.ipynb>`__
+For more details see :doc:`TIProviders` and
+`TILookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
 
 vtlookup
 ~~~~~~~~
@@ -109,7 +109,7 @@ for the account type that you have. Support IoC Types:
 -  DNS Domain
 -  IPv4 Address
 
-`VTLookup Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/VirusTotalLookup.ipynb>`__
+`VTLookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/VirusTotalLookup.ipynb>`__
 
 geoip
 ~~~~~
@@ -126,7 +126,7 @@ for different services:
    rate. Maxmind geolite uses a downloadable database, while IPStack is
    an online lookup (API key required).
 
-`GeoIP Lookup Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/GeoIPLookups.ipynb>`__
+`GeoIP Lookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb>`__
 
 eventcluster
 ~~~~~~~~~~~~
@@ -180,7 +180,7 @@ working with security data in Jupyter notebooks quicker and easier.
 -  nbdisplay - functions that implement common display of things like
    alerts, events in a slightly more consumable way than print()
 
-`Notebooks Tools Usage <https://github.com/Microsoft/msticpy/docs/notebooks/NotebookWidgets.ipynb>`__
+`Notebooks Tools Usage <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb>`__
 
 Data sub-package - *data*
 -------------------------
