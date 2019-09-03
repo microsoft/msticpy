@@ -332,36 +332,37 @@ def display_timeline(
     reset_output()
     output_notebook()
 
+    # Take each item that is passed in data and fill in blanks and add a y_index
     y_index = 1
-    for k, v in data.items():
-        if not v['source_columns']:
-            v['source_columns'] = ["NewProcessName", "EventID", "CommandLine"]
-        if v['time_column'] not in v['source_columns']:
-            v['source_columns'].append(v['time_column'])
-        if "CommandLine" in v['source_columns']:
-            graph_df = v['data'][v['source_columns']].copy()
+    for key, val in data.items():
+        val['data']['y_index'] = y_index
+        y_index += 1
+        if not val['source_columns']:
+            val['source_columns'] = ["NewProcessName", "EventID", "CommandLine"]
+        if val['time_column'] not in val['source_columns']:
+            val['source_columns'].append(val['time_column'])
+        if 'y_index' not in val['source_columns']:
+            val['source_columns'].append('y_index')
+        if "CommandLine" in val['source_columns']:
+            graph_df = val['data'][val['source_columns']].copy()
             graph_df[_WRAP_CMDL] = graph_df.apply(
                 lambda x: _wrap_text(x.CommandLine, _WRAP), axis=1
             )
         else:
-            graph_df = v['data'][v['source_columns']].copy()
-        v['data']['y_index'] = y_index
-        y_index += 1
-        v['source'] = ColumnDataSource(graph_df)
+            graph_df = val['data'][val['source_columns']].copy()
+        val['source'] = ColumnDataSource(graph_df)
 
-    # build the tool tips from columns (excluding these)
-    primary_data = list(data.keys())[0]
-    excl_cols = [data[primary_data]['time_column'], "CommandLine", "y_index"]
+    # build the tool tips from columns of the first dataset
+    prim_data = list(data.keys())[0]
+    excl_cols = [data[prim_data]['time_column'], "CommandLine", "y_index"]
     tool_tip_items = [
-        (f"{col}", f"@{col}") for col in data[primary_data]['source_columns'] if col not in excl_cols
+        (f"{col}", f"@{col}") for col in data[prim_data]['source_columns'] if col not in excl_cols
     ]
-    if _WRAP_CMDL in data[primary_data]['data']:
+    if _WRAP_CMDL in data[prim_data]['data']:
         tool_tip_items.append(("CommandLine", f"@{_WRAP_CMDL}"))
     hover = HoverTool(
         tooltips=tool_tip_items,
         formatters={"Tooltip": "printf"}
-        # display a tooltip whenever the cursor is vertically in line with a glyph
-        # ,mode='vline'
     )
 
     if not title:
@@ -369,31 +370,31 @@ def display_timeline(
     else:
         title = "Timeline {}".format(title)
 
-    # tools = 'pan, box_zoom, wheel_zoom, reset, undo, redo, save, hover'
     plot = figure(
-        x_range=(data[primary_data]['data'][data[primary_data]['time_column']][int(len(data[primary_data]['data'].index) * .33)], data[primary_data]['data'][data[primary_data]['time_column']][int(len(data[primary_data]['data'].index) * .66)]),
+        x_range=(data[prim_data]['data'][data[prim_data]['time_column']][int(len(data[prim_data]['data'].index) * .33)],
+                 data[prim_data]['data'][data[prim_data]['time_column']][int(len(data[prim_data]['data'].index) * .66)]),
         min_border_left=50,
         plot_height=height,
         plot_width=900,
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
-        tools=[hover, "pan", "xwheel_zoom", "box_zoom", "reset", "save"],
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         title=title,
 
     )
     plot.yaxis.visible = False
-
+    # Create plot bar to act as as range selector
     select = figure(title="Drag the middle and edges of the selection box to change the range above",
                     plot_height=130, plot_width=900,
                     x_axis_type="datetime", y_axis_type=None,
                     tools="", toolbar_location=None)
-    for k, v in data.items():
+    for key, val in data.items():
         select.circle(
-            x=v['time_column'],
+            x=val['time_column'],
             y="y_index",
-            color=v['color'],
-            source=v['source']
+            color=val['color'],
+            source=val['source']
         )
     range_tool = RangeTool(x_range=plot.x_range)
     range_tool.overlay.fill_color = "navy"
@@ -412,15 +413,15 @@ def display_timeline(
     tick_format.milliseconds = ["%H:%M:%S.%3N"]
     plot.xaxis[0].formatter = tick_format
 
-    for k, v in data.items():
+    for key, val in data.items():
         plot.circle(
-            x=v['time_column'],
+            x=val['time_column'],
             y="y_index",
-            color=v['Color'],
+            color=val['color'],
             alpha=0.5,
             size=10,
-            source=v['source'],
-            legend=k
+            source=val['source'],
+            legend=key
         )
 
     plot.legend.location = "top_left"
