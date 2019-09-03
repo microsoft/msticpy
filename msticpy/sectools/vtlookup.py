@@ -308,7 +308,7 @@ class VTLookup:
         observable, status = preprocess_observable(observable, ioc_type)
         if observable is None:
             raise SyntaxError(
-                "{} for observable value {}".format(status, observable)
+                "{} for observable value {}".format(status, observable), 1
             )
 
         if ioc_type not in self._VT_TYPE_MAP:
