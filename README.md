@@ -131,6 +131,7 @@ values of the host and guids in the string and using delimiters or tokens to
 group the values. This allows you to more easily see distinct patterns of 
 activity.
 
+[Event Clustering Notebook](./docs/notebooks/EventClustering.ipynb)
 
 
 ### outliers

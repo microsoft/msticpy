@@ -11,7 +11,7 @@ import os
 import re
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, List, Mapping
+from typing import Callable, List, Mapping, Any, Union, Dict
 
 import pandas as pd
 from IPython.display import display
@@ -858,3 +858,154 @@ class SelectString:
     def display(self):
         """Display the interactive widget."""
         display(self._wgt_select)
+
+
+# pylint: disable=too-few-public-methods
+@export
+class SelectSubset:
+    """
+    Class to select a subset from an input list.
+
+    Attributes
+    ----------
+    selected_values : List[Any]
+        The selected item values.
+    selected_items : List[Any]
+        The selected items label and value
+
+    """
+
+    def __init__(
+        self,
+        source_items: Union[Dict[str, str], List[Any]],
+        default_selected: Union[Dict[str, str], List[Any]] = None,
+    ):
+        """
+        Create instance of SelectSubset widget.
+
+        Parameters
+        ----------
+        source_items : Union[Dict[str, str], List[Any]]
+            List of source items - either a dictionary(label, value),
+            a simple list or
+            a list of (label, value) tuples.
+        default_selected : Union[Dict[str, str], List[Any]]
+            Populate the selected list with values - either
+            a dictionary(label, value),
+            a simple list or
+            a list of (label, value) tuples.
+
+        """
+        if isinstance(source_items, dict):
+            source_items = [(label, val) for label, val in source_items.items()]
+
+        self.src_items = sorted(set(source_items))
+        if isinstance(self.src_items[0], tuple):
+            self._src_dict = {val: (label, val) for label, val in self.src_items}
+        else:
+            self._src_dict = {}
+
+        layout = widgets.Layout(width="40%", height="200px")
+        self._source_list = widgets.Select(
+            options=sorted(set(self.src_items)), layout=layout, description="Source: "
+        )
+
+        if isinstance(default_selected, dict):
+            default_selected = [(label, val) for label, val in default_selected.items()]
+        if default_selected:
+            set_selected = set(default_selected)
+            set_selected = sorted(set_selected.intersection(source_items))
+        else:
+            set_selected = []
+
+        self._select_list = widgets.Select(
+            options=set_selected, layout=layout, description="Selected: "
+        )
+
+        self._b_add_all = widgets.Button(description="Add All \u21fe")
+        self._b_add = widgets.Button(description="Add \u21fe")
+        self._b_del = widgets.Button(description="\u21fd Remove")
+        self._b_del_all = widgets.Button(description="\u21fd Remove All")
+
+        self._b_add.on_click(self._on_btn_add)
+        self._b_del.on_click(self._on_btn_del)
+        self._b_del_all.on_click(self._on_btn_del_all)
+        self._b_add_all.on_click(self._on_btn_add_all)
+
+        v_box = widgets.VBox(
+            [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
+        )
+        h_box = widgets.HBox([self._source_list, v_box, self._select_list])
+        display(h_box)
+
+    @property
+    def selected_items(self) -> List[Any]:
+        """
+        Return a list of the selected items.
+
+        If the input list is a list of tuples, this returns
+        a list of the selected tuples.
+
+        Returns
+        -------
+        List[Any]
+            List of items in the selected list.
+
+        """
+        return list(self._select_list.options)
+
+    @property
+    def selected_values(self) -> List[Any]:
+        """
+        Return list of selected values.
+
+        If the input list is a list of tuples, this returns
+        a list of values of the items.
+
+        Returns
+        -------
+        List[Any]
+            List of selected item values.
+
+        """
+        if self._select_list.options and isinstance(
+            self._select_list.options[0], tuple
+        ):
+            return [item[1] for item in self._select_list.options]
+        return self.selected_items
+
+    def _on_btn_add(self, button):
+        del button
+        selected_set = set(self._select_list.options)
+        if self._src_dict:
+            selected_set.add(self._src_dict[self._source_list.value])
+        else:
+            selected_set.add(self._source_list.value)
+        self._select_list.options = sorted(list(selected_set))
+
+    def _on_btn_add_all(self, button):
+        del button
+        self._select_list.options = sorted(list(set(self._source_list.options)))
+
+    def _on_btn_del(self, button):
+        del button
+        selected_set = set(self._select_list.options)
+        # save the current index
+        cur_index = self._select_list.index
+        if selected_set:
+            if self._src_dict:
+                # if we're working with tuples, we need to specify the tuple to remove
+                selected_set.remove(self._src_dict[self._select_list.value])
+            else:
+                # else just delete the value
+                selected_set.remove(self._select_list.value)
+            self._select_list.options = sorted(list(selected_set))
+        # try to set the index to the next item in the list
+        if cur_index < len(self._select_list.options):
+            self._select_list.index = cur_index if cur_index else 0
+        else:
+            self._select_list.index = len(self._select_list.options) - 1
+
+    def _on_btn_del_all(self, button):
+        del button
+        self._select_list.options = []
