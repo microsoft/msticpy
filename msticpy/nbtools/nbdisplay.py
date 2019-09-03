@@ -10,7 +10,13 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 from bokeh.io import output_notebook, show
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Label, RangeTool
+from bokeh.models import (
+    ColumnDataSource,
+    DatetimeTickFormatter,
+    HoverTool,
+    Label,
+    RangeTool,
+)
 from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 from IPython.core.display import HTML, display
@@ -143,7 +149,7 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
         line2_lx_tmplt = '(Cmdline: "{CommandLine}") [Path: {cwd}]'
         output_tmplt = f"\n{txt_spaces}{{line1}}\n{txt_spaces}{{line2}}"
     rows = process_row.to_dict()
-    if 'TargetLogonId' in rows:
+    if "TargetLogonId" in rows:
         line1 = line1_w_tmplt.format(**(rows))
         line2 = line2_w_tmplt.format(**(rows))
     else:
@@ -296,10 +302,7 @@ _WRAP_CMDL = "WrapCmdl"
 # pylint: disable=too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline(
-    data: dict,
-    alert: SecurityAlert = None,
-    title: str = None,
-    height: int = 300,
+    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300
 ):
     """
 
@@ -335,35 +338,34 @@ def display_timeline(
     # Take each item that is passed in data and fill in blanks and add a y_index
     y_index = 1
     for key, val in data.items():
-        val['data']['y_index'] = y_index
+        val["data"]["y_index"] = y_index
         y_index += 1
-        if not val['source_columns']:
-            val['source_columns'] = ["NewProcessName", "EventID", "CommandLine"]
-        if val['time_column'] not in val['source_columns']:
-            val['source_columns'].append(val['time_column'])
-        if 'y_index' not in val['source_columns']:
-            val['source_columns'].append('y_index')
-        if "CommandLine" in val['source_columns']:
-            graph_df = val['data'][val['source_columns']].copy()
+        if not val["source_columns"]:
+            val["source_columns"] = ["NewProcessName", "EventID", "CommandLine"]
+        if val["time_column"] not in val["source_columns"]:
+            val["source_columns"].append(val["time_column"])
+        if "y_index" not in val["source_columns"]:
+            val["source_columns"].append("y_index")
+        if "CommandLine" in val["source_columns"]:
+            graph_df = val["data"][val["source_columns"]].copy()
             graph_df[_WRAP_CMDL] = graph_df.apply(
                 lambda x: _wrap_text(x.CommandLine, _WRAP), axis=1
             )
         else:
-            graph_df = val['data'][val['source_columns']].copy()
-        val['source'] = ColumnDataSource(graph_df)
+            graph_df = val["data"][val["source_columns"]].copy()
+        val["source"] = ColumnDataSource(graph_df)
 
     # build the tool tips from columns of the first dataset
     prim_data = list(data.keys())[0]
-    excl_cols = [data[prim_data]['time_column'], "CommandLine", "y_index"]
+    excl_cols = [data[prim_data]["time_column"], "CommandLine", "y_index"]
     tool_tip_items = [
-        (f"{col}", f"@{col}") for col in data[prim_data]['source_columns'] if col not in excl_cols
+        (f"{col}", f"@{col}")
+        for col in data[prim_data]["source_columns"]
+        if col not in excl_cols
     ]
-    if _WRAP_CMDL in data[prim_data]['data']:
+    if _WRAP_CMDL in data[prim_data]["data"]:
         tool_tip_items.append(("CommandLine", f"@{_WRAP_CMDL}"))
-    hover = HoverTool(
-        tooltips=tool_tip_items,
-        formatters={"Tooltip": "printf"}
-    )
+    hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
 
     if not title:
         title = "Event Timeline"
@@ -371,8 +373,14 @@ def display_timeline(
         title = "Timeline {}".format(title)
 
     plot = figure(
-        x_range=(data[prim_data]['data'][data[prim_data]['time_column']][int(len(data[prim_data]['data'].index) * .33)],
-                 data[prim_data]['data'][data[prim_data]['time_column']][int(len(data[prim_data]['data'].index) * .66)]),
+        x_range=(
+            data[prim_data]["data"][data[prim_data]["time_column"]][
+                int(len(data[prim_data]["data"].index) * 0.33)
+            ],
+            data[prim_data]["data"][data[prim_data]["time_column"]][
+                int(len(data[prim_data]["data"].index) * 0.66)
+            ],
+        ),
         min_border_left=50,
         plot_height=height,
         plot_width=900,
@@ -381,20 +389,21 @@ def display_timeline(
         x_minor_ticks=10,
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         title=title,
-
     )
     plot.yaxis.visible = False
     # Create plot bar to act as as range selector
-    select = figure(title="Drag the middle and edges of the selection box to change the range above",
-                    plot_height=130, plot_width=900,
-                    x_axis_type="datetime", y_axis_type=None,
-                    tools="", toolbar_location=None)
+    select = figure(
+        title="Drag the middle and edges of the selection box to change the range above",
+        plot_height=130,
+        plot_width=900,
+        x_axis_type="datetime",
+        y_axis_type=None,
+        tools="",
+        toolbar_location=None,
+    )
     for key, val in data.items():
         select.circle(
-            x=val['time_column'],
-            y="y_index",
-            color=val['color'],
-            source=val['source']
+            x=val["time_column"], y="y_index", color=val["color"], source=val["source"]
         )
     range_tool = RangeTool(x_range=plot.x_range)
     range_tool.overlay.fill_color = "navy"
@@ -415,13 +424,13 @@ def display_timeline(
 
     for key, val in data.items():
         plot.circle(
-            x=val['time_column'],
+            x=val["time_column"],
             y="y_index",
-            color=val['color'],
+            color=val["color"],
             alpha=0.5,
             size=10,
-            source=val['source'],
-            legend=key
+            source=val["source"],
+            legend=key,
         )
 
     plot.legend.location = "top_left"

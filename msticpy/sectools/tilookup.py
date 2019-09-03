@@ -338,7 +338,7 @@ class TILookup:
         if len(result_list) > 0:
             return pd.concat(result_list, sort=False)
         else:
-            print('No IoC matches')
+            print("No IoC matches")
 
     @staticmethod
     def result_to_df(
