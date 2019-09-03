@@ -1,3 +1,0 @@
-.*squid.*
-.*apt.get.*
-.*pam_unix.*

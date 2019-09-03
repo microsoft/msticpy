@@ -12,7 +12,7 @@ and threat investigation. There are three main sub-packages:
 - data     - data interfaces specific to Sentinel/Log Analytics
 
 The package is in an early preview mode so there are likely to be bugs and there are several
-areas that are not yet optimized for performance. 
+areas that are not yet optimized for performance.
 We welcome feedback, bug reports and suggestions for new features.
 
 ## Installing
@@ -131,12 +131,6 @@ event-specific formatting and normalization (e.g. for process start events it wi
 re-assemble the process command line arguments into a single string).
 
 This is still a work-in-progress.
-
-### linuxsyslog
-
-A series of queries and data maniuplation packages to support an investigation of a 
-linux host with only syslog logging enabled. Some of data collection elements of this
-will be moved to the data subpackage as it is developed.
 
 ## Notebook tools sub-package - `nbtools`
 
