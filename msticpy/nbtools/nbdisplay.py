@@ -17,9 +17,11 @@ from bokeh.models import (
     HoverTool,
     Label,
     Legend,
+	RangeTool,
 )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure, reset_output
+from bokeh.layouts import column
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
 
@@ -103,13 +105,13 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
         level = 2
 
     px_spaces = 20 * level * 2
-    txt_spaces = " " * (4 * level)
+    txt_spaces = " " * (4 * int(level))
 
-    font_col = "red" if process_row.NodeRole == "source" else "black"
+    font_col = "red" if process_row.NodeRole == "source" else "white"
 
     if fmt.lower() == "html":
         l1_span = f'<span style="color:{font_col};font-size:90%">'
-        line1_tmplt = (
+        line1_w_tmplt = (
             l1_span
             + "[{NodeRole}:lev{Level}] {TimeGenerated} "
             + "<b>{NewProcessName}</b> "
@@ -117,23 +119,45 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
             + "SubjSess:{SubjectLogonId}, "
             + "TargSess:{TargetLogonId}]"
         )
-        line2_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]</span>' ""
+        line2_w_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]</span>' ""
         output_tmplt = (
             f'<div style="margin-left:{px_spaces}px">' + f"{{line1}}<br>{{line2}}</div>"
         )
-
+        line1_lx_tmplt = (
+            l1_span
+            + "[{NodeRole}:lev{Level}] {TimeGenerated} "
+            + "<b>{NewProcessName}</b> "
+            + "[PID: {NewProcessId}, "
+            + "PPID: {ProcessId}]"
+        )
+        line2_lx_tmplt = '(Cmdline: "{CommandLine}") [Path: {cwd}]</span>' ""
+        output_tmplt = (
+            f'<div style="margin-left:{px_spaces}px">' + f"{{line1}}<br>{{line2}}</div>"
+        )
     else:
-        line1_tmplt = (
+        line1_w_tmplt = (
             "[{NodeRole}:lev{Level}] {TimeGenerated} "
             + "{NewProcessName} "
             + "[PID: {NewProcessId}, "
             + "SubjSess:{SubjectLogonId}, "
             + "TargSess:{TargetLogonId}]"
         )
-        line2_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]'
+        line2_w_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]'
+        line1_lx_tmplt = (
+            "[{NodeRole}:lev{Level}] {TimeGenerated} "
+            + "{NewProcessName} "
+            + "[PID: {NewProcessId}, "
+            + "PPID: {ProcessId}]"
+        )
+        line2_lx_tmplt = '(Cmdline: "{CommandLine}") [Path: {cwd}]'
         output_tmplt = f"\n{txt_spaces}{{line1}}\n{txt_spaces}{{line2}}"
-    line1 = line1_tmplt.format(**(process_row.to_dict()))
-    line2 = line2_tmplt.format(**(process_row.to_dict()))
+    rows = process_row.to_dict()
+    if "TargetLogonId" in rows:
+        line1 = line1_w_tmplt.format(**(rows))
+        line2 = line2_w_tmplt.format(**(rows))
+    else:
+        line1 = line1_lx_tmplt.format(**(rows))
+        line2 = line2_lx_tmplt.format(**(rows))
 
     return output_tmplt.format(line1=line1, line2=line2)
 
@@ -161,12 +185,15 @@ def format_process_tree(process_tree: pd.DataFrame, fmt: str = "html"):
     node.
 
     """
-    tree = process_tree.sort_values(by=["TimeCreatedUtc"], ascending=True)
+    if "TimeCreatedUtc" in process_tree.index:
+        tree = process_tree.sort_values(by=["TimeCreatedUtc"], ascending=True)
+    else:
+        tree = process_tree.sort_values(by=["TimeGenerated"], ascending=True)
 
     if fmt.lower() == "html":
-        out_string = "<h3>Alert process tree:</h3>"
+        out_string = "<h3>Process tree:</h3>"
     else:
-        out_string = "Alert process tree:"
+        out_string = "Process tree:"
         out_string = out_string + "\n" + "_" * len(out_string)
 
     for _, line in tree.iterrows():
@@ -278,38 +305,31 @@ _WRAP_CMDL = "WrapCmdl"
 # pylint: disable=too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline(
-    data: pd.DataFrame,
-    alert: SecurityAlert = None,
-    overlay_data: pd.DataFrame = None,
-    title: str = None,
-    time_column: str = "TimeGenerated",
-    source_columns: list = None,
-    overlay_colums: list = None,
-    height: int = 300,
+    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300
 ):
     """
+
     Display a timeline of events.
 
     Parameters
     ----------
-    data : pd.DataFrame
-        Input DataFrame
+    data : dict
+        Data points to plot on the timeline.
+            Need to contain:
+                Key - Name of data type to be displayed in legend
+                Value - dict of data containing:
+                    data : pd.DataFrame
+                        Data to plot
+                    time_column : str
+                        Name of the timestamp column
+                    source_columns : list
+                        List of source columns to use in tooltips
+                    color: str
+                        Color of datapoints for this data
     alert : SecurityAlert, optional
         Input alert (the default is None)
-    overlay_data : pd.DataFrame, optional
-        Second event stream to display as overlay
-        (the default is None)
     title : str, optional
         Title to display (the default is None)
-    time_column : str, optional
-        Name of the timestamp column
-        (the default is 'TimeGenerated')
-    source_columns : list, optional
-        List of source columns to use in tooltips
-        (the default is None)
-    overlay_colums : list, optional
-        List of source columns to use in overlay data tooltips.
-        (the default is None)
     height : int, optional
         the height of the plot figure (under 300 limits access
         to Bokeh tools)(the default is 300)
@@ -318,75 +338,82 @@ def display_timeline(
     reset_output()
     output_notebook()
 
-    y_max = 1
-
-    if not source_columns:
-        source_columns = ["NewProcessName", "EventID", "CommandLine"]
-    if time_column not in source_columns:
-        source_columns.append(time_column)
-
-    if "CommandLine" in source_columns:
-        graph_df = data[source_columns].copy()
-        graph_df[_WRAP_CMDL] = graph_df.apply(
-            lambda x: _wrap_text(x.CommandLine, _WRAP), axis=1
-        )
-    else:
-        graph_df = data[source_columns].copy()
-
-    # if we have an overlay - add this data and shift the y co-ordinates to
-    # show on two separate lines
-    if overlay_data is not None:
-        overlay_colums = (
-            overlay_colums if overlay_colums is not None else source_columns
-        )
-        if time_column not in overlay_colums:
-            overlay_colums.append(time_column)
-        if "CommandLine" in overlay_colums:
-            overlay_df = overlay_data[overlay_colums].copy()
-            overlay_df[_WRAP_CMDL] = overlay_df.apply(
+    # Take each item that is passed in data and fill in blanks and add a y_index
+    y_index = 1
+    for key, val in data.items():
+        val["data"]["y_index"] = y_index
+        y_index += 1
+        if not val["source_columns"]:
+            val["source_columns"] = ["NewProcessName", "EventID", "CommandLine"]
+        if val["time_column"] not in val["source_columns"]:
+            val["source_columns"].append(val["time_column"])
+        if "y_index" not in val["source_columns"]:
+            val["source_columns"].append("y_index")
+        if "CommandLine" in val["source_columns"]:
+            graph_df = val["data"][val["source_columns"]].copy()
+            graph_df[_WRAP_CMDL] = graph_df.apply(
                 lambda x: _wrap_text(x.CommandLine, _WRAP), axis=1
             )
         else:
-            overlay_df = overlay_data[overlay_colums].copy()
-        graph_df["y_index"] = 2
-        overlay_df["y_index"] = 1
-        y_max = 2
-    else:
-        graph_df["y_index"] = 1
+            graph_df = val["data"][val["source_columns"]].copy()
+        val["source"] = ColumnDataSource(graph_df)
 
-    source = ColumnDataSource(graph_df)
-
-    # build the tool tips from columns (excluding these)
-    excl_cols = [time_column, "CommandLine"]
+    # build the tool tips from columns of the first dataset
+    prim_data = list(data.keys())[0]
+    excl_cols = [data[prim_data]["time_column"], "CommandLine", "y_index"]
     tool_tip_items = [
-        (f"{col}", f"@{col}") for col in source_columns if col not in excl_cols
+        (f"{col}", f"@{col}")
+        for col in data[prim_data]["source_columns"]
+        if col not in excl_cols
     ]
-    if _WRAP_CMDL in graph_df:
+    if _WRAP_CMDL in data[prim_data]["data"]:
         tool_tip_items.append(("CommandLine", f"@{_WRAP_CMDL}"))
-    hover = HoverTool(
-        tooltips=tool_tip_items,
-        formatters={"Tooltip": "printf"}
-        # display a tooltip whenever the cursor is vertically in line with a glyph
-        # ,mode='vline'
-    )
+    hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
 
     if not title:
         title = "Event Timeline"
     else:
         title = "Timeline {}".format(title)
 
-    # tools = 'pan, box_zoom, wheel_zoom, reset, undo, redo, save, hover'
     plot = figure(
+        x_range=(
+            data[prim_data]["data"][data[prim_data]["time_column"]][
+                int(len(data[prim_data]["data"].index) * 0.33)
+            ],
+            data[prim_data]["data"][data[prim_data]["time_column"]][
+                int(len(data[prim_data]["data"].index) * 0.66)
+            ],
+        ),
         min_border_left=50,
         plot_height=height,
         plot_width=900,
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
-        tools=[hover, "pan", "xwheel_zoom", "box_zoom", "reset"],
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         title=title,
     )
     plot.yaxis.visible = False
+    # Create plot bar to act as as range selector
+    select = figure(
+        title="Drag the middle and edges of the selection box to change the range above",
+        plot_height=130,
+        plot_width=900,
+        x_axis_type="datetime",
+        y_axis_type=None,
+        tools="",
+        toolbar_location=None,
+    )
+    for key, val in data.items():
+        select.circle(
+            x=val["time_column"], y="y_index", color=val["color"], source=val["source"]
+        )
+    range_tool = RangeTool(x_range=plot.x_range)
+    range_tool.overlay.fill_color = "navy"
+    range_tool.overlay.fill_alpha = 0.2
+    select.ygrid.grid_line_color = None
+    select.add_tools(range_tool)
+    select.toolbar.active_multi = range_tool
 
     # Tick formatting for different zoom levels
     # '%H:%M:%S.%3Nms
@@ -396,33 +423,25 @@ def display_timeline(
     tick_format.minutes = ["%H:%M:%S"]
     tick_format.seconds = ["%H:%M:%S"]
     tick_format.milliseconds = ["%H:%M:%S.%3N"]
-
     plot.xaxis[0].formatter = tick_format
-    plot.circle(
-        x=time_column, y="y_index", color="navy", alpha=0.5, size=10, source=source
-    )
 
-    if overlay_data is not None:
-        overlay_source = ColumnDataSource(overlay_df)
+    for key, val in data.items():
         plot.circle(
-            x=time_column,
+            x=val["time_column"],
             y="y_index",
-            color="green",
+            color=val["color"],
             alpha=0.5,
             size=10,
-            source=overlay_source,
+            source=val["source"],
+            legend=key,
         )
 
-    # Adding data labels stops everything working!
-    # labels = LabelSet(x=time_column, y='y_index', y_offset=5,
-    #                   text='NewProcessName', source=source,
-    #                   angle='90deg', text_font_size='8pt')
-    # p.add_layout(labels)
+    plot.legend.location = "top_left"
+    plot.legend.click_policy = "hide"
 
-    # if we have an alert, plot the time as a line
     if alert is not None:
         x_alert_label = pd.Timestamp(alert["StartTimeUtc"])
-        plot.line(x=[x_alert_label, x_alert_label], y=[0, y_max + 1])
+        plot.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
         alert_label = Label(
             x=x_alert_label,
             y=0,
@@ -441,7 +460,7 @@ def display_timeline(
 
         print("Alert start time = ", alert["StartTimeUtc"])
 
-    show(plot)
+    show(column(plot, select))
 
 
 def _wrap_text(source_string, wrap_len):
