@@ -27,7 +27,7 @@ defaults:
         type: str
         default: ''
 sources:
-  list_events:
+  list_host_events:
     description: Retrieves list of all events on a host
     args:
       query: '
@@ -45,7 +45,7 @@ sources:
         description: The hostname match operator
         type: str
         default: has
-  list_events_by_id:
+  list_host_events_by_id:
     description: Retrieves list of events on a host
     args:
       query: '

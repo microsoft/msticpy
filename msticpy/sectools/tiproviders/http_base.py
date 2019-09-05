@@ -69,7 +69,9 @@ class HttpProvider(TIProvider):
 
         for req_param in self._REQUIRED_PARAMS:
             if req_param not in self._request_params:
-                raise ValueError(f"{req_param} value was not found for {self.__class__.__name__}")
+                raise ValueError(
+                    f"{req_param} value was not found for {self.__class__.__name__}"
+                )
 
     # pylint: disable=too-many-branches
     @lru_cache(maxsize=256)

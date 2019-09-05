@@ -35,12 +35,13 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_NO_PROVIDERS_MSSG = '''
+_NO_PROVIDERS_MSSG = """
 No TI Providers are loaded - please check that
 you have correctly configured your msticpyconfig.yaml settings.
-For more information see 
+For more information see
 https://msticpy.readthedocs.io/en/latest/TIProviders.html
-'''
+"""
+
 
 @export
 class TILookup:
@@ -347,10 +348,9 @@ class TILookup:
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
 
-        if len(result_list) > 0:
-            return pd.concat(result_list, sort=False)
-        else:
+        if not result_list:
             print("No IoC matches")
+        return pd.concat(result_list, sort=False)
 
     @staticmethod
     def result_to_df(

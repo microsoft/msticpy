@@ -17,7 +17,7 @@ from bokeh.models import (
     HoverTool,
     Label,
     Legend,
-	RangeTool,
+    RangeTool,
 )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure, reset_output
