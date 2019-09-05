@@ -67,6 +67,8 @@ class XForce(HttpProvider):
     _IOC_QUERIES["hostname-whois"] = _IOC_QUERIES["ipv4-whois"]
     _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["ipv4-whois"]
 
+    _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
+
     # pylint: disable=too-many-branches
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """

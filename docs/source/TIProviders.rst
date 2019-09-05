@@ -112,10 +112,17 @@ The list below shows the current set of providers.
 Configuration File
 ------------------
 
-You can configure primary and secondary providers. Primary providers are
-used by default.
+You **must** have a correctly configured ``msticpyconfig.yaml`` in
+order to use the TILookup module. In this file you specify the 
+providers you want to load, any API keys that the provider services
+require. You can configure primary and secondary providers.
 
-You may need to supply an authorization (API) key and in some cases a
+Primary providers are those used by default, when you query for IoCs
+without specifying any specific provider names. You may want to
+add some providers as secondary so that they are not used for every
+query but are available if you want to search more widely.
+
+You will usually need to supply an authorization (API) key and in some cases a
 user ID for each provider.
 
 For LogAnalytics/Azure Sentinel providers, you will need the workspace
@@ -129,9 +136,13 @@ Alternatively, you can specify a location for this file in an
 environment variable ``MSTICPYCONFIG``.
 
 If you need to create a config file, use the content shown below.
+The ``Provider`` key must correspond to an available Python class.
+The names of the built-in provider classes are shown in the 
+``ti_lookup.available_providers`` property.
 
-Delete any provider entries that you do not want to use and add the
-missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
+Delete any provider entries from the example below that you do not want 
+to use and add the missing parameters for your providers. 
+Save the file as ``msticpyconfig.yaml``. 
 
 
 .. note:: If you have your Azure Sentinel workspace and tenant IDs configured
@@ -167,6 +178,28 @@ missing parameters for your providers. Save the file as ``msticpyconfig.yaml``.
           TenantID: "your-azure-sentinel-tenant-id"
         Primary: True
         Provider: "AzSTI"
+
+
+.. note:: You can also specify that the Args values as environment
+  variables as follows:
+
+
+.. code:: yaml
+
+      XForce:
+          Args:
+            ApiID:
+              EnvironmentVar: "XFORCE_ID"
+            AuthKey:
+              EnvironmentVar: "XFORCE_KEY"
+          Primary: False
+          Provider: "XForce"
+
+
+
+When you have made a configuration change you can reload the
+providers and check the status like this.
+
 
 .. code:: ipython3
 

@@ -54,6 +54,8 @@ class HttpProvider(TIProvider):
 
     _IOC_QUERIES: Dict[str, IoCLookupParams] = {}
 
+    _REQUIRED_PARAMS: List[str] = []
+
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
@@ -64,6 +66,10 @@ class HttpProvider(TIProvider):
             self._request_params["API_ID"] = kwargs.pop("api_id")
         if "auth_key" in kwargs:
             self._request_params["API_KEY"] = kwargs.pop("auth_key")
+
+        for req_param in self._REQUIRED_PARAMS:
+            if req_param not in self._request_params:
+                raise ValueError(f"{req_param} value was not found for {self.__class__.__name__}")
 
     # pylint: disable=too-many-branches
     @lru_cache(maxsize=256)
