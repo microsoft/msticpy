@@ -259,6 +259,91 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             ses_opened = ses_opened + 1
         return logon_sessions
 
+def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
+    """
+    Clusters logon sessions observed in syslog by start and end time based on PAM events.
+
+    Will return a LogonDataError if supplied dataframe does not contain complete logon sessions.
+    Parameters
+    ----------
+    logon_events: pd.DataFrame
+        A DataFrame of all syslog logon events (can be generated with LinuxSyslog.user_logon query)
+
+    Returns
+    -------
+    logon_sessions: dict
+        A dictionary of logon sessions including start and end times and logged on user
+
+    Raises
+    ------
+    KQLDataError
+        There are no logon sessions in the supplied data set
+
+    """
+
+    logon_sessions = {}
+    users = []
+    starts = []
+    ends = []
+    ses_close_time = dt.datetime.now()
+    ses_opened = 0
+    ses_closed = 0
+    logons_opened = (
+        (
+            logon_events[
+                logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
+            ]
+        )
+        .set_index("TimeGenerated")
+        .sort_index(ascending=True)
+    )
+    logons_closed = (
+        (
+            logon_events[
+                logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
+            ]
+        )
+        .set_index("TimeGenerated")
+        .sort_index(ascending=True)
+    )
+    if logons_opened.empty or logons_closed.empty:
+        print("There are no logon sessions in the supplied data set")
+    else:
+        while ses_opened < len(logons_opened.index) and ses_closed < len(
+            logons_closed.index
+        ):
+            ses_start = (logons_opened.iloc[ses_opened]).name
+            ses_end = (logons_closed.iloc[ses_closed]).name
+            if "User" in logons_opened.columns:
+                user = (logons_opened.iloc[ses_opened]).User
+            elif "Sudoer" in logons_opened.columns:
+                user = (logons_opened.iloc[ses_opened]).Sudoer
+            else:
+                user = "Unknown"
+            if ses_start > ses_close_time or ses_opened == 0:
+                pass
+            else:
+                ses_opened += 1
+                continue
+            if ses_end < ses_start:
+                ses_closed += 1
+                continue
+            users.append(user)
+            starts.append(ses_start)
+            ends.append(ses_end)
+            logon_string = f"Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}"
+            logon_sessions[logon_string] = {
+                "start": ses_start,
+                "end": ses_end,
+                "user": user,
+            }
+            ses_close_time = ses_end
+            ses_closed = ses_closed + 1
+            ses_opened = ses_opened + 1
+        logon_sessions_df = pd.DataFrame({"User" : users,
+                                         "Start" : starts,
+                                         "Ends": ends})
+        return logon_sessions_df
 
 def risky_actions(
     events: pd.DataFrame,

@@ -31,7 +31,7 @@ class FoliumMap:
         tiles=None,
         width: str = "100%",
         height: str = "100%",
-        location: list = [47.67, -122.13]
+        location: list = [47.67, -122.13],
     ):
         """
         Create an instance of the folium map.
@@ -56,7 +56,11 @@ class FoliumMap:
 
         """
         self.folium_map = folium.Map(
-            zoom_start=zoom_start, tiles=tiles, width=width, height=height, location=location
+            zoom_start=zoom_start,
+            tiles=tiles,
+            width=width,
+            height=height,
+            location=location,
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
 
@@ -131,3 +135,40 @@ class FoliumMap:
                 icon=folium.Icon(**kwargs),
             )
             marker.add_to(self.folium_map)
+
+
+def get_map_center(ip_entities: list):
+    """
+    Calculate median point between IP Entity locations.
+
+    Parameters
+    ----------
+    ip_entities: list
+
+    Returns
+    -------
+    Tuple
+        The Lattitude and Longitude calculated
+
+    """
+    longs = []
+    lats = []
+    for entity in ip_entities:
+        for ip in entity:
+            for i in ip:
+                if "Location" in i:
+                    if (
+                        i["Location"]["Longitude"] not in longs
+                        and i["Location"]["Latitude"] not in lats
+                    ):
+                        longs.append(i["Location"]["Longitude"])
+                        lats.append(i["Location"]["Latitude"])
+                elif "Longitude" in i:
+                    if i["Longitude"] not in longs and i["Latitude"] not in lats:
+                        longs.append(i["Longitude"])
+                        lats.append(i["Latitude"])
+                else:
+                    pass
+    avglat = sum(lats) / len(lats)
+    avglong = sum(longs) / len(longs)
+    return (avglat, avglong)

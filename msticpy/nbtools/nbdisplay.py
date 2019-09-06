@@ -104,7 +104,7 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
     px_spaces = 20 * level * 2
     txt_spaces = " " * (4 * int(level))
 
-    font_col = "red" if process_row.NodeRole == "source" else "white"
+    font_col = "red" if process_row.NodeRole == "source" else "black"
 
     if fmt.lower() == "html":
         l1_span = f'<span style="color:{font_col};font-size:90%">'
@@ -302,7 +302,7 @@ _WRAP_CMDL = "WrapCmdl"
 # pylint: disable=too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline(
-    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300
+    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300, legend_loc: int = "top_left"
 ):
     """
 
@@ -330,6 +330,8 @@ def display_timeline(
     height : int, optional
         the height of the plot figure (under 300 limits access
         to Bokeh tools)(the default is 300)
+    legend_loc: str, optional
+        Which side of the graph you want the legend to appear on
 
     """
     reset_output()
@@ -342,6 +344,8 @@ def display_timeline(
         y_index += 1
         if not val["source_columns"]:
             val["source_columns"] = ["NewProcessName", "EventID", "CommandLine"]
+        if "time_column" not in val:
+            val["time_column"] = "TimeGenerated"
         if val["time_column"] not in val["source_columns"]:
             val["source_columns"].append(val["time_column"])
         if "y_index" not in val["source_columns"]:
@@ -353,6 +357,7 @@ def display_timeline(
             )
         else:
             graph_df = val["data"][val["source_columns"]].copy()
+        val["data"].reset_index(drop=True, inplace=True)
         val["source"] = ColumnDataSource(graph_df)
 
     # build the tool tips from columns of the first dataset
@@ -387,7 +392,7 @@ def display_timeline(
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
-        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+        tools=[hover, "xpan", "xwheel_zoom", "box_zoom", "reset", "save"],
         title=title,
     )
     plot.yaxis.visible = False
@@ -433,12 +438,13 @@ def display_timeline(
             legend=key,
         )
 
-    plot.legend.location = "top_left"
+    plot.legend.location = legend_loc
     plot.legend.click_policy = "hide"
 
     if alert is not None:
         x_alert_label = pd.Timestamp(alert["StartTimeUtc"])
         plot.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
+        select.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
         alert_label = Label(
             x=x_alert_label,
             y=0,
@@ -454,8 +460,7 @@ def display_timeline(
         )
 
         plot.add_layout(alert_label)
-
-        print("Alert start time = ", alert["StartTimeUtc"])
+        select.add_layout(alert_label)
 
     show(column(plot, select))
 
