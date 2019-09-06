@@ -17,7 +17,7 @@ from bokeh.models import (
     HoverTool,
     Label,
     Legend,
-	RangeTool,
+    RangeTool,
 )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure, reset_output
@@ -305,7 +305,16 @@ _WRAP_CMDL = "WrapCmdl"
 # pylint: disable=too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline(
-    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300
+    data: Union[pd.DataFrame, dict],
+    alert: SecurityAlert = None,
+    overlay_data: pd.DataFrame = None,
+    title: str = None,
+    time_column: str = "TimeGenerated",
+    source_columns: list = None,
+    overlay_colums: list = None,
+    color: int = "navy",
+    overlay_color: str = "green",
+    height: int = 300,
 ):
     """
 
@@ -375,15 +384,12 @@ def display_timeline(
     else:
         title = "Timeline {}".format(title)
 
+    df_time_range = data[prim_data]["data"][data[prim_data]["time_column"]]
+    df_len = len(data[prim_data]["data"])
+    start_range = df_time_range.iloc[int(df_len * 0.33)]
+    end_range = df_time_range.iloc[int(df_len * 0.63)]
     plot = figure(
-        x_range=(
-            data[prim_data]["data"][data[prim_data]["time_column"]][
-                int(len(data[prim_data]["data"].index) * 0.33)
-            ],
-            data[prim_data]["data"][data[prim_data]["time_column"]][
-                int(len(data[prim_data]["data"].index) * 0.66)
-            ],
-        ),
+        x_range=(start_range, end_range),
         min_border_left=50,
         plot_height=height,
         plot_width=900,
@@ -395,7 +401,7 @@ def display_timeline(
     )
     plot.yaxis.visible = False
     # Create plot bar to act as as range selector
-    select = figure(
+    rng_select = figure(
         title="Drag the middle and edges of the selection box to change the range above",
         plot_height=130,
         plot_width=900,
@@ -405,15 +411,15 @@ def display_timeline(
         toolbar_location=None,
     )
     for key, val in data.items():
-        select.circle(
+        rng_select.circle(
             x=val["time_column"], y="y_index", color=val["color"], source=val["source"]
         )
     range_tool = RangeTool(x_range=plot.x_range)
     range_tool.overlay.fill_color = "navy"
     range_tool.overlay.fill_alpha = 0.2
-    select.ygrid.grid_line_color = None
-    select.add_tools(range_tool)
-    select.toolbar.active_multi = range_tool
+    rng_select.ygrid.grid_line_color = None
+    rng_select.add_tools(range_tool)
+    rng_select.toolbar.active_multi = range_tool
 
     # Tick formatting for different zoom levels
     # '%H:%M:%S.%3Nms
@@ -460,7 +466,18 @@ def display_timeline(
 
         print("Alert start time = ", alert["StartTimeUtc"])
 
-    show(column(plot, select))
+    show(column(plot, rng_select))
+
+
+def _get_timeline_args(**kwargs):
+    overlay_data: pd.DataFrame = kwargs.get("overlay_data", None)
+    title: str = kwargs.get("title", None)
+    time_column: str = kwargs.get("time_column", "TimeGenerated")
+    source_columns: list = kwargs.get("source_columns", None)
+    overlay_columns: list = kwargs.get("overlay_columns", None)
+    color: int = kwargs.get("color", "navy")
+    overlay_color: str = kwargs.get("color", "green")
+    height: int = kwargs.get("height", 300)
 
 
 def _wrap_text(source_string, wrap_len):

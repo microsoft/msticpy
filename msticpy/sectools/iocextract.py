@@ -553,7 +553,7 @@ class IoCExtract:
         try:
             tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
             temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
-            return set(temp_df["TLD"])
+            return set(temp_df["TLD"].dropna())
         except (HTTPError, URLError):
             pass
         # pylint: disable=broad-except, W0703
