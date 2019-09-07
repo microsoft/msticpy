@@ -13,7 +13,7 @@ or Log Analytics table respectively.
 
 Notebook
 --------
-`TIProvider Usage Notebook <https://github.com/Microsoft/msticpy/docs/notebooks/TIProviders.ipynb>`__
+`TIProvider Usage Notebook <https://github.com/Microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
 
 Table of Contents
 -----------------
