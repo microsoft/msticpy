@@ -6,7 +6,9 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
+from pathlib import Path
 from typing import Callable, Optional, Any, Tuple
+import warnings
 
 from IPython.core.display import display, HTML
 import pandas as pd
@@ -188,3 +190,30 @@ def check_py_version(min_ver: Tuple = (3, 6)):
         raise SystemExit(
             "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
         )
+
+
+@export
+def resolve_pkg_path(part_path: str):
+    """
+    Resolve a path relative to the package.
+
+    Parameters
+    ----------
+    part_path : str
+        Absolute or relative path to resolve.
+
+    """
+    if Path(part_path).is_absolute():
+        return part_path
+
+    resolved_path = str(Path(__file__).resolve().parent.joinpath(part_path))
+    if Path(resolved_path).exists():
+        return str(resolved_path)
+
+    searched_paths = list(
+        Path(__file__).resolve().parent.glob(str(Path("**").joinpath(part_path)))
+    )
+    if not searched_paths or len(searched_paths) > 1:
+        warnings.warn(f"No path or ambiguous match for {part_path} not found")
+        return None
+    return str(searched_paths[0])

@@ -861,7 +861,6 @@ class SelectString:
         display(self._wgt_select)
 
 
-# pylint: disable=too-few-public-methods
 @export
 class SelectSubset:
     """

@@ -46,9 +46,9 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 class TISeverity(Enum):
     """Threat intelligence report severity."""
 
-    Information = 1
-    Warning = 2
-    High = 3
+    Information = 0
+    Warning = 1
+    High = 2
 
 
 # pylint: disable=too-few-public-methods
@@ -61,17 +61,17 @@ class LookupResult:
     ioc_type: str
     query_subtype: Optional[str] = None
     result: bool = False
-    # severity: str = attr.ib(default="Information")
+    severity: int = attr.ib(default=0)
     details: Any = None
     raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
     status: int = 0
 
-    # @severity.validator
-    # def _check_severity(self, attribute, value):
-    #     del attribute
-    #     if value not in TISeverity.__members__:
-    #         self.severity = "Information"
+    @severity.validator
+    def _check_severity(self, attribute, value):
+        del attribute
+        if value not in TISeverity.__members__:
+            self.severity = "Information"
 
     @property
     def summary(self):

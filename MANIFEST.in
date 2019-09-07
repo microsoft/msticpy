@@ -1,3 +1,4 @@
 include msticpy/data/queries/*.yaml
 include msticpy/msticpyconfig.yaml
 include msticpy/sectools/tld_seed.txt
+include msticpy/resources/*
