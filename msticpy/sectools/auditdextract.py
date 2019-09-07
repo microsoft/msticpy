@@ -439,7 +439,7 @@ def read_from_file(
     )
 
 
-def _parse_audit_message(audit_str: str) -> List[Dict[str, str]]:
+def _parse_audit_message(audit_str: str) -> List[Dict[str, List[str]]]:
     """
     Parse an auditd message string into List format required by unpack_auditd.
 
@@ -456,9 +456,11 @@ def _parse_audit_message(audit_str: str) -> List[Dict[str, str]]:
     """
     audit_message = audit_str.rstrip().split(": ")
     audit_headers = audit_message[0]
-    audit_headers = re.match(r"type=([^\s]+)", audit_headers)
-    audit_str = [{audit_headers.group(1): audit_message[1].split(" ")}]
-    return audit_str
+    audit_hdr_match = re.match(r"type=([^\s]+)", audit_headers)
+    if audit_hdr_match:
+        audit_msg = [{audit_hdr_match.group(1): audit_message[1].split(" ")}]
+        return audit_msg
+    return []  # type ignore
 
 
 def _extract_timestamp(audit_str: str) -> str:
@@ -478,6 +480,8 @@ def _extract_timestamp(audit_str: str) -> str:
     """
     audit_message = audit_str.rstrip().split(": ")
     audit_headers = audit_message[0]
-    audit_headers = re.match(r".*msg=audit\(([^\)]+)\)", audit_headers)
-    time_stamp = audit_headers.group(1).split(":")[0]
-    return time_stamp
+    audit_hdr_match = re.match(r".*msg=audit\(([^\)]+)\)", audit_headers)
+    if audit_hdr_match:
+        time_stamp = audit_hdr_match.group(1).split(":")[0]
+        return time_stamp
+    return ""

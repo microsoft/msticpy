@@ -27,6 +27,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-lines
 class TimeUnit(Enum):
     """Time unit enumeration and value."""
 
@@ -914,12 +915,12 @@ class SelectSubset:
             default_selected = [(label, val) for label, val in default_selected.items()]
         if default_selected:
             set_selected = set(default_selected)
-            set_selected = sorted(set_selected.intersection(source_items))
+            selected_items = sorted(set_selected.intersection(source_items))
         else:
-            set_selected = []
+            selected_items = []
 
         self._select_list = widgets.Select(
-            options=set_selected, layout=layout, description="Selected: "
+            options=selected_items, layout=layout, description="Selected: "
         )
 
         self._b_add_all = widgets.Button(description="Add All \u21fe")

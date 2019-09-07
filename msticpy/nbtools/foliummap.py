@@ -31,7 +31,7 @@ class FoliumMap:
         tiles=None,
         width: str = "100%",
         height: str = "100%",
-        location: list = [47.67, -122.13],
+        location: list = None,
     ):
         """
         Create an instance of the folium map.
@@ -55,6 +55,9 @@ class FoliumMap:
             The map object.
 
         """
+        if not location:
+            location = [47.67, -122.13]
+
         self.folium_map = folium.Map(
             zoom_start=zoom_start,
             tiles=tiles,
