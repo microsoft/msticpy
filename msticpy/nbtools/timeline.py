@@ -233,8 +233,11 @@ def display_timeline_dict(data: Union[pd.DataFrame, dict], **kwargs) -> figure:
         data_columns = set()
         series_data = series_def["data"]
 
-        # if the series has no source columns, use the default
-        if not series_def["source_columns"]:
+        # if the series has source columns, use those
+        if series_def["source_columns"]:
+            data_columns.update(series_def["source_columns"])
+        else:
+            # else use the default set
             data_columns.update(def_source_columns)
         # add these columns to the tool tip column set
         tool_tip_columns.update(data_columns)
@@ -258,8 +261,8 @@ def display_timeline_dict(data: Union[pd.DataFrame, dict], **kwargs) -> figure:
     hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
 
     title = f"Timeline: {title}" if title else "Event Timeline"
-    start_range = min_time + ((max_time - min_time) / 3)
-    end_range = min_time + ((max_time - min_time) * 2 / 3)
+    start_range = min_time + ((max_time - min_time) * 0.1)
+    end_range = min_time + ((max_time - min_time) * 0.9)
     height = height if height else _calc_auto_plot_height(len(data))
     plot = figure(
         x_range=(start_range, end_range),
@@ -438,8 +441,8 @@ def display_timeline_grouped(data: pd.DataFrame, **kwargs) -> figure:
     title = f"Timeline: {title}" if title else "Event Timeline"
     min_time = graph_df[time_column].min()
     max_time = graph_df[time_column].max()
-    start_range = min_time + ((max_time - min_time) / 3)
-    end_range = min_time + ((max_time - min_time) * 2 / 3)
+    start_range = min_time + ((max_time - min_time) * 0.1)
+    end_range = min_time + ((max_time - min_time) * 0.9)
     height = height if height else _calc_auto_plot_height(series_count)
 
     plot = figure(

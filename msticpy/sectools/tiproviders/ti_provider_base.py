@@ -15,7 +15,7 @@ requests per minute for the account type that you have.
 import abc
 from abc import ABC
 from enum import Enum
-import math
+import math  # noqa
 import pprint
 import re
 from collections import Counter, namedtuple
@@ -46,9 +46,9 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 class TISeverity(Enum):
     """Threat intelligence report severity."""
 
-    Information = 0
-    Warning = 1
-    High = 2
+    information = 0
+    warning = 1
+    high = 2
 
 
 # pylint: disable=too-few-public-methods
@@ -61,7 +61,7 @@ class LookupResult:
     ioc_type: str
     query_subtype: Optional[str] = None
     result: bool = False
-    severity: int = attr.ib(default=0)
+    severity: int = attr.ib(default=TISeverity.information)
     details: Any = None
     raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
@@ -70,8 +70,14 @@ class LookupResult:
     @severity.validator
     def _check_severity(self, attribute, value):
         del attribute
-        if value not in TISeverity.__members__:
-            self.severity = "Information"
+        if isinstance(value, TISeverity):
+            self.severity = value.value
+        if isinstance(value, str) and value.lower() in TISeverity.__members__:
+            self.severity = TISeverity[value.lower()].value
+        elif isinstance(value, int):
+            self.severity = TISeverity(value).value
+        else:
+            self.severity = TISeverity.information.value
 
     @property
     def summary(self):
@@ -79,7 +85,7 @@ class LookupResult:
         p_pr = pprint.PrettyPrinter(indent=4)
         print("ioc:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
-        # print("severity:", self.severity)
+        print("severity:", self.severity)
         p_pr.pprint(self.details)
         print("reference: ", self.reference)
 
@@ -88,6 +94,13 @@ class LookupResult:
         """Print raw results of the Lookup Result."""
         p_pr = pprint.PrettyPrinter(indent=4)
         p_pr.pprint(self.raw_result)
+
+    @property
+    def severity_desc(self):
+        try:
+            return TISeverity(self.severity)
+        except ValueError:
+            return "unknown"
 
 
 # Mapping for DataFrame columns

@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from collections import ChainMap
 from inspect import isclass
-import sys
+import sys  # noqa
 from typing import List, Mapping, Dict, Tuple, Union, Iterable, Optional
 import warnings
 
