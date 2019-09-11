@@ -214,7 +214,7 @@ def display_timeline_dict(data: Union[pd.DataFrame, dict], **kwargs) -> figure:
     title: str = kwargs.pop("title", None)
     time_column: str = kwargs.pop("time_column", "TimeGenerated")
     source_columns: list = kwargs.pop("source_columns", None)
-    legend_pos: str = kwargs.pop("legend", "inline")
+    legend_pos: str = kwargs.pop("legend", None)
     show_yaxis: bool = kwargs.pop("yaxis", False)
     show_range: bool = kwargs.pop("range_tool", True)
 
@@ -550,19 +550,18 @@ def _plot_grouped_series(graph_df, group_count_df, plot, **kwargs):
     time_column: str = kwargs.pop("time_column", "TimeGenerated")
     group_by: str = kwargs.pop("group_by", None)
     legend_column: str = kwargs.pop("legend_column", None)
-    legend_pos: str = kwargs.pop("legend", "inline")
+    legend_pos: str = kwargs.pop("legend", None)
 
     # If legend_pos is outside the graph we need to create the legend
     # seperately.
     # We plot groups individually so that we can create an interactive legend.
     legend_items = []
     for _, group_id in group_count_df[group_by].items():
+        first_group_item = graph_df[graph_df[group_by] == group_id].iloc[0]
         if legend_column:
-            legend_label = graph_df[graph_df[group_by] == group_id][legend_column].iloc[
-                0
-            ]
+            legend_label = first_group_item[legend_column]
         else:
-            legend_label = None
+            legend_label = first_group_item[group_by]
         inline_legend = legend_label if legend_pos == "inline" else None
         row_source = ColumnDataSource(graph_df[graph_df[group_by] == group_id])
         p_series = plot.diamond(
