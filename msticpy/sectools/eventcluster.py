@@ -185,30 +185,53 @@ def _merge_clustered_items(
         cluster_id = cluster_set[idx]
         class_members = labels == cluster_id
         if isinstance(data, pd.DataFrame):
-            last_event_time = data[class_members][-1:][time_column].iat[0]
+            time_ordered = data[class_members].sort_values(time_column, ascending=True)
+            first_event_time = time_ordered[0:][time_column].iat[0]
+            last_event_time = time_ordered[-1:][time_column].iat[0]
         else:
+            first_event_time = None
             last_event_time = None
 
         if cluster_id == -1:
             # 'Noise' events are individual items that could not be assigned
             # to a cluster and so are unique
             cluster_list.append(
-                data[class_members].assign(
+                data[class_members]
+                .assign(
                     Clustered=False,
                     ClusterId=cluster_id,
                     ClusterSize=1,
+                    TimeGenerated=first_event_time,
+                    FirstEventTime=first_event_time,
                     LastEventTime=last_event_time,
+                )
+                .astype(
+                    dtype={
+                        "TimeGenerated": "datetime64[ns]",
+                        "FirstEventTime": "datetime64[ns]",
+                        "LastEventTime": "datetime64[ns]",
+                    }
                 )
             )
         else:
             # Otherwise, just choose the first example of the cluster set
             cluster_list.append(
-                data[class_members].assign(
+                data[class_members]
+                .assign(
                     Clustered=True,
                     ClusterId=cluster_id,
                     ClusterSize=counts[idx],
+                    TimeGenerated=first_event_time,
+                    FirstEventTime=first_event_time,
                     LastEventTime=last_event_time,
                 )[0:1]
+                .astype(
+                    dtype={
+                        "TimeGenerated": "datetime64[ns]",
+                        "FirstEventTime": "datetime64[ns]",
+                        "LastEventTime": "datetime64[ns]",
+                    }
+                )
             )
     # pylint: enable=consider-using-enumerate
     return pd.concat(cluster_list)

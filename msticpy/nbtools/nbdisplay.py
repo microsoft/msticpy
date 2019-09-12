@@ -21,6 +21,7 @@ from .timeline import (  # noqa
     display_timeline,
     display_timeline_dict,
     display_timeline_grouped,
+    display_timeline_values,
 )
 
 # pylint: enable=unused-import
