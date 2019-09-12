@@ -67,9 +67,11 @@ class FoliumMap:
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
 
-    def __repr__(self):
+    def _repr_html_(self):
         """Return folium map."""
-        return self.folium_map
+        # pylint: disable=protected-access
+        return self.folium_map._repr_html_()
+        # pylint: enable=protected-access
 
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
