@@ -219,6 +219,7 @@ def resolve_pkg_path(part_path: str):
     return str(searched_paths[0])
 
 
+# pylint: disable=invalid-name
 def md(string: str, styles: Union[str, Iterable[str]] = None):
     """
     Return string as Markdown with optional style.
@@ -238,9 +239,9 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
         if "," in styles:
             styles = [style.strip() for style in styles.split(",")]
         else:
-            style_str = f_styles.get(styles, "")
+            style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
-        style_str = ";".join([f_styles.get(style, "") for style in styles])
+        style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
     display(Markdown(f"<p style='{style_str}'>{string}</p>"))
 
 
@@ -258,7 +259,7 @@ def md_warn(string: str):
 
 
 # Styles available to use in the above Markdown tools.
-f_styles = {
+_F_STYLES = {
     "bold": "font-weight: bold",
     "italic": "font-style: italic",
     "red": "color: red",

@@ -61,7 +61,7 @@ class LookupResult:
     ioc_type: str
     query_subtype: Optional[str] = None
     result: bool = False
-    severity: int = attr.ib(default=TISeverity.information)
+    severity: int = attr.ib(default=TISeverity.information.value)
     details: Any = None
     raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
@@ -96,10 +96,19 @@ class LookupResult:
         p_pr.pprint(self.raw_result)
 
     @property
-    def severity_desc(self):
+    def severity_desc(self) -> str:
+        """
+        Return text description of severity score.
+
+        Returns
+        -------
+        str
+            Severity description.
+
+        """
         try:
-            return TISeverity(self.severity)
-        except ValueError:
+            return TISeverity(self.severity).name
+        except (ValueError, AttributeError):
             return "unknown"
 
 

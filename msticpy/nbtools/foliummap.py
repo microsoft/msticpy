@@ -87,17 +87,17 @@ class FoliumMap:
             kwargs: icon properties to use for displaying this cluster
 
         """
-        geo_entity = GeoLocation()
-        geo_entity.CountryCode = "Unknown"
-        geo_entity.CountryName = "Unknown"
-        geo_entity.State = "Unknown"
-        geo_entity.City = "Unknown"
-        geo_entity.Longitude = 0.0
-        geo_entity.Latitude = 0.0
+        geo_entity = GeoLocation()  # type: ignore
+        geo_entity.CountryCode = "Unknown"  # type: ignore
+        geo_entity.CountryName = "Unknown"  # type: ignore
+        geo_entity.State = "Unknown"  # type: ignore
+        geo_entity.City = "Unknown"  # type: ignore
+        geo_entity.Longitude = 0.0  # type: ignore
+        geo_entity.Latitude = 0.0  # type: ignore
 
         for ip_entity in ip_entities:
             if ip_entity.Location is None:
-                ip_entity.Location = geo_entity
+                ip_entity.Location = geo_entity  # type: ignore
 
         for ip_entity in ip_entities:
             if not (
