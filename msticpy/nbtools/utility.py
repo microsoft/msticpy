@@ -263,5 +263,5 @@ f_styles = {
     "italic": "font-style: italic",
     "red": "color: red",
     "large": "font-size: 130%",
-    "heading": "font-size: 200%"
+    "heading": "font-size: 200%",
 }
