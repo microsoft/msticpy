@@ -7,10 +7,10 @@
 import re
 import sys
 from pathlib import Path
-from typing import Callable, Optional, Any, Tuple
+from typing import Callable, Optional, Any, Tuple, Union, Iterable
 import warnings
 
-from IPython.core.display import display, HTML
+from IPython.core.display import display, HTML, Markdown
 import pandas as pd
 
 from .._version import VERSION
@@ -217,3 +217,51 @@ def resolve_pkg_path(part_path: str):
         warnings.warn(f"No path or ambiguous match for {part_path} not found")
         return None
     return str(searched_paths[0])
+
+
+def md(string: str, styles: Union[str, Iterable[str]] = None):
+    """
+    Return string as Markdown with optional style.
+
+    Parameters
+    ----------
+    string : str
+        The string to display
+    styles : Union[str, Iterable[str]], optional
+        A style mnemonic or collection of styles. If multiple styles,
+        these can be supplied as an interable of strings or a comma-separated
+        string, by default None
+
+    """
+    style_str = ""
+    if isinstance(styles, str):
+        if "," in styles:
+            styles = [style.strip() for style in styles.split(",")]
+        else:
+            style_str = f_styles.get(styles, "")
+    if isinstance(styles, list):
+        style_str = ";".join([f_styles.get(style, "") for style in styles])
+    display(Markdown(f"<p style='{style_str}'>{string}</p>"))
+
+
+def md_warn(string: str):
+    """
+    Return string as a warning - red text prefixed by "Warning".
+
+    Parameters
+    ----------
+    string : str
+        The warning message.
+
+    """
+    md(f"Warning: {string}", "bold, red, large")
+
+
+# Styles available to use in the above Markdown tools.
+f_styles = {
+    "bold": "font-weight: bold",
+    "italic": "font-style: italic",
+    "red": "color: red",
+    "large": "font-size: 130%",
+    "heading": "font-size: 200%"
+}

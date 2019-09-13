@@ -68,7 +68,7 @@ class FoliumMap:
         folium.TileLayer(name=title).add_to(self.folium_map)
 
     def _repr_html_(self):
-        """Return folium map."""
+        """Return folium map as HTML."""
         # pylint: disable=protected-access
         return self.folium_map._repr_html_()
         # pylint: enable=protected-access

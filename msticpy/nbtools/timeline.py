@@ -665,14 +665,11 @@ def _create_range_tool(
                 x=series_def["time_column"],
                 y="y_index",
                 color=series_def["color"],
-                source=series_def["source"]
+                source=series_def["source"],
             )
     elif isinstance(data, pd.DataFrame):
         rng_select.circle(
-            x=time_column,
-            y="y_index",
-            color="blue",
-            source=ColumnDataSource(data)
+            x=time_column, y="y_index", color="blue", source=ColumnDataSource(data)
         )
 
     range_tool = RangeTool(x_range=plot_range)
@@ -847,18 +844,16 @@ def display_timeline_values(  # noqa: C901, MC0001
             row_source = ColumnDataSource(graph_df[graph_df[group_by] == group_id])
             p_series = []
             plot_args = dict(
-                x=time_column,
-                color="color",
-                alpha=0.7,
-                source=row_source,
-                legend=inline_legend,
+                x=time_column, alpha=0.7, source=row_source, legend=inline_legend
             )
             if "vbar" in plot_kinds:
-                p_series.append(plot.vbar(top=y, width=4, **plot_args))
+                p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
             if "circle" in plot_kinds:
-                p_series.append(plot.circle(y=y, size=4, **plot_args))
+                p_series.append(plot.circle(y=y, size=4, color="color", **plot_args))
             if "line" in plot_kinds:
-                p_series.append(plot.line(y=y, line_width=4, **plot_args))
+                p_series.append(
+                    plot.line(y=y, line_width=4, line_color="color", **plot_args)
+                )
             if legend_column:
                 legend_label = graph_df[graph_df[group_by] == group_id][
                     legend_column
