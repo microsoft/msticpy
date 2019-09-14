@@ -28,11 +28,13 @@ def _get_tlds() -> Optional[List[str]]:
 
     """
     try:
-        resp = request.urlopen(_TLD_LIST)
-        txt_resp = resp.read().decode("utf-8", "ignore")
-        tld_set = set(txt_resp.split("\n")[1:])  # get rid of header
-        tld_set.remove("")  # get rid of blank values
-        return sorted(tld_set)
+        req = request.Request(_TLD_LIST)
+        with request.urlopen(req) as resp:
+            resp = request.urlopen(_TLD_LIST)
+            txt_resp = resp.read().decode("utf-8", "ignore")
+            tld_set = set(txt_resp.split("\n")[1:])  # get rid of header
+            tld_set.remove("")  # get rid of blank values
+            return sorted(tld_set)
     except (HTTPError, URLError) as err:
         warnings.warn(
             "Exception detected trying to retrieve IANA top-level domain list."

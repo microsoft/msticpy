@@ -61,9 +61,9 @@ Constructor
 
 .. parsed-literal::
 
-    
+
             Initialize TILookup instance.
-    
+
             Parameters
             ----------
             primary_providers : Optional[List[TIProvider]], optional
@@ -77,7 +77,8 @@ Methods
 
 * *add_provider()* - Add a TI provider to the current collection.
 * *available_providers()* - Return a list of builtin providers.
-* *list_available_providers()* - Print a list of builtin providers with optional usage.
+* *list_available_providers()* - Print a list of builtin providers with
+  optional usage.
 * *loaded_providers()* - Return dictionary of loaded providers.
 * *lookup_ioc()* - Lookup single IoC in active providers.
 * *lookup_iocs()* - Lookup a collection of IoCs.
@@ -113,7 +114,7 @@ Configuration File
 ------------------
 
 You **must** have a correctly configured ``msticpyconfig.yaml`` in
-order to use the TILookup module. In this file you specify the 
+order to use the TILookup module. In this file you specify the
 providers you want to load, any API keys that the provider services
 require. You can configure primary and secondary providers.
 
@@ -137,12 +138,12 @@ environment variable ``MSTICPYCONFIG``.
 
 If you need to create a config file, use the content shown below.
 The ``Provider`` key must correspond to an available Python class.
-The names of the built-in provider classes are shown in the 
+The names of the built-in provider classes are shown in the
 ``ti_lookup.available_providers`` property.
 
-Delete any provider entries from the example below that you do not want 
-to use and add the missing parameters for your providers. 
-Save the file as ``msticpyconfig.yaml``. 
+Delete any provider entries from the example below that you do not want
+to use and add the missing parameters for your providers.
+Save the file as ``msticpyconfig.yaml``.
 
 
 .. note:: If you have your Azure Sentinel workspace and tenant IDs configured
@@ -154,7 +155,7 @@ Save the file as ``msticpyconfig.yaml``.
 .. code:: yaml
 
     QueryDefinitions:
-    
+
     TIProviders:
       OTX:
         Args:
@@ -270,7 +271,7 @@ And show the output
 .. code:: ipython3
 
     result, details = ti_lookup.lookup_ioc(observable="38.75.137.9", providers=["OTX"])
-    
+
     print("Positive" if result else "Negative")
     # the details is a list (since there could be multiple responses for an IoC)
     for provider, detail in details:
@@ -278,7 +279,7 @@ And show the output
         detail.summary
         print("\nRaw Results")
         detail.raw_result_fmt
-    
+
 
 
 .. parsed-literal::
@@ -292,7 +293,7 @@ And show the output
         'references': [   [   'https://blog.malwarebytes.com/threat-analysis/2019/07/exploit-kits-summer-2019-review/']],
         'tags': [[]]}
     reference:  https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general
-    
+
     Raw Results
     { 'area_code': 0,
       'asn': 'AS63023 GTHost',
@@ -376,7 +377,7 @@ And show the output
       'type': 'IPv4',
       'type_title': 'IPv4',
       'whois': 'http://whois.domaintools.com/38.75.137.9'}
-    
+
 
 Or convert result to a DataFrame and let pandas do the display work…
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -394,11 +395,11 @@ Or convert result to a DataFrame and let pandas do the display work…
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -498,11 +499,11 @@ Lookup using all primary providers
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -589,76 +590,76 @@ such as geo-ip and passive-dns
 
     Primary providers
     -----------------
-    
+
     Provider class: OTX
     AlientVault OTX Lookup. Supported query types:
-    	ioc_type=dns
-    	ioc_type=dns, ioc_query_type=geo
-    	ioc_type=dns, ioc_query_type=passivedns
-    	ioc_type=file_hash
-    	ioc_type=hostname
-    	ioc_type=ipv4
-    	ioc_type=ipv4, ioc_query_type=geo
-    	ioc_type=ipv4, ioc_query_type=passivedns
-    	ioc_type=ipv6
-    	ioc_type=ipv6, ioc_query_type=geo
-    	ioc_type=ipv6, ioc_query_type=passivedns
-    	ioc_type=md5_hash
-    	ioc_type=sha1_hash
-    	ioc_type=sha256_hash
-    	ioc_type=url
-    
+      ioc_type=dns
+      ioc_type=dns, ioc_query_type=geo
+      ioc_type=dns, ioc_query_type=passivedns
+      ioc_type=file_hash
+      ioc_type=hostname
+      ioc_type=ipv4
+      ioc_type=ipv4, ioc_query_type=geo
+      ioc_type=ipv4, ioc_query_type=passivedns
+      ioc_type=ipv6
+      ioc_type=ipv6, ioc_query_type=geo
+      ioc_type=ipv6, ioc_query_type=passivedns
+      ioc_type=md5_hash
+      ioc_type=sha1_hash
+      ioc_type=sha256_hash
+      ioc_type=url
+
     Provider class: VirusTotal
     VirusTotal Lookup. Supported query types:
-    	ioc_type=dns
-    	ioc_type=file_hash
-    	ioc_type=ipv4
-    	ioc_type=md5_hash
-    	ioc_type=sha1_hash
-    	ioc_type=sha256_hash
-    	ioc_type=url
-    
+      ioc_type=dns
+      ioc_type=file_hash
+      ioc_type=ipv4
+      ioc_type=md5_hash
+      ioc_type=sha1_hash
+      ioc_type=sha256_hash
+      ioc_type=url
+
     Provider class: XForce
     IBM XForce Lookup. Supported query types:
-    	ioc_type=dns, ioc_query_type=info
-    	ioc_type=dns, ioc_query_type=passivedns
-    	ioc_type=dns, ioc_query_type=whois
-    	ioc_type=file_hash
-    	ioc_type=hostname, ioc_query_type=whois
-    	ioc_type=ipv4
-    	ioc_type=ipv4, ioc_query_type=malware
-    	ioc_type=ipv4, ioc_query_type=passivedns
-    	ioc_type=ipv4, ioc_query_type=rep
-    	ioc_type=ipv4, ioc_query_type=whois
-    	ioc_type=ipv6
-    	ioc_type=ipv6, ioc_query_type=malware
-    	ioc_type=ipv6, ioc_query_type=passivedns
-    	ioc_type=ipv6, ioc_query_type=rep
-    	ioc_type=ipv6, ioc_query_type=whois
-    	ioc_type=md5_hash
-    	ioc_type=sha1_hash
-    	ioc_type=sha256_hash
-    	ioc_type=url
-    	ioc_type=url, ioc_query_type=malware
-    
+      ioc_type=dns, ioc_query_type=info
+      ioc_type=dns, ioc_query_type=passivedns
+      ioc_type=dns, ioc_query_type=whois
+      ioc_type=file_hash
+      ioc_type=hostname, ioc_query_type=whois
+      ioc_type=ipv4
+      ioc_type=ipv4, ioc_query_type=malware
+      ioc_type=ipv4, ioc_query_type=passivedns
+      ioc_type=ipv4, ioc_query_type=rep
+      ioc_type=ipv4, ioc_query_type=whois
+      ioc_type=ipv6
+      ioc_type=ipv6, ioc_query_type=malware
+      ioc_type=ipv6, ioc_query_type=passivedns
+      ioc_type=ipv6, ioc_query_type=rep
+      ioc_type=ipv6, ioc_query_type=whois
+      ioc_type=md5_hash
+      ioc_type=sha1_hash
+      ioc_type=sha256_hash
+      ioc_type=url
+      ioc_type=url, ioc_query_type=malware
+
     Provider class: AzSTI
     Azure Sentinel TI provider class. Supported query types:
-    	ioc_type=dns
-    	ioc_type=file_hash
-    	ioc_type=hostname
-    	ioc_type=ipv4
-    	ioc_type=ipv6
-    	ioc_type=linux_path
-    	ioc_type=md5_hash
-    	ioc_type=sha1_hash
-    	ioc_type=sha256_hash
-    	ioc_type=url
-    	ioc_type=windows_path
-    
+      ioc_type=dns
+      ioc_type=file_hash
+      ioc_type=hostname
+      ioc_type=ipv4
+      ioc_type=ipv6
+      ioc_type=linux_path
+      ioc_type=md5_hash
+      ioc_type=sha1_hash
+      ioc_type=sha256_hash
+      ioc_type=url
+      ioc_type=windows_path
+
     Secondary providers
     -------------------
     none
-    
+
 
 Use to do a passive DNS lookup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -772,7 +773,7 @@ lookup_iocs
         "40.112.72.205",
         "40.113.200.201",
     ]
-    
+
     ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI")
 
 
@@ -783,11 +784,11 @@ lookup_iocs
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -904,11 +905,11 @@ Output sorted by IoC
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1021,11 +1022,11 @@ ignored
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1125,11 +1126,11 @@ ignored
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
