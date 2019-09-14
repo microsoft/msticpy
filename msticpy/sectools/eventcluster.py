@@ -409,7 +409,7 @@ def delim_count(
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\\s\-\\/\.,"\'\|&:;%$()]')
+        delimiters to use. (the default is r'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]')
 
     Returns
     -------
@@ -498,7 +498,7 @@ def delim_count_df(
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\s\-\\/\.,"\'|&:;%$()]')
+        delimiters to use. (the default is r\'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]\')
 
     Returns
     -------

@@ -17,12 +17,7 @@ from .._version import VERSION
 from .security_alert import SecurityAlert
 
 # pylint: disable=unused-import
-from .timeline import (  # noqa
-    display_timeline,
-    display_timeline_dict,
-    display_timeline_grouped,
-    display_timeline_values,
-)
+from .timeline import display_timeline, display_timeline_values  # noqa
 
 # pylint: enable=unused-import
 from .utility import export
@@ -105,7 +100,7 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
     px_spaces = 20 * level * 2
     txt_spaces = " " * (4 * int(level))
 
-    font_col = "red" if process_row.NodeRole == "source" else "white"
+    font_col = "red" if process_row.NodeRole == "source" else "inherit"
 
     if fmt.lower() == "html":
         l1_span = f'<span style="color:{font_col};font-size:90%">'
