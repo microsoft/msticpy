@@ -14,7 +14,7 @@ from urllib.error import HTTPError, URLError
 import warnings
 
 
-_TLD_LIST = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
+_TLD_LIST = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt"
 
 
 def _get_tlds() -> Optional[List[str]]:
@@ -29,8 +29,7 @@ def _get_tlds() -> Optional[List[str]]:
     """
     try:
         req = request.Request(_TLD_LIST)
-        with request.urlopen(req) as resp:
-            resp = request.urlopen(_TLD_LIST)
+        with request.urlopen(req) as resp:  # nosec - Hard-coded URL
             txt_resp = resp.read().decode("utf-8", "ignore")
             tld_set = set(txt_resp.split("\n")[1:])  # get rid of header
             tld_set.remove("")  # get rid of blank values
