@@ -15,6 +15,7 @@ from bokeh.models import (
     Label,
     Legend,
     RangeTool,
+    Title,
 )
 
 # pylint: disable=no-name-in-module
@@ -876,13 +877,20 @@ def _create_range_tool(
     ext_max = max_time + ((max_time - min_time) * 0.15)
     rng_select = figure(
         x_range=(ext_min, ext_max),
-        title="Drag the middle and edges of the selection box to change the range above",
+        title="Range Selector",
         plot_height=100,
         plot_width=width,
         x_axis_type="datetime",
         y_axis_type=None,
         tools="",
         toolbar_location=None,
+    )
+    help_str = (
+        "Drag the middle or edges of the selection box to change "
+        + "the range in the main chart"
+    )
+    rng_select.add_layout(
+        Title(text=help_str, align="right", text_font_size="10px"), "below"
     )
     rng_select.xaxis[0].formatter = _get_tick_formatter()
     if isinstance(data, dict):
