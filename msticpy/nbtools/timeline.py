@@ -673,7 +673,7 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
 
     if ref_event is not None:
         ref_time = getattr(ref_event, "StartTimeUtc", None)
-        if ref_time:
+        if not ref_time:
             ref_time = getattr(ref_event, "TimeGenerated", None)
     else:
         ref_time = kwargs.get("ref_time", None)
