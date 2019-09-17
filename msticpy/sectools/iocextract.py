@@ -551,12 +551,12 @@ class IoCExtract:
 
         """
         try:
-            tld_list = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
+            tld_list = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt"
             temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
-            return set(temp_df["TLD"])
+            return set(temp_df["TLD"].dropna())
         except (HTTPError, URLError):
             pass
-        # pylint: disable=broad-except, W0703
+        # pylint: disable=broad-except
         except Exception as err:
             warnings.warn(
                 "Exception detected trying to retrieve IANA top-level domain list."
@@ -564,7 +564,7 @@ class IoCExtract:
                 + f"{err.args}",
                 RuntimeWarning,
             )
-        # pylint: enable=broad-except, W0703
+        # pylint: enable=broad-except
         # if we failed to get the list try to read from a seed file
         return cls._read_tld_seed_file()
 

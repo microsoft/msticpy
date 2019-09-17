@@ -3,7 +3,7 @@ Other Documents
 
 .. toctree::
     :maxdepth: 1
-    
+
     JupyterAndSecurity.rst
 
     JupyterAndAzureSentinel.rst
@@ -11,4 +11,6 @@ Other Documents
     CollectingLinuxAuditLogs.rst
 
     TIProviders.rst
+
+    EventTimeline.rst
 

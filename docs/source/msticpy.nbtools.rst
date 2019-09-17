@@ -20,6 +20,14 @@ msticpy.nbtools.nbdisplay module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.timeline module
+-------------------------------
+
+.. automodule:: msticpy.nbtools.timeline
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.nbwidgets module
 --------------------------------
 

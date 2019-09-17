@@ -4,29 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-
-import json
-from json import JSONDecodeError
 import os
 import re
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, List, Mapping
+import json
+from json import JSONDecodeError
+from typing import Any, Callable, Dict, List, Mapping, Union
 
 import pandas as pd
 from IPython.display import display
 import ipywidgets as widgets
 from ipywidgets import Layout
 
+from .._version import VERSION
 from . import kql as qry
 from .query_defns import QueryParamProvider
 from .utility import export
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-lines
 class TimeUnit(Enum):
     """Time unit enumeration and value."""
 
@@ -519,7 +519,7 @@ class AlertSelector(QueryParamProvider):
     def _select_top_alert(self):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
-        if len(top_alert) == 1:
+        if not top_alert.empty:
             self.alert_id = top_alert.SystemAlertId
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
@@ -786,6 +786,7 @@ class SelectString:
         auto_display: bool = False,
         height: str = "100px",
         width: str = "50%",
+        display_filter: bool = True,
     ):
         """
         Select an item from a list or dict.
@@ -813,6 +814,8 @@ class SelectString:
             Selection list height (the default is '100px')
         width : str, optional
             Selection list width (the default is '50%')
+        display_filter : bool, optional
+            Whether to display item filter (the default is True)
 
         """
         if item_list:
@@ -826,15 +829,25 @@ class SelectString:
         else:
             raise ValueError("One of item_list or item_dict must be supplied.")
 
-        self.item_action = action
         self._wgt_select = widgets.Select(
             options=self._item_list,
             description=description,
             layout=Layout(width=width, height=height),
             style={"description_width": "initial"},
         )
+        self._display_filter = display_filter
+        if display_filter:
+            self._w_filter = widgets.Text(
+                value="", description="Filter:", style={"description_width": "initial"}
+            )
+
+            # set up observer callbacks
+            self._w_filter.observe(self._update_options, names="value")
         self._wgt_select.observe(self._select_item, names="value")
 
+        self.item_action = action
+        if self.item_action:
+            self._w_output = widgets.Output(layout={"border": "1px solid black"})
         if auto_display:
             self.display()
 
@@ -853,8 +866,217 @@ class SelectString:
             self.value = value
 
         if self.item_action is not None:
-            self.item_action(self.value)
+            self._w_output.clear_output()
+            with self._w_output:
+                self.item_action(self.value)
+
+    def _update_options(self, change):
+        """Filter the alert list by substring."""
+        if change is not None and "new" in change:
+            self._wgt_select.options = [
+                i for i in self._item_list if change["new"].lower() in i.lower()
+            ]
 
     def display(self):
         """Display the interactive widget."""
-        display(self._wgt_select)
+        self._show_top_item()
+        wgt_list = []
+        if self._display_filter:
+            wgt_list.append(self._w_filter)
+        wgt_list.append(self._wgt_select)
+        if self.item_action:
+            wgt_list.append(self._w_output)
+        display(widgets.VBox(wgt_list))
+
+    def _show_top_item(self):
+        """Run action on the first item by default."""
+        if self.item_action is not None and self.value:
+            self._w_output.clear_output()
+            with self._w_output:
+                self.item_action(self.value)
+
+
+@export
+class SelectSubset:
+    """
+    Class to select a subset from an input list.
+
+    Attributes
+    ----------
+    selected_values : List[Any]
+        The selected item values.
+    selected_items : List[Any]
+        The selected items label and value
+
+    """
+
+    def __init__(
+        self,
+        source_items: Union[Dict[str, str], List[Any]],
+        default_selected: Union[Dict[str, str], List[Any]] = None,
+        display_filter: bool = True,
+    ):
+        """
+        Create instance of SelectSubset widget.
+
+        Parameters
+        ----------
+        source_items : Union[Dict[str, str], List[Any]]
+            List of source items - either a dictionary(label, value),
+            a simple list or
+            a list of (label, value) tuples.
+        default_selected : Union[Dict[str, str], List[Any]]
+            Populate the selected list with values - either
+            a dictionary(label, value),
+            a simple list or
+            a list of (label, value) tuples.
+        display_filter : bool, optional
+            Whether to display item filter (the default is True)
+
+        """
+        if isinstance(source_items, dict):
+            source_items = [(label, val) for label, val in source_items.items()]
+
+        self.src_items = sorted(set(source_items))
+        if isinstance(self.src_items[0], tuple):
+            self._src_dict = {val: (label, val) for label, val in self.src_items}
+        else:
+            self._src_dict = {}
+
+        layout = widgets.Layout(width="40%", height="200px")
+        self._source_list = widgets.SelectMultiple(
+            options=sorted(set(self.src_items)), layout=layout, description="Source: "
+        )
+
+        if isinstance(default_selected, dict):
+            default_selected = [(label, val) for label, val in default_selected.items()]
+        if default_selected:
+            set_selected = set(default_selected)
+            selected_items = sorted(set_selected.intersection(source_items))
+        else:
+            selected_items = []
+
+        self._select_list = widgets.SelectMultiple(
+            options=selected_items, layout=layout, description="Selected: "
+        )
+
+        self._display_filter = display_filter
+        if display_filter:
+            self._w_filter = widgets.Text(
+                value="", description="Filter:", style={"description_width": "initial"}
+            )
+
+            # set up observer callbacks
+            self._w_filter.observe(self._update_options, names="value")
+
+        self._b_add_all = widgets.Button(description="Add All \u21fe")
+        self._b_add = widgets.Button(description="Add \u21fe")
+        self._b_del = widgets.Button(description="\u21fd Remove")
+        self._b_del_all = widgets.Button(description="\u21fd Remove All")
+
+        self._b_add.on_click(self._on_btn_add)
+        self._b_del.on_click(self._on_btn_del)
+        self._b_del_all.on_click(self._on_btn_del_all)
+        self._b_add_all.on_click(self._on_btn_add_all)
+
+        v_box = widgets.VBox(
+            [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
+        )
+        wgt_box = widgets.HBox([self._source_list, v_box, self._select_list])
+        if self._display_filter:
+            wgt_box = widgets.VBox([self._w_filter, wgt_box])
+        display(wgt_box)
+
+    @property
+    def selected_items(self) -> List[Any]:
+        """
+        Return a list of the selected items.
+
+        If the input list is a list of tuples, this returns
+        a list of the selected tuples.
+
+        Returns
+        -------
+        List[Any]
+            List of items in the selected list.
+
+        """
+        return list(self._select_list.options)
+
+    @property
+    def selected_values(self) -> List[Any]:
+        """
+        Return list of selected values.
+
+        If the input list is a list of tuples, this returns
+        a list of values of the items.
+
+        Returns
+        -------
+        List[Any]
+            List of selected item values.
+
+        """
+        if self._select_list.options and isinstance(
+            self._select_list.options[0], tuple
+        ):
+            return [item[1] for item in self._select_list.options]
+        return self.selected_items
+
+    def _update_options(self, change):
+        """Filter the alert list by substring."""
+        if change is not None and "new" in change:
+            self._source_list.options = sorted(
+                {
+                    i
+                    for i in self.src_items
+                    if str(change["new"]).lower() in str(i).lower()
+                }
+            )
+
+    # pylint: disable=not-an-iterable
+    def _on_btn_add(self, button):
+        del button
+        selected_set = set(self._select_list.options)
+        if self._src_dict:
+            for selected in self._source_list.value:
+                selected_set.add(self._src_dict[selected])
+        else:
+            for selected in self._source_list.value:
+                selected_set.add(selected)
+        self._select_list.options = sorted(list(selected_set))
+
+    def _on_btn_add_all(self, button):
+        del button
+        self._select_list.options = sorted(list(set(self._source_list.options)))
+
+    def _on_btn_del(self, button):
+        del button
+        selected_set = set(self._select_list.options)
+        # save the current index
+        cur_index = max(self._select_list.index)
+        if selected_set:
+            if self._src_dict:
+                # if we're working with tuples, we need to specify the tuple to remove
+                for selected in self._select_list.value:
+                    selected_set.remove(self._src_dict[selected])
+            else:
+                # else just delete the value
+                for selected in self._select_list.value:
+                    selected_set.remove(selected)
+            self._select_list.options = sorted(list(selected_set))
+        if not self._select_list.options:
+            return
+        # try to set the index to the next item in the list
+        if cur_index < len(self._select_list.options):
+            next_item = cur_index if cur_index else 0
+            self._select_list.index = tuple([next_item])
+        else:
+            last_item = max(len(self._select_list.options) - 1, 0)
+            self._select_list.index = tuple([last_item])
+
+    # pylint: enable=not-an-iterable
+
+    def _on_btn_del_all(self, button):
+        del button
+        self._select_list.options = []

@@ -9,7 +9,6 @@ entityschema module.
 Module for V3 Entities class
 """
 from ipaddress import ip_address, IPv4Address, IPv6Address
-import json
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -148,27 +147,23 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return repr of entity."""
-        return json.dumps(self._to_dict(self), default=self._jdump_default)
+        params = ", ".join(
+            [f"{name}={val}" for name, val in self.properties.items() if val]
+        )
+        if len(params) > 80:
+            params = params[:80] + "..."
+        return f"{self.__class__.__name__}({params})"
 
     def _to_dict(self, entity) -> dict:
         """Return as simple nested dictionary."""
         ent_dict = {}
         for prop, val in entity.properties.items():
-            if val:
+            if val is not None:
                 if isinstance(val, Entity):
                     ent_dict[prop] = self._to_dict(val)
                 else:
                     ent_dict[prop] = val
         return ent_dict
-
-    @staticmethod
-    def _jdump_default(o):
-        """
-        json.dumps default method.
-
-        Allows it to work (at least not fail) on non-serializable types.
-        """
-        return o.__dict__
 
     @property
     def properties(self) -> dict:

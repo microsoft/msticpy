@@ -6,9 +6,11 @@
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
 import sys
-from typing import Callable, Optional, Any, Tuple
+from pathlib import Path
+from typing import Callable, Optional, Any, Tuple, Union, Iterable
+import warnings
 
-from IPython.core.display import display, HTML
+from IPython.core.display import display, HTML, Markdown
 import pandas as pd
 
 from .._version import VERSION
@@ -188,3 +190,79 @@ def check_py_version(min_ver: Tuple = (3, 6)):
         raise SystemExit(
             "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
         )
+
+
+@export
+def resolve_pkg_path(part_path: str):
+    """
+    Resolve a path relative to the package.
+
+    Parameters
+    ----------
+    part_path : str
+        Absolute or relative path to resolve.
+
+    """
+    if Path(part_path).is_absolute():
+        return part_path
+
+    resolved_path = str(Path(__file__).resolve().parent.joinpath(part_path))
+    if Path(resolved_path).exists():
+        return str(resolved_path)
+
+    searched_paths = list(
+        Path(__file__).resolve().parent.glob(str(Path("**").joinpath(part_path)))
+    )
+    if not searched_paths or len(searched_paths) > 1:
+        warnings.warn(f"No path or ambiguous match for {part_path} not found")
+        return None
+    return str(searched_paths[0])
+
+
+# pylint: disable=invalid-name
+def md(string: str, styles: Union[str, Iterable[str]] = None):
+    """
+    Return string as Markdown with optional style.
+
+    Parameters
+    ----------
+    string : str
+        The string to display
+    styles : Union[str, Iterable[str]], optional
+        A style mnemonic or collection of styles. If multiple styles,
+        these can be supplied as an interable of strings or a comma-separated
+        string, by default None
+
+    """
+    style_str = ""
+    if isinstance(styles, str):
+        if "," in styles:
+            styles = [style.strip() for style in styles.split(",")]
+        else:
+            style_str = _F_STYLES.get(styles, "")
+    if isinstance(styles, list):
+        style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
+    display(Markdown(f"<p style='{style_str}'>{string}</p>"))
+
+
+def md_warn(string: str):
+    """
+    Return string as a warning - red text prefixed by "Warning".
+
+    Parameters
+    ----------
+    string : str
+        The warning message.
+
+    """
+    md(f"Warning: {string}", "bold, red, large")
+
+
+# Styles available to use in the above Markdown tools.
+_F_STYLES = {
+    "bold": "font-weight: bold",
+    "italic": "font-style: italic",
+    "red": "color: red",
+    "large": "font-size: 130%",
+    "heading": "font-size: 200%",
+}
