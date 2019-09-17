@@ -1,6 +1,23 @@
 repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: check-json
+    -   id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
 -   repo: https://github.com/ambv/black
     rev: stable
     hooks:
     - id: black
-      language_version: python3.6
+      language: python
+      language_version: python3.7
+-   repo: local
+    hooks:
+    - id: download_tlds
+      name: download_tlds
+      entry: python -m pre-commit.download_tlds
+      pass_filenames: False
+      language: python
+      types: [python]
+      args: [--tld-seed=./msticpy/sectools/tld_seed.txt]

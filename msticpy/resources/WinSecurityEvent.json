@@ -1,0 +1,2613 @@
+[
+	{
+		"category": "Account Logon",
+		"subcategory": "Credential Validation",
+		"event_id": 4774,
+		"description": "An account was mapped for logon. ",
+		"full_desc": "4774: An account was mapped for logon. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Credential Validation",
+		"event_id": 4775,
+		"description": "An account could not be mapped for logon. ",
+		"full_desc": "4775: An account could not be mapped for logon. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Credential Validation",
+		"event_id": 4776,
+		"description": "The computer attempted to validate the credentials for an account.",
+		"full_desc": "4776: The computer attempted to validate the credentials for an account."
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Credential Validation",
+		"event_id": 4777,
+		"description": "The domain controller failed to validate the credentials for an account. ",
+		"full_desc": "4777: The domain controller failed to validate the credentials for an account. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Authentication Service",
+		"event_id": 4768,
+		"description": "A Kerberos authentication ticket (TGT) was requested. ",
+		"full_desc": "4768: A Kerberos authentication ticket (TGT) was requested. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Authentication Service",
+		"event_id": 4771,
+		"description": "Kerberos pre-authentication failed. ",
+		"full_desc": "4771: Kerberos pre-authentication failed. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Authentication Service",
+		"event_id": 4772,
+		"description": "A Kerberos authentication ticket request failed. ",
+		"full_desc": "4772: A Kerberos authentication ticket request failed. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Service Ticket Operations",
+		"event_id": 4769,
+		"description": "A Kerberos service ticket was requested. ",
+		"full_desc": "4769: A Kerberos service ticket was requested. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Service Ticket Operations",
+		"event_id": 4770,
+		"description": "A Kerberos service ticket was renewed. ",
+		"full_desc": "4770: A Kerberos service ticket was renewed. "
+	},
+	{
+		"category": "Account Logon",
+		"subcategory": "Kerberos Service Ticket Operations",
+		"event_id": 4773,
+		"description": "A Kerberos service ticket request failed. ",
+		"full_desc": "4773: A Kerberos service ticket request failed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4783,
+		"description": "A basic application group was created. ",
+		"full_desc": "4783: A basic application group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4784,
+		"description": "A basic application group was changed. ",
+		"full_desc": "4784: A basic application group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4785,
+		"description": "A member was added to a basic application group. ",
+		"full_desc": "4785: A member was added to a basic application group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4786,
+		"description": "A member was removed from a basic application group. ",
+		"full_desc": "4786: A member was removed from a basic application group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4787,
+		"description": "A non-member was added to a basic application group. ",
+		"full_desc": "4787: A non-member was added to a basic application group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4788,
+		"description": "A non-member was removed from a basic application group. ",
+		"full_desc": "4788: A non-member was removed from a basic application group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4789,
+		"description": "A basic application group was deleted. ",
+		"full_desc": "4789: A basic application group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4790,
+		"description": "An LDAP query group was created. ",
+		"full_desc": "4790: An LDAP query group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4791,
+		"description": "A basic application group was changed. ",
+		"full_desc": "4791: A basic application group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Application Group Management",
+		"event_id": 4792,
+		"description": "An LDAP query group was deleted. ",
+		"full_desc": "4792: An LDAP query group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Computer Account Management",
+		"event_id": 4741,
+		"description": "A computer account was created. ",
+		"full_desc": "4741: A computer account was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Computer Account Management",
+		"event_id": 4742,
+		"description": "A computer account was changed. ",
+		"full_desc": "4742: A computer account was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Computer Account Management",
+		"event_id": 4743,
+		"description": "A computer account was deleted. ",
+		"full_desc": "4743: A computer account was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4744,
+		"description": "A security-disabled local group was created. ",
+		"full_desc": "4744: A security-disabled local group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4745,
+		"description": "A security-disabled local group was changed. ",
+		"full_desc": "4745: A security-disabled local group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4746,
+		"description": "A member was added to a security-disabled local group. ",
+		"full_desc": "4746: A member was added to a security-disabled local group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4747,
+		"description": "A member was removed from a security-disabled local group. ",
+		"full_desc": "4747: A member was removed from a security-disabled local group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4748,
+		"description": "A security-disabled local group was deleted. ",
+		"full_desc": "4748: A security-disabled local group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4749,
+		"description": "A security-disabled global group was created. ",
+		"full_desc": "4749: A security-disabled global group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4750,
+		"description": "A security-disabled global group was changed. ",
+		"full_desc": "4750: A security-disabled global group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4751,
+		"description": "A member was added to a security-disabled global group. ",
+		"full_desc": "4751: A member was added to a security-disabled global group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4752,
+		"description": "A member was removed from a security-disabled global group. ",
+		"full_desc": "4752: A member was removed from a security-disabled global group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4753,
+		"description": "A security-disabled global group was deleted. ",
+		"full_desc": "4753: A security-disabled global group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4759,
+		"description": "A security-disabled universal group was created. ",
+		"full_desc": "4759: A security-disabled universal group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4760,
+		"description": "A security-disabled universal group was changed. ",
+		"full_desc": "4760: A security-disabled universal group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4761,
+		"description": "A member was added to a security-disabled universal group. ",
+		"full_desc": "4761: A member was added to a security-disabled universal group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Distribution Group Management",
+		"event_id": 4762,
+		"description": "A member was removed from a security-disabled universal group. ",
+		"full_desc": "4762: A member was removed from a security-disabled universal group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Other Account Management Events",
+		"event_id": 4782,
+		"description": "The password hash an account was accessed. ",
+		"full_desc": "4782: The password hash an account was accessed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Other Account Management Events",
+		"event_id": 4793,
+		"description": "The Password Policy Checking API was called. ",
+		"full_desc": "4793: The Password Policy Checking API was called. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4727,
+		"description": "A security-enabled global group was created. ",
+		"full_desc": "4727: A security-enabled global group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4728,
+		"description": "A member was added to a security-enabled global group. ",
+		"full_desc": "4728: A member was added to a security-enabled global group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4729,
+		"description": "A member was removed from a security-enabled global group. ",
+		"full_desc": "4729: A member was removed from a security-enabled global group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4730,
+		"description": "A security-enabled global group was deleted. ",
+		"full_desc": "4730: A security-enabled global group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4731,
+		"description": "A security-enabled local group was created. ",
+		"full_desc": "4731: A security-enabled local group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4732,
+		"description": "A member was added to a security-enabled local group. ",
+		"full_desc": "4732: A member was added to a security-enabled local group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4733,
+		"description": "A member was removed from a security-enabled local group. ",
+		"full_desc": "4733: A member was removed from a security-enabled local group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4734,
+		"description": "A security-enabled local group was deleted. ",
+		"full_desc": "4734: A security-enabled local group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4735,
+		"description": "A security-enabled local group was changed. ",
+		"full_desc": "4735: A security-enabled local group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4737,
+		"description": "A security-enabled global group was changed. ",
+		"full_desc": "4737: A security-enabled global group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4754,
+		"description": "A security-enabled universal group was created. ",
+		"full_desc": "4754: A security-enabled universal group was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4755,
+		"description": "A security-enabled universal group was changed. ",
+		"full_desc": "4755: A security-enabled universal group was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4756,
+		"description": "A member was added to a security-enabled universal group. ",
+		"full_desc": "4756: A member was added to a security-enabled universal group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4757,
+		"description": "A member was removed from a security-enabled universal group. ",
+		"full_desc": "4757: A member was removed from a security-enabled universal group. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4758,
+		"description": "A security-enabled universal group was deleted. ",
+		"full_desc": "4758: A security-enabled universal group was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "Security Group Management",
+		"event_id": 4764,
+		"description": "A groupâ€™s type was changed. ",
+		"full_desc": "4764: A groupâ€™s type was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4720,
+		"description": "A user account was created. ",
+		"full_desc": "4720: A user account was created. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4722,
+		"description": "A user account was enabled. ",
+		"full_desc": "4722: A user account was enabled. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4723,
+		"description": "An attempt was made to change an account's password. ",
+		"full_desc": "4723: An attempt was made to change an account's password. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4724,
+		"description": "An attempt was made to reset an account's password. ",
+		"full_desc": "4724: An attempt was made to reset an account's password. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4725,
+		"description": "A user account was disabled. ",
+		"full_desc": "4725: A user account was disabled. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4726,
+		"description": "A user account was deleted. ",
+		"full_desc": "4726: A user account was deleted. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4738,
+		"description": "A user account was changed. ",
+		"full_desc": "4738: A user account was changed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4740,
+		"description": "A user account was locked out. ",
+		"full_desc": "4740: A user account was locked out. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4765,
+		"description": "SID History was added to an account. ",
+		"full_desc": "4765: SID History was added to an account. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4766,
+		"description": "An attempt to add SID History to an account failed. ",
+		"full_desc": "4766: An attempt to add SID History to an account failed. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4767,
+		"description": "A user account was unlocked. ",
+		"full_desc": "4767: A user account was unlocked. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4780,
+		"description": "The ACL was set on accounts which are members of administrators groups. ",
+		"full_desc": "4780: The ACL was set on accounts which are members of administrators groups. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4781,
+		"description": "The name of an account was changed: ",
+		"full_desc": "4781: The name of an account was changed: "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 4794,
+		"description": "An attempt was made to set the Directory Services Restore Mode. ",
+		"full_desc": "4794: An attempt was made to set the Directory Services Restore Mode. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 5376,
+		"description": "Credential Manager credentials were backed up. ",
+		"full_desc": "5376: Credential Manager credentials were backed up. "
+	},
+	{
+		"category": "Account Management",
+		"subcategory": "User Account Management",
+		"event_id": 5377,
+		"description": "Credential Manager credentials were restored from a backup. ",
+		"full_desc": "5377: Credential Manager credentials were restored from a backup. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "DPAPI Activity",
+		"event_id": 4692,
+		"description": "Backup of data protection master key was attempted. ",
+		"full_desc": "4692: Backup of data protection master key was attempted. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "DPAPI Activity",
+		"event_id": 4693,
+		"description": "Recovery of data protection master key was attempted. ",
+		"full_desc": "4693: Recovery of data protection master key was attempted. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "DPAPI Activity",
+		"event_id": 4694,
+		"description": "Protection of auditable protected data was attempted. ",
+		"full_desc": "4694: Protection of auditable protected data was attempted. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "DPAPI Activity",
+		"event_id": 4695,
+		"description": "Unprotection of auditable protected data was attempted. ",
+		"full_desc": "4695: Unprotection of auditable protected data was attempted. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "Process Creation",
+		"event_id": 4688,
+		"description": "A new process has been created. ",
+		"full_desc": "4688: A new process has been created. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "Process Creation",
+		"event_id": 4696,
+		"description": "A primary token was assigned to process. ",
+		"full_desc": "4696: A primary token was assigned to process. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "Process Termination",
+		"event_id": 4689,
+		"description": "A process has exited. ",
+		"full_desc": "4689: A process has exited. "
+	},
+	{
+		"category": "Detailed Tracking",
+		"subcategory": "RPC Events",
+		"event_id": 5712,
+		"description": " A Remote Procedure Call (RPC) was attempted. ",
+		"full_desc": "5712:  A Remote Procedure Call (RPC) was attempted. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4928,
+		"description": "An Active Directory replica source naming context was established. ",
+		"full_desc": "4928: An Active Directory replica source naming context was established. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4929,
+		"description": "An Active Directory replica source naming context was removed. ",
+		"full_desc": "4929: An Active Directory replica source naming context was removed. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4930,
+		"description": "An Active Directory replica source naming context was modified. ",
+		"full_desc": "4930: An Active Directory replica source naming context was modified. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4931,
+		"description": "An Active Directory replica destination naming context was modified. ",
+		"full_desc": "4931: An Active Directory replica destination naming context was modified. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4934,
+		"description": "Attributes of an Active Directory object were replicated. ",
+		"full_desc": "4934: Attributes of an Active Directory object were replicated. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4935,
+		"description": "Replication failure begins. ",
+		"full_desc": "4935: Replication failure begins. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4936,
+		"description": "Replication failure ends. ",
+		"full_desc": "4936: Replication failure ends. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Detailed Directory Service Replication",
+		"event_id": 4937,
+		"description": "A lingering object was removed from a replica. ",
+		"full_desc": "4937: A lingering object was removed from a replica. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Access",
+		"event_id": 4662,
+		"description": " An operation was performed on an object. ",
+		"full_desc": "4662:  An operation was performed on an object. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Changes",
+		"event_id": 5136,
+		"description": "A directory service object was modified. ",
+		"full_desc": "5136: A directory service object was modified. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Changes",
+		"event_id": 5137,
+		"description": "A directory service object was created. ",
+		"full_desc": "5137: A directory service object was created. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Changes",
+		"event_id": 5138,
+		"description": "A directory service object was undeleted. ",
+		"full_desc": "5138: A directory service object was undeleted. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Changes",
+		"event_id": 5139,
+		"description": "A directory service object was moved. ",
+		"full_desc": "5139: A directory service object was moved. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Changes",
+		"event_id": 5141,
+		"description": " A directory service object was deleted. ",
+		"full_desc": "5141:  A directory service object was deleted. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Replication",
+		"event_id": 4932,
+		"description": "Synchronization of a replica of an Active Directory naming context has begun. ",
+		"full_desc": "4932: Synchronization of a replica of an Active Directory naming context has begun. "
+	},
+	{
+		"category": "DS Access",
+		"subcategory": "Directory Service Replication",
+		"event_id": 4933,
+		"description": "Synchronization of a replica of an Active Directory naming context has ended. ",
+		"full_desc": "4933: Synchronization of a replica of an Active Directory naming context has ended. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4978,
+		"description": "During extended mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation.",
+		"full_desc": "4978: During extended mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4979,
+		"description": "IPsec main mode and extended mode security associations were established.",
+		"full_desc": "4979: IPsec main mode and extended mode security associations were established."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4980,
+		"description": "IPsec main mode and extended mode security associations were established.",
+		"full_desc": "4980: IPsec main mode and extended mode security associations were established."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4981,
+		"description": "IPsec main mode and extended mode security associations were established.",
+		"full_desc": "4981: IPsec main mode and extended mode security associations were established."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4982,
+		"description": "IPsec main mode and extended mode security associations were established.",
+		"full_desc": "4982: IPsec main mode and extended mode security associations were established."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4983,
+		"description": "An IPsec extended mode negotiation failed. The corresponding main mode security association has been deleted.",
+		"full_desc": "4983: An IPsec extended mode negotiation failed. The corresponding main mode security association has been deleted."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Extended Mode",
+		"event_id": 4984,
+		"description": "An IPsec extended mode negotiation failed. The corresponding main mode security association has been deleted.",
+		"full_desc": "4984: An IPsec extended mode negotiation failed. The corresponding main mode security association has been deleted."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4646,
+		"description": "IKE DoS-prevention mode started. ",
+		"full_desc": "4646: IKE DoS-prevention mode started. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4650,
+		"description": "An IPsec main mode security association was established. Extended mode was not enabled. Certificate authentication was not used.",
+		"full_desc": "4650: An IPsec main mode security association was established. Extended mode was not enabled. Certificate authentication was not used."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4651,
+		"description": "An IPsec main mode security association was established. Extended mode was not enabled. A certificate was used for authentication.",
+		"full_desc": "4651: An IPsec main mode security association was established. Extended mode was not enabled. A certificate was used for authentication."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4652,
+		"description": "An IPsec main mode negotiation failed.",
+		"full_desc": "4652: An IPsec main mode negotiation failed."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4653,
+		"description": "An IPsec main mode negotiation failed.",
+		"full_desc": "4653: An IPsec main mode negotiation failed."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4655,
+		"description": "An IPsec main mode security association ended.",
+		"full_desc": "4655: An IPsec main mode security association ended."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 4976,
+		"description": "During main mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation.",
+		"full_desc": "4976: During main mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 5049,
+		"description": "An IPsec security association was deleted.",
+		"full_desc": "5049: An IPsec security association was deleted."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Main Mode",
+		"event_id": 5453,
+		"description": "IPsec Policy Agent applied Active Directory storage IPsec policy on the computer.",
+		"full_desc": "5453: IPsec Policy Agent applied Active Directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Quick Mode",
+		"event_id": 4654,
+		"description": "An IPsec quick mode negotiation failed.",
+		"full_desc": "4654: An IPsec quick mode negotiation failed."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Quick Mode",
+		"event_id": 4977,
+		"description": "During quick mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation.",
+		"full_desc": "4977: During quick mode negotiation, IPsec received an invalid negotiation packet. If this problem persists, it could indicate a network issue or an attempt to modify or replay this negotiation."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Quick Mode",
+		"event_id": 5451,
+		"description": "An IPsec quick mode security association was established.",
+		"full_desc": "5451: An IPsec quick mode security association was established."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "IPsec Quick Mode",
+		"event_id": 5452,
+		"description": "An IPsec quick mode security association ended.",
+		"full_desc": "5452: An IPsec quick mode security association ended."
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logoff",
+		"event_id": 4634,
+		"description": " An account was logged off. ",
+		"full_desc": "4634:  An account was logged off. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logoff",
+		"event_id": 4647,
+		"description": " User initiated logoff. ",
+		"full_desc": "4647:  User initiated logoff. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logon",
+		"event_id": 4624,
+		"description": "An account was successfully logged on. ",
+		"full_desc": "4624: An account was successfully logged on. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logon",
+		"event_id": 4625,
+		"description": "An account failed to log on. ",
+		"full_desc": "4625: An account failed to log on. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logon",
+		"event_id": 4648,
+		"description": "A logon was attempted using explicit credentials. ",
+		"full_desc": "4648: A logon was attempted using explicit credentials. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Logon",
+		"event_id": 4675,
+		"description": "SIDs were filtered. ",
+		"full_desc": "4675: SIDs were filtered. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6272,
+		"description": "Network Policy Server granted access to a user. ",
+		"full_desc": "6272: Network Policy Server granted access to a user. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6273,
+		"description": "Network Policy Server denied access to a user. ",
+		"full_desc": "6273: Network Policy Server denied access to a user. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6274,
+		"description": "Network Policy Server discarded the request for a user. ",
+		"full_desc": "6274: Network Policy Server discarded the request for a user. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6275,
+		"description": "Network Policy Server discarded the accounting request for a user. ",
+		"full_desc": "6275: Network Policy Server discarded the accounting request for a user. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6276,
+		"description": "Network Policy Server quarantined a user. ",
+		"full_desc": "6276: Network Policy Server quarantined a user. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6277,
+		"description": "Network Policy Server granted access to a user but put it on probation because the host did not meet the defined health policy. ",
+		"full_desc": "6277: Network Policy Server granted access to a user but put it on probation because the host did not meet the defined health policy. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6278,
+		"description": "Network Policy Server granted full access to a user because the host met the defined health policy. ",
+		"full_desc": "6278: Network Policy Server granted full access to a user because the host met the defined health policy. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6279,
+		"description": "Network Policy Server locked the user account due to repeated failed authentication attempts. ",
+		"full_desc": "6279: Network Policy Server locked the user account due to repeated failed authentication attempts. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Network Policy Server",
+		"event_id": 6280,
+		"description": "Network Policy Server unlocked the user account. ",
+		"full_desc": "6280: Network Policy Server unlocked the user account. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4649,
+		"description": "A replay attack was detected. ",
+		"full_desc": "4649: A replay attack was detected. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4778,
+		"description": "A session was reconnected to a Window Station. ",
+		"full_desc": "4778: A session was reconnected to a Window Station. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4779,
+		"description": "A session was disconnected from a Window Station. ",
+		"full_desc": "4779: A session was disconnected from a Window Station. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4800,
+		"description": "The workstation was locked. ",
+		"full_desc": "4800: The workstation was locked. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4801,
+		"description": "The workstation was unlocked. ",
+		"full_desc": "4801: The workstation was unlocked. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4802,
+		"description": "The screen saver was invoked. ",
+		"full_desc": "4802: The screen saver was invoked. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 4803,
+		"description": "The screen saver was dismissed. ",
+		"full_desc": "4803: The screen saver was dismissed. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 5378,
+		"description": "The requested credentials delegation was disallowed by policy. ",
+		"full_desc": "5378: The requested credentials delegation was disallowed by policy. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 5632,
+		"description": "A request was made to authenticate to a wireless network. ",
+		"full_desc": "5632: A request was made to authenticate to a wireless network. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Other Logon/Logoff Events",
+		"event_id": 5633,
+		"description": "A request was made to authenticate to a wired network. ",
+		"full_desc": "5633: A request was made to authenticate to a wired network. "
+	},
+	{
+		"category": "Logon/Logoff",
+		"subcategory": "Special Logon",
+		"event_id": 4964,
+		"description": " Special groups have been assigned to a new logon. ",
+		"full_desc": "4964:  Special groups have been assigned to a new logon. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Application Generated",
+		"event_id": 4665,
+		"description": "An attempt was made to create an application client context. ",
+		"full_desc": "4665: An attempt was made to create an application client context. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Application Generated",
+		"event_id": 4666,
+		"description": "An application attempted an operation: ",
+		"full_desc": "4666: An application attempted an operation: "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Application Generated",
+		"event_id": 4667,
+		"description": "An application client context was deleted. ",
+		"full_desc": "4667: An application client context was deleted. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Application Generated",
+		"event_id": 4668,
+		"description": "An application was initialized. ",
+		"full_desc": "4668: An application was initialized. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4868,
+		"description": "The certificate manager denied a pending certificate request. ",
+		"full_desc": "4868: The certificate manager denied a pending certificate request. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4869,
+		"description": "Certificate Services received a resubmitted certificate request. ",
+		"full_desc": "4869: Certificate Services received a resubmitted certificate request. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4870,
+		"description": "Certificate Services revoked a certificate. ",
+		"full_desc": "4870: Certificate Services revoked a certificate. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4871,
+		"description": "Certificate Services received a request to publish the certificate revocation list (CRL). ",
+		"full_desc": "4871: Certificate Services received a request to publish the certificate revocation list (CRL). "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4872,
+		"description": "Certificate Services published the certificate revocation list (CRL). ",
+		"full_desc": "4872: Certificate Services published the certificate revocation list (CRL). "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4873,
+		"description": "A certificate request extension changed. ",
+		"full_desc": "4873: A certificate request extension changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4874,
+		"description": "One or more certificate request attributes changed. ",
+		"full_desc": "4874: One or more certificate request attributes changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4875,
+		"description": "Certificate Services received a request to shut down. ",
+		"full_desc": "4875: Certificate Services received a request to shut down. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4876,
+		"description": "Certificate Services backup started. ",
+		"full_desc": "4876: Certificate Services backup started. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4877,
+		"description": "Certificate Services backup completed. ",
+		"full_desc": "4877: Certificate Services backup completed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4878,
+		"description": "Certificate Services restore started. ",
+		"full_desc": "4878: Certificate Services restore started. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4879,
+		"description": "Certificate Services restore completed. ",
+		"full_desc": "4879: Certificate Services restore completed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4880,
+		"description": "Certificate Services started. ",
+		"full_desc": "4880: Certificate Services started. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4881,
+		"description": "Certificate Services stopped. ",
+		"full_desc": "4881: Certificate Services stopped. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4882,
+		"description": "The security permissions for Certificate Services changed. ",
+		"full_desc": "4882: The security permissions for Certificate Services changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4883,
+		"description": "Certificate Services retrieved an archived key. ",
+		"full_desc": "4883: Certificate Services retrieved an archived key. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4884,
+		"description": "Certificate Services imported a certificate into its database. ",
+		"full_desc": "4884: Certificate Services imported a certificate into its database. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4885,
+		"description": "The audit filter for Certificate Services changed. ",
+		"full_desc": "4885: The audit filter for Certificate Services changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4886,
+		"description": "Certificate Services received a certificate request. ",
+		"full_desc": "4886: Certificate Services received a certificate request. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4887,
+		"description": "Certificate Services approved a certificate request and issued a certificate. ",
+		"full_desc": "4887: Certificate Services approved a certificate request and issued a certificate. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4888,
+		"description": "Certificate Services denied a certificate request. ",
+		"full_desc": "4888: Certificate Services denied a certificate request. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4889,
+		"description": "Certificate Services set the status of a certificate request to pending. ",
+		"full_desc": "4889: Certificate Services set the status of a certificate request to pending. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4890,
+		"description": "The certificate manager settings for Certificate Services changed. ",
+		"full_desc": "4890: The certificate manager settings for Certificate Services changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4891,
+		"description": "A configuration entry changed in Certificate Services. ",
+		"full_desc": "4891: A configuration entry changed in Certificate Services. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4892,
+		"description": "A property of Certificate Services changed. ",
+		"full_desc": "4892: A property of Certificate Services changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4893,
+		"description": "Certificate Services archived a key. ",
+		"full_desc": "4893: Certificate Services archived a key. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4894,
+		"description": "Certificate Services imported and archived a key. ",
+		"full_desc": "4894: Certificate Services imported and archived a key. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4895,
+		"description": "Certificate Services published the CA certificate to Active Directory Domain Services. ",
+		"full_desc": "4895: Certificate Services published the CA certificate to Active Directory Domain Services. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4896,
+		"description": "One or more rows have been deleted from the certificate database. ",
+		"full_desc": "4896: One or more rows have been deleted from the certificate database. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4897,
+		"description": "Role separation enabled: ",
+		"full_desc": "4897: Role separation enabled: "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4898,
+		"description": "Certificate Services loaded a template. ",
+		"full_desc": "4898: Certificate Services loaded a template. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4899,
+		"description": "A Certificate Services template was updated. ",
+		"full_desc": "4899: A Certificate Services template was updated. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 4900,
+		"description": "Certificate Services template security was updated. ",
+		"full_desc": "4900: Certificate Services template security was updated. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5120,
+		"description": "OCSP Responder Service Started. ",
+		"full_desc": "5120: OCSP Responder Service Started. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5121,
+		"description": "OCSP Responder Service Stopped. ",
+		"full_desc": "5121: OCSP Responder Service Stopped. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5122,
+		"description": "A Configuration entry changed in the OCSP Responder Service. ",
+		"full_desc": "5122: A Configuration entry changed in the OCSP Responder Service. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5123,
+		"description": "A configuration entry changed in the OCSP Responder Service. ",
+		"full_desc": "5123: A configuration entry changed in the OCSP Responder Service. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5124,
+		"description": "A security setting was updated on OCSP Responder Service. ",
+		"full_desc": "5124: A security setting was updated on OCSP Responder Service. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5125,
+		"description": "A request was submitted to OCSP Responder Service. ",
+		"full_desc": "5125: A request was submitted to OCSP Responder Service. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5126,
+		"description": "Signing Certificate was automatically updated by the OCSP Responder Service. ",
+		"full_desc": "5126: Signing Certificate was automatically updated by the OCSP Responder Service. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Certification Services",
+		"event_id": 5127,
+		"description": "The OCSP Revocation Provider successfully updated the revocation information. ",
+		"full_desc": "5127: The OCSP Revocation Provider successfully updated the revocation information. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Detailed File Share",
+		"event_id": 5145,
+		"description": " A network share object was checked to see whether the client can be granted desired access. ",
+		"full_desc": "5145:  A network share object was checked to see whether the client can be granted desired access. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File Share",
+		"event_id": 5140,
+		"description": "A network share object was accessed. ",
+		"full_desc": "5140: A network share object was accessed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File Share",
+		"event_id": 5142,
+		"description": "A network share object was added.",
+		"full_desc": "5142: A network share object was added."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File Share",
+		"event_id": 5143,
+		"description": "A network share object was modified. ",
+		"full_desc": "5143: A network share object was modified. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File Share",
+		"event_id": 5144,
+		"description": "A network share object was deleted.",
+		"full_desc": "5144: A network share object was deleted."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File Share",
+		"event_id": 5168,
+		"description": "Spn check for SMB/SMB2 failed.",
+		"full_desc": "5168: Spn check for SMB/SMB2 failed."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File System",
+		"event_id": 4664,
+		"description": "An attempt was made to create a hard link. ",
+		"full_desc": "4664: An attempt was made to create a hard link. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File System",
+		"event_id": 4985,
+		"description": "The state of a transaction has changed. ",
+		"full_desc": "4985: The state of a transaction has changed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "File System",
+		"event_id": 5051,
+		"description": "A file was virtualized. ",
+		"full_desc": "5051: A file was virtualized. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5031,
+		"description": "The Windows Firewall Service blocked an application from accepting incoming connections on the network.",
+		"full_desc": "5031: The Windows Firewall Service blocked an application from accepting incoming connections on the network."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5148,
+		"description": "The Windows Filtering Platform has detected a DoS attack and entered a defensive mode; packets associated with this attack will be discarded.",
+		"full_desc": "5148: The Windows Filtering Platform has detected a DoS attack and entered a defensive mode; packets associated with this attack will be discarded."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5149,
+		"description": "The DoS attack has subsided and normal processing is being resumed.",
+		"full_desc": "5149: The DoS attack has subsided and normal processing is being resumed."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5150,
+		"description": "The Windows Filtering Platform has blocked a packet.",
+		"full_desc": "5150: The Windows Filtering Platform has blocked a packet."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5151,
+		"description": "A more restrictive Windows Filtering Platform filter has blocked a packet.",
+		"full_desc": "5151: A more restrictive Windows Filtering Platform filter has blocked a packet."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5154,
+		"description": "The Windows Filtering Platform has permitted an application or service to listen on a port for incoming connections. ",
+		"full_desc": "5154: The Windows Filtering Platform has permitted an application or service to listen on a port for incoming connections. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5155,
+		"description": "The Windows Filtering Platform has blocked an application or service from listening on a port for incoming connections. ",
+		"full_desc": "5155: The Windows Filtering Platform has blocked an application or service from listening on a port for incoming connections. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5156,
+		"description": "The Windows Filtering Platform has permitted a connection.",
+		"full_desc": "5156: The Windows Filtering Platform has permitted a connection."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5157,
+		"description": "The Windows Filtering Platform has blocked a connection. ",
+		"full_desc": "5157: The Windows Filtering Platform has blocked a connection. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5158,
+		"description": "The Windows Filtering Platform has permitted a bind to a local port. ",
+		"full_desc": "5158: The Windows Filtering Platform has permitted a bind to a local port. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Connection",
+		"event_id": 5159,
+		"description": "The Windows Filtering Platform has blocked a bind to a local port. ",
+		"full_desc": "5159: The Windows Filtering Platform has blocked a bind to a local port. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Packet Drop",
+		"event_id": 5152,
+		"description": " The Windows Filtering Platform has blocked a packet.",
+		"full_desc": "5152:  The Windows Filtering Platform has blocked a packet."
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Filtering Platform Packet Drop",
+		"event_id": 5153,
+		"description": " A more restrictive Windows Filtering Platform filter has blocked a packet. ",
+		"full_desc": "5153:  A more restrictive Windows Filtering Platform filter has blocked a packet. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Handle Manipulation",
+		"event_id": 4656,
+		"description": "A handle to an object was requested. ",
+		"full_desc": "4656: A handle to an object was requested. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Handle Manipulation",
+		"event_id": 4658,
+		"description": "The handle to an object was closed. ",
+		"full_desc": "4658: The handle to an object was closed. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Handle Manipulation",
+		"event_id": 4690,
+		"description": "An attempt was made to duplicate a handle to an object. ",
+		"full_desc": "4690: An attempt was made to duplicate a handle to an object. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4671,
+		"description": "An application attempted to access a blocked ordinal through the TBS. ",
+		"full_desc": "4671: An application attempted to access a blocked ordinal through the TBS. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4691,
+		"description": "Indirect access to an object was requested. ",
+		"full_desc": "4691: Indirect access to an object was requested. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4698,
+		"description": "A scheduled task was created. ",
+		"full_desc": "4698: A scheduled task was created. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4699,
+		"description": "A scheduled task was deleted. ",
+		"full_desc": "4699: A scheduled task was deleted. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4700,
+		"description": "A scheduled task was enabled. ",
+		"full_desc": "4700: A scheduled task was enabled. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4701,
+		"description": "A scheduled task was disabled. ",
+		"full_desc": "4701: A scheduled task was disabled. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 4702,
+		"description": "A scheduled task was updated. ",
+		"full_desc": "4702: A scheduled task was updated. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 5888,
+		"description": "An object in the COM+ Catalog was modified. ",
+		"full_desc": "5888: An object in the COM+ Catalog was modified. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 5889,
+		"description": "An object was deleted from the COM+ Catalog. ",
+		"full_desc": "5889: An object was deleted from the COM+ Catalog. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Other Object Access Events",
+		"event_id": 5890,
+		"description": "An object was added to the COM+ Catalog. ",
+		"full_desc": "5890: An object was added to the COM+ Catalog. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Registry",
+		"event_id": 4657,
+		"description": " A registry value was modified. ",
+		"full_desc": "4657:  A registry value was modified. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Registry",
+		"event_id": 5039,
+		"description": " A registry key was virtualized. ",
+		"full_desc": "5039:  A registry key was virtualized. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Special Multi-use",
+		"event_id": 4659,
+		"description": "A handle to an object was requested with intent to delete. ",
+		"full_desc": "4659: A handle to an object was requested with intent to delete. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Special Multi-use",
+		"event_id": 4660,
+		"description": "An object was deleted. ",
+		"full_desc": "4660: An object was deleted. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Special Multi-use",
+		"event_id": 4661,
+		"description": "A handle to an object was requested. ",
+		"full_desc": "4661: A handle to an object was requested. "
+	},
+	{
+		"category": "Object Access",
+		"subcategory": "Special Multi-use",
+		"event_id": 4663,
+		"description": "An attempt was made to access an object. ",
+		"full_desc": "4663: An attempt was made to access an object. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4715,
+		"description": "The audit policy (SACL) on an object was changed. ",
+		"full_desc": "4715: The audit policy (SACL) on an object was changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4719,
+		"description": "System audit policy was changed. ",
+		"full_desc": "4719: System audit policy was changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4817,
+		"description": "Auditing settings on an object were changed.",
+		"full_desc": "4817: Auditing settings on an object were changed."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4902,
+		"description": "The Per-user audit policy table was created. ",
+		"full_desc": "4902: The Per-user audit policy table was created. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4904,
+		"description": "An attempt was made to register a security event source. ",
+		"full_desc": "4904: An attempt was made to register a security event source. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4905,
+		"description": "An attempt was made to unregister a security event source. ",
+		"full_desc": "4905: An attempt was made to unregister a security event source. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4906,
+		"description": "The CrashOnAuditFail value has changed. ",
+		"full_desc": "4906: The CrashOnAuditFail value has changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4907,
+		"description": "Auditing settings on object were changed. ",
+		"full_desc": "4907: Auditing settings on object were changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4908,
+		"description": "Special Groups Logon table modified. ",
+		"full_desc": "4908: Special Groups Logon table modified. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Audit Policy Change",
+		"event_id": 4912,
+		"description": "Per User Audit Policy was changed. ",
+		"full_desc": "4912: Per User Audit Policy was changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4706,
+		"description": "A new trust was created to a domain. ",
+		"full_desc": "4706: A new trust was created to a domain. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4707,
+		"description": "A trust to a domain was removed. ",
+		"full_desc": "4707: A trust to a domain was removed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4713,
+		"description": "Kerberos policy was changed. ",
+		"full_desc": "4713: Kerberos policy was changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4716,
+		"description": "Trusted domain information was modified. ",
+		"full_desc": "4716: Trusted domain information was modified. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4717,
+		"description": "System security access was granted to an account. ",
+		"full_desc": "4717: System security access was granted to an account. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4718,
+		"description": "System security access was removed from an account. ",
+		"full_desc": "4718: System security access was removed from an account. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4739,
+		"description": "Domain Policy was changed. ",
+		"full_desc": "4739: Domain Policy was changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4864,
+		"description": "A namespace collision was detected. ",
+		"full_desc": "4864: A namespace collision was detected. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4865,
+		"description": "A trusted forest information entry was added. ",
+		"full_desc": "4865: A trusted forest information entry was added. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4866,
+		"description": "A trusted forest information entry was removed. ",
+		"full_desc": "4866: A trusted forest information entry was removed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authentication Policy Change",
+		"event_id": 4867,
+		"description": "A trusted forest information entry was modified. ",
+		"full_desc": "4867: A trusted forest information entry was modified. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authorization Policy Change",
+		"event_id": 4704,
+		"description": "A user right was assigned. ",
+		"full_desc": "4704: A user right was assigned. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authorization Policy Change",
+		"event_id": 4705,
+		"description": "A user right was removed. ",
+		"full_desc": "4705: A user right was removed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Authorization Policy Change",
+		"event_id": 4714,
+		"description": "Data Recovery Agent group policy for Encrypting File System (EFS) has changed. The new changes have been applied.",
+		"full_desc": "4714: Data Recovery Agent group policy for Encrypting File System (EFS) has changed. The new changes have been applied."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 4709,
+		"description": "The IPsec Policy Agent service was started.",
+		"full_desc": "4709: The IPsec Policy Agent service was started."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 4710,
+		"description": "The IPsec Policy Agent service was disabled.",
+		"full_desc": "4710: The IPsec Policy Agent service was disabled."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 4711,
+		"description": "May contain any one of the following:",
+		"full_desc": "4711: May contain any one of the following:"
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 4712,
+		"description": "IPsec Policy Agent encountered a potentially serious failure.",
+		"full_desc": "4712: IPsec Policy Agent encountered a potentially serious failure."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5040,
+		"description": "A change was made to IPsec settings. An authentication set was added.",
+		"full_desc": "5040: A change was made to IPsec settings. An authentication set was added."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5041,
+		"description": "A change was made to IPsec settings. An authentication set was modified.",
+		"full_desc": "5041: A change was made to IPsec settings. An authentication set was modified."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5042,
+		"description": "A change was made to IPsec settings. An authentication set was deleted.",
+		"full_desc": "5042: A change was made to IPsec settings. An authentication set was deleted."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5043,
+		"description": "A change was made to IPsec settings. A connection security rule was added.",
+		"full_desc": "5043: A change was made to IPsec settings. A connection security rule was added."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5044,
+		"description": "A change was made to IPsec settings. A connection security rule was modified.",
+		"full_desc": "5044: A change was made to IPsec settings. A connection security rule was modified."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5045,
+		"description": "A change was made to IPsec settings. A connection security rule was deleted.",
+		"full_desc": "5045: A change was made to IPsec settings. A connection security rule was deleted."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5046,
+		"description": "A change was made to IPsec settings. A crypto set was added.",
+		"full_desc": "5046: A change was made to IPsec settings. A crypto set was added."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5047,
+		"description": "A change was made to IPsec settings. A crypto set was modified.",
+		"full_desc": "5047: A change was made to IPsec settings. A crypto set was modified."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5048,
+		"description": "A change was made to IPsec settings. A crypto set was deleted.",
+		"full_desc": "5048: A change was made to IPsec settings. A crypto set was deleted."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5440,
+		"description": "The following callout was present when the Windows Filtering Platform Base Filtering Engine started. ",
+		"full_desc": "5440: The following callout was present when the Windows Filtering Platform Base Filtering Engine started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5441,
+		"description": "The following filter was present when the Windows Filtering Platform Base Filtering Engine started. ",
+		"full_desc": "5441: The following filter was present when the Windows Filtering Platform Base Filtering Engine started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5442,
+		"description": "The following provider was present when the Windows Filtering Platform Base Filtering Engine started. ",
+		"full_desc": "5442: The following provider was present when the Windows Filtering Platform Base Filtering Engine started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5443,
+		"description": "The following provider context was present when the Windows Filtering Platform Base Filtering Engine started. ",
+		"full_desc": "5443: The following provider context was present when the Windows Filtering Platform Base Filtering Engine started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5444,
+		"description": "The following sub-layer was present when the Windows Filtering Platform Base Filtering Engine started. ",
+		"full_desc": "5444: The following sub-layer was present when the Windows Filtering Platform Base Filtering Engine started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5446,
+		"description": "A Windows Filtering Platform callout has been changed. ",
+		"full_desc": "5446: A Windows Filtering Platform callout has been changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5448,
+		"description": "A Windows Filtering Platform provider has been changed. ",
+		"full_desc": "5448: A Windows Filtering Platform provider has been changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5449,
+		"description": "A Windows Filtering Platform provider context has been changed. ",
+		"full_desc": "5449: A Windows Filtering Platform provider context has been changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5450,
+		"description": "A Windows Filtering Platform sub-layer has been changed. ",
+		"full_desc": "5450: A Windows Filtering Platform sub-layer has been changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5456,
+		"description": "PAStore Engine applied Active Directory storage IPsec policy on the computer. ",
+		"full_desc": "5456: PAStore Engine applied Active Directory storage IPsec policy on the computer. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5457,
+		"description": "IPsec Policy Agent failed to apply Active Directory storage IPsec policy on the computer.",
+		"full_desc": "5457: IPsec Policy Agent failed to apply Active Directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5458,
+		"description": "IPsec Policy Agent applied locally cached copy of Active Directory storage IPsec policy on the computer.",
+		"full_desc": "5458: IPsec Policy Agent applied locally cached copy of Active Directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5459,
+		"description": "IPsec Policy Agent failed to apply locally cached copy of Active Directory storage IPsec policy on the computer.",
+		"full_desc": "5459: IPsec Policy Agent failed to apply locally cached copy of Active Directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5460,
+		"description": "IPsec Policy Agent applied local registry storage IPsec policy on the computer.",
+		"full_desc": "5460: IPsec Policy Agent applied local registry storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5461,
+		"description": "IPsec Policy Agent failed to apply local registry storage IPsec policy on the computer.",
+		"full_desc": "5461: IPsec Policy Agent failed to apply local registry storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5462,
+		"description": "IPsec Policy Agent failed to apply some rules of the active IPsec policy on the computer. Use the IP Security Monitor snap-in to diagnose the problem.",
+		"full_desc": "5462: IPsec Policy Agent failed to apply some rules of the active IPsec policy on the computer. Use the IP Security Monitor snap-in to diagnose the problem."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5463,
+		"description": "IPsec Policy Agent polled for changes to the active IPsec policy and detected no changes.",
+		"full_desc": "5463: IPsec Policy Agent polled for changes to the active IPsec policy and detected no changes."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5464,
+		"description": "IPsec Policy Agent polled for changes to the active IPsec policy, detected changes, and applied them.",
+		"full_desc": "5464: IPsec Policy Agent polled for changes to the active IPsec policy, detected changes, and applied them."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5465,
+		"description": "IPsec Policy Agent received a control for forced reloading of IPsec policy and processed the control successfully.",
+		"full_desc": "5465: IPsec Policy Agent received a control for forced reloading of IPsec policy and processed the control successfully."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5466,
+		"description": "IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory cannot be reached, and will use the cached copy of the Active Directory IPsec policy instead. Any changes made to the Active Directory IPsec policy since the last poll could not be applied.",
+		"full_desc": "5466: IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory cannot be reached, and will use the cached copy of the Active Directory IPsec policy instead. Any changes made to the Active Directory IPsec policy since the last poll could not be applied."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5467,
+		"description": "IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory can be reached, and found no changes to the policy. The cached copy of the Active Directory IPsec policy is no longer being used.",
+		"full_desc": "5467: IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory can be reached, and found no changes to the policy. The cached copy of the Active Directory IPsec policy is no longer being used."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5468,
+		"description": "IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory can be reached, found changes to the policy, and applied those changes. The cached copy of the Active Directory IPsec policy is no longer being used.",
+		"full_desc": "5468: IPsec Policy Agent polled for changes to the Active Directory IPsec policy, determined that Active Directory can be reached, found changes to the policy, and applied those changes. The cached copy of the Active Directory IPsec policy is no longer being used."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5471,
+		"description": "IPsec Policy Agent loaded local storage IPsec policy on the computer.",
+		"full_desc": "5471: IPsec Policy Agent loaded local storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5472,
+		"description": "IPsec Policy Agent failed to load local storage IPsec policy on the computer.",
+		"full_desc": "5472: IPsec Policy Agent failed to load local storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5473,
+		"description": "IPsec Policy Agent loaded directory storage IPsec policy on the computer.",
+		"full_desc": "5473: IPsec Policy Agent loaded directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5474,
+		"description": "IPsec Policy Agent failed to load directory storage IPsec policy on the computer.",
+		"full_desc": "5474: IPsec Policy Agent failed to load directory storage IPsec policy on the computer."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Filtering Platform Policy Change",
+		"event_id": 5477,
+		"description": "IPsec Policy Agent failed to add quick mode filter.",
+		"full_desc": "5477: IPsec Policy Agent failed to add quick mode filter."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4944,
+		"description": "The following policy was active when the Windows Firewall started. ",
+		"full_desc": "4944: The following policy was active when the Windows Firewall started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4945,
+		"description": "A rule was listed when the Windows Firewall started. ",
+		"full_desc": "4945: A rule was listed when the Windows Firewall started. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4946,
+		"description": "A change was made to the Windows Firewall exception list. A rule was added.",
+		"full_desc": "4946: A change was made to the Windows Firewall exception list. A rule was added."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4947,
+		"description": "A change was made to the Windows Firewall exception list. A rule was modified.",
+		"full_desc": "4947: A change was made to the Windows Firewall exception list. A rule was modified."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4948,
+		"description": "A change was made to the Windows Firewall exception list. A rule was deleted.",
+		"full_desc": "4948: A change was made to the Windows Firewall exception list. A rule was deleted."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4949,
+		"description": "Windows Firewall settings were restored to the default values. ",
+		"full_desc": "4949: Windows Firewall settings were restored to the default values. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4950,
+		"description": "A Windows Firewall setting was changed.",
+		"full_desc": "4950: A Windows Firewall setting was changed."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4951,
+		"description": "Windows Firewall ignored a rule because its major version number is not recognized.",
+		"full_desc": "4951: Windows Firewall ignored a rule because its major version number is not recognized."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4952,
+		"description": "Windows Firewall ignored parts of a rule because its minor version number is not recognized. Other parts of the rule will be enforced.",
+		"full_desc": "4952: Windows Firewall ignored parts of a rule because its minor version number is not recognized. Other parts of the rule will be enforced."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4953,
+		"description": "Windows Firewall ignored a rule because it could not be parsed.",
+		"full_desc": "4953: Windows Firewall ignored a rule because it could not be parsed."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4954,
+		"description": "Group Policy settings for Windows Firewall were changed, and the new settings were applied.",
+		"full_desc": "4954: Group Policy settings for Windows Firewall were changed, and the new settings were applied."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4956,
+		"description": "Windows Firewall changed the active profile.",
+		"full_desc": "4956: Windows Firewall changed the active profile."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4957,
+		"description": "Windows Firewall did not apply the following rule: ",
+		"full_desc": "4957: Windows Firewall did not apply the following rule: "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 4958,
+		"description": "Windows Firewall did not apply the following rule because the rule referred to items not configured on this computer: ",
+		"full_desc": "4958: Windows Firewall did not apply the following rule because the rule referred to items not configured on this computer: "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "MPSSVC Rule-Level Policy Change",
+		"event_id": 5050,
+		"description": "An attempt to programmatically disable Windows Firewall using a call to INetFwProfile.FirewallEnabled(FALSE) interface was rejected because this API is not supported on this version of Windows. This is most likely due to a program that is incompatible with this version of Windows. Please contact the program's manufacturer to make sure you have a compatible program version.",
+		"full_desc": "5050: An attempt to programmatically disable Windows Firewall using a call to INetFwProfile.FirewallEnabled(FALSE) interface was rejected because this API is not supported on this version of Windows. This is most likely due to a program that is incompatible with this version of Windows. Please contact the program's manufacturer to make sure you have a compatible program version."
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 4909,
+		"description": "The local policy settings for the TBS were changed. ",
+		"full_desc": "4909: The local policy settings for the TBS were changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 4910,
+		"description": "The group policy settings for the TBS were changed. ",
+		"full_desc": "4910: The group policy settings for the TBS were changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5063,
+		"description": "A cryptographic provider operation was attempted. ",
+		"full_desc": "5063: A cryptographic provider operation was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5064,
+		"description": "A cryptographic context operation was attempted. ",
+		"full_desc": "5064: A cryptographic context operation was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5065,
+		"description": "A cryptographic context modification was attempted. ",
+		"full_desc": "5065: A cryptographic context modification was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5066,
+		"description": "A cryptographic function operation was attempted. ",
+		"full_desc": "5066: A cryptographic function operation was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5067,
+		"description": "A cryptographic function modification was attempted. ",
+		"full_desc": "5067: A cryptographic function modification was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5068,
+		"description": "A cryptographic function provider operation was attempted. ",
+		"full_desc": "5068: A cryptographic function provider operation was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5069,
+		"description": "A cryptographic function property operation was attempted. ",
+		"full_desc": "5069: A cryptographic function property operation was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5070,
+		"description": "A cryptographic function property modification was attempted. ",
+		"full_desc": "5070: A cryptographic function property modification was attempted. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 5447,
+		"description": "A Windows Filtering Platform filter has been changed. ",
+		"full_desc": "5447: A Windows Filtering Platform filter has been changed. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 6144,
+		"description": "Security policy in the group policy objects has been applied successfully. ",
+		"full_desc": "6144: Security policy in the group policy objects has been applied successfully. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Other Policy Change Events",
+		"event_id": 6145,
+		"description": "One or more errors occurred while processing security policy in the group policy objects. ",
+		"full_desc": "6145: One or more errors occurred while processing security policy in the group policy objects. "
+	},
+	{
+		"category": "Policy Change",
+		"subcategory": "Special Multi-use",
+		"event_id": 4670,
+		"description": " Permissions on an object were changed. ",
+		"full_desc": "4670:  Permissions on an object were changed. "
+	},
+	{
+		"category": "Privilege Use",
+		"subcategory": "Sensitive Privilege Use / Non-Sensitive Privilege Use",
+		"event_id": 4672,
+		"description": "Special privileges assigned to new logon. ",
+		"full_desc": "4672: Special privileges assigned to new logon. "
+	},
+	{
+		"category": "Privilege Use",
+		"subcategory": "Sensitive Privilege Use / Non-Sensitive Privilege Use",
+		"event_id": 4673,
+		"description": "A privileged service was called. ",
+		"full_desc": "4673: A privileged service was called. "
+	},
+	{
+		"category": "Privilege Use",
+		"subcategory": "Sensitive Privilege Use / Non-Sensitive Privilege Use",
+		"event_id": 4674,
+		"description": "An operation was attempted on a privileged object. ",
+		"full_desc": "4674: An operation was attempted on a privileged object. "
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 4960,
+		"description": "IPsec dropped an inbound packet that failed an integrity check. If this problem persists, it could indicate a network issue or that packets are being modified in transit to this computer. Verify that the packets sent from the remote computer are the same as those received by this computer. This error might also indicate interoperability problems with other IPsec implementations. ",
+		"full_desc": "4960: IPsec dropped an inbound packet that failed an integrity check. If this problem persists, it could indicate a network issue or that packets are being modified in transit to this computer. Verify that the packets sent from the remote computer are the same as those received by this computer. This error might also indicate interoperability problems with other IPsec implementations. "
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 4961,
+		"description": "IPsec dropped an inbound packet that failed a replay check. If this problem persists, it could indicate a replay attack against this computer. ",
+		"full_desc": "4961: IPsec dropped an inbound packet that failed a replay check. If this problem persists, it could indicate a replay attack against this computer. "
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 4962,
+		"description": "IPsec dropped an inbound packet that failed a replay check. The inbound packet had too low a sequence number to ensure it was not a replay. ",
+		"full_desc": "4962: IPsec dropped an inbound packet that failed a replay check. The inbound packet had too low a sequence number to ensure it was not a replay. "
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 4963,
+		"description": "IPsec dropped an inbound clear text packet that should have been secured. If the remote computer is configured with a Request Outbound IPsec policy, this might be benign and expected. This can also be caused by the remote computer changing its IPsec policy without informing this computer. This could also be a spoofing attack attempt.",
+		"full_desc": "4963: IPsec dropped an inbound clear text packet that should have been secured. If the remote computer is configured with a Request Outbound IPsec policy, this might be benign and expected. This can also be caused by the remote computer changing its IPsec policy without informing this computer. This could also be a spoofing attack attempt."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 4965,
+		"description": "IPsec received a packet from a remote computer with an incorrect Security Parameter Index (SPI). This is usually caused by malfunctioning hardware that is corrupting packets. If these errors persist, verify that the packets sent from the remote computer are the same as those received by this computer. This error might also indicate interoperability problems with other IPsec implementations. In that case, if connectivity is not impeded, then these events can be ignored.",
+		"full_desc": "4965: IPsec received a packet from a remote computer with an incorrect Security Parameter Index (SPI). This is usually caused by malfunctioning hardware that is corrupting packets. If these errors persist, verify that the packets sent from the remote computer are the same as those received by this computer. This error might also indicate interoperability problems with other IPsec implementations. In that case, if connectivity is not impeded, then these events can be ignored."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5478,
+		"description": "The IPsec Policy Agent service was started.",
+		"full_desc": "5478: The IPsec Policy Agent service was started."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5479,
+		"description": "IPsec Services has been shut down successfully. The shutdown of IPsec Services can put the computer at greater risk of network attack or expose the computer to potential security risks. ",
+		"full_desc": "5479: IPsec Services has been shut down successfully. The shutdown of IPsec Services can put the computer at greater risk of network attack or expose the computer to potential security risks. "
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5480,
+		"description": "IPsec Policy Agent failed to get the complete list of network interfaces on the computer. This poses a potential security risk because some of the network interfaces may not get the protection provided by the applied IPsec filters. Use the IP Security Monitor snap-in to diagnose the problem.",
+		"full_desc": "5480: IPsec Policy Agent failed to get the complete list of network interfaces on the computer. This poses a potential security risk because some of the network interfaces may not get the protection provided by the applied IPsec filters. Use the IP Security Monitor snap-in to diagnose the problem."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5483,
+		"description": "The IPsec Policy Agent service failed to initialize its RPC server. The service could not be started.",
+		"full_desc": "5483: The IPsec Policy Agent service failed to initialize its RPC server. The service could not be started."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5484,
+		"description": "The IPsec Policy Agent service experienced a critical failure and has shut down. The shutdown of this service can put the computer at greater risk of network attack or expose the computer to potential security risks.",
+		"full_desc": "5484: The IPsec Policy Agent service experienced a critical failure and has shut down. The shutdown of this service can put the computer at greater risk of network attack or expose the computer to potential security risks."
+	},
+	{
+		"category": "System",
+		"subcategory": "IPsec Driver",
+		"event_id": 5485,
+		"description": "IPsec Policy Agent failed to process some IPsec filters on a plug-and-play event for network interfaces. This poses a potential security risk because some of the network interfaces may not get the protection provided by the applied IPsec filters. Use the IP Security Monitor snap-in to diagnose the problem.",
+		"full_desc": "5485: IPsec Policy Agent failed to process some IPsec filters on a plug-and-play event for network interfaces. This poses a potential security risk because some of the network interfaces may not get the protection provided by the applied IPsec filters. Use the IP Security Monitor snap-in to diagnose the problem."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5024,
+		"description": "The Windows Firewall service started successfully.",
+		"full_desc": "5024: The Windows Firewall service started successfully."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5025,
+		"description": "The Windows Firewall service was stopped.",
+		"full_desc": "5025: The Windows Firewall service was stopped."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5027,
+		"description": "The Windows Firewall service was unable to retrieve the security policy from the local storage. Windows Firewall will continue to enforce the current policy.",
+		"full_desc": "5027: The Windows Firewall service was unable to retrieve the security policy from the local storage. Windows Firewall will continue to enforce the current policy."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5028,
+		"description": "Windows Firewall was unable to parse the new security policy. Windows Firewall will continue to enforce the current policy.",
+		"full_desc": "5028: Windows Firewall was unable to parse the new security policy. Windows Firewall will continue to enforce the current policy."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5029,
+		"description": "The Windows Firewall service failed to initialize the driver. Windows Firewall will continue to enforce the current policy.",
+		"full_desc": "5029: The Windows Firewall service failed to initialize the driver. Windows Firewall will continue to enforce the current policy."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5030,
+		"description": "The Windows Firewall service failed to start.",
+		"full_desc": "5030: The Windows Firewall service failed to start."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5032,
+		"description": "Windows Firewall was unable to notify the user that it blocked an application from accepting incoming connections on the network. ",
+		"full_desc": "5032: Windows Firewall was unable to notify the user that it blocked an application from accepting incoming connections on the network. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5033,
+		"description": "The Windows Firewall Driver started successfully.",
+		"full_desc": "5033: The Windows Firewall Driver started successfully."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5034,
+		"description": "The Windows Firewall Driver was stopped.",
+		"full_desc": "5034: The Windows Firewall Driver was stopped."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5035,
+		"description": "The Windows Firewall Driver failed to start. ",
+		"full_desc": "5035: The Windows Firewall Driver failed to start. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5037,
+		"description": "The Windows Firewall Driver detected a critical runtime error, terminating.",
+		"full_desc": "5037: The Windows Firewall Driver detected a critical runtime error, terminating."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5058,
+		"description": "Key file operation. ",
+		"full_desc": "5058: Key file operation. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 5059,
+		"description": "Key migration operation. ",
+		"full_desc": "5059: Key migration operation. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6400,
+		"description": "BranchCache: Received an incorrectly formatted response while discovering availability of content.",
+		"full_desc": "6400: BranchCache: Received an incorrectly formatted response while discovering availability of content."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6401,
+		"description": "BranchCache: Received invalid data from a peer. Data discarded.",
+		"full_desc": "6401: BranchCache: Received invalid data from a peer. Data discarded."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6403,
+		"description": "BranchCache: The hosted cache sent an incorrectly formatted response to the client.",
+		"full_desc": "6403: BranchCache: The hosted cache sent an incorrectly formatted response to the client."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6404,
+		"description": "BranchCache: Hosted cache could not be authenticated using the provisioned SSL certificate.",
+		"full_desc": "6404: BranchCache: Hosted cache could not be authenticated using the provisioned SSL certificate."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6405,
+		"description": "BranchCache: %2 instance(s) of event id %1 occurred.",
+		"full_desc": "6405: BranchCache: %2 instance(s) of event id %1 occurred."
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6406,
+		"description": "%1 registered to Windows Firewall to control filtering for the following: %2",
+		"full_desc": "6406: %1 registered to Windows Firewall to control filtering for the following: %2"
+	},
+	{
+		"category": "System",
+		"subcategory": "Other System Events",
+		"event_id": 6407,
+		"description": "1%",
+		"full_desc": "6407: 1%"
+	},
+	{
+		"category": "System",
+		"subcategory": "Security State Change",
+		"event_id": 4608,
+		"description": "Windows is starting up. ",
+		"full_desc": "4608: Windows is starting up. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security State Change",
+		"event_id": 4616,
+		"description": "The system time was changed. ",
+		"full_desc": "4616: The system time was changed. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security State Change",
+		"event_id": 4621,
+		"description": "Administrator recovered system from CrashOnAuditFail. Users who are not administrators will now be allowed to log on. Some auditable activity might not have been recorded. ",
+		"full_desc": "4621: Administrator recovered system from CrashOnAuditFail. Users who are not administrators will now be allowed to log on. Some auditable activity might not have been recorded. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security System Extension",
+		"event_id": 4610,
+		"description": "An authentication package has been loaded by the Local Security Authority. ",
+		"full_desc": "4610: An authentication package has been loaded by the Local Security Authority. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security System Extension",
+		"event_id": 4611,
+		"description": "A trusted logon process has been registered with the Local Security Authority. ",
+		"full_desc": "4611: A trusted logon process has been registered with the Local Security Authority. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security System Extension",
+		"event_id": 4614,
+		"description": "A notification package has been loaded by the Security Account Manager. ",
+		"full_desc": "4614: A notification package has been loaded by the Security Account Manager. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security System Extension",
+		"event_id": 4622,
+		"description": "A security package has been loaded by the Local Security Authority. ",
+		"full_desc": "4622: A security package has been loaded by the Local Security Authority. "
+	},
+	{
+		"category": "System",
+		"subcategory": "Security System Extension",
+		"event_id": 4697,
+		"description": "A service was installed in the system. ",
+		"full_desc": "4697: A service was installed in the system. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 4612,
+		"description": "Internal resources allocated for the queuing of audit messages have been exhausted, leading to the loss of some audits. ",
+		"full_desc": "4612: Internal resources allocated for the queuing of audit messages have been exhausted, leading to the loss of some audits. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 4615,
+		"description": "Invalid use of LPC port. ",
+		"full_desc": "4615: Invalid use of LPC port. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 4618,
+		"description": "A monitored security event pattern has occurred. ",
+		"full_desc": "4618: A monitored security event pattern has occurred. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 4816,
+		"description": "RPC detected an integrity violation while decrypting an incoming message. ",
+		"full_desc": "4816: RPC detected an integrity violation while decrypting an incoming message. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5038,
+		"description": "Code integrity determined that the image hash of a file is not valid. The file could be corrupt due to unauthorized modification or the invalid hash could indicate a potential disk device error. ",
+		"full_desc": "5038: Code integrity determined that the image hash of a file is not valid. The file could be corrupt due to unauthorized modification or the invalid hash could indicate a potential disk device error. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5056,
+		"description": "A cryptographic self test was performed. ",
+		"full_desc": "5056: A cryptographic self test was performed. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5057,
+		"description": "A cryptographic primitive operation failed. ",
+		"full_desc": "5057: A cryptographic primitive operation failed. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5060,
+		"description": "Verification operation failed. ",
+		"full_desc": "5060: Verification operation failed. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5061,
+		"description": "Cryptographic operation. ",
+		"full_desc": "5061: Cryptographic operation. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 5062,
+		"description": "A kernel-mode cryptographic self test was performed. ",
+		"full_desc": "5062: A kernel-mode cryptographic self test was performed. "
+	},
+	{
+		"category": "System",
+		"subcategory": "System Integrity",
+		"event_id": 6281,
+		"description": "Code Integrity determined that the page hashes of an image file are not valid. The file could be improperly signed without page hashes or corrupt due to unauthorized modification. The invalid hashes could indicate a potential disk device error",
+		"full_desc": "6281: Code Integrity determined that the page hashes of an image file are not valid. The file could be improperly signed without page hashes or corrupt due to unauthorized modification. The invalid hashes could indicate a potential disk device error"
+	}
+]

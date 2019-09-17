@@ -12,7 +12,8 @@ and threat investigation. There are three main sub-packages:
 - data     - data interfaces specific to Sentinel/Log Analytics
 
 The package is in an early preview mode so there are likely to be bugs and there are several
-areas that are not yet optimized for performance. 
+areas that are not yet optimized for performance.
+
 We welcome feedback, bug reports, suggestions for new features and contributions.
 
 ## Installing
@@ -131,6 +132,7 @@ values of the host and guids in the string and using delimiters or tokens to
 group the values. This allows you to more easily see distinct patterns of 
 activity.
 
+[Event Clustering Notebook](./docs/notebooks/EventClustering.ipynb)
 
 
 ### outliers

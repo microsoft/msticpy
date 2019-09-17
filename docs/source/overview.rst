@@ -147,6 +147,8 @@ values in the string and using delimiters or tokens to group the values.
 This is an unsupervised learning module implemented using SciKit Learn
 DBScan.
 
+`Event Clustering Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb>`__
+
 outliers
 ~~~~~~~~
 
