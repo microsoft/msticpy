@@ -11,11 +11,10 @@ from collections import Counter
 from typing import List, Dict, Any, Optional, Union
 
 import pandas as pd
-from deprecated.sphinx import deprecated
 
 from .entityschema import Entity, Process, Account, Host
 from .query_defns import QueryParamProvider, DataFamily, DataEnvironment
-from .utility import is_not_empty, escape_windows_path
+from .utility import escape_windows_path
 from .utility import export
 from .._version import VERSION
 
@@ -98,6 +97,13 @@ class SecurityBase(QueryParamProvider):
                 str_entities.append(str(ent).replace("\n", ", "))
             str_props = str_props + str_entities
         return "\n".join(str_props)
+
+    def __repr__(self) -> str:
+        """Return repr of item."""
+        params = ", ".join([f"{name}={val}" for name, val in self.properties.items()])
+        if len(params) > 80:
+            params = params[:80] + "..."
+        return f"{self.__class__.__name__}({params})"
 
     # def __getstate__(self):
     #     """Return dictionary of state for serialization/pickling."""
@@ -307,48 +313,6 @@ class SecurityBase(QueryParamProvider):
         """Return the datetime of event."""
         return self.TimeGenerated
 
-    @deprecated("Use properties of entity directly.")
-    def get_entity_property(
-        self, entity_property: str, entity_type: str = None, entity: Entity = None
-    ) -> Any:
-        """
-        Return the value of the named entity property.
-
-        If the entity parameter is not supplied the function will return the
-        property value of the first entity of the current alert that
-        matches the specified type and has a property of entity_property
-
-        Parameters
-        ----------
-        entity_property : str
-            The name of the property to return
-        entity_type : str, optional
-            The name of the entity type (optional if entity is supplied)
-            (the default is None)
-        entity : Entity, optional
-            Source Entity (the default is None)
-
-        Returns
-        -------
-        Any
-            The retrieved value or None.
-
-        """
-        if entity and entity_property in entity:
-            return entity[entity_property]
-
-        if self.entities is not None:
-            for test_entity in [
-                entity for entity in self.entities if entity["Type"] == entity_type
-            ]:
-                if (
-                    test_entity
-                    and entity_property in test_entity
-                    and is_not_empty(test_entity[entity_property])
-                ):
-                    return test_entity[entity_property]
-        return None
-
     def get_logon_id(self, account: Account = None) -> Optional[Union[str, int]]:
         """
         Get the logon Id for the alert or the account, if supplied.
@@ -381,38 +345,6 @@ class SecurityBase(QueryParamProvider):
                 return acct["LogonId"]
         elif "LogonId" in account:
             return account["LogonId"]
-        return None
-
-    @deprecated("Use properties of entity directly.")
-    def get_process_name(self, process: Process) -> Optional[str]:
-        """
-        Return the process (filename) of the process.
-
-        If `process` is not supplied, return the filename
-        of the first process entity.
-
-        Parameters
-        ----------
-        process : Process
-            [description]
-
-        Returns
-        -------
-        Optional[str]
-            Process name or None.
-
-        """
-        if isinstance(process, Process) and process.ProcessFilePath:
-            return process.ProcessFilePath
-        if "ImageFile" in process:
-            if "FullPath" in process["ImageFile"]:
-                return process["ImageFile"]["FullPath"]
-            if "Directory" in process["ImageFile"]:
-                return (
-                    process["ImageFile"]["Directory"]
-                    + self.path_separator
-                    + process["ImageFile"]["Name"]
-                )
         return None
 
     def subscription_filter(self, operator="=="):

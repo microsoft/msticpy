@@ -55,6 +55,9 @@ class FoliumMap:
             The map object.
 
         """
+        if not location:
+            location = [47.67, -122.13]
+
         self.folium_map = folium.Map(
             zoom_start=zoom_start,
             tiles=tiles,
@@ -64,9 +67,11 @@ class FoliumMap:
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
 
-    def __repr__(self):
-        """Return folium map."""
-        return self.folium_map
+    def _repr_html_(self):
+        """Return folium map as HTML."""
+        # pylint: disable=protected-access
+        return self.folium_map._repr_html_()
+        # pylint: enable=protected-access
 
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
@@ -82,17 +87,17 @@ class FoliumMap:
             kwargs: icon properties to use for displaying this cluster
 
         """
-        geo_entity = GeoLocation()
-        geo_entity.CountryCode = "Unknown"
-        geo_entity.CountryName = "Unknown"
-        geo_entity.State = "Unknown"
-        geo_entity.City = "Unknown"
-        geo_entity.Longitude = 0.0
-        geo_entity.Latitude = 0.0
+        geo_entity = GeoLocation()  # type: ignore
+        geo_entity.CountryCode = "Unknown"  # type: ignore
+        geo_entity.CountryName = "Unknown"  # type: ignore
+        geo_entity.State = "Unknown"  # type: ignore
+        geo_entity.City = "Unknown"  # type: ignore
+        geo_entity.Longitude = 0.0  # type: ignore
+        geo_entity.Latitude = 0.0  # type: ignore
 
         for ip_entity in ip_entities:
             if ip_entity.Location is None:
-                ip_entity.Location = geo_entity
+                ip_entity.Location = geo_entity  # type: ignore
 
         for ip_entity in ip_entities:
             if not (

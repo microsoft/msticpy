@@ -63,6 +63,8 @@ class VirusTotal(HttpProvider):
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
 
+    _REQUIRED_PARAMS = ["API_KEY"]
+
     def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
         """
         Return the details of the response.

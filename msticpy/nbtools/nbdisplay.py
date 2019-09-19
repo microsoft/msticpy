@@ -4,27 +4,30 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Mapping, Union, Any
+from typing import Any, Mapping, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
-from bokeh.io import output_notebook, show
-from bokeh.models import (
+
     ColumnDataSource,
     DatetimeTickFormatter,
     HoverTool,
     Label,
     RangeTool,
 )
-from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
 
-from .security_alert import SecurityAlert
-from .utility import export
 from .._version import VERSION
+from .security_alert import SecurityAlert
+
+# pylint: disable=unused-import
+from .timeline import display_timeline, display_timeline_values  # noqa
+
+# pylint: enable=unused-import
+from .utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -104,7 +107,7 @@ def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
     px_spaces = 20 * level * 2
     txt_spaces = " " * (4 * int(level))
 
-    font_col = "red" if process_row.NodeRole == "source" else "black"
+    font_col = "red" if process_row.NodeRole == "source" else "inherit"
 
     if fmt.lower() == "html":
         l1_span = f'<span style="color:{font_col};font-size:90%">'
@@ -292,92 +295,29 @@ def draw_alert_entity_graph(
     )
 
 
-# Constants
-_WRAP = 50
-_WRAP_CMDL = "WrapCmdl"
 
-
-# Need to refactor this to allow multiple data sets.
-# pylint: disable=too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements, too-many-branches
-@export  # noqa: C901, MC0001
-def display_timeline(
-    data: dict, alert: SecurityAlert = None, title: str = None, height: int = 300, legend_loc: int = "top_left"
-):
-    """
-
-    Display a timeline of events.
-
-    Parameters
-    ----------
     data : dict
         Data points to plot on the timeline.
             Need to contain:
                 Key - Name of data type to be displayed in legend
                 Value - dict of data containing:
-                    data : pd.DataFrame
-                        Data to plot
                     time_column : str
                         Name of the timestamp column
                     source_columns : list
                         List of source columns to use in tooltips
                     color: str
                         Color of datapoints for this data
-    alert : SecurityAlert, optional
-        Input alert (the default is None)
-    title : str, optional
-        Title to display (the default is None)
-    height : int, optional
-        the height of the plot figure (under 300 limits access
-        to Bokeh tools)(the default is 300)
     legend_loc: str, optional
         Which side of the graph you want the legend to appear on
-
-    """
-    reset_output()
-    output_notebook()
-
-    # Take each item that is passed in data and fill in blanks and add a y_index
-    y_index = 1
-    for key, val in data.items():
-        val["data"]["y_index"] = y_index
-        y_index += 1
-        if not val["source_columns"]:
-            val["source_columns"] = ["NewProcessName", "EventID", "CommandLine"]
-        if "time_column" not in val:
-            val["time_column"] = "TimeGenerated"
         if val["time_column"] not in val["source_columns"]:
             val["source_columns"].append(val["time_column"])
         if "y_index" not in val["source_columns"]:
             val["source_columns"].append("y_index")
         if "CommandLine" in val["source_columns"]:
             graph_df = val["data"][val["source_columns"]].copy()
-            graph_df[_WRAP_CMDL] = graph_df.apply(
-                lambda x: _wrap_text(x.CommandLine, _WRAP), axis=1
-            )
-        else:
-            graph_df = val["data"][val["source_columns"]].copy()
-        val["data"].reset_index(drop=True, inplace=True)
-        val["source"] = ColumnDataSource(graph_df)
-
-    # build the tool tips from columns of the first dataset
-    prim_data = list(data.keys())[0]
     excl_cols = [data[prim_data]["time_column"], "CommandLine", "y_index"]
-    tool_tip_items = [
-        (f"{col}", f"@{col}")
         for col in data[prim_data]["source_columns"]
         if col not in excl_cols
-    ]
-    if _WRAP_CMDL in data[prim_data]["data"]:
-        tool_tip_items.append(("CommandLine", f"@{_WRAP_CMDL}"))
-    hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
-
-    if not title:
-        title = "Event Timeline"
-    else:
-        title = "Timeline {}".format(title)
-
-    plot = figure(
         x_range=(
             data[prim_data]["data"][data[prim_data]["time_column"]][
                 int(len(data[prim_data]["data"].index) * 0.33)
@@ -386,16 +326,6 @@ def display_timeline(
                 int(len(data[prim_data]["data"].index) * 0.66)
             ],
         ),
-        min_border_left=50,
-        plot_height=height,
-        plot_width=900,
-        x_axis_label="Event Time",
-        x_axis_type="datetime",
-        x_minor_ticks=10,
-        tools=[hover, "xpan", "xwheel_zoom", "box_zoom", "reset", "save"],
-        title=title,
-    )
-    plot.yaxis.visible = False
     # Create plot bar to act as as range selector
     select = figure(
         title="Drag the middle and edges of the selection box to change the range above",
@@ -416,79 +346,9 @@ def display_timeline(
     select.ygrid.grid_line_color = None
     select.add_tools(range_tool)
     select.toolbar.active_multi = range_tool
-
-    # Tick formatting for different zoom levels
-    # '%H:%M:%S.%3Nms
-    tick_format = DatetimeTickFormatter()
-    tick_format.days = ["%m-%d %H:%M"]
-    tick_format.hours = ["%H:%M:%S"]
-    tick_format.minutes = ["%H:%M:%S"]
-    tick_format.seconds = ["%H:%M:%S"]
-    tick_format.milliseconds = ["%H:%M:%S.%3N"]
-    plot.xaxis[0].formatter = tick_format
-
-    for key, val in data.items():
-        plot.circle(
-            x=val["time_column"],
-            y="y_index",
-            color=val["color"],
-            alpha=0.5,
-            size=10,
-            source=val["source"],
             legend=key,
-        )
-
-    plot.legend.location = legend_loc
-    plot.legend.click_policy = "hide"
-
-    if alert is not None:
-        x_alert_label = pd.Timestamp(alert["StartTimeUtc"])
-        plot.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
         select.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
-        alert_label = Label(
-            x=x_alert_label,
-            y=0,
-            y_offset=10,
-            x_units="data",
-            y_units="data",
-            text="< Alert time",
-            render_mode="css",
-            border_line_color="red",
-            border_line_alpha=1.0,
-            background_fill_color="white",
-            background_fill_alpha=1.0,
-        )
-
-        plot.add_layout(alert_label)
         select.add_layout(alert_label)
-
-    show(column(plot, select))
-
-
-def _wrap_text(source_string, wrap_len):
-    if len(source_string) <= wrap_len:
-        return source_string
-    out_string = ""
-    input_parts = source_string.split()
-    out_line = ""
-    for part in input_parts:
-        if len(part) > wrap_len:
-            if out_line:
-                out_string += out_line + "\n"
-                out_line = ""
-            out_line = part[0:wrap_len] + "..."
-        else:
-            if out_line:
-                out_line += " " + part
-            else:
-                out_line = part
-            if len(out_line) > wrap_len:
-                out_string += out_line + "\n"
-                out_line = ""
-
-    return out_string
-
-
 # Constants for Windows logon
 _WIN_LOGON_TYPE_MAP = {
     0: "Unknown",

@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from collections import ChainMap
 from inspect import isclass
-import sys
+import sys  # noqa
 from typing import List, Mapping, Dict, Tuple, Union, Iterable, Optional
 import warnings
 
@@ -33,6 +33,14 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+_NO_PROVIDERS_MSSG = """
+No TI Providers are loaded - please check that
+you have correctly configured your msticpyconfig.yaml settings.
+For more information see
+https://msticpy.readthedocs.io/en/latest/TIProviders.html
+"""
 
 
 @export
@@ -272,6 +280,8 @@ class TILookup:
 
         result_list: List[Tuple[str, LookupResult]] = []
         selected_providers = self._select_providers(providers, prov_scope)
+        if not selected_providers:
+            raise RuntimeError(_NO_PROVIDERS_MSSG)
 
         ioc_type = ioc_type if ioc_type else TIProvider.resolve_ioc_type(observable)
         for prov_name, provider in selected_providers.items():
@@ -324,6 +334,9 @@ class TILookup:
         """
         result_list: List[pd.DataFrame] = []
         selected_providers = self._select_providers(providers, prov_scope)
+        if not selected_providers:
+            raise RuntimeError(_NO_PROVIDERS_MSSG)
+
         for prov_name, provider in selected_providers.items():
             provider_result = provider.lookup_iocs(
                 data=data,
@@ -335,6 +348,8 @@ class TILookup:
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
 
+        if not result_list:
+            print("No IoC matches")
         return pd.concat(result_list, sort=False)
 
     @staticmethod

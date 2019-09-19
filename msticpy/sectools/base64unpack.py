@@ -85,6 +85,8 @@ _BASE64_HEADER_OFFSET_TYPES = {"DAxMDA3NzcAMDAwMDAwM": "tar"}
 # Base64 simple regex
 _BASE64_REGEX = "(?P<b64>[A-Za-z0-9+/\\n\\r]{30,}={0,2})"
 BASE64_REGEX_C = re.compile(_BASE64_REGEX, re.I | re.X)
+# Same expresion without group for pandas
+_BASE64_REGEX_NG = "[A-Za-z0-9+/\\n\\r]{30,}={0,2}"
 
 # we use this to store a set of strings that match the B64 regex but
 # that we were unable to decode - so that we don't end up in an
@@ -175,7 +177,7 @@ def unpack_items(
             raise ValueError("column must be supplied if the input is a DataFrame")
 
         output_df = None
-        rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
+        rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX_NG)]
         for input_row in rows_with_b64_match[[column]].itertuples():
             input_string = _b64_string_pad(input_row[1])
             (decoded_string, output_frame) = _decode_b64_string_recursive(input_string)
@@ -209,13 +211,11 @@ def unpack(
 
     Returns
     -------
-    Tuple[str, pd.DataFrame] (if `input_string`)
+    Tuple[str, Optional[List[BinaryRecord]]]
         Decoded string and additional metadata
 
     Notes
     -----
-    If the input is a dataframe you must supply the name of the column to use.
-
     Items that decode to utf-8 or utf-16 strings will be returned as decoded
     strings replaced in the original string. If the encoded string is a
     known binary type it will identify the file type and return the hashes
@@ -227,23 +227,6 @@ def unpack(
 
     - decoded string: this is the input string with any decoded sections
       replaced by the results of the decoding
-
-    It also returns the data as pandas DataFrame with
-    the following columns:
-
-    - reference : this is an index that matches an index number in the
-      returned string (e.g. <<encoded binary type=pdf index=1.2').
-    - original_string : the string prior to decoding - file_type : the type
-      of file if this could be determined
-    - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
-      are broken out into separate columns)
-    - input_bytes : the binary image as a byte array
-    - decoded_string : printable form of the decoded string (either string
-      or list of hex byte values)
-    - encoding_type : utf-8, utf-16 or binary
-    - md5, sha1, sha256 : the respective hashes of the binary file_type,
-      file_hashes, input_bytes, md5, sha1, sha256 will be null if this item is
-      decoded to a string
 
     """
     # pylint: disable=invalid-name, global-statement
@@ -269,7 +252,7 @@ def unpack_df(data: pd.DataFrame, column: str, trace: bool = False) -> pd.DataFr
     Returns
     -------
     pd.DataFrame
-        Decoded stringa and additional metadata in dataframe
+        Decoded string and additional metadata in dataframe
 
     Notes
     -----
@@ -308,7 +291,7 @@ def unpack_df(data: pd.DataFrame, column: str, trace: bool = False) -> pd.DataFr
 
     output_df = pd.DataFrame(columns=_RESULT_FIELDS)
     row_results: List[pd.DataFrame] = []
-    rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX)]
+    rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX_NG)]
     for input_row in rows_with_b64_match[[column]].itertuples():
         (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
         output_frame["src_index"] = input_row.Index

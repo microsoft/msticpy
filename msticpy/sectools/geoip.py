@@ -36,7 +36,7 @@ from requests.exceptions import HTTPError
 from IPython import get_ipython
 from IPython.display import HTML, display
 import geoip2.database  # type: ignore
-from geoip2.errors import AddressNotFoundError
+from geoip2.errors import AddressNotFoundError  # type: ignore
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
