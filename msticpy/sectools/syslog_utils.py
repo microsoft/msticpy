@@ -259,6 +259,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             ses_opened = ses_opened + 1
         return logon_sessions
 
+
 def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
     """
     Clusters logon sessions observed in syslog by start and end time based on PAM events.
@@ -340,10 +341,9 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
             ses_close_time = ses_end
             ses_closed = ses_closed + 1
             ses_opened = ses_opened + 1
-        logon_sessions_df = pd.DataFrame({"User" : users,
-                                         "Start" : starts,
-                                         "Ends": ends})
+        logon_sessions_df = pd.DataFrame({"User": users, "Start": starts, "Ends": ends})
         return logon_sessions_df
+
 
 def risky_actions(
     events: pd.DataFrame,
@@ -493,4 +493,3 @@ def _normalize_to_utc(time_stamp: dt.datetime):
     else:
         time_stamp = time_stamp.astimezone(pytz.utc)
         return time_stamp
-
