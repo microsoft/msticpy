@@ -10,12 +10,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
-    ColumnDataSource,
-    DatetimeTickFormatter,
-    HoverTool,
-    Label,
-    RangeTool,
-)
 from bokeh.layouts import column
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
