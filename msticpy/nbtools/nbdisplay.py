@@ -288,61 +288,6 @@ def draw_alert_entity_graph(
         nx_graph, pos, edge_labels=elabels, font_size=font_size * 2 / 3, alpha=0.6
     )
 
-
-
-    data : dict
-        Data points to plot on the timeline.
-            Need to contain:
-                Key - Name of data type to be displayed in legend
-                Value - dict of data containing:
-                    time_column : str
-                        Name of the timestamp column
-                    source_columns : list
-                        List of source columns to use in tooltips
-                    color: str
-                        Color of datapoints for this data
-    legend_loc: str, optional
-        Which side of the graph you want the legend to appear on
-        if val["time_column"] not in val["source_columns"]:
-            val["source_columns"].append(val["time_column"])
-        if "y_index" not in val["source_columns"]:
-            val["source_columns"].append("y_index")
-        if "CommandLine" in val["source_columns"]:
-            graph_df = val["data"][val["source_columns"]].copy()
-    excl_cols = [data[prim_data]["time_column"], "CommandLine", "y_index"]
-        for col in data[prim_data]["source_columns"]
-        if col not in excl_cols
-        x_range=(
-            data[prim_data]["data"][data[prim_data]["time_column"]][
-                int(len(data[prim_data]["data"].index) * 0.33)
-            ],
-            data[prim_data]["data"][data[prim_data]["time_column"]][
-                int(len(data[prim_data]["data"].index) * 0.66)
-            ],
-        ),
-    # Create plot bar to act as as range selector
-    select = figure(
-        title="Drag the middle and edges of the selection box to change the range above",
-        plot_height=130,
-        plot_width=900,
-        x_axis_type="datetime",
-        y_axis_type=None,
-        tools="",
-        toolbar_location=None,
-    )
-    for key, val in data.items():
-        select.circle(
-            x=val["time_column"], y="y_index", color=val["color"], source=val["source"]
-        )
-    range_tool = RangeTool(x_range=plot.x_range)
-    range_tool.overlay.fill_color = "navy"
-    range_tool.overlay.fill_alpha = 0.2
-    select.ygrid.grid_line_color = None
-    select.add_tools(range_tool)
-    select.toolbar.active_multi = range_tool
-            legend=key,
-        select.line(x=[x_alert_label, x_alert_label], y=[0, y_index + 1])
-        select.add_layout(alert_label)
 # Constants for Windows logon
 _WIN_LOGON_TYPE_MAP = {
     0: "Unknown",
