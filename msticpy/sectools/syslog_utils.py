@@ -93,7 +93,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
             ip_entities.append(ip_entity)
     return ip_entities
 
-
+@export
 def create_host_record(
     syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
 ) -> Host:
@@ -259,7 +259,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             ses_opened = ses_opened + 1
         return logon_sessions
 
-
+@export
 def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
     """
     Clusters logon sessions observed in syslog by start and end time based on PAM events.
@@ -344,7 +344,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
         logon_sessions_df = pd.DataFrame({"User": users, "Start": starts, "Ends": ends})
         return logon_sessions_df
 
-
+@export
 def risky_actions(
     events: pd.DataFrame,
     risky_stuff: str = os.path.join(
