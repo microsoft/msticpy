@@ -93,6 +93,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
             ip_entities.append(ip_entity)
     return ip_entities
 
+
 @export
 def create_host_record(
     syslog_df: pd.DataFrame, heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
@@ -210,7 +211,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     ses_closed = 0
     logons_opened = (
         (
-            logon_events[
+            logon_events.loc[
                 logon_events["SyslogMessage"].str.contains("pam_unix.+session opened")
             ]
         )
@@ -219,7 +220,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     )
     logons_closed = (
         (
-            logon_events[
+            logon_events.loc[
                 logon_events["SyslogMessage"].str.contains("pam_unix.+session closed")
             ]
         )
@@ -258,6 +259,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             ses_closed = ses_closed + 1
             ses_opened = ses_opened + 1
         return logon_sessions
+
 
 @export
 def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
@@ -343,6 +345,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
             ses_opened = ses_opened + 1
         logon_sessions_df = pd.DataFrame({"User": users, "Start": starts, "Ends": ends})
         return logon_sessions_df
+
 
 @export
 def risky_actions(

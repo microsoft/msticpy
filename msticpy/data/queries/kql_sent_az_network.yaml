@@ -30,25 +30,25 @@ defaults:
         description: Column project statement
         type: str
         default: '
-          | project TenantId, TimeGenerated, 
-            FlowStartTime = FlowStartTime_t, 
-            FlowEndTime = FlowEndTime_t, 
-            FlowIntervalEndTime = FlowIntervalEndTime_t, 
+          | project TenantId, TimeGenerated,
+            FlowStartTime = FlowStartTime_t,
+            FlowEndTime = FlowEndTime_t,
+            FlowIntervalEndTime = FlowIntervalEndTime_t,
             FlowType = FlowType_s,
             ResourceGroup = split(VM_s, "/")[0],
             VMName = split(VM_s, "/")[1],
-            VMIPAddress = VMIP_s, 
+            VMIPAddress = VMIP_s,
             PublicIPs = extractall(@"([\d\.]+)[|\d]+", dynamic([1]), PublicIPs_s),
             SrcIP = SrcIP_s,
             DestIP = DestIP_s,
             ExtIP = iif(FlowDirection_s == "I", SrcIP_s, DestIP_s),
-            L4Protocol = L4Protocol_s, 
-            L7Protocol = L7Protocol_s, 
-            DestPort = DestPort_d, 
+            L4Protocol = L4Protocol_s,
+            L7Protocol = L7Protocol_s,
+            DestPort = DestPort_d,
             FlowDirection = FlowDirection_s,
-            AllowedOutFlows = AllowedOutFlows_d, 
+            AllowedOutFlows = AllowedOutFlows_d,
             AllowedInFlows = AllowedInFlows_d,
-            DeniedInFlows = DeniedInFlows_d, 
+            DeniedInFlows = DeniedInFlows_d,
             DeniedOutFlows = DeniedOutFlows_d,
             RemoteRegion = AzureRegion_s,
             VMRegion = Region_s'
@@ -62,7 +62,8 @@ sources:
         | where VM_s contains "{host_name}"
         | where FlowStartTime_t >= datetime({start})
         | where FlowEndTime_t <= datetime({end})
-        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP), 
+        {query_project}
+        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP),
                          iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
                          )
         | project-away ExtIP
@@ -77,4 +78,3 @@ sources:
         description: Optional additional filter clauses
         type: str
         default: ''
-   
