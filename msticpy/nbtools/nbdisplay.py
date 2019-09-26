@@ -288,6 +288,7 @@ def draw_alert_entity_graph(
         nx_graph, pos, edge_labels=elabels, font_size=font_size * 2 / 3, alpha=0.6
     )
 
+
 # Constants for Windows logon
 _WIN_LOGON_TYPE_MAP = {
     0: "Unknown",
