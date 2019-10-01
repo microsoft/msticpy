@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 import abc
 from functools import lru_cache
+from http import client
 from json import JSONDecodeError
 import traceback
 from typing import Any, Dict, List, Tuple
@@ -24,7 +25,7 @@ import requests
 
 from ..._version import VERSION
 from ...nbtools.utility import export
-from .ti_provider_base import LookupResult, TIProvider
+from .ti_provider_base import LookupResult, TIProvider, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -118,6 +119,7 @@ class HttpProvider(TIProvider):
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
+        result.provider = kwargs.get("provider_name", self.__class__.__name__)
         if result.status:
             return result
 
@@ -133,11 +135,12 @@ class HttpProvider(TIProvider):
             result.reference = req_params["url"]
             if result.status == 200:
                 result.raw_result = response.json()
-                result.result, result.details = self.parse_results(result)
+                result.result, severity, result.details = self.parse_results(result)
+                result.set_severity(severity)
             else:
                 result.raw_result = str(response)
                 result.result = False
-                result.details = "No response from provider."
+                result.details = self._response_message(result.status)
             return result
         except (
             LookupError,
@@ -221,7 +224,7 @@ class HttpProvider(TIProvider):
         return src.verb, req_dict
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
@@ -232,8 +235,9 @@ class HttpProvider(TIProvider):
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
@@ -255,7 +259,17 @@ class HttpProvider(TIProvider):
 
         """
         return (
-            response.status == 404
+            response.status != 200
             or not response.raw_result
             or not isinstance(response.raw_result, dict)
         )
+
+    @staticmethod
+    def _response_message(status_code):
+        if status_code == 404:
+            return "Not found."
+        if status_code == 401:
+            return "Authorization failed. Check account and key details."
+        if status_code == 403:
+            return "Request forbidden. Allowed query rate may have been exceeded."
+        return client.responses.get(status_code, "Unknown HTTP status code.")

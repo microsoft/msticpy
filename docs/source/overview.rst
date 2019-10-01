@@ -183,6 +183,7 @@ working with security data in Jupyter notebooks quicker and easier.
    alerts, events in a slightly more consumable way than print()
 
 `Notebooks Tools Usage <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb>`__
+`Event Timeline Visualization <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb>`__
 
 Data sub-package - *data*
 -------------------------
@@ -190,18 +191,22 @@ Data sub-package - *data*
 These components are currently still part of the nbtools sub-package but
 will be refactored to separate them into their own sub-package.
 
--  query manager - collection of modules that implement common kql/Log
-   Analytics queries using KqlMagic
+-  QueryProvider - extensible query library targeting Log Analytics or OData
+   endpoints. Built-in parameterized queries allow complex queries to be run
+   from a single function call. Add your own queries using a simple YAML
+   schema.
 -  security\_alert and security\_event - encapsulation classes for
    alerts and events. Each has a standard 'entities' property reflecting
    the entities found in the alert or event. These can also be used as
    meta-parameters for many of the queries. For example the query:
-   ``qry.list_host_logons(provs==[query_times, alert])`` will extract
+   ``qry.list_host_logons(query_times, alert)`` will extract
    the value for the ``hostname`` query parameter from the alert.
 -  entityschema - implements entity classes (e.g. Host, Account,
    IPAddress) used in Log Analytics alerts and in many of these modules.
    Each entity encaspulates one or more properties related to the
    entity.
+
+`Data Queries Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`__
 
 --------------
 
@@ -210,6 +215,7 @@ To-Do Items
 -----------
 
 -  Add additional notebooks to document use of the tools.
+-  Expand list of supported TI provider classes.
 
 Supported Platforms and Packages
 --------------------------------

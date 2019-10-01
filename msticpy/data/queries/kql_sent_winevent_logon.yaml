@@ -105,3 +105,37 @@ sources:
         description: Table name
         type: str
         default: 'SecurityEvent | where EventID == 4625'
+  list_logons_by_account:
+    description: Retrieves the logon events for an account
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Account has "{account_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: The account name to find
+        type: str
+  list_logon_failures_by_account:
+    description: Retrieves the logon failure events  for an account
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Account has "{account_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: The account name to find
+        type: str
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityEvent | where EventID == 4625'

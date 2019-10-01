@@ -26,7 +26,7 @@ import pandas as pd
 
 from . import tiproviders
 from .tiproviders import *  # noqa:F401, F403
-from .tiproviders.ti_provider_base import TIProvider, LookupResult, DF_COLUMNS_MAP
+from .tiproviders.ti_provider_base import TIProvider, LookupResult
 from .tiproviders.ti_provider_settings import get_provider_settings, reload_settings
 from ..nbtools.utility import export
 from .._version import VERSION
@@ -135,7 +135,6 @@ class TILookup:
                 providers.append(provider_class.__name__)
         return providers
 
-    @property
     def list_available_providers(self, show_query_types=False):  # type: ignore
         """
         Print a list of builtin providers with optional usage.
@@ -373,7 +372,7 @@ class TILookup:
         """
         return pd.DataFrame(
             {r_item[0]: pd.Series(attr.asdict(r_item[1])) for r_item in ioc_lookup[1]}
-        ).T.rename(columns=DF_COLUMNS_MAP)
+        ).T.rename(columns=LookupResult.column_map())
 
     def _select_providers(
         self, providers: List[str] = None, prov_scope: str = "primary"

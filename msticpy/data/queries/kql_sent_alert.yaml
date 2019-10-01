@@ -131,6 +131,7 @@ sources:
       host_name:
         description: The hostname to find
         type: str
+        default: ''
       account_name:
         description: The account name to find
         type: str

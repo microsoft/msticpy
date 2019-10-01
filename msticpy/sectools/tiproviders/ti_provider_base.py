@@ -22,7 +22,7 @@ from collections import Counter, namedtuple
 
 from functools import singledispatch, lru_cache
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, Generator
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 import socket
 from socket import gaierror
 
@@ -46,13 +46,12 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 class TISeverity(Enum):
     """Threat intelligence report severity."""
 
+    unknown = -1
     information = 0
     warning = 1
     high = 2
 
 
-# pylint: disable=too-few-public-methods
-# TODO implement severity scoring
 @attr.s(auto_attribs=True)
 class LookupResult:
     """Lookup result for IoCs."""
@@ -60,8 +59,9 @@ class LookupResult:
     ioc: str
     ioc_type: str
     query_subtype: Optional[str] = None
+    provider: Optional[str] = None
     result: bool = False
-    severity: int = attr.ib(default=TISeverity.information.value)
+    severity: int = attr.ib(default=0)
     details: Any = None
     raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
@@ -72,9 +72,9 @@ class LookupResult:
         del attribute
         if isinstance(value, TISeverity):
             self.severity = value.value
-        if isinstance(value, str) and value.lower() in TISeverity.__members__:
+        elif isinstance(value, str) and value.lower() in TISeverity.__members__:
             self.severity = TISeverity[value.lower()].value
-        elif isinstance(value, int):
+        elif isinstance(value, int) and 0 <= value <= 2:
             self.severity = TISeverity(value).value
         else:
             self.severity = TISeverity.information.value
@@ -85,7 +85,7 @@ class LookupResult:
         p_pr = pprint.PrettyPrinter(indent=4)
         print("ioc:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
-        print("severity:", self.severity)
+        print("severity:", self.severity, self.severity_name)
         p_pr.pprint(self.details)
         print("reference: ", self.reference)
 
@@ -96,7 +96,7 @@ class LookupResult:
         p_pr.pprint(self.raw_result)
 
     @property
-    def severity_desc(self) -> str:
+    def severity_name(self) -> str:
         """
         Return text description of severity score.
 
@@ -108,21 +108,29 @@ class LookupResult:
         """
         try:
             return TISeverity(self.severity).name
-        except (ValueError, AttributeError):
-            return "unknown"
+        except ValueError:
+            return TISeverity.unknown.name
 
+    def set_severity(self, value: Any):
+        """
+        Set the severity from enum, int or string.
 
-# Mapping for DataFrame columns
-DF_COLUMNS_MAP: Dict[str, str] = {
-    "ioc": "IoC",
-    "ioc_type": "IoCType",
-    "query_subtype": "QuerySubtype",
-    "result": "Result",
-    "details": "Details",
-    "raw_result": "RawResult",
-    "reference": "Reference",
-    "status": "Status",
-}
+        Parameters
+        ----------
+        value : Any
+            The severity value to set
+
+        """
+        self._check_severity(None, value)
+
+    @classmethod
+    def column_map(cls):
+        """Return a dictionary that maps fields to DF Names."""
+        col_mapping = {}
+        for name in attr.fields_dict(cls):
+            out_name = "".join([part.capitalize() for part in name.split("_")])
+            col_mapping[name] = out_name
+        return col_mapping
 
 
 _IOC_EXTRACT = IoCExtract()
@@ -212,14 +220,10 @@ class TIProvider(ABC):
             )
             results.append(pd.Series(attr.asdict(item_result)))
 
-        return (
-            pd.DataFrame(data=results)
-            .rename(columns=DF_COLUMNS_MAP)
-            .drop(columns=["Status"])
-        )
+        return pd.DataFrame(data=results).rename(columns=LookupResult.column_map())
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
@@ -230,8 +234,9 @@ class TIProvider(ABC):
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
@@ -578,7 +583,7 @@ def entropy(input_str: str) -> float:
 @singledispatch
 def generate_items(
     data: Any, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None
-) -> Generator:
+) -> Iterable[Tuple[Optional[str], Optional[str]]]:
     """
     Generate item pairs from different input types.
 
@@ -593,7 +598,7 @@ def generate_items(
 
     Returns
     -------
-    Generator[Tuple[str, str]] - a tuple of Observable/Type.
+    Iterable[Tuple[Optional[str], Optional[str]]]] - a tuple of Observable/Type.
 
     """
     del obs_col, ioc_type_col

@@ -24,7 +24,7 @@ from ..._version import VERSION
 from ...nbtools.utility import export
 from ...nbtools.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
-from .ti_provider_base import LookupResult, TIProvider, generate_items
+from .ti_provider_base import LookupResult, TIProvider, generate_items, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -97,6 +97,7 @@ class KqlTIProvider(TIProvider):
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
+        result.provider = kwargs.get("provider_name", self.__class__.__name__)
         if result.status:
             return result
 
@@ -115,12 +116,13 @@ class KqlTIProvider(TIProvider):
             )
         data_result = query_obj(**query_params)
         if not isinstance(data_result, pd.DataFrame) or data_result.empty:
-            result.details = "0 rows returned."
+            result.details = "Not found."
             result.status = -1
             return result
 
         result.raw_result = data_result
-        result.result, result.details = self.parse_results(result)
+        result.result, severity, result.details = self.parse_results(result)
+        result.set_severity(severity)
         # Save the query that was used.
         result.reference = query_obj("query", **query_params)
         return result
@@ -198,12 +200,14 @@ class KqlTIProvider(TIProvider):
                     warnings.warn("No results return from data provider.")
                 else:
                     warnings.warn(
-                        "No results return from data provider."
+                        "No results return from data provider. "
                         + str(data_result.completion_query_info)
+                        if data_result
+                        else "Unknown error"
                     )
 
-            src_ioc_frame = pd.DataFrame(obs_set, columns=["IoC"])
-            src_ioc_frame["IoCType"] = ioc_type
+            src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
+            src_ioc_frame["IocType"] = ioc_type
             src_ioc_frame["QuerySubtype"] = query_type
             src_ioc_frame["Reference"] = query_obj("query", **query_params)
 
@@ -211,26 +215,28 @@ class KqlTIProvider(TIProvider):
             # and continue
             if not isinstance(data_result, pd.DataFrame) or data_result.empty:
                 src_ioc_frame["Result"] = False
-                src_ioc_frame["Details"] = "0 rows returned."
+                src_ioc_frame["Details"] = "Not found."
                 src_ioc_frame["Status"] = -1
+                src_ioc_frame["Severity"] = TISeverity.information.value
                 all_results.append(src_ioc_frame)
                 continue
 
             # Create our results columns
             data_result["Result"] = True
             data_result["Status"] = 0
+            data_result["Severity"] = self._get_severity(data_result)
             data_result["Details"] = self._get_detail_summary(data_result)
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
 
             combined_results_df = self._combine_results(
-                input_df=src_ioc_frame, results_df=data_result, ioc_key="IoC"
+                input_df=src_ioc_frame, results_df=data_result, reslt_ioc_key="IoC"
             )
             all_results.append(combined_results_df)
 
-        return pd.concat(all_results, ignore_index=True, axis=0)
+        return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
@@ -241,8 +247,9 @@ class KqlTIProvider(TIProvider):
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
@@ -250,6 +257,11 @@ class KqlTIProvider(TIProvider):
     @staticmethod
     @abc.abstractmethod
     def _get_detail_summary(data_result: pd.DataFrame) -> pd.Series:
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         pass
 
     def _create_query_provider(self, **kwargs):
@@ -326,7 +338,7 @@ class KqlTIProvider(TIProvider):
 
     @staticmethod
     def _combine_results(
-        input_df: pd.DataFrame, results_df: pd.DataFrame, ioc_key: str
+        input_df: pd.DataFrame, results_df: pd.DataFrame, reslt_ioc_key: str
     ) -> pd.DataFrame:
         # Clean out unwanted columns from the results and merge with
         # the original IoCList
@@ -334,18 +346,28 @@ class KqlTIProvider(TIProvider):
         # merge the results with our original IoC set
         # and drop all of the columns that we are not interested in
         columns_to_drop = set(results_df.columns.to_list())
-        colums_to_keep = {"IoC", "Result", "Status", "Details", "RawResult"}
+        colums_to_keep = {
+            reslt_ioc_key,
+            "Result",
+            "Status",
+            "Severity",
+            "Details",
+            "RawResult",
+        }
         columns_to_drop = columns_to_drop - colums_to_keep
 
         cleaned_results_df = results_df.copy().drop(columns=columns_to_drop)
         combined_df = input_df.copy()
-        combined_df["IoCKey"] = input_df["IoC"].str.lower()
-        cleaned_results_df = cleaned_results_df.rename(columns={ioc_key: "IoCKey"})
+        combined_df["IoCKey"] = input_df["Ioc"].str.lower()
+        cleaned_results_df = cleaned_results_df.rename(
+            columns={reslt_ioc_key: "IoCKey"}
+        )
         combined_df = combined_df.merge(
             right=cleaned_results_df, how="left", on="IoCKey"
         ).drop(columns="IoCKey")
         # Fill in any NaN values from the merge
         combined_df["Result"] = combined_df["Result"].fillna(False)
-        combined_df["Details"] = combined_df["Details"].fillna("0 rows returned.")
+        combined_df["Details"] = combined_df["Details"].fillna("Not found.")
         combined_df["Status"] = combined_df["Status"].fillna(-1)
+        combined_df["Severity"] = combined_df["Severity"].fillna(0)
         return combined_df

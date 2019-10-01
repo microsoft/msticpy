@@ -28,7 +28,7 @@ or for the latest dev build
 
 Full documentation is at [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/overview.html)
 
-Sample notebooks for many of the modules are in the [docs/notebooks](./docs/notebooks) folder and accompanying notebooks.
+Sample notebooks for many of the modules are in the [docs/notebooks](https://github.com/microsoft/msticpy/blob/master/docs/notebooks) folder and accompanying notebooks.
 
 You can also browse through the sample notebooks referenced at the end of this document
 (especially the *Windows Alert Investigation* notebook) to see some of the functionality used in context.
@@ -48,7 +48,7 @@ will unpack the contents. The results of each decode/unpack are rechecked for fu
 base64 content and will recurse down up to 20 levels (default can be overridden).
 Output is to a decoded string (for single string input) or a DataFrame (for dataframe input).
 
-[Base64Unpack Notebook](./docs/notebooks/Base64Unpack.ipynb)
+[Base64Unpack Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb)
 
 ### iocextract
 
@@ -68,7 +68,7 @@ You can modify or add to the regular expressions used at runtime.
 
 Output is a dictionary of matches (for single string input) or a DataFrame (for dataframe input).
 
-[Base64Unpack Notebook](./docs/notebooks/IoCExtract.ipynb)
+[Base64Unpack Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb)
 
 ### tiproviders
 
@@ -81,7 +81,7 @@ and an API key. Some providers also enforce throttling (especially for free
 tiers), which might affect performing bulk lookups.
 
 For more details see :doc:`TIProviders` and
-[TILookup Usage Notebook](./docs/notebooks/TIProviders.ipynb)
+[TILookup Usage Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb)
 
 ### vtlookup
 
@@ -96,7 +96,7 @@ Support IoC Types:
 - DNS Domain
 - IPv4 Address
 
-[VTLookup Notebook](./docs/notebooks/VirusTotalLookup.ipynb)
+[VTLookup Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/VirusTotalLookup.ipynb)
 
 ### geoip
 
@@ -111,7 +111,7 @@ a paid tier will normally get you more accuracy, more detail and
 a higher throughput rate. Maxmind geolite uses a downloadable database,
 while IPStack is an online lookup (API key required).
 
-[GeoIP Lookup Notebook](./docs/notebooks/GeoIPLookups.ipynb)
+[GeoIP Lookup Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb)
 
 ### eventcluster
 
@@ -124,16 +124,17 @@ This is an unsupervised learning module implemented using SciKit Learn DBScan.
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that
 does some maintenance on thousands of servers with a commandline like the following
+
 ```bash
 install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
 ```
-can be collapsed into a single cluster pattern by ignoring the character 
+
+can be collapsed into a single cluster pattern by ignoring the character
 values of the host and guids in the string and using delimiters or tokens to
-group the values. This allows you to more easily see distinct patterns of 
+group the values. This allows you to more easily see distinct patterns of
 activity.
 
-[Event Clustering Notebook](./docs/notebooks/EventClustering.ipynb)
-
+[Event Clustering Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb)
 
 ### outliers
 
@@ -159,22 +160,29 @@ with security data in Jupyter notebooks quicker and easier.
 - nbdisplay - functions that implement common display of things like alerts, events in a slightly more consumable way than print()
 - entityschema - implements entity classes (e.g. Host, Account, IPAddress) used in Log Analytics alerts and in many of these modules. Each entity encaspulates one or more properties related to the entity.
 
-[Notebook Tools Notebook](./docs/notebooks/NotebookWidgets.ipynb)
+[Notebook Tools Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb) and [Event Timeline Visualization](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb)
 
 ## Data sub-package - `data`
 
 These components are currently still part of the nbtools sub-package but will be
 refactored to separate them into their own package.
 
-- query manager - collection of modules that implement common kql/Log Analytics queries using KqlMagic
+- QueryProvider - extensible query library targeting Log Analytics or OData
+  endpoints. Built-in parameterized queries allow complex queries to be run
+  from a single function call. Add your own queries using a simple YAML
+  schema.
 - security_alert and security_event - encapsulation classes for alerts and events.
+- entity_schema - definitions for multiple entities (Host, Account, File, IPAddress,
+  etc.)
 
 Each has a standard 'entities' property reflecting the entities found in the alert or event.
 These can also be used as meta-parameters for many of the queries.
 For example, the following query will extract the value for the `hostname` query parameter
 from the alert:
 
-`qry.list_host_logons(provs==[query_times, alert])`
+`qry.list_host_logons(query_times, alert)`
+
+[Data Queries Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb)
 
 ---
 
@@ -196,8 +204,8 @@ See the following notebooks for more examples of the use of this package in prac
 
 ## To-Do Items
 
-- Refactor data modules into separate sub-package(s).
 - Add additional notebooks to document use of the tools.
+- Expand list of supported TI provider classes.
 
 ## Supported Platforms and Packages
 

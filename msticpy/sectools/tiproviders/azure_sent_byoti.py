@@ -18,7 +18,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...nbtools.utility import export
-from .ti_provider_base import LookupResult
+from .ti_provider_base import LookupResult, TISeverity
 from .kql_base import KqlTIProvider
 
 __version__ = VERSION
@@ -51,7 +51,7 @@ class AzSTI(KqlTIProvider):
     _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
     _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
@@ -62,27 +62,35 @@ class AzSTI(KqlTIProvider):
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
         if response.raw_result is None:
-            return False, "No data"
+            return False, TISeverity.information, "No data"
 
+        severity = TISeverity.warning
         # if this is a series (single row) return a dictionary
         if isinstance(response.raw_result, pd.Series):
             extracted_data = response.raw_result[
                 ["Action", "ThreatType", "ThreatSeverity", "Active", "ConfidenceScore"]
             ].to_dict()
-            return True, extracted_data
+            if extracted_data["Action"].lower() in ["alert", "block"]:
+                severity = TISeverity.high
+            return True, TISeverity.warning, extracted_data
         # if this is a dataframe (multiple rows)
         # concatenate the values for each column/record into a list
         # and return as a dictionary
         if isinstance(response.raw_result, pd.DataFrame):
             d_frame = response.raw_result
+            if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
+                severity = TISeverity.high
+
             return (
                 True,
+                severity,
                 {
                     "Action": self._series_to_list(d_frame["Action"]),
                     "ThreatType": self._series_to_list(d_frame["ThreatType"]),
@@ -92,7 +100,7 @@ class AzSTI(KqlTIProvider):
                     "ConfidenceScore": self._series_to_list(d_frame["ConfidenceScore"]),
                 },
             )
-        return False, "No data"
+        return False, TISeverity.information, "No data"
 
     @staticmethod
     def _get_detail_summary(data_result: pd.DataFrame) -> pd.Series:
@@ -107,5 +115,15 @@ class AzSTI(KqlTIProvider):
                 "Description": x.Description,
                 "ConfidenceScore": x.ConfidenceScore,
             },
+            axis=1,
+        )
+
+    @staticmethod
+    def _get_severity(data_result: pd.DataFrame) -> pd.Series:
+        # For the input frame return severity in a series
+        return data_result.apply(
+            lambda x: TISeverity.high.value
+            if x.Action.lower() in ["alert", "block"]
+            else TISeverity.warning.value,
             axis=1,
         )
