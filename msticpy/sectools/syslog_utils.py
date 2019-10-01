@@ -226,7 +226,9 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
             user = (logons_opened.iloc[ses_opened]).Sudoer
         else:
             user = "Unknown"
-        if ses_start < ses_close_time or ses_opened != 0:
+        if ses_start > ses_close_time or ses_opened == 0:
+            pass
+        else:
             ses_opened += 1
             continue
         if ses_end < ses_start:
@@ -311,7 +313,9 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
             user = (logons_opened.iloc[ses_opened]).Sudoer
         else:
             user = "Unknown"
-        if ses_start < ses_close_time or ses_opened != 0:
+        if ses_start > ses_close_time or ses_opened == 0:
+            pass
+        else:
             ses_opened += 1
             continue
         if ses_end < ses_start:

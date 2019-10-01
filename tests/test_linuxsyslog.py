@@ -25,6 +25,13 @@ def test_cluster_syslog_logons():
     assert len(output) >= 1
 
 
+def test_cluster_syslog_logons_df():
+    input_file = os.path.join(_TEST_DATA, "linux_logons.csv")
+    input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
+    output = ls.cluster_syslog_logons_df(input_df)
+    assert len(output.index) >= 1
+
+
 def test_host_data():
     syslog_file = os.path.join(_TEST_DATA, "syslog_data.csv")
     syslog_df = pd.read_csv(syslog_file, parse_dates=["TimeGenerated"])
