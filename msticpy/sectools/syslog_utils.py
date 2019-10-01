@@ -19,7 +19,6 @@ from typing import Tuple
 import pytz
 
 import ipywidgets as widgets
-
 import numpy as np
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
@@ -53,14 +52,6 @@ class DataError(Error):
     """Raised when thereis a data input error."""
 
 
-class KQLError(Error):
-    """Raised whent there is an error related to KQL."""
-
-
-class KQLDataError(KQLError):
-    """Raised when there is an error related to the data returned by KQL."""
-
-
 def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entitity.
@@ -68,7 +59,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
     Parameters
     ----------
     ip_str : str
-        The string containing the IP Address
+        The string of the IP Address
 
     Returns
     -------
@@ -117,17 +108,11 @@ def create_host_record(
     Host
         Details of the host data collected
 
-    Raises
-    ------
-    KQLDataError
-        Could not find any data for the computer in the time window
-
     """
-    if not isinstance(syslog_df, pd.DataFrame) or syslog_df.empty:
-        raise KQLDataError(f"No syslog data provided")
-
     host_entity = Host(src_event=syslog_df.iloc[0])
     applications = []
+
+    # Produce list of processes on the host that are not part of a 'standard' linux distro
     _apps = syslog_df["ProcessName"].unique().tolist()
     for app in _apps:
         if app not in (
@@ -143,12 +128,8 @@ def create_host_record(
             "syslog-ng",
         ):
             applications.append(app)
-        else:
-            pass
 
-    if not isinstance(heartbeat_df, pd.DataFrame) or heartbeat_df.empty:
-        raise KQLDataError(f"No heartbeat data provided")
-
+    # Produce host_entity record mapping linux heartbeat elements to host_entity fields
     host_hb = heartbeat_df.iloc[0]
     host_entity.SourceComputerId = host_hb["SourceComputerId"]
     host_entity.OSType = host_hb["OSType"]
@@ -168,9 +149,8 @@ def create_host_record(
     ip_entity.Location = geoloc_entity
     host_entity.IPAddress = ip_entity
 
-    if az_net_df is None or az_net_df.empty:
-        pass
-    else:
+    # If Azure network data present add this to host record
+    if az_net_df is not None and not az_net_df.empty:
         if len(az_net_df) == 1:
             priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
             host_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
@@ -210,6 +190,7 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     ses_close_time = dt.datetime.now()
     ses_opened = 0
     ses_closed = 0
+    # Extract logon session opened and logon session closed data.
     logons_opened = (
         (
             logon_events.loc[
@@ -232,26 +213,29 @@ def cluster_syslog_logons(logon_events: pd.DataFrame) -> dict:
     if logons_opened.empty or logons_closed.empty:
         raise DataError("There are no logon sessions in the supplied data set")
 
+    # For each session identify the likely start and end times
     while ses_opened < len(logons_opened.index) and ses_closed < len(
         logons_closed.index
     ):
         ses_start = (logons_opened.iloc[ses_opened]).name
         ses_end = (logons_closed.iloc[ses_closed]).name
+        # If we can identify a user for the session add this to the details
         if "User" in logons_opened.columns:
             user = (logons_opened.iloc[ses_opened]).User
         elif "Sudoer" in logons_opened.columns:
             user = (logons_opened.iloc[ses_opened]).Sudoer
         else:
             user = "Unknown"
-        if ses_start > ses_close_time or ses_opened == 0:
-            pass
-        else:
+        if ses_start < ses_close_time or ses_opened != 0:
             ses_opened += 1
             continue
         if ses_end < ses_start:
             ses_closed += 1
             continue
-        logon_string = f"Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}"
+        # Produce dictionary of logon session components with descriptive string as key
+        logon_string = (
+            f"Logged on user: {user} Start time: {ses_start} End time: {ses_end}"
+        )
         logon_sessions[logon_string] = {
             "start": ses_start,
             "end": ses_end,
@@ -282,17 +266,17 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
 
     Raises
     ------
-    KQLDataError
+    DataError
         There are no logon sessions in the supplied data set
 
     """
-    logon_sessions = {}
     users = []
     starts = []
     ends = []
     ses_close_time = dt.datetime.now()
     ses_opened = 0
     ses_closed = 0
+    # Extract logon session opened and logon session closed data.
     logons_opened = (
         (
             logon_events[
@@ -314,20 +298,20 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
     if logons_opened.empty or logons_closed.empty:
         raise DataError("There are no logon sessions in the supplied data set")
 
+    # For each session identify the likely start and end times
     while ses_opened < len(logons_opened.index) and ses_closed < len(
         logons_closed.index
     ):
         ses_start = (logons_opened.iloc[ses_opened]).name
         ses_end = (logons_closed.iloc[ses_closed]).name
+        # If we can identify a user for the session add this to the details
         if "User" in logons_opened.columns:
             user = (logons_opened.iloc[ses_opened]).User
         elif "Sudoer" in logons_opened.columns:
             user = (logons_opened.iloc[ses_opened]).Sudoer
         else:
             user = "Unknown"
-        if ses_start > ses_close_time or ses_opened == 0:
-            pass
-        else:
+        if ses_start < ses_close_time or ses_opened != 0:
             ses_opened += 1
             continue
         if ses_end < ses_start:
@@ -336,12 +320,6 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> dict:
         users.append(user)
         starts.append(ses_start)
         ends.append(ses_end)
-        logon_string = f"Logged on user: {user} Session start time: {ses_start} Session end time: {ses_end}"
-        logon_sessions[logon_string] = {
-            "start": ses_start,
-            "end": ses_end,
-            "user": user,
-        }
         ses_close_time = ses_end
         ses_closed = ses_closed + 1
         ses_opened = ses_opened + 1
@@ -375,10 +353,16 @@ def risky_cmd_line(
     risky actions: dict
         A dictionary of commands that match a risky pattern
 
+    Raises
+    ------
+    DataError
+        This function currently only supports Syslog
+
     """
     if "SyslogMessage" not in events.columns:
         raise DataError("This function currently only supports Syslog")
 
+    # Handle situations where command line activity has already been extracted to a 'Command' column
     if "Command" in events.columns:
         events["Command"].replace("", np.nan, inplace=True)
         syslog_actions = (
@@ -400,6 +384,7 @@ def risky_cmd_line(
     with open(risky_stuff) as json_file:
         risky_data = json.load(json_file)
 
+    # Decode any Base64 encoded commands so we can match on them as well
     b64_regex = re.compile(
         "(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)"
     )
@@ -462,6 +447,7 @@ def sudo_actions_speed(
 
     suspicious_actions = []
     sudo_events["Command"].replace("", np.nan, inplace=True)
+    # Only focus on logs that contain comand line activity
     sudo_actions = sudo_events.dropna(subset=["Command"]).reset_index()
     df_len = len(sudo_actions.index) - (events + 1)
     while df_len >= 0:
@@ -481,19 +467,19 @@ def sudo_actions_speed(
 
 @export
 def risky_sudo_sessions(
-    risky_actions: dict, sudo_sessions: dict, suspicious_actions: list
+    sudo_sessions: dict, risky_actions: dict = None, suspicious_actions: list = None
 ) -> dict:
     """
     Detect if a sudo session occurs at the point of a suspicious event.
 
     Parameters
     ----------
-    risky_actions: dict
-        Dictionary of risky sudo commands (as generated by risky_actions)
-    suspicious_actions: list
-        List of risky sudo commands (as generated by risky_actions)
     sudo_sessions: dict
         Dictionary of sudo sessions (as generated by cluster_syslog_logons)
+    risky_actions: dict (Optional)
+        Dictionary of risky sudo commands (as generated by risky_actions)
+    suspicious_actions: list (Optional)
+        List of risky sudo commands (as generated by risky_actions)
 
     Returns
     -------
@@ -501,51 +487,66 @@ def risky_sudo_sessions(
         A dictionary of sudo sessions with flags denoting risk
 
     """
-    risky_sessions = {}
+    if risky_actions is None and suspicious_actions is None:
+        raise DataError(
+            "At least one of risky_actions or suspicious_actions must be supplied"
+        )
 
-    if risky_actions and not suspicious_actions:
-        for key, value in risky_actions.items():
-            for sess_key, sess_val in sudo_sessions.items():
-                if (
-                    _normalize_to_utc(sess_val["start"])
-                    <= _normalize_to_utc(key)
-                    <= _normalize_to_utc(sess_val["end"])
-                ):
-                    risky_sessions.update({sess_key: value})
-    elif suspicious_actions and not risky_actions:
-        for event in suspicious_actions:
-            for key, value in event.items():
-                for sess_key, sess_val in sudo_sessions.items():
-                    if (
-                        _normalize_to_utc(sess_val["start"])
-                        <= _normalize_to_utc(value[0]["TimeGenerated"].iloc[1])
-                        <= _normalize_to_utc(sess_val["end"])
-                    ):
-                        risky_sessions.update({sess_key: "Suspicious event pattern"})
+    risky_sessions = {}
+    # Depending on whether we have risky or suspicious acitons or both
+    # identify sessions which these actions occur in
+    if risky_actions is not None and suspicious_actions is None:
+        risky_sessions = _find_risky_sudo_session(
+            risky_actions=risky_actions, sudo_sessions=sudo_sessions
+        )
+    elif suspicious_actions is not None and risky_actions is None:
+        risky_sessions = _find_suspicious_sudo_session(
+            suspicious_actions=suspicious_actions, sudo_sessions=sudo_sessions
+        )
     else:
-        for key, value in risky_actions.items():
-            for sess_key, sess_val in sudo_sessions.items():
-                if (
-                    _normalize_to_utc(sess_val["start"])
-                    <= _normalize_to_utc(key)
-                    <= _normalize_to_utc(sess_val["end"])
-                ):
-                    risky_sessions.update({sess_key: value})
-        for event in suspicious_actions:
-            for key, value in event.items():
-                for sess_key, sess_val in sudo_sessions.items():
-                    if (
-                        _normalize_to_utc(sess_val["start"])
-                        <= _normalize_to_utc(value[0]["TimeGenerated"].iloc[1])
-                        <= _normalize_to_utc(sess_val["end"])
-                    ):
-                        risky_sessions.update({sess_key: "Suspicious event pattern"})
+        risky_act_sessions = _find_risky_sudo_session(
+            risky_actions=risky_actions, sudo_sessions=sudo_sessions
+        )
+        susp_sessions = _find_suspicious_sudo_session(
+            suspicious_actions=suspicious_actions, sudo_sessions=sudo_sessions
+        )
+        risky_sessions = {**risky_act_sessions, **susp_sessions}
     return risky_sessions
 
 
 def _normalize_to_utc(time_stamp: dt.datetime):
+    # Normalize datetimes to UTC in case we have mixed timezones in datasets
     if time_stamp.tzinfo is None or time_stamp.tzinfo.utcoffset(time_stamp) is None:
         time_stamp = time_stamp.replace(tzinfo=pytz.UTC)
     else:
         time_stamp = time_stamp.astimezone(pytz.utc)
     return time_stamp
+
+
+def _find_risky_sudo_session(risky_actions: dict, sudo_sessions: dict):
+    risky_sessions = {}
+    # Determine if risky event occurs during a session time window
+    for key, value in risky_actions.items():
+        for sess_key, sess_val in sudo_sessions.items():
+            if (
+                _normalize_to_utc(sess_val["start"])
+                <= _normalize_to_utc(key)
+                <= _normalize_to_utc(sess_val["end"])
+            ):
+                risky_sessions.update({sess_key: value})
+    return risky_sessions
+
+
+def _find_suspicious_sudo_session(suspicious_actions: list, sudo_sessions: dict):
+    risky_sessions = {}
+    # Determine if suspicious event occurs during a session time window
+    for event in suspicious_actions:
+        for value in event.values():
+            for sess_key, sess_val in sudo_sessions.items():
+                if (
+                    _normalize_to_utc(sess_val["start"])
+                    <= _normalize_to_utc(value[0]["TimeGenerated"].iloc[1])
+                    <= _normalize_to_utc(sess_val["end"])
+                ):
+                    risky_sessions.update({sess_key: "Suspicious event pattern"})
+    return risky_sessions

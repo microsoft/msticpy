@@ -59,21 +59,21 @@ sources:
         | where Facility == "auth" or Facility == "authpriv"
         | where ProcessName != "sudo" and ProcessName != "CRON"
         | extend LogonResult = iif(
-                                (SyslogMessage contains "failure" or SyslogMessage contains "invalid" or 
-                                SyslogMessage contains "Uanble to negotiate" or 
-                                SyslogMessage contains "authentication failures" or 
-                                SyslogMessage contains "Did not receive identification" or 
-                                SyslogMessage contains " Bad protocol version identification" or 
+                                (SyslogMessage contains "failure" or SyslogMessage contains "invalid" or
+                                SyslogMessage contains "Unable to negotiate" or
+                                SyslogMessage contains "authentication failures" or
+                                SyslogMessage contains "Did not receive identification" or
+                                SyslogMessage contains " Bad protocol version identification" or
                                 SyslogMessage matches regex "^Connection closed .* [preauth]")
-                                or 
+                                or
                                 (Facility == "authpriv" and ProcessName == "su" and SyslogMessage contains "FAILED" and SyslogMessage !contains "pam_"),
-                                 "Failure", 
+                                 "Failure",
                                  iif(
-                                                SyslogMessage contains "Accepted" or 
+                                                SyslogMessage contains "Accepted" or
                                                 (ProcessName == "su" and SyslogMessage contains "Successful"), "Success", "Unknown"
                                     )
                                 )
-        | extend User = iif(SyslogMessage contains "publickey", extract("(for )([[:alnum:]]+)",2,SyslogMessage), extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)), SourceIP = extract("(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
+        | extend User = iif(SyslogMessage contains "publickey", extract("(for )([[:alnum:]]+)",2,SyslogMessage), extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)), SourceIP = extract("(([0-9]{1,3}\\.){3}[0-9]{1,3})",1,SyslogMessage), SourcePort = extract("port ([0-9]+)",1,SyslogMessage),UID = extract("uid=([0-9]+)",1,SyslogMessage),SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
         | where User contains "{account_name}"'
     parameters:
       host_name:
