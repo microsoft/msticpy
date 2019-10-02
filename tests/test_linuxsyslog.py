@@ -23,7 +23,7 @@ def test_cluster_syslog_logons_df():
     input_file = os.path.join(_TEST_DATA, "linux_logons.csv")
     input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
     output = ls.cluster_syslog_logons_df(input_df)
-    assert len(output.index) >= 1
+    assert len(output.index) >= 1 # nosec
 
 
 def test_host_data():
@@ -34,15 +34,15 @@ def test_host_data():
     az_net_file = os.path.join(_TEST_DATA, "az_net.csv")
     az_net_df = pd.read_csv(az_net_file)
     host_record = ls.create_host_record(syslog_df, heartbeat_df, az_net_df)
-    assert type(host_record) == Host
-    assert host_record.OSType == "Linux"
+    assert type(host_record) == Host # nosec
+    assert host_record.OSType == "Linux" # nosec
 
 
 def test_cluster_sudo_sessions():
     input_file = os.path.join(_TEST_DATA, "sudo_events.csv")
     input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
     output = ls.cluster_syslog_logons_df(input_df)
-    assert len(output.index) >= 1
+    assert len(output.index) >= 1 # nosec
 
 
 def test_risky_sudo_sessions():
@@ -58,5 +58,5 @@ def test_risky_sudo_sessions():
         suspicious_actions=suspicious_events,
         sudo_sessions=sudo_sessions,
     )
-    assert len(output) == 2
-    assert type(output) == dict
+    assert len(output) == 2 # nosec
+    assert type(output) == dict # nosec

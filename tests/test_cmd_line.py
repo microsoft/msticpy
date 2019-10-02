@@ -22,17 +22,17 @@ def test_risky_cmd_line():
     input_file = os.path.join(_TEST_DATA, "sudo_data.csv")
     input_df = pd.read_csv(input_file)
     output = cl.risky_cmd_line(events=input_df, log_type="Syslog")
-    assert len(output) >= 1
-    assert type(output) == dict
-    assert output["2019-07-05T18:19:52.873Z"] == "/bin/bash"
+    assert len(output) >= 1 # nosec
+    assert type(output) == dict # nosec
+    assert output["2019-07-05T18:19:52.873Z"] == "/bin/bash" # nosec
 
 
 def test_cmd_speed():
     input_file = os.path.join(_TEST_DATA, "sudo_data_speed.csv")
     input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
     output = cl.cmd_speed(cmd_events=input_df, cmd_field="Command")
-    assert len(output) >= 1
-    assert type(output[0]) == dict
+    assert len(output) >= 1 # nosec
+    assert type(output[0]) == dict # nosec
 
 
 def test_syslog_risky_actions():
@@ -45,5 +45,5 @@ def test_syslog_risky_actions():
         cmd_field="SyslogMessage",
         detection_rules=risky_stuff,
     )
-    assert len(output) >= 1
-    assert type(output) == dict
+    assert len(output) >= 1 # nosec
+    assert type(output) == dict # nosec
