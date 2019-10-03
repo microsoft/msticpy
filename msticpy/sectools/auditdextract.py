@@ -492,7 +492,7 @@ def generate_process_tree(
     audit_data: pd.DataFrame, branch_depth: str = 4, processes: pd.DataFrame = None
 ) -> pd.DataFrame:
     """
-    Generate process tree data from auditd logs that can be passed to nbdisplay.display_process_tree to display a process tree
+    Generate process tree data from auditd logs.
 
     Parameters
     ----------
@@ -591,7 +591,7 @@ def generate_process_tree(
 
 def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame:
     """
-    Clusters process data into specific processes
+    Clusters process data into specific processes.
 
     Parameters
     ----------

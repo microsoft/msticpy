@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
-from bokeh.layouts import column
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
 
