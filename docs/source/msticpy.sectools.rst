@@ -20,6 +20,14 @@ msticpy.sectools.base64unpack module
     :undoc-members:
     :show-inheritance:
 
+msticpy.sectools.cmd_line module
+----------------------------------
+
+.. automodule:: msticpy.sectools.cmd_line
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.sectools.eventcluster module
 ------------------------------------
 
@@ -48,6 +56,14 @@ msticpy.sectools.outliers module
 --------------------------------
 
 .. automodule:: msticpy.sectools.outliers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.sectools.syslog_utils module
+----------------------------------
+
+.. automodule:: msticpy.sectools.syslog_utils
     :members:
     :undoc-members:
     :show-inheritance:

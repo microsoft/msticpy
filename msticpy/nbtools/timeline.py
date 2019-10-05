@@ -723,9 +723,10 @@ def _plot_dict_series(data, plot, legend_pos):
 
 def _wrap_df_columns(data: pd.DataFrame, wrap_len: int = 50):
     """Wrap any string columns."""
-    for col in data.columns:
-        if isinstance(data[col].iloc[0], str):
-            data[col] = data[col].str.wrap(wrap_len)
+    if not data.empty:
+        for col in data.columns:
+            if isinstance(data[col].iloc[0], str):
+                data[col] = data[col].str.wrap(wrap_len)
 
 
 def _get_tick_formatter() -> DatetimeTickFormatter:
