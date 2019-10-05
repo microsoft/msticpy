@@ -1,0 +1,7 @@
+{
+    "Syslog": [
+        ".*squid.*",
+        ".*apt.get.*",
+        ".*pam_unix.*"
+    ]
+}

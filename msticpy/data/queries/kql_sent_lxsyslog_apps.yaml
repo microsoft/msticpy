@@ -1,0 +1,71 @@
+metadata:
+  version: 1
+  description: Linux Syslog Application Queries
+  data_environments: [LogAnalytics]
+  data_families: [LinuxSyslog]
+  tags: ['linux', 'syslog', 'application']
+defaults:
+  metadata:
+    data_source: 'linux_syslog'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'Syslog'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project
+            TenantId,
+            Computer,
+            Facility,
+            TimeGenerated,
+            HostName,
+            SeverityLevel,
+            SyslogMessage,
+            ProcessID,
+            ProcessName,
+            HostIP,
+          | extend TimeCreatedUtc=TimeGenerated'
+sources:
+  squid_activity:
+    description: All squid proxy activity
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer == "{host_name}"
+        | where ProcessName contains "squid"
+        | extend URL = extract("(CONNECT |GET )([^ ]*)",2,SyslogMessage),
+          SourceIP = extract("([0-9]+ )(([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9])\\.([0-9]|[0-9][0-9]|[0-9][0-9][0-9]))",2,SyslogMessage),
+          Status = extract("(TCP_(([A-Z]+)(_[A-Z]+)*)|UDP_(([A-Z]+)(_[A-Z]+)*))",1,SyslogMessage),
+          HTTP_Status_Code = extract("(TCP_(([A-Z]+)(_[A-Z]+)*)|UDP_(([A-Z]+)(_[A-Z]+)*))/([0-9][0-9][0-9])",8,SyslogMessage),
+          User = extract("(CONNECT |GET )([^ ]* )([^ ]+)",3,SyslogMessage)
+        | where URL != ""
+        | where User contains "{user}"'
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
+      user:
+        description: Username to filter the search by
+        type: str
+        default: ''
+

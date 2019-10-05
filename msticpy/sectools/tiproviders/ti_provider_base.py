@@ -84,7 +84,7 @@ class LookupResult:
         p_pr = pprint.PrettyPrinter(indent=4)
         print("ioc:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
-        print("severity:", self.severity, self.severity_name)
+        # print("severity:", self.severity)
         p_pr.pprint(self.details)
         print("reference: ", self.reference)
 

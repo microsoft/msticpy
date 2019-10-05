@@ -1,0 +1,80 @@
+metadata:
+  version: 1
+  description: Azure Network Analytics Queries
+  data_environments: [LogAnalytics]
+  data_families: [AzureNetwork]
+  tags: ['network', 'azure']
+defaults:
+  metadata:
+    data_source: 'linux_syslog'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'AzureNetworkAnalytics_CL'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project TenantId, TimeGenerated,
+            FlowStartTime = FlowStartTime_t,
+            FlowEndTime = FlowEndTime_t,
+            FlowIntervalEndTime = FlowIntervalEndTime_t,
+            FlowType = FlowType_s,
+            ResourceGroup = split(VM_s, "/")[0],
+            VMName = split(VM_s, "/")[1],
+            VMIPAddress = VMIP_s,
+            PublicIPs = extractall(@"([\d\.]+)[|\d]+", dynamic([1]), PublicIPs_s),
+            SrcIP = SrcIP_s,
+            DestIP = DestIP_s,
+            ExtIP = iif(FlowDirection_s == "I", SrcIP_s, DestIP_s),
+            L4Protocol = L4Protocol_s,
+            L7Protocol = L7Protocol_s,
+            DestPort = DestPort_d,
+            FlowDirection = FlowDirection_s,
+            AllowedOutFlows = AllowedOutFlows_d,
+            AllowedInFlows = AllowedInFlows_d,
+            DeniedInFlows = DeniedInFlows_d,
+            DeniedOutFlows = DeniedOutFlows_d,
+            RemoteRegion = AzureRegion_s,
+            VMRegion = Region_s'
+sources:
+  az_net_analytics:
+    description: All Azure Network Analytics Data
+    args:
+      query: '
+        {table}
+        | where SubType_s == "FlowLog"
+        | where VM_s contains "{host_name}"
+        | where FlowStartTime_t >= datetime({start})
+        | where FlowEndTime_t <= datetime({end})
+        {query_project}
+        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP),
+                         iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
+                         )
+        | project-away ExtIP
+        | mvexpand AllExtIPs
+        {where_clause}'
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
+        default: ''
+      where_clause:
+        description: Optional additional filter clauses
+        type: str
+        default: ''

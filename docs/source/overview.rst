@@ -170,6 +170,23 @@ fields and performs some event-specific formatting and normalization
 (e.g. for process start events it will re-assemble the process command
 line arguments into a single string). This is still a work-in-progress.
 
+syslog_utils
+~~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.syslog_utils`
+
+Module to suppport the investigation of Linux hosts through Syslog.
+Includes functions to create host records, cluster logon events, and
+identify user sessions containing suspicious activity.
+
+cmd_line
+~~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.cmd_line`
+
+Module to investigation of command line activity. Allows for the detction
+of known malicious commands as well as suspicious patterns of behaviour.
+
 Notebook tools sub-package - *nbtools*
 --------------------------------------
 

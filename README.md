@@ -151,6 +151,17 @@ re-assemble the process command line arguments into a single string).
 
 This is still a work-in-progress.
 
+### syslog_utils
+
+A series data maniuplation functions to support an investigation of a
+linux host with only syslog logging enabled. This includes functions for collating host
+data, clusting logon events and detecting user sessions containing suspicious activity.
+
+### cmd_line
+
+A module to support he detection of known malicious command line activity or suspicious
+patterns of command line activity.
+
 ## Notebook tools sub-package - `nbtools`
 
 This is a collection of display and utility modules designed to make working
