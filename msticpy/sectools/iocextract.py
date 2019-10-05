@@ -633,9 +633,9 @@ class IoCExtract:
             if ioc_types and ioc_type not in ioc_types:
                 continue
 
-            if os_family == "Linux" and rgx_def.ioc_type == "windows_path":
-                continue
-            elif os_family == "Windows" and rgx_def.ioc_type == "linux_path":
+            if (os_family == "Linux" and rgx_def.ioc_type == "windows_path") or (
+                os_family == "Windows" and rgx_def.ioc_type == "linux_path"
+            ):
                 continue
 
             match_pos = 0

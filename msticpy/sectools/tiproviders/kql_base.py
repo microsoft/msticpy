@@ -349,7 +349,7 @@ class KqlTIProvider(TIProvider):
 
     @staticmethod
     def _series_to_list(series: pd.Series) -> List[Any]:
-        return list({val for val in series.dropna().values})
+        return list(series.dropna().unique())
 
     @staticmethod
     def _combine_results(
