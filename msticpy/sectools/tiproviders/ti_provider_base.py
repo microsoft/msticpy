@@ -23,8 +23,6 @@ from collections import Counter, namedtuple
 from functools import singledispatch, lru_cache
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
-import socket
-from socket import gaierror
 
 import attr
 import pandas as pd
@@ -52,6 +50,7 @@ class TISeverity(Enum):
     high = 2
 
 
+# pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True)
 class LookupResult:
     """Lookup result for IoCs."""
@@ -131,6 +130,23 @@ class LookupResult:
             out_name = "".join([part.capitalize() for part in name.split("_")])
             col_mapping[name] = out_name
         return col_mapping
+
+
+# pylint: enable=too-many-instance-attributes
+
+
+# pylint: disable=too-few-public-methods
+class TILookupStatus(Enum):
+    """Threat intelligence lookup status."""
+
+    ok = 0
+    not_supported = 1
+    bad_format = 2
+    query_failed = 3
+    other = 10
+
+
+# pylint: enable=too-few-public-methods
 
 
 _IOC_EXTRACT = IoCExtract()
@@ -215,6 +231,8 @@ class TIProvider(ABC):
         """
         results = []
         for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
+            if not observable:
+                continue
             item_result = self.lookup_ioc(
                 ioc=observable, ioc_type=ioc_type, query_type=query_type
             )
@@ -343,7 +361,7 @@ class TIProvider(ABC):
         LookupResult
             Lookup result with resolved ioc_type and pre-processed
             observable.
-            LookupResult.status == -1 on failure.
+            LookupResult.status is none-zero on failure.
 
         """
         result = LookupResult(
@@ -358,13 +376,13 @@ class TIProvider(ABC):
 
         if not self.is_supported_type(result.ioc_type):
             result.details = f"IoC type {result.ioc_type} not supported."
-            result.status = -1
+            result.status = TILookupStatus.not_supported.value
             return result
 
         clean_ioc = preprocess_observable(ioc, result.ioc_type)
         if clean_ioc.status != "ok":
             result.details = clean_ioc.status
-            result.status = -1
+            result.status = TILookupStatus.bad_format.value
 
         return result
 
@@ -553,10 +571,6 @@ def _preprocess_dns(domain: str) -> SanitizedObservable:
         return SanitizedObservable(None, "Domain is an IP address")
     except ValueError:
         pass
-    try:
-        socket.gethostbyname(domain)
-    except gaierror:
-        return SanitizedObservable(None, "Domain not resolvable")
 
     return SanitizedObservable(domain, "ok")
 

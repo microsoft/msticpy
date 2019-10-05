@@ -360,12 +360,55 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(n_requests, len(results_df[results_df["Result"] == True]))
 
     def _generate_rand_domain(self):
+        dom_suffixes = ["com", "org", "net", "biz"]
         letters = string.ascii_letters
         str_length = random.randint(4, 20)
         dom = ""
         for i in range(0, 2):
             dom_part = "".join(random.choice(letters) for i in range(str_length))
             dom = dom + "." + dom_part if dom else dom_part
-        suffix = "".join(random.choice(letters) for i in range(3)).lower()
+        suffix = random.choice(dom_suffixes)
 
         return dom + "." + suffix
+
+    def test_tor_exit_nodes(self):
+        ti_lookup = self.ti_lookup
+
+        tor_nodes = [
+            "192.42.116.17",
+            "163.172.215.183",
+            "185.225.208.117",
+            "176.10.99.200",
+        ]
+        other_ips = [
+            "104.117.0.237",
+            "13.107.4.50",
+            "172.217.10.144",
+            "172.217.11.16",
+            "172.217.15.112",
+        ]
+
+        pos_results = []
+        neg_results = []
+        for ioc in tor_nodes + other_ips:
+            result = ti_lookup.lookup_ioc(
+                observable=ioc, ioc_type="ipv4", providers=["Tor"]
+            )
+            lu_result = result[1][0][1]
+            self.assertTrue(lu_result.result)
+            self.assertTrue(bool(lu_result.reference))
+            if lu_result.severity > 0:
+                self.assertTrue(bool(lu_result.details))
+                self.assertTrue(bool(lu_result.raw_result))
+                pos_results.append(lu_result)
+            else:
+                neg_results.append(lu_result)
+
+        self.assertEqual(len(pos_results), 4)
+        self.assertEqual(len(neg_results), 5)
+
+        all_ips = tor_nodes + other_ips
+        tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
+        self.assertEqual(len(all_ips), len(tor_results_df))
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)

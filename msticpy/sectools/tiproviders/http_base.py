@@ -25,7 +25,7 @@ import requests
 
 from ..._version import VERSION
 from ...nbtools.utility import export
-from .ti_provider_base import LookupResult, TIProvider, TISeverity
+from .ti_provider_base import LookupResult, TIProvider, TISeverity, TILookupStatus
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -137,6 +137,7 @@ class HttpProvider(TIProvider):
                 result.raw_result = response.json()
                 result.result, severity, result.details = self.parse_results(result)
                 result.set_severity(severity)
+                result.status = TILookupStatus.ok.value
             else:
                 result.raw_result = str(response)
                 result.result = False

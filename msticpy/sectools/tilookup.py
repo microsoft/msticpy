@@ -26,7 +26,7 @@ import pandas as pd
 
 from . import tiproviders
 from .tiproviders import *  # noqa:F401, F403
-from .tiproviders.ti_provider_base import TIProvider, LookupResult
+from .tiproviders.ti_provider_base import TIProvider, LookupResult, TILookupStatus
 from .tiproviders.ti_provider_settings import get_provider_settings, reload_settings
 from ..nbtools.utility import export
 from .._version import VERSION
@@ -344,6 +344,14 @@ class TILookup:
                 query_type=ioc_query_type,
                 **kwargs,
             )
+            if not kwargs.get("show_not_supported", False):
+                provider_result = provider_result[
+                    provider_result["Status"] != TILookupStatus.not_supported.value
+                ]
+            if not kwargs.get("show_bad_ioc", False):
+                provider_result = provider_result[
+                    provider_result["Status"] != TILookupStatus.bad_format.value
+                ]
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
 

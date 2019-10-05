@@ -24,7 +24,13 @@ from ..._version import VERSION
 from ...nbtools.utility import export
 from ...nbtools.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
-from .ti_provider_base import LookupResult, TIProvider, generate_items, TISeverity
+from .ti_provider_base import (
+    LookupResult,
+    TIProvider,
+    generate_items,
+    TISeverity,
+    TILookupStatus,
+)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -115,9 +121,11 @@ class KqlTIProvider(TIProvider):
                 f"Could not find query for {ioc} ({ioc_type}, {query_type})"
             )
         data_result = query_obj(**query_params)
-        if not isinstance(data_result, pd.DataFrame) or data_result.empty:
+        if not isinstance(data_result, pd.DataFrame):
+            result.status = TILookupStatus.query_failed.value
+        if data_result.empty:
             result.details = "Not found."
-            result.status = -1
+            result.status = TILookupStatus.ok.value
             return result
 
         result.raw_result = data_result
@@ -128,7 +136,7 @@ class KqlTIProvider(TIProvider):
         return result
 
     # pylint: disable=too-many-locals, too-many-branches
-    def lookup_iocs(
+    def lookup_iocs(  # noqa: C901, MC0001
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
         obs_col: str = None,
@@ -165,11 +173,13 @@ class KqlTIProvider(TIProvider):
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
+            if not ioc:
+                continue
             result = self._check_ioc_type(
                 ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
             )
 
-            if result.status != -1:
+            if result.status != TILookupStatus.not_supported.value:
                 ioc_groups[result.ioc_type].add(result.ioc)
 
         all_results = []
@@ -213,17 +223,22 @@ class KqlTIProvider(TIProvider):
 
             # If no results, add the empty dataframe to the combined results
             # and continue
-            if not isinstance(data_result, pd.DataFrame) or data_result.empty:
+            if not isinstance(data_result, pd.DataFrame):
+                src_ioc_frame["Result"] = False
+                src_ioc_frame["Details"] = "Query failure"
+                src_ioc_frame["Status"] = TILookupStatus.query_failed.value
+                src_ioc_frame["Severity"] = TISeverity.information.value
+            elif data_result.empty:
                 src_ioc_frame["Result"] = False
                 src_ioc_frame["Details"] = "Not found."
-                src_ioc_frame["Status"] = -1
+                src_ioc_frame["Status"] = TILookupStatus.ok.value
                 src_ioc_frame["Severity"] = TISeverity.information.value
                 all_results.append(src_ioc_frame)
                 continue
 
             # Create our results columns
             data_result["Result"] = True
-            data_result["Status"] = 0
+            data_result["Status"] = TILookupStatus.ok.value
             data_result["Severity"] = self._get_severity(data_result)
             data_result["Details"] = self._get_detail_summary(data_result)
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
@@ -368,6 +383,8 @@ class KqlTIProvider(TIProvider):
         # Fill in any NaN values from the merge
         combined_df["Result"] = combined_df["Result"].fillna(False)
         combined_df["Details"] = combined_df["Details"].fillna("Not found.")
-        combined_df["Status"] = combined_df["Status"].fillna(-1)
-        combined_df["Severity"] = combined_df["Severity"].fillna(0)
+        combined_df["Status"] = combined_df["Status"].fillna(TILookupStatus.ok.value)
+        combined_df["Severity"] = combined_df["Severity"].fillna(
+            TISeverity.information.value
+        )
         return combined_df

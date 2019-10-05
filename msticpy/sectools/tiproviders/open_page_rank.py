@@ -19,7 +19,7 @@ from typing import Any, Tuple, Union, Iterable, Dict, List
 import attr
 import pandas as pd
 
-from .ti_provider_base import LookupResult, TISeverity, generate_items
+from .ti_provider_base import LookupResult, TISeverity, generate_items, TILookupStatus
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
 from ..._version import VERSION
@@ -85,22 +85,29 @@ class OPR(HttpProvider):
 
         """
         kwargs.get("provider_name", self.__class__.__name__)
+
+        domain_list = set()
+        bad_requests: List[pd.Series] = []
+        for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
+            if not ioc:
+                continue
+            result = self._check_ioc_type(
+                ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
+            )
+
+            if result.status == TILookupStatus.ok.value:
+                domain_list.add(result.ioc)
+            else:
+                bad_requests.append(pd.Series(attr.asdict(result)))
+
         results: List[pd.Series] = []
-        domain_list = {
-            ioc
-            for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col)
-            if ioc_type == "dns" and bool(ioc)
-        }
         if not domain_list:
             return pd.DataFrame(columns=LookupResult.column_map())
         for item_result in self._lookup_bulk_request(domain_list):  # type: ignore
             results.append(pd.Series(attr.asdict(item_result)))
 
-        return (
-            pd.DataFrame(data=results)
-            .rename(columns=LookupResult.column_map())
-            .drop(columns=["Status"])
-        )
+        all_results = results + bad_requests
+        return pd.DataFrame(data=all_results).rename(columns=LookupResult.column_map())
 
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
@@ -131,14 +138,13 @@ class OPR(HttpProvider):
 
     def _parse_multi_results(self, response: LookupResult) -> Iterable[LookupResult]:
         """Parse details of batch response."""
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if not isinstance(response.raw_result, dict):
             new_result = LookupResult(**attr.asdict(response))
             new_result.result = False
             new_result.set_severity(TISeverity.information)
             new_result.details = "Not found."
             yield new_result
-
-        if isinstance(response.raw_result, dict) and "response" in response.raw_result:
+        elif "response" in response.raw_result:
             dom_records = response.raw_result["response"]
             for dom_record in dom_records:
                 result, sev, details = self._parse_one_record(dom_record)
@@ -204,7 +210,7 @@ class OPR(HttpProvider):
             )
             result = LookupResult(ioc=",".join(ioc_list), ioc_type="dns")
             if response.status_code == 200:
-                result.status = response.status_code
+                result.status = TILookupStatus.ok.value
                 result.reference = self._BASE_URL + path
                 result.raw_result = response.json()
                 for single_result in self._parse_multi_results(result):

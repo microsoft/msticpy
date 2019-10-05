@@ -324,7 +324,7 @@ class IoCExtract:
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
                 "Source column(s) {} not found in supplied DataFrame".format(
                     ", ".join(missing_cols)
@@ -430,7 +430,7 @@ class IoCExtract:
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
                 "Source column(s) {} not found in supplied DataFrame".format(
                     ", ".join(missing_cols)

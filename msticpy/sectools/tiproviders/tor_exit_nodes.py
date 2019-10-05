@@ -16,7 +16,7 @@ from typing import Tuple, Iterable, Dict, Any
 
 import requests
 
-from .ti_provider_base import TIProvider, LookupResult, TISeverity
+from .ti_provider_base import TIProvider, LookupResult, TISeverity, TILookupStatus
 from ...nbtools.utility import export
 from ..._version import VERSION
 
@@ -81,14 +81,20 @@ class Tor(TIProvider):
             The returned results.
 
         """
-        result = LookupResult(
-            ioc=ioc,
-            ioc_type="ipv4",
-            provider="TOR",
-            result=bool(self._nodelist),
-            reference=self._BASE_URL,
-            status=0 if self._nodelist else -1,
+        result = self._check_ioc_type(
+            ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
+
+        result.provider = kwargs.get("provider_name", self.__class__.__name__)
+        result.result = bool(self._nodelist)
+        result.reference = self._BASE_URL
+
+        if result.status and not bool(self._nodelist):
+            result.status = TILookupStatus.query_failed.value
+
+        if result.status:
+            return result
+
         tor_node = self._nodelist.get(ioc)
 
         if tor_node:
