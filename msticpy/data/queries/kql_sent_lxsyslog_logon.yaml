@@ -100,7 +100,7 @@ sources:
         | where TimeGenerated <= datetime({end})
         | where Facility in ("auth", "authpriv")
           and ProcessName != "CRON" and ProcessName != "sudo"
-        | where SyslogMessage has {account_name}
+        | where SyslogMessage has "{account_name}"
         | where SyslogMessage startswith "Accepted"
         | extend mssg_strings = split(SyslogMessage, " ")
         | mvexpand mssg_item=mssg_strings
@@ -129,7 +129,7 @@ sources:
         | where TimeGenerated <= datetime({end})
         | where Facility in ("auth", "authpriv")
           and ProcessName != "CRON" and ProcessName != "sudo"
-        | where SyslogMessage has {ip_address}
+        | where SyslogMessage has "{ip_address}"
         | where SyslogMessage startswith "Accepted"
         | extend
           LogonType = strcat(extract("Accepted\\\\s+([^\\\\s]+)", 1, SyslogMessage),
