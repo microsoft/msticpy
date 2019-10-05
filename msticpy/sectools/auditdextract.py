@@ -17,8 +17,9 @@ import codecs
 import re
 from datetime import datetime
 from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
-
+import math
 import pandas as pd
+from .eventcluster import dbcluster_events, add_process_features
 
 
 from .._version import VERSION
@@ -308,7 +309,7 @@ def extract_events_to_df(
     ).rename(columns={0: "EventType", 1: "EventData"})
     # if only one type of event is requested
     if event_type:
-        tmp_df = tmp_df[tmp_df["EventType"] == event_type]
+        tmp_df = tmp_df.loc[tmp_df["EventType"] == event_type]
         if verbose:
             print(f"Event subset = ", event_type, " (events: {len(tmp_df)})")
 
@@ -485,3 +486,194 @@ def _extract_timestamp(audit_str: str) -> str:
         time_stamp = audit_hdr_match.group(1).split(":")[0]
         return time_stamp
     return ""
+
+
+def generate_process_tree(
+    audit_data: pd.DataFrame, branch_depth: str = 4, processes: pd.DataFrame = None
+) -> pd.DataFrame:
+    """
+    Generate process tree data from auditd logs.
+
+    Parameters
+    ----------
+    audit_data : pd.DataFrame
+        The Audit data containing process creation events
+    branch_depth: str, optional
+        The maximum depth of parent or child processes to extract from the data
+        (The default is 4)
+
+    Returns
+    -------
+    pd.DataFrame
+        The formatted process tree data
+
+    """
+    # Generate process tree from the auditd data
+    if processes is None:
+        procs = audit_data.loc[audit_data["pid"].notnull()].head()
+    else:
+        procs = processes
+    if "NodeRole" not in procs and "Level" not in procs:
+        procs.loc[:, "NodeRole"] = pd.Series("source", index=procs.index)
+        procs.loc[:, "Level"] = pd.Series(0, index=procs.index)
+    process_tree = pd.DataFrame()
+    for ppid in procs["pid"]:
+        pdf = audit_data.loc[audit_data["pid"] == (int(ppid))]
+        pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
+        pdf.loc[:, "Level"] = pd.Series(1, index=pdf.index)
+        process_tree = process_tree.append(pdf, sort=False)
+        count = 1
+        while count <= branch_depth:
+            if pdf.empty:
+                count = branch_depth + 1
+            else:
+                for ppid in pdf["ppid"]:
+                    if math.isnan(ppid):
+                        count = branch_depth + 1
+                        continue
+                    else:
+                        pdf = audit_data.loc[audit_data["pid"] == (int(ppid))]
+                        pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
+                        pdf.loc[:, "Level"] = pd.Series(count + 1, index=pdf.index)
+                        process_tree = process_tree.append(pdf, sort=False)
+                        count = count + 1
+        for index, proc in procs.iterrows():
+            child_procs = audit_data.loc[
+                (audit_data["TimeGenerated"] > proc["TimeGenerated"])
+            ]
+            cdf = child_procs.loc[child_procs["ppid"] == (int(proc["pid"]))]
+            cdf.loc[:, "NodeRole"] = pd.Series("child", index=cdf.index)
+            cdf.loc[:, "Level"] = pd.Series(1, index=cdf.index)
+            process_tree = process_tree.append(cdf, sort=False)
+            count = 1
+            while count <= branch_depth:
+                if cdf.empty:
+                    count = branch_depth + 1
+                else:
+                    for ppid in cdf["pid"]:
+                        cdf = audit_data.loc[audit_data["ppid"] == (int(ppid))]
+                        cdf.loc[:, "NodeRole"] = pd.Series("child", index=cdf.index)
+                        cdf.loc[:, "Level"] = pd.Series(count + 1, index=cdf.index)
+                        process_tree = process_tree.append(cdf, sort=False)
+                        count = count + 1
+    process_tree = process_tree.rename(
+        columns={
+            "acct": "SubjectUserName",
+            "uid": "SubjectUserSid",
+            "user": "SubjectUserName",
+            "ses": "SubjectLogonId",
+            "pid": "NewProcessId",
+            "exe": "NewProcessName",
+            "ppid": "ProcessId",
+            "cmd": "CommandLine",
+        }
+    )
+    process_tree = process_tree.append(procs, sort=False).sort_values(
+        by="TimeGenerated"
+    )[
+        [
+            "TimeGenerated",
+            "NewProcessName",
+            "CommandLine",
+            "NewProcessId",
+            "SubjectUserSid",
+            "cwd",
+            "ProcessId",
+            "NodeRole",
+            "Level",
+        ]
+    ]
+    process_tree = process_tree.loc[
+        process_tree["NewProcessId"].notnull()
+    ].drop_duplicates()
+    return process_tree
+
+
+def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame:
+    """
+    Clusters process data into specific processes.
+
+    Parameters
+    ----------
+    audit_data : pd.DataFrame
+        The Audit data containing process creation events
+    app: str
+        The name of a specific app you wish to cluster
+
+    Returns
+    -------
+    pd.DataFrame
+        Details of the clustered process
+
+    """
+    if app is not None:
+        processes = audit_data[audit_data["exe"].str.contains(app, na=False)]
+    else:
+        processes = audit_data
+    processes = processes.rename(
+        columns={
+            "acct": "SubjectUserName",
+            "uid": "SubjectUserSid",
+            "user": "SubjectUserName",
+            "ses": "SubjectLogonId",
+            "pid": "NewProcessId",
+            "exe": "NewProcessName",
+            "ppid": "ProcessId",
+            "cmd": "CommandLine",
+        }
+    )
+    req_cols = [
+        "cwd",
+        "SubjectUserName",
+        "SubjectUserSid",
+        "SubjectUserName",
+        "SubjectLogonId",
+        "NewProcessId",
+        "NewProcessName",
+        "ProcessId",
+        "CommandLine",
+    ]
+    for col in req_cols:
+        if col not in processes:
+            processes[col] = ""
+
+    feature_procs_h1 = add_process_features(input_frame=processes)
+
+    (clus_events, dbcluster, x_data) = dbcluster_events(
+        data=feature_procs_h1,
+        cluster_columns=["pathScore", "SubjectUserSid"],
+        time_column="TimeGenerated",
+        max_cluster_distance=0.0001,
+    )
+    (
+        clus_events.sort_values("TimeGenerated")[
+            [
+                "TimeGenerated",
+                "LastEventTime",
+                "NewProcessName",
+                "CommandLine",
+                "SubjectLogonId",
+                "SubjectUserSid",
+                "pathScore",
+                "isSystemSession",
+                "ProcessId",
+                "ClusterSize",
+            ]
+        ].sort_values("ClusterSize", ascending=True)
+    )
+
+    procs = clus_events[
+        [
+            "TimeGenerated",
+            "NewProcessName",
+            "CommandLine",
+            "NewProcessId",
+            "SubjectUserSid",
+            "cwd",
+            "ClusterSize",
+            "ProcessId",
+        ]
+    ]
+    procs = procs.rename(columns={"NewProcessId": "pid", "ProcessId": "ppid"})
+
+    return procs
