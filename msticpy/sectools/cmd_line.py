@@ -5,10 +5,11 @@
 # --------------------------------------------------------------------------
 
 """
+Contains a series of functions required to correct collect, parse and visualise
+linux syslog data.
 
-Contains a series of functions required to correct collect, parse and visualise linux syslog data.
-
-Designed to support standard linux syslog for investigations where auditd is not avalaible.
+Designed to support standard linux syslog for investigations where auditd
+is not avalaible.
 
 """
 import os
@@ -47,7 +48,8 @@ def risky_cmd_line(
     Parameters
     ----------
     events: pd.DataFrame
-        A DataFrame of all syslog events potentially containing risky command line activity.
+        A DataFrame of all syslog events potentially containing risky
+        command line activity.
     log_type: str
         The log type of the data included in events.
         Must correspond to a detection type in detection_rules file.
@@ -55,7 +57,8 @@ def risky_cmd_line(
         Path to json file containing patterns of risky activity to detect.
         (Defaults to msticpy/resources/cmd_line_rules.json)
     cmd_field: str, optiona;
-        The column in the events dataset that contains the command lines to be analysed.
+        The column in the events dataset that contains the command lines to
+        be analysed.
         (Defaults to "Command")
 
     Returns
@@ -86,7 +89,8 @@ def risky_cmd_line(
 
     # Decode any Base64 encoded commands so we can match on them as well
     b64_regex = re.compile(
-        "(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)"
+        "(?P<b64>(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|"
+        + "[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$)"
     )
     risky_actions = {}
     detections = rules[log_type]
@@ -125,8 +129,9 @@ def cmd_speed(
         Time window in seconds in which to evaluate speed of execution against
         (Defaults to 5)
     events: int, optional
-        Number of syslog command execution events in which to evaluate speed of execution against
-        (Defaults to 10
+        Number of syslog command execution events in which to evaluate
+        speed of execution against
+        (Defaults to 10)
 
     Returns
     -------
@@ -157,7 +162,7 @@ def cmd_speed(
         )
         if delta < dt.timedelta(seconds=time):
             suspicious_actions.append(
-                {df_len: [actions[df_len : (df_len + events)], delta]}
+                {df_len: [actions[df_len : (df_len + events)], delta]}  # noqa: E203
             )
         else:
             pass

@@ -6,9 +6,11 @@
 
 """
 
-Contains a series of functions required to correct collect, parse and visualise linux syslog data.
+Contains a series of functions required to correct collect, parse and
+visualise linux syslog data.
 
-Designed to support standard linux syslog for investigations where auditd is not avalaible.
+Designed to support standard linux syslog for investigations where
+auditd is not available.
 
 """
 import datetime as dt
@@ -107,7 +109,8 @@ def create_host_record(
     host_entity = Host(src_event=syslog_df.iloc[0])
     applications = []
 
-    # Produce list of processes on the host that are not part of a 'standard' linux distro
+    # Produce list of processes on the host that are not
+    # part of a 'standard' linux distro
     _apps = syslog_df["ProcessName"].unique().tolist()
     for app in _apps:
         if app not in (
@@ -163,19 +166,22 @@ def create_host_record(
 @export
 def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     """
-    Clusters logon sessions observed in syslog by start and end time based on PAM events.
+    Clusters logon sessions in syslog by start/end time based on PAM events.
 
-    Will return a LogonDataError if supplied dataframe does not contain complete logon sessions.
+    Will return a LogonDataError if supplied dataframe does not contain
+    complete logon sessions.
 
     Parameters
     ----------
     logon_events: pd.DataFrame
-        A DataFrame of all syslog logon events (can be generated with LinuxSyslog.user_logon query)
+        A DataFrame of all syslog logon events
+        (can be generated with LinuxSyslog.user_logon query)
 
     Returns
     -------
     logon_sessions: pd.DataFrame
-        A dictionary of logon sessions including start and end times and logged on user
+        A dictionary of logon sessions including start and end times
+        and logged on user
 
     Raises
     ------
