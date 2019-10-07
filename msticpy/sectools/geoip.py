@@ -485,7 +485,7 @@ class GeoLiteLookup(GeoIpLookup):
         ip_entity: IpAddress = None,
     ) -> Tuple[List[Tuple[Dict[str, str], int]], List[IpAddress]]:
         """
-        Lookup IP location from IPStack web service.
+        Lookup IP location from GeoLite2 data created by MaxMind.
 
         Parameters
         ----------
