@@ -22,7 +22,6 @@ import math
 import os
 from pathlib import Path
 import shutil
-import site
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
@@ -299,7 +298,7 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = (
         "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
     )
-    _DB_HOME = os.path.join(os.path.expanduser('~'),".mstcpy")
+    _DB_HOME = os.path.join(os.path.expanduser('~'), ".msticpy")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
@@ -317,8 +316,7 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated.
@@ -345,8 +343,8 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package installation
-            directory.(the default is None)
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.(the default is None)
 
         """
         if url is None:
@@ -402,8 +400,8 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.
 
         Returns
         -------
@@ -442,8 +440,8 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated, overriding age criteria.
