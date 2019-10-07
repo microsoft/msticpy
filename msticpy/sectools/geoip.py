@@ -299,7 +299,7 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = (
         "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
     )
-    _PKG_DIR = os.path.join(os.path.dirname(site.__file__), "site-packages", "msticpy")
+    _DB_HOME = os.path.join(os.path.expanduser('~'),".mstcpy")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
@@ -325,7 +325,7 @@ class GeoLiteLookup(GeoIpLookup):
 
         """
         if db_folder is None:
-            db_folder = self._PKG_DIR
+            db_folder = self._DB_HOME
         self._force_update = force_update
         self._auto_update = auto_update
         self._check_and_update_db(db_folder, self._force_update, self._auto_update)
@@ -353,7 +353,7 @@ class GeoLiteLookup(GeoIpLookup):
             url = self._MAXMIND_DOWNLOAD
 
         if db_folder is None:
-            db_folder = self._PKG_DIR
+            db_folder = self._DB_HOME
 
         if not os.path.exists(db_folder):
             os.mkdir(db_folder)
