@@ -1,10 +1,13 @@
 AzureSentinel:
   Workspaces:
     Default:
-      WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf0"
-      TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+      WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+      TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+    MyTestWS:
+      WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
 QueryDefinitions:
-  Default: 
+  Default:
     - 'queries'
   Custom:
     - 'testdata'
@@ -37,3 +40,11 @@ TIProviders:
       TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
     Provider: "NoLoad-AzSTI"
+  OpenPageRank:
+    Args:
+      AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+    Primary: True
+    Provider: "OPR"
+  TorExitNodes:
+    Primary: True
+    Provider: Tor

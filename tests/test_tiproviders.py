@@ -8,6 +8,8 @@ import unittest
 from unittest import mock
 import os
 from pathlib import Path
+import random
+import string
 from typing import Union, Any, Tuple
 
 from ..msticpy.nbtools import pkg_config
@@ -64,7 +66,7 @@ def mocked_session(*args, **kwargs):
     return mock_req_session()
 
 
-# This class will requests.Session()
+# This class will mock requests.Session()
 class mock_req_session:
     def get(self, *args, **kwargs):
         class MockResponse:
@@ -76,7 +78,10 @@ class mock_req_session:
                 return self.json_data
 
         if "url" not in kwargs:
-            return MockResponse(None, 404)
+            if args:
+                kwargs.update({"url", args[0]})
+            else:
+                return MockResponse(None, 404)
         if kwargs["url"].startswith("https://otx.alienvault.com"):
             if is_benign_ioc(kwargs["url"]):
                 return MockResponse(None, 404)
@@ -130,6 +135,77 @@ class mock_req_session:
                 "response_code": 1,
             }
             return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://openpagerank.com"):
+            dom_responses = {
+                "google.com": {
+                    "status_code": 200,
+                    "error": "",
+                    "page_rank_integer": 10,
+                    "page_rank_decimal": 10,
+                    "rank": "6",
+                    "domain": "google.com",
+                },
+                "microsoft.com": {
+                    "status_code": 200,
+                    "error": "",
+                    "page_rank_integer": 8,
+                    "page_rank_decimal": 7.63,
+                    "rank": "40",
+                    "domain": "microsoft.com",
+                },
+                "unknown.dom": {
+                    "status_code": 404,
+                    "error": "Domain not found",
+                    "page_rank_integer": 0,
+                    "page_rank_decimal": 0,
+                    "rank": None,
+                    "domain": "unknowndomain.com",
+                },
+            }
+
+            if "params" in kwargs:
+                mocked_result = {
+                    "status_code": 200,
+                    "response": [dom_responses["unknown.dom"]],
+                }
+                for domain in dom_responses.keys():
+                    if domain in kwargs["params"].values():
+                        mocked_result = {
+                            "status_code": 200,
+                            "response": [dom_responses[domain]],
+                        }
+                        break
+                return MockResponse(mocked_result, 200)
+            else:
+                url_param_str = kwargs["url"].split("?", 1)[1]
+                url_params = url_param_str.split("&")
+                if len(url_params) > 100:
+                    raise ValueError("Maximum of 100 items in bulk request")
+                rand_responses = []
+                for param in url_params:
+                    dom = param.split("=")[1]
+                    rank = random.randint(1, 1000)
+                    if bool(rank % 2):
+                        dom_resp = {
+                            "status_code": 200,
+                            "error": "",
+                            "page_rank_integer": rank,
+                            "page_rank_decimal": float(rank),
+                            "rank": str(rank),
+                            "domain": dom,
+                        }
+                    else:
+                        dom_resp = {
+                            "status_code": 404,
+                            "error": "Domain not found",
+                            "page_rank_integer": 0,
+                            "page_rank_decimal": 0,
+                            "rank": None,
+                            "domain": dom,
+                        }
+                    rand_responses.append(dom_resp)
+                mocked_result = {"status_code": 200, "response": rand_responses}
+                return MockResponse(mocked_result, 200)
         return MockResponse(None, 404)
 
 
@@ -155,7 +231,7 @@ class TestTIProviders(unittest.TestCase):
         ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
-        self.assertGreaterEqual(4, len(ti_settings))
+        self.assertGreaterEqual(len(ti_settings), 4)
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class
@@ -163,8 +239,8 @@ class TestTIProviders(unittest.TestCase):
             ti_lookup = TILookup()
 
         # should have 2 succesfully loaded providers
-        self.assertGreaterEqual(3, len(ti_lookup.loaded_providers))
-        self.assertGreaterEqual(3, len(ti_lookup.provider_status))
+        self.assertGreaterEqual(len(ti_lookup.loaded_providers), 3)
+        self.assertGreaterEqual(len(ti_lookup.provider_status), 3)
 
     def test_xforce(self):
         self.exercise_provider("XForce")
@@ -222,3 +298,117 @@ class TestTIProviders(unittest.TestCase):
                 self.assertIsNotNone(lu_result.details)
                 self.assertIsNotNone(lu_result.raw_result)
                 self.assertIsNotNone(lu_result.reference)
+
+    def test_opr_single_lookup(self):
+        ti_lookup = self.ti_lookup
+
+        ti_provider = ti_lookup.loaded_providers["OPR"]
+        saved_session = ti_provider._requests_session
+        ti_provider._requests_session = mock_req_session()
+        iocs = {
+            "google.com": ("dns", None),
+            "microsoft.com": ("dns", None),
+            "badplace.net": ("dns", None),
+        }
+
+        # Lookup multiple IoCs
+        for ioc, ioc_params in iocs.items():
+            result = ti_lookup.lookup_ioc(
+                observable=ioc,
+                ioc_type=ioc_params[0],
+                ioc_query_type=ioc_params[1],
+                providers=["OPR"],
+            )
+            self.assertIsNotNone(result)
+            for prov, lu_result in result[1]:
+                self.assertIsNotNone(lu_result.ioc)
+                self.assertIsNotNone(lu_result.ioc_type)
+                if lu_result.severity > 0:
+                    self.assertTrue(
+                        "rank" in lu_result.details
+                        and lu_result.details["rank"] is None
+                    )
+                    self.assertTrue(
+                        "error" in lu_result.details
+                        and lu_result.details["error"] == "Domain not found"
+                    )
+                else:
+                    self.assertTrue(
+                        "rank" in lu_result.details
+                        and lu_result.details["rank"].isdigit()
+                        and int(lu_result.details["rank"]) > 0
+                    )
+                    self.assertTrue(
+                        "response" in lu_result.raw_result
+                        and lu_result.raw_result["response"][0]
+                        and lu_result.raw_result["response"][0]["domain"] == ioc
+                    )
+
+    def test_opr_bulk_lookup(self):
+        ti_lookup = self.ti_lookup
+
+        ti_provider = ti_lookup.loaded_providers["OPR"]
+        saved_session = ti_provider._requests_session
+        ti_provider._requests_session = mock_req_session()
+
+        n_requests = 250
+        gen_doms = {self._generate_rand_domain(): "dns" for i in range(n_requests)}
+        results_df = ti_lookup.lookup_iocs(data=gen_doms, providers=["OPR"])
+
+        self.assertEqual(n_requests, len(results_df))
+        self.assertGreater(len(results_df[results_df["Severity"] > 0]), n_requests / 3)
+        self.assertEqual(n_requests, len(results_df[results_df["Result"] == True]))
+
+    def _generate_rand_domain(self):
+        dom_suffixes = ["com", "org", "net", "biz"]
+        letters = string.ascii_letters
+        str_length = random.randint(4, 20)
+        dom = ""
+        for i in range(0, 2):
+            dom_part = "".join(random.choice(letters) for i in range(str_length))
+            dom = dom + "." + dom_part if dom else dom_part
+        suffix = random.choice(dom_suffixes)
+
+        return dom + "." + suffix
+
+    def test_tor_exit_nodes(self):
+        ti_lookup = self.ti_lookup
+
+        tor_nodes = [
+            "192.42.116.17",
+            "163.172.215.183",
+            "185.225.208.117",
+            "176.10.99.200",
+        ]
+        other_ips = [
+            "104.117.0.237",
+            "13.107.4.50",
+            "172.217.10.144",
+            "172.217.11.16",
+            "172.217.15.112",
+        ]
+
+        pos_results = []
+        neg_results = []
+        for ioc in tor_nodes + other_ips:
+            result = ti_lookup.lookup_ioc(
+                observable=ioc, ioc_type="ipv4", providers=["Tor"]
+            )
+            lu_result = result[1][0][1]
+            self.assertTrue(lu_result.result)
+            self.assertTrue(bool(lu_result.reference))
+            if lu_result.severity > 0:
+                self.assertTrue(bool(lu_result.details))
+                self.assertTrue(bool(lu_result.raw_result))
+                pos_results.append(lu_result)
+            else:
+                neg_results.append(lu_result)
+
+        self.assertEqual(len(pos_results), 4)
+        self.assertEqual(len(neg_results), 5)
+
+        all_ips = tor_nodes + other_ips
+        tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
+        self.assertEqual(len(all_ips), len(tor_results_df))
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)

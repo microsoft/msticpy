@@ -1,0 +1,131 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Azure Sentinel and Bookmark Queries
+  data_environments: [LogAnalytics]
+  data_families: [AzureSentinel]
+  tags: ['investigation', 'bookmark', 'investigation']
+defaults:
+  metadata:
+    data_source: 'bookmark'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'HuntingBookmark'
+      query_project:
+        description: Column project statement
+        type: str
+        default: ''
+      start:
+        description: Query start time
+        type: datetime
+        default: -30
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_bookmarks:
+    description: Retrieves list of bookmarks
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+  list_bookmarks_for_entity:
+    description: Retrieves bookmarks for entity string
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where QueryResultRow has {entity_id}
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      entity_id:
+        description: Identitifier of entity
+        type: str
+  get_bookmark_by_id:
+    description: Retrieves a single Bookmark by BookmarkId
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        HuntingBookmark
+        | where BookmarkId =~ "{bookmark_id}"
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      bookmark_id:
+        description: Identitifier of bookmark
+        type: str
+  get_bookmark_by_name:
+    description: Retrieves one or more Bookmarks by Bookmark Name
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where BookmarkName has "{bookmark_name}"
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults
+        | where SoftDeleted == false
+        {add_query_items}'
+    parameters:
+      bookmark_name:
+        description: Name or part name of B
+        type: str
+  list_bookmarks_for_tags:
+    description: Retrieves Bookmark by one or mare Tags
+    metadata:
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | mvexpand Tag=todynamic(Tags)
+        | where SoftDeleted == false
+        | where Tag in~ in ({bookmark_tags})
+        | extend QryResults = todynamic(QueryResultRow)
+        | extend Computer = QryResults["Computer"]
+        | extend Account = QryResults["Account"]
+        | extend Entities = QryResults.__entityMapping
+        | project-away QryResults, Tag
+        | distinct *
+        {add_query_items}'
+    parameters:
+      bookmark_tags:
+        description: Bookmark tags
+        type: list

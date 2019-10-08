@@ -324,7 +324,7 @@ class IoCExtract:
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
                 "Source column(s) {} not found in supplied DataFrame".format(
                     ", ".join(missing_cols)
@@ -430,7 +430,7 @@ class IoCExtract:
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
-            missing_cols = [elem for elem in col_set if elem not in data.colums]
+            missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
                 "Source column(s) {} not found in supplied DataFrame".format(
                     ", ".join(missing_cols)
@@ -633,9 +633,9 @@ class IoCExtract:
             if ioc_types and ioc_type not in ioc_types:
                 continue
 
-            if os_family == "Linux" and rgx_def.ioc_type == "windows_path":
-                continue
-            elif os_family == "Windows" and rgx_def.ioc_type == "linux_path":
+            if (os_family == "Linux" and rgx_def.ioc_type == "windows_path") or (
+                os_family == "Windows" and rgx_def.ioc_type == "linux_path"
+            ):
                 continue
 
             match_pos = 0
