@@ -935,7 +935,7 @@ class SelectSubset:
 
         """
         if isinstance(source_items, dict):
-            source_items = [(label, val) for label, val in source_items.items()]
+            source_items = list(source_items.items())
 
         self.src_items = sorted(set(source_items))
         if isinstance(self.src_items[0], tuple):
@@ -949,7 +949,7 @@ class SelectSubset:
         )
 
         if isinstance(default_selected, dict):
-            default_selected = [(label, val) for label, val in default_selected.items()]
+            default_selected = list(default_selected.items())
         if default_selected:
             set_selected = set(default_selected)
             selected_items = sorted(set_selected.intersection(source_items))

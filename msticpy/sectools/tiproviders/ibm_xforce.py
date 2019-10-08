@@ -16,7 +16,7 @@ from typing import Any, Tuple
 
 import attr
 
-from .ti_provider_base import LookupResult
+from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
 from ..._version import VERSION
@@ -45,7 +45,7 @@ class XForce(HttpProvider):
         "ipv4-rep": _XForceParams(path="/ipr/history/{observable}"),
         "ipv4-malware": _XForceParams(path="/ipr/malware/{observable}"),
         "ipv4-whois": _XForceParams(path="/whois/{observable}"),
-        "dns-info": _XForceParams(path="/resolve/{observable}"),
+        "dns-passivedns": _XForceParams(path="/resolve/{observable}"),
         "hostname-whois": _XForceParams(path="/whois/{observable}"),
         "file_hash": _XForceParams(path="/malware/{observable}"),
         "url": _XForceParams(path="/url/{observable}"),
@@ -61,16 +61,17 @@ class XForce(HttpProvider):
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["dns-passivedns"] = _IOC_QUERIES["dns-info"]
-    _IOC_QUERIES["ipv4-passivedns"] = _IOC_QUERIES["dns-info"]
-    _IOC_QUERIES["ipv6-passivedns"] = _IOC_QUERIES["dns-info"]
+    _IOC_QUERIES["dns"] = _IOC_QUERIES["url"]
+    _IOC_QUERIES["dns-malware"] = _IOC_QUERIES["url-malware"]
+    _IOC_QUERIES["ipv4-passivedns"] = _IOC_QUERIES["dns-passivedns"]
+    _IOC_QUERIES["ipv6-passivedns"] = _IOC_QUERIES["dns-passivedns"]
     _IOC_QUERIES["hostname-whois"] = _IOC_QUERIES["ipv4-whois"]
     _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["ipv4-whois"]
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
     # pylint: disable=too-many-branches
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
@@ -81,32 +82,43 @@ class XForce(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
+        severity = TISeverity.information
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, "Not found."
-        result = False
+            return False, severity, "Not found."
+        result = True
         result_dict = {}
-        if response.ioc_type in ["ipv4", "ipv6"] and not response.query_subtype:
-            if response.raw_result.get("score") or response.raw_result.get("cats"):
-                result_dict.update(
-                    {
-                        "score": response.raw_result.get("score", 0),
-                        "cats": response.raw_result.get("cats"),
-                        "categoryDescriptions": response.raw_result.get(
-                            "categoryDescriptions"
-                        ),
-                        "reason": response.raw_result.get("reason"),
-                        "reasonDescription": response.raw_result.get(
-                            "reasonDescription", 0
-                        ),
-                        "tags": response.raw_result.get("tags", 0),
-                    }
-                )
-                result = True
+        if (
+            response.ioc_type in ["ipv4", "ipv6", "url", "dns"]
+            and not response.query_subtype
+        ):
+            score = response.raw_result.get("score", 0)
+            result_dict.update(
+                {
+                    "score": response.raw_result.get("score", 0),
+                    "cats": response.raw_result.get("cats"),
+                    "categoryDescriptions": response.raw_result.get(
+                        "categoryDescriptions"
+                    ),
+                    "reason": response.raw_result.get("reason"),
+                    "reasonDescription": response.raw_result.get(
+                        "reasonDescription", 0
+                    ),
+                    "tags": response.raw_result.get("tags", 0),
+                }
+            )
+            severity = (
+                TISeverity.information
+                if score == 0
+                else TISeverity.warning
+                if score == 1
+                else TISeverity.high
+            )
         if (
             response.ioc_type in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
             or response.query_subtype == "malware"
@@ -122,7 +134,7 @@ class XForce(HttpProvider):
                         ),
                     }
                 )
-                result = True
+                severity = TISeverity.high
         if response.ioc_type in [
             "dns",
             "ipv4",
@@ -133,18 +145,6 @@ class XForce(HttpProvider):
             contact = response.raw_result.get("contact", 0)
             if records:
                 result_dict.update({"records": records})
-                result = True
             elif contact:
                 result_dict.update({"contact": contact})
-                result = True
-        if response.ioc_type == "url":
-            result_dict.update(
-                {
-                    "cats": response.raw_result.get("cats"),
-                    "categoryDescriptions": response.raw_result.get(
-                        "categoryDescriptions"
-                    ),
-                }
-            )
-            result = True
-        return result, result_dict
+        return result, severity, result_dict

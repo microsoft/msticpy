@@ -97,6 +97,22 @@ class WorkspaceConfig:
         ten_ok = self._config.get(self.CONF_TENANT_ID_KEY, None)
         return ws_ok and ten_ok  # type: ignore
 
+    @property
+    def code_connect_str(self) -> str:
+        """
+        Return the Log Analytics connection string for dev code auth.
+
+        Returns
+        -------
+        str
+            Connection string
+
+        """
+        con_str = 'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
+        return con_str.format(
+            ten_id=self[self.CONF_TENANT_ID_KEY], ws_id=self[self.CONF_WS_ID_KEY]
+        )
+
     @classmethod
     def _read_config_values(cls, file_path: str) -> Dict[str, str]:
         """Read configuration file."""

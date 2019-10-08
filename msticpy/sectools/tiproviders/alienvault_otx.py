@@ -16,7 +16,7 @@ from typing import Any, Tuple
 
 import attr
 
-from .ti_provider_base import LookupResult
+from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
 from ...nbtools.utility import export
 from ..._version import VERSION
@@ -68,37 +68,52 @@ class OTX(HttpProvider):
 
     _REQUIRED_PARAMS = ["API_KEY"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : Any
+        response : LookupResult
             The returned data response
 
         Returns
         -------
-        Tuple[bool, Any]
+        Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
+            TISeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, "Not found."
+            return False, TISeverity.information, "Not found."
         if "pulse_info" in response.raw_result:
             pulses = response.raw_result["pulse_info"].get("pulses", {})
+            pulse_count = len(pulses)
+            if pulse_count == 0:
+                severity = TISeverity.information
+                return (
+                    True,
+                    severity,
+                    {
+                        "pulse_count": pulse_count,
+                        "sections_available": response.raw_result["sections"],
+                    },
+                )
+            if pulse_count == 1:
+                severity = TISeverity.warning
+            else:
+                severity = TISeverity.high
             return (
                 True,
+                severity,
                 {
-                    "pulse_count": len(pulses),
+                    "pulse_count": pulse_count,
                     "names": [p.get("name") for p in pulses],
                     "tags": [p.get("tags") for p in pulses],
                     "references": [p.get("references") for p in pulses],
                 },
             )
-        if not response.query_subtype:
-            return True, {}
-        return False, {}
+        return True, TISeverity.information, {}
 
     # pylint: enable=duplicate-code

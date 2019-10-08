@@ -164,14 +164,14 @@ the notebook Help menu.
 References
 ----------
 
--  The `msticpy <https://github.com/Microsoft/msticpy>`__ Python package
+-  The `msticpy <https://github.com/microsoft/msticpy>`__ Python package
    containing tools used in these notebooks developed by engineers on the
    Microsoft Threat Intelligence team. It is available on
-   `GitHub <https://github.com/Microsoft/msticpy>`__ along with several
+   `GitHub <https://github.com/microsoft/msticpy>`__ along with several
    notebooks documenting the use of the tools and on
    `PyPi <https://pypi.org/project/msticpy/>`__.
 
--  `Kqlmagic <https://github.com/Microsoft/jupyter-Kqlmagic>`__ is a
+-  `Kqlmagic <https://github.com/microsoft/jupyter-Kqlmagic>`__ is a
    Jupyter-friendly package developed by Azure's Michael Binstock.
 
 -  `Using Notebooks in Azure
