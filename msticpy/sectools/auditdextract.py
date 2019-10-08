@@ -488,8 +488,9 @@ def _extract_timestamp(audit_str: str) -> str:
     return ""
 
 
+# pylint: disable=too-many-branches
 def generate_process_tree(
-    audit_data: pd.DataFrame, branch_depth: str = 4, processes: pd.DataFrame = None
+    audit_data: pd.DataFrame, branch_depth: int = 4, processes: pd.DataFrame = None
 ) -> pd.DataFrame:
     """
     Generate process tree data from auditd logs.
@@ -498,7 +499,7 @@ def generate_process_tree(
     ----------
     audit_data : pd.DataFrame
         The Audit data containing process creation events
-    branch_depth: str, optional
+    branch_depth: int, optional
         The maximum depth of parent or child processes to extract from the data
         (The default is 4)
 
@@ -517,8 +518,8 @@ def generate_process_tree(
         procs.loc[:, "NodeRole"] = pd.Series("source", index=procs.index)
         procs.loc[:, "Level"] = pd.Series(0, index=procs.index)
     process_tree = pd.DataFrame()
-    for ppid in procs["pid"]:
-        pdf = audit_data.loc[audit_data["pid"] == (int(ppid))]
+    for proc_pid in procs["pid"]:
+        pdf = audit_data.loc[audit_data["pid"] == (int(proc_pid))]
         pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
         pdf.loc[:, "Level"] = pd.Series(1, index=pdf.index)
         process_tree = process_tree.append(pdf, sort=False)
@@ -527,17 +528,16 @@ def generate_process_tree(
             if pdf.empty:
                 count = branch_depth + 1
             else:
-                for ppid in pdf["ppid"]:
-                    if math.isnan(ppid):
+                for ancest_pid in pdf["ppid"]:
+                    if math.isnan(ancest_pid):
                         count = branch_depth + 1
                         continue
-                    else:
-                        pdf = audit_data.loc[audit_data["pid"] == (int(ppid))]
-                        pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
-                        pdf.loc[:, "Level"] = pd.Series(count + 1, index=pdf.index)
-                        process_tree = process_tree.append(pdf, sort=False)
-                        count = count + 1
-        for index, proc in procs.iterrows():
+                    pdf = audit_data.loc[audit_data["pid"] == (int(ancest_pid))]
+                    pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
+                    pdf.loc[:, "Level"] = pd.Series(count + 1, index=pdf.index)
+                    process_tree = process_tree.append(pdf, sort=False)
+                    count = count + 1
+        for _, proc in procs.iterrows():
             child_procs = audit_data.loc[
                 (audit_data["TimeGenerated"] > proc["TimeGenerated"])
             ]
@@ -550,8 +550,8 @@ def generate_process_tree(
                 if cdf.empty:
                     count = branch_depth + 1
                 else:
-                    for ppid in cdf["pid"]:
-                        cdf = audit_data.loc[audit_data["ppid"] == (int(ppid))]
+                    for desc_pid in cdf["pid"]:
+                        cdf = audit_data.loc[audit_data["ppid"] == (int(desc_pid))]
                         cdf.loc[:, "NodeRole"] = pd.Series("child", index=cdf.index)
                         cdf.loc[:, "Level"] = pd.Series(count + 1, index=cdf.index)
                         process_tree = process_tree.append(cdf, sort=False)
@@ -639,7 +639,7 @@ def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame
 
     feature_procs_h1 = add_process_features(input_frame=processes)
 
-    (clus_events, dbcluster, x_data) = dbcluster_events(
+    clus_events, _, _ = dbcluster_events(
         data=feature_procs_h1,
         cluster_columns=["pathScore", "SubjectUserSid"],
         time_column="TimeGenerated",

@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
-from typing import Iterable
+from typing import Iterable, List
 from numbers import Number
 import warnings
 
@@ -31,7 +31,7 @@ class FoliumMap:
         tiles=None,
         width: str = "100%",
         height: str = "100%",
-        location: list = [47.67, -122.13],
+        location: list = None,
     ):
         """
         Create an instance of the folium map.
@@ -156,11 +156,11 @@ def get_map_center(ip_entities: list):
         The Lattitude and Longitude calculated
 
     """
-    longs = []
-    lats = []
+    longs: List[int] = []
+    lats: List[int] = []
     for entity in ip_entities:
-        for ip in entity:
-            for i in ip:
+        for ip_addr in entity:
+            for i in ip_addr:
                 if "Location" in i:
                     if (
                         i["Location"]["Longitude"] not in longs

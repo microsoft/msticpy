@@ -5,25 +5,25 @@ metadata:
   data_families: [Network]
   tags: ['network', 'heartbeat']
   aliases:
-    - &azure_network_project '| project TenantId, TimeGenerated, 
-        FlowStartTime = FlowStartTime_t, 
-        FlowEndTime = FlowEndTime_t, 
-        FlowIntervalEndTime = FlowIntervalEndTime_t, 
+    - &azure_network_project '| project TenantId, TimeGenerated,
+        FlowStartTime = FlowStartTime_t,
+        FlowEndTime = FlowEndTime_t,
+        FlowIntervalEndTime = FlowIntervalEndTime_t,
         FlowType = FlowType_s,
         ResourceGroup = split(VM_s, "/")[0],
         VMName = split(VM_s, "/")[1],
-        VMIPAddress = VMIP_s, 
+        VMIPAddress = VMIP_s,
         PublicIPs = extractall(@"([\d\.]+)[|\d]+", dynamic([1]), PublicIPs_s),
         SrcIP = SrcIP_s,
         DestIP = DestIP_s,
         ExtIP = iif(FlowDirection_s == "I", SrcIP_s, DestIP_s),
-        L4Protocol = L4Protocol_s, 
-        L7Protocol = L7Protocol_s, 
-        DestPort = DestPort_d, 
+        L4Protocol = L4Protocol_s,
+        L7Protocol = L7Protocol_s,
+        DestPort = DestPort_d,
         FlowDirection = FlowDirection_s,
-        AllowedOutFlows = AllowedOutFlows_d, 
+        AllowedOutFlows = AllowedOutFlows_d,
         AllowedInFlows = AllowedInFlows_d,
-        DeniedInFlows = DeniedInFlows_d, 
+        DeniedInFlows = DeniedInFlows_d,
         DeniedOutFlows = DeniedOutFlows_d,
         RemoteRegion = AzureRegion_s,
         VMRegion = Region_s'
@@ -35,7 +35,7 @@ metadata:
         $<query_condition>$
         | where (AllowedOutFlows_d > 0 or AllowedInFlows_d > 0)
         {query_project}
-        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP), 
+        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP),
                          iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
                          )
         | project-away ExtIP
@@ -63,7 +63,7 @@ sources:
         | where VirtualMachine_s has "{host_name}"
         | where ResourceType == "NetworkInterface"
         | top 1 by TimeGenerated desc
-        | project PrivateIPAddresses = PrivateIPAddresses_s, 
+        | project PrivateIPAddresses = PrivateIPAddresses_s,
         PublicIPAddresses = PublicIPAddresses_s
         {add_query_items}'
     parameters:
@@ -80,7 +80,7 @@ sources:
           or PublicIPAddresses_s has "{ip_address}"
         | where ResourceType == "NetworkInterface"
         | top 1 by TimeGenerated desc
-        | project PrivateIPAddresses = PrivateIPAddresses_s, 
+        | project PrivateIPAddresses = PrivateIPAddresses_s,
         PublicIPAddresses = PublicIPAddresses_s, VirtualMachine = VirtualMachine_s
         | extend Computer = split(VirtualMachine_s, "/")[-1]
         {add_query_items}'
@@ -144,9 +144,9 @@ sources:
     query_macros:
       query_condition:
         description: Query-specific where clause
-        value: '| where (VMIP_s in ({ip_address_list}) 
-           or SrcIP_s in ({ip_address_list}) 
-           or DestIP_s in ({ip_address_list}) 
+        value: '| where (VMIP_s in ({ip_address_list})
+           or SrcIP_s in ({ip_address_list})
+           or DestIP_s in ({ip_address_list})
           )'
   list_azure_network_flows_by_host:
     description: Retrieves Azure network analytics flow events.
@@ -170,4 +170,4 @@ sources:
     query_macros:
       query_condition:
         description: Query-specific where clause
-        value: '| where VM_s has {host_name}'
+        value: '| where VM_s has "{host_name}"'

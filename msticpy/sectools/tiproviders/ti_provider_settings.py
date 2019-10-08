@@ -26,7 +26,7 @@ class TIProviderSettings:
     name: str
     description: str
     provider: Optional[str] = None
-    args: Dict[str, str] = Factory(dict)
+    args: Dict[Optional[str], Any] = Factory(dict)
     primary: bool = False
 
 
@@ -64,14 +64,17 @@ def reload_settings():
     config.refresh_config()
 
 
-def _get_setting_args(prov_args: Dict[str, Any]) -> Dict[str, Any]:
+def _get_setting_args(prov_args: Optional[Dict[str, Any]]) -> Dict[Any, Any]:
     """Extract the provider args from the settings."""
+    if not prov_args:
+        return {}
     arg_dict: Dict[str, Any] = prov_args.copy()
     name_map = {
         "ApiID": "api_id",
         "AuthKey": "auth_key",
         "WorkspaceID": "workspace_id",
         "TenantID": "tenant_id",
+        "SubscriptionID": "subscription_id",
     }
     for arg_name, arg_value in prov_args.items():
         target_name = name_map.get(arg_name, arg_name)

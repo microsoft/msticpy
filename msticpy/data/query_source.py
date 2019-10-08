@@ -7,7 +7,7 @@
 from datetime import datetime, timedelta
 from numbers import Number
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from collections import ChainMap
 
 from .._version import VERSION
@@ -221,27 +221,22 @@ class QuerySource:
         # Handle formatting for datetimes and cases where a format
         # template has been supplied
         for p_name, settings in self.params.items():
+            param_value = param_dict[p_name]
             # special case of datetime specified as a number - we
             # interpret this as an offset from utcnow
-            if settings["type"] == "datetime" and isinstance(
-                param_dict[p_name], Number
-            ):
-                if param_dict[p_name] < 0:
-                    param_dict[p_name] = datetime.utcnow() - timedelta(
-                        abs(param_dict[p_name])
+            if settings["type"] == "datetime":
+                if isinstance(param_value, datetime):
+                    param_dict[p_name] = param_value
+                elif isinstance(param_value, Number):
+                    param_dict[p_name] = datetime.utcnow() + timedelta(  # type: ignore
+                        param_value
                     )
                 else:
-                    param_dict[p_name] = datetime.utcnow() + timedelta(
-                        abs(param_dict[p_name])
-                    )
+                    tm_delta = self._parse_timedelta(str(param_value))
+                    param_dict[p_name] = datetime.utcnow() + tm_delta
 
             if settings["type"] == "list":
-                if isinstance(param_dict[p_name], list):
-                    param_dict[p_name] = ",".join(
-                        [f"'{item}'" for item in param_dict[p_name]]
-                    )
-                else:
-                    param_dict[p_name] = f"'{param_dict[p_name]}'"
+                param_dict[p_name] = self._parse_param_list(param_value)
 
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)
@@ -256,6 +251,38 @@ class QuerySource:
                 param_dict[p_name] = param_dict[p_name].isoformat(sep="T") + "Z"
 
         return self._query.format(**param_dict)
+
+    @staticmethod
+    def _parse_timedelta(time_range: str = "0") -> timedelta:
+        """Parse time period string and return equivalent timedelta."""
+        tr_regex = r"(?P<sign>[+\-]?)\s*(?P<value>[\d]+)\s*(?P<unit>[wdhm]?)"
+        m_time = re.match(tr_regex, time_range)
+
+        if not m_time or "value" not in m_time.groupdict():
+            return timedelta(0)
+        days = weeks = secs = 0
+        tm_val = int(m_time.groupdict()["sign"] + m_time.groupdict()["value"])
+        tm_unit = (
+            m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
+        )
+        if tm_unit == "d" or tm_unit not in "wdhm":
+            days = tm_val
+        elif tm_unit == "w":
+            weeks = tm_val
+        elif tm_unit == "h":
+            secs = tm_val * 60 * 60
+        elif tm_unit == "m":
+            secs = tm_val * 60
+        return timedelta(days=days, weeks=weeks, seconds=secs)
+
+    @staticmethod
+    def _parse_param_list(param_value: Union[str, List]) -> str:
+        """Parse list, comma-delim str or str."""
+        if isinstance(param_value, list):
+            return ",".join([f"'{item}'" for item in param_value])
+        if isinstance(param_value, str) and "," in param_value:
+            return ",".join([f"'{item.strip()}'" for item in param_value.split(",")])
+        return f"'{param_value}'"
 
     def help(self):
         """Print help for query."""
@@ -305,7 +332,8 @@ class QuerySource:
 
         """
         req_source_items = {"args"}
-        param_pattern = r"{([^}]+)}"
+        # match items surrounded by single {} but not double
+        param_pattern = r"(?!{{){([^}]+)}(?!})"
 
         valid_failures = []
 

@@ -22,9 +22,11 @@ defaults:
       start:
         description: Query start time
         type: datetime
+        default: -30
       end:
         description: Query end time
         type: datetime
+        default: 0
       add_query_items:
         description: Additional query clauses
         type: str
@@ -131,6 +133,7 @@ sources:
       host_name:
         description: The hostname to find
         type: str
+        default: ''
       account_name:
         description: The account name to find
         type: str
