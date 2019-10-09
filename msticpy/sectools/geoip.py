@@ -22,7 +22,6 @@ import math
 import os
 from pathlib import Path
 import shutil
-import site
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
@@ -299,7 +298,7 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = (
         "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
     )
-    _PKG_DIR = os.path.join(os.path.dirname(site.__file__), "site-packages", "msticpy")
+    _DB_HOME = os.path.join(os.path.expanduser('~'), ".msticpy")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
@@ -317,15 +316,14 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated.
 
         """
         if db_folder is None:
-            db_folder = self._PKG_DIR
+            db_folder = self._DB_HOME
         self._force_update = force_update
         self._auto_update = auto_update
         self._check_and_update_db(db_folder, self._force_update, self._auto_update)
@@ -345,15 +343,15 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package installation
-            directory.(the default is None)
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.(the default is None)
 
         """
         if url is None:
             url = self._MAXMIND_DOWNLOAD
 
         if db_folder is None:
-            db_folder = self._PKG_DIR
+            db_folder = self._DB_HOME
 
         if not os.path.exists(db_folder):
             os.mkdir(db_folder)
@@ -402,8 +400,8 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.
 
         Returns
         -------
@@ -442,8 +440,8 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download msticpy package
-            installation directory.
+            If no path provided, it is set to download to .msticpy dir under
+            user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated, overriding age criteria.
@@ -487,7 +485,7 @@ class GeoLiteLookup(GeoIpLookup):
         ip_entity: IpAddress = None,
     ) -> Tuple[List[Tuple[Dict[str, str], int]], List[IpAddress]]:
         """
-        Lookup IP location from IPStack web service.
+        Lookup IP location from GeoLite2 data created by MaxMind.
 
         Parameters
         ----------
