@@ -6,15 +6,20 @@
 
 """
 
-Contains a series of functions required to manipulate and enrich IP Address data to assist investigations.
+Contains a series of functions required to manipulate and enrich IP Address data
+to assist investigations.
 
 Designed to support any data source containing IP address entity.
 
 """
+from typing import Tuple
+
 import ipaddress as ip
+import pandas as pd
+
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, Host, IpAddress
+from ..nbtools.entityschema import GeoLocation, IpAddress
 from ..nbtools.utility import export
 from .geoip import GeoLiteLookup
 
@@ -69,7 +74,21 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
 
 @export
 def get_ip_type(ip_str: str) -> str:
-    """ function to validate given value is an IP address and deteremine IPType category (e.g. Private/Public/Multicast)"""
+    """
+    function to validate given value is an IP address and deteremine IPType category
+    (e.g. Private/Public/Multicast).
+
+    Parameters
+    ----------
+    ip_str : str
+        The string of the IP Address
+
+    Returns
+    -------
+    str
+        Returns ip type string using ip address module
+
+    """
     try:
         ip.ip_address(ip_str)
         if ip.ip_address(ip_str).is_private:
