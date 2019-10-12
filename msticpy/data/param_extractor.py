@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Parameter extractor helper functions for use with IPython/Juptyer queries."""
+"""Parameter extractor helper functions for use with IPython/Jupyter queries."""
 from typing import List, Dict, Tuple, Any
 
 from .query_store import QuerySource
