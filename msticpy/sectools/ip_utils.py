@@ -91,6 +91,9 @@ def get_ip_type(ip_str: str) -> str:
     """
     try:
         ip.ip_address(ip_str)
+    except ValueError:
+        print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
+    else:
         if ip.ip_address(ip_str).is_private:
             return "Private"
         elif ip.ip_address(ip_str).is_multicast:
@@ -105,8 +108,6 @@ def get_ip_type(ip_str: str) -> str:
             return "Public"
         elif ip.ip_address(ip_str).is_link_local:
             return "Link Local"
-    except ValueError:
-        print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
 
 
 @export
@@ -129,7 +130,7 @@ def create_ip_record(
         Details of the IP data collected
 
     """
-    ip_entity = IpAddress(src_event=heartbeat_df.iloc[0])
+    ip_entity = IpAddress()
 
     # Produce ip_entity record using available dataframes
     ip_hb = heartbeat_df.iloc[0]
@@ -149,7 +150,6 @@ def create_ip_record(
     geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]
     geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]
     ip_entity.Location = geoloc_entity
-    ip_entity.IPAddress = ip_entity
 
     # If Azure network data present add this to host record
     if az_net_df is not None and not az_net_df.empty:
