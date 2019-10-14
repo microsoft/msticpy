@@ -33,19 +33,19 @@ defaults:
       groupbyfield:
         description: Group by field to aggregate results
         type: str
-        default: 'DeviceVendor' 
+        default: DeviceVendor
       timestampfield:
         description: Timestamp field to use from source dataset
         type: str
-        default: 'TimeGenerated' 
+        default: TimeGenerated
       aggregatefield:
         description: field to agregate from source dataset
         type: str
-        default: 'Total'
+        default: Total
       aggregatefunction:
         description: Aggregation functions to use - count(), sum(), avg() etc
         type: str
-        default: 'count()'
+        default: count()
       mvexpand_clause:
         description: 
         type: str
@@ -54,8 +54,8 @@ defaults:
         {timestampfield} to typeof(datetime), 
         anomalies to typeof(double), 
         score to typeof(double), 
-        baseline to typeof(long)
-        '            
+        baseline to typeof(long) | where anomalies > 0 | extend score = round(score,2)
+        '
 sources:
   get_timeseries_data:
     description: Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
@@ -65,7 +65,7 @@ sources:
             {query_project}
             {where_clause}
             | where {timestampfield} between (datetime({start})...datetime({end}))
-            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
             '
   get_timeseries_alerts:
     description: Time Series anomaly alerts generated using built-in KQL time series functions
@@ -75,10 +75,9 @@ sources:
             {query_project}
             {where_clause}
             | where {timestampfield} between (datetime({start})...datetime({end}))
-            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
-            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold}, -1, 'linefit') 
-            {mvexpand_clause} 
-            | where anomalies > 0 | extend score = round(score,2)
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
+            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold},-1,"linefit")
+            {mvexpand_clause}
             '
   plot_timeseries_data:
     description: Plot timeseries data using built-in KQL time series decomposition functions
