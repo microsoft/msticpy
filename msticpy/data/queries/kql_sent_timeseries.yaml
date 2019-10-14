@@ -54,7 +54,7 @@ defaults:
         {timestampfield} to typeof(datetime), 
         anomalies to typeof(double), 
         score to typeof(double), 
-        baseline to typeof(long) | where anomalies > 0 | extend score = round(score,2)
+        baseline to typeof(long) 
         '
 sources:
   get_timeseries_data:
@@ -78,16 +78,32 @@ sources:
             | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
             | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold},-1,"linefit")
             {mvexpand_clause}
+            | where anomalies > 0 | extend score = round(score,2)
             '
-  plot_timeseries_data:
-    description: Plot timeseries data using built-in KQL time series decomposition functions
+  plot_timeseries_datawithbaseline:
+    description: Plot timeseries data using built-in KQL time series decomposition using built-in KQL render method
     args:
       query: '
             {table}
             {query_project}
             {where_clause} 
             | where {timestampfield} between (datetime({start})...datetime({end}))
-            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
             | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatefield}) 
-            | render timechart
+            | project {timestampfield}, {aggregatefield}, baseline
+            | render timechart (Title="Time Series Decomposition with Baseline vs Actual Chart")
+            '
+  plot_timeseries_scoreanomolies:
+    description: Plot timeseries anomaly score using built-in KQL render method
+    args:
+      query: '
+            {table}
+            {query_project}
+            {where_clause} 
+            | where {timestampfield} between (datetime({start})...datetime({end}))
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
+            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold},-1,"linefit")
+            {mvexpand_clause}
+            | project {timestampfield}, score
+            | render timechart with (Title="Time Series Anomalies Chart")
             '
