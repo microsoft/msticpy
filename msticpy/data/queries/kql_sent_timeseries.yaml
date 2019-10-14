@@ -1,0 +1,94 @@
+metadata:
+  version: 1
+  description: TimeSeries - Series of TimeSeries queries for variety of Data Sources
+  data_environments: [LogAnalytics]
+  data_families: ['SigninLogs','SecurityEvent','VMConnection','CommonSecurityLog','AzureNetworkAnalytics_CL']
+  tags: ['TimeSeries','host','ip','alert','PaloAlto','network']
+defaults:
+  parameters:
+      table:
+        description: Table name
+        type: str
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project TimeGenerated, SourceIP, DestinationIP, DeviceVendor'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      timeframe:
+        description: Aggregation TimeFrame
+        type: datetime
+      scorethreshold:
+        description: Score threshold for alerting
+        type: str
+      where_clause:
+        description: Optional additional filter clauses
+        type: str
+        default: '' 
+      groupbyfield:
+        description: Group by field to aggregate results
+        type: str
+        default: 'DeviceVendor' 
+      timestampfield:
+        description: Timestamp field to use from source dataset
+        type: str
+        default: 'TimeGenerated' 
+      aggregatefield:
+        description: field to agregate from source dataset
+        type: str
+        default: 'Total'
+      aggregatefunction:
+        description: Aggregation functions to use - count(), sum(), avg() etc
+        type: str
+        default: 'count()'
+      mvexpand_clause:
+        description: 
+        type: str
+        default: '
+        | mv-expand {aggregatefield} to typeof(double), 
+        {timestampfield} to typeof(datetime), 
+        anomalies to typeof(double), 
+        score to typeof(double), 
+        baseline to typeof(long)
+        '            
+sources:
+  get_timeseries_data:
+    description: Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
+    args:
+      query: '
+            {table}
+            {query_project}
+            {where_clause}
+            | where {timestampfield} between (datetime({start})...datetime({end}))
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
+            '
+  get_timeseries_alerts:
+    description: Time Series anomaly alerts generated using built-in KQL time series functions
+    args:
+      query: '
+            {table}
+            {query_project}
+            {where_clause}
+            | where {timestampfield} between (datetime({start})...datetime({end}))
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
+            | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold}, -1, 'linefit') 
+            {mvexpand_clause} 
+            | where anomalies > 0 | extend score = round(score,2)
+            '
+  plot_timeseries_data:
+    description: Plot timeseries data using built-in KQL time series decomposition functions
+    args:
+      query: '
+            {table}
+            {query_project}
+            {where_clause} 
+            | where {timestampfield} between (datetime({start})...datetime({end}))
+            | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupby}
+            | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatefield}) 
+            | render timechart
+            '
