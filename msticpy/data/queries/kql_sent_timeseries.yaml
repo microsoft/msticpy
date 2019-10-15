@@ -12,8 +12,6 @@ defaults:
       query_project:
         description: Column project statement
         type: str
-        default: '
-          | project TimeGenerated, SourceIP, DestinationIP, DeviceVendor'
       start:
         description: Query start time
         type: datetime
@@ -22,7 +20,8 @@ defaults:
         type: datetime
       timeframe:
         description: Aggregation TimeFrame
-        type: datetime
+        type: str
+        default: '1h'
       scorethreshold:
         description: Score threshold for alerting
         type: str
@@ -33,7 +32,6 @@ defaults:
       groupbyfield:
         description: Group by field to aggregate results
         type: str
-        default: DeviceVendor
       timestampfield:
         description: Timestamp field to use from source dataset
         type: str
@@ -46,16 +44,6 @@ defaults:
         description: Aggregation functions to use - count(), sum(), avg() etc
         type: str
         default: count()
-      mvexpand_clause:
-        description: 
-        type: str
-        default: '
-        | mv-expand {aggregatefield} to typeof(double), 
-        {timestampfield} to typeof(datetime), 
-        anomalies to typeof(double), 
-        score to typeof(double), 
-        baseline to typeof(long) 
-        '
 sources:
   get_timeseries_data:
     description: Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
@@ -77,7 +65,7 @@ sources:
             | where {timestampfield} between (datetime({start})...datetime({end}))
             | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
             | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatefield}, {scorethreshold},-1,"linefit")
-            {mvexpand_clause}
+            | mv-expand {aggregatefield} to typeof(double), {timestampfield} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long) 
             | where anomalies > 0 | extend score = round(score,2)
             '
   plot_timeseries_datawithbaseline:
@@ -91,7 +79,7 @@ sources:
             | make-series {aggregatefield}={aggregatefunction} on {timestampfield} from datetime({start}) to datetime({end}) step {timeframe} by {groupbyfield}
             | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatefield}) 
             | project {timestampfield}, {aggregatefield}, baseline
-            | render timechart (Title="Time Series Decomposition with Baseline vs Actual Chart")
+            | render timechart with (Title="Time Series Decomposition with Baseline vs Actual Chart")
             '
   plot_timeseries_scoreanomolies:
     description: Plot timeseries anomaly score using built-in KQL render method
