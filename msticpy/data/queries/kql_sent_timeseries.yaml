@@ -9,10 +9,6 @@ defaults:
       table:
         description: Table name
         type: str
-      query_project:
-        description: Column project statement
-        type: str
-        default: '| project {timestampcolumn},{aggregatecolumn},{groupbycolumn}'
       start:
         description: Query start time
         type: datetime
@@ -53,7 +49,7 @@ sources:
     args:
       query: '
             {table}
-            {query_project}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
@@ -64,7 +60,7 @@ sources:
     args:
       query: '
             {table}
-            {query_project}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
@@ -78,7 +74,7 @@ sources:
     args:
       query: '
             {table}
-            {query_project}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause} 
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
@@ -92,7 +88,7 @@ sources:
     args:
       query: '
             {table}
-            {query_project}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause} 
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
