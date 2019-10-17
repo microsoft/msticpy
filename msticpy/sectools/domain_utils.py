@@ -190,5 +190,6 @@ class DomainValidator():
                 result = False
         except:
             result = False
+            x509 = None
 
-        return result
+        return result, x509
