@@ -14,4 +14,4 @@ def test_validate_domain():
     blacklisted = test_dom_val.ssl_blacklisted('www.google.com')
     assert valid_tld == True
     assert resolvable == True
-    assert blacklisted == False
+    assert blacklisted == (False, None)
