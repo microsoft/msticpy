@@ -56,17 +56,13 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     else:
         raise AttributeError("No configuration found for Browshot")
     # Request screenshot from Browshot and get request ID
-    id_string = (
-        f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"
-    )
+    id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"
     id_data = requests.get(id_string)
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
     )
-    image_string = (
-        f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"
-    )
+    image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"
 
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
@@ -95,7 +91,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 
 
 @export
-class DomainValidator():
+class DomainValidator:
     """Assess a domain's validity."""
 
     _TLD_URL = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
@@ -105,7 +101,7 @@ class DomainValidator():
         """Pull IANA TLD list and save to internal attribute."""
         try:
             resp = requests.get(self._TLD_URL)
-            self._tld_list = resp.content.decode().split('\n')[1:]
+            self._tld_list = resp.content.decode().split("\n")[1:]
         except ConnectionError:
             self._tld_list = []
 
@@ -131,7 +127,7 @@ class DomainValidator():
         """
         _, _, tld = tldextract.extract(url_domain.lower())
         if "." in tld:
-            ttld = tld.split('.')[1].upper()
+            ttld = tld.split(".")[1].upper()
         else:
             ttld = tld.upper()
 
@@ -158,7 +154,7 @@ class DomainValidator():
 
         """
         try:
-            dns.resolver.query(url_domain, 'A')
+            dns.resolver.query(url_domain, "A")
             result = True
         except:
             result = False
@@ -184,7 +180,7 @@ class DomainValidator():
             cert = ssl.get_server_certificate(url_domain, 443)
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
             cert_sha1 = x509.digest("sha1")
-            if self._ssl_bl['SHA1'].str.contains(cert_sha1).any():
+            if self._ssl_bl["SHA1"].str.contains(cert_sha1).any():
                 result = True
             else:
                 result = False
