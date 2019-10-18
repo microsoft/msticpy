@@ -16,12 +16,12 @@ import ssl
 import json
 import time
 import requests
-import tldextract
 import dns.resolver
 import OpenSSL
 import pandas as pd
 from ipywidgets import IntProgress
 from IPython import display
+import tldextract
 from ..nbtools import pkg_config as config
 from .._version import VERSION
 from ..nbtools.utility import export
