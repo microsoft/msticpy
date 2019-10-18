@@ -13,11 +13,17 @@ with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
 import ssl
+import sys
+import warnings
 import json
 import time
+from typing import Set, Tuple
+from urllib.error import HTTPError, URLError
+from pathlib import Path
 import requests
 import dns.resolver
 import OpenSSL
+import pkg_resources
 import pandas as pd
 from ipywidgets import IntProgress
 from IPython import display
@@ -94,25 +100,15 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 class DomainValidator:
     """Assess a domain's validity."""
 
-    _TLD_URL = "http://data.iana.org/TLD/tlds-alpha-by-domain.txt"
-    _SSLBL_URL = "https://sslbl.abuse.ch/blacklist/sslblacklist.csv"
-
     def __init__(self):
         """Pull IANA TLD list and save to internal attribute."""
-        try:
-            resp = requests.get(self._TLD_URL)
-            self._tld_list = resp.content.decode().split("\n")[1:]
-        except ConnectionError:
-            self._tld_list = []
+        self.__class__.tld_index: Set[str] = self.get_tlds()
 
-        try:
-            self._ssl_bl = pd.read_csv(self._SSLBL_URL, skiprows=8)
-        except ConnectionError:
-            self._ssl_bl = pd.DataFrame({"SHA1": []})
+        self.__class__.ssl_bl: pd.DataFrame = self._get_ssl_bl()
 
-    def validate_tld(self, url_domain: str):
+    def validate_tld(self, url_domain: str) -> bool:
         """
-        Validate if a domain's TLD is public.
+        Validate if a domain's TLD appears in the IANA tld list.
 
         Parameters
         ----------
@@ -125,20 +121,18 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
+        if not self.tld_index:  # type: ignore
+            self.tld_index = self.get_tlds()
+        if not self.tld_index:
+            return True
         _, _, tld = tldextract.extract(url_domain.lower())
         if "." in tld:
             ttld = tld.split(".")[1].upper()
         else:
             ttld = tld.upper()
+        return ttld in self.tld_index
 
-        if not tld or ttld not in self._tld_list:
-            result = False
-        else:
-            result = True
-
-        return result
-
-    def is_resolvable(self, url_domain: str):
+    def is_resolvable(self, url_domain: str) -> bool:
         """
         Validate if a domain or URL be be resolved to an IP address.
 
@@ -156,12 +150,12 @@ class DomainValidator:
         try:
             dns.resolver.query(url_domain, "A")
             result = True
-        except:
+        except Exception:  # pylint: disable=broad-except
             result = False
 
         return result
 
-    def ssl_blacklisted(self, url_domain: str):
+    def ssl_blacklisted(self, url_domain: str) -> Tuple:
         """
         Validate if a domain or URL's SSL cert has been blacklisted.
 
@@ -180,12 +174,79 @@ class DomainValidator:
             cert = ssl.get_server_certificate(url_domain, 443)
             x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
             cert_sha1 = x509.digest("sha1")
-            if self._ssl_bl["SHA1"].str.contains(cert_sha1).any():
-                result = True
-            else:
-                result = False
-        except:
+            result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1).any())
+        except Exception:  # pylint: disable=broad-except
             result = False
             x509 = None
 
         return result, x509
+
+    @classmethod
+    def get_tlds(cls) -> Set[str]:
+        """
+        Return IANA Top Level Domains.
+
+        Returns
+        -------
+        Set[str]
+            Set of top level domains.
+
+        """
+        try:
+            tld_list = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt"
+            temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
+            return set(temp_df["TLD"].dropna())
+        except (HTTPError, URLError):
+            pass
+        except Exception as err:  # pylint: disable=broad-except
+            warnings.warn(
+                "Exception detected trying to retrieve IANA top-level domain list."
+                + "Falling back to builtin seed list. "
+                + f"{err.args}",
+                RuntimeWarning,
+            )
+        # pylint: enable=broad-except
+        # if we failed to get the list try to read from a seed file
+        return cls._read_tld_seed_file()
+
+    @classmethod
+    def _read_tld_seed_file(cls) -> Set[str]:
+        """Read TLD seed list from seed file."""
+        seed_file = "tld_seed.txt"
+        conf_file = pkg_resources.resource_filename(__name__, seed_file)
+
+        if not Path(conf_file).is_file():
+            # if all else fails we try to find the package default config somewhere
+            # in the package tree - we use the first one we find
+            pkg_paths = sys.modules["msticpy"]
+            if pkg_paths:
+                conf_file = str(
+                    next(Path(pkg_paths.__path__[0]).glob(seed_file))  # type: ignore
+                )
+
+        if conf_file:
+            with open(conf_file, "r") as file_handle:
+                tld_txt = file_handle.read()
+                tld_set = set(tld_txt.split("\n"))
+            return tld_set
+        return set()
+
+    @classmethod
+    def _write_tld_seed_file(cls):
+        """Write existing TLD list to a text file."""
+        if cls.tld_index:
+            seed_file = "tld_seed.txt"
+            with open(seed_file, "w") as file_handle:
+                file_handle.write("\n".join(sorted(cls.tld_index)))
+
+    @classmethod
+    def _get_ssl_bl(cls) -> pd.DataFrame:
+        """Download and load abuse.ch SSL Blacklist."""
+        try:
+            ssl_bl = pd.read_csv(
+                "https://sslbl.abuse.ch/blacklist/sslblacklist.csv", skiprows=8
+            )
+        except ConnectionError:
+            ssl_bl = pd.DataFrame({"SHA1": []})
+
+        return ssl_bl
