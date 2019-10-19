@@ -190,7 +190,7 @@ class OPR(HttpProvider):
 
         l_len = len(ioc_list)
         for step in range(0, l_len, batch_size):
-            batch_list = ioc_list[step : (step + batch_size)]  # noqa
+            batch_list = ioc_list[step : (step + batch_size)]  # noqa: E203
             for result in self._lookup_batch(batch_list):
                 yield result
 

@@ -59,7 +59,8 @@ sources:
         | where ProcessName == "sudo"
         | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
         | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("COMMAND=(.*)$",1,SyslogMessage), CommandCall=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
-        | where SyslogMessage contains "{account_name}" or Sudoer contains "{account_name}" or SyslogMessage contains "session closed for user root"'
+        | where SyslogMessage contains "{account_name}" or Sudoer contains "{account_name}" or SyslogMessage contains "session closed for user root"
+        {add_query_items}'
     parameters:
       account_name:
         description: Username to filter the search by
@@ -75,7 +76,8 @@ sources:
         | where TimeGenerated <= datetime({end})
         | where Computer has "{host_name}"
         | where ProcessName == "CRON" or Facility == "cron"
-        | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)'
+        | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)
+        {add_query_items}'
     parameters:
   user_group_activity:
     description: All user/group additions, deletions, and modifications
@@ -93,7 +95,8 @@ sources:
                                         )
                                     )
         | extend User=extract("(user: name=|user '')([[:alnum:]]+)",2,SyslogMessage), Group=extract("(group: name=|group '')([[:alnum:]]+)",2,SyslogMessage), UID=extract("UID=([0-9]+)",1,SyslogMessage), GID=extract("GID=([0-9]+)",1,SyslogMessage)
-        | where UserGroupAction != "" '
+        | where UserGroupAction != ""
+        {add_query_items}'
     parameters:
   all_syslog:
     description: Returns all syslog activity for a host
@@ -103,6 +106,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer == "{host_name}"'
+        | where Computer has "{host_name}"
+        {add_query_items}'
     parameters:
 
