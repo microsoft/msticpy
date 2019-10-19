@@ -1,0 +1,84 @@
+metadata:
+  version: 1
+  description: Kql Sentinel Azure
+  data_environments: [LogAnalytics]
+  data_families: [Office365]
+  tags: ['office', 'o365']
+defaults:
+  metadata:
+    data_source: 'OfficeActivity'
+  parameters:
+      start:
+        description: Query start time
+        type: datetime
+        default: -5
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_activity_for_account:
+    description: Lists Office Activity for Account
+    metadata:
+    args:
+      query: '
+        let accountName = "{account_name}";
+        let account = case(
+            accountName has "@", tostring(split(accountName, "@")[0]),
+            accountName has "\\", tostring(split(accountName, "\\")[1]),
+            accountName
+        );
+        {table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where UserId has accountName
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: OfficeActivity
+      account_name:
+        description: The account name to find
+        type: str
+  list_activity_for_ip:
+    description: Lists Office Activity for Caller IP Address(es)
+    metadata:
+    args:
+      query: '
+        {table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where ClientIP in ({ip_address_list})
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: OfficeActivity
+      ip_address_list:
+        description: The IP Address or list of Addresses
+        type: list
+  list_azure_activity_for_resource:
+    description: Lists Office Activity for a Resource
+    metadata:
+    args:
+      query: '
+        {table}
+        | where OfficeObjectId has "{resource}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: OfficeActivity
+      resource:
+        description: OfficeObjectId or substring
+        type: str
+

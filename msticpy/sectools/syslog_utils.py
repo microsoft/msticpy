@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 """
+syslog_utils - Syslog parsing and utility module.
 
 Contains a series of functions required to correct collect, parse and
 visualise linux syslog data.
@@ -14,7 +14,7 @@ auditd is not available.
 
 """
 import datetime as dt
-from typing import Tuple
+from typing import List, Dict, Any
 import pytz
 
 import ipywidgets as widgets
@@ -49,7 +49,7 @@ class DataError(Error):
     """Raised when thereis a data input error."""
 
 
-def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
+def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entitity.
 
@@ -60,7 +60,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
 
     Returns
     -------
-    Tuple
+    List[str]
         The populated IP entities including address and geo-location
 
     """
@@ -129,23 +129,25 @@ def create_host_record(
 
     # Produce host_entity record mapping linux heartbeat elements to host_entity fields
     host_hb = heartbeat_df.iloc[0]
-    host_entity.SourceComputerId = host_hb["SourceComputerId"]
-    host_entity.OSType = host_hb["OSType"]
-    host_entity.OSName = host_hb["OSName"]
-    host_entity.OSVMajorersion = host_hb["OSMajorVersion"]
-    host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]
-    host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]
-    host_entity.OmsSolutions = [sol.strip() for sol in host_hb["Solutions"].split(",")]
-    host_entity.Applications = applications
-    host_entity.VMUUID = host_hb["VMUUID"]
+    host_entity.SourceComputerId = host_hb["SourceComputerId"]  # type: ignore
+    host_entity.OSType = host_hb["OSType"]  # type: ignore
+    host_entity.OSName = host_hb["OSName"]  # type: ignore
+    host_entity.OSVMajorersion = host_hb["OSMajorVersion"]  # type: ignore
+    host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]  # type: ignore
+    host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]  # type: ignore
+    host_entity.OmsSolutions = [  # type: ignore
+        sol.strip() for sol in host_hb["Solutions"].split(",")
+    ]  # type: ignore
+    host_entity.Applications = applications  # type: ignore
+    host_entity.VMUUID = host_hb["VMUUID"]  # type: ignore
     ip_entity = IpAddress()
     ip_entity.Address = host_hb["ComputerIP"]
     geoloc_entity = GeoLocation()
-    geoloc_entity.CountryName = host_hb["RemoteIPCountry"]
-    geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
-    geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
-    ip_entity.Location = geoloc_entity
-    host_entity.IPAddress = ip_entity
+    geoloc_entity.CountryName = host_hb["RemoteIPCountry"]  # type: ignore
+    geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
+    geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
+    ip_entity.Location = geoloc_entity  # type: ignore
+    host_entity.IPAddress = ip_entity  # type: ignore
 
     # If Azure network data present add this to host record
     if az_net_df is not None and not az_net_df.empty:
@@ -279,26 +281,19 @@ def risky_sudo_sessions(
             "At least one of risky_actions or suspicious_actions must be supplied"
         )
 
-    risky_sessions = {}
     # Depending on whether we have risky or suspicious acitons or both
     # identify sessions which these actions occur in
-    if risky_actions is not None and suspicious_actions is None:
-        risky_sessions = _find_risky_sudo_session(
-            risky_actions=risky_actions, sudo_sessions=sessions
-        )
-    elif suspicious_actions is not None and risky_actions is None:
-        risky_sessions = _find_suspicious_sudo_session(
-            suspicious_actions=suspicious_actions, sudo_sessions=sessions
-        )
-    else:
+    risky_act_sessions: Dict[str, Any] = {}
+    susp_act_sessions: Dict[str, Any] = {}
+    if risky_actions is not None:
         risky_act_sessions = _find_risky_sudo_session(
             risky_actions=risky_actions, sudo_sessions=sessions
         )
-        susp_sessions = _find_suspicious_sudo_session(
+    if suspicious_actions is not None:
+        susp_act_sessions = _find_suspicious_sudo_session(
             suspicious_actions=suspicious_actions, sudo_sessions=sessions
         )
-        risky_sessions = {**risky_act_sessions, **susp_sessions}
-    return risky_sessions
+    return {**risky_act_sessions, **susp_act_sessions}
 
 
 def _normalize_to_utc(time_stamp: dt.datetime):

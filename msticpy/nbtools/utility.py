@@ -263,6 +263,8 @@ _F_STYLES = {
     "bold": "font-weight: bold",
     "italic": "font-style: italic",
     "red": "color: red",
+    "green": "color: green",
+    "blue": "color: blue",
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
 }
