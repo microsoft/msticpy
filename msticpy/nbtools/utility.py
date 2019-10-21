@@ -5,13 +5,17 @@
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
+import subprocess
 import sys
-from pathlib import Path
-from typing import Callable, Optional, Any, Tuple, Union, Iterable
 import warnings
+from pathlib import Path
+from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
-from IPython.core.display import display, HTML, Markdown
 import pandas as pd
+import pkg_resources
+from IPython.core.display import HTML, Markdown, display
+
+from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
 
@@ -217,6 +221,48 @@ def resolve_pkg_path(part_path: str):
         warnings.warn(f"No path or ambiguous match for {part_path} not found")
         return None
     return str(searched_paths[0])
+
+
+@export
+# pylint: disable=not-an-iterable
+def check_and_install_missing_packages(required_packages, notebook=True):
+    """
+    Check current installed packages and install missing packages from provided list of packages
+
+    Parameters
+    ----------
+    required_packages : [list]
+        List of packages to check and install in a current environment
+    notebook : bool, optional
+        [Boolean value to toggle notebook view and console view to display correct progress bar],
+        by default True
+    """
+    installed_packages = pkg_resources.working_set
+    installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
+    for package in required_packages:
+        if package not in installed_packages_list:
+            if notebook:
+                pkgbar = tqdm_notebook(
+                    required_packages, desc="Installing Missing Packages", unit="bytes"
+                )
+            else:
+                pkgbar = tqdm(
+                    required_packages, desc="Installing Missing Packages", unit="bytes"
+                )
+            try:
+                for _ in pkgbar:
+                    retcode = subprocess.call(["pip", "install", package])
+                    if retcode > 0:
+                        print(
+                            f"An Error has occured while installing {package}"
+                        )
+                    else:
+                        print(f"{package} installed succesfully")
+            except OSError as err:
+                print("Execution of Pip installation failed:", err)
+            break
+    else:
+        print("All packages are already installed")
 
 
 # pylint: disable=invalid-name
