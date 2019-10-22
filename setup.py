@@ -27,6 +27,9 @@ INSTALL_REQUIRES = [
     "setuptools>=40.6.2",
     "typing>=3.6.6",
     "urllib3>=1.24.0",
+    "tldextract>=2.2.2",
+    "dnspython>=1.16.0",
+    "cryptography>=2.8",
 ]
 
 
