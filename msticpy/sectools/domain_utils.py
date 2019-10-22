@@ -68,7 +68,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
     )
-    image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"
+    image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"  # pylint: disable=line-too-long
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
     progress = IntProgress(min=0, max=40)
@@ -174,8 +174,8 @@ class DomainValidator:
             backend = crypto.hazmat.backends.default_backend()
             x509 = crypto.x509.load_pem_x509_certificate(cert.encode("ascii"), backend)
             cert_sha1 = x509.fingerprint(
-                crypto.hazmat.primitives.hashes.SHA1()
-            )  # nosec
+                crypto.hazmat.primitives.hashes.SHA1()  # nosec
+            )
             result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any())
         except Exception:  # pylint: disable=broad-except
             result = False
