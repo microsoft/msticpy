@@ -109,7 +109,7 @@ class WorkspaceConfig:
 
         """
         ten_id = self._config.get(self.CONF_TENANT_ID_KEY, None)
-        ws_id = self._config.get(self[self.CONF_WS_ID_KEY], None)
+        ws_id = self._config.get(self.CONF_WS_ID_KEY, None)
         if not ten_id:
             raise KeyError(
                 f"Configuration setting for {self.CONF_TENANT_ID_KEY} "
