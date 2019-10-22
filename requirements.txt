@@ -16,3 +16,4 @@ seaborn>=0.9.0
 setuptools>=40.6.3
 typing>=3.6.6
 urllib3>=1.24.1
+tqdm>=4.36.1
