@@ -62,15 +62,13 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     else:
         raise AttributeError("No configuration found for Browshot")
     # Request screenshot from Browshot and get request ID
-    id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"
+    id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
     id_data = requests.get(id_string)
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
     )
-    image_string = (
-        f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"
-    )
+    image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
     progress = IntProgress(min=0, max=40)
@@ -133,7 +131,7 @@ class DomainValidator:
             ttld = tld.upper()
         return ttld in self.tld_index
 
-    def is_resolvable(self, url_domain: str) -> bool:
+    def is_resolvable(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
         """
         Validate if a domain or URL be be resolved to an IP address.
 
@@ -175,7 +173,9 @@ class DomainValidator:
             cert = ssl.get_server_certificate((url_domain, 443))
             backend = crypto.hazmat.backends.default_backend()
             x509 = crypto.x509.load_pem_x509_certificate(cert.encode("ascii"), backend)
-            cert_sha1 = x509.fingerprint(crypto.hazmat.primitives.hashes.SHA1())
+            cert_sha1 = x509.fingerprint(
+                crypto.hazmat.primitives.hashes.SHA1()
+            )  # nosec
             result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any())
         except Exception:  # pylint: disable=broad-except
             result = False
