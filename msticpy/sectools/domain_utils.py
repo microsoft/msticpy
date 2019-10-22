@@ -22,7 +22,7 @@ from urllib.error import HTTPError, URLError
 from pathlib import Path
 import requests
 import dns.resolver
-import OpenSSL
+import cryptography as crypto
 import pkg_resources
 import pandas as pd
 from ipywidgets import IntProgress
@@ -172,9 +172,10 @@ class DomainValidator:
         """
         try:
             cert = ssl.get_server_certificate(url_domain, 443)
-            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-            cert_sha1 = x509.digest("sha1")
-            result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1).any())
+            backend = crypto.hazmat.backends.default_backend()
+            x509 = crypto.x509.load_pem_x509_certificate(cert.encode('ascii'), backend)
+            cert_sha1 = x509.fingerprint(crypto.hazmat.primitives.hashes.SHA1())
+            result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any())
         except Exception:  # pylint: disable=broad-except
             result = False
             x509 = None

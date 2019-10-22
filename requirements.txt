@@ -18,3 +18,4 @@ typing>=3.6.6
 urllib3>=1.24.1
 tldextract>=2.2.2
 dnspython>=1.16.0
+cryptography>=2.8
