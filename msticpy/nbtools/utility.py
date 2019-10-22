@@ -239,30 +239,24 @@ def check_and_install_missing_packages(required_packages, notebook=True):
     """
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
-    for package in required_packages:
-        if package not in installed_packages_list:
-            if notebook:
-                pkgbar = tqdm_notebook(
-                    required_packages, desc="Installing Missing Packages", unit="bytes"
-                )
-            else:
-                pkgbar = tqdm(
-                    required_packages, desc="Installing Missing Packages", unit="bytes"
-                )
-            try:
-                for _ in pkgbar:
-                    retcode = subprocess.call(["pip", "install", package])
-                    if retcode > 0:
-                        print(
-                            f"An Error has occured while installing {package}"
-                        )
-                    else:
-                        print(f"{package} installed succesfully")
-            except OSError as err:
-                print("Execution of Pip installation failed:", err)
-            break
+    missing_packages = [pkg for pkg in required_packages if pkg not in installed_packages_list]
+    if not missing_packages:
+        print("All packages are already installed")       
     else:
-        print("All packages are already installed")
+        print("Missing packages to be installed:\t{}".format(*missing_packages, sep='\t'))
+        if notebook:
+            pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
+        else:
+            pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
+        try:
+            for package in pkgbar:
+                retcode = subprocess.call(["pip", "install", package])
+                if retcode > 0:
+                    print(f"An Error has occured while installing {package}")
+                else:
+                    print(f"{package} installed succesfully")
+        except OSError as err:
+                print("Execution of Pip installation failed:", err)
 
 
 # pylint: disable=invalid-name

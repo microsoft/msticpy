@@ -2,7 +2,7 @@ metadata:
   version: 1
   description: TimeSeries - Series of TimeSeries queries for variety of Data Sources
   data_environments: [LogAnalytics]
-  data_families: ['SigninLogs','SecurityEvent','VMConnection','CommonSecurityLog','AzureNetworkAnalytics_CL','OfficeActivity']
+  data_families: ['MultiDataSource']
   tags: ['TimeSeries','host','ip','alert','network']
 defaults:
   parameters:
