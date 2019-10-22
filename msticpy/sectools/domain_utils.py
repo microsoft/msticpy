@@ -171,7 +171,7 @@ class DomainValidator:
 
         """
         try:
-            cert = ssl.get_server_certificate(url_domain, 443)
+            cert = ssl.get_server_certificate((url_domain, 443))
             backend = crypto.hazmat.backends.default_backend()
             x509 = crypto.x509.load_pem_x509_certificate(cert.encode('ascii'), backend)
             cert_sha1 = x509.fingerprint(crypto.hazmat.primitives.hashes.SHA1())
