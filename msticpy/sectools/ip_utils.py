@@ -112,6 +112,7 @@ def get_ip_type(ip_str: str) -> str:
             ip_type = "Link Local"
     return ip_type
 
+
 @lru_cache(maxsize=1024)
 # pylint: disable=no-else-return
 def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
@@ -140,6 +141,7 @@ def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
         return whois_result["asn_description"], whois_result
     else:
         return "NO ASN Information since IP address is of type", {ip_type}
+
 
 @export
 def create_ip_record(

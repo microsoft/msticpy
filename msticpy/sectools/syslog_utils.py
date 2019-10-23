@@ -14,7 +14,7 @@ auditd is not available.
 
 """
 import datetime as dt
-from typing import List, Dict, Any
+from typing import Dict, Any
 import pytz
 
 import ipywidgets as widgets
@@ -25,6 +25,7 @@ from IPython import get_ipython
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from ..nbtools.utility import export
+from .ip_utils import convert_to_ip_entities
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -47,41 +48,6 @@ class Error(Exception):
 
 class DataError(Error):
     """Raised when thereis a data input error."""
-
-
-def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
-    """
-    Take in an IP Address string and converts it to an IP Entitity.
-
-    Parameters
-    ----------
-    ip_str : str
-        The string of the IP Address
-
-    Returns
-    -------
-    List[str]
-        The populated IP entities including address and geo-location
-
-    """
-    ip_entities = []
-    if ip_str:
-        if "," in ip_str:
-            addrs = ip_str.split(",")
-        elif " " in ip_str:
-            addrs = ip_str.split(" ")
-        else:
-            addrs = [ip_str]
-
-        for addr in addrs:
-            ip_entity = IpAddress()
-            ip_entity.Address = addr.strip()
-            try:
-                IPLOCATION.lookup_ip(ip_entity=ip_entity)
-            except DataError:
-                pass
-            ip_entities.append(ip_entity)
-    return ip_entities
 
 
 @export

@@ -50,6 +50,7 @@ class OPR(HttpProvider):
 
         self._provider_name = self.__class__.__name__
 
+    # pylint: disable=duplicate-code
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],

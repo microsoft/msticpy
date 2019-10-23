@@ -28,7 +28,7 @@ INSTALL_REQUIRES = [
     "typing>=3.6.6",
     "urllib3>=1.24.0",
     "tqdm>=4.36.1",
-    "ipwhois>=1.1.0"
+    "ipwhois>=1.1.0",
 ]
 
 

@@ -239,11 +239,15 @@ def check_and_install_missing_packages(required_packages, notebook=True):
     """
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
-    missing_packages = [pkg for pkg in required_packages if pkg not in installed_packages_list]
+    missing_packages = [
+        pkg for pkg in required_packages if pkg not in installed_packages_list
+    ]
     if not missing_packages:
-        print("All packages are already installed")       
+        print("All packages are already installed")
     else:
-        print("Missing packages to be installed:\t{}".format(*missing_packages, sep='\t'))
+        print(
+            "Missing packages to be installed:\t{}".format(*missing_packages, sep="\t")
+        )
         if notebook:
             pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
         else:
@@ -256,7 +260,7 @@ def check_and_install_missing_packages(required_packages, notebook=True):
                 else:
                     print(f"{package} installed succesfully")
         except OSError as err:
-                print("Execution of Pip installation failed:", err)
+            print("Execution of Pip installation failed:", err)
 
 
 # pylint: disable=invalid-name
