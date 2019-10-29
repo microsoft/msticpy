@@ -12,11 +12,12 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
+import ipaddress as ip
+from functools import lru_cache
 from typing import Tuple
 
-import ipaddress as ip
 import pandas as pd
-
+from ipwhois import IPWhois
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress
@@ -73,6 +74,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
 
 
 @export
+# pylint: disable=no-else-return
 def get_ip_type(ip_str: str) -> str:
     """
     function to validate given value is an IP address and deteremine IPType category
@@ -95,19 +97,50 @@ def get_ip_type(ip_str: str) -> str:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
         if ip.ip_address(ip_str).is_private:
-            return "Private"
+            ip_type = "Private"
         elif ip.ip_address(ip_str).is_multicast:
-            return "Multicast"
+            ip_type = "Multicast"
         elif ip.ip_address(ip_str).is_unspecified:
-            return "Unspecified"
+            ip_type = "Unspecified"
         elif ip.ip_address(ip_str).is_reserved:
-            return "Reserved"
+            ip_type = "Reserved"
         elif ip.ip_address(ip_str).is_loopback:
-            return "Loopback"
+            ip_type = "Loopback"
         elif ip.ip_address(ip_str).is_global:
-            return "Public"
+            ip_type = "Public"
         elif ip.ip_address(ip_str).is_link_local:
-            return "Link Local"
+            ip_type = "Link Local"
+    return ip_type
+
+
+@lru_cache(maxsize=1024)
+# pylint: disable=no-else-return
+def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
+    """
+    Retrieves whois ASN information for given IP address using IPWhois python package.
+
+    Parameters
+    ----------
+    ip_str : str
+        [description]
+    show_progress : bool, optional
+        [description], by default False
+
+    Returns
+    -------
+    IP
+        Details of the IP data collected
+
+    """
+    ip_type = get_ip_type(ip_str)
+    if ip_type == "Public":
+        whois = IPWhois(ip_str)
+        whois_result = whois.lookup_whois()
+        if show_progress:
+            print(".", end="")
+        return whois_result["asn_description"], whois_result
+    else:
+        return "NO ASN Information since IP address is of type", {ip_type}
 
 
 @export

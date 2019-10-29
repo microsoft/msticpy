@@ -3,8 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 """
+cmd_line - Syslog Command processing module.
+
 Contains a series of functions required to correct collect, parse and visualise
 linux syslog data.
 
@@ -98,8 +99,8 @@ def risky_cmd_line(
         for date, message in activity[cmd_field].items():
             if b64_regex.match(message):
                 b64match = b64_regex.search(message)
-                b64string = unpack(input_string=b64match[1])
-                b64string = b64string[1]["decoded_string"].to_string()
+                b64string = unpack(input_string=b64match[1])  # type: ignore
+                b64string = b64string[1]["decoded_string"].to_string()  # type: ignore
                 if re.match(detection, message):
                     risky_actions.update({date: message})
                 else:

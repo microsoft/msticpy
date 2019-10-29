@@ -55,7 +55,7 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where QueryResultRow has {entity_id}
+        | where QueryResultRow has "{entity_id}"
         | extend QryResults = todynamic(QueryResultRow)
         | extend Computer = QryResults["Computer"]
         | extend Account = QryResults["Account"]
