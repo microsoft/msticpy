@@ -191,9 +191,7 @@ def check_py_version(min_ver: Tuple = (3, 6)):
     if sys.version_info < min_ver:
         print("Check the Kernel->Change Kernel menu and ensure that Python 3.6")
         print("or later is selected as the active kernel.")
-        raise SystemExit(
-            "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
-        )
+        raise SystemExit("Python %s.%s or later is required.\n" % min_ver[0], min_ver[1])
 
 
 @export
@@ -234,8 +232,10 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
     required_packages : [list]
         List of packages to check and install in a current environment
     notebook : bool, optional
-        [Boolean value to toggle notebook view and console view to display correct progress bar],
+        Boolean value to toggle notebook view and console view to display correct progress bar,
         by default True
+    user : bool, optional
+        Boolean value to toggle user flag while installing pip packages, by default True
     """
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
