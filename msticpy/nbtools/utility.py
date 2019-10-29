@@ -225,7 +225,7 @@ def resolve_pkg_path(part_path: str):
 
 @export
 # pylint: disable=not-an-iterable
-def check_and_install_missing_packages(required_packages, notebook=True):
+def check_and_install_missing_packages(required_packages, notebook=True, user=True):
     """
     Check current installed packages and install missing packages from provided list of packages
 
@@ -245,16 +245,17 @@ def check_and_install_missing_packages(required_packages, notebook=True):
     if not missing_packages:
         print("All packages are already installed")
     else:
-        print(
-            "Missing packages to be installed:\t{}".format(*missing_packages, sep="\t")
-        )
+        print("Missing packages to be installed:: ", *required_packages, sep=" ")
         if notebook:
             pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
         else:
             pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
         try:
             for package in pkgbar:
-                retcode = subprocess.call(["pip", "install", package])
+                if user:
+                    retcode = subprocess.call(["pip", "install", "--user", package])
+                else:
+                    retcode = subprocess.call(["pip", "install", package])
                 if retcode > 0:
                     print(f"An Error has occured while installing {package}")
                 else:
