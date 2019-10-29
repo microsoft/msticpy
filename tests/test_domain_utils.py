@@ -16,3 +16,14 @@ def test_validate_domain():
     assert valid_tld == True
     assert resolvable == True
     assert blacklisted[0] == False
+
+
+def test_validate_domain_fail():
+    test_dom_val = domain_utils.DomainValidator()
+    valid_tld = test_dom_val.validate_tld("www.contoso.garbage")
+    resolvable = test_dom_val.is_resolvable("www.contoso.garbage")
+    blacklisted = test_dom_val.ssl_blacklisted("www.contoso.garbage")
+    assert valid_tld == False
+    assert resolvable == False
+    assert blacklisted[0] == False
+    assert blacklisted[1] == None
