@@ -143,7 +143,7 @@ class HttpProvider(TIProvider):
                 result.result = False
                 result.details = self._response_message(result.status)
             return result
-        except ( # pylint: disable=duplicate-code
+        except (  # pylint: disable=duplicate-code
             LookupError,
             JSONDecodeError,
             NotImplementedError,

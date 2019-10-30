@@ -14,7 +14,7 @@ Designed to support any data source containing IP address entity.
 """
 import ipaddress as ip
 from functools import lru_cache
-from typing import Tuple
+from typing import List, Tuple
 
 import pandas as pd
 from ipwhois import IPWhois
@@ -38,7 +38,7 @@ class DataError(Error):
     """Raised when thereis a data input error."""
 
 
-def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
+def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entitity.
 
@@ -49,7 +49,7 @@ def convert_to_ip_entities(ip_str: str) -> Tuple[IpAddress]:
 
     Returns
     -------
-    Tuple
+    List
         The populated IP entities including address and geo-location
 
     """
@@ -117,7 +117,7 @@ def get_ip_type(ip_str: str) -> str:
 # pylint: disable=no-else-return
 def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
     """
-    Retrieves whois ASN information for given IP address using IPWhois python package.
+    Retrieve whois ASN information for given IP address using IPWhois python package.
 
     Parameters
     ----------
@@ -140,7 +140,7 @@ def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
             print(".", end="")
         return whois_result["asn_description"], whois_result
     else:
-        return "NO ASN Information since IP address is of type", {ip_type}
+        return f"N ASN Information since IP address is of type: {ip_type}", {}
 
 
 @export
@@ -168,21 +168,23 @@ def create_ip_record(
     # Produce ip_entity record using available dataframes
     ip_hb = heartbeat_df.iloc[0]
     ip_entity.Address = ip_hb["ComputerIP"]
-    ip_entity.hostname = ip_hb["Computer"]
-    ip_entity.SourceComputerId = ip_hb["SourceComputerId"]
-    ip_entity.OSType = ip_hb["OSType"]
-    ip_entity.OSName = ip_hb["OSName"]
-    ip_entity.OSVMajorersion = ip_hb["OSMajorVersion"]
-    ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]
-    ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]
-    ip_entity.OmsSolutions = [sol.strip() for sol in ip_hb["Solutions"].split(",")]
-    ip_entity.VMUUID = ip_hb["VMUUID"]
-    ip_entity.SubscriptionId = ip_hb["SubscriptionId"]
-    geoloc_entity = GeoLocation()
-    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]
-    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]
-    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]
-    ip_entity.Location = geoloc_entity
+    ip_entity.hostname = ip_hb["Computer"]  # type: ignore
+    ip_entity.SourceComputerId = ip_hb["SourceComputerId"]  # type: ignore
+    ip_entity.OSType = ip_hb["OSType"]  # type: ignore
+    ip_entity.OSName = ip_hb["OSName"]  # type: ignore
+    ip_entity.OSVMajorersion = ip_hb["OSMajorVersion"]  # type: ignore
+    ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
+    ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]  # type: ignore
+    ip_entity.OmsSolutions = [
+        sol.strip() for sol in ip_hb["Solutions"].split(",")
+    ]  # type: ignore
+    ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
+    ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
+    geoloc_entity = GeoLocation()  # type: ignore
+    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
+    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
+    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
+    ip_entity.Location = geoloc_entity  # type: ignore
 
     # If Azure network data present add this to host record
     if az_net_df is not None and not az_net_df.empty:
