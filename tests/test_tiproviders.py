@@ -403,11 +403,11 @@ class TestTIProviders(unittest.TestCase):
             else:
                 neg_results.append(lu_result)
 
-        self.assertEqual(len(pos_results), 4)
-        self.assertEqual(len(neg_results), 5)
+        self.assertEqual(len(pos_results), 2)
+        self.assertEqual(len(neg_results), 7)
 
         all_ips = tor_nodes + other_ips
         tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
         self.assertEqual(len(all_ips), len(tor_results_df))
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 2)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 7)
