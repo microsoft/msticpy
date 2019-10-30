@@ -6,8 +6,7 @@
 
 """
 
-Contains a series of functions required to correct collect, parse and
-visualise linux syslog data.
+Functions required to correct collect, parse and visualize syslog data.
 
 Designed to support standard linux syslog for investigations where
 auditd is not available.

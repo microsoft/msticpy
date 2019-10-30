@@ -654,7 +654,7 @@ def _unpack_and_hash_b64_binary(input_bytes, file_type=None):
                 file_results = _get_hashes_and_printable_string(extracted_file)
                 idx = f"[{unpacked_type}] Filename: {file_name}"
 
-                # ToDo - the unpacked type here refers to the archive file type
+                # ToDo - the unpacked type here refers to the archive file type  # pylint: disable=fixme
                 # so assigning this to file_type is not exactly the right thing
                 # to do. In a future episode we'll try to determine the file type
                 # using magic numbers.

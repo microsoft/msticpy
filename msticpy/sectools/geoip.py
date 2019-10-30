@@ -298,7 +298,7 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = (
         "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
     )
-    _DB_HOME = os.path.join(os.path.expanduser('~'), ".msticpy")
+    _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
