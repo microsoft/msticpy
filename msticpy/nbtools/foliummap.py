@@ -174,6 +174,8 @@ def get_map_center(ip_entities: list):
                         lats.append(i["Latitude"])
                 else:
                     pass
-    avglat = sum(lats) / len(lats)
-    avglong = sum(longs) / len(longs)
+    lat_count = len(lats) if lats else 1
+    long_count = len(longs) if longs else 1
+    avglat = sum(lats) / lat_count
+    avglong = sum(longs) / long_count
     return (avglat, avglong)

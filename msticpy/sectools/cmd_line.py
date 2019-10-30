@@ -5,8 +5,7 @@
 # --------------------------------------------------------------------------
 
 """
-Contains a series of functions required to correct collect, parse and visualise
-linux syslog data.
+Detect riskly command line activity.
 
 Designed to support standard linux syslog for investigations where auditd
 is not avalaible.
