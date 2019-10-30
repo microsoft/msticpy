@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 """
+ip_utils - IP Address functions.
 
 Contains a series of functions required to manipulate and enrich IP Address data
 to assist investigations.
@@ -77,8 +77,9 @@ def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
 # pylint: disable=no-else-return
 def get_ip_type(ip_str: str) -> str:
     """
-    function to validate given value is an IP address and deteremine IPType category
-    (e.g. Private/Public/Multicast).
+    Validate value is an IP address and deteremine IPType category.
+
+    (IPAddress category is e.g. Private/Public/Multicast).
 
     Parameters
     ----------
@@ -175,9 +176,9 @@ def create_ip_record(
     ip_entity.OSVMajorersion = ip_hb["OSMajorVersion"]  # type: ignore
     ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
     ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]  # type: ignore
-    ip_entity.OmsSolutions = [
+    ip_entity.OmsSolutions = [  # type: ignore
         sol.strip() for sol in ip_hb["Solutions"].split(",")
-    ]  # type: ignore
+    ]
     ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
     ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
     geoloc_entity = GeoLocation()  # type: ignore
