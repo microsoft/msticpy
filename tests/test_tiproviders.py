@@ -374,12 +374,11 @@ class TestTIProviders(unittest.TestCase):
     def test_tor_exit_nodes(self):
         ti_lookup = self.ti_lookup
 
-        tor_nodes = [
-            "192.42.116.17",
-            "163.172.215.183",
-            "185.225.208.117",
-            "176.10.99.200",
-        ]
+        # we can't use a fixed list since this changes all the time
+        # so take a sample from the current list
+        tor_prov = ti_lookup.loaded_providers["Tor"]
+        tor_nodes = random.sample(tor_prov._nodelist.keys(), 4)
+
         other_ips = [
             "104.117.0.237",
             "13.107.4.50",
@@ -404,11 +403,11 @@ class TestTIProviders(unittest.TestCase):
             else:
                 neg_results.append(lu_result)
 
-        self.assertEqual(len(pos_results), 2)
-        self.assertEqual(len(neg_results), 7)
+        self.assertEqual(len(pos_results), 4)
+        self.assertEqual(len(neg_results), 5)
 
         all_ips = tor_nodes + other_ips
         tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
         self.assertEqual(len(all_ips), len(tor_results_df))
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 2)
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 7)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)
