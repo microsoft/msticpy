@@ -24,20 +24,16 @@ The following types are built-in:
 """
 
 import re
-import sys
-import warnings
 from collections import defaultdict, namedtuple
 from enum import Enum
-from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple, Union
-from urllib.error import HTTPError, URLError
 from urllib.parse import unquote
 
 import pandas as pd
-import pkg_resources
 
 from .._version import VERSION
 from ..nbtools.utility import export
+from .domain_utils import DomainValidator
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -178,7 +174,7 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
-        self.__class__.tld_index: Set[str] = self.get_tlds()
+        self.dom_val = DomainValidator()
 
     # Public members
     def add_ioc_type(
@@ -480,7 +476,7 @@ class IoCExtract:
         rgx = self._content_regex[val_type]
         pattern_match = rgx.comp_regex.fullmatch(input_str)
         if val_type == "dns":
-            return self._domain_has_valid_tld(input_str) and pattern_match
+            return self.dom_val.validate_tld(input_str) and pattern_match
         return pattern_match is not None
 
     @staticmethod
@@ -539,87 +535,6 @@ class IoCExtract:
 
         return IoCType.unknown.name
 
-    @classmethod
-    def get_tlds(cls) -> Set[str]:
-        """
-        Return IANA Top Level Domains.
-
-        Returns
-        -------
-        Set[str]
-            Set of top level domains.
-
-        """
-        try:
-            tld_list = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt"
-            temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
-            return set(temp_df["TLD"].dropna())
-        except (HTTPError, URLError):
-            pass
-        # pylint: disable=broad-except
-        except Exception as err:
-            warnings.warn(
-                "Exception detected trying to retrieve IANA top-level domain list."
-                + "Falling back to builtin seed list. "
-                + f"{err.args}",
-                RuntimeWarning,
-            )
-        # pylint: enable=broad-except
-        # if we failed to get the list try to read from a seed file
-        return cls._read_tld_seed_file()
-
-    @classmethod
-    def _read_tld_seed_file(cls) -> Set[str]:
-        """Read TLD seed list from seed file."""
-        seed_file = "tld_seed.txt"
-        conf_file = pkg_resources.resource_filename(__name__, seed_file)
-
-        if not Path(conf_file).is_file():
-            # if all else fails we try to find the package default config somewhere
-            # in the package tree - we use the first one we find
-            pkg_paths = sys.modules["msticpy"]
-            if pkg_paths:
-                conf_file = str(
-                    next(Path(pkg_paths.__path__[0]).glob(seed_file))  # type: ignore
-                )
-
-        if conf_file:
-            with open(conf_file, "r") as file_handle:
-                tld_txt = file_handle.read()
-                tld_set = set(tld_txt.split("\n"))
-            return tld_set
-        return set()
-
-    @classmethod
-    def _write_tld_seed_file(cls):
-        """Write existing TLD list to a text file."""
-        if cls.tld_index:
-            seed_file = "tld_seed.txt"
-            with open(seed_file, "w") as file_handle:
-                file_handle.write("\n".join(sorted(cls.tld_index)))
-
-    def _domain_has_valid_tld(self, domain: str) -> bool:
-        """
-        Return True if last component of `domain` is a valid TLD.
-
-        Parameters
-        ----------
-        domain : str
-            Domain string to test
-
-        Returns
-        -------
-        bool
-            True if valid Top Level Domain
-
-        """
-        if not self.tld_index:  # type: ignore
-            self.tld_index = self.get_tlds()
-        if not self.tld_index:
-            return True
-        dom_suffix = domain.split(".")[-1].upper()
-        return dom_suffix in self.tld_index
-
     # Private methods
     def _scan_for_iocs(
         self, src: str, os_family: str, ioc_types: List[str] = None
@@ -649,7 +564,7 @@ class IoCExtract:
                     else rgx_match.group()
                 )
 
-                if ioc_type == "dns" and not self._domain_has_valid_tld(match_str):
+                if ioc_type == "dns" and not self.dom_val.validate_tld(match_str):
                     continue
 
                 self._add_highest_pri_match(iocs_found, match_str, rgx_def)
