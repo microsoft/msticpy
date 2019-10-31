@@ -5,13 +5,17 @@
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
+import subprocess
 import sys
-from pathlib import Path
-from typing import Callable, Optional, Any, Tuple, Union, Iterable
 import warnings
+from pathlib import Path
+from typing import Any, Callable, Iterable, Optional, Tuple, Union
 
-from IPython.core.display import display, HTML, Markdown
 import pandas as pd
+import pkg_resources
+from IPython.core.display import HTML, Markdown, display
+
+from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
 
@@ -219,6 +223,49 @@ def resolve_pkg_path(part_path: str):
     return str(searched_paths[0])
 
 
+@export
+# pylint: disable=not-an-iterable
+def check_and_install_missing_packages(required_packages, notebook=True, user=True):
+    """
+    Check current installed packages and install missing packages from provided list of packages
+
+    Parameters
+    ----------
+    required_packages : [list]
+        List of packages to check and install in a current environment
+    notebook : bool, optional
+        Boolean value to toggle notebook view and console view to display correct progress bar,
+        by default True
+    user : bool, optional
+        Boolean value to toggle user flag while installing pip packages, by default True
+    """
+    installed_packages = pkg_resources.working_set
+    installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
+    missing_packages = [
+        pkg for pkg in required_packages if pkg not in installed_packages_list
+    ]
+    if not missing_packages:
+        print("All packages are already installed")
+    else:
+        print("Missing packages to be installed:: ", *required_packages, sep=" ")
+        if notebook:
+            pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
+        else:
+            pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
+        try:
+            for package in pkgbar:
+                if user:
+                    retcode = subprocess.call(["pip", "install", "--user", package])
+                else:
+                    retcode = subprocess.call(["pip", "install", package])
+                if retcode > 0:
+                    print(f"An Error has occured while installing {package}")
+                else:
+                    print(f"{package} installed succesfully")
+        except OSError as err:
+            print("Execution of Pip installation failed:", err)
+
+
 # pylint: disable=invalid-name
 def md(string: str, styles: Union[str, Iterable[str]] = None):
     """
@@ -263,6 +310,8 @@ _F_STYLES = {
     "bold": "font-weight: bold",
     "italic": "font-style: italic",
     "red": "color: red",
+    "green": "color: green",
+    "blue": "color: blue",
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
 }

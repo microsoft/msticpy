@@ -29,7 +29,7 @@ sources:
         let accountName = "{account_name}";
         let account = case(
             accountName has "@", tostring(split(accountName, "@")[0]),
-            accountName has "\\\\", tostring(split(accountName, "\\\\")[1]),
+            accountName has "\\", tostring(split(accountName, "\\")[1]),
             accountName
         );
         {table}
@@ -45,6 +45,24 @@ sources:
       account_name:
         description: The account name to find
         type: str
+  list_aad_signins_for_ip:
+    description: Lists Azure AD Signins for an IP Address
+    metadata:
+    args:
+      query: '
+        {table}
+        | where IPAddress in ({ip_address_list})
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: SigninLogs
+      ip_address_list:
+        description: The IP Address or list of Addresses
+        type: list
   list_azure_activity_for_account:
     description: Lists Azure Activity for Account
     metadata:
@@ -53,7 +71,7 @@ sources:
         let accountName = "{account_name}";
         let account = case(
             accountName has "@", tostring(split(accountName, "@")[0]),
-            accountName has "\\\\", tostring(split(accountName, "\\\\")[1]),
+            accountName has "\\", tostring(split(accountName, "\\")[1]),
             accountName
         );
         {table}
@@ -75,7 +93,7 @@ sources:
     args:
       query: '
         {table}
-        | where CallerIpAddress in ({ip_addresses})
+        | where CallerIpAddress in ({ip_address_list})
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         {add_query_items}'
@@ -84,7 +102,7 @@ sources:
         description: Table name
         type: str
         default: AzureActivity
-      ip_addresses:
+      ip_address_list:
         description: The IP Address or list of Addresses
         type: list
   list_azure_activity_for_resource:
