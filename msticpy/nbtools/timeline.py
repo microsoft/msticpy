@@ -295,7 +295,7 @@ def display_timeline_values(
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column, alpha=0.7, source=row_source, legend=inline_legend
+                x=time_column, alpha=0.7, source=row_source, legend_label=inline_legend
             )
             if "vbar" in plot_kinds:
                 p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
@@ -483,16 +483,25 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     # if legend_pos is "left" or "right", we add the legend to the side
     legend_items = []
     for ser_name, series_def in data.items():
-        inline_legend = ser_name if legend_pos == "inline" else None
-        p_series = plot.diamond(
-            x=series_def["time_column"],
-            y="y_index",
-            color=series_def["color"],
-            alpha=0.5,
-            size=10,
-            source=series_def["source"],
-            legend=inline_legend,
-        )
+        if legend_pos == "inline":
+            p_series = plot.diamond(
+                x=series_def["time_column"],
+                y="y_index",
+                color=series_def["color"],
+                alpha=0.5,
+                size=10,
+                source=series_def["source"],
+                legend_label=ser_name,
+            )
+        else:
+            p_series = plot.diamond(
+                x=series_def["time_column"],
+                y="y_index",
+                color=series_def["color"],
+                alpha=0.5,
+                size=10,
+                source=series_def["source"],
+            )
         if legend_pos in ["left", "right"]:
             legend_items.append((str(ser_name), [p_series]))
 
@@ -693,16 +702,25 @@ def _plot_dict_series(data, plot, legend_pos):
     # We plot groups individually so that we can create an interactive legend.
     legend_items = []
     for ser_name, series_def in data.items():
-        inline_legend = ser_name if legend_pos == "inline" else None
-        p_series = plot.diamond(
-            x=series_def["time_column"],
-            y="y_index",
-            color=series_def["color"],
-            alpha=0.5,
-            size=10,
-            source=series_def["source"],
-            legend=inline_legend,
-        )
+        if legend_pos == "inline":
+            p_series = plot.diamond(
+                x=series_def["time_column"],
+                y="y_index",
+                color=series_def["color"],
+                alpha=0.5,
+                size=10,
+                source=series_def["source"],
+                legend_label=ser_name,
+            )
+        else:
+            p_series = plot.diamond(
+                x=series_def["time_column"],
+                y="y_index",
+                color=series_def["color"],
+                alpha=0.5,
+                size=10,
+                source=series_def["source"],
+            )
         if legend_pos in ["left", "right"]:
             legend_items.append((ser_name, [p_series]))
 
