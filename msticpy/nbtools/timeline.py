@@ -295,7 +295,10 @@ def display_timeline_values(
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column, alpha=0.7, source=row_source, legend_label=str(inline_legend)
+                x=time_column,
+                alpha=0.7,
+                source=row_source,
+                legend_label=str(inline_legend),
             )
             if "vbar" in plot_kinds:
                 p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
