@@ -295,7 +295,7 @@ def display_timeline_values(
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column, alpha=0.7, source=row_source, legend_label=inline_legend
+                x=time_column, alpha=0.7, source=row_source, legend_label=str(inline_legend)
             )
             if "vbar" in plot_kinds:
                 p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
@@ -491,7 +491,7 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
                 alpha=0.5,
                 size=10,
                 source=series_def["source"],
-                legend_label=ser_name,
+                legend_label=str(ser_name),
             )
         else:
             p_series = plot.diamond(
@@ -710,7 +710,7 @@ def _plot_dict_series(data, plot, legend_pos):
                 alpha=0.5,
                 size=10,
                 source=series_def["source"],
-                legend_label=ser_name,
+                legend_label=str(ser_name),
             )
         else:
             p_series = plot.diamond(
