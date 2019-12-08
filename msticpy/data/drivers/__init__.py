@@ -8,6 +8,7 @@
 from .driver_base import DriverBase
 from .kql_driver import KqlDriver
 from .security_graph_driver import SecurityGraphDriver
+from .mdatp_driver import MDATPDriver
 
 from ..._version import VERSION
 

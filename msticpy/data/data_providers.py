@@ -11,7 +11,7 @@ import warnings
 
 import pandas as pd
 
-from .drivers import DriverBase, KqlDriver, SecurityGraphDriver
+from .drivers import DriverBase, KqlDriver, SecurityGraphDriver, MDATPDriver
 from .query_store import QueryStore
 from .param_extractor import extract_query_params
 from ..nbtools.query_defns import DataEnvironment
@@ -28,6 +28,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: KqlDriver,
     DataEnvironment.AzureSecurityCenter: KqlDriver,
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
+    DataEnvironment.MDATP: MDATPDriver,
 }
 
 
