@@ -135,7 +135,7 @@ class QueryProvider:
                 return getattr(parent, child_name)
         raise AttributeError(f"{name} is not a valid attribute.")
 
-    def connect(self, connection_str: str, **kwargs):
+    def connect(self, connection_str: str = None, **kwargs):
         """
         Connect to data source.
 
