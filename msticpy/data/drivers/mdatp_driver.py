@@ -14,6 +14,7 @@ import pandas as pd
 
 from .driver_base import DriverBase
 from ...nbtools.utility import export
+from ...nbtools import pkg_config as config
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -84,8 +85,10 @@ class MDATPDriver(DriverBase):
         if connection_str:
             self.current_connection = connection_str
             cs_dict = self._parse_connection_str(connection_str)
-        else:
+        elif kwargs:
             cs_dict = kwargs
+        else:
+            cs_dict = config.settings.get("MDATPApp")["Args"]
 
         req_url = _OAUTH_URL.format(tenantId=cs_dict["tenantId"])
         req_body = dict(self._REQ_BODY)
@@ -159,17 +162,17 @@ class MDATPDriver(DriverBase):
 
         req_url = self.api_root + "/advancedqueries/run"
         req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
-        body = {
-        'Query': query
-        }
-        print(body)
-        print(req_url)
-        print(self.req_headers)
+        body = {"Query": query}
         response = requests.post(url=req_url, headers=self.req_headers, data=str(body))
         if response.status_code != requests.codes["ok"]:
             if response.status_code == 401:
                 raise ConnectionRefusedError(
                     "Authentication failed - possible ", "timeout. Please re-connect."
+                )
+            # Raise an exception to handle hittng the Advanced Hunting API limits
+            if response.status_code == 429:
+                raise ConnectionRefusedError(
+                    "You have likely hit the MDATP API limit, please wait some time and try again. https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/run-advanced-query-api"  # pylint: disable=line-too-long
                 )
             response.raise_for_status()
 
@@ -192,39 +195,6 @@ class MDATPDriver(DriverBase):
         return pd.io.json.json_normalize(result), result
 
     # pylint: enable=too-many-branches
-
-    def get_alerts(self, amount : int = None) -> pd.DataFrame:
-        if amount is not None:
-            amount = f"$top={amount}"
-        req_url = self.api_root + "/alerts?"
-        req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
-        print(req_url)
-        print(self.req_headers)
-        response = requests.get(url=req_url, headers=self.req_headers)
-        if response.status_code != requests.codes["ok"]:
-            if response.status_code == 401:
-                raise ConnectionRefusedError(
-                    "Authentication failed - possible ", "timeout. Please re-connect."
-                )
-            response.raise_for_status()
-
-        json_response = response.json()
-        if isinstance(json_response, int):
-            print(
-                "Warning - query did not complete successfully.",
-                "Check returned response.",
-            )
-            return None, json_response
-
-        if "value" in json_response:
-            result = json_response["value"]
-        else:
-            result = json_response
-
-        if not result:
-            print("Warning - query did not return any results.")
-            return None, json_response
-        return pd.io.json.json_normalize(result)
 
     @staticmethod
     def _parse_connection_str(connection_str: str) -> Dict[str, str]:
