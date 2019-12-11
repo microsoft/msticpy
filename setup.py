@@ -11,7 +11,7 @@ import setuptools
 
 INSTALL_REQUIRES = [
     "attrs>=18.2.0",
-    "bokeh>=1.0.2",
+    "azure>=4.0.0" "bokeh>=1.0.2",
     "cryptography>=2.8",
     "deprecated>=1.2.4",
     "dnspython>=1.16.0",
