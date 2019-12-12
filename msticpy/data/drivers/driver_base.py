@@ -108,7 +108,7 @@ class DriverBase(ABC):
         """
 
     @abc.abstractmethod
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame plus native results.
 
