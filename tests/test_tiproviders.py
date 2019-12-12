@@ -374,12 +374,11 @@ class TestTIProviders(unittest.TestCase):
     def test_tor_exit_nodes(self):
         ti_lookup = self.ti_lookup
 
-        tor_nodes = [
-            "192.42.116.17",
-            "163.172.215.183",
-            "185.225.208.117",
-            "176.10.99.200",
-        ]
+        # we can't use a fixed list since this changes all the time
+        # so take a sample from the current list
+        tor_prov = ti_lookup.loaded_providers["Tor"]
+        tor_nodes = random.sample(tor_prov._nodelist.keys(), 4)
+
         other_ips = [
             "104.117.0.237",
             "13.107.4.50",

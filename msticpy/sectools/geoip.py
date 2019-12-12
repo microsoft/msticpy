@@ -102,11 +102,11 @@ class GeoIpLookup(metaclass=ABCMeta):
             appended (where a location lookup was successful)
 
         """
-        ip_list = data[column].values
+        ip_list = list(data[column].values)
         _, entities = self.lookup_ip(ip_addr_list=ip_list)
 
         ip_dicts = [
-            ent.Location.properties().update(IpAddress=ent.Address) for ent in entities
+            {**ent.Location.properties, "IpAddress": ent.Address} for ent in entities
         ]
         df_out = pd.DataFrame(data=ip_dicts)
         return data.merge(df_out, how="left", left_on=column, right_on="IpAddress")
@@ -298,7 +298,7 @@ class GeoLiteLookup(GeoIpLookup):
     _MAXMIND_DOWNLOAD = (
         "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
     )
-    _DB_HOME = os.path.join(os.path.expanduser('~'), ".msticpy")
+    _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
@@ -519,7 +519,7 @@ class GeoLiteLookup(GeoIpLookup):
             geo_match = None
             try:
                 geo_match = self._reader.city(ip_input).raw
-            except (AddressNotFoundError, AttributeError):
+            except (AddressNotFoundError, AttributeError, ValueError):
                 continue
             if geo_match:
                 output_raw.append(geo_match)

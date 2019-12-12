@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Parameter extractor helper functions for use with IPython/Jupyter queries."""
-from typing import List, Dict, Tuple, Any
+"""Parameter extractor helper functions for use with IPython/Juptyer queries."""
+from typing import List, Dict, Tuple, Any, Iterable
 
 from .query_store import QuerySource
 from ..nbtools.utility import export
@@ -42,54 +42,57 @@ def extract_query_params(
         List of any missing parameters
 
     """
-    # get the required parameters for this query and build a dictionary
+    # get the parameters for this query
+    all_param_names = query_source.params.keys()
+
+    # required_params are those that don't have defaults set in the query
+    # template. Build a dictionary to hold the values. This will contain
+    # at least the required params plus any that are extracted from args and
+    # kwargs and have been added dynamically.
     req_param_names = query_source.required_params.keys()
     req_params: Dict[str, Any] = {param: None for param in req_param_names}
 
-    # Iterate through required parameters. If any are set in the supplied
-    # provider objects, assign them to our output dictionary
-    query_providers = [prov for prov in args if hasattr(prov, "query_params")]
-    for provider in query_providers:
-        for param in req_param_names:
-            if param in provider.query_params:
-                req_params[param] = provider.query_params[param]
+    # try to retrieve any parameters as attributes of the args objects
+    _get_object_params(args, all_param_names, req_params)
 
-    # If any custom parameters have been supplied add these
-    # overriding any parameters from the QueryParamProviders
+    # If any kwargs parameters have been supplied, add these.
+    # These any parameters obtained from _get_object_params
     if kwargs:
         req_params.update(kwargs)
 
-    # If we have missing parameters try to retrieve them
-    # as attributes of the object
+    # Get the names of any params that were required but we didn't
+    # find a value for
     missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
-    if missing_params:
-        _get_missing_params(args, missing_params, req_params)
-
     return req_params, missing_params
 
 
-def _get_missing_params(
-    args: Tuple[Any, ...], missing_params: List[str], req_params: Dict[str, Any]
+def _get_object_params(
+    args: Tuple[Any, ...], param_names: Iterable[str], req_params: Dict[str, Any]
 ):
     """
-    Get missing params from arguments.
+    Get params from attributes of arg objects.
 
     Parameters
     ----------
     args : Tuple[Any]
-        Args list from calling funtion
-    missing_params : List[str]
-        The list of missing parameters to get
+        Args list from calling function
+    param_names : Iterable[str]
+        The list of parameter names to look for
     req_params : Dict[str, str]
         Dictionary of required parameters
 
     """
-    for arg_object in [obj for obj in args if not isinstance(obj, QueryParamProvider)]:
-        for m_param in missing_params:
-            if isinstance(arg_object, dict) and m_param in arg_object:
-                req_params[m_param] = arg_object.get(m_param, None)
-            elif hasattr(arg_object, m_param):
-                req_params[m_param] = getattr(arg_object, m_param)
-        missing_params = [
+    for arg_object in args:
+        if isinstance(arg_object, QueryParamProvider):
+            for param in param_names:
+                if param in arg_object.query_params:
+                    req_params[param] = arg_object.query_params[param]
+        else:
+            for param in param_names:
+                if isinstance(arg_object, dict) and param in arg_object:
+                    req_params[param] = arg_object.get(param, None)
+                elif hasattr(arg_object, param):
+                    req_params[param] = getattr(arg_object, param)
+        param_names = [
             p_name for p_name, p_value in req_params.items() if p_value is not None
         ]

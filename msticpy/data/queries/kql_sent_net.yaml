@@ -63,7 +63,7 @@ sources:
         | where VirtualMachine_s has "{host_name}"
         | where ResourceType == "NetworkInterface"
         | top 1 by TimeGenerated desc
-        | project PrivateIPAddresses = PrivateIPAddresses_s,
+        | project-rename PrivateIPAddresses = PrivateIPAddresses_s,
         PublicIPAddresses = PublicIPAddresses_s
         {add_query_items}'
     parameters:
@@ -80,9 +80,9 @@ sources:
           or PublicIPAddresses_s has "{ip_address}"
         | where ResourceType == "NetworkInterface"
         | top 1 by TimeGenerated desc
-        | project PrivateIPAddresses = PrivateIPAddresses_s,
+        | project-rename PrivateIPAddresses = PrivateIPAddresses_s,
         PublicIPAddresses = PublicIPAddresses_s, VirtualMachine = VirtualMachine_s
-        | extend Computer = split(VirtualMachine_s, "/")[-1]
+        | extend Computer = split(VirtualMachine, "/")[-1]
         {add_query_items}'
     parameters:
       ip_address:

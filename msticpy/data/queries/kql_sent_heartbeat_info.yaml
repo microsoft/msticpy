@@ -1,0 +1,85 @@
+metadata:
+  version: 1
+  description: Heartbeat - Gather Host system information details
+  data_environments: [LogAnalytics]
+  data_families: [Heartbeat]
+  tags: ['Heartbeat','host','ip','osinfo']
+defaults:
+  metadata:
+    data_source: 'Heartbeat'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'Heartbeat'
+      query_project:
+        description: Column project statement
+        type: str
+        default: '
+          | project
+            TimeGenerated,   
+            Computer,
+            ComputerIP,
+            ComputerEnvironment,
+            SubscriptionId,
+            ResourceType,
+            OSType,
+            OSName,
+            OSMajorVersion,
+            OSMinorVersion,
+            RemoteIPCountry,
+            RemoteIPLatitude,
+            RemoteIPLongitude,
+            Solutions,
+            SourceComputerId,
+            VMUUID'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: '
+        | top 1 by TimeGenerated desc nulls last'
+sources:
+  get_info_by_hostname:
+    description: Retrieves Information by Hostname
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Computer {host_op} "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
+  get_info_by_ipaddress:
+    description: Retrieves Information by IP address
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where ComputerIP == "{ip_address}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: IP address value
+        type: str

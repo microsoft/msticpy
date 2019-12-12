@@ -60,6 +60,7 @@ class KqlTIProvider(TIProvider):
         if not self._query_provider:
             raise RuntimeError("Query provider for KQL could not be created.")
 
+    # pylint: disable=duplicate-code
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
