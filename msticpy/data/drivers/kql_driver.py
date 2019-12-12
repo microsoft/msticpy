@@ -95,7 +95,7 @@ class KqlDriver(DriverBase):
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 

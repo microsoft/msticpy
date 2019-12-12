@@ -87,6 +87,9 @@ class AzureData(ABC):
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
+            "Subscription Location Limits": sub.subscription_policies.location_placement_id,
+            "Subscription Quota": sub.subscription_policies.quota_id,
+            "Spending Limit": sub.subscription_policies.spending_limit,
         }
 
         return sub_details
