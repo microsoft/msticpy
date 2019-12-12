@@ -54,6 +54,9 @@ multiple observables. Processing may require a an API key and processing
 performance may be limited to a specific number of requests per minute
 for the account type that you have.
 
+:py:mod:`TILookup API documentation<msticpy.sectools.tilookup>`
+
+
 
 Constructor
 ~~~~~~~~~~~

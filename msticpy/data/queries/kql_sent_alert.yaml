@@ -123,7 +123,7 @@ sources:
             and (Entities has src_accountname or Entities has src_acct
             or ExtendedProperties has src_accountname
             or ExtendedProperties has src_acct), true, false)
-        | extend proc_match = iif(isnotempty(src_acct)
+        | extend proc_match = iif(isnotempty(src_proc)
             and (Entities has src_procname or Entities has src_proc
             or ExtendedProperties has src_procname
             or ExtendedProperties has src_proc), true, false)
@@ -161,11 +161,11 @@ sources:
         | where TimeGenerated <= datetime({end})
         | project SystemAlertId, ExtendedProperties, Entities
         | extend source_ips_str =
-            extract("\\"Source IPs\\": \\"([^\\"]+)\\"", 1, ExtendedProperties)
+            extract("\"Source IPs\": \"([^\"]+)\"", 1, ExtendedProperties)
         | extend source_ips_1 =
             iif(isnotempty(source_ips_str), split(source_ips_str, ","), dynamic([]))
         | extend source_ips_2 =
-            extract_all("\\"Address\\": \\"([^\\"]+)\\"", dynamic([1]), Entities)
+            extract_all("\"Address\": \"([^\"]+)\"", dynamic([1]), Entities)
         | mvexpand alert_ip_1 =
             source_ips_1 to typeof(string), alert_ip_2 = source_ips_2 to typeof(string)
         | where isnotempty(alert_ip_1) or isnotempty(alert_ip_2)

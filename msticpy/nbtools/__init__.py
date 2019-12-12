@@ -16,6 +16,7 @@ from .security_alert_graph import *
 from . import utility as utils
 
 from .observationlist import Observations
+from .wsconfig import WorkspaceConfig
 from . import nbdisplay
 
 # pylint: enable=W0401

@@ -79,13 +79,15 @@ sources:
           User = iif(SyslogMessage contains "publickey",
             extract("(for )([[:alnum:]]+)", 2, SyslogMessage),
             extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)),
-          LogonType = strcat(extract("Accepted\\\\s+([^\\\\s]+)", 1, SyslogMessage),
+          LogonType = strcat(extract("Accepted\\s+([^\\s]+)", 1, SyslogMessage),
                              " (", ProcessName, ")"),
-          SourceIP = extract("((?:[0-9]{{1,3}}\\\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
+          SourceIP = extract("((?:[0-9]{{1,3}}\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
           SourcePort = extract("port ([0-9]+)",1,SyslogMessage),
           UID = extract("uid=([0-9]+)",1,SyslogMessage),
-          SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2,SyslogMessage)
-        | where User contains "{account_name}"'
+          SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2, SyslogMessage)
+        | where User contains "{account_name}"
+        | extend AccountName = User
+        {add_query_items}'
     parameters:
       host_name:
         description: Hostname to query for
@@ -104,17 +106,36 @@ sources:
         | where SyslogMessage startswith "Accepted"
         | extend mssg_strings = split(SyslogMessage, " ")
         | mvexpand mssg_item=mssg_strings
-        | where mssg_item has account_name
+        | where mssg_item has "{account_name}"
         | extend mssg_item = tostring(mssg_item)
-        | extend AccountName = trim("\\\\.", mssg_item)
+        | extend AccountName = trim("\\.", mssg_item)
+        | extend User = AccountName
         | project-away mssg_strings, mssg_item
         | distinct *
+        | extend LogonResult = iif(
+                                   SyslogMessage contains "Accepted" or
+                                   (ProcessName == "su" and SyslogMessage contains "Successful"),
+                                   "Success",
+                                   iif(
+                                      (SyslogMessage contains "failure"
+                                        or SyslogMessage contains "invalid"
+                                        or SyslogMessage contains "Unable to negotiate"
+                                        or SyslogMessage contains "authentication failures"
+                                        or SyslogMessage contains "Did not receive identification"
+                                        or SyslogMessage contains " Bad protocol version identification"
+                                        or SyslogMessage matches regex "^Connection closed .* [preauth]")
+                                      or (Facility == "authpriv" and ProcessName == "su"
+                                        and SyslogMessage contains "FAILED" and SyslogMessage !contains "pam_"),
+                                      "Failure", "Unknown"
+                                    )
+                               )
         | extend
-          LogonType = strcat(extract("Accepted\\\\s+([^\\\\s]+)", 1, SyslogMessage),
+          LogonType = strcat(extract("Accepted\\s+([^\\s]+)", 1, SyslogMessage),
                              " (", ProcessName, ")"),
-          SourceIP = extract("((?:[0-9]{{1,3}}\\\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
+          SourceIP = extract("((?:[0-9]{{1,3}}\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
           SourcePort = extract("port ([0-9]+)", 1, SyslogMessage),
-          UID = extract("uid=([0-9]+)", 1, SyslogMessage)'
+          UID = extract("uid=([0-9]+)", 1, SyslogMessage)
+        {add_query_items}'
     parameters:
       account_name:
         description: The account name to search on
@@ -132,11 +153,16 @@ sources:
         | where SyslogMessage has "{ip_address}"
         | where SyslogMessage startswith "Accepted"
         | extend
-          LogonType = strcat(extract("Accepted\\\\s+([^\\\\s]+)", 1, SyslogMessage),
+          User = iif(SyslogMessage contains "publickey",
+            extract("(for )([[:alnum:]]+)", 2, SyslogMessage),
+            extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)),
+          LogonType = strcat(extract("Accepted\\s+([^\\s]+)", 1, SyslogMessage),
                              " (", ProcessName, ")"),
-          SourceIP = extract("((?:[0-9]{{1,3}}\\\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
+          SourceIP = extract("((?:[0-9]{{1,3}}\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
           SourcePort = extract("port ([0-9]+)", 1, SyslogMessage),
-          UID = extract("uid=([0-9]+)", 1, SyslogMessage)'
+          UID = extract("uid=([0-9]+)", 1, SyslogMessage)
+        | extend AccountName = User
+        {add_query_items}'
     parameters:
       ip_address:
         description: The source IP Address to search on
