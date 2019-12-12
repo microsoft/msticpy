@@ -187,6 +187,14 @@ cmd_line
 Module to investigation of command line activity. Allows for the detection
 of known malicious commands as well as suspicious patterns of behaviour.
 
+domain_utils
+~~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.domain_utils`
+
+Module to support investigation of domain names and URLs with functions to 
+validate a domain name and screenshot a URL.
+
 Notebook tools sub-package - *nbtools*
 --------------------------------------
 

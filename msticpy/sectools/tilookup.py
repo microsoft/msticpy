@@ -344,6 +344,8 @@ class TILookup:
                 query_type=ioc_query_type,
                 **kwargs,
             )
+            if provider_result is None or provider_result.empty:
+                continue
             if not kwargs.get("show_not_supported", False):
                 provider_result = provider_result[
                     provider_result["Status"] != TILookupStatus.not_supported.value

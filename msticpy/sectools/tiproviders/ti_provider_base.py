@@ -170,6 +170,7 @@ class TIProvider(ABC):
         if IoCType.unknown in self._supported_types:
             self._supported_types.remove(IoCType.unknown)
 
+    # pylint: disable=duplicate-code
     @abc.abstractmethod
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs

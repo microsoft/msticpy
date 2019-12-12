@@ -108,10 +108,19 @@ class WorkspaceConfig:
             Connection string
 
         """
-        con_str = 'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
-        return con_str.format(
-            ten_id=self[self.CONF_TENANT_ID_KEY], ws_id=self[self.CONF_WS_ID_KEY]
-        )
+        ten_id = self._config.get(self.CONF_TENANT_ID_KEY, None)
+        ws_id = self._config.get(self.CONF_WS_ID_KEY, None)
+        if not ten_id:
+            raise KeyError(
+                f"Configuration setting for {self.CONF_TENANT_ID_KEY} "
+                + "could not be found."
+            )
+        if not ws_id:
+            raise KeyError(
+                f"Configuration setting for {self.CONF_WS_ID_KEY} "
+                + "could not be found."
+            )
+        return f"loganalytics://code().tenant('{ten_id}').workspace('{ws_id}')"
 
     @classmethod
     def _read_config_values(cls, file_path: str) -> Dict[str, str]:

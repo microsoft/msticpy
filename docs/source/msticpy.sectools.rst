@@ -61,7 +61,7 @@ msticpy.sectools.outliers module
     :show-inheritance:
 
 msticpy.sectools.syslog_utils module
-----------------------------------
+------------------------------------
 
 .. automodule:: msticpy.sectools.syslog_utils
     :members:

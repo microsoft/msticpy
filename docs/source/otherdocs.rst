@@ -14,3 +14,5 @@ Other Documents
 
     EventTimeline.rst
 
+    msticpyconfig.rst
+

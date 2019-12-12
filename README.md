@@ -80,7 +80,7 @@ multiple observables. Depending on the provider, you may require an account
 and an API key. Some providers also enforce throttling (especially for free
 tiers), which might affect performing bulk lookups.
 
-For more details see :doc:`TIProviders` and
+For more details see `TIProviders` and
 [TILookup Usage Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb)
 
 ### vtlookup
@@ -153,9 +153,9 @@ This is still a work-in-progress.
 
 ### syslog_utils
 
-A series data maniuplation functions to support an investigation of a
-linux host with only syslog logging enabled. This includes functions for collating host
-data, clusting logon events and detecting user sessions containing suspicious activity.
+Module to support an investigation of a linux host with only syslog logging enabled.
+This includes functions for collating host data, clusting logon events and detecting
+user sessions containing suspicious activity.
 
 ### cmd_line
 
