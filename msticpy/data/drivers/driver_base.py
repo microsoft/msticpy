@@ -83,7 +83,7 @@ class DriverBase(ABC):
 
         Parameters
         ----------
-        connection_string : str
+        connection_str : str
             Connect to a data source
 
         """
