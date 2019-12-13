@@ -6,6 +6,7 @@
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from abc import ABC
 
+import attr
 import pandas as pd
 
 from azure.common.credentials import ServicePrincipalCredentials
@@ -18,6 +19,25 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+# pylint: disable=too-few-public-methods
+# attr class doesn't need a methos
+@attr.s
+class Items():
+    """attr class to build resource details dictionary."""
+
+    resouce_id = attr.ib()
+    name = attr.ib()
+    ressource_type = attr.ib()
+    location = attr.ib()
+    tags = attr.ib()
+    plan = attr.ib()
+    properties = attr.ib()
+    kind = attr.ib()
+    managed_by = attr.ib()
+    sku = attr.ib()
+    identity = attr.ib()
+# pylint: enable=too-few-public-methods
 
 
 class AzureData(ABC):
@@ -94,8 +114,6 @@ class AzureData(ABC):
 
         return sub_details
 
-    # pylint: disable=too-many-locals
-    # Required to build dataframe
     def get_resources(
         self, sub_id: str, rgroup: str = None, get_props: bool = False
     ) -> pd.DataFrame:
@@ -130,63 +148,41 @@ class AzureData(ABC):
         if get_props is True:
             print("Collecting properties for every resource may take some time...")
 
-        ids = []
-        names = []
-        types = []
-        locations = []
-        tags = []
-        plans = []
-        properties = []
-        kinds = []
-        managed_by = []
-        identities = []
-        skus = []
+        resource_items = []
 
         for resource in resources:
-            ids.append(resource.id)
-            names.append(resource.name)
-            types.append(resource.type)
-            locations.append(resource.location)
-            tags.append(resource.tags)
-            plans.append(resource.plan)
             if get_props is True:
                 try:
-                    properties.append(
-                        self.resource_client.resources.get_by_id(
-                            resource.id, "2019-08-01"
-                        ).properties
-                    )
+                    props = self.resource_client.resources.get_by_id(
+                        resource.id, "2019-08-01"
+                    ).properties
                 except CloudError:
-                    properties.append(
-                        self.resource_client.resources.get_by_id(
-                            resource.id, self.get_api(resource.id)
-                        ).properties
-                    )
+                    props = self.resource_client.resources.get_by_id(
+                        resource.id, self.get_api(resource.id)
+                    ).properties
             else:
-                properties.append(resource.properties)
-            kinds.append(resource.kind)
-            managed_by.append(resource.managed_by)
-            identities.append(resource.identity)
-            skus.append(resource.sku)
+                props = resource.properties
 
-        resource_df = pd.DataFrame(
-            {
-                "ID": ids,
-                "Name": names,
-                "Type": types,
-                "Location": locations,
-                "Tags": tags,
-                "Plan": plans,
-                "Properties": properties,
-                "Kind": kinds,
-                "Managed By": managed_by,
-                "Identity": identities,
-                "SKU": skus,
-            }
-        )
+            resource_details = attr.asdict(
+                Items(
+                    resource.id,
+                    resource.name,
+                    resource.type,
+                    resource.location,
+                    resource.tags,
+                    resource.plan,
+                    props,
+                    resource.kind,
+                    resource.managed_by,
+                    resource.sku,
+                    resource.identity,
+                )
+            )
+            resource_items.append(resource_details)
+
+        resource_df = pd.DataFrame(resource_items)
+
         return resource_df
-
-    # pylint: enable=too-many-locals
 
     def get_resource_details(
         self, resource_id: str = None, resource_details: dict = None, sub_id: str = None
@@ -237,19 +233,21 @@ class AzureData(ABC):
                 self.get_api(resource_id),
             )
 
-        resource_details = {
-            "ID": resource.id,
-            "Name": resource.name,
-            "Type": resource.type,
-            "Location": resource.location,
-            "Tags": resource.tags,
-            "Plan": resource.plan,
-            "Properties": resource.properties,
-            "Kind": resource.kind,
-            "Managed By": resource.managed_by,
-            "SKU": resource.sku,
-            "Identity": resource.identity,
-        }
+        resource_details = attr.asdict(
+            Items(
+                resource.id,
+                resource.name,
+                resource.type,
+                resource.location,
+                resource.tags,
+                resource.plan,
+                resource.properties,
+                resource.kind,
+                resource.managed_by,
+                resource.sku,
+                resource.identity,
+            )
+        )
 
         return resource_details
 

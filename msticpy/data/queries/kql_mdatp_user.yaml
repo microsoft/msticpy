@@ -29,11 +29,11 @@ sources:
         LogonEvents
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where AccountName has "{username}"
+        | where AccountName has "{account_name}"
         {add_query_items}'
       uri: None
     parameters:
-      username:
+      account_name:
         description: Name of user
         type: str
   user_processes:
@@ -44,10 +44,10 @@ sources:
         ProcessCreationEvents
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where AccountName has "{username}"
+        | where AccountName has "{account_name}"
         {add_query_items}'
     parameters:
-      username:
+      account_name:
         description: Name of user
         type: str
   user_files:
@@ -58,10 +58,10 @@ sources:
         FileCreationEvents
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where InitiatingProcessAccountName contains "{username}"
+        | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
-      username:
+      account_name:
         description: Name of user
         type: str
   user_network:
@@ -72,9 +72,9 @@ sources:
         NetworkCommunicationEvents
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where InitiatingProcessAccountName contains "{username}"
+        | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
-      username:
+      account_name:
         description: Name of user
         type: str

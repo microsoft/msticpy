@@ -33,11 +33,11 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where ComputerName has "{hostname}"
+        | where ComputerName has "{host_name}"
         {add_query_items}'
       uri: None
     parameters:
-      hostname:
+      host_name:
         description: Name of host
         type: str
   process_creations:
@@ -48,10 +48,10 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where FileName contains "{processid}" or SHA1 has "{processid}" or SHA256 has "{processid}" or MD5 has "{processid}"
+        | where FileName contains "{process_identifier}" or SHA1 has "{process_identifier}" or SHA256 has "{process_identifier}" or MD5 has "{process_identifier}"
         {add_query_items}'
     parameters:
-      processid:
+      process_identifier:
         description: Identifier for the process, filename, or hash
         type: str
   process_paths:
@@ -62,10 +62,10 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where FileName contains "{path}"
+        | where FileName contains "{file_path}"
         {add_query_items}'
     parameters:
-      path:
+      file_path:
         description: full or partial path
         type: str
   process_cmd_line:

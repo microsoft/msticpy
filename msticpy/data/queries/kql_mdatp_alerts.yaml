@@ -44,10 +44,10 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where ComputerName has "{hostname}"
+        | where ComputerName has "{host_name}"
         {add_query_items}'
     parameters:
-      hostname:
+      host_name:
         description: Name of host
         type: str
   ip_alerts:

@@ -79,7 +79,7 @@ sources:
         description: Remote URL
         type: str
   protocol_connections:
-    description: Lists alerts associated with a specified SHA1 hash
+    description: Lists alerts associated with a specified protocol
     metadata:
     args:
       query: '
