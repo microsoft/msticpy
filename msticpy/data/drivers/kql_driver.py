@@ -52,7 +52,7 @@ class KqlDriver(DriverBase):
 
         Parameters
         ----------
-        connection_string : str
+        connection_str : str
             Connect to a data source
 
         """

@@ -141,7 +141,7 @@ class QueryProvider:
 
         Parameters
         ----------
-        connection_string : str
+        connection_str : str
             Connection string for the data source
 
         """

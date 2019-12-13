@@ -47,7 +47,7 @@ class AzureData(ABC):
         self.connected = True
 
     def get_subscriptions(self) -> pd.DataFrame:
-        """Get details of all subscription within the tenant."""
+        """Get details of all subscriptions within the tenant."""
         if self.connected is False:
             raise Exception("Please connect before continuing")
 
@@ -95,7 +95,7 @@ class AzureData(ABC):
         return sub_details
 
     # pylint: disable=too-many-locals
-
+    # Required to build dataframe
     def get_resources(
         self, sub_id: str, rgroup: str = None, get_props: bool = False
     ) -> pd.DataFrame:
@@ -196,15 +196,17 @@ class AzureData(ABC):
 
         Parameters
         ----------
-        resource_id: str (Optional)
+        resource_id: str, optional
             The ID of the resource to get details on
-        resource_details: dict(Optional)
+        resource_details: dict, optional
             If ID is unknown provide the following details:
                 -resource_group_name
                 -resource_provider_namespace
                 -resource_type
                 -resource_name
                 -parent_resource_path
+        sub_id: str, optional
+            The ID of the subscription to get resources from
 
         Returns
         -------
@@ -258,7 +260,9 @@ class AzureData(ABC):
         Parameters
         ----------
         resource_id: str
-            The id of the resources to get an API version for
+            The ID of the resources to get an API version for
+        sub_id: str
+            The ID of the subscription to get details from
 
         Returns
         -------
