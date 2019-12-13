@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-from typing import Optional, Tuple, Dict, Iterable
+from typing import Optional, Tuple, Dict, Iterable, Union, Any
 
 import ipywidgets as wgt
 from IPython.display import display
@@ -72,37 +72,29 @@ LX_EVENT_SCH = ProcSchema(
     user_id="uid",
 )
 
-LX_TYPE_DICT = {
-    "argc": "str",
-    "egid": "str",
-    "euid": "str",
-    "gid": "str",
-    "ppid": "str",
-    "pid": "str",
-    "ses": "str",
-    "uid": "str",
-}
+LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "uid"]
 
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class ProcessTreeSchemaException(Exception):
-    pass
+    """Custom exception for Process Tree schema."""
 
 
 class _Progress:
     """UI Progress bar."""
 
-    def __init__(self, completed_len: int):
-        """Instantiate new _Progress UI.
+    def __init__(self, completed_len: int, visible: bool = True):
+        """
+        Instantiate new _Progress UI.
 
         Parameters
         ----------
         completed_len : int
             The expected value that indicates 100% done.
-        """
 
+        """
         self._completed = 0
         self._total = completed_len
         self._progress = wgt.IntProgress(
@@ -114,56 +106,75 @@ class _Progress:
             orientation="horizontal",
         )
         self._done_label = wgt.Label(value="0%")
+        self._progress.visible = visible
+        self._done_label.visible = visible
         display(wgt.HBox([self._progress, self._done_label]))
 
     @property
     def value(self) -> int:
-        """Return the current progress value.
+        """
+        Return the current progress value.
 
         Returns
         -------
         int
             Progess value
+
         """
         return self._completed
 
     @property
     def max(self) -> int:
-        """Return the current progress maximum value.
+        """
+        Return the current progress maximum value.
 
         Returns
         -------
         int
             Max value
+
         """
         return self._total
 
-    def update_progress(self, new_total: int = 0, increment: int = 0):
-        """Update progress UI by increment or new total.
+    def update_progress(self, new_total: int = 0, delta: int = 0):
+        """
+        Update progress UI by increment or new total.
 
         Parameters
         ----------
         new_total : int, optional
             New total, by default 0
-        increment : int, optional
+        delta : int, optional
             Increment to update current total, by default 0
+
         """
         if new_total:
             self._completed = new_total
         else:
-            self._completed += increment
-        perc_total = int(self._completed / self._total)
+            self._completed += delta
+        perc_total = int(100 * self._completed / self._total)
         self._progress.value = perc_total
         self._done_label.value = f"{perc_total}%"
 
-    def reset(self):
-        self._completed = 0
+    def show(self):
+        """Make the controls visible."""
+        self._progress.visible = True
+        self._done_label.visible = True
+
+    def hide(self):
+        """Hide the controls."""
+        self._progress.visible = True
+        self._done_label.visible = True
 
 
 def build_process_tree(
-    procs: pd.DataFrame, schema: ProcSchema = None, debug: bool = False
-) -> Tuple[pd.DataFrame, ProcSchema]:
-    """Build process trees from the process events.
+    procs: pd.DataFrame,
+    schema: ProcSchema = None,
+    show_progress: bool = False,
+    debug: bool = False,
+) -> pd.DataFrame:
+    """
+    Build process trees from the process events.
 
     Parameters
     ----------
@@ -172,57 +183,60 @@ def build_process_tree(
     schema : ProcSchema, optional
         The column schema to use, by default None
         If None, then the schema is inferred
+    show_progress : bool
+        Shows the progress of the process (helpful for
+        very large data sets)
     debug : bool
         If True produces extra debugging output,
         by default False
 
     Returns
     -------
-    Tuple[pd.DataFrame, ProcSchema]
-        [description]
+    pd.DataFrame
+        Process tree dataframe.
 
-    Raises
-    ------
-    ValueError
-        [description]
     """
     # If schema is none, infer schema from columns
-    # Use attr to get the keys for the schema.
     if not schema:
         schema = infer_schema(procs)
 
     data_len = len(procs)
     section_len = int(data_len / 4)
-    progress_ui = _Progress(completed_len=data_len * 2)
+    progress_ui = _Progress(completed_len=data_len * 2, visible=show_progress)
 
     # Clean data
     procs_cln = _clean_proc_data(procs, schema)
-    progress_ui.update_progress(section_len)
+    progress_ui.update_progress(delta=section_len)
 
     # Merge parent-child
     merged_procs = _merge_parent_by_time(procs_cln, schema)
     if debug:
         _check_merge_status(procs_cln, merged_procs, schema)
-    progress_ui.update_progress(section_len)
+    progress_ui.update_progress(delta=section_len)
 
     # extract inferred parents
     merged_procs_par = _extract_inferred_parents(merged_procs, schema)
     if debug:
         _check_inferred_parents(merged_procs, merged_procs_par)
-    progress_ui.update_progress(section_len)
+    progress_ui.update_progress(delta=section_len)
 
     # create parent-child keys
     merged_procs_keys = _assign_proc_keys(merged_procs_par, schema)
     if debug:
         _check_proc_keys(merged_procs_keys, schema)
-    progress_ui.update_progress(section_len)
+    progress_ui.update_progress(delta=section_len)
 
     # Build process paths
-    return _build_proc_tree(merged_procs_keys, progress_ui), schema
+    proc_tree = _build_proc_tree(merged_procs_keys, progress_ui)
+
+    if show_progress:
+        print(get_summary_info(proc_tree))
+    return proc_tree
 
 
 def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
-    """Infer the correct schema to use for this data set.
+    """
+    Infer the correct schema to use for this data set.
 
     Parameters
     ----------
@@ -250,12 +264,14 @@ def _clean_proc_data(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFrame:
         procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
     )
 
-    # Change Linux int cols to Object/string types
-    type_chng_dict = {
-        col: c_type for col, c_type in LX_TYPE_DICT.items() if col in procs.columns
-    }
-    if type_chng_dict:
-        procs_cln = procs_cln.astype(type_chng_dict)
+    # Change Linux int cols to force int then to string types
+    type_chng_int_dict = {col: "int" for col in LX_INT_TYPES if col in procs.columns}
+    if type_chng_int_dict:
+        procs_cln = procs_cln.astype(type_chng_int_dict)
+        type_chng_str_dict = {
+            col: "str" for col in LX_INT_TYPES if col in procs.columns
+        }
+        procs_cln = procs_cln.astype(type_chng_str_dict)
     if "EventID" not in procs_cln.columns and "EventType" in procs_cln.columns:
         procs_cln = procs_cln.rename(columns={"EventType": "EventID"})
 
@@ -317,33 +333,33 @@ def _merge_parent_by_time(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFra
 
 
 def _extract_inferred_parents(
-    merged_procs2: pd.DataFrame, schema: ProcSchema
+    merged_procs: pd.DataFrame, schema: ProcSchema
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
     # Fill in missing values for root processes
-    root_procs_crit = merged_procs2["source_index_par"].isna()
-    merged_procs2.loc[root_procs_crit, "NewProcessId_par"] = merged_procs2[
+    root_procs_crit = merged_procs["source_index_par"].isna()
+    merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
         schema.parent_id
     ]
     if schema.parent_name:
-        merged_procs2.loc[root_procs_crit, "new_process_lc_par"] = merged_procs2[
+        merged_procs.loc[root_procs_crit, "new_process_lc_par"] = merged_procs[
             "parent_proc_lc"
         ]
     else:
-        merged_procs2.loc[root_procs_crit, "new_process_lc_par"] = "unknown"
-        merged_procs2.loc[root_procs_crit, f"{schema.process_name}_par"] = "unknown"
+        merged_procs.loc[root_procs_crit, "new_process_lc_par"] = "unknown"
+        merged_procs.loc[root_procs_crit, f"{schema.process_name}_par"] = "unknown"
         # If the schema doesn't have a ParentProcessName/parent_proc_lc - copy this value
         # from the merged data for ALL processes
-        merged_procs2["ParentProcessName"] = merged_procs2[f"{schema.process_name}_par"]
-        merged_procs2["parent_proc_lc"] = merged_procs2["new_process_lc_par"]
-    merged_procs2.loc[root_procs_crit, "EffectiveLogonId_par"] = merged_procs2[
+        merged_procs["ParentProcessName"] = merged_procs[f"{schema.process_name}_par"]
+        merged_procs["parent_proc_lc"] = merged_procs["new_process_lc_par"]
+    merged_procs.loc[root_procs_crit, "EffectiveLogonId_par"] = merged_procs[
         schema.logon_id
     ]
-    merged_procs2.loc[root_procs_crit, "TimeGenerated_orig_par"] = pd.Timestamp(0)
+    merged_procs.loc[root_procs_crit, "TimeGenerated_orig_par"] = pd.Timestamp(0)
 
     # Extract synthentic rows for the parents of root processes
     inferred_parents = (
-        merged_procs2[root_procs_crit][
+        merged_procs[root_procs_crit][
             [
                 "TenantId",
                 "EventID",
@@ -364,13 +380,13 @@ def _extract_inferred_parents(
         )
         .assign(
             TimeGenerated=pd.Timestamp(0),
-            EffectiveLogonId=merged_procs2[schema.logon_id],
+            EffectiveLogonId=merged_procs[schema.logon_id],
         )
         .drop_duplicates()
     )
 
     plus_parents = pd.concat(
-        [merged_procs2, inferred_parents], ignore_index=True, axis=0, sort=False
+        [merged_procs, inferred_parents], ignore_index=True, axis=0, sort=False
     )
     return plus_parents
 
@@ -397,7 +413,6 @@ def _assign_proc_keys(
     )
     proc_tree = merged_procs_par.copy()
     # Create labels based on node type
-    pids = proc_tree[["proc_key"]].set_index("proc_key")
     ppids = proc_tree[["parent_key"]].set_index("parent_key")
     proc_tree = proc_tree.assign(IsRoot=False, IsLeaf=False, IsBranch=False)
 
@@ -415,24 +430,19 @@ def _assign_proc_keys(
 
 
 def _build_proc_tree(input_tree, progress: _Progress, max_depth=-1):
-    std_cols = ["parent_key", "source_index", "path"]
-    mrg_cols = ["parent_key", "source_index_x", "source_index_y", "path_x", "path_y"]
-
+    """Build process tree paths."""
     # set default path == current process ID
     input_tree["path"] = input_tree["source_index"]
 
     cur_level = input_tree[input_tree["IsRoot"]]
 
     cur_level_num = 0
-    visited_procs = set()
-    visited_procs.update(cur_level.index)
-    progress.update_progress(increment=len(cur_level))
+    progress.update_progress(delta=len(cur_level))
     while True:
         sel_crit = input_tree["parent_key"].isin(cur_level.index)
         next_level = input_tree[sel_crit].copy()
 
         if next_level.empty:
-            print(f"max path depth reached: {cur_level_num}")
             progress.update_progress(new_total=progress.max)
             break
         if max_depth != -1 and cur_level_num >= max_depth:
@@ -461,13 +471,14 @@ def _build_proc_tree(input_tree, progress: _Progress, max_depth=-1):
 
         cur_level = next_level
         cur_level_num += 1
-        progress.update_progress(increment=len(cur_level))
+        progress.update_progress(delta=len(cur_level))
 
     return input_tree
 
 
 def get_process_key(procs: pd.DataFrame, source_index: int) -> str:
-    """Return the process key of the process given its source_index.
+    """
+    Return the process key of the process given its source_index.
 
     Parameters
     ----------
@@ -486,7 +497,8 @@ def get_process_key(procs: pd.DataFrame, source_index: int) -> str:
 
 
 def build_process_key(source_proc: pd.Series, schema: ProcSchema = None) -> str:
-    """Return a process key from a process event.
+    """
+    Return a process key from a process event.
 
     Parameters
     ----------
@@ -506,12 +518,13 @@ def build_process_key(source_proc: pd.Series, schema: ProcSchema = None) -> str:
         schema = infer_schema(source_proc)
     proc_path = source_proc[schema.process_name].lower()
     pid = source_proc[schema.process_id]
-    ts = source_proc[schema.time_stamp].strftime(TS_FMT_STRING)
-    return f"{proc_path}{pid}{ts}"
+    tstamp = source_proc[schema.time_stamp].strftime(TS_FMT_STRING)
+    return f"{proc_path}{pid}{tstamp}"
 
 
 def get_roots(procs: pd.DataFrame) -> pd.DataFrame:
-    """Return the process tree roots for the current data set
+    """
+    Return the process tree roots for the current data set.
 
     Parameters
     ----------
@@ -528,7 +541,8 @@ def get_roots(procs: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_process(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
-    """Return the process event as a Series.
+    """
+    Return the process event as a Series.
 
     Parameters
     ----------
@@ -550,14 +564,16 @@ def get_process(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series
     """
     if isinstance(source, str):
         return procs.loc[source]
-    elif isinstance(source, pd.Series):
+    if isinstance(source, pd.Series):
         return source
-    else:
-        raise ValueError("Unknown type for source parameter.")
+    raise ValueError("Unknown type for source parameter.")
 
 
-def get_parent(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
-    """Return the parent of the source process.
+def get_parent(
+    procs: pd.DataFrame, source: Union[str, pd.Series]
+) -> Optional[pd.Series]:
+    """
+    Return the parent of the source process.
 
     Parameters
     ----------
@@ -568,18 +584,19 @@ def get_parent(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
 
     Returns
     -------
-    pd.Series
-        Parent Process row
+    Optional[pd.Series]
+        Parent Process row or None if no parent was found.
+
     """
     proc = get_process(procs, source)
     if proc.parent_key in procs.index:
         return procs.loc[proc.parent_key]
-    else:
-        print("not found")
+    return None
 
 
 def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
-    """Return the root process for the source process.
+    """
+    Return the root process for the source process.
 
     Parameters
     ----------
@@ -592,6 +609,7 @@ def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
     -------
     pd.Series
         Root process
+
     """
     proc = get_process(procs, source)
     p_path = proc.path.split("/")
@@ -600,7 +618,8 @@ def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
 
 
 def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.DataFrame:
-    """Return the process tree to which the source process belongs.
+    """
+    Return the process tree to which the source process belongs.
 
     Parameters
     ----------
@@ -613,6 +632,7 @@ def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Data
     -------
     pd.DataFrame
         Process Tree
+
     """
     proc = get_process(procs, source)
     p_path = proc.path.split("/")
@@ -622,7 +642,8 @@ def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Data
 def get_children(
     procs: pd.DataFrame, source: Union[str, pd.Series], include_source: bool = True
 ) -> pd.DataFrame:
-    """Return the child processes for the source process.
+    """
+    Return the child processes for the source process.
 
     Parameters
     ----------
@@ -652,7 +673,8 @@ def get_descendents(
     include_source: bool = True,
     max_levels: int = -1,
 ) -> pd.DataFrame:
-    """Return the descendents of the source process.
+    """
+    Return the descendents of the source process.
 
     Parameters
     ----------
@@ -668,7 +690,8 @@ def get_descendents(
     Returns
     -------
     pd.DataFrame
-        [description]
+        Descendent processes
+
     """
     proc = get_process(procs, source)
     descendents = []
@@ -693,7 +716,8 @@ def get_descendents(
 
 
 def get_ancestors(procs: pd.DataFrame, source, include_source=True) -> pd.DataFrame:
-    """Return the ancestor processes of the source process.
+    """
+    Return the ancestor processes of the source process.
 
     Parameters
     ----------
@@ -708,6 +732,7 @@ def get_ancestors(procs: pd.DataFrame, source, include_source=True) -> pd.DataFr
     -------
     pd.DataFrame
         Ancestor processes
+
     """
     proc = get_process(procs, source)
     p_path = proc.path.split("/")
@@ -719,7 +744,8 @@ def get_ancestors(procs: pd.DataFrame, source, include_source=True) -> pd.DataFr
 def get_siblings(
     procs: pd.DataFrame, source: Union[str, pd.Series], include_source: bool = True
 ) -> pd.DataFrame:
-    """Return the processes that share the parent of the source process.
+    """
+    Return the processes that share the parent of the source process.
 
     Parameters
     ----------
@@ -734,12 +760,39 @@ def get_siblings(
     -------
     pd.DataFrame
         Sibling processes.
+
     """
     parent = get_parent(procs, source)
+    proc = get_process(procs, source)
     siblings = get_children(procs, parent, include_source=False)
     if not include_source:
-        return siblings.loc[~source]
+        return siblings.loc[~proc]
     return siblings
+
+
+def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
+    """
+    Return summary information about the process trees.
+
+    Parameters
+    ----------
+    procs : pd.DataFrame
+        Process events (with process tree metadata)
+
+    Returns
+    -------
+    Dict[str, int]
+        Summary statistic about the process tree
+
+    """
+    summary: Dict[str, Any] = {}
+    summary["Processes"] = len(procs)
+    summary["RootProcesses"] = len(procs[procs["IsRoot"]])
+    summary["LeafProcesses"] = len(procs[procs["IsLeaf"]])
+    summary["BranchProcesses"] = len(procs[procs["IsBranch"]])
+    summary["IsolatedProcesses"] = len(procs[(procs["IsRoot"]) & (procs["IsLeaf"])])
+    summary["LargestTreeDepth"] = procs["path"].str.count("/").max() + 1
+    return summary
 
 
 # Diagnostic functions
@@ -760,8 +813,7 @@ def _check_merge_status(procs, merged_procs, schema):
     print("Merged # procs - dropna", len(merged_procs.dropna()))
 
     print(
-        "Unique merged_procs2 index in merge",
-        len(merged_procs["source_index"].unique()),
+        "Unique merged_procs index in merge", len(merged_procs["source_index"].unique())
     )
     print("These two should add up to top line")
     row_dups = len(rows_with_dups2)
@@ -785,24 +837,24 @@ def _check_inferred_parents(procs, procs_par):
 
 def _check_proc_keys(merged_procs_par, schema):
     """Diagnostic for _assign_proc_keys."""
-    c1 = merged_procs_par["TimeGenerated_orig_par"].isin(
+    crit1 = merged_procs_par["TimeGenerated_orig_par"].isin(
         merged_procs_par[schema.time_stamp]
     )
-    c2 = merged_procs_par["EffectiveLogonId"].isin(merged_procs_par[schema.logon_id])
+    crit2 = merged_procs_par["EffectiveLogonId"].isin(merged_procs_par[schema.logon_id])
     if schema.target_logon_id:
         c2a = merged_procs_par["EffectiveLogonId"].isin(
             merged_procs_par[schema.target_logon_id]
         )
-    c3 = merged_procs_par["parent_proc_lc"].isin(merged_procs_par["new_process_lc"])
-    c4 = merged_procs_par[schema.process_id].isin(merged_procs_par[schema.parent_id])
-    c5 = merged_procs_par["parent_key"].isin(merged_procs_par.index)
-    c6 = merged_procs_par["parent_key"].isna()
-    print("has parent time", len(merged_procs_par[c1]))
-    print("effectivelogonId in subjectlogonId", len(merged_procs_par[c2]))
+    crit3 = merged_procs_par["parent_proc_lc"].isin(merged_procs_par["new_process_lc"])
+    crit4 = merged_procs_par[schema.process_id].isin(merged_procs_par[schema.parent_id])
+    crit5 = merged_procs_par["parent_key"].isin(merged_procs_par.index)
+    crit6 = merged_procs_par["parent_key"].isna()
+    print("has parent time", len(merged_procs_par[crit1]))
+    print("effectivelogonId in subjectlogonId", len(merged_procs_par[crit2]))
     if schema.target_logon_id:
         print("effectivelogonId in targetlogonId", len(merged_procs_par[c2a]))
-    print("parent_proc_lc in procs", len(merged_procs_par[c3]))
-    print("ProcessId in ParentProcessId", len(merged_procs_par[c4]))
-    print("Parent_key in proc_key", len(merged_procs_par[c5]))
-    print("Parent_key not in proc_key", len(merged_procs_par[~c5]))
-    print("Parent_key is NA", len(merged_procs_par[c6]))
+    print("parent_proc_lc in procs", len(merged_procs_par[crit3]))
+    print("ProcessId in ParentProcessId", len(merged_procs_par[crit4]))
+    print("Parent_key in proc_key", len(merged_procs_par[crit5]))
+    print("Parent_key not in proc_key", len(merged_procs_par[~crit5]))
+    print("Parent_key is NA", len(merged_procs_par[crit6]))

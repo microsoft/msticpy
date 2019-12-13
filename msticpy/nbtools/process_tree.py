@@ -20,7 +20,11 @@ from bokeh.models import (
     RangeTool,
     ColorBar,
 )
-from bokeh.palettes import Spectral, RdGy, Set3
+
+# pylint: disable=no-name-in-module
+from bokeh.palettes import viridis
+
+# pylint: enable=no-name-in-module
 from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
 from bokeh.layouts import column, row
 import numpy as np
@@ -45,15 +49,8 @@ def show_process_tree(
     output_var: str = None,
     legend_col: str = None,
 ):
-    """[summary]
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        [description]
-
     """
-    """Build process tree from data and plot a tree.
+    Build process tree from data and plot a tree.
 
     Parameters
     ----------
@@ -66,29 +63,31 @@ def show_process_tree(
         by default None
     legend_col : str, optional
         The column used to color the tree items, by default None
+
     """
-    procs_with_path, schema = build_process_tree(data)
+    procs_with_path = build_process_tree(data)
     # If we have multiple roots - ask the user to choose?
-    if len(procs_with_path[procs_with_path["IsRoot"]] > 1):
+    if len(procs_with_path[procs_with_path["IsRoot"]]) > 1:
         print("many roots")
 
     p_tree_srt = procs_with_path.sort_values("path", ascending="True")
     p_tree_srt = p_tree_srt.reset_index()
-    plot_tree(p_tree_srt, schema)
+    plot_tree(p_tree_srt, schema, output_var=output_var, legend_col=legend_col)
 
 
 # pylint: disable=too-many-locals
 def plot_tree(
-    proc_tree: pd.DataFrame,
+    data: pd.DataFrame,
     schema: ProcSchema = None,
     output_var: str = None,
     legend_col: str = None,
 ):
-    """Plot a Process Tree Visualization.
+    """
+    Plot a Process Tree Visualization.
 
     Parameters
     ----------
-    proc_tree : pd.DataFrame
+    data : pd.DataFrame
         DataFrame containing one or more Process Trees
     schema : ProcSchema, optional
         The data schema to use for the data set, by default None
@@ -113,11 +112,11 @@ def plot_tree(
     reset_output()
     output_notebook()
 
-    proc_tree, schema, levels, n_rows = _pre_process_tree(proc_tree, schema)
+    data, schema, levels, n_rows = _pre_process_tree(data, schema)
     if schema is None:
         raise ProcessTreeSchemaException("Could not infer schema from data set.")
 
-    source = ColumnDataSource(data=proc_tree)
+    source = ColumnDataSource(data=data)
 
     max_level = max(levels) + 3
     min_level = min(levels)
@@ -139,23 +138,21 @@ def plot_tree(
     )
     b_plot.add_tools(hover)
 
+    # Get legend/color bar map
     fill_map, color_bar = _create_fill_map(source, legend_col)
-    if legend_col:
-        b_plot.legend.title = legend_col
-    if color_bar:
-        b_plot.add_layout(color_bar, "right")
     # dodge to align rectangle with grid
     rect_x = dodge("Level", 1.75, range=b_plot.x_range)
-    rect_plot = b_plot.rect(
-        x=rect_x,
-        y="Row",
-        width=3.5,
-        height=0.95,
-        source=source,
-        fill_alpha=0.6,
-        fill_color=fill_map,
-        legend=legend_col,
+    rect_plot_params = dict(
+        width=3.5, height=0.95, source=source, fill_alpha=0.6, fill_color=fill_map
     )
+
+    if color_bar:
+        b_plot.add_layout(color_bar, "right")
+    elif legend_col:
+        rect_plot_params["legend_field"] = legend_col
+    rect_plot = b_plot.rect(x=rect_x, y="Row", **rect_plot_params)
+    if legend_col and not color_bar:
+        b_plot.legend.title = legend_col
 
     text_props = {"source": source, "text_align": "left", "text_baseline": "middle"}
 
@@ -216,6 +213,7 @@ def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
         schema = infer_schema(proc_tree)
     _validate_plot_schema(proc_tree, schema)
 
+    proc_tree = proc_tree.sort_values("path", ascending="True").reset_index()
     n_rows = len(proc_tree)
     proc_tree["Row"] = proc_tree.index
     proc_tree["Row"] = n_rows - proc_tree["Row"]
@@ -316,23 +314,25 @@ def _create_fill_map(
     if source_column is None or source_column not in source.data:
         return fill_map, color_bar
 
-    col_kind = source.data[source_column].kind
-    if col_kind in ["b", "o"]:
-        src_values = np.unique(source.data[source_column])
-        values = [str(val) for val in src_values if not np.isnan(val)]
+    col_kind = source.data[source_column].dtype.kind
+    if col_kind in ["b", "O"]:
+        s_values = set(source.data[source_column])
+        if np.nan in s_values:
+            s_values.remove(np.nan)
+        values = list(s_values)
         fill_map = factor_cmap(
-            source_column, palette=Spectral[max(3, len(values))], factors=values
+            source_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
         values = source.data[source_column]
         fill_map = linear_cmap(
             field_name=source_column,
-            palette=Spectral[30],
+            palette=viridis(256),
             low=np.min(values),
             high=np.max(values),
         )
         color_bar = ColorBar(
-            color_mapper=fill_map["transform"], width=8, location=(0, 0)
+            color_mapper=fill_map["transform"], width=8, location=(0, 0)  # type: ignore
         )
     return fill_map, color_bar
 
