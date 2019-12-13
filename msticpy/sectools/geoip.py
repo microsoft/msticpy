@@ -27,7 +27,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Mapping, Any
 
 import pandas as pd
 import requests
@@ -62,7 +62,7 @@ class GeoIpLookup(metaclass=ABCMeta):
         ip_address: str = None,
         ip_addr_list: Iterable = None,
         ip_entity: IpAddress = None,
-    ) -> Tuple[List[Tuple[Dict[str, str], int]], List[IpAddress]]:
+    ) -> Tuple[List[Any], List[IpAddress]]:
         """
         Lookup IP location abstract method.
 
@@ -78,7 +78,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
         Returns
         -------
-        Tuple[List[Mapping[str, str]], List[IpAddress]]
+        Tuple[List[Any], List[IpAddress]]:
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
@@ -149,7 +149,7 @@ class IPStackLookup(GeoIpLookup):
         ip_address: str = None,
         ip_addr_list: Iterable = None,
         ip_entity: IpAddress = None,
-    ) -> Tuple[List[Tuple[Dict[str, str], int]], List[IpAddress]]:
+    ) -> Tuple[List[Any], List[IpAddress]]:
         """
         Lookup IP location from IPStack web service.
 
@@ -165,7 +165,7 @@ class IPStackLookup(GeoIpLookup):
 
         Returns
         -------
-        Tuple[List[Mapping[str, str]], List[IpAddress]]
+        Tuple[List[Any], List[IpAddress]]:
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
@@ -188,12 +188,13 @@ class IPStackLookup(GeoIpLookup):
             raise ValueError("No valid ip addresses were passed as arguments.")
 
         results = self._submit_request(ip_list)
+        output_raw = []
         output_entities = []
         for ip_loc, status in results:
             if status == 200:
                 output_entities.append(self._create_ip_entity(ip_loc, ip_entity))
-
-        return results, output_entities
+            output_raw.append((ip_loc, status))
+        return output_raw, output_entities
 
     @staticmethod
     def _create_ip_entity(ip_loc: dict, ip_entity) -> IpAddress:
@@ -483,7 +484,7 @@ class GeoLiteLookup(GeoIpLookup):
         ip_address: str = None,
         ip_addr_list: Iterable = None,
         ip_entity: IpAddress = None,
-    ) -> Tuple[List[Tuple[Dict[str, str], int]], List[IpAddress]]:
+    ) -> Tuple[List[Any], List[IpAddress]]:
         """
         Lookup IP location from GeoLite2 data created by MaxMind.
 
@@ -499,7 +500,7 @@ class GeoLiteLookup(GeoIpLookup):
 
         Returns
         -------
-        Tuple[List[Mapping[str, str]], List[IpAddress]]
+        Tuple[List[Any], List[IpAddress]]
             raw geolocation results and same results as IpAddress entities with
             populated Location property.
 
@@ -530,7 +531,9 @@ class GeoLiteLookup(GeoIpLookup):
         return output_raw, output_entities
 
     @staticmethod
-    def _create_ip_entity(ip_address, geo_match: dict, ip_entity) -> IpAddress:
+    def _create_ip_entity(
+        ip_address: str, geo_match: Mapping[str, Any], ip_entity: IpAddress = None
+    ) -> IpAddress:
         if not ip_entity:
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
@@ -555,7 +558,7 @@ class GeoLiteLookup(GeoIpLookup):
         geo_entity.Latitude = geo_match.get("location", {}).get(  # type: ignore
             "latitude", None
         )
-        ip_entity.Location = geo_entity
+        ip_entity.Location = geo_entity  # type: ignore
         return ip_entity
 
 
