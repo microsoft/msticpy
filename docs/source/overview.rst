@@ -175,7 +175,7 @@ syslog_utils
 
 :py:mod:`msticpy.sectools.syslog_utils`
 
-Module to suppport the investigation of Linux hosts through Syslog.
+Module to support the investigation of Linux hosts through Syslog.
 Includes functions to create host records, cluster logon events, and
 identify user sessions containing suspicious activity.
 
@@ -184,7 +184,7 @@ cmd_line
 
 :py:mod:`msticpy.sectools.cmd_line`
 
-Module to investigation of command line activity. Allows for the detction
+Module to investigation of command line activity. Allows for the detection
 of known malicious commands as well as suspicious patterns of behaviour.
 
 domain_utils
@@ -228,7 +228,7 @@ will be refactored to separate them into their own sub-package.
    the value for the ``hostname`` query parameter from the alert.
 -  entityschema - implements entity classes (e.g. Host, Account,
    IPAddress) used in Log Analytics alerts and in many of these modules.
-   Each entity encaspulates one or more properties related to the
+   Each entity encapsulates one or more properties related to the
    entity.
 
 `Data Queries Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`__
