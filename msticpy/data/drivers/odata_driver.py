@@ -80,7 +80,7 @@ class OData(DriverBase):
 
         Parameters
         ----------
-        connection_string: str, optional
+        connection_str: str, optional
             Connect to a data source
 
         Notes
