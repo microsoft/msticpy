@@ -20,8 +20,9 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+
 # pylint: disable=too-few-public-methods
-# attr class doesn't need a methos
+# attr class doesn't need a method
 @attr.s
 class Items:
     """attr class to build resource details dictionary."""
