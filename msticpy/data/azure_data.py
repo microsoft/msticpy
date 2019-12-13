@@ -23,7 +23,7 @@ __author__ = "Pete Bryan"
 # pylint: disable=too-few-public-methods
 # attr class doesn't need a methos
 @attr.s
-class Items():
+class Items:
     """attr class to build resource details dictionary."""
 
     resouce_id = attr.ib()
@@ -37,6 +37,8 @@ class Items():
     managed_by = attr.ib()
     sku = attr.ib()
     identity = attr.ib()
+
+
 # pylint: enable=too-few-public-methods
 
 
