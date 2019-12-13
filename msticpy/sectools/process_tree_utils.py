@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-from typing import Optional, Tuple, Dict, Iterable, Union, Any
+from typing import Optional, Dict, Iterable, Union, Any
 
 import ipywidgets as wgt
 from IPython.display import display
@@ -426,6 +426,9 @@ def _assign_proc_keys(
     proc_tree["source_index"] = proc_tree.index.astype(str)
     # Set the index of the output frame to be the proc_key
     proc_tree = proc_tree.set_index("proc_key")
+
+    first_unique = proc_tree.index.duplicated()
+    proc_tree = proc_tree[~first_unique]
     return proc_tree
 
 
