@@ -98,7 +98,7 @@ tables but there will often be exceptions:
 Any data that is accessible over your network or from a file can be
 linked with Azure Sentinel data via Python and Jupyter.
 
-Access to Sophisticated Data Processing, Machine Learing and Visualization
+Access to Sophisticated Data Processing, Machine Learning and Visualization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Azure Sentinel and the Kusto/Log Analytics data store underlying it have

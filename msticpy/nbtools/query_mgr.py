@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""query manager helper functions for use with IPython/Juptyer queries."""
+"""query manager helper functions for use with IPython/Jupyter queries."""
 import sys
 from functools import partial
 import re
