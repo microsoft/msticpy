@@ -43,7 +43,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def show_process_tree(
+def build_and_show_process_tree(
     data: pd.DataFrame,
     schema: ProcSchema = None,
     output_var: str = None,
@@ -65,22 +65,36 @@ def show_process_tree(
         The column used to color the tree items, by default None
 
     """
-    procs_with_path = build_process_tree(data)
-    # If we have multiple roots - ask the user to choose?
-    if len(procs_with_path[procs_with_path["IsRoot"]]) > 1:
-        print("many roots")
+    # Check if this table already seems to have the proc_tree metadata
+    input_cols = set(data.columns)
+    expected_cols = set(
+        [
+            "new_process_lc",
+            "parent_proc_lc",
+            "source_index",
+            "new_process_lc_par",
+            "source_index_par",
+            "parent_key",
+            "IsRoot",
+            "IsLeaf",
+            "IsBranch",
+            "path",
+            "parent_index",
+        ]
+    )
+    if not expected_cols.issubset(input_cols):
+        data = build_process_tree(data)
 
-    p_tree_srt = procs_with_path.sort_values("path", ascending="True")
-    p_tree_srt = p_tree_srt.reset_index()
-    plot_tree(p_tree_srt, schema, output_var=output_var, legend_col=legend_col)
+    plot_process_tree(data, schema, output_var=output_var, legend_col=legend_col)
 
 
 # pylint: disable=too-many-locals
-def plot_tree(
+def plot_process_tree(
     data: pd.DataFrame,
     schema: ProcSchema = None,
     output_var: str = None,
     legend_col: str = None,
+    show_table: bool = False,
 ):
     """
     Plot a Process Tree Visualization.
@@ -97,6 +111,8 @@ def plot_tree(
         by default None
     legend_col : str, optional
         The column used to color the tree items, by default None
+    show_table: bool
+        Set to False to hide the data table, by default True.
 
     Raises
     ------
@@ -196,9 +212,11 @@ def plot_tree(
         y_col="Row",
         fill_map=fill_map,
     )
-    data_table = _create_data_table(source, schema)
-
-    show(column(row(b_plot, range_tool), data_table))
+    plot_elems = row(b_plot, range_tool)
+    if show_table:
+        data_table = _create_data_table(source, schema, legend_col)
+        plot_elems = column(plot_elems, data_table)
+    show(plot_elems)
 
 
 # pylint: enable=too-many-locals
@@ -324,7 +342,7 @@ def _create_fill_map(
             source_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
-        values = source.data[source_column]
+        values = [val for val in source.data[source_column] if not np.isnan(val)]
         fill_map = linear_cmap(
             field_name=source_column,
             palette=viridis(256),
@@ -373,7 +391,9 @@ def _create_vert_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _create_data_table(source: ColumnDataSource, schema: ProcSchema):
+def _create_data_table(
+    source: ColumnDataSource, schema: ProcSchema, legend_col: str = None
+):
     """Return DataTable widget for source."""
     column_names = [
         schema.user_name,
@@ -386,6 +406,10 @@ def _create_data_table(source: ColumnDataSource, schema: ProcSchema):
         schema.parent_name,
         schema.target_logon_id,
     ]
+
+    if legend_col and legend_col not in column_names:
+        column_names.append(legend_col)
+
     date_fmt = "%F %T"
     columns = [
         TableColumn(
@@ -394,7 +418,12 @@ def _create_data_table(source: ColumnDataSource, schema: ProcSchema):
             formatter=DateFormatter(format=date_fmt),
         )
     ]
-    columns2 = [TableColumn(field=col, title=col) for col in column_names]
+    columns2 = [
+        TableColumn(field=col, title=col)
+        for col in column_names
+        if col in source.column_names
+    ]
+
     data_table = DataTable(
         source=source, columns=columns + columns2, width=950, height=150
     )

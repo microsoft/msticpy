@@ -642,6 +642,24 @@ def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Data
     return procs[procs["path"].str.startswith(p_path[0])]
 
 
+def get_tree_depth(procs: pd.DataFrame) -> int:
+    """
+    Return the depth of the process tree
+
+    Parameters
+    ----------
+    procs : pd.DataFrame
+        Process events (with process tree metadata)
+
+    Returns
+    -------
+    int
+        Tree depth
+
+    """
+    return procs(procs["path"].str.count("/").max()) + 1
+
+
 def get_children(
     procs: pd.DataFrame, source: Union[str, pd.Series], include_source: bool = True
 ) -> pd.DataFrame:
@@ -769,7 +787,7 @@ def get_siblings(
     proc = get_process(procs, source)
     siblings = get_children(procs, parent, include_source=False)
     if not include_source:
-        return siblings.loc[~proc]
+        return siblings[siblings.index != proc.name]
     return siblings
 
 
