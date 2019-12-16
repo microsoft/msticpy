@@ -40,7 +40,7 @@ controls that are displayed incorrectly even when viewing a notebook
 locally. The GitHub notebook viewer is reasonable for simple notebooks
 but not very sophisticated. Here is a link to one of the notebooks
 displayed in
-`nbviewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__.
+`nbviewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__.
 
 Note: you do not need to have Python or any of the dependencies
 installed to view notebooks in nbviewer or GitHub.
@@ -179,7 +179,7 @@ References
    is the official documentation for using Jupyter notebooks in Azure
    Sentinel.
 
--  `Get Started <https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Get%20Started.ipynb>`__
+-  `Get Started <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Notebooks/Get%20Started.ipynb>`__
    is a Jupyter notebook that demonstrates the use of Kqlmagic to
    retrieve data from Azure Sentinel.
 
@@ -191,17 +191,17 @@ Notebooks
    Notebooks <https://techcommunity.microsoft.com/t5/Windows-Defender-ATP/Automating-Security-Operations-Using-Windows-Defender-ATP-APIs/ba-p/294434>`__
    by John Lambert
 
--  Azure Sentinel sample Jupyter notebooks can be found
-   `here <https://github.com/Azure/Azure-Sentinel>`__ on GitHub.
+-  Azure Sentinel Jupyter notebooks can be found
+   `here <https://github.com/Azure/Azure-Sentinel-Notebooks>`__ on GitHub.
 
 -  Windows Alert Investigation
-   in \ `github <https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
+   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
 
 -  Windows Host Explorer
-   in \ `github <https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb>`__
+   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb>`__
 
 -  Office 365 Exploration
-   in \ `github <https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
+   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
 
 -  Cross-Network Hunting
-   in \ `github <https://github.com/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel/blob/master/Notebooks/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb>`__
+   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb>`__ or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb>`__
