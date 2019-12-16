@@ -52,6 +52,13 @@ msticpy.data.data\_providers module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.azure\_data
+---------------------------------------------------
+.. automodule:: msticpy.data.drivers.azure_data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.data\_query\_reader module
 ---------------------------------------
 .. automodule:: msticpy.data.data_query_reader
@@ -104,13 +111,6 @@ msticpy.data.drivers.odata\_driver module
 msticpy.data.drivers.mdatp\_driver module
 ---------------------------------------------------
 .. automodule:: msticpy.data.drivers.mdatp_driver
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-msticpy.data.azure\_data
----------------------------------------------------
-.. automodule:: msticpy.data.drivers.azure_data
     :members:
     :undoc-members:
     :show-inheritance:

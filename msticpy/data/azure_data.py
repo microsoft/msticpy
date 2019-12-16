@@ -27,9 +27,9 @@ __author__ = "Pete Bryan"
 class Items:
     """attr class to build resource details dictionary."""
 
-    resouce_id = attr.ib()
+    resource_id = attr.ib()
     name = attr.ib()
-    ressource_type = attr.ib()
+    resource_type = attr.ib()
     location = attr.ib()
     tags = attr.ib()
     plan = attr.ib()
