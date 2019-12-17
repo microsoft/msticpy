@@ -82,6 +82,10 @@ class WorkspaceConfig:
         # In operator overload
         return key == "Type" or key in self._config or key in self.__dict__
 
+    def __repr__(self):
+        """Return contents of current config."""
+        return self._config.__repr__()
+
     @property
     def config_loaded(self) -> bool:
         """
