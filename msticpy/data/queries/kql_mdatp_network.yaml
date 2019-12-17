@@ -1,0 +1,94 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP]
+  data_families: [MDATP]
+  tags: ['network']
+defaults:
+  metadata:
+    data_source: 'network_events'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'NetworkCommunicationEvents  '
+      start:
+        description: Query start time
+        type: datetime
+        default: -30
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_connections:
+    description: Retrieves list of network connections for a host
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        {add_query_items}'
+      uri: None
+    parameters:
+  host_connections:
+    description: Lists alerts by for a specified hostname
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where ComputerName has "{hostname}"
+        {add_query_items}'
+    parameters:
+      hostname:
+        description: Name of host
+        type: str
+  ip_connections:
+    description: Lists alerts associated with a specified remote IP
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where RemoteIP has "{ip_address}" or where LocalIP has "{ip_address}"
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: Remote IP Address
+        type: str
+  url_connections:
+    description: Lists alerts associated with a specified URL
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where RemoteUrl has "{url}"
+        {add_query_items}'
+    parameters:
+      url:
+        description: Remote URL
+        type: str
+  protocol_connections:
+    description: Lists alerts associated with a specified protocol
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where RemotePort == {protocol}
+        {add_query_items}'
+    parameters:
+      protocol:
+        description: Port to query for
+        type: str

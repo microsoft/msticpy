@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Security Graph OData Driver class."""
+"""MDATP OData Driver class."""
 from typing import Union, Any
 import pandas as pd
 
@@ -12,16 +12,16 @@ from ...nbtools.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
-__author__ = "Ian Hellen"
+__author__ = "Pete Bryan"
 
 
 @export
-class SecurityGraphDriver(OData):
-    """Driver to query security graph."""
+class MDATPDriver(OData):
+    """KqlDriver class to retreive date from MDATP."""
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite KqlDriver and optionally connect.
+        Instantiaite MDATPDriver and optionally connect.
 
         Parameters
         ----------
@@ -34,13 +34,11 @@ class SecurityGraphDriver(OData):
             "client_id": None,
             "client_secret": None,
             "grant_type": "client_credentials",
-            "scope": "https://graph.microsoft.com/.default",
+            "resource": "https://api.securitycenter.windows.com",
         }
-        self.oauth_url = (
-            "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
-        )
-        self.api_root = "https://graph.microsoft.com/"
-        self.api_ver = "v1.0"
+        self.oauth_url = "https://login.windows.net/{tenantId}/oauth2/token"
+        self.api_root = "https://api.securitycenter.windows.com/"
+        self.api_ver = "api"
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
         """
@@ -58,4 +56,6 @@ class SecurityGraphDriver(OData):
             Kql ResultSet if an error.
 
         """
-        return self.query_with_results(query, body=False)[0]
+        return self.query_with_results(
+            query, body=True, api_end="/advancedqueries/run"
+        )[0]
