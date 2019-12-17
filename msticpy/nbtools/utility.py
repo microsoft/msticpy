@@ -121,8 +121,10 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
 
     Parameters
     ----------
-        nb_url_search {str} -- The URL search string
-        param {str} -- The parameter name to search for
+        nb_url_search: str
+            The URL search string
+        param: str
+            The parameter name to search for
 
     Returns
     -------
@@ -227,7 +229,7 @@ def resolve_pkg_path(part_path: str):
 # pylint: disable=not-an-iterable
 def check_and_install_missing_packages(required_packages, notebook=True, user=True):
     """
-    Check current installed packages and install missing packages from provided list of packages
+    Check current installed packages and install missing packages from provided list of packages.
 
     Parameters
     ----------
@@ -238,6 +240,7 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
         by default True
     user : bool, optional
         Boolean value to toggle user flag while installing pip packages, by default True
+
     """
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted([f"{i.key}" for i in installed_packages])

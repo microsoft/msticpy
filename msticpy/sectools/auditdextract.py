@@ -392,7 +392,7 @@ def read_from_file(
     verbose : bool, optional
         If true more progress messages are output
         (the default is False)
-    dummpy_sep : str, optional
+    dummy_sep : str, optional
         Separator to use for reading the 'csv' file
         (default is tab - '\t')
 
@@ -502,6 +502,8 @@ def generate_process_tree(  # noqa: MC0001
     branch_depth: int, optional
         The maximum depth of parent or child processes to extract from the data
         (The default is 4)
+    processes: pd.DataFrame, optional
+        Dataframe of processes to generate tree for
 
     Returns
     -------

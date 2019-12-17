@@ -1,0 +1,71 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP]
+  data_families: [MDATP]
+  tags: ['file']
+defaults:
+  metadata:
+    data_source: 'file_events'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'ProcessCreationEvents'
+      start:
+        description: Query start time
+        type: datetime
+        default: -30
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_files:
+    description: Lists all file events by filename
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where FileName has "{file_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      file_name:
+        description: Name of file
+        type: str
+  file_path:
+    description: Lists all file events from files in a certain path
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where FolderPath contains "{path}"
+        {add_query_items}'
+    parameters:
+      path:
+        description: Full or partial path to search in
+        type: str
+  list_filehash:
+    description: Lists all file events by hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where SHA1 == "{hash}" or SHA256 == "{hash}" or MD5 == "{hash}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      hash:
+        description: Hash of file
+        type: str
