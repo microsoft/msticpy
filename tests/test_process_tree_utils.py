@@ -98,9 +98,9 @@ def test_tree_utils_lx():
     assert len(ptutil.get_roots(p_tree_l)) == 29
     t_root = ptutil.get_roots(p_tree_l).iloc[0]
     full_tree = ptutil.get_descendents(p_tree_l, t_root)
-    assert len(full_tree) == 871
+    assert len(full_tree) == 901
     children = ptutil.get_children(p_tree_l, t_root)
-    assert len(children) == 436
+    assert len(children) == 452
 
     depth = full_tree["path"].str.count("/").max() + 1
     bottom_desc = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[0]

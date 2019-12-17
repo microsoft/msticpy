@@ -18,7 +18,7 @@ from .security_alert import SecurityAlert
 
 # pylint: disable=unused-import
 from .timeline import display_timeline, display_timeline_values  # noqa
-from .process_tree import build_and_show_process_tree, plot_process_tree
+from .process_tree import build_and_show_process_tree, plot_process_tree  # noqa
 
 # pylint: enable=unused-import
 from .utility import export
