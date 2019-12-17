@@ -17,6 +17,10 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+class ProcessTreeSchemaException(Exception):
+    """Custom exception for Process Tree schema."""
+
+
 @attr.s(auto_attribs=True)
 class ProcSchema:
     """Property name lookup for Process event schema."""
@@ -42,6 +46,50 @@ class ProcSchema:
     def columns(self) -> Iterable[str]:
         """Return a dictionary that maps fields to schema names."""
         return [str(val) for val in attr.asdict(self).values() if val]
+
+    @property
+    def event_type_col(self) -> str:
+        """
+        Return the column name containing the event identifier.
+
+        Returns
+        -------
+        str
+            The name of the event ID column.
+
+        Raises
+        ------
+        ProcessTreeSchemaException
+            If the schema is not known.
+
+        """
+        if self.process_name == "NewProcessName":
+            return "EventID"
+        if self.process_name == "exe":
+            return "EventType"
+        raise ProcessTreeSchemaException("Unknown schema.")
+
+    @property
+    def event_filter(self) -> Any:
+        """
+        Return the event type/ID to process for the current schema.
+
+        Returns
+        -------
+        Any
+            The value of the event ID to process.
+
+        Raises
+        ------
+        ProcessTreeSchemaException
+            If the schema is not known.
+
+        """
+        if self.process_name == "NewProcessName":
+            return 4688
+        if self.process_name == "exe":
+            return "SYSCALL_EXECVE"
+        raise ProcessTreeSchemaException("Unknown schema.")
 
 
 WIN_EVENT_SCH = ProcSchema(
@@ -76,10 +124,6 @@ LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "ui
 
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
-
-
-class ProcessTreeSchemaException(Exception):
-    """Custom exception for Process Tree schema."""
 
 
 class _Progress:
@@ -263,6 +307,10 @@ def _clean_proc_data(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFrame:
     procs_cln = (
         procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
     )
+
+    # Filter out any non-process events
+    event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
+    procs_cln = procs_cln[event_type_filter]
 
     # Change Linux int cols to force int then to string types
     type_chng_int_dict = {col: "int" for col in LX_INT_TYPES if col in procs.columns}
@@ -644,7 +692,7 @@ def get_root_tree(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Data
 
 def get_tree_depth(procs: pd.DataFrame) -> int:
     """
-    Return the depth of the process tree
+    Return the depth of the process tree.
 
     Parameters
     ----------
@@ -657,7 +705,7 @@ def get_tree_depth(procs: pd.DataFrame) -> int:
         Tree depth
 
     """
-    return procs(procs["path"].str.count("/").max()) + 1
+    return procs["path"].str.count("/").max() + 1
 
 
 def get_children(
