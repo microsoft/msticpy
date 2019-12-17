@@ -1,0 +1,94 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP]
+  data_families: [MDATP]
+  tags: ['alert']
+defaults:
+  metadata:
+    data_source: 'security_alert'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'AlertEvents'
+      start:
+        description: Query start time
+        type: datetime
+        default: -30
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        {add_query_items}'
+      uri: None
+    parameters:
+  host_alerts:
+    description: Lists alerts by for a specified hostname
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where ComputerName has "{host_name}"
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+  ip_alerts:
+    description: Lists alerts associated with a specified remote IP
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where RemoteIP has "{ip_address}"
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: Remote IP Address
+        type: str
+  url_alerts:
+    description: Lists alerts associated with a specified URL
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where RemoteUrl has "{url}"
+        {add_query_items}'
+    parameters:
+      url:
+        description: Remote URL
+        type: str
+  sha1_alerts:
+    description: Lists alerts associated with a specified SHA1 hash
+    metadata:
+    args:
+      query: '
+        {table}
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where SHA1 has "{sha1}"
+        {add_query_items}'
+    parameters:
+      sha1:
+        description: SHA1 hash
+        type: str
