@@ -232,12 +232,17 @@ class QuerySource:
                         param_value
                     )
                 else:
-                    tm_delta = self._parse_timedelta(str(param_value))
-                    param_dict[p_name] = datetime.utcnow() + tm_delta
+                    # If the param appears to be ISO datetime format transform to datetime object
+                    try:
+                        param_dict[p_name] = datetime.strptime(
+                            param_value, "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                    except ValueError:
+                        tm_delta = self._parse_timedelta(str(param_value))
+                        param_dict[p_name] = datetime.utcnow() + tm_delta
 
             if settings["type"] == "list":
                 param_dict[p_name] = self._parse_param_list(param_value)
-
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)
             if fmt_template:
