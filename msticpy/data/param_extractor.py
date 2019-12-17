@@ -24,8 +24,8 @@ def extract_query_params(
 
     Parameters
     ----------
-    query_params : List[str]
-        Query parameters
+    query_source : QuerySource
+        Query source
     args : Tuple[QueryParamProvider]
         objects that implement QueryParamProvider
         (from which query parameters can be extracted).
