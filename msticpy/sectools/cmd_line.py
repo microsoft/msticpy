@@ -122,7 +122,7 @@ def cmd_speed(
 
     Parameters
     ----------
-    events: pd.DataFrame
+    cmd_events: pd.DataFrame
         A DataFrame of all sudo events to check.
     cmd_field: str
         The column of the event data that contains command line activity
