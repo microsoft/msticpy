@@ -48,6 +48,8 @@ class FoliumMap:
             Map display width (the default is '100%')
         height : str, optional
             Map display height (the default is '100%')
+        location : list, optional
+            Location to center map on
 
         Attributes
         ----------
@@ -149,6 +151,7 @@ def get_map_center(ip_entities: list):
     Parameters
     ----------
     ip_entities: list
+        A list of ip entities to get a center point from
 
     Returns
     -------
