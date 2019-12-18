@@ -1080,3 +1080,91 @@ class SelectSubset:
     def _on_btn_del_all(self, button):
         del button
         self._select_list.options = []
+
+
+@export
+class Progress:
+    """UI Progress bar."""
+
+    def __init__(self, completed_len: int, visible: bool = True):
+        """
+        Instantiate new _Progress UI.
+
+        Parameters
+        ----------
+        completed_len : int
+            The expected value that indicates 100% done.
+        visible : bool
+            If True start the progress UI visible, by default True.
+
+        """
+        self._completed = 0
+        self._total = completed_len
+        self._progress = widgets.IntProgress(
+            value=0,
+            max=100,
+            step=1,
+            description="Progress:",
+            bar_style="info",
+            orientation="horizontal",
+        )
+        self._done_label = widgets.Label(value="0%")
+        self._progress.visible = visible
+        self._done_label.visible = visible
+        display(widgets.HBox([self._progress, self._done_label]))
+
+    @property
+    def value(self) -> int:
+        """
+        Return the current progress value.
+
+        Returns
+        -------
+        int
+            Progess value
+
+        """
+        return self._completed
+
+    @property
+    def max(self) -> int:
+        """
+        Return the current progress maximum value.
+
+        Returns
+        -------
+        int
+            Max value
+
+        """
+        return self._total
+
+    def update_progress(self, new_total: int = 0, delta: int = 0):
+        """
+        Update progress UI by increment or new total.
+
+        Parameters
+        ----------
+        new_total : int, optional
+            New total, by default 0
+        delta : int, optional
+            Increment to update current total, by default 0
+
+        """
+        if new_total:
+            self._completed = new_total
+        else:
+            self._completed += delta
+        perc_total = int(100 * self._completed / self._total)
+        self._progress.value = perc_total
+        self._done_label.value = f"{perc_total}%"
+
+    def show(self):
+        """Make the controls visible."""
+        self._progress.visible = True
+        self._done_label.visible = True
+
+    def hide(self):
+        """Hide the controls."""
+        self._progress.visible = True
+        self._done_label.visible = True

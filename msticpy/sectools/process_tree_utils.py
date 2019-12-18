@@ -6,18 +6,18 @@
 """Process Tree Visualization."""
 from typing import Optional, Dict, Iterable, Union, Any
 
-import ipywidgets as wgt
-from IPython.display import display
 import attr
 import pandas as pd
 
+from ..nbtools.nbwidgets import Progress
+from ..nbtools.utility import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-class ProcessTreeSchemaException(Exception):
+class ProcessTreeSchemaException(MsticpyException):
     """Custom exception for Process Tree schema."""
 
 
@@ -126,91 +126,6 @@ LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "ui
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
 
-class _Progress:
-    """UI Progress bar."""
-
-    def __init__(self, completed_len: int, visible: bool = True):
-        """
-        Instantiate new _Progress UI.
-
-        Parameters
-        ----------
-        completed_len : int
-            The expected value that indicates 100% done.
-
-        """
-        self._completed = 0
-        self._total = completed_len
-        self._progress = wgt.IntProgress(
-            value=0,
-            max=100,
-            step=1,
-            description="Progress:",
-            bar_style="info",
-            orientation="horizontal",
-        )
-        self._done_label = wgt.Label(value="0%")
-        self._progress.visible = visible
-        self._done_label.visible = visible
-        display(wgt.HBox([self._progress, self._done_label]))
-
-    @property
-    def value(self) -> int:
-        """
-        Return the current progress value.
-
-        Returns
-        -------
-        int
-            Progess value
-
-        """
-        return self._completed
-
-    @property
-    def max(self) -> int:
-        """
-        Return the current progress maximum value.
-
-        Returns
-        -------
-        int
-            Max value
-
-        """
-        return self._total
-
-    def update_progress(self, new_total: int = 0, delta: int = 0):
-        """
-        Update progress UI by increment or new total.
-
-        Parameters
-        ----------
-        new_total : int, optional
-            New total, by default 0
-        delta : int, optional
-            Increment to update current total, by default 0
-
-        """
-        if new_total:
-            self._completed = new_total
-        else:
-            self._completed += delta
-        perc_total = int(100 * self._completed / self._total)
-        self._progress.value = perc_total
-        self._done_label.value = f"{perc_total}%"
-
-    def show(self):
-        """Make the controls visible."""
-        self._progress.visible = True
-        self._done_label.visible = True
-
-    def hide(self):
-        """Hide the controls."""
-        self._progress.visible = True
-        self._done_label.visible = True
-
-
 def build_process_tree(
     procs: pd.DataFrame,
     schema: ProcSchema = None,
@@ -246,7 +161,7 @@ def build_process_tree(
 
     data_len = len(procs)
     section_len = int(data_len / 4)
-    progress_ui = _Progress(completed_len=data_len * 2, visible=show_progress)
+    progress_ui = Progress(completed_len=data_len * 2, visible=show_progress)
 
     # Clean data
     procs_cln = _clean_proc_data(procs, schema)
@@ -284,7 +199,7 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
 
     Parameters
     ----------
-    procs : pd.DataFrame
+    procs : Union[pd.DataFrame, pd.Series]
         Data set to test
 
     Returns
@@ -480,7 +395,7 @@ def _assign_proc_keys(
     return proc_tree
 
 
-def _build_proc_tree(input_tree, progress: _Progress, max_depth=-1):
+def _build_proc_tree(input_tree, progress: Progress, max_depth=-1):
     """Build process tree paths."""
     # set default path == current process ID
     input_tree["path"] = input_tree["source_index"]
