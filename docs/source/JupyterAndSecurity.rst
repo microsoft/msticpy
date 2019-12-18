@@ -77,7 +77,7 @@ to encode your logic in a single (possibly complex) statement, while
 Being able to use procedural code lets you:
 
 - See and debug intermediate results.
-- Add functionality (such as decoding fields, parsing data) that 
+- Add functionality (such as decoding fields, parsing data) that
   may not be available in the query language.
 - Re-use partial results in later processing steps.
 
@@ -99,7 +99,7 @@ Any data that is accessible over your network or from a file can be
 linked with Azure Sentinel data via Python and Jupyter.
 
 Access to Sophisticated Data Processing, Machine Learning and Visualization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Azure Sentinel and the Kusto/Log Analytics data store underlying it have
 a lot of options for visualization and advanced data processing (even
