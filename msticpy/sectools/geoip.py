@@ -320,6 +320,9 @@ class GeoLiteLookup(GeoIpLookup):
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated.
+        auto_update: bool, optional
+            Auto update can be set to true or false. depending on it,
+            new download request will be initiated if age criteria is matched.
 
         """
         if db_folder is None:
