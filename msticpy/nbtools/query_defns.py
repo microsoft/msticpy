@@ -36,6 +36,7 @@ class DataFamily(Enum):
     SecurityGraphAlert = 4
     LinuxSyslog = 5
     AzureNetwork = 6
+    MDATP = 7
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
@@ -83,6 +84,7 @@ class DataEnvironment(Enum):
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
+    MDATP = 5
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

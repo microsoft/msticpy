@@ -1,0 +1,80 @@
+metadata:
+  version: 1
+  description: MDATP Queries
+  data_environments: [MDATP]
+  data_families: [MDATP]
+  tags: ['user']
+defaults:
+  metadata:
+    data_source: 'user_events'
+  parameters:
+      start:
+        description: Query start time
+        type: datetime
+        default: -30
+      end:
+        description: Query end time
+        type: datetime
+        default: 0
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  user_logons:
+    description: Lists all user logons by user
+    metadata:
+    args:
+      query: '
+        LogonEvents
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where AccountName has "{account_name}"
+        {add_query_items}'
+      uri: None
+    parameters:
+      account_name:
+        description: Name of user
+        type: str
+  user_processes:
+    description: Lists all processes created by a user
+    metadata:
+    args:
+      query: '
+        ProcessCreationEvents
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where AccountName has "{account_name}"
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: Name of user
+        type: str
+  user_files:
+    description: Lists all files created by a user
+    metadata:
+    args:
+      query: '
+        FileCreationEvents
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where InitiatingProcessAccountName contains "{account_name}"
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: Name of user
+        type: str
+  user_network:
+    description: Lists all network connections associated with a user
+    metadata:
+    args:
+      query: '
+        NetworkCommunicationEvents
+        | where EventTime >= datetime({start})
+        | where EventTime <= datetime({end})
+        | where InitiatingProcessAccountName contains "{account_name}"
+        {add_query_items}'
+    parameters:
+      account_name:
+        description: Name of user
+        type: str

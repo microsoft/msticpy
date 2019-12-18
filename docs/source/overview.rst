@@ -13,9 +13,10 @@ It is organized into three main sub-packages:
 -  sectools - python security tools to help with data analysis or
    investigation
 -  nbtools - Jupyter-specific UI tools such as widgets and data display
--  data - data interfaces specific to Sentinel/Log Analytics
+-  data - data layer and pre-defined queries for Azure Sentinel, MDATP and
+   other data sources.
 
-The package is in an early preview mode so there are likely to be bugs
+The package is in an early iteration so there are likely to be bugs
 and there are several parts that are not yet optimized for performance. We
 welcome feedback, bug reports and suggestions for new features.
 
@@ -192,7 +193,7 @@ domain_utils
 
 :py:mod:`msticpy.sectools.domain_utils`
 
-Module to support investigation of domain names and URLs with functions to 
+Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.
 
 Notebook tools sub-package - *nbtools*

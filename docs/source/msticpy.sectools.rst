@@ -60,6 +60,14 @@ msticpy.sectools.outliers module
     :undoc-members:
     :show-inheritance:
 
+msticpy.sectools.process_tree_utils module
+------------------------------------------
+
+.. automodule:: msticpy.sectools.process_tree_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.sectools.syslog_utils module
 ------------------------------------
 
