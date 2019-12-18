@@ -112,7 +112,7 @@ def plot_process_tree(
     legend_col : str, optional
         The column used to color the tree items, by default None
     show_table: bool
-        Set to False to hide the data table, by default True.
+        Set to True to show a data table, by default False.
 
     Raises
     ------
@@ -159,7 +159,7 @@ def plot_process_tree(
     # dodge to align rectangle with grid
     rect_x = dodge("Level", 1.75, range=b_plot.x_range)
     rect_plot_params = dict(
-        width=3.5, height=0.95, source=source, fill_alpha=0.6, fill_color=fill_map
+        width=3.5, height=0.95, source=source, fill_alpha=0.4, fill_color=fill_map
     )
 
     if color_bar:
@@ -361,7 +361,10 @@ def _create_vert_range_tool(
 ):
     """Return vertical range too for plot."""
     rng_select = figure(
-        plot_width=width, plot_height=height, y_range=(min_y - 1, max_y + 1)
+        plot_width=width,
+        plot_height=height,
+        y_range=(min_y - 1, max_y + 1),
+        toolbar_location=None,
     )
 
     x_dodge = dodge(x_col, -0.5)
