@@ -40,17 +40,12 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | where Computer has "{host_name}"
-        // extract the message parts from the RawData field
         | extend mssg_parts = extract_all(@"type=(?P<type>[^\s]+)\s+msg=audit\((?P<mssg_id>[^)]+)\):\s+(?P<mssg>[^\r]+)\r?",
-          dynamic([\"type\", \"mssg_id\", \"mssg\"]), RawData)
+          dynamic(["type", "mssg_id", "mssg"]), RawData)
         | extend mssg_type = tostring(mssg_parts[0][0]), mssg_id = tostring(mssg_parts[0][1])
         | project TenantId, TimeGenerated, Computer, mssg_type, mssg_id, mssg_parts
-        // extract message fields as a list
         | extend mssg_content = split(mssg_parts[0][2], " ")
-        // re-assembly message type and message fields as a dictionary
         | extend typed_mssg = pack(mssg_type, mssg_content)
-        // group by standard fields plus mssg_id - so all parts of a message are
-        // are in a list of dicts - one list element for each message type
         | summarize AuditdMessage = makelist(typed_mssg) by TenantId, TimeGenerated, Computer, mssg_id
         {add_query_items}'
     parameters:
