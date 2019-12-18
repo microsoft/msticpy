@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from abc import ABC
+from typing import Optional
 
 import attr
 import pandas as pd
@@ -15,13 +16,14 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.common.exceptions import CloudError
 
 from ..nbtools import pkg_config as config
+from ..nbtools.utility import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
 # attr class doesn't need a method
 @attr.s
 class Items:
@@ -40,7 +42,11 @@ class Items:
     identity = attr.ib()
 
 
-# pylint: enable=too-few-public-methods
+class MsticpyAzureException(MsticpyException):
+    """Exception class for AzureData."""
+
+
+# pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
 class AzureData(ABC):
@@ -49,16 +55,21 @@ class AzureData(ABC):
     def __init__(self, connect: bool = False):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
-        self.credentials = None
-        self.sub_client = None
-        self.resource_client = None
+        self.credentials: Optional[ServicePrincipalCredentials] = None
+        self.sub_client: Optional[SubscriptionClient] = None
+        self.resource_client: Optional[ResourceManagementClient] = None
         if connect is True:
             self.connect()
 
     def connect(self, client_id: str = None, tenant_id: str = None, secret: str = None):
         """Authenticate with the SDK."""
         if client_id is None and tenant_id is None and secret is None:
-            config_items = config.settings.get("AzureCLI")["Args"]
+            az_cli_config = config.settings.get("AzureCLI")
+            if not az_cli_config:
+                raise MsticpyAzureException(
+                    "No AzureCLI configuration found in configuration settings."
+                )
+            config_items = az_cli_config["Args"]
             client_id = config_items["clientId"]
             tenant_id = config_items["tenantId"]
             secret = config_items["clientSecret"]
@@ -66,18 +77,22 @@ class AzureData(ABC):
         self.credentials = ServicePrincipalCredentials(
             client_id=client_id, secret=secret, tenant=tenant_id
         )
+        if not self.credentials:
+            raise CloudError("Could not obtain credentials.")
         self.sub_client = SubscriptionClient(self.credentials)
+        if not self.sub_client:
+            raise CloudError("Could not create a Subscription client.")
         self.connected = True
 
     def get_subscriptions(self) -> pd.DataFrame:
         """Get details of all subscriptions within the tenant."""
         if self.connected is False:
-            raise Exception("Please connect before continuing")
+            raise MsticpyAzureException("Please connect before continuing")
 
         subscription_ids = []
         display_names = []
         states = []
-        for item in self.sub_client.subscriptions.list():
+        for item in self.sub_client.subscriptions.list():  # type: ignore
             subscription_ids.append(item.subscription_id)
             display_names.append(item.display_name)
             states.append(str(item.state))
@@ -105,7 +120,7 @@ class AzureData(ABC):
         if self.connected is False:
             raise Exception("Please connect before continuing")
 
-        sub = self.sub_client.subscriptions.get(sub_id)
+        sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
         sub_details = {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
@@ -143,6 +158,8 @@ class AzureData(ABC):
             raise Exception("Please connect before continuing")
 
         self.resource_client = ResourceManagementClient(self.credentials, sub_id)
+        if not self.resource_client:
+            raise CloudError("Could not create a ResourceManagementClient.")
         if rgroup is None:
             resources = self.resource_client.resources.list()
         else:
@@ -214,27 +231,31 @@ class AzureData(ABC):
 
         """
         if self.connected is False:
-            raise Exception("Please connect before continuing")
+            raise MsticpyAzureException("Please connect before continuing")
 
         if self.resource_client is None:
             self.resource_client = ResourceManagementClient(self.credentials, sub_id)
-
-        if resource_id is None and resource_details is None:
-            raise Exception("Please provide either a resource ID or resource details")
+            if not self.resource_client:
+                raise CloudError("Could not create a ResourceManagementClient.")
 
         if resource_id is not None:
             resource = self.resource_client.resources.get_by_id(
                 resource_id, self.get_api(resource_id)
             )
-        else:
+        elif resource_details is not None:
             resource = self.resource_client.resources.get(
                 resource_details["resource_group_name"],
                 resource_details["resource_provider_namespace"],
                 resource_details["parent_resource_path"],
                 resource_details["resource_type"],
                 resource_details["resource_name"],
-                self.get_api(resource_id),
+                self.get_api(
+                    resource_id
+                ),  # TODO - this is suspicious since resource_id
+                # would have been None in the previous else clause.
             )
+        else:
+            raise Exception("Please provide either a resource ID or resource details")
 
         resource_details = attr.asdict(
             Items(
@@ -276,7 +297,8 @@ class AzureData(ABC):
 
         if self.resource_client is None:
             self.resource_client = ResourceManagementClient(self.credentials, sub_id)
-
+            if not self.resource_client:
+                raise CloudError("Could not create a ResourceManagementClient.")
         provider = self.resource_client.providers.get(resource_id.split("/")[6])
         resource_types = next(
             (
@@ -295,6 +317,6 @@ class AzureData(ABC):
             else:
                 api_ver = api_version[0]
         else:
-            raise Exception("Resource provider not found")
+            raise MsticpyAzureException("Resource provider not found")
 
         return str(api_ver)

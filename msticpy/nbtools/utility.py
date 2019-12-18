@@ -128,6 +128,7 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
 
     Returns
     -------
+    Optional[str]
         value of the query string parameter or None if not found.
 
     """
@@ -322,3 +323,7 @@ _F_STYLES = {
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
 }
+
+
+class MsticpyException(Exception):
+    """Default exception class for msticpy."""
