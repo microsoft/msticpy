@@ -44,7 +44,7 @@ class ProcSchema:
 
     @property
     def columns(self) -> Iterable[str]:
-        """Return a dictionary that maps fields to schema names."""
+        """Return an interable of target column names."""
         return [str(val) for val in attr.asdict(self).values() if val]
 
     @property
@@ -199,7 +199,7 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
 
     Parameters
     ----------
-    procs : Union[pd.DataFrame, pd.Series]
+    data : Union[pd.DataFrame, pd.Series]
         Data set to test
 
     Returns
