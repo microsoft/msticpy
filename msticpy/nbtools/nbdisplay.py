@@ -18,6 +18,7 @@ from .security_alert import SecurityAlert
 
 # pylint: disable=unused-import
 from .timeline import display_timeline, display_timeline_values  # noqa
+from .process_tree import build_and_show_process_tree, plot_process_tree  # noqa
 
 # pylint: enable=unused-import
 from .utility import export
@@ -67,134 +68,6 @@ def display_alert(
         raise ValueError("Unrecognized alert object type " + str(type(alert)))
 
 
-def _print_process(process_row: pd.Series, fmt: str = "html") -> str:
-    """
-    Format individual process item as text or html.
-
-    Parameters
-    ----------
-    process_row : pd.Series
-        Process series
-    fmt : str, optional
-        Format ('txt' or 'html')
-        (the default is ' html')
-
-    Returns
-    -------
-    str
-        Formatted process summary.
-
-    """
-    if process_row.NodeRole == "parent":
-        if process_row.Level > 1:
-            level = 0
-        else:
-            level = 1
-    elif process_row.NodeRole == "source":
-        level = 2
-    elif process_row.NodeRole == "child":
-        level = 3 + process_row.Level
-    else:
-        level = 2
-
-    px_spaces = 20 * level * 2
-    txt_spaces = " " * (4 * int(level))
-
-    font_col = "red" if process_row.NodeRole == "source" else "inherit"
-
-    if fmt.lower() == "html":
-        l1_span = f'<span style="color:{font_col};font-size:90%">'
-        line1_w_tmplt = (
-            l1_span
-            + "[{NodeRole}:lev{Level}] {TimeGenerated} "
-            + "<b>{NewProcessName}</b> "
-            + "[PID: {NewProcessId}, "
-            + "SubjSess:{SubjectLogonId}, "
-            + "TargSess:{TargetLogonId}]"
-        )
-        line2_w_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]</span>' ""
-        output_tmplt = (
-            f'<div style="margin-left:{px_spaces}px">' + f"{{line1}}<br>{{line2}}</div>"
-        )
-        line1_lx_tmplt = (
-            l1_span
-            + "[{NodeRole}:lev{Level}] {TimeGenerated} "
-            + "<b>{NewProcessName}</b> "
-            + "[PID: {NewProcessId}, "
-            + "PPID: {ProcessId}]"
-        )
-        line2_lx_tmplt = '(Cmdline: "{CommandLine}") [Path: {cwd}]</span>' ""
-        output_tmplt = (
-            f'<div style="margin-left:{px_spaces}px">' + f"{{line1}}<br>{{line2}}</div>"
-        )
-    else:
-        line1_w_tmplt = (
-            "[{NodeRole}:lev{Level}] {TimeGenerated} "
-            + "{NewProcessName} "
-            + "[PID: {NewProcessId}, "
-            + "SubjSess:{SubjectLogonId}, "
-            + "TargSess:{TargetLogonId}]"
-        )
-        line2_w_tmplt = '(Cmdline: "{CommandLine}") [Account: {Account}]'
-        line1_lx_tmplt = (
-            "[{NodeRole}:lev{Level}] {TimeGenerated} "
-            + "{NewProcessName} "
-            + "[PID: {NewProcessId}, "
-            + "PPID: {ProcessId}]"
-        )
-        line2_lx_tmplt = '(Cmdline: "{CommandLine}") [Path: {cwd}]'
-        output_tmplt = f"\n{txt_spaces}{{line1}}\n{txt_spaces}{{line2}}"
-    rows = process_row.to_dict()
-    if "TargetLogonId" in rows:
-        line1 = line1_w_tmplt.format(**(rows))
-        line2 = line2_w_tmplt.format(**(rows))
-    else:
-        line1 = line1_lx_tmplt.format(**(rows))
-        line2 = line2_lx_tmplt.format(**(rows))
-
-    return output_tmplt.format(line1=line1, line2=line2)
-
-
-def format_process_tree(process_tree: pd.DataFrame, fmt: str = "html"):
-    """
-    Display process tree data frame.
-
-    Parameters
-    ----------
-    process_tree : pd.DataFrame
-        Process tree DataFrame
-    fmt : str, optional
-        Format ('txt' or 'html')
-        (the default is ' html')
-
-    Returns
-    -------
-    str
-        Formatted process tree.
-
-    The display module expects the columns NodeRole and Level to
-    be populated. NoteRole is one of: 'source', 'parent', 'child'
-    or 'sibling'. Level indicates the 'hop' distance from the 'source'
-    node.
-
-    """
-    if "TimeCreatedUtc" in process_tree.index:
-        tree = process_tree.sort_values(by=["TimeCreatedUtc"], ascending=True)
-    else:
-        tree = process_tree.sort_values(by=["TimeGenerated"], ascending=True)
-
-    if fmt.lower() == "html":
-        out_string = "<h3>Process tree:</h3>"
-    else:
-        out_string = "Process tree:"
-        out_string = out_string + "\n" + "_" * len(out_string)
-
-    for _, line in tree.iterrows():
-        out_string += _print_process(line, fmt)
-
-    return out_string
-
-
 @export
 def display_process_tree(process_tree: pd.DataFrame):
     """
@@ -211,7 +84,7 @@ def display_process_tree(process_tree: pd.DataFrame):
     node.
 
     """
-    display(HTML(format_process_tree(process_tree)))
+    build_and_show_process_tree(process_tree)
 
 
 @export
