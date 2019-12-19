@@ -250,9 +250,12 @@ class AzureData(ABC):
                 resource_details["resource_type"],
                 resource_details["resource_name"],
                 self.get_api(
-                    resource_id
-                ),  # TODO - this is suspicious since resource_id
-                # would have been None in the previous else clause.
+                    resource_provider=(
+                        resource_details["resource_provider_namespace"]
+                        + "/"
+                        + resource_details["resource_type"]
+                    )
+                ),
             )
         else:
             raise Exception("Please provide either a resource ID or resource details")
@@ -275,16 +278,20 @@ class AzureData(ABC):
 
         return resource_details
 
-    def get_api(self, resource_id: str, sub_id: str = None) -> str:
+    def get_api(
+        self, resource_id: str = None, sub_id: str = None, resource_provider: str = None
+    ) -> str:
         """
         Return the latest avaliable API version for the resource.
 
         Parameters
         ----------
-        resource_id: str
+        resource_id: str, optional
             The ID of the resources to get an API version for
-        sub_id: str
+        sub_id: str, optional
             The ID of the subscription to get details from
+        resource_provider: str, optional
+            The resource provider namespace and service to get an API version for
 
         Returns
         -------
@@ -299,14 +306,21 @@ class AzureData(ABC):
             self.resource_client = ResourceManagementClient(self.credentials, sub_id)
             if not self.resource_client:
                 raise CloudError("Could not create a ResourceManagementClient.")
-        provider = self.resource_client.providers.get(resource_id.split("/")[6])
+
+        if resource_id is not None:
+            namespace = resource_id.split("/")[6]
+            service = resource_id.split("/")[7]
+        elif resource_provider is not None:
+            namespace = resource_provider.split("/")[0]
+            service = resource_provider.split("/")[1]
+        else:
+            raise ValueError(
+                "Please provide an resource ID or resource provider namespace"
+            )
+
+        provider = self.resource_client.providers.get(namespace)
         resource_types = next(
-            (
-                t
-                for t in provider.resource_types
-                if t.resource_type == resource_id.split("/")[7]
-            ),
-            None,
+            (t for t in provider.resource_types if t.resource_type == service), None
         )
         if resource_types:
             api_version = [
