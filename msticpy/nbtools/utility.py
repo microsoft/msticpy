@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import re
-import subprocess
+import subprocess  # nosec
 import sys
 import warnings
 from pathlib import Path
@@ -128,6 +128,7 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
 
     Returns
     -------
+    Optional[str]
         value of the query string parameter or None if not found.
 
     """
@@ -229,17 +230,19 @@ def resolve_pkg_path(part_path: str):
 # pylint: disable=not-an-iterable
 def check_and_install_missing_packages(required_packages, notebook=True, user=True):
     """
-    Check current installed packages and install missing packages from provided list of packages.
+    Check and install missing packages from provided list of packages.
 
     Parameters
     ----------
     required_packages : [list]
         List of packages to check and install in a current environment
     notebook : bool, optional
-        Boolean value to toggle notebook view and console view to display correct progress bar,
+        Boolean value to toggle notebook view and console view to
+        display correct progress bar,
         by default True
     user : bool, optional
-        Boolean value to toggle user flag while installing pip packages, by default True
+        Boolean value to toggle user flag while installing pip packages,
+        by default True
 
     """
     installed_packages = pkg_resources.working_set
@@ -258,9 +261,11 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
         try:
             for package in pkgbar:
                 if user:
-                    retcode = subprocess.call(["pip", "install", "--user", package])
+                    retcode = subprocess.call(  # nosec
+                        ["pip", "install", "--user", package]
+                    )
                 else:
-                    retcode = subprocess.call(["pip", "install", package])
+                    retcode = subprocess.call(["pip", "install", package])  # nosec
                 if retcode > 0:
                     print(f"An Error has occured while installing {package}")
                 else:
@@ -318,3 +323,7 @@ _F_STYLES = {
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
 }
+
+
+class MsticpyException(Exception):
+    """Default exception class for msticpy."""

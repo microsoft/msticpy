@@ -16,3 +16,7 @@ Other Documents
 
     msticpyconfig.rst
 
+    DataQueries
+
+    ProcessTree
+

@@ -802,11 +802,11 @@ def get_hashes(binary: bytes) -> Mapping[str, str]:
     hash_dict = dict()
     for hash_type in ["md5", "sha1", "sha256"]:
         if hash_type == "md5":
-            hash_alg = hashlib.md5()
+            hash_alg = hashlib.md5()  # nosec
         elif hash_type == "sha256":
             hash_alg = hashlib.sha256()
         elif hash_type == "sha1":
-            hash_alg = hashlib.sha1()
+            hash_alg = hashlib.sha1()  # nosec
         hash_alg.update(binary)
         hash_dict[hash_type] = hash_alg.hexdigest()
     return hash_dict

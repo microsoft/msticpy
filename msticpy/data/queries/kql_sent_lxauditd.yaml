@@ -1,0 +1,51 @@
+metadata:
+  version: 1
+  description: Linux Auditd Queries
+  data_environments: [LogAnalytics]
+  data_families: [LinuxAudit]
+  tags: ['linux', 'audit', "auditd"]
+defaults:
+  metadata:
+    data_source: 'linux_auditd'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'AuditLog_CL'
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: 'true'
+      host_name:
+        description: Hostname to query for
+        type: str
+        default: ''
+sources:
+  auditd_all:
+    description: Extract all audit messages grouped by mssg_id
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        | extend mssg_parts = extract_all(@"type=(?P<type>[^\s]+)\s+msg=audit\((?P<mssg_id>[^)]+)\):\s+(?P<mssg>[^\r]+)\r?",
+          dynamic(["type", "mssg_id", "mssg"]), RawData)
+        | extend mssg_type = tostring(mssg_parts[0][0]), mssg_id = tostring(mssg_parts[0][1])
+        | project TenantId, TimeGenerated, Computer, mssg_type, mssg_id, mssg_parts
+        | extend mssg_content = split(mssg_parts[0][2], " ")
+        | extend typed_mssg = pack(mssg_type, mssg_content)
+        | summarize AuditdMessage = makelist(typed_mssg) by TenantId, TimeGenerated, Computer, mssg_id
+        {add_query_items}'
+    parameters:
