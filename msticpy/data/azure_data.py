@@ -6,13 +6,17 @@
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from abc import ABC
 from typing import Optional
+import datetime
 
 import attr
 import pandas as pd
+import numpy as np
 
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.network import NetworkManagementClient
+from azure.mgmt.monitor import MonitorManagementClient
 from azure.common.exceptions import CloudError
 
 from ..nbtools import pkg_config as config
@@ -58,6 +62,8 @@ class AzureData(ABC):
         self.credentials: Optional[ServicePrincipalCredentials] = None
         self.sub_client: Optional[SubscriptionClient] = None
         self.resource_client: Optional[ResourceManagementClient] = None
+        self.network_client: Optional[NetworkManagementClient] = None
+        self.monitoring_client: Optional[MonitorManagementClient] = None
         if connect is True:
             self.connect()
 
@@ -118,7 +124,7 @@ class AzureData(ABC):
 
         """
         if self.connected is False:
-            raise Exception("Please connect before continuing")
+            raise MsticpyAzureException("Please connect before continuing")
 
         sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
         sub_details = {
@@ -155,7 +161,7 @@ class AzureData(ABC):
 
         """
         if self.connected is False:
-            raise Exception("Please connect before continuing")
+            raise MsticpyAzureException("Please connect before continuing")
 
         self.resource_client = ResourceManagementClient(self.credentials, sub_id)
         if not self.resource_client:
@@ -258,7 +264,7 @@ class AzureData(ABC):
                 ),
             )
         else:
-            raise Exception("Please provide either a resource ID or resource details")
+            raise ValueError("Please provide either a resource ID or resource details")
 
         resource_details = attr.asdict(
             Items(
@@ -300,7 +306,7 @@ class AzureData(ABC):
 
         """
         if self.connected is False:
-            raise Exception("Please connect before continuing")
+            raise MsticpyAzureException("Please connect before continuing")
 
         if self.resource_client is None:
             self.resource_client = ResourceManagementClient(self.credentials, sub_id)
@@ -334,3 +340,144 @@ class AzureData(ABC):
             raise MsticpyAzureException("Resource provider not found")
 
         return str(api_ver)
+
+    def get_network_details(self, network_id: str, sub_id: str) -> dict:
+        """
+        Return details related to an Azure network interface.
+
+        Parameters
+        ----------
+        network_id: str
+            The ID of the network interface to return details on
+        sub_id: str
+            The subscription ID that the network interface is part of
+
+        Returns
+        -------
+        details: dict
+            A dictionary of items related to the network interface
+        """
+        if self.connected is False:
+            raise MsticpyAzureException("Please connect before continuing")
+
+        if self.network_client is None:
+            self.network_client = NetworkManagementClient(self.credentials, sub_id)
+            if not self.network_client:
+                raise CloudError("Could not create a NetworkManagementClient.")
+
+        details = self.network_client.network_interfaces.get(
+            network_id.split("/")[4], network_id.split("/")[8]
+        )
+        return details
+
+    def get_cpu_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
+        """
+        Return CPU monitoring details for an Azure resource
+
+        Parameters
+        ----------
+        resource_id: str
+            The ID of the Azure resource to return details on
+        sub_id: str
+            The subscription ID that the network interface is part of
+
+        Returns
+        -------
+        details: pd.DataFrame
+            A DataFrame of CPU metrics
+
+        """
+        if self.connected is False:
+            raise MsticpyAzureException("Please connect before continuing")
+
+        if self.monitoring_client is None:
+            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+            if not self.monitoring_client:
+                raise CloudError("Could not create a MonitorManagementClient.")
+
+        start = datetime.datetime.now().date()
+        end = start - datetime.timedelta(days=30)
+        self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+        mon_details = self.monitoring_client.metrics.list(
+            resource_id,
+            timespan=f"{end}/{start}",
+            interval="PT1H",
+            metricnames="Percentage CPU",
+            aggregation="Total",
+        )
+        times = []
+        datas = []
+        for mon_detail in mon_details.value:
+            for time in mon_detail.timeseries:
+                for data in time.data:
+                    times.append(data.time_stamp)
+                    datas.append(data.total)
+
+        details = pd.DataFrame({"Time": times, "CPU Usage": datas})
+        details.replace(np.nan, 0, inplace=True)
+        return details
+
+    def get_network_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
+        """
+        Return network monitoring details for an Azure resource
+
+        Parameters
+        ----------
+        resource_id: str
+            The ID of the Azure resource to return details on
+        sub_id: str
+            The subscription ID that the network interface is part of
+
+        Returns
+        -------
+        details: dict
+            A DataFrame of network metrics
+
+        """
+        if self.connected is False:
+            raise MsticpyAzureException("Please connect before continuing")
+
+        if self.monitoring_client is None:
+            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+            if not self.monitoring_client:
+                raise CloudError("Could not create a MonitorManagementClient.")
+
+        start = datetime.datetime.now().date()
+        end = start - datetime.timedelta(days=30)
+
+        net_mon = self.monitoring_client.metrics.list(
+            resource_id,
+            timespan=f"{end}/{start}",
+            interval="PT1H",
+            metricnames="Network In,Network Out",
+            aggregation="Total",
+        )
+        # Extract the Network timeseries data
+        times = []
+        network_in = []
+        network_out = []
+        for net in net_mon.value:
+            if net.name.value == "Network In":
+                for time in net.timeseries:
+                    for data in time.data:
+                        times.append(data.time_stamp)
+                        network_in.append(data.total)
+            elif net.name.value == "Network Out":
+                for time in net.timeseries:
+                    for data in time.data:
+                        network_out.append(data.total)
+
+        # Build dataframe and transform it into a grouped set
+        details = pd.DataFrame(
+            {"Time": times, "Network In": network_in, "Network Out": network_out}
+        )
+        in_details = details[["Time", "Network In"]]
+        in_details["Value"] = "Network In"
+        in_details.rename(columns={"Network In": "Data"}, inplace=True)
+        out_details = details[["Time", "Network Out"]]
+        out_details["Value"] = "Network Out"
+        out_details.rename(columns={"Network Out": "Data"}, inplace=True)
+        details = pd.concat([in_details, out_details])
+        details.replace(np.nan, 0, inplace=True)
+
+        return details
