@@ -56,7 +56,8 @@ def build_and_show_process_tree(
     ----------
     data : pd.DataFrame
         Window process creation or Linux Auditd events
-    The data schema to use for the data set, by default None
+    schema : ProcSchema
+        The data schema to use for the data set, by default None
         (if None the schema is inferred)
     output_var : str, optional
         Output variable for selected items in the tree,
