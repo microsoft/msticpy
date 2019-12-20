@@ -103,6 +103,6 @@ Comment configuration file sample
 See also
 --------
 
-:doc:`The Threat Intelligence Providers documention <TIProviders>`
+:doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
 
-:py:mod:`msticpy.nbtools.wsconfig`
+:py:mod:`wsconfig<msticpy.nbtools.wsconfig>`

@@ -25,7 +25,7 @@ picking items from a list or tracking progress of a long-running event.
 
 QueryTime
 
-See :py:class:`~msticpy.nbtools.nbwidgets.QueryTime`
+See :py:class:`QueryTime<msticpy.nbtools.nbwidgets.QueryTime>`
 
 This widget is used to specify time boundaries - designed to be used
 with the built-in msticpy queries and custom queries. The ``start`` and
@@ -101,7 +101,7 @@ Use the QueryTime properties in a query.
 Lookback
 --------
 
-See :py:class:`~msticpy.nbtools.nbwidgets.Lookback`
+See :py:class:`Lookback<msticpy.nbtools.nbwidgets.Lookback>`
 
 This is simpler version of QueryTime with single slider value
 
@@ -129,7 +129,7 @@ This is simpler version of QueryTime with single slider value
 AlertSelector
 -------------
 
-See :py:class:`~msticpy.nbtools.nbwidgets.AlertSelector`
+See :py:class:`AlertSelector<msticpy.nbtools.nbwidgets.AlertSelector>`
 
 lets you view list of alerts and select one for investigation.
 You can optionally provide an action (a Python function) to call
@@ -173,7 +173,7 @@ SelectString
 ------------
 
 
-See :py:class:`~msticpy.nbtools.nbwidgets.SelectString`
+See :py:class:`SelectString<msticpy.nbtools.nbwidgets.SelectString>`
 
 Similar to AlertSelector but simpler and allows you to use any list or
 dictionary of items.
@@ -197,7 +197,7 @@ dictionary of items.
 
 GetEnvironmentKey
 
-See :py:class:`~msticpy.nbtools.nbwidgets.GetEnvironmentKey`
+See :py:class:`GetEnvironmentKey<msticpy.nbtools.nbwidgets.GetEnvironmentKey>`
 
 Get editable value of an environment variable.
 
@@ -221,7 +221,7 @@ key isn’t set.
 SelectSubset
 ------------
 
-See :py:class:`~msticpy.nbtools.nbwidgets.SelectSubset`
+See :py:class:`SelectSubset<msticpy.nbtools.nbwidgets.SelectSubset>`
 
 Allows you to select one or
 multiple items from a list to populate an output set.
@@ -284,7 +284,7 @@ Progress Indicator
 ------------------
 
 
-See :py:class:`~msticpy.nbtools.nbwidgets.Progress`
+See :py:class:`Progress<msticpy.nbtools.nbwidgets.Progress>`
 
 This is thin wrapper around the IPyWidgets ``IntProgess`` control.
 It adds some convenience functions for updating progress and

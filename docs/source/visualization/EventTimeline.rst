@@ -24,7 +24,7 @@ Plotting a simple timeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The display_timeline function (see
-:py:func:`~msticpy.nbtools.timeline.display_timeline`) takes three main
+:py:func:`display_timeline<msticpy.nbtools.timeline.display_timeline>`) takes three main
 parameters:
 
 * data - the data to plot. This can be either a pandas DataFrame or a
@@ -85,7 +85,7 @@ More Advanced Timelines
 give you more flexibility to show multiple data series and change the
 way the graph appears.
 
-See :py:func:`~msticpy.nbtools.timeline.display_timeline` Documentation
+See :py:func:`display_timeline<msticpy.nbtools.timeline.display_timeline>` Documentation
 for a description of all of the parameters.
 
 
@@ -255,7 +255,7 @@ Note that the majority of parameters are the same as
 ``display_timeline`` but include a mandatory ``y`` parameter which
 indicates which value you want to plot on the y (vertical) axis.
 
-See :py:func:`~msticpy.nbtools.timeline.display_timeline_values` documentation
+See :py:func:`display_timeline_values<msticpy.nbtools.timeline.display_timeline_values>` documentation
 for a description of all of the parameters.
 
 

@@ -32,7 +32,7 @@ Constructor
 ~~~~~~~~~~~
 
 
-See See :py:class:`~msticpy.sectools.ti_lookup.TILookup`
+See :py:class:`TILookup<msticpy.sectools.tilookup.TILookup>`
 
 .. parsed-literal::
 
@@ -198,7 +198,7 @@ Looking up IoCs
 lookup_ioc
 ~~~~~~~~~~
 
-See :py:func:`~msticpy.sectools.ti_lookup.lookup_ioc`
+See :py:meth:`lookup_ioc<msticpy.sectools.ti_lookup.lookup_ioc>`
 
 To lookup a single IoC.
 
@@ -359,7 +359,7 @@ And show the output
 Or convert result to a DataFrame and let pandas do the display work…
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :py:func:`~msticpy.sectools.ti_lookup.result_to_df`
+See :py:meth:`result_to_df<msticpy.sectools.ti_lookup.result_to_df>`
 
 .. code:: ipython3
 
@@ -560,7 +560,7 @@ This shows the supported IoC Types.
 In some cases an IoC type will also support special types of sub-query
 such as geo-ip and passive-dns
 
-See :py:meth:`~msticpy.sectools.ti_lookup.provider_usage`
+See :py:meth:`provider_usage<msticpy.sectools.ti_lookup.provider_usage>`
 
 .. code:: ipython3
 
@@ -681,7 +681,7 @@ dictionary of the form ``{ioc_observable: ioc_type}``
 Looking up Multiple IoCs
 ------------------------
 
-See :py:meth:`~msticpy.sectools.ti_lookup.lookup_iocs`
+See :py:meth:`lookup_iocs<msticpy.sectools.ti_lookup.lookup_iocs>`
 
 lookup_iocs
 ~~~~~~~~~~~

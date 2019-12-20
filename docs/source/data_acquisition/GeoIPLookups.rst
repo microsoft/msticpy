@@ -69,12 +69,12 @@ details.
 Maxmind Geo-IP Lite Lookup Class
 --------------------------------
 
-See :py:func:`~msticpy.sectools.geoip.GeoLiteLookup`
+See :py:class:`GeoLiteLookup<msticpy.sectools.geoip.GeoLiteLookup>`
 
 Lookup IP location from GeoLite2 data created by MaxMind.
 
 You can pass a single IP Address, a list of IPAddresses or an IPAddress
-entity (see :py:func:`~msticpy.nbtools.entityschema.IPAddress`)
+entity (see :py:class:`IPAddress<msticpy.nbtools.entityschema.IPAddress>`)
 
 
 .. code:: ipython3
@@ -210,7 +210,7 @@ Looking up a list of IP Addresses.
 IPStack Geo-lookup Class
 ------------------------
 
-See :py:func:`~msticpy.sectools.geoip.IPStackLookup`
+See :py:class:`IPStackLookup<msticpy.sectools.geoip.IPStackLookup>`
 
 
 .. note:: IPStack requires an IPStack API Key.
@@ -308,7 +308,7 @@ Looking up a list of IP Addresses
 Taking input from a pandas DataFrame
 ------------------------------------
 
-See :py:func:`~msticpy.sectools.geoip.GeoIpLookup.df_lookup_ip`
+See :py:meth:`df_lookup_ip<msticpy.sectools.geoip.GeoIpLookup.df_lookup_ip>`
 
 The base class for both implementations has a method that sources the ip
 addresses from a dataframe column and returns a new dataframe with the
@@ -326,7 +326,7 @@ Creating a Custom GeopIP Lookup Class
 You can derive a class that implements the same operations to use with a
 different GeoIP service by subclassing the GeoIpLookup class.
 
-See :py:class:`~msticpy.sectools.geoip.GeoIpLookup`
+See :py:class:`GeoIpLookup<msticpy.sectools.geoip.GeoIpLookup>`
 
 You should override the lookup_ip method implementing your own method of
 geoip lookup.
@@ -334,7 +334,7 @@ geoip lookup.
 Calculating Geographical Distances
 ----------------------------------
 
-Use the :py:func:`~msticpy.sectools.geoip.geo_distance` function from
+Use the :py:func:`geo_distance<msticpy.sectools.geoip.geo_distance>` function from
 msticpy.sectools.geoip to calculate distances between two locations.
 
 I am indebted to Martin Thoma who
