@@ -228,8 +228,8 @@ class QuerySource:
                 if isinstance(param_value, datetime):
                     param_dict[p_name] = param_value
                 elif isinstance(param_value, Number):
-                    param_dict[p_name] = datetime.utcnow() + timedelta(  # type: ignore
-                        param_value
+                    param_dict[p_name] = datetime.utcnow() + timedelta(
+                        param_value  # type: ignore
                     )
                 else:
                     # If the param appears to be ISO datetime format transform to datetime object
