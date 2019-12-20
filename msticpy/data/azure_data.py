@@ -46,6 +46,34 @@ class Items:
     identity = attr.ib()
 
 
+@attr.s
+class NsgItems:
+    """attr class to build NSG rule dictionary. """
+
+    rule_name = attr.ib()
+    description = attr.ib()
+    protocol = attr.ib()
+    direction = attr.ib()
+    src_ports = attr.ib()
+    dst_ports = attr.ib()
+    src_addrs = attr.ib()
+    dst_addrs = attr.ib()
+    action = attr.ib()
+
+@attr.s
+class InterfaceItems:
+    """attr class to build network interface details dictionary. """
+
+    interface_id = attr.ib()
+    private_ip = attr.ib()
+    private_ip_allocation = attr.ib()
+    public_ip = attr.ib()
+    public_ip_allocation = attr.ib()
+    app_sec_group = attr.ib()
+    subnet = attr.ib()
+    subnet_nsg = attr.ib()
+    subnet_route_table = attr.ib()
+
 class MsticpyAzureException(MsticpyException):
     """Exception class for AzureData."""
 
@@ -368,7 +396,37 @@ class AzureData(ABC):
         details = self.network_client.network_interfaces.get(
             network_id.split("/")[4], network_id.split("/")[8]
         )
-        return details
+        ips = []
+        for ip in details.ip_configurations:
+            ip_details = attr.asdict(InterfaceItems(network_id, ip.private_ip_address, ip.private_ip_allocation_method, ip.public_ip_address.ip_address, ip.public_ip_address.public_ip_allocation_method, ip.application_security_groups, ip.subnet.name, ip.subnet.network_security_group, ip.subnet.route_table))
+            ips.append(ip_details)
+
+        ip_df = pd.DataFrame(ips)
+        
+        nsg_details = self.network_client.network_security_groups.get(
+            details.network_security_group.id.split("/")[4],
+            details.network_security_group.id.split("/")[8],
+        )
+        nsg_rules = []
+        for nsg in nsg_details.default_security_rules:
+            rules = attr.asdict(
+                NsgItems(
+                    nsg.name,
+                    nsg.description,
+                    nsg.protocol,
+                    nsg.direction,
+                    nsg.source_port_range,
+                    nsg.destination_port_range,
+                    nsg.source_address_prefix,
+                    nsg.destination_address_prefix,
+                    nsg.access,
+                )
+            )
+            nsg_rules.append(rules)
+
+        nsg_df = pd.DataFrame(nsg_rules)
+
+        return ip_df, nsg_df
 
     def get_cpu_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
         """
