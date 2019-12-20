@@ -1,9 +1,11 @@
-msticpy - ProcessTree
-=====================
+ProcessTree
+===========
 
 This describes the use of the process tree data and
 visualization modules. These modules can be used with either Windows
-process creation events (ID 4688) or Linux auditd logs.
+process creation events (ID 4688) or Linux auditd logs. The
+ProcessTree visualization is built
+using the `Bokeh library <https://bokeh.pydata.org>`__.
 
 See the sample
 `ProcessTree Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb>`__

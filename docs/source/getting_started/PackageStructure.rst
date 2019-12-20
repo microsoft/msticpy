@@ -1,40 +1,24 @@
-Introduction
-============
-
-Microsoft Threat Intelligence Python Security Tools
----------------------------------------------------
-
-msticpy is a set of tools intended to be used for security investigations
-and hunting. Most of the tools originated from Jupyter notebooks and many
-of them are only useful in notebooks (e.g. much of the nbtools sub-package)
-
-It is organized into three main sub-packages:
-
--  sectools - python security tools to help with data analysis or
-   investigation
--  nbtools - Jupyter-specific UI tools such as widgets and data display
--  data - data layer and pre-defined queries for Azure Sentinel, MDATP and
-   other data sources.
-
-The package is in an early iteration so there are likely to be bugs
-and there are several parts that are not yet optimized for performance. We
-welcome feedback, bug reports and suggestions for new features.
-
-Installing
-----------
-
-``pip install msticpy``
-
-or for the latest dev build
-
-``pip install git+https://github.com/microsoft/msticpy``
-
+Package Structure
+=================
 
 Security Tools Sub-package - *sectools*
 ---------------------------------------
 
 This subpackage contains several modules helpful for working on security
 investigations and hunting:
+
+
+auditdextract
+~~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.auditdextract`
+
+Module to load and decode Linux audit logs. It collapses messages
+sharing the same message ID into single events, decodes hex-encoded data
+fields and performs some event-specific formatting and normalization
+(e.g. for process start events it will re-assemble the process command
+line arguments into a single string). This is still a work-in-progress.
+
 
 base64unpack
 ~~~~~~~~~~~~
@@ -160,16 +144,6 @@ Similar to the eventcluster module but a little bit more experimental
 outlier events in a single data set or using one data set as training
 data and another on which to predict outliers.
 
-auditdextract
-~~~~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.auditdextract`
-
-Module to load and decode Linux audit logs. It collapses messages
-sharing the same message ID into single events, decodes hex-encoded data
-fields and performs some event-specific formatting and normalization
-(e.g. for process start events it will re-assemble the process command
-line arguments into a single string). This is still a work-in-progress.
 
 syslog_utils
 ~~~~~~~~~~~~~
@@ -195,6 +169,7 @@ domain_utils
 
 Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.
+
 
 Notebook tools sub-package - *nbtools*
 --------------------------------------

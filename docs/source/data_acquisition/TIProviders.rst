@@ -1,6 +1,6 @@
 
-msticpy Threat Intel Lookup
-===========================
+Threat Intel Lookup
+===================
 
 This document describes the use of the Threat Intelligence lookup class
 in msticpy. The class allows lookup of individual or multiple IoCs from
@@ -14,36 +14,6 @@ or Log Analytics table respectively.
 Notebook
 --------
 `TIProvider Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
-
-Table of Contents
------------------
-
-* TILookup class
-
-  * Constructor
-  * Methods
-  * Available Providers
-
-* Looking up IoCs
-
-  * lookup_ioc
-  * Lookup an IoC from a single provider
-  * Convert result to a DataFrame and let pandas do the display work…
-  * Lookup using all primary providers
-
-* Provider Usage
-
-  * Use to do a passive DNS lookup
-
-* Inferring IoC Type vs. Specifying explicity
-
-* Looking up Multiple IoCs
-
-  * lookup_iocs
-  * Multiple IoCs using all providers
-
-* Specifying Time Ranges
-
 
 
 TILookup class
@@ -61,6 +31,8 @@ for the account type that you have.
 Constructor
 ~~~~~~~~~~~
 
+
+See See :py:class:`~msticpy.sectools.ti_lookup.TILookup`
 
 .. parsed-literal::
 
@@ -226,6 +198,8 @@ Looking up IoCs
 lookup_ioc
 ~~~~~~~~~~
 
+See :py:func:`~msticpy.sectools.ti_lookup.lookup_ioc`
+
 To lookup a single IoC.
 
 ::
@@ -384,6 +358,8 @@ And show the output
 
 Or convert result to a DataFrame and let pandas do the display work…
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :py:func:`~msticpy.sectools.ti_lookup.result_to_df`
 
 .. code:: ipython3
 
@@ -584,6 +560,8 @@ This shows the supported IoC Types.
 In some cases an IoC type will also support special types of sub-query
 such as geo-ip and passive-dns
 
+See :py:meth:`~msticpy.sectools.ti_lookup.provider_usage`
+
 .. code:: ipython3
 
     ti_lookup.provider_usage()
@@ -702,6 +680,8 @@ dictionary of the form ``{ioc_observable: ioc_type}``
 
 Looking up Multiple IoCs
 ------------------------
+
+See :py:meth:`~msticpy.sectools.ti_lookup.lookup_iocs`
 
 lookup_iocs
 ~~~~~~~~~~~

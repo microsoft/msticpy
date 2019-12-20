@@ -1,5 +1,5 @@
-msticpy Event Timeline
-======================
+Event Timeline
+==============
 
 This document describes the use of the interactive timeline controls built
 using the `Bokeh library <https://bokeh.pydata.org>`__.

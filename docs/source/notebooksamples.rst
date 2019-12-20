@@ -14,4 +14,4 @@ in practice:
 - `Event Timeline Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb>`__
 - `Threat Intel Providers Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
 - `Process Tree Notebook Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb>`__
-- `Event Clustering Tree Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb>`__
+- `Event Clustering Tree Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb>`__
