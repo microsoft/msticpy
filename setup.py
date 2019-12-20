@@ -12,7 +12,8 @@ import setuptools
 INSTALL_REQUIRES = [
     "attrs>=18.2.0",
     "azure-common>=1.1.23",
-    "azure-mgmt>=4.0.0",
+    "azure-mgmt-resource>=2.2.0",
+    "azure-mgmt-subscription>=0.2.0",
     "bokeh>=1.4.0",
     "cryptography>=2.8",
     "deprecated>=1.2.4",
