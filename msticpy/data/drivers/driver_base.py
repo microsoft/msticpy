@@ -6,7 +6,7 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict
+from typing import Tuple, Any, Union, Dict, Optional
 
 import pandas as pd
 
@@ -77,13 +77,13 @@ class DriverBase(ABC):
         return {}
 
     @abc.abstractmethod
-    def connect(self, connection_str: str, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
 
         Parameters
         ----------
-        connection_str : str
+        connection_str : Optional[str]
             Connect to a data source
 
         """

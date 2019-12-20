@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """OData Driver class."""
 import abc
-from typing import Tuple, Any, Dict, Union
+from typing import Tuple, Any, Dict, Union, Optional
 import re
 import urllib
 
@@ -15,6 +15,7 @@ import pandas as pd
 
 from .driver_base import DriverBase
 from ...nbtools import pkg_config as config
+from ...nbtools.utility import MsticpyException
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -44,9 +45,10 @@ class OData(DriverBase):
             "Accept": "application/json",
             "Authorization": None,
         }
-        self.oauth_url = None
-        self.req_body = None
-        self.api_ver = None
+        self.oauth_url: Optional[str] = None
+        self.req_body: Optional[Dict[str, Optional[str]]] = None
+        self.api_ver: Optional[str] = None
+        self.api_root: Optional[str] = None
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
@@ -100,10 +102,17 @@ class OData(DriverBase):
             cs_dict = kwargs
         # Allow user to specify location of connection variables in config file.
         if "app_name" in cs_dict:
-            cs_dict = config.settings.get(cs_dict["app_name"])["Args"]
+            app_config = config.settings.get(cs_dict["app_name"])
+            if not app_config:
+                raise MsticpyException(
+                    f"No configuration settings found for {cs_dict['app_name']}."
+                )
+            cs_dict = app_config["Args"]
 
-        req_url = self.oauth_url.format(tenantId=cs_dict["tenantId"])
-        req_body = dict(self.req_body)
+        # self.oauth_url and self.req_body are correctly set in concrete
+        # instances __init__
+        req_url = self.oauth_url.format(tenantId=cs_dict["tenantId"])  # type: ignore
+        req_body = dict(self.req_body)  # type: ignore
         req_body["client_id"] = cs_dict["clientId"]
         req_body["client_secret"] = cs_dict["clientSecret"]
 
@@ -127,7 +136,9 @@ class OData(DriverBase):
         return json_response
 
     # pylint: disable=too-many-branches
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(
+        self, query: str, **kwargs
+    ) -> Tuple[pd.DataFrame, Any]:  # noqa: MC0001
         """
         Execute query string and return DataFrame of results.
 
@@ -163,7 +174,8 @@ class OData(DriverBase):
                 url=req_url, headers=self.req_headers, data=str(body)
             )
         else:
-            req_url = self.api_root + query
+            # api_root set if self.connected
+            req_url = self.api_root + query  # type: ignore
             response = requests.get(url=req_url, headers=self.req_headers)
         if response.status_code != requests.codes["ok"]:
             if response.status_code == 401:

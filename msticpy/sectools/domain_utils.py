@@ -58,7 +58,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     if api_key is not None:
         bs_api_key = api_key
     elif config.settings.get("Browshot") is not None:
-        bs_api_key = config.settings.get("Browshot")["Args"]["AuthKey"]
+        bs_api_key = config.settings.get("Browshot")["Args"]["AuthKey"]  # type: ignore
     else:
         raise AttributeError("No configuration found for Browshot")
     # Request screenshot from Browshot and get request ID
@@ -171,12 +171,16 @@ class DomainValidator:
         """
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
-            backend = crypto.hazmat.backends.default_backend()
-            x509 = crypto.x509.load_pem_x509_certificate(cert.encode("ascii"), backend)
-            cert_sha1 = x509.fingerprint(
-                crypto.hazmat.primitives.hashes.SHA1()  # nosec
+            backend = crypto.hazmat.backends.default_backend()  # type: ignore
+            x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
+                cert.encode("ascii"), backend
             )
-            result = bool(self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any())
+            cert_sha1 = x509.fingerprint(
+                crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
+            )
+            result = bool(
+                self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any()  # type: ignore
+            )
         except Exception:  # pylint: disable=broad-except
             result = False
             x509 = None
