@@ -68,7 +68,7 @@ You can modify or add to the regular expressions used at runtime.
 
 Output is a dictionary of matches (for single string input) or a DataFrame (for dataframe input).
 
-[Base64Unpack Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb)
+[IoCExtract Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb)
 
 ### tiproviders
 
