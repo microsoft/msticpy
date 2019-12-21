@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from abc import ABC
 from typing import Optional
 import datetime
 
@@ -60,6 +59,7 @@ class NsgItems:
     dst_addrs = attr.ib()
     action = attr.ib()
 
+
 @attr.s
 class InterfaceItems:
     """attr class to build network interface details dictionary. """
@@ -74,6 +74,7 @@ class InterfaceItems:
     subnet_nsg = attr.ib()
     subnet_route_table = attr.ib()
 
+
 class MsticpyAzureException(MsticpyException):
     """Exception class for AzureData."""
 
@@ -81,7 +82,7 @@ class MsticpyAzureException(MsticpyException):
 # pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
-class AzureData(ABC):
+class AzureData:
     """Class for returning data on an Azure tenant."""
 
     def __init__(self, connect: bool = False):
@@ -97,6 +98,7 @@ class AzureData(ABC):
 
     def connect(self, client_id: str = None, tenant_id: str = None, secret: str = None):
         """Authenticate with the SDK."""
+        # Use details of msticpyyaml if not provided
         if client_id is None and tenant_id is None and secret is None:
             az_cli_config = config.settings.get("AzureCLI")
             if not az_cli_config:
@@ -108,6 +110,7 @@ class AzureData(ABC):
             tenant_id = config_items["tenantId"]
             secret = config_items["clientSecret"]
 
+        # Create credentials and connect to the subscription client to validate
         self.credentials = ServicePrincipalCredentials(
             client_id=client_id, secret=secret, tenant=tenant_id
         )
@@ -188,6 +191,7 @@ class AzureData(ABC):
             A dataframe of resource details
 
         """
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -199,11 +203,13 @@ class AzureData(ABC):
         else:
             resources = self.resource_client.resources.list_by_resource_group(rgroup)
 
+        # Warn users about getting full properties for each resource
         if get_props is True:
             print("Collecting properties for every resource may take some time...")
 
         resource_items = []
 
+        # Get properites for each resource, if standard API version isn't usable look up latest API
         for resource in resources:
             if get_props is True:
                 try:
@@ -217,6 +223,7 @@ class AzureData(ABC):
             else:
                 props = resource.properties
 
+            # Parse relevent resource attributes into a dataframe and return it
             resource_details = attr.asdict(
                 Items(
                     resource.id,
@@ -264,6 +271,7 @@ class AzureData(ABC):
             The details of the requested resource
 
         """
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -272,10 +280,12 @@ class AzureData(ABC):
             if not self.resource_client:
                 raise CloudError("Could not create a ResourceManagementClient.")
 
+        # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
             resource = self.resource_client.resources.get_by_id(
-                resource_id, self.get_api(resource_id)
+                resource_id, api_version=self.get_api(resource_id)
             )
+        # If resource details are provided use get to get details
         elif resource_details is not None:
             resource = self.resource_client.resources.get(
                 resource_details["resource_group_name"],
@@ -283,7 +293,7 @@ class AzureData(ABC):
                 resource_details["parent_resource_path"],
                 resource_details["resource_type"],
                 resource_details["resource_name"],
-                self.get_api(
+                api_version=self.get_api(
                     resource_provider=(
                         resource_details["resource_provider_namespace"]
                         + "/"
@@ -294,6 +304,7 @@ class AzureData(ABC):
         else:
             raise ValueError("Please provide either a resource ID or resource details")
 
+        # Parse relevent details into a dictionary to return
         resource_details = attr.asdict(
             Items(
                 resource.id,
@@ -333,6 +344,7 @@ class AzureData(ABC):
             The latest avaliable non-preview API version
 
         """
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -341,6 +353,7 @@ class AzureData(ABC):
             if not self.resource_client:
                 raise CloudError("Could not create a ResourceManagementClient.")
 
+        # Normalise elements depending on user input type
         if resource_id is not None:
             namespace = resource_id.split("/")[6]
             service = resource_id.split("/")[7]
@@ -352,10 +365,13 @@ class AzureData(ABC):
                 "Please provide an resource ID or resource provider namespace"
             )
 
+        # Get list of API versions for the service
         provider = self.resource_client.providers.get(namespace)
         resource_types = next(
             (t for t in provider.resource_types if t.resource_type == service), None
         )
+
+        # Get first API version that isn't in preview
         if resource_types:
             api_version = [
                 v for v in resource_types.api_versions if "preview" not in v.lower()
@@ -371,7 +387,7 @@ class AzureData(ABC):
 
     def get_network_details(self, network_id: str, sub_id: str) -> dict:
         """
-        Return details related to an Azure network interface.
+        Return details related to an Azure network interface and associated NSG
 
         Parameters
         ----------
@@ -385,6 +401,7 @@ class AzureData(ABC):
         details: dict
             A dictionary of items related to the network interface
         """
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -393,16 +410,30 @@ class AzureData(ABC):
             if not self.network_client:
                 raise CloudError("Could not create a NetworkManagementClient.")
 
+        # Get interface details and parse relevent elements into a dataframe
         details = self.network_client.network_interfaces.get(
             network_id.split("/")[4], network_id.split("/")[8]
         )
         ips = []
-        for ip in details.ip_configurations:
-            ip_details = attr.asdict(InterfaceItems(network_id, ip.private_ip_address, ip.private_ip_allocation_method, ip.public_ip_address.ip_address, ip.public_ip_address.public_ip_allocation_method, ip.application_security_groups, ip.subnet.name, ip.subnet.network_security_group, ip.subnet.route_table))
+        for ip in details.ip_configurations:  # pylint: disable=invalid-name
+            ip_details = attr.asdict(
+                InterfaceItems(
+                    network_id,
+                    ip.private_ip_address,
+                    ip.private_ip_allocation_method,
+                    ip.public_ip_address.ip_address,
+                    ip.public_ip_address.public_ip_allocation_method,
+                    ip.application_security_groups,
+                    ip.subnet.name,
+                    ip.subnet.network_security_group,
+                    ip.subnet.route_table,
+                )
+            )
             ips.append(ip_details)
 
         ip_df = pd.DataFrame(ips)
-        
+
+        # Get NSG details and parse relevent elements into a dataframe
         nsg_details = self.network_client.network_security_groups.get(
             details.network_security_group.id.split("/")[4],
             details.network_security_group.id.split("/")[8],
@@ -445,6 +476,7 @@ class AzureData(ABC):
             A DataFrame of CPU metrics
 
         """
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -453,6 +485,7 @@ class AzureData(ABC):
             if not self.monitoring_client:
                 raise CloudError("Could not create a MonitorManagementClient.")
 
+        # Get CPU metrics in one hour chunks for the last 30 days
         start = datetime.datetime.now().date()
         end = start - datetime.timedelta(days=30)
         self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
@@ -463,6 +496,8 @@ class AzureData(ABC):
             metricnames="Percentage CPU",
             aggregation="Total",
         )
+
+        # Parse the timeseries data into a dataframe
         times = []
         datas = []
         for mon_detail in mon_details.value:
@@ -492,6 +527,9 @@ class AzureData(ABC):
             A DataFrame of network metrics
 
         """
+        # ToDo add check for if resource is not a VM
+
+        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
@@ -500,6 +538,7 @@ class AzureData(ABC):
             if not self.monitoring_client:
                 raise CloudError("Could not create a MonitorManagementClient.")
 
+        # Get network in and network out metrics for the last 30 days
         start = datetime.datetime.now().date()
         end = start - datetime.timedelta(days=30)
 
