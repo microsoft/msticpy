@@ -32,6 +32,11 @@ TIProviders
 This allows you to configure which providers are run by default and to
 supply any authorization keys needed to access the service.
 
+You can also extend msticpyconfig to include additional sections to 
+support other authentication and configuration options such as MDATP
+API connections. Refer to documentation on these features for required
+structures.
+
 Comment configuration file sample
 ---------------------------------
 

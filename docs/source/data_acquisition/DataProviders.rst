@@ -195,7 +195,69 @@ Other Data Environments will have different connection string formats.
     Workspace ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
     Tenant ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+Connecting to an OData Source
+-----------------------------
+You can also connect to OData based data sources such as the MDATP API, 
+or the Security Graph API. These connections often rely on having a 
+dedicated Azure AD app for handling the authentication process. 
 
+MDATP
+~~~~~
+Details on registering an Azure AD application for MDATP can be found
+`here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
+Once you have registered the application you can use it to connect to
+the MDATP API via the MDATP Data Environment. 
+
+When connecting the required elements for connection can be passed in
+a number of ways. The simpliest is to pass the required elements as 
+kwargs. The required elements are:
+
+* tenant_id -- The tentant ID of the MDATP workspace to connect to.
+* client_id -- The ID of the application registered for MDATP.
+* client_secret -- The secret used for by the application.
+
+.. code:: ipython3
+
+        ten_id = input('Tenant ID')
+        client_id = input('Client ID')
+        client_secret = input('Client Secret')
+        mdatp_prov = QueryProvider('MDATP')
+        mdatp_prov.connect(tenant_id=ten_id, client_id=client_id, client_secret=client_secret)
+
+Alternatively you can store these details in the msticpyconfig.yaml 
+file. Details should be included in the following format:
+
+.. code:: yaml
+
+      MDATPApp:
+          Args:
+            ClientId: "CLIENT ID"
+            ClientSecret: "CLIENT SECRET"
+            TenantId: "TENANT ID"
+
+To use the stored variables when connecting pass app_name to the connect
+function with the value passed being the heading used in msticpyconfig.yaml
+
+.. code:: ipython3
+
+        mdatp_prov = QueryProvider('MDATP')
+        mdatp_prov.connect(app_name="MDATPApp")
+
+For examples of using the MDATP connector see the sample MDATPQuery Notebook.
+
+Security Graph API
+~~~~~~~~~~~~~~~~~~
+Connecting to the Security Graph API follows the same format as MDATP
+connections with connection variables passed to the funciton in the
+same way.
+
+Details for registering an application for the Security Graph API can
+be found `here <https://docs.microsoft.com/en-us/graph/auth-register-app-v2?context=graph%2Fapi%2F1.0&view=graph-rest-1.0>`__.
+
+.. code:: ipython3
+
+        mdatp_prov = QueryProvider('SecurityGraph')
+        mdatp_prov.connect(app_name="SecurityGraphApp")
 
 
 Listing available queries

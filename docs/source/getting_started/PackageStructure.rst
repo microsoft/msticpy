@@ -217,6 +217,7 @@ To-Do Items
 
 -  Add additional notebooks to document use of the tools.
 -  Expand list of supported TI provider classes.
+-  Expand Azure data enrichment options.
 
 Supported Platforms and Packages
 --------------------------------

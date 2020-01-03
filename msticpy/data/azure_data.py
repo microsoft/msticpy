@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from abc import ABC
 from typing import Optional
 
 import attr
@@ -49,7 +48,7 @@ class MsticpyAzureException(MsticpyException):
 # pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
-class AzureData(ABC):
+class AzureData():
     """Class for returning data on an Azure tenant."""
 
     def __init__(self, connect: bool = False):

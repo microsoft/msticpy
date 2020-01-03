@@ -6,3 +6,4 @@ Enriching Data
 
    data_acquisition/TIProviders
    data_acquisition/GeoIPLookups
+   data_acquisition/AzureData
