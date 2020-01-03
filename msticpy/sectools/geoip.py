@@ -295,9 +295,7 @@ class GeoLiteLookup(GeoIpLookup):
 
     """
 
-    _MAXMIND_DOWNLOAD = (
-        "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
-    )
+    _MAXMIND_DOWNLOAD = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
     _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy", "GeoLite2")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
@@ -315,13 +313,17 @@ class GeoLiteLookup(GeoIpLookup):
         Parameters
         ----------
         api_key : str
-            API Key from MaxMind - Read more about GeoLite2 : https://dev.maxmind.com/geoip/geoip2/geolite2/
-            Sign up for a MaxMind account - https://www.maxmind.com/en/geolite2/signup
-            Set your password and create a license key - https://www.maxmind.com/en/accounts/current/license-key        
+            API Key from MaxMind - 
+            Read more about GeoLite2 : https://dev.maxmind.com/geoip/geoip2/geolite2/
+            Sign up for a MaxMind account 
+                - https://www.maxmind.com/en/geolite2/signup
+            Set your password and create a license key 
+                - https://www.maxmind.com/en/accounts/current/license-key        
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy dir under user`s home directory.
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir 
+            under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated.
@@ -363,7 +365,8 @@ class GeoLiteLookup(GeoIpLookup):
             db_folder = self._DB_HOME
 
         if not os.path.exists(db_folder):
-            os.makedirs(db_folder)  # using makedirs to create intermediate-level dirs needed to contain the leaf directory
+            # using makedirs to create intermediate-level dirs to contain the leaf dir
+            os.makedirs(db_folder)
         db_archive_path = os.path.join(db_folder, self._DB_ARCHIVE)
         db_file_path = os.path.join(db_folder, self._DB_FILE)
 
@@ -391,14 +394,13 @@ class GeoLiteLookup(GeoIpLookup):
                 tar_archive = tarfile.open(self._DB_ARCHIVE)
                 print(f"Extracting GeoLite2 city database archive...")
                 for member in tar_archive.getmembers():
-                    if member.isreg():  # Will skip the dirs to extract only file objects
+                    if (
+                        member.isreg()
+                    ):  # Will skip the dirs to extract only file objects
                         # Strip the path from files to extract it to desired directory
-                        member.name = os.path.basename(member.name) 
+                        member.name = os.path.basename(member.name)
                         tar_archive.extract(member, db_folder)
-                print(
-                    "Extraction complete. Local Maxmind city DB:",
-                    f"{db_file_path}",
-                )
+                print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
             except IOError as err:
                 warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
 
