@@ -253,7 +253,7 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
     if not missing_packages:
         print("All packages are already installed")
     else:
-        print("Missing packages to be installed:: ", *required_packages, sep=" ")
+        print("Missing packages to be installed:: ", *missing_packages, sep=" ")
         if notebook:
             pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
         else:

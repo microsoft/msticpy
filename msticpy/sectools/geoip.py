@@ -17,25 +17,24 @@ for different services:
    an online lookup (API key required).
 
 """
-import gzip
 import math
 import os
-from pathlib import Path
-import shutil
+import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from typing import Dict, List, Tuple, Optional, Mapping, Any
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+import geoip2.database  # type: ignore
 import pandas as pd
 import requests
-from requests.exceptions import HTTPError
+from geoip2.errors import AddressNotFoundError  # type: ignore
 from IPython import get_ipython
 from IPython.display import HTML, display
-import geoip2.database  # type: ignore
-from geoip2.errors import AddressNotFoundError  # type: ignore
+from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
@@ -296,15 +295,14 @@ class GeoLiteLookup(GeoIpLookup):
 
     """
 
-    _MAXMIND_DOWNLOAD = (
-        "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
-    )
-    _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy")
-    _DB_ARCHIVE = "GeoLite2-City.mmdb.gz"
+    _MAXMIND_DOWNLOAD = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+    _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy", "GeoLite2")
+    _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
     def __init__(
         self,
+        api_key: str,
         db_folder: str = None,
         force_update: bool = False,
         auto_update: bool = True,
@@ -314,10 +312,18 @@ class GeoLiteLookup(GeoIpLookup):
 
         Parameters
         ----------
+        api_key : str
+            API Key from MaxMind - 
+            Read more about GeoLite2 : https://dev.maxmind.com/geoip/geoip2/geolite2/
+            Sign up for a MaxMind account 
+                - https://www.maxmind.com/en/geolite2/signup
+            Set your password and create a license key 
+                - https://www.maxmind.com/en/accounts/current/license-key        
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy dir under user`s home directory.
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir 
+            under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
             new download request will be initiated.
@@ -326,6 +332,7 @@ class GeoLiteLookup(GeoIpLookup):
             new download request will be initiated if age criteria is matched.
 
         """
+        self._api_key = api_key
         if db_folder is None:
             db_folder = self._DB_HOME
         self._force_update = force_update
@@ -336,7 +343,7 @@ class GeoLiteLookup(GeoIpLookup):
             raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
 
-    def _download_and_extract_gzip(self, url: str = None, db_folder: str = None):
+    def _download_and_extract_archive(self, url: str = None, db_folder: str = None):
         r"""
         Download file from the given URL and extract if it is archive.
 
@@ -352,13 +359,14 @@ class GeoLiteLookup(GeoIpLookup):
 
         """
         if url is None:
-            url = self._MAXMIND_DOWNLOAD
+            url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
         if db_folder is None:
             db_folder = self._DB_HOME
 
         if not os.path.exists(db_folder):
-            os.mkdir(db_folder)
+            # using makedirs to create intermediate-level dirs to contain the leaf dir
+            os.makedirs(db_folder)
         db_archive_path = os.path.join(db_folder, self._DB_ARCHIVE)
         db_file_path = os.path.join(db_folder, self._DB_FILE)
 
@@ -383,14 +391,16 @@ class GeoLiteLookup(GeoIpLookup):
                 for chunk in response.iter_content(chunk_size=10000):
                     file_hdl.write(chunk)
             try:
-                with gzip.open(db_archive_path, "rb") as f_in:
-                    print(f"Extracting city database...")
-                    with open(db_file_path, "wb") as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-                        print(
-                            "Extraction complete. Local Maxmind city DB:",
-                            f"{db_file_path}",
-                        )
+                tar_archive = tarfile.open(self._DB_ARCHIVE)
+                print(f"Extracting GeoLite2 city database archive...")
+                for member in tar_archive.getmembers():
+                    if (
+                        member.isreg()
+                    ):  # Will skip the dirs to extract only file objects
+                        # Strip the path from files to extract it to desired directory
+                        member.name = os.path.basename(member.name)
+                        tar_archive.extract(member, db_folder)
+                print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
             except IOError as err:
                 warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
 
@@ -404,7 +414,7 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy dir under
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir under
             user`s home directory.
 
         Returns
@@ -444,7 +454,7 @@ class GeoLiteLookup(GeoIpLookup):
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy dir under
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir under
             user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
@@ -455,13 +465,14 @@ class GeoLiteLookup(GeoIpLookup):
 
         """
         geoip_db_path = self._get_geoip_dbpath(db_folder)
+        url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
         if geoip_db_path is None:
             print(
                 "No local Maxmind City Database found. ",
                 f"Attempting to downloading new database to {db_folder}",
             )
-            self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
+            self._download_and_extract_archive(url, db_folder)
         else:
             # Create a reader object to retrive db info and build date
             # to check age from build_epoch property.
@@ -474,13 +485,13 @@ class GeoLiteLookup(GeoIpLookup):
                     "Latest local Maxmind City Database present is older than 30 days.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
+                self._download_and_extract_archive(url, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_gzip(self._MAXMIND_DOWNLOAD, db_folder)
+                self._download_and_extract_archive(url, db_folder)
 
     def lookup_ip(
         self,
