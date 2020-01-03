@@ -36,7 +36,7 @@ WIDGET_DEFAULTS = {
     "layout": widgets.Layout(width="95%"),
     "style": {"description_width": "initial"},
 }
-IPLOCATION = GeoLiteLookup()
+IPLOCATION = GeoLiteLookup(api_key='dummy-key')
 _IP = get_ipython()
 register_matplotlib_converters()
 

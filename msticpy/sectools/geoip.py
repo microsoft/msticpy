@@ -340,7 +340,6 @@ class GeoLiteLookup(GeoIpLookup):
         if not self._dbpath:
             raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
-        self._url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
     def _download_and_extract_archive(self, url: str = None, db_folder: str = None):
         r"""
@@ -358,7 +357,7 @@ class GeoLiteLookup(GeoIpLookup):
 
         """
         if url is None:
-            url = self._url
+            url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
         if db_folder is None:
             db_folder = self._DB_HOME
@@ -464,13 +463,14 @@ class GeoLiteLookup(GeoIpLookup):
 
         """
         geoip_db_path = self._get_geoip_dbpath(db_folder)
+        url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
         if geoip_db_path is None:
             print(
                 "No local Maxmind City Database found. ",
                 f"Attempting to downloading new database to {db_folder}",
             )
-            self._download_and_extract_archive(self._url, db_folder)
+            self._download_and_extract_archive(url, db_folder)
         else:
             # Create a reader object to retrive db info and build date
             # to check age from build_epoch property.
@@ -483,13 +483,13 @@ class GeoLiteLookup(GeoIpLookup):
                     "Latest local Maxmind City Database present is older than 30 days.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_archive(self._url, db_folder)
+                self._download_and_extract_archive(url, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_archive(self._url, db_folder)
+                self._download_and_extract_archive(url, db_folder)
 
     def lookup_ip(
         self,

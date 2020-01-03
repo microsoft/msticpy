@@ -27,7 +27,7 @@ from .geoip import GeoLiteLookup
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 
-IPLOCATION = GeoLiteLookup()
+IPLOCATION = GeoLiteLookup(api_key='dummy-key')
 
 
 class Error(Exception):
