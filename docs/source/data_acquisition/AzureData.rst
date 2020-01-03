@@ -1,5 +1,5 @@
-Azure Data Enichment
-====================
+Azure Data Enrichment
+=====================
 
 Description:
 ------------
@@ -64,7 +64,7 @@ permissions can be found `here <https://docs.microsoft.com/en-us/cli/azure/creat
 Once the Service Principal has been registered the following details 
 are required (they can be found in the Azure Portal under 
 Azure Active Directory > App Registrations):
-* tenant_id -- The tentant ID of the Azure tenant the Service Principal is in.
+* tenant_id -- The tenant ID of the Azure tenant the Service Principal is in.
 * client_id -- The ID of the application associated with the Service Principal.
 * secret -- The password of the Service Principal.
 
@@ -103,7 +103,7 @@ Get Azure Subscription Details
 
 Details about the subscription a resource is a member of can provide 
 vital context to a security analyst when conducting an investigation.
-This pacakge contains 2 functions to support this.
+This package contains 2 functions to support this.
 
 AZURE_DATA_CONNECTOR.list_subscriptions() returns a pandas DataFrame 
 with details of all the subscriptions within the tenant.
@@ -173,8 +173,8 @@ As well as subscriptions we can return details on a specific Azure
 resource.
 AZURE_DATA_CONNECTOR.get_resources() returns a pandas DataFrame with 
 details on all resources within a Subscription or Resource Group.
-In addition you can request full properties on each Resource with the 
-get_props = True parmater. However this can take some time to return 
+In addition, you can request full properties on each Resource with the 
+get_props = True parmater. However, this can take some time to return 
 results.
 
 .. code:: ipython3
@@ -296,7 +296,7 @@ results.
 
 You can return full details on a single resource with 
 AZURE_DATA_CONNECTOR.get_resource_details() and passing either a 
-Resource ID or set of Resource deatils.
+Resource ID or set of Resource details.
 
 
 .. code:: ipython3

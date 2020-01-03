@@ -212,7 +212,7 @@ When connecting the required elements for connection can be passed in
 a number of ways. The simpliest is to pass the required elements as 
 kwargs. The required elements are:
 
-* tenant_id -- The tentant ID of the MDATP workspace to connect to.
+* tenant_id -- The tenant ID of the MDATP workspace to connect to.
 * client_id -- The ID of the application registered for MDATP.
 * client_secret -- The secret used for by the application.
 
