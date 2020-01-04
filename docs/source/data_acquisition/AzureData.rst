@@ -1,8 +1,8 @@
 Azure Data Enrichment
 =====================
 
-Description:
-------------
+Description
+-----------
 
 This package contains functionality for enriching data regarding Azuure 
 host details with additional host details exposed via the Azure API.
@@ -12,6 +12,8 @@ This package is primarily aimed at Azure IaaS resources but will work
 with any Azure Resource type.
 This feature is currently a work in progress and additional data 
 enrichment capabilities will be added over time.
+
+:py:mod:`Azure Data API documentation<msticpy.data.azure_data>`
 
 The first step in using this package is to install the msticpy package.
 
@@ -53,6 +55,8 @@ The first step in using this package is to install the msticpy package.
 
 Instantiating and Connecting with an Azure Data Connector
 ---------------------------------------------------------
+See :py:class:`Azure Data <msticpy.data.azure_data.AzureData>`
+
 In order to connect to the Azure API and retreive the required data 
 we need to instantiate an Azure Data Connector and connect to the API.
 Authentication to the Azure API is handled via an Azure Service 
@@ -64,6 +68,7 @@ permissions can be found `here <https://docs.microsoft.com/en-us/cli/azure/creat
 Once the Service Principal has been registered the following details 
 are required (they can be found in the Azure Portal under 
 Azure Active Directory > App Registrations):
+
 * tenant_id -- The tenant ID of the Azure tenant the Service Principal is in.
 * client_id -- The ID of the application associated with the Service Principal.
 * secret -- The password of the Service Principal.
@@ -80,16 +85,16 @@ kwargs.
         az = AzureData()
         az.connect(tenant_id=ten_id, client_id=client_id, secret=secret)
 
-Alternatively you can store these details in the msticpyconfig.yaml 
+Alternatively you can store these details in the ``msticpyconfig.yaml`` 
 file. Details should be included in the following format:
 
 .. code:: yaml
 
-AzureCLI:
-  Args:
-   clientId: "CLIENT ID"
-   clientSecret: "CLIENT SECRET" 
-   tenantId: "TENANT ID"
+      AzureCLI:
+        Args:
+        clientId: "CLIENT ID"
+        clientSecret: "CLIENT SECRET" 
+        tenantId: "TENANT ID"
 
 To use the stored variables when connecting simply provide no arguements.
 
@@ -100,6 +105,8 @@ To use the stored variables when connecting simply provide no arguements.
 
 Get Azure Subscription Details
 ------------------------------
+
+See :py:meth:`get_subscriptions <msticpy.data.azure_data.AzureData.get_subscriptions>`
 
 Details about the subscription a resource is a member of can provide 
 vital context to a security analyst when conducting an investigation.
@@ -149,8 +156,13 @@ with details of all the subscriptions within the tenant.
     </table>
     </div>
 
+|
+
+See :py:meth:`get_subscription_info <msticpy.data.azure_data.AzureData.get_subscription_info>`
+
 AZURE_DATA_CONNECTOR.get_subscription_info() gets information on a 
 specific subscription ID.
+
 
 .. code:: ipython3
 
@@ -169,6 +181,8 @@ specific subscription ID.
 Get Azure Resource Details
 --------------------------
 
+See :py:meth:`get_resources <msticpy.data.azure_data.AzureData.get_resources>`
+
 As well as subscriptions we can return details on a specific Azure 
 resource.
 AZURE_DATA_CONNECTOR.get_resources() returns a pandas DataFrame with 
@@ -181,8 +195,6 @@ results.
 
     resources = az.get_resources(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
     resources.head()
-
-
 
 
 .. raw:: html
@@ -293,10 +305,11 @@ results.
     </table>
     </div>
 
+|
 
-You can return full details on a single resource with 
-AZURE_DATA_CONNECTOR.get_resource_details() and passing either a 
-Resource ID or set of Resource details.
+See :py:meth:`get_resource_details<msticpy.data.azure_data.AzureData.get_resource_details>`
+
+You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_resource_details() and passing a Resource ID.
 
 
 .. code:: ipython3
@@ -349,6 +362,14 @@ Resource ID or set of Resource details.
      'identity': None}
 
 
+.. note:: You can also provide a dictionary of resource details if you 
+          don't have a complete Resource ID.
+          The details dictionary must contain:
+          * resource_group_name
+          * resource_provider_namespace
+          * parent_resource_path (if there isn't one leave as a empty string).
+          * resource_type
+          * resource_name
 
 .. code:: ipython3
 

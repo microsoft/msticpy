@@ -197,12 +197,16 @@ Other Data Environments will have different connection string formats.
 
 Connecting to an OData Source
 -----------------------------
+:py:mod:`OData driver API documentation<msticpy.data.drivers.odata_driver>`
+
 You can also connect to OData based data sources such as the MDATP API, 
 or the Security Graph API. These connections often rely on having a 
 dedicated Azure AD app for handling the authentication process. 
 
 MDATP
 ~~~~~
+:py:mod:`MDATP driver API documentation<msticpy.data.drivers.mdatp_driver>`
+
 Details on registering an Azure AD application for MDATP can be found
 `here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
 Once you have registered the application you can use it to connect to
@@ -247,6 +251,8 @@ For examples of using the MDATP connector see the sample MDATPQuery Notebook.
 
 Security Graph API
 ~~~~~~~~~~~~~~~~~~
+:py:mod:`Security Graph driver API documentation<msticpy.data.drivers.security_graph_driver>`
+
 Connecting to the Security Graph API follows the same format as MDATP
 connections with connection variables passed to the funciton in the
 same way.
