@@ -48,3 +48,12 @@ TIProviders:
   TorExitNodes:
     Primary: True
     Provider: Tor
+OtherProviders:
+  GeoIPLite:
+    Args:
+      AuthKey: "987654321-111"
+    Provider: "GeoLiteLookup"
+  IPStack:
+    Args:
+      AuthKey: "987654321-222"
+    Provider: "IPStackLookup"

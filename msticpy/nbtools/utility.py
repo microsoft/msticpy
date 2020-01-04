@@ -327,3 +327,7 @@ _F_STYLES = {
 
 class MsticpyException(Exception):
     """Default exception class for msticpy."""
+
+
+class MsticpyConfigException(Exception):
+    """Configuration exception class for msticpy."""

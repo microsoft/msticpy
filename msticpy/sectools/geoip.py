@@ -38,10 +38,15 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..nbtools.utility import export
+from ..nbtools.utility import export, MsticpyConfigException
+from .provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+class GeoIPDatabaseException(Exception):
+    """Exception when GeoIP database cannot be found."""
 
 
 class GeoIpLookup(metaclass=ABCMeta):
@@ -54,6 +59,13 @@ class GeoIpLookup(metaclass=ABCMeta):
     GeoLiteLookup : MaxMind GeoIP Implementation
 
     """
+
+    _LICENSE_TXT: Optional[str] = None
+    _LICENSE_HTML: Optional[str] = None
+
+    def __init__(self):
+        """Initialize instance of GeoIpLookup class."""
+        self._print_license()
 
     @abstractmethod
     def lookup_ip(
@@ -110,6 +122,12 @@ class GeoIpLookup(metaclass=ABCMeta):
         df_out = pd.DataFrame(data=ip_dicts)
         return data.merge(df_out, how="left", left_on=column, right_on="IpAddress")
 
+    def _print_license(self):
+        if self._LICENSE_HTML and get_ipython():
+            display(HTML(self._LICENSE_HTML))
+        elif self._LICENSE_TXT:
+            print(self._LICENSE_TXT)
+
 
 @export
 class IPStackLookup(GeoIpLookup):
@@ -123,9 +141,16 @@ class IPStackLookup(GeoIpLookup):
 
     """
 
+    _LICENSE_HTML = """
+This library uses services provided by ipstack.
+<a href="https://ipstack.com">https://ipstack.com</a>"""
+
+    _LICENSE_TXT = """
+This library uses services provided by ipstack (https://ipstack.com)"""
+
     _IPSTACK_API = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
 
-    def __init__(self, api_key: str, bulk_lookup: bool = False):
+    def __init__(self, api_key: str = None, bulk_lookup: bool = False):
         """
         Create a new instance of IPStackLookup.
 
@@ -133,6 +158,7 @@ class IPStackLookup(GeoIpLookup):
         ----------
         api_key : str
             API Key from IPStack - see https://ipstack.com
+            default is None - obtain key from msticpyconfig.yaml
         bulk_lookup : bool, optional
             For Professional and above tiers allowing you to
             submit multiple IPs in a single request.
@@ -140,7 +166,18 @@ class IPStackLookup(GeoIpLookup):
             per address)
 
         """
-        self._api_key = api_key
+        super().__init__()
+
+        self.settings = _get_geoip_provider_settings("IPStack")
+        if api_key:
+            self._api_key = api_key
+        else:
+            self._api_key = self.settings.args.get("AuthKey")  # type: ignore
+        if not self._api_key:
+            raise MsticpyConfigException(
+                "No API key was found in configuration or supplied as parameter.",
+                "Obtain an API Key from IPStack - see https://ipstack.com.",
+            )
         self.bulk_lookup = bulk_lookup
 
     def lookup_ip(
@@ -296,13 +333,23 @@ class GeoLiteLookup(GeoIpLookup):
     """
 
     _MAXMIND_DOWNLOAD = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+
     _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy", "GeoLite2")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
+    _LICENSE_HTML = """
+This product includes GeoLite2 data created by MaxMind, available from
+<a href="https://www.maxmind.com">https://www.maxmind.com</a>.
+"""
+    _LICENSE_TXT = """
+This product includes GeoLite2 data created by MaxMind, available from
+https://www.maxmind.com.
+"""
+
     def __init__(
         self,
-        api_key: str,
+        api_key: str = None,
         db_folder: str = None,
         force_update: bool = False,
         auto_update: bool = True,
@@ -313,16 +360,17 @@ class GeoLiteLookup(GeoIpLookup):
         Parameters
         ----------
         api_key : str
-            API Key from MaxMind - 
+            Default is None - use configuration value from msticpyconfig.yaml.
+            API Key from MaxMind -
             Read more about GeoLite2 : https://dev.maxmind.com/geoip/geoip2/geolite2/
-            Sign up for a MaxMind account 
+            Sign up for a MaxMind account
                 - https://www.maxmind.com/en/geolite2/signup
-            Set your password and create a license key 
-                - https://www.maxmind.com/en/accounts/current/license-key        
+            Set your password and create a license key
+                - https://www.maxmind.com/en/accounts/current/license-key
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
             (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy\GeoLite2 dir 
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir
             under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
@@ -332,7 +380,14 @@ class GeoLiteLookup(GeoIpLookup):
             new download request will be initiated if age criteria is matched.
 
         """
-        self._api_key = api_key
+        super().__init__()
+
+        self.settings = _get_geoip_provider_settings("GeoIPLite")
+        if api_key:
+            self._api_key = api_key
+        else:
+            self._api_key = self.settings.args.get("AuthKey")  # type: ignore
+
         if db_folder is None:
             db_folder = self._DB_HOME
         self._force_update = force_update
@@ -343,7 +398,9 @@ class GeoLiteLookup(GeoIpLookup):
             raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
 
-    def _download_and_extract_archive(self, url: str = None, db_folder: str = None):
+    def _download_and_extract_archive(  # noqa: MC0001
+        self, url: str = None, db_folder: str = None
+    ) -> bool:
         r"""
         Download file from the given URL and extract if it is archive.
 
@@ -357,7 +414,18 @@ class GeoLiteLookup(GeoIpLookup):
             If no path provided, it is set to download to .msticpy dir under
             user`s home directory.(the default is None)
 
+        Returns
+        -------
+        bool
+            True if download successful.
+
         """
+        if not self._api_key:
+            raise MsticpyConfigException(
+                "No API key was found in configuration or supplied as parameter.",
+                "Obtain an API Key from MaxMind.",
+                "Sign up for an account at https://www.maxmind.com/en/geolite2/signup.",
+            )
         if url is None:
             url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
@@ -386,13 +454,12 @@ class GeoLiteLookup(GeoIpLookup):
             )
         # pylint: enable=broad-except
         else:
-            print("Downloading GeoLite DB archive from MaxMind....")
+            print("Downloading and extracting GeoLite DB archive from MaxMind....")
             with open(db_archive_path, "wb") as file_hdl:
                 for chunk in response.iter_content(chunk_size=10000):
                     file_hdl.write(chunk)
             try:
                 tar_archive = tarfile.open(self._DB_ARCHIVE)
-                print(f"Extracting GeoLite2 city database archive...")
                 for member in tar_archive.getmembers():
                     if (
                         member.isreg()
@@ -401,8 +468,10 @@ class GeoLiteLookup(GeoIpLookup):
                         member.name = os.path.basename(member.name)
                         tar_archive.extract(member, db_folder)
                 print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
+                return True
             except IOError as err:
                 warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
+        return False
 
     @staticmethod
     def _get_geoip_dbpath(db_folder: str = None) -> Optional[str]:
@@ -472,7 +541,11 @@ class GeoLiteLookup(GeoIpLookup):
                 "No local Maxmind City Database found. ",
                 f"Attempting to downloading new database to {db_folder}",
             )
-            self._download_and_extract_archive(url, db_folder)
+            dl_result = self._download_and_extract_archive(url, db_folder)
+            if not dl_result:
+                raise GeoIPDatabaseException(
+                    "No Maxmind DB available.", "Cannot continue."
+                )
         else:
             # Create a reader object to retrive db info and build date
             # to check age from build_epoch property.
@@ -485,13 +558,17 @@ class GeoLiteLookup(GeoIpLookup):
                     "Latest local Maxmind City Database present is older than 30 days.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_archive(url, db_folder)
+                dl_result = self._download_and_extract_archive(url, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                self._download_and_extract_archive(url, db_folder)
+                dl_result = self._download_and_extract_archive(url, db_folder)
+            if not dl_result:
+                warnings.warn(
+                    "Continuing with cached database. Results may inaccurate."
+                )
 
     def lookup_ip(
         self,
@@ -576,27 +653,25 @@ class GeoLiteLookup(GeoIpLookup):
         return ip_entity
 
 
-_MM_LICENSE_HTML = """
-This product includes GeoLite2 data created by MaxMind, available from
-<a href="https://www.maxmind.com">https://www.maxmind.com</a>.
-"""
-_MM_LICENSE_TXT = """
-This product includes GeoLite2 data created by MaxMind, available from
-https://www.maxmind.com.
-"""
-_IPSTACK_LICENSE_HTML = """
-This library uses services provided by ipstack.
-<a href="https://ipstack.com">https://ipstack.com</a>"""
+def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
+    """
+    Return settings for a provider.
 
-_IPSTACK_LICENSE_TXT = """
-This library uses services provided by ipstack (https://ipstack.com)"""
+    Parameters
+    ----------
+    provider_name : str
+        Name of the provider.
 
-if not get_ipython():
-    print(_MM_LICENSE_TXT)
-    print(_IPSTACK_LICENSE_TXT)
-else:
-    display(HTML(_MM_LICENSE_HTML))
-    display(HTML(_IPSTACK_LICENSE_HTML))
+    Returns
+    -------
+    ProviderSettings
+        Settings for the provider.
+
+    """
+    settings = get_provider_settings(config_section="OtherProviders")
+    if provider_name in settings:
+        return settings[provider_name]
+    return ProviderSettings(name=provider_name, description="Not found.")
 
 
 @export

@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Helper functions for TI configuration settings."""
+"""Helper functions for configuration settings."""
 import warnings
 from os import environ
 from typing import Any, Dict, Optional
@@ -11,8 +11,8 @@ from typing import Any, Dict, Optional
 import attr
 from attr import Factory
 
-from ..._version import VERSION
-from ...nbtools import pkg_config as config
+from .._version import VERSION
+from ..nbtools import pkg_config as config
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -20,7 +20,7 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
-class TIProviderSettings:
+class ProviderSettings:
     """Provider settings."""
 
     name: str
@@ -30,24 +30,29 @@ class TIProviderSettings:
     primary: bool = False
 
 
-def get_provider_settings() -> Dict[str, TIProviderSettings]:
+def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
     """
-    Read TI Provider settings from package config.
+    Read Provider settings from package config.
+
+    Parameters
+    ----------
+    config_section : str, optional
+        [description], by default "TIProviders"
 
     Returns
     -------
-    Dict[str, TIProviderSettings]
+    Dict[str, ProviderSettings]
         Provider settings indexed by provider name.
 
     """
-    ti_settings = config.settings.get("TIProviders")
-    if not ti_settings:
+    prov_settings = config.settings.get(config_section)
+    if not prov_settings:
         return {}
 
     settings = {}
-    for provider, item_settings in ti_settings.items():
+    for provider, item_settings in prov_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = TIProviderSettings(
+        prov_settings = ProviderSettings(
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(prov_args),
