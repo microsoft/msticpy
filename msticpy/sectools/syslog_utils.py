@@ -34,6 +34,7 @@ WIDGET_DEFAULTS = {
     "style": {"description_width": "initial"},
 }
 
+
 class Error(Exception):
     """Base class for other exceptions."""
 

@@ -4,8 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
-import warnings
-from os import environ
 from typing import Any, Dict, Optional
 
 import attr
@@ -73,34 +71,9 @@ def _get_setting_args(prov_args: Optional[Dict[str, Any]]) -> Dict[Any, Any]:
     """Extract the provider args from the settings."""
     if not prov_args:
         return {}
-    arg_dict: Dict[str, Any] = prov_args.copy()
     name_map = {
-        "ApiID": "api_id",
-        "AuthKey": "auth_key",
         "WorkspaceID": "workspace_id",
         "TenantID": "tenant_id",
         "SubscriptionID": "subscription_id",
     }
-    for arg_name, arg_value in prov_args.items():
-        target_name = name_map.get(arg_name, arg_name)
-        if isinstance(arg_value, str):
-            arg_dict[target_name] = arg_value
-        elif isinstance(arg_value, dict):
-            arg_dict[target_name] = _fetch_setting(arg_value)  # type: ignore
-    return arg_dict
-
-
-def _fetch_setting(config_setting: Dict[str, Any]) -> Optional[str]:
-    """Return required value for indirect settings (e.g. getting env var)."""
-    item_settings = next(iter(config_setting.values()))
-    if "EnvironmentVar" in item_settings:
-        env_value = environ.get(item_settings["EnvironmentVar"])
-        if not env_value:
-            warnings.warn(
-                f"Environment variable {item_settings['EnvironmentVar']} "
-                + " was not set"
-            )
-        return env_value
-    if "KeyVaultURI" in item_settings:
-        raise NotImplementedError("Keyvault support not yet implemented.")
-    return None
+    return config.get_settings(conf_group=prov_args, name_map=name_map)

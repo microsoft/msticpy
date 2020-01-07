@@ -332,7 +332,10 @@ class GeoLiteLookup(GeoIpLookup):
 
     """
 
-    _MAXMIND_DOWNLOAD = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+    _MAXMIND_DOWNLOAD = (
+        "https://download.maxmind.com/app/geoip_download?"
+        + "edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
+    )
 
     _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy", "GeoLite2")
     _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
@@ -443,15 +446,11 @@ https://www.maxmind.com.
             response.raise_for_status()
         except HTTPError as http_err:
             warnings.warn(
-                f"HTTP error occurred trying to download GeoLite DB: {http_err}",
-                RuntimeWarning,
+                f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
         # pylint: disable=broad-except
         except Exception as err:
-            warnings.warn(
-                f"Other error occurred trying to download GeoLite DB: {err}",
-                RuntimeWarning,
-            )
+            warnings.warn(f"Other error occurred trying to download GeoLite DB: {err}")
         # pylint: enable=broad-except
         else:
             print("Downloading and extracting GeoLite DB archive from MaxMind....")
@@ -459,7 +458,7 @@ https://www.maxmind.com.
                 for chunk in response.iter_content(chunk_size=10000):
                     file_hdl.write(chunk)
             try:
-                tar_archive = tarfile.open(self._DB_ARCHIVE)
+                tar_archive = tarfile.open(db_archive_path)
                 for member in tar_archive.getmembers():
                     if (
                         member.isreg()
@@ -541,8 +540,8 @@ https://www.maxmind.com.
                 "No local Maxmind City Database found. ",
                 f"Attempting to downloading new database to {db_folder}",
             )
-            dl_result = self._download_and_extract_archive(url, db_folder)
-            if not dl_result:
+            db_is_current = self._download_and_extract_archive(url, db_folder)
+            if not db_is_current:
                 raise GeoIPDatabaseException(
                     "No Maxmind DB available.", "Cannot continue."
                 )
@@ -553,19 +552,20 @@ https://www.maxmind.com.
             last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
             # Check for out of date DB file according to db_age
             db_age = datetime.utcnow() - last_mod_time
+            db_is_current = True
             if db_age > timedelta(30) and auto_update:
                 print(
                     "Latest local Maxmind City Database present is older than 30 days.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                dl_result = self._download_and_extract_archive(url, db_folder)
+                db_is_current = self._download_and_extract_archive(url, db_folder)
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                dl_result = self._download_and_extract_archive(url, db_folder)
-            if not dl_result:
+                db_is_current = self._download_and_extract_archive(url, db_folder)
+            if not db_is_current:
                 warnings.warn(
                     "Continuing with cached database. Results may inaccurate."
                 )

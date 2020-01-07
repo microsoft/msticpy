@@ -122,7 +122,8 @@ class TestPkgConfig(unittest.TestCase):
         pkg_config.refresh_config()
 
         geoip_lite = GeoLiteLookup()
-        self.assertEqual(geoip_lite._api_key, "987654321-111")
+        self.assertIsInstance(geoip_lite._api_key, str)
+        self.assertGreaterEqual(len(geoip_lite._api_key), 0)
 
         ipstack = IPStackLookup()
         self.assertEqual(ipstack._api_key, "987654321-222")
