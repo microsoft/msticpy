@@ -121,10 +121,10 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
 
     Parameters
     ----------
-        nb_url_search: str
-            The URL search string
-        param: str
-            The parameter name to search for
+    nb_url_search: str
+        The URL search string
+    param: str
+        The parameter name to search for
 
     Returns
     -------

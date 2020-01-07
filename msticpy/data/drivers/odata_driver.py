@@ -136,7 +136,7 @@ class OData(DriverBase):
         return json_response
 
     # pylint: disable=too-many-branches
-    def query_with_results(
+    def query_with_results(  # noqa: MC0001
         self, query: str, **kwargs
     ) -> Tuple[pd.DataFrame, Any]:  # noqa: MC0001
         """
