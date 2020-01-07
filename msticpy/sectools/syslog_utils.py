@@ -18,14 +18,11 @@ import pytz
 
 import ipywidgets as widgets
 import pandas as pd
-from pandas.plotting import register_matplotlib_converters
-from IPython import get_ipython
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from ..nbtools.utility import export
 from .ip_utils import convert_to_ip_entities
-from .geoip import GeoLiteLookup
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -36,9 +33,6 @@ WIDGET_DEFAULTS = {
     "layout": widgets.Layout(width="95%"),
     "style": {"description_width": "initial"},
 }
-IPLOCATION = GeoLiteLookup()
-_IP = get_ipython()
-register_matplotlib_converters()
 
 
 class Error(Exception):

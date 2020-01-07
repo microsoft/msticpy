@@ -18,8 +18,9 @@ Consolidated settings are accessible as an attribute `settings`.
 """
 import os
 import sys
+import warnings
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pkg_resources
 import yaml
@@ -135,6 +136,67 @@ def _get_top_module():
         else:
             break
     return top_module
+
+
+def get_settings(
+    conf_group: Optional[Dict[str, Any]], name_map: Optional[Dict[str, str]] = None
+) -> Dict[Any, Any]:
+    """
+    Lookup configuration values config, environment or KeyVault.
+
+    Parameters
+    ----------
+    conf_group : Optional[Dict[str, Any]]
+        The configuration dictionary
+    name_map : Optional[Dict[str, str]], optional
+        Optional mapping to re-write setting names,
+        by default None
+
+    Returns
+    -------
+    Dict[Any, Any]
+        Dictionary of resolved settings
+
+    Raises
+    ------
+    NotImplementedError
+        Keyvault storage is not yet implemented
+
+    """
+    if not conf_group:
+        return {}
+    setting_dict: Dict[str, Any] = conf_group.copy()
+
+    for arg_name, arg_value in conf_group.items():
+        target_name = arg_name
+        if name_map:
+            target_name = name_map.get(target_name, target_name)
+
+        if isinstance(arg_value, str):
+            setting_dict[target_name] = arg_value
+        elif isinstance(arg_value, dict):
+            try:
+                setting_dict[target_name] = _fetch_setting(arg_value)  # type: ignore
+            except NotImplementedError:
+                warnings.warn(
+                    f"Setting type for setting {arg_value} not yet implemented. "
+                )
+    return setting_dict
+
+
+def _fetch_setting(config_setting: Dict[str, Any]) -> Optional[str]:
+    """Return required value for indirect settings (e.g. getting env var)."""
+    if "EnvironmentVar" in config_setting:
+        env_value = os.environ.get(config_setting["EnvironmentVar"])
+        if not env_value:
+            warnings.warn(
+                f"Environment variable {config_setting['EnvironmentVar']} "
+                + " was not set"
+            )
+        return env_value
+    if "KeyVaultURI" in config_setting:
+        raise NotImplementedError("Keyvault support not yet implemented.")
+    return None
 
 
 # read initial config when first imported.

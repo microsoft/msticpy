@@ -18,7 +18,7 @@ from ..msticpy.nbtools import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
-    TIProviderSettings,
+    ProviderSettings,
     get_provider_settings,
     preprocess_observable,
     LookupResult,

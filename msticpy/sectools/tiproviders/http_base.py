@@ -63,10 +63,10 @@ class HttpProvider(TIProvider):
 
         self._requests_session = requests.Session()
         self._request_params = {}
-        if "api_id" in kwargs:
-            self._request_params["API_ID"] = kwargs.pop("api_id")
-        if "auth_key" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("auth_key")
+        if "ApiID" in kwargs:
+            self._request_params["API_ID"] = kwargs.pop("ApiID")
+        if "AuthKey" in kwargs:
+            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
         for req_param in self._REQUIRED_PARAMS:
             if req_param not in self._request_params:
