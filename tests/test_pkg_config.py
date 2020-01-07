@@ -11,6 +11,7 @@ from typing import Union, Any, Tuple
 
 from ..msticpy.nbtools import pkg_config
 from ..msticpy.nbtools.wsconfig import WorkspaceConfig
+from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
@@ -114,3 +115,15 @@ class TestPkgConfig(unittest.TestCase):
             and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
             and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
         )
+
+    def test_geo_ip_settings(self):
+        test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
+        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+        pkg_config.refresh_config()
+
+        geoip_lite = GeoLiteLookup()
+        self.assertIsInstance(geoip_lite._api_key, str)
+        self.assertGreaterEqual(len(geoip_lite._api_key), 0)
+
+        ipstack = IPStackLookup()
+        self.assertEqual(ipstack._api_key, "987654321-222")

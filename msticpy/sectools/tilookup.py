@@ -27,7 +27,7 @@ import pandas as pd
 from . import tiproviders
 from .tiproviders import *  # noqa:F401, F403
 from .tiproviders.ti_provider_base import TIProvider, LookupResult, TILookupStatus
-from .tiproviders.ti_provider_settings import get_provider_settings, reload_settings
+from .provider_settings import get_provider_settings, reload_settings
 from ..nbtools.utility import export
 from .._version import VERSION
 

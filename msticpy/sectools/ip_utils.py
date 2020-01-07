@@ -14,7 +14,7 @@ Designed to support any data source containing IP address entity.
 """
 import ipaddress as ip
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 import pandas as pd
 from ipwhois import IPWhois
@@ -27,8 +27,6 @@ from .geoip import GeoLiteLookup
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 
-IPLOCATION = GeoLiteLookup()
-
 
 class Error(Exception):
     """Base class for other exceptions."""
@@ -36,6 +34,22 @@ class Error(Exception):
 
 class DataError(Error):
     """Raised when thereis a data input error."""
+
+
+def _get_geolite_lookup() -> Callable:
+    """Closure for instantiating GeoLiteLookup."""
+    geo_ip = None
+
+    def _get_geo_ip(**kwargs) -> GeoLiteLookup:
+        nonlocal geo_ip
+        if geo_ip is None:
+            geo_ip = GeoLiteLookup(**kwargs)
+        return geo_ip
+
+    return _get_geo_ip
+
+
+_GET_IP_LOOKUP = _get_geolite_lookup()
 
 
 def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
@@ -66,7 +80,8 @@ def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
             ip_entity = IpAddress()
             ip_entity.Address = addr.strip()
             try:
-                IPLOCATION.lookup_ip(ip_entity=ip_entity)
+                ip_lookup = _GET_IP_LOOKUP()
+                ip_lookup.lookup_ip(ip_entity=ip_entity)
             except DataError:
                 pass
             ip_entities.append(ip_entity)
