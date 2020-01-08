@@ -7,7 +7,7 @@
 from datetime import datetime, timedelta
 from numbers import Number
 import re
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Any
 from collections import ChainMap
 
 from .._version import VERSION
@@ -222,22 +222,10 @@ class QuerySource:
         # template has been supplied
         for p_name, settings in self.params.items():
             param_value = param_dict[p_name]
-            # special case of datetime specified as a number - we
-            # interpret this as an offset from utcnow
             if settings["type"] == "datetime":
-                if isinstance(param_value, datetime):
-                    param_dict[p_name] = param_value
-                elif isinstance(param_value, Number):
-                    param_dict[p_name] = datetime.utcnow() + timedelta(
-                        param_value  # type: ignore
-                    )
-                else:
-                    tm_delta = self._parse_timedelta(str(param_value))
-                    param_dict[p_name] = datetime.utcnow() + tm_delta
-
+                param_dict[p_name] = self._convert_datetime(param_value)
             if settings["type"] == "list":
                 param_dict[p_name] = self._parse_param_list(param_value)
-
             # if the parameter requires custom formatting
             fmt_template = settings.get("format", None)
             if fmt_template:
@@ -251,6 +239,23 @@ class QuerySource:
                 param_dict[p_name] = param_dict[p_name].isoformat(sep="T") + "Z"
 
         return self._query.format(**param_dict)
+
+    def _convert_datetime(self, param_value: Any) -> datetime:
+        if isinstance(param_value, datetime):
+            return param_value
+        if isinstance(param_value, Number):
+            # datetime specified as a number - we
+            # interpret this as an offset from utcnow
+            return datetime.utcnow() + timedelta(
+                param_value  # type: ignore
+            )
+        try:
+            # Try to parse ISO datetime string format transform to datetime object
+            return datetime.strptime(param_value, "%Y-%m-%d %H:%M:%S.%f")
+        except (ValueError, TypeError):
+            # If none of these, assume a time delta
+            tm_delta = self._parse_timedelta(str(param_value))
+            return datetime.utcnow() + tm_delta
 
     @staticmethod
     def _parse_timedelta(time_range: str = "0") -> timedelta:

@@ -3,16 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Helper functions for TI configuration settings."""
-import warnings
-from os import environ
+"""Helper functions for configuration settings."""
 from typing import Any, Dict, Optional
 
 import attr
 from attr import Factory
 
-from ..._version import VERSION
-from ...nbtools import pkg_config as config
+from .._version import VERSION
+from ..nbtools import pkg_config as config
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -20,7 +18,7 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
-class TIProviderSettings:
+class ProviderSettings:
     """Provider settings."""
 
     name: str
@@ -30,24 +28,29 @@ class TIProviderSettings:
     primary: bool = False
 
 
-def get_provider_settings() -> Dict[str, TIProviderSettings]:
+def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
     """
-    Read TI Provider settings from package config.
+    Read Provider settings from package config.
+
+    Parameters
+    ----------
+    config_section : str, optional
+        [description], by default "TIProviders"
 
     Returns
     -------
-    Dict[str, TIProviderSettings]
+    Dict[str, ProviderSettings]
         Provider settings indexed by provider name.
 
     """
-    ti_settings = config.settings.get("TIProviders")
-    if not ti_settings:
+    prov_settings = config.settings.get(config_section)
+    if not prov_settings:
         return {}
 
     settings = {}
-    for provider, item_settings in ti_settings.items():
+    for provider, item_settings in prov_settings.items():
         prov_args = item_settings.get("Args")
-        prov_settings = TIProviderSettings(
+        prov_settings = ProviderSettings(
             name=provider,
             description=item_settings.get("Description"),
             args=_get_setting_args(prov_args),
@@ -68,34 +71,9 @@ def _get_setting_args(prov_args: Optional[Dict[str, Any]]) -> Dict[Any, Any]:
     """Extract the provider args from the settings."""
     if not prov_args:
         return {}
-    arg_dict: Dict[str, Any] = prov_args.copy()
     name_map = {
-        "ApiID": "api_id",
-        "AuthKey": "auth_key",
         "WorkspaceID": "workspace_id",
         "TenantID": "tenant_id",
         "SubscriptionID": "subscription_id",
     }
-    for arg_name, arg_value in prov_args.items():
-        target_name = name_map.get(arg_name, arg_name)
-        if isinstance(arg_value, str):
-            arg_dict[target_name] = arg_value
-        elif isinstance(arg_value, dict):
-            arg_dict[target_name] = _fetch_setting(arg_value)  # type: ignore
-    return arg_dict
-
-
-def _fetch_setting(config_setting: Dict[str, Any]) -> Optional[str]:
-    """Return required value for indirect settings (e.g. getting env var)."""
-    item_settings = next(iter(config_setting.values()))
-    if "EnvironmentVar" in item_settings:
-        env_value = environ.get(item_settings["EnvironmentVar"])
-        if not env_value:
-            warnings.warn(
-                f"Environment variable {item_settings['EnvironmentVar']} "
-                + " was not set"
-            )
-        return env_value
-    if "KeyVaultURI" in item_settings:
-        raise NotImplementedError("Keyvault support not yet implemented.")
-    return None
+    return config.get_settings(conf_group=prov_args, name_map=name_map)

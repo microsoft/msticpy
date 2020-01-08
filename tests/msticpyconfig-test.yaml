@@ -14,15 +14,14 @@ QueryDefinitions:
 TIProviders:
   OTX:
     Args:
-      AuthKey: "987654321"
+      AuthKey:
+        EnvironmentVar: "OTX_AUTH"
     Primary: True
-    Provider: "OTX" # Explicitly name provider to override
+    Provider: "OTX"
   VirusTotal:
     Args:
-      ApiID:
-        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
       AuthKey:
-        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+        EnvironmentVar: "VIRUSTOTAL_AUTH"
     Primary: True
     Provider: "VirusTotal"
   XForce:
@@ -30,18 +29,20 @@ TIProviders:
       ApiID:
         EnvironmentVar: "XFORCE_ID"
       AuthKey:
-        EnvironmentVar: "XFORCE_KEY"
+        EnvironmentVar: "XFORCE_AUTH"
     Primary: False
     Provider: "XForce"
   AzureSentinel:
     Args:
+      # TBD
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
     Provider: "NoLoad-AzSTI"
   OpenPageRank:
     Args:
-      AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+      AuthKey:
+        EnvironmentVar: "OPR_AUTH"
     Primary: True
     Provider: "OPR"
   TorExitNodes:
@@ -55,5 +56,6 @@ OtherProviders:
     Provider: "GeoLiteLookup"
   IPStack:
     Args:
-      AuthKey: "987654321-222"
+      AuthKey:
+        EnvironmentVar: "IPSTACK_AUTH"
     Provider: "IPStackLookup"
