@@ -118,42 +118,36 @@ msticpy.data.drivers.mdatp\_driver module
 msticpy.nbtools.kql module
 --------------------------
 
-.. automodule:: msticpy.nbtools.kql
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: version 0.2.0
+   Use :py:class:`msticpy.data.QueryProvider` instead.
+
 
 msticpy.nbtools.query\_builtin\_queries module
 ----------------------------------------------
 
-.. automodule:: msticpy.nbtools.query_builtin_queries
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: version 0.2.0
+   Use :py:class:`msticpy.data.QueryProvider` instead.
+
 
 msticpy.nbtools.query\_defns module
 -----------------------------------
 
-.. automodule:: msticpy.nbtools.query_defns
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: version 0.2.0
+   Use :py:class:`msticpy.data.QueryProvider` instead.
+
 
 msticpy.nbtools.query\_mgr module
 ---------------------------------
 
-.. automodule:: msticpy.nbtools.query_mgr
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: version 0.2.0
+   Use :py:class:`msticpy.data.QueryProvider` instead.
 
 msticpy.nbtools.query\_schema module
 ------------------------------------
 
-.. automodule:: msticpy.nbtools.query_schema
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. deprecated:: version 0.2.0
+   Use :py:class:`msticpy.data.QueryProvider` instead.
+
 
 Module contents
 ---------------

@@ -48,7 +48,7 @@ class MsticpyAzureException(MsticpyException):
 # pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
-class AzureData():
+class AzureData:
     """Class for returning data on an Azure tenant."""
 
     def __init__(self, connect: bool = False):

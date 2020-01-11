@@ -74,7 +74,7 @@ class HttpProvider(TIProvider):
                     f"{req_param} value was not found for {self.__class__.__name__}"
                 )
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
@@ -149,15 +149,13 @@ class HttpProvider(TIProvider):
             NotImplementedError,
             ConnectionError,
         ) as err:
-            result.details = err.args
-            result.raw_result = (
-                type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
-            )
+            self._err_to_results(result, err)
             if not isinstance(err, LookupError):
                 url = req_params.get("url", None) if req_params else None
                 result.reference = url
             return result
 
+    # pylint: enable=duplicate-code
     # pylint: disable=too-many-branches
     def _substitute_parms(
         self, ioc: str, ioc_type: str, query_type: str = None
@@ -263,6 +261,13 @@ class HttpProvider(TIProvider):
             response.status != 200
             or not response.raw_result
             or not isinstance(response.raw_result, dict)
+        )
+
+    @staticmethod
+    def _err_to_results(result: LookupResult, err: Exception):
+        result.details = err.args
+        result.raw_result = (
+            type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
         )
 
     @staticmethod

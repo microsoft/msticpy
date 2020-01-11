@@ -32,10 +32,51 @@ TIProviders
 This allows you to configure which providers are run by default and to
 supply any authorization keys needed to access the service.
 
-You can also extend msticpyconfig to include additional sections to 
+OtherProviders
+~~~~~~~~~~~~~~
+This section is similar to the TIProviders section, allowing you
+specify configuration options for other data providers.
+
+
+Specifying secrets as Environment Variables
+-------------------------------------------
+
+Some configuration values can be references to environment Variables
+rather than have a value explicitly stored within the configuration
+file. You might want secrets such as API keys to be supplied this
+way. The ``Args`` subsection of TIProvider and OtherProvider entries
+supports storing values as simple strings or as references to named
+environment variables. You can see examples of both in the sample
+file below.
+
+Extending msticpyconfig.yaml
+----------------------------
+
+You can also extend msticpyconfig to include additional sections to
 support other authentication and configuration options such as MDATP
 API connections. Refer to documentation on these features for required
 structures.
+
+Settings are read by the
+:py:mod:`refresh_config<msticpy.nbtools.pkg_config>` module.
+Combined settings are available as the ``settings`` attribute of this
+module. Default settings and custom settings (the settings that you
+specify in your own msticpyconfig.yaml) also available separately in
+the ``default_settings`` and ``custom_settngs`` attributes, respectively.
+
+To force settings to be re-read after the package has been imported,
+call :py:func:`refresh_config<msticpy.nbtools.pkg_config.refresh_config>`.
+
+The settings exposed in these attributes are python dictionaries that
+reflect the underlying YAML data in the configuration file.
+
+.. note:: the :py:mod:`~msticpy.nbtools.wsconfig` module, TIProviders,
+   OtherProviders and the data libraries use additional functionality
+   to provide higher-level views of the configuration data. An example
+   of this is the using environment variable references to replace
+   the actual configuration value with the secret stored in the
+   environment variables.
+
 
 Comment configuration file sample
 ---------------------------------
@@ -103,6 +144,17 @@ Comment configuration file sample
       TorExitNodes:
         Primary: True
         Provider: "Tor"
+    OtherProviders:
+      GeoIPLite:
+        Args:
+          AuthKey:
+            EnvironmentVar: "MAXMIND_AUTH"
+          DBFolder: "~/.msticpy"
+        Provider: "GeoLiteLookup"
+      IPStack:
+        Args:
+          AuthKey: "987654321-222"
+        Provider: "IPStackLookup"
 
 
 See also
@@ -110,4 +162,6 @@ See also
 
 :doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
 
+:py:mod:`wsconfig<msticpy.nbtools.wsconfig>`
+:py:mod:`provider_settings<msticpy.nbtools.provider_settings>`
 :py:mod:`wsconfig<msticpy.nbtools.wsconfig>`

@@ -4,11 +4,11 @@ GeoIP Lookup
 Introduction
 ------------
 
-This module contains two classes that allow you to look up the
-Geolocation of IP Addresses.
+This :py:mod:`module<msticpy.sectools.geoip>` contains two classes
+that allow you to look up the Geolocation of IP Addresses.
 
 MaxMind GeoIPLite
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
@@ -21,20 +21,9 @@ have varying levels of paid service. Please check out their site for
 more details.
 
 The geoip module uses the official Maxmind PyPi package - geoip2.
-It has options to customize the behavior of local maxmind database.
-
-* ``db_folder`` : Specify custom path containing local Maxmind city
-  database. If not specified, download to .msticpy dir under user's home
-  directory.
-*  ``force_update`` : can be set to True/False to issue force
-   update without an age-check of age check.
-*  ``auto_update`` : True, by default, will check the age of the Maxmind
-   city database if the current database is older than 30 days.
-   ``force_update=True`` will override this setting.
-
 
 IPStack
-~~~~~~~
+^^^^^^^
 
 
 This library uses services provided by ipstack. https://ipstack.com
@@ -43,6 +32,9 @@ IPStack is an online service and also offers a free tier of their
 service. Again, the paid tiers offer greater accuracy, more detailed
 information and higher throughput. Please check out their site for more
 details.
+
+Importing the GeoIP classes
+---------------------------
 
 .. code:: ipython3
 
@@ -71,10 +63,81 @@ Maxmind Geo-IP Lite Lookup Class
 
 See :py:class:`GeoLiteLookup<msticpy.sectools.geoip.GeoLiteLookup>`
 
-Lookup IP location from GeoLite2 data created by MaxMind.
+.. note:: Maxmind now require an API Key to download database
+   updates. You can create a free account or opt for a paid tier,
+   which gives you greater accuracy and more features.
 
-You can pass a single IP Address, a list of IPAddresses or an IPAddress
-entity (see :py:class:`IPAddress<msticpy.nbtools.entityschema.IPAddress>`)
+
+Setting GeoIPLite configuration options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can supply options for the GeoLiteLookup class within the
+`msticpyconfig.yaml` configuration file (see
+:doc:`../getting_started/msticpyconfig`) or when instantiating the
+GeoLiteLookup class.
+
+The example shown here shows part of the ``OtherProviders`` section of
+msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
+For example, ``AuthKey: abcd123456789`` or use a reference to an
+environment variable holding the key value, as shown in the example.
+
+The DBFolder setting specifies a folder where the downloaded Maxmind
+database files will be stored and referenced from. Thefolder path
+can be prefixed with "~" to specify a path relative to the current
+users home directory (this works cross-platform).
+
+.. code:: yaml
+
+    ...
+    OtherProviders:
+      GeoIPLite:
+        Args:
+          AuthKey:
+            EnvironmentVar: "MAXMIND_AUTH"
+          DBFolder: "~/.msticpy"
+        Provider: "GeoLiteLookup"
+
+You can also specify the API key and folder options when creating an
+instance of the GeoLiteLookup class. In this case the folder path
+must be either an absolute or relative path - expansion of "~" will
+not work reliably cross-platform.
+
+
+.. code:: ipython3
+
+    iplocation = GeoLiteLookup(api_key="mykey", db_folder="/tmp/mmdb")
+
+
+Usage
+^^^^^
+
+Creating an instance of the GeoLiteLookup class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: ipython3
+
+    iplocation = GeoLiteLookup()
+
+You can also supply options to customize the behavior of the
+local maxmind database.
+
+* ``api_key``: described above
+* ``db_folder`` : Specify custom path containing local Maxmind city
+  database. If not specified, download to .msticpy dir under user's home
+  directory.
+*  ``force_update`` : Set to ``True`` to force
+   update without an age-check the current database.
+*  ``auto_update`` : ``True`` (default) will check the age of the Maxmind
+   city database if the current database is older than 30 days. Setting
+   to ``False`` to skip age checking.
+   ``force_update=True`` will override this setting.
+
+
+Lookup IP location from GeoLite2 database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can pass a single IP Address, a list of IPAddresses or an IpAddress
+entity (see :py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>`)
 
 
 .. code:: ipython3
@@ -146,7 +209,8 @@ entity (see :py:class:`IPAddress<msticpy.nbtools.entityschema.IPAddress>`)
       'Count...)
 
 
-Looking up a list of IP Addresses.
+Looking up a list of IP Addresses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. code:: ipython3
@@ -220,9 +284,34 @@ See :py:class:`IPStackLookup<msticpy.sectools.geoip.IPStackLookup>`
    Trying to use option with the free tier will result in the
    request being rejected.
 
+Setting IPStack configuration options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can supply options for the IPStack class within the
+`msticpyconfig.yaml` configuration file (see
+:doc:`../getting_started/msticpyconfig`) or when instantiating the
+class.
+
+The example shown here shows part of the ``OtherProviders`` section of
+msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
+For example, ``AuthKey: abcd123456789`` or use a reference to an
+environment variable holding the key value, as shown in the example.
+
+.. code:: yaml
+
+    ...
+    OtherProviders:
+      IPStack:
+        Args:
+          AuthKey: "987654321-222"
+        Provider: "IPStackLookup"
+
 
 Usage
 ^^^^^
+
+Manually Entering the IPStack Key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -230,11 +319,15 @@ Usage
     ips_key = nbwidgets.GetEnvironmentKey(env_var='IPSTACK_API_KEY',
                                help_str='To obtain an API key sign up here https://www.ipstack.com/',
                                prompt='IPStack API key:')
+    iplocation = IPStackLookup(api_key=ips_key.value)
 
 
+Lookup IP location from IPStack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. code:: ipython3
 
-    iplocation = IPStackLookup(api_key=ips_key.value)
+    # Assumes that you have configured the AuthKey value in msticpyconfig.yaml
+    iplocation = IPStackLookup()
     loc_result, ip_entity = iplocation.lookup_ip(ip_address='90.156.201.97')
     print('Raw result')
     display(loc_result)
@@ -285,6 +378,7 @@ Usage
 
 
 Looking up a list of IP Addresses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -330,6 +424,7 @@ See :py:class:`GeoIpLookup<msticpy.sectools.geoip.GeoIpLookup>`
 
 You should override the lookup_ip method implementing your own method of
 geoip lookup.
+
 
 Calculating Geographical Distances
 ----------------------------------
@@ -385,3 +480,8 @@ posted this solution (which I’ve modified slightly) on Stackoverflow.
 
     Distance between IP Locations = 8796.8km
 
+
+See also
+--------
+
+:doc:`../visualization/FoliumMap`

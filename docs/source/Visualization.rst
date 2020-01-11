@@ -8,3 +8,4 @@ Displaying/Visualizing Data
    visualization/EventTimeline
    visualization/ProcessTree
    visualization/NotebookWidgets
+   visualization/FoliumMap

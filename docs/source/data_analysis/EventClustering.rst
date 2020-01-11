@@ -389,8 +389,8 @@ different locations.
 .. image:: _static/EventClustering_3.png
 
 
-Time showing clustered vs. original data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Timeline showing clustered vs. original data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -653,7 +653,7 @@ whether this is a Windows or Linux host.
 
 
 Comparing All Logons with Clustered results relative to Alert time line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: ipython3
 
@@ -833,8 +833,8 @@ responsible for the process tree session whether any additional logons
 (e.g. creating a process as another user) might be associated with the
 alert timeline.
 
-*Note you should use the pan and zoom tools to align the timelines since
-the data may be over different time ranges.*
+.. tip:: Use the pan and zoom tools to align the timelines since
+   the data may be over different time ranges.
 
 .. code:: ipython3
 

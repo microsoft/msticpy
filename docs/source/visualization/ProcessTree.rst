@@ -95,6 +95,7 @@ The default output returns some statistics about the processed data.
 
       {'Processes': 1010, 'RootProcesses': 10, 'LeafProcesses': 815, 'BranchProcesses': 185, 'IsolatedProcesses': 0, 'LargestTreeDepth': 7}
 
+
 Process Tree utils module
 -------------------------
 
@@ -138,7 +139,9 @@ functions <#Process-Tree-utility-functions>`__.
 Plotting Syntax
 ---------------
 
-See :py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>` and
+See
+:py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
+and
 :py:func:`build_and_show_process_tree<msticpy.nbtools.process_tree.build_and_show_process_tree>`
 
 .. code:: python
@@ -208,10 +211,10 @@ visualizing Windows processes.
 
 **Note** This assumes that the Linux audit log has been read from a
 file using
-:py:func:`~msticpy.sectools.auditdextract.read_from_file()`
+:py:func:`read_from_file<msticpy.sectools.auditdextract.read_from_file>`
 or read from Azure Sentinel/Log Analytics using the
 LinuxAudit.auditd_all query and processed using
-:py:func:`~msticpy.sectools.auditdextract.extract_events_to_df`
+:py:func:`extract_events_to_df<msticpy.sectools.auditdextract.extract_events_to_df>`
 function.
 
 Using either of these, the audit messages events related to a single
@@ -352,7 +355,8 @@ Process Tree utility Functions
 ------------------------------
 
 
-The ``process_tree_utils`` module has a number of functions that may
+The :py:mod:`process_tree_utils<msticpy.sectools.process_tree_utils>`
+module has a number of functions that may
 be useful in extracting or manipulating process trees or tree
 relationships.
 
@@ -383,7 +387,9 @@ Functions:
 -  :py:func:`get_tree_depth<msticpy.sectools.process_tree_utils.get_tree_depth>`
 -  :py:func:`infer_schema<msticpy.sectools.process_tree_utils.infer_schema>`
 
+
 :py:func:`~msticpy.sectools.process_tree_utils.get_summary_info`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get summary information.
 
@@ -405,6 +411,7 @@ Get summary information.
           'LargestTreeDepth': 7}
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_roots`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get roots of all trees in the data set.
 
@@ -416,6 +423,7 @@ Get roots of all trees in the data set.
       ptree.get_roots(p_tree_win).head()
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_descendents`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the full tree beneath a process.
 
@@ -432,6 +440,7 @@ True returns the source process with the result set.
       full_tree.head()
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_children`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the immediate children of a process
 
@@ -448,6 +457,7 @@ True returns the source process with the result set.
 
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_tree_depth`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the depth of a tree.
 
@@ -466,7 +476,10 @@ Get the depth of a tree.
          depth of tree is 4
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_parent`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 :py:func:`~msticpy.sectools.process_tree_utils.get_ancestors`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Get the parent process or all ancestors.
@@ -534,7 +547,9 @@ True returns the source process with the result set.
          [4 rows x 35 columns]
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_process`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 :py:func:`~msticpy.sectools.process_tree_utils.build_process_key`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 get_process retrieves a process record by its key.
@@ -570,6 +585,7 @@ In both cases the process returned is a single row - a pandas Series.
          'c:\\windows\\system32\\conhost.exe0x15842019-02-10 15:24:56.050000'
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_siblings`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the siblings of a process.
 
