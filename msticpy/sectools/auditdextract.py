@@ -17,8 +17,9 @@ import codecs
 import re
 from datetime import datetime
 from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
-import math
 import pandas as pd
+
+from .process_tree_utils import build_process_tree
 from .eventcluster import dbcluster_events, add_process_features
 
 
@@ -340,10 +341,10 @@ def extract_events_to_df(
     tmp_df["TimeStamp"] = tmp_df.apply(
         lambda x: datetime.utcfromtimestamp(float(x["mssg_id"].split(":")[0])), axis=1
     )
-    tmp_df = (
-        tmp_df.drop(["TimeGenerated"], axis=1)
-        .rename(columns={"TimeStamp": "TimeGenerated"})
-        .pipe(_move_cols_to_front, column_count=5)
+    if "TimeGenerated" in tmp_df:
+        tmp_df = tmp_df.drop(["TimeGenerated"], axis=1)
+    tmp_df = tmp_df.rename(columns={"TimeStamp": "TimeGenerated"}).pipe(
+        _move_cols_to_front, column_count=5
     )
     if verbose:
         print(f"Complete. {len(tmp_df)} output rows", end=" ")
@@ -413,7 +414,7 @@ def read_from_file(
     """
     # read in the file using pd.read_csv()
     df_raw = pd.read_csv(
-        filepath, sep=dummy_sep, names=["raw_data"], skip_blank_lines=True, squeeze=True
+        filepath, sep=dummy_sep, names=["raw_data"], skip_blank_lines=True
     )
 
     # extract message ID into seperate column
@@ -440,9 +441,9 @@ def read_from_file(
     )
 
 
-def _parse_audit_message(audit_str: str) -> List[Dict[str, List[str]]]:
+def _parse_audit_message(audit_str: str) -> Dict[str, List[str]]:
     """
-    Parse an auditd message string into List format required by unpack_auditd.
+    Parse an auditd message string into Dict format required by unpack_auditd.
 
     Parameters
     ----------
@@ -451,7 +452,7 @@ def _parse_audit_message(audit_str: str) -> List[Dict[str, List[str]]]:
 
     Returns
     -------
-    List[Dict[str, str]]
+    Dict[str, str]
         The extracted message values
 
     """
@@ -459,9 +460,9 @@ def _parse_audit_message(audit_str: str) -> List[Dict[str, List[str]]]:
     audit_headers = audit_message[0]
     audit_hdr_match = re.match(r"type=([^\s]+)", audit_headers)
     if audit_hdr_match:
-        audit_msg = [{audit_hdr_match.group(1): audit_message[1].split(" ")}]
+        audit_msg = {audit_hdr_match.group(1): audit_message[1].split(" ")}
         return audit_msg
-    return []  # type ignore
+    return {}  # type ignore
 
 
 def _extract_timestamp(audit_str: str) -> str:
@@ -511,87 +512,12 @@ def generate_process_tree(  # noqa: MC0001
         The formatted process tree data
 
     """
-    # Generate process tree from the auditd data
-    if processes is None:
-        procs = audit_data.loc[audit_data["pid"].notnull()].head()
-    else:
-        procs = processes
-    if "NodeRole" not in procs and "Level" not in procs:
-        procs.loc[:, "NodeRole"] = pd.Series("source", index=procs.index)
-        procs.loc[:, "Level"] = pd.Series(0, index=procs.index)
-    process_tree = pd.DataFrame()
-    for proc_pid in procs["pid"]:
-        pdf = audit_data.loc[audit_data["pid"] == (int(proc_pid))]
-        pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
-        pdf.loc[:, "Level"] = pd.Series(1, index=pdf.index)
-        process_tree = process_tree.append(pdf, sort=False)
-        count = 1
-        while count <= branch_depth:
-            if pdf.empty:
-                count = branch_depth + 1
-            else:
-                for ancest_pid in pdf["ppid"]:
-                    if math.isnan(ancest_pid):
-                        count = branch_depth + 1
-                        continue
-                    pdf = audit_data.loc[audit_data["pid"] == (int(ancest_pid))]
-                    pdf.loc[:, "NodeRole"] = pd.Series("parent", index=pdf.index)
-                    pdf.loc[:, "Level"] = pd.Series(count + 1, index=pdf.index)
-                    process_tree = process_tree.append(pdf, sort=False)
-                    count = count + 1
-        for _, proc in procs.iterrows():
-            child_procs = audit_data.loc[
-                (audit_data["TimeGenerated"] > proc["TimeGenerated"])
-            ]
-            cdf = child_procs.loc[child_procs["ppid"] == (int(proc["pid"]))]
-            cdf.loc[:, "NodeRole"] = pd.Series("child", index=cdf.index)
-            cdf.loc[:, "Level"] = pd.Series(1, index=cdf.index)
-            process_tree = process_tree.append(cdf, sort=False)
-            count = 1
-            while count <= branch_depth:
-                if cdf.empty:
-                    count = branch_depth + 1
-                else:
-                    for desc_pid in cdf["pid"]:
-                        cdf = audit_data.loc[audit_data["ppid"] == (int(desc_pid))]
-                        cdf.loc[:, "NodeRole"] = pd.Series("child", index=cdf.index)
-                        cdf.loc[:, "Level"] = pd.Series(count + 1, index=cdf.index)
-                        process_tree = process_tree.append(cdf, sort=False)
-                        count = count + 1
-    process_tree = process_tree.rename(
-        columns={
-            "acct": "SubjectUserName",
-            "uid": "SubjectUserSid",
-            "user": "SubjectUserName",
-            "ses": "SubjectLogonId",
-            "pid": "NewProcessId",
-            "exe": "NewProcessName",
-            "ppid": "ProcessId",
-            "cmd": "CommandLine",
-        }
-    )
-    process_tree = process_tree.append(procs, sort=False).sort_values(
-        by="TimeGenerated"
-    )[
-        [
-            "TimeGenerated",
-            "NewProcessName",
-            "CommandLine",
-            "NewProcessId",
-            "SubjectUserSid",
-            "cwd",
-            "ProcessId",
-            "NodeRole",
-            "Level",
-        ]
-    ]
-    process_tree = process_tree.loc[
-        process_tree["NewProcessId"].notnull()
-    ].drop_duplicates()
-    return process_tree
+    # Superceded by process_tree_utils module
+    del branch_depth, processes
+    return build_process_tree(audit_data)
 
 
-def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame:
+def cluster_auditd_processes(audit_data: pd.DataFrame, app: str = None) -> pd.DataFrame:
     """
     Clusters process data into specific processes.
 
@@ -599,7 +525,7 @@ def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame
     ----------
     audit_data : pd.DataFrame
         The Audit data containing process creation events
-    app: str
+    app: str, optional
         The name of a specific app you wish to cluster
 
     Returns
@@ -621,7 +547,7 @@ def cluster_auditd_processes(audit_data: pd.DataFrame, app: str) -> pd.DataFrame
             "pid": "NewProcessId",
             "exe": "NewProcessName",
             "ppid": "ProcessId",
-            "cmd": "CommandLine",
+            "cmdline": "CommandLine",
         }
     )
     req_cols = [

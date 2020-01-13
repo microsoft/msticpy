@@ -7,12 +7,12 @@ authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-
 Many of the included tools can be used in other security scenarios for threat hunting
 and threat investigation. There are three main sub-packages:
 
-- sectools - python security tools to help with data analysis or investigation
-- nbtools  - Jupyter-specific UI tools such as widgets and data display
-- data     - data interfaces specific to Sentinel/Log Analytics
-
-The package is in an early preview mode so there are likely to be bugs and there are several
-areas that are not yet optimized for performance.
+- **sectools** - Python security tools to help with data enrichment,
+  analysis or investigation.
+- **nbtools** - Jupyter-specific UI tools such as widgets, plotting and
+  other data display.
+- **data** - data layer and pre-defined queries for Azure Sentinel, MDATP and
+   other data sources.
 
 We welcome feedback, bug reports, suggestions for new features and contributions.
 

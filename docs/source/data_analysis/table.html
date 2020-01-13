@@ -1,0 +1,44 @@
+<head></head>
+<body>
+<table border="1">
+    <thead>
+      <tr style="text-align: right;">
+        <th>IoCType</th>
+        <th>Regex</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ipv4</td>
+        <td><pre>(?P&lt;ipaddress>(?:[0-9]{1,3}\\.){3}[0-9]{1,3})</pre></td>
+      </tr>
+      <tr>
+        <td>ipv6</td>
+        <td><pre>(?&lt;![:.\\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\\w])</pre></td>
+      </tr>
+      <tr>
+        <td>dns</td>
+        <td><pre>((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}</pre></td>
+      </tr>
+      <tr>
+        <td>url</td>
+        <td><pre>
+(?P<protocol>(https?|ftp|telnet|ldap|file)://)
+(?P<userinfo>([a-z0-9-._~!$&\\'()*+,;=:]|%[0-9A-F]{2})*@)?
+(?P<host>([a-z0-9-._~!$&\\'()*+,;=]|%[0-9A-F]{2})*)
+        </pre></td>
+      </tr>
+      <tr>
+        <td>windows_path</td>
+        <td><pre>
+(?P<root>[a-z]:|\\\\\\\\[a-z0-9_.$-]+||[.]+)
+(?P<folder>\\\\(?:[^\\/:*?"\\\'<>|\\r\\n]+\\\\)*)
+(?P<file>[^\\\\/*?""<>|\\r\\n ]+)
+        </pre></td>
+      </tr>
+      <tr>
+        <td>ipv4</td>
+        <td><pre>'(?P<ipaddress>(?:[0-9]{1,3}\\.){3}[0-9]{1,3})'<pre></td>
+      </tr>
+    </table>
+</body>

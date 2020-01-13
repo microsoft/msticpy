@@ -13,7 +13,6 @@ requests per minute for the account type that you have.
 
 """
 from json import JSONDecodeError
-import traceback
 from typing import Any, Tuple, Union, Iterable, Dict, List
 
 import attr
@@ -49,6 +48,10 @@ class OPR(HttpProvider):
         super().__init__(**kwargs)
 
         self._provider_name = self.__class__.__name__
+        print(
+            "Using Open PageRank.",
+            "See https://www.domcop.com/openpagerank/what-is-openpagerank",
+        )
 
     # pylint: disable=duplicate-code
     def lookup_iocs(
@@ -195,6 +198,7 @@ class OPR(HttpProvider):
             for result in self._lookup_batch(batch_list):
                 yield result
 
+    # pylint: disable=duplicate-code
     def _lookup_batch(self, ioc_list: list) -> Iterable[LookupResult]:
         # build the query string manually - of the form domains[N]=domN&domains[N+1]...
         qry_elements = []
@@ -229,17 +233,9 @@ class OPR(HttpProvider):
             NotImplementedError,
             ConnectionError,
         ) as err:
-            result.details = err.args
-            result.raw_result = (
-                type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
-            )
+            self._err_to_results(result, err)
             if not isinstance(err, LookupError):
                 result.reference = req_url
             yield result
 
     # pylint: enable=duplicate-code
-
-
-print(
-    "Using Open PageRank. See https://www.domcop.com/openpagerank/what-is-openpagerank"
-)

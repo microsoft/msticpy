@@ -10,11 +10,13 @@ Geographic location lookup for IP addresses. This module has two classes
 for different services:
 
 -  GeoLiteLookup - Maxmind Geolite (see https://www.maxmind.com)
--  IPStackLookup - IPStack (see https://ipstack.com) Both services offer
-   a free tier for non-commercial use. However, a paid tier will
-   normally get you more accuracy, more detail and a higher throughput
-   rate. Maxmind geolite uses a downloadable database, while IPStack is
-   an online lookup (API key required).
+-  IPStackLookup - IPStack (see https://ipstack.com)
+
+Both services offer
+a free tier for non-commercial use. However, a paid tier will
+normally get you more accuracy, more detail and a higher throughput
+rate. Maxmind geolite uses a downloadable database, while IPStack is
+an online lookup (API key required).
 
 """
 import math
@@ -150,13 +152,13 @@ This library uses services provided by ipstack (https://ipstack.com)"""
 
     _IPSTACK_API = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
 
-    def __init__(self, api_key: str = None, bulk_lookup: bool = False):
+    def __init__(self, api_key: Optional[str] = None, bulk_lookup: bool = False):
         """
         Create a new instance of IPStackLookup.
 
         Parameters
         ----------
-        api_key : str
+        api_key : str, optional
             API Key from IPStack - see https://ipstack.com
             default is None - obtain key from msticpyconfig.yaml
         bulk_lookup : bool, optional
@@ -345,6 +347,7 @@ class GeoLiteLookup(GeoIpLookup):
 This product includes GeoLite2 data created by MaxMind, available from
 <a href="https://www.maxmind.com">https://www.maxmind.com</a>.
 """
+
     _LICENSE_TXT = """
 This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
@@ -352,8 +355,8 @@ https://www.maxmind.com.
 
     def __init__(
         self,
-        api_key: str = None,
-        db_folder: str = None,
+        api_key: Optional[str] = None,
+        db_folder: Optional[str] = None,
         force_update: bool = False,
         auto_update: bool = True,
     ):
@@ -362,18 +365,18 @@ https://www.maxmind.com.
 
         Parameters
         ----------
-        api_key : str
+        api_key : str, optional
             Default is None - use configuration value from msticpyconfig.yaml.
             API Key from MaxMind -
             Read more about GeoLite2 : https://dev.maxmind.com/geoip/geoip2/geolite2/
-            Sign up for a MaxMind account
-                - https://www.maxmind.com/en/geolite2/signup
-            Set your password and create a license key
-                - https://www.maxmind.com/en/accounts/current/license-key
+            Sign up for a MaxMind account:
+            https://www.maxmind.com/en/geolite2/signup
+            Set your password and create a license key:
+            https://www.maxmind.com/en/accounts/current/license-key
         db_folder: str, optional
             Provide absolute path to the folder containing MMDB file
-            (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy\GeoLite2 dir
+            (e.g. '/usr/home' or 'C:/maxmind').
+            If no path provided, it is set to download to .msticpy/GeoLite2
             under user`s home directory.
         force_update : bool, optional
             Force update can be set to true or false. depending on it,
@@ -392,11 +395,14 @@ https://www.maxmind.com.
             self._api_key = self.settings.args.get("AuthKey")  # type: ignore
 
         if db_folder is None:
-            db_folder = self._DB_HOME
+            self._dbfolder = self.settings.args.get("DBFolder")
+        if not self._dbfolder:
+            self._dbfolder = self._DB_HOME
+        self._dbfolder = str(Path(self._dbfolder).expanduser())
         self._force_update = force_update
         self._auto_update = auto_update
-        self._check_and_update_db(db_folder, self._force_update, self._auto_update)
-        self._dbpath = self._get_geoip_dbpath(db_folder)
+        self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
+        self._dbpath = self._get_geoip_dbpath(self._dbfolder)
         if not self._dbpath:
             raise RuntimeError("No usable GeoIP Database could be found.")
         self._reader = geoip2.database.Reader(self._dbpath)
@@ -426,7 +432,7 @@ https://www.maxmind.com.
         if not self._api_key:
             raise MsticpyConfigException(
                 "No API key was found in configuration or supplied as parameter.",
-                "Obtain an API Key from MaxMind.",
+                "Obtain an API Key from MaxMind and configure in msticpyconfig.yaml.",
                 "Sign up for an account at https://www.maxmind.com/en/geolite2/signup.",
             )
         if url is None:
@@ -558,13 +564,19 @@ https://www.maxmind.com.
                     "Latest local Maxmind City Database present is older than 30 days.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                db_is_current = self._download_and_extract_archive(url, db_folder)
+                try:
+                    db_is_current = self._download_and_extract_archive(url, db_folder)
+                except MsticpyConfigException as no_key_err:
+                    warnings.warn(" ".join(no_key_err.args))
             elif force_update and auto_update:
                 print(
                     "force_update is set to True.",
                     f"Attempting to download new database to {db_folder}",
                 )
-                db_is_current = self._download_and_extract_archive(url, db_folder)
+                try:
+                    db_is_current = self._download_and_extract_archive(url, db_folder)
+                except MsticpyConfigException as no_key_err:
+                    warnings.warn(" ".join(no_key_err.args))
             if not db_is_current:
                 warnings.warn(
                     "Continuing with cached database. Results may inaccurate."
