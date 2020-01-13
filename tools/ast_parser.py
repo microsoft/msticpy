@@ -9,7 +9,7 @@ from pprint import pprint
 from collections import defaultdict
 from typing import List, Dict, Any
 
-from msticpy._version import VERSION
+from ..msticpy._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -33,15 +33,28 @@ def analyze(src_file, quiet=True, node_types: List[str] = None):
     return analyzer.results
 
 
+# pylint: disable=invalid-name
 class Analyzer(ast.NodeVisitor):
+    """
+    Module AST visitor class - used by ast.parse.
+
+    Attributes
+    ----------
+    nodes : Dict[str, Any]
+        Dictionary of nodes in AST
+
+    """
+
     def __init__(self):
+        """Instantiate Analyzer."""
+        self.supported_types = ["imports", "imports_from", "calls", "funcs"]
         self.nodes: Dict[str, Any] = {}
         self.nodes["imports"] = []
         self.nodes["imports_from"] = defaultdict(list)
         self.nodes["calls"] = defaultdict(list)
         self.nodes["funcs"] = defaultdict(list)
 
-    def visit_Import(self, node: Any):
+    def visit_Import(self, node: Any):  # noqa: N802
         """
         Collect import statements.
 
@@ -55,7 +68,7 @@ class Analyzer(ast.NodeVisitor):
             self.nodes["imports"].append(alias.name)
         self.generic_visit(node)
 
-    def visit_ImportFrom(self, node: Any):
+    def visit_ImportFrom(self, node: Any):  # noqa: N802
         """
         Collect import from statements.
 
@@ -70,7 +83,7 @@ class Analyzer(ast.NodeVisitor):
             self.nodes["imports_from"][node.module].append(alias.name)
         self.generic_visit(node)
 
-    def visit_Call(self, node: Any):
+    def visit_Call(self, node: Any):  # noqa: N802
         """
         Collect call statements.
 
@@ -84,7 +97,7 @@ class Analyzer(ast.NodeVisitor):
             self.nodes["calls"][node.func.id].append(node.lineno)
         self.generic_visit(node)
 
-    def visit_FunctionDef(self, node: Any):
+    def visit_FunctionDef(self, node: Any):  # noqa: N802
         """
         Collect function statements.
 
@@ -99,6 +112,15 @@ class Analyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def report(self, node_types: List[str] = None):
+        """
+        Print report of analysis.
+
+        Parameters
+        ----------
+        node_types : List[str], optional
+            Optional list of node types, by default None
+
+        """
         for node_type, results in self.nodes.items():
             if node_types is not None and node_type in node_types:
                 print(node_type)
@@ -106,4 +128,13 @@ class Analyzer(ast.NodeVisitor):
 
     @property
     def results(self) -> Dict[str, Any]:
+        """
+        Return dictionary of results.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of results keyed by node_type.
+
+        """
         return self.nodes

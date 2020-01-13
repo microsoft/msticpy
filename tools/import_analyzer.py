@@ -6,13 +6,16 @@
 """Python file import analyzer."""
 import argparse
 from pathlib import Path
+import re
 import sys
 from contextlib import contextmanager
 from importlib import import_module
-from typing import Dict, List
+from typing import Dict
 
-from ast_parser import analyze
-from msticpy._version import VERSION
+import networkx as nx
+
+from .ast_parser import analyze
+from ..msticpy._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -21,6 +24,7 @@ __author__ = "Ian Hellen"
 # TODO parameter
 PACKAGE_ROOT = "E:/src/microsoft/msticpy"
 PACKAGE_NAME = "msticpy"
+PKG_TOKENS = r"([^=><]+)([=><]+)(.+)"
 
 
 class ModuleImports:
@@ -46,7 +50,13 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
     with open(Path(package_root).joinpath(req_file), "r") as req_f:
         req_list = req_f.readlines()
 
-    setup_reqs = {key.lower(): key for key in {req.split(">")[0] for req in req_list}}
+    setup_pkgs = {
+        re.match(PKG_TOKENS, item).groups()
+        for item in req_list
+        if re.match(PKG_TOKENS, item)
+    }
+    setup_versions = {key[0].lower(): key for key in setup_pkgs}
+    setup_reqs = {key[0].lower(): key[0] for key in setup_pkgs}
 
     # for packages that do not match top-level names
     # add the mapping
@@ -60,7 +70,7 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
         if pkg.startswith("azure-mgmt"):
             setup_reqs.pop(pkg)
             setup_reqs[pkg.replace("-", ".")] = pkg
-    return setup_reqs
+    return setup_reqs, setup_versions
 
 
 def _get_pkg_from_path(pkg_file: str, pkg_root: str):
@@ -172,7 +182,7 @@ def analyze_imports(
         A dictionary of modules and imports
 
     """
-    setup_reqs = _get_setup_reqs(package_root, req_file)
+    setup_reqs, _ = _get_setup_reqs(package_root, req_file)
     pkg_root = Path(package_root) / package_name
     all_mod_imports: Dict[str, ModuleImports] = {}
     pkg_modules = _get_pkg_modules(pkg_root)
@@ -220,8 +230,39 @@ def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs
         import type, by default "setup_reqs"
 
     """
-    for mod in modules:
-        print(mod, getattr(modules[mod], imp_type))
+    for py_mod in modules:
+        print(py_mod, getattr(modules[py_mod], imp_type))
+
+
+def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
+    """
+    Build Networkx graph of imports
+
+    Parameters
+    ----------
+    modules : Dict[str, ModuleImports]
+        Dictionary of module imports
+
+    Returns
+    -------
+    nx.Graph
+        Networkx DiGraph
+
+    """
+    req_imports = {mod: attribs.setup_reqs for mod, attribs in modules.items()}
+    import_graph = nx.DiGraph()
+    for py_mod, mod_imps in req_imports.items():
+        for imp in mod_imps:
+            import_graph.add_node(py_mod, n_type="module", degree=len(imps))
+            import_graph.add_node(imp, n_type="import")
+            import_graph.add_edge(py_mod, imp)
+
+    for node, attr in import_graph.nodes(data=True):
+        if attr["n_type"] == "import":
+            imp_nbrs = len(list(import_graph.predecessors(node)))
+            import_graph.add_node(node, n_type="import", degree=imp_nbrs)
+
+    return import_graph
 
 
 def _add_script_args():
