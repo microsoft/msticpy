@@ -246,7 +246,7 @@ class QuerySource:
         if isinstance(param_value, Number):
             # datetime specified as a number - we
             # interpret this as an offset from utcnow
-            return datetime.utcnow() + timedelta(
+            return datetime.utcnow() + timedelta(  # type: ignore
                 param_value  # type: ignore
             )
         try:

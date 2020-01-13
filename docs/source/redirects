@@ -1,0 +1,5 @@
+JupyterAndAzureSentinel.rst getting_started/JupyterAndAzureSentinel.rst
+JupyterAndSecurity.rst getting_started/JupyterAndSecurity.rst
+msticpyconfig.rst getting_started/msticpyconfig.rst
+TIProviders.rst data_acquisition/TIProviders.rst
+EventTimeline.rst visualization/EventTimeline.rst

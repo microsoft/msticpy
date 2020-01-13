@@ -8,6 +8,9 @@ import unittest
 import os
 from pathlib import Path
 from typing import Union, Any, Tuple
+import warnings
+
+import yaml
 
 from ..msticpy.nbtools import pkg_config
 from ..msticpy.nbtools.wsconfig import WorkspaceConfig
@@ -119,11 +122,29 @@ class TestPkgConfig(unittest.TestCase):
     def test_geo_ip_settings(self):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+        if "MAXMIND_AUTH" not in os.environ:
+            os.environ["MAXMIND_AUTH"] = "Testkey"
+
         pkg_config.refresh_config()
 
-        geoip_lite = GeoLiteLookup()
+        with open(test_config1) as f_handle:
+            config_settings = yaml.safe_load(f_handle)
+        conf_dbpath = (
+            config_settings.get("OtherProviders", {})
+            .get("GeoIPLite", {})
+            .get("Args", {})
+            .get("DBFolder")
+        )
+        conf_dbpath = str(Path(conf_dbpath).expanduser())
+
+        with warnings.catch_warnings():
+            # We want to ignore warnings from failure to download DB file
+            warnings.simplefilter("ignore", category=UserWarning)
+            geoip_lite = GeoLiteLookup()
         self.assertIsInstance(geoip_lite._api_key, str)
-        self.assertGreaterEqual(len(geoip_lite._api_key), 0)
+        self.assertEqual(geoip_lite._api_key, os.environ["MAXMIND_AUTH"])
+
+        self.assertEqual(geoip_lite._dbfolder, conf_dbpath)
 
         ipstack = IPStackLookup()
         self.assertEqual(ipstack._api_key, "987654321-222")
