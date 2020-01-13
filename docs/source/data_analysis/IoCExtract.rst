@@ -1,0 +1,682 @@
+IoC Extraction
+==============
+
+
+This class allows you to extract IoC patterns from a string or a
+DataFrame. Several patterns are built in to the class and you can
+override these or supply new ones.
+
+
+.. code:: ipython3
+
+    # Imports
+    import sys
+    MIN_REQ_PYTHON = (3,6)
+    if sys.version_info < MIN_REQ_PYTHON:
+        print('Check the Kernel->Change Kernel menu and ensure that Python 3.6')
+        print('or later is selected as the active kernel.')
+        sys.exit("Python %s.%s or later is required.\n" % MIN_REQ_PYTHON)
+
+    from IPython.display import display, HTML
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set()
+    import pandas as pd
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', 50)
+    pd.set_option('display.max_colwidth', 100)
+
+.. code:: ipython3
+
+    # Load test data
+    process_tree = pd.read_csv('data/process_tree.csv')
+    process_tree[['CommandLine']].head()
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>CommandLine</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>cmd  /c "systeminfo &amp;&amp; systeminfo"</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>.\rundll32  /C 12345.exe</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>.\rundll32  /C c:\users\MSTICAdmin\12345.exe</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <br/>
+
+
+
+
+Looking for IoC in a String
+---------------------------
+
+Just pass the string as a parameter to the extract() method.
+
+
+Get a commandline from our data set.
+
+.. code:: ipython3
+
+    # get a commandline from our data set
+    cmdline = process_tree['CommandLine'].loc[78]
+    cmdline
+
+
+
+
+.. parsed-literal::
+
+    'netsh  start capture=yes IPv4.Address=1.2.3.4 tracefile=C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\bzzzzzz.txt'
+
+
+Instantiate an IoCExtract instance and pass the string to the extract() method.
+
+.. code:: ipython3
+
+    # Instantiate an IoCExtract object
+    from msticpy.sectools import IoCExtract
+    ioc_extractor = IoCExtract()
+
+    # any IoCs in the string?
+    iocs_found = ioc_extractor.extract(cmdline)
+
+    if iocs_found:
+        print('\nPotential IoCs found in alert process:')
+        display(iocs_found)
+
+
+
+.. parsed-literal::
+
+
+    Potential IoCs found in alert process:
+
+
+
+.. parsed-literal::
+
+    defaultdict(set,
+                {'ipv4': {'1.2.3.4'},
+                 'windows_path': {'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\bzzzzzz.txt'}})
+
+
+The following IoC patterns are searched for:
+
+* ipv4
+* ipv6
+* dns
+* url
+* windows_path
+* linux_path
+* md5_hash
+* sha1_hash
+* sha256_hash
+
+
+Using a DataFrame as Input
+--------------------------
+
+You can use the ``data=`` parameter to
+IoCExtract.extract() to pass a DataFrame. Use the ``columns``
+parameter to specify which column or columns that you want to search.
+
+.. note:: When searching a DataFrame
+    the following types are not included in the search by default
+    ``windows_path`` and ``linux_path`` because of the likely high volume
+    of results and number of false positive matches. You can
+    include them by specifing ``include_paths=True`` as a parameter to
+    ``extract()``.
+
+    You can also use the ``ioc_types`` parameter to explicitly list the
+    ioc_types that you want to search for. This should be a list of
+    strings of valid types.
+    See :py:meth:`ioc_types<msticpy.sectools.ioc_extractor.IoCExtract.ioc_types>`
+
+
+.. code:: ipython3
+
+    ioc_extractor = IoCExtract()
+    ioc_df = ioc_extractor.extract(data=process_tree, columns=['CommandLine'], os_family='Windows')
+    if len(ioc_df):
+        display(HTML("<h3>IoC patterns found in process tree.</h3>"))
+        display(ioc_df)
+
+
+
+.. raw:: html
+
+    <h3>IoC patterns found in process tree.</h3>
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>IoCType</th>
+          <th>Observable</th>
+          <th>SourceIndex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>48</th>
+          <td>windows_path</td>
+          <td>.\powershell</td>
+          <td>36</td>
+        </tr>
+        <tr>
+          <th>49</th>
+          <td>url</td>
+          <td>http://somedomain/best-kitten-names-1.jpg'</td>
+          <td>37</td>
+        </tr>
+        <tr>
+          <th>53</th>
+          <td>windows_path</td>
+          <td>.\pOWErS^H^ElL^.eX^e^</td>
+          <td>37</td>
+        </tr>
+        <tr>
+          <th>58</th>
+          <td>md5_hash</td>
+          <td>81ed03caf6901e444c72ac67d192fb9c</td>
+          <td>44</td>
+        </tr>
+        <tr>
+          <th>59</th>
+          <td>url</td>
+          <td>http://badguyserver/pwnme"</td>
+          <td>46</td>
+        </tr>
+        <tr>
+          <th>68</th>
+          <td>windows_path</td>
+          <td>.\reg  query add mscfile\\\\open</td>
+          <td>59</td>
+        </tr>
+        <tr>
+          <th>72</th>
+          <td>windows_path</td>
+          <td>\system\CurrentControlSet\Control\Terminal</td>
+          <td>63</td>
+        </tr>
+        <tr>
+          <th>92</th>
+          <td>ipv4</td>
+          <td>1.2.3.4</td>
+          <td>78</td>
+        </tr>
+        <tr>
+          <th>108</th>
+          <td>ipv4</td>
+          <td>127.0.0.1</td>
+          <td>102</td>
+        </tr>
+        <tr>
+          <th>109</th>
+          <td>url</td>
+          <td>http://127.0.0.1/</td>
+          <td>102</td>
+        </tr>
+        <tr>
+          <th>110</th>
+          <td>windows_path</td>
+          <td>\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Svchost\MyNastySvcHostConfig</td>
+          <td>103</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <br/>
+
+
+IoCExtractor API
+----------------
+
+See :py:class:`IoCExtract<msticpy.sectools.ioc_extractor.IoCExtract>`
+and See :py:func:`IoCExtract<msticpy.sectools.ioc_extractor.IoCExtract.extract>`
+
+
+Predefined Regex Patterns
+-------------------------
+
+.. code:: ipython3
+
+    from html import escape
+    extractor = IoCExtract()
+
+    for ioc_type, pattern in extractor.ioc_types.items():
+        esc_pattern = escape(pattern.comp_regex.pattern)
+        display(HTML(f'<b>{ioc_type}</b>'))
+        display(HTML(f'<div style="margin-left:20px"><pre>{esc_pattern}</pre></div>)'))
+
+
+
+.. raw:: html
+
+    <table border="1">
+      <thead>
+        <tr style="text-align: right;">
+          <th>IoCType</th>
+          <th>Regex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ipv4</td>
+          <td><pre>(?P&lt;ipaddress&gt;(?:[0-9]{1,3}\\.){3}[0-9]{1,3})</pre></td>
+        </tr>
+        <tr>
+          <td>ipv6</td>
+          <td><pre>(?&lt;![:.\\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\\w])</pre></td>
+        </tr>
+        <tr>
+          <td>dns</td>
+          <td><pre>((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}</pre></td>
+        </tr>
+        <tr>
+          <td>url</td>
+          <td>
+            <pre>(?P&lt;protocol&gt;(https?|ftp|telnet|ldap|file)://)&#10;</pre>
+            <pre>(?P&lt;userinfo&gt;([a-z0-9-._~!$&amp;\\'()*+,;=:]|%[0-9A-F]{2})*@)?&#10;</pre>
+            <pre>(?P&lt;host&gt;([a-z0-9-._~!$&amp;\\'()*+,;=]|%[0-9A-F]{2})*)</pre>
+          </td>
+        </tr>
+        <tr>
+          <td>windows_path</td>
+          <td>
+            <pre>&#13;&#10;(?P&lt;root&gt;[a-z]:|\\\\\\\\[a-z0-9_.$-]+||[.]+)&#10;</pre>
+            <pre>(?P&lt;folder&gt;\\\\(?:[^\\/:*?&quot;\\\'&lt;&gt;|\\r\\n]+\\\\)*)&#10;></pre>
+            <pre>(?P&lt;file&gt;[^\\\\/*?&quot;&quot;&lt;&gt;|\\r\\n ]+)</pre>
+          </td>
+        </tr>
+        <tr>
+          <td>linux_path</td>
+          <td>
+            <pre>(?P&lt;root&gt;/+||[.]+)&#10;</pre>
+            <pre>(?P&lt;folder&gt;/(?:[^\\\\/:*?&lt;&gt;|\\r\\n]+/)*)&#10;</pre>
+            <pre>(?P&lt;file&gt;[^/\\0&lt;&gt;|\\r\\n ]+)</pre>
+          </td>
+        <tr>
+          <td>md5_hash</td>
+          <td><pre>(?:^|[^A-Fa-f0-9])(?P&lt;hash&gt;[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])</pre></td>
+        </tr>
+        <tr>
+          <td>sha1_hash</td>
+          <td><pre>(?:^|[^A-Fa-f0-9])(?P&lt;hash&gt;[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])</pre></td>
+        </tr>
+          <tr>
+          <td>ipv6</td>
+          <td><pre>(?:^|[^A-Fa-f0-9])(?P&lt;hash&gt;[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])</pre></td>
+        </tr>
+      </table>
+      <br>
+
+
+
+Adding your own pattern(s)
+--------------------------
+
+
+See :py:func:`add_ioc_type<msticpy.sectools.ioc_extractor.IoCExtract.add_ioc_type>`
+
+
+Add an IoC type and regular expression to use to the built-in set.
+
+.. warning:: Adding an ioc_type that exists in the internal set will overwrite that item
+
+Regular expressions are compiled with re.I | re.X | re.M (Ignore case, Verbose
+and MultiLine)
+
+add_ioc_type parameters:
+
+-  ioc_type{str} - a unique name for the IoC type
+-  ioc_regex{str} - a regular expression used to search for the type
+
+
+.. code:: ipython3
+
+    import re
+    rcomp = re.compile(r'(?P<pipe>\\\\\.\\pipe\\[^\s\\]+)')
+
+.. code:: ipython3
+
+    extractor.add_ioc_type(ioc_type='win_named_pipe', ioc_regex=r'(?P<pipe>\\\\\.\\pipe\\[^\s\\]+)')
+
+    # Check that it added ok
+    print(extractor.ioc_types['win_named_pipe'])
+
+    # Use it in our data set
+    ioc_extractor.extract(data=process_tree, columns=['CommandLine'], os_family='Windows').query('IoCType == \'win_named_pipe\'')
+
+
+.. parsed-literal::
+
+    IoCPattern(ioc_type='win_named_pipe', comp_regex=re.compile('(?P<pipe>\\\\\\\\\\.\\\\pipe\\\\[^\\s\\\\]+)', re.IGNORECASE|re.MULTILINE|re.VERBOSE), priority=0)
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>IoCType</th>
+          <th>Observable</th>
+          <th>SourceIndex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>116</th>
+          <td>win_named_pipe</td>
+          <td>\\.\pipe\blahtest"</td>
+          <td>107</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <br>
+
+
+
+
+Merging output with source data
+-------------------------------
+
+The SourceIndex column allows you to merge the
+results with the input DataFrame Where an input row has multiple IoC
+matches the output of this merge will result in duplicate rows from the
+input (one per IoC match). The previous index is preserved in the second
+column (and in the SourceIndex column).
+
+Note: you will need to set the type of the SourceIndex column. In the
+example below case we are matching with the default numeric index so we
+force the type to be numeric. In cases where you are using an index of a
+different dtype you will need to convert the SourceIndex (dtype=object)
+to match the type of your index column.
+
+.. code:: ipython3
+
+    input_df = data=process_tree.head(20)
+    output_df = ioc_extractor.extract(data=input_df, columns=['NewProcessName', 'CommandLine'])
+    # set the type of the SourceIndex column. In this case we are matching with the default numeric index.
+    output_df['SourceIndex'] = pd.to_numeric(output_df['SourceIndex'])
+    merged_df = pd.merge(left=input_df, right=output_df, how='outer', left_index=True, right_on='SourceIndex')
+    merged_df.head()
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>Unnamed: 0</th>
+          <th>TenantId</th>
+          <th>Account</th>
+          <th>EventID</th>
+          <th>TimeGenerated</th>
+          <th>Computer</th>
+          <th>SubjectUserSid</th>
+          <th>SubjectUserName</th>
+          <th>SubjectDomainName</th>
+          <th>SubjectLogonId</th>
+          <th>NewProcessId</th>
+          <th>NewProcessName</th>
+          <th>TokenElevationType</th>
+          <th>ProcessId</th>
+          <th>CommandLine</th>
+          <th>ParentProcessName</th>
+          <th>TargetLogonId</th>
+          <th>SourceComputerId</th>
+          <th>TimeCreatedUtc</th>
+          <th>NodeRole</th>
+          <th>Level</th>
+          <th>ProcessId1</th>
+          <th>NewProcessId1</th>
+          <th>IoCType</th>
+          <th>Observable</th>
+          <th>SourceIndex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>0</td>
+          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
+          <td>MSTICAlertsWin1\MSTICAdmin</td>
+          <td>4688</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>MSTICAlertsWin1</td>
+          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
+          <td>MSTICAdmin</td>
+          <td>MSTICAlertsWin1</td>
+          <td>0xfaac27</td>
+          <td>0x1580</td>
+          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
+          <td>%%1936</td>
+          <td>0xbc8</td>
+          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
+          <td>C:\Windows\System32\cmd.exe</td>
+          <td>0x0</td>
+          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>source</td>
+          <td>0</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>windows_path</td>
+          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>0</td>
+          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
+          <td>MSTICAlertsWin1\MSTICAdmin</td>
+          <td>4688</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>MSTICAlertsWin1</td>
+          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
+          <td>MSTICAdmin</td>
+          <td>MSTICAlertsWin1</td>
+          <td>0xfaac27</td>
+          <td>0x1580</td>
+          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
+          <td>%%1936</td>
+          <td>0xbc8</td>
+          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
+          <td>C:\Windows\System32\cmd.exe</td>
+          <td>0x0</td>
+          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>source</td>
+          <td>0</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>windows_path</td>
+          <td>C:\RECYCLER\xxppyy.exe</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>0</td>
+          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
+          <td>MSTICAlertsWin1\MSTICAdmin</td>
+          <td>4688</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>MSTICAlertsWin1</td>
+          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
+          <td>MSTICAdmin</td>
+          <td>MSTICAlertsWin1</td>
+          <td>0xfaac27</td>
+          <td>0x1580</td>
+          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
+          <td>%%1936</td>
+          <td>0xbc8</td>
+          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
+          <td>C:\Windows\System32\cmd.exe</td>
+          <td>0x0</td>
+          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
+          <td>2019-01-15 05:15:15.677</td>
+          <td>source</td>
+          <td>0</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>windows_path</td>
+          <td>.\ftp</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>1</td>
+          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
+          <td>MSTICAlertsWin1\MSTICAdmin</td>
+          <td>4688</td>
+          <td>2019-01-15 05:15:16.167</td>
+          <td>MSTICAlertsWin1</td>
+          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
+          <td>MSTICAdmin</td>
+          <td>MSTICAlertsWin1</td>
+          <td>0xfaac27</td>
+          <td>0x16fc</td>
+          <td>C:\Diagnostics\UserTmp\reg.exe</td>
+          <td>%%1936</td>
+          <td>0xbc8</td>
+          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
+          <td>C:\Windows\System32\cmd.exe</td>
+          <td>0x0</td>
+          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
+          <td>2019-01-15 05:15:16.167</td>
+          <td>sibling</td>
+          <td>1</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>windows_path</td>
+          <td>C:\Diagnostics\UserTmp\reg.exe</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>1</td>
+          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
+          <td>MSTICAlertsWin1\MSTICAdmin</td>
+          <td>4688</td>
+          <td>2019-01-15 05:15:16.167</td>
+          <td>MSTICAlertsWin1</td>
+          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
+          <td>MSTICAdmin</td>
+          <td>MSTICAlertsWin1</td>
+          <td>0xfaac27</td>
+          <td>0x16fc</td>
+          <td>C:\Diagnostics\UserTmp\reg.exe</td>
+          <td>%%1936</td>
+          <td>0xbc8</td>
+          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
+          <td>C:\Windows\System32\cmd.exe</td>
+          <td>0x0</td>
+          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
+          <td>2019-01-15 05:15:16.167</td>
+          <td>sibling</td>
+          <td>1</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>windows_path</td>
+          <td>.\reg</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+

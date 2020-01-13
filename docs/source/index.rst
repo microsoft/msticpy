@@ -7,7 +7,7 @@ Many of the components can also be used independently of Azure Sentinel
 when using Jupyter for threat hunting and security investigation.
 
 Most of the content of the package began life as inline code in a
-notebook. However, having a lot of code in your notebooks creates 
+notebook. However, having a lot of code in your notebooks creates
 a few problems:
 
 * notebooks dominated by big code blocks make it difficult to see
@@ -33,13 +33,15 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Contents:
+   :maxdepth: 2
 
-   overview.rst
-   msticpy.rst
+   GettingStarted
+   DataAcquisition
+   DataEnrichment
+   DataAnalysis
+   Visualization
+   msticpyAPI
    notebooksamples.rst
-   otherdocs.rst
    contributing.rst
    license.rst
 

@@ -1,40 +1,24 @@
-Introduction
-============
-
-Microsoft Threat Intelligence Python Security Tools
----------------------------------------------------
-
-msticpy is a set of tools intended to be used for security investigations
-and hunting. Most of the tools originated from Jupyter notebooks and many
-of them are only useful in notebooks (e.g. much of the nbtools sub-package)
-
-It is organized into three main sub-packages:
-
--  sectools - python security tools to help with data analysis or
-   investigation
--  nbtools - Jupyter-specific UI tools such as widgets and data display
--  data - data layer and pre-defined queries for Azure Sentinel, MDATP and
-   other data sources.
-
-The package is in an early iteration so there are likely to be bugs
-and there are several parts that are not yet optimized for performance. We
-welcome feedback, bug reports and suggestions for new features.
-
-Installing
-----------
-
-``pip install msticpy``
-
-or for the latest dev build
-
-``pip install git+https://github.com/microsoft/msticpy``
-
+Package Structure
+=================
 
 Security Tools Sub-package - *sectools*
 ---------------------------------------
 
 This subpackage contains several modules helpful for working on security
 investigations and hunting:
+
+
+auditdextract
+~~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.auditdextract`
+
+Module to load and decode Linux audit logs. It collapses messages
+sharing the same message ID into single events, decodes hex-encoded data
+fields and performs some event-specific formatting and normalization
+(e.g. for process start events it will re-assemble the process command
+line arguments into a single string).
+
 
 base64unpack
 ~~~~~~~~~~~~
@@ -50,7 +34,9 @@ base64 content and will recurse down up to 20 levels (default can be
 overridden). Output is to a decoded string (for single string input) or
 a DataFrame (for dataframe input).
 
-`Base64Unpack Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb>`__
+See :doc:`../data_analysis/Base64Unpack`
+
+Sample notebook - `Base64Unpack Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb>`__
 
 iocextract
 ~~~~~~~~~~
@@ -75,7 +61,9 @@ The following types are built-in:
 Output is a dictionary of matches (for single string input) or a
 DataFrame (for dataframe input).
 
-`IoCExtract Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb>`__
+See :doc:`../data_analysis/IoCExtract`
+
+Sample notebook - `IoCExtract Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb>`__
 
 tiproviders
 ~~~~~~~~~~~
@@ -90,8 +78,9 @@ multiple observables. Depending on the provider, you may require an account
 and an API key. Some providers also enforce throttling (especially for free
 tiers), which might affect performing bulk lookups.
 
-For more details see :doc:`TIProviders` and
-`TILookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
+See :doc:`../data_acquisition/TIProviders`
+
+Sample notebook - `TILookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
 
 vtlookup
 ~~~~~~~~
@@ -110,7 +99,7 @@ for the account type that you have. Support IoC Types:
 -  DNS Domain
 -  IPv4 Address
 
-`VTLookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/VirusTotalLookup.ipynb>`__
+Sample notebook - `VTLookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/VirusTotalLookup.ipynb>`__
 
 geoip
 ~~~~~
@@ -127,7 +116,9 @@ for different services:
    rate. Maxmind geolite uses a downloadable database, while IPStack is
    an online lookup (API key required).
 
-`GeoIP Lookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb>`__
+See :doc:`../data_acquisition/GeoIPLookups`
+
+Sample notebook - `GeoIP Lookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb>`__
 
 eventcluster
 ~~~~~~~~~~~~
@@ -148,7 +139,9 @@ values in the string and using delimiters or tokens to group the values.
 This is an unsupervised learning module implemented using SciKit Learn
 DBScan.
 
-`Event Clustering Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb>`__
+See :doc:`../data_analysis/EventClustering`
+
+Sample notebook - `Event Clustering Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb>`__
 
 outliers
 ~~~~~~~~
@@ -160,16 +153,6 @@ Similar to the eventcluster module but a little bit more experimental
 outlier events in a single data set or using one data set as training
 data and another on which to predict outliers.
 
-auditdextract
-~~~~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.auditdextract`
-
-Module to load and decode Linux audit logs. It collapses messages
-sharing the same message ID into single events, decodes hex-encoded data
-fields and performs some event-specific formatting and normalization
-(e.g. for process start events it will re-assemble the process command
-line arguments into a single string). This is still a work-in-progress.
 
 syslog_utils
 ~~~~~~~~~~~~~
@@ -196,43 +179,107 @@ domain_utils
 Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.
 
+
 Notebook tools sub-package - *nbtools*
 --------------------------------------
 
 This is a collection of display and utility modules designed to make
 working with security data in Jupyter notebooks quicker and easier.
 
--  nbwidgets - groups common functionality such as list pickers, time
-   boundary settings, saving and retrieving environment variables into a
-   single line callable command.
--  nbdisplay - functions that implement common display of things like
-   alerts, events in a slightly more consumable way than print()
+See :doc:`../Visualization`
 
-`Notebooks Tools Usage <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb>`__
-`Event Timeline Visualization <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb>`__
+Notebook widgets
+~~~~~~~~~~~~~~~~
+
+:py:mod:`msticpy.nbtools.nbwidgets`
+
+
+Common functionality such as list pickers, time
+boundary settings, saving and retrieving environment variables into a
+single line callable command.
+
+See :doc:`../visualization/NotebookWidgets`
+
+Sample notebook - `Event Clustering Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb>`__
+
+Display functions
+~~~~~~~~~~~~~~~~~
+
+:py:mod:`msticpy.nbtools.nbdisplay`
+
+Common display of things like
+alerts, events in a slightly more consumable way than print()
+
+Process tree
+~~~~~~~~~~~~
+
+:py:mod:`msticpy.nbtools.process_tree` - process tree visualization.
+
+See :doc:`../visualization/ProcessTree`
+
+Sample notebook - `Process Tree Visualization <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb>`_
+
+Event timeline
+~~~~~~~~~~~~~~
+
+:py:mod:`msticpy.nbtools.timeline` - event timeline visualization.
+
+See :doc:`../visualization/EventTimeline`
+
+Sample notebook - `Event Timeline Visualization <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb>`_
+
 
 Data sub-package - *data*
 -------------------------
 
-These components are currently still part of the nbtools sub-package but
-will be refactored to separate them into their own sub-package.
+See :doc:`../DataAcquisition`
 
--  QueryProvider - extensible query library targeting Log Analytics or OData
-   endpoints. Built-in parameterized queries allow complex queries to be run
-   from a single function call. Add your own queries using a simple YAML
-   schema.
--  security\_alert and security\_event - encapsulation classes for
-   alerts and events. Each has a standard 'entities' property reflecting
-   the entities found in the alert or event. These can also be used as
-   meta-parameters for many of the queries. For example the query:
-   ``qry.list_host_logons(query_times, alert)`` will extract
-   the value for the ``hostname`` query parameter from the alert.
--  entityschema - implements entity classes (e.g. Host, Account,
-   IPAddress) used in Log Analytics alerts and in many of these modules.
-   Each entity encapsulates one or more properties related to the
-   entity.
+QueryProvider
+~~~~~~~~~~~~~
 
-`Data Queries Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`__
+:py:mod:`msticpy.data.data_providers.QueryProvider`
+
+Extensible query library targeting Log Analytics or OData
+endpoints. Built-in parameterized queries allow complex queries to be run
+from a single function call. Add your own queries using a simple YAML
+schema.
+
+See :doc:`../data_acquisition/DataProviders`
+
+Sample notebook - `Data Queries Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`__
+
+
+----
+
+.. note:: The following modules are currently part of the ``nbtools``
+   sub-package but will be moved to the ``data`` package.
+
+SecurityAlert and SecurityEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:py:class:`msticpy.nbtools.security_alert.SecurityAlert`
+
+:py:class:`msticpy.nbtools.security_event.SecurityEvent`
+
+Encapsulation classes for
+alerts and events. Each has a standard 'entities' property reflecting
+the entities found in the alert or event. These can also be used as
+meta-parameters for many of the queries. For example the query:
+``qry.list_host_logons(query_times, alert)`` will extract
+the value for the ``hostname`` query parameter from the alert.
+
+
+
+Entities
+~~~~~~~~
+
+:py:mod:`msticpy.nbtools.entity_schema`
+
+Entity classes (e.g. Host, Account, IPAddress) used in Azure Security Center
+and Azure Sentinel alerts and in many of the modules of *msticpy*.
+
+Each entity encapsulates one or more properties related to the entity.
+
 
 --------------
 
@@ -242,6 +289,7 @@ To-Do Items
 
 -  Add additional notebooks to document use of the tools.
 -  Expand list of supported TI provider classes.
+-  Expand Azure data enrichment options.
 
 Supported Platforms and Packages
 --------------------------------

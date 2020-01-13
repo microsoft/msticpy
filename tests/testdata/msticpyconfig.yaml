@@ -52,6 +52,7 @@ OtherProviders:
     Args:
       AuthKey:
         EnvironmentVar: "MAXMIND_AUTH"
+      DBFolder: "~/.msticpy"
     Provider: "GeoLiteLookup"
   IPStack:
     Args:

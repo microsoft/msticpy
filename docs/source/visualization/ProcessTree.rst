@@ -1,9 +1,11 @@
-msticpy - ProcessTree
-=====================
+ProcessTree
+===========
 
 This describes the use of the process tree data and
 visualization modules. These modules can be used with either Windows
-process creation events (ID 4688) or Linux auditd logs.
+process creation events (ID 4688) or Linux auditd logs. The
+ProcessTree visualization is built
+using the `Bokeh library <https://bokeh.pydata.org>`__.
 
 See the sample
 `ProcessTree Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb>`__
@@ -43,10 +45,11 @@ The input can be either Windows 4688 events or Linux audit events
 
 build_process_tree syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-See :py:func:`~msticpy.sectools.process_tree_utils.build_process_tree`.
+See :py:func:`build_process_tree<msticpy.sectools.process_tree_utils.build_process_tree>`
 
 .. code:: python
 
+   from mstipy.sectools import *
    ptree.build_process_tree(procs, schema=None, show_progress=False, debug=False)
 
 Parameters
@@ -92,6 +95,7 @@ The default output returns some statistics about the processed data.
 
       {'Processes': 1010, 'RootProcesses': 10, 'LeafProcesses': 815, 'BranchProcesses': 185, 'IsolatedProcesses': 0, 'LargestTreeDepth': 7}
 
+
 Process Tree utils module
 -------------------------
 
@@ -135,8 +139,10 @@ functions <#Process-Tree-utility-functions>`__.
 Plotting Syntax
 ---------------
 
-See :py:func:`~msticpy.nbtools.process_tree.plot_process_tree` and
-:py:func:`~msticpy.nbtools.process_tree.build_and_show_process_tree`
+See
+:py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
+and
+:py:func:`build_and_show_process_tree<msticpy.nbtools.process_tree.build_and_show_process_tree>`
 
 .. code:: python
 
@@ -180,22 +186,22 @@ show_table (bool)
    source values as a data table beneath the process tree.
 
 
-Caveats
-^^^^^^^
-**Large data sets** (more than a few hundred processses)
+.. warning:: **Large data sets** (more than a few hundred processses)
 
-These will normally be handled well by the Bokeh plot (up to multiple
-tens of thousands or more) but it will make navigation of the tree
-difficult. In particular, the range tool (on the right of the main
-plot) will be difficult to manipulate. Split the input data into
-smaller chunks before plotting.
+   These will normally be handled well by the Bokeh plot (up to multiple
+   tens of thousands or more) but it will make navigation of the tree
+   difficult. In particular, the range tool (on the right of the main
+   plot) will be difficult to manipulate. Split the input data into
+   smaller chunks before plotting.
 
-**Font Size**
-
-The font size does not scale based on how much data is shown. If you
-use the range tool to select too large a subset of the data in the
-main plot, the font will become unreadable. If this happens, use the
-``reset`` tool to set the plot back to its defaults.
+.. note:: **Range Tool and Font Size**
+   Avoid using Range tool to change the size of the displayed plot.
+   The font size does not scale based on how much data is shown. If you
+   use the range tool to select too large a subset of the data in the
+   main plot, the font will become unreadable. If this happens, use the
+   ``reset`` tool to set the plot back to its defaults. Dragging the
+   range box along the tree, rather than dragging individual edges
+   (resulting in resizing the range) will give more readable results.
 
 
 Linux Process Tree
@@ -205,14 +211,16 @@ visualizing Windows processes.
 
 **Note** This assumes that the Linux audit log has been read from a
 file using
-`msticpy.sectools.auditdextract.read_from_file() <https://msticpy.readthedocs.io/en/latest/msticpy.sectools.html#msticpy.sectools.auditdextract.read_from_file>`__
+:py:func:`read_from_file<msticpy.sectools.auditdextract.read_from_file>`
 or read from Azure Sentinel/Log Analytics using the
 LinuxAudit.auditd_all query and processed using
-`msticpy.sectools.auditdextract.extract_events_to_df() <https://msticpy.readthedocs.io/en/latest/msticpy.sectools.html#msticpy.sectools.auditdextract.extract_events_to_df>`__
+:py:func:`extract_events_to_df<msticpy.sectools.auditdextract.extract_events_to_df>`
 function.
 
 Using either of these, the audit messages events related to a single
 process start are merged into a single row.
+
+See :doc: `../data_acquisition/CollectingLinuxAuditLogs.rst` for more details.
 
 
 .. container:: cell code
@@ -341,40 +349,49 @@ Plotting Using a color gradient
    :width: 5in
    :height: 4in
 
-.. container:: cell markdown
 
-   .. rubric:: Process Tree utility functions
-      :name: process-tree-utility-functions
 
-   The ``process_tree_utils`` module has a number of functions that may
-   be useful in extracting or manipulating process trees or tree
-   relationships.
+Process Tree utility Functions
+------------------------------
 
-   .. rubric:: Functions
-      :name: functions
 
-   -  :py:func:`~msticpy.sectools.process_tree_utils.build_process_key`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.build_process_tree`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_ancestors`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_children`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_descendents`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_parent`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_process`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_process_key`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_root`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_root_tree`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_roots`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_siblings`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_summary_info`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.get_tree_depth`
-   -  :py:func:`~msticpy.sectools.process_tree_utils.infer_schema`
+The :py:mod:`process_tree_utils<msticpy.sectools.process_tree_utils>`
+module has a number of functions that may
+be useful in extracting or manipulating process trees or tree
+relationships.
 
-.. container:: cell markdown
+These typically take a ``procs`` parameter - the DataFrame containing
+the process trees.
+Processes that perform navigation relative to another process (get_parent,
+get_children, etc.) also take a ``source`` parameter - the process that is
+the origin of the navigation.
 
-   .. rubric:: get_summary_info
-      :name: get_summary_info
+Some functions also have an ``include_source`` parameter, e.g. get_children.
+This controls whether the function will include the source process in the results.
 
-   Get summary information.
+Functions:
+
+-  :py:func:`build_process_key<msticpy.sectools.process_tree_utils.build_process_key>`
+-  :py:func:`build_process_tree<msticpy.sectools.process_tree_utils.build_process_tree>`
+-  :py:func:`get_ancestors<msticpy.sectools.process_tree_utils.get_ancestors>`
+-  :py:func:`get_children<msticpy.sectools.process_tree_utils.get_children>`
+-  :py:func:`get_descendents<msticpy.sectools.process_tree_utils.get_descendents>`
+-  :py:func:`get_parent<msticpy.sectools.process_tree_utils.get_parent>`
+-  :py:func:`get_process<msticpy.sectools.process_tree_utils.get_process>`
+-  :py:func:`get_process_key<msticpy.sectools.process_tree_utils.get_process_key>`
+-  :py:func:`get_root<msticpy.sectools.process_tree_utils.get_root>`
+-  :py:func:`get_root_tree<msticpy.sectools.process_tree_utils.get_root_tree>`
+-  :py:func:`get_roots<msticpy.sectools.process_tree_utils.get_roots>`
+-  :py:func:`get_siblings<msticpy.sectools.process_tree_utils.get_siblings>`
+-  :py:func:`get_summary_info<msticpy.sectools.process_tree_utils.get_summary_info>`
+-  :py:func:`get_tree_depth<msticpy.sectools.process_tree_utils.get_tree_depth>`
+-  :py:func:`infer_schema<msticpy.sectools.process_tree_utils.infer_schema>`
+
+
+:py:func:`~msticpy.sectools.process_tree_utils.get_summary_info`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Get summary information.
 
 .. container:: cell code
 
@@ -393,12 +410,10 @@ Plotting Using a color gradient
           'IsolatedProcesses': 0,
           'LargestTreeDepth': 7}
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_roots`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_roots
-      :name: get_roots
-
-   Get roots of all trees in the data set.
+Get roots of all trees in the data set.
 
 .. container:: cell code
 
@@ -407,12 +422,13 @@ Plotting Using a color gradient
       # Get roots of all trees in the set
       ptree.get_roots(p_tree_win).head()
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_descendents`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_descendents
-      :name: get_descendents
+Get the full tree beneath a process.
 
-   Get the full tree beneath a process.
+get_descendents takes an ``include_source`` parameter. Setting this to
+True returns the source process with the result set.
 
 .. container:: cell code
 
@@ -423,12 +439,13 @@ Plotting Using a color gradient
       full_tree = ptree.get_descendents(p_tree_win, t_root)
       full_tree.head()
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_children`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_children
-      :name: get_children
+Get the immediate children of a process
 
-   Get the immediate children of a process
+get_children takes an ``include_source`` parameter. Setting this to
+True returns the source process with the result set.
 
 .. container:: cell code
 
@@ -439,12 +456,10 @@ Plotting Using a color gradient
       children.head()
 
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_tree_depth`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_tree_depth
-      :name: get_tree_depth
-
-   Get the depth of a tree.
+Get the depth of a tree.
 
 .. container:: cell code
 
@@ -460,12 +475,17 @@ Plotting Using a color gradient
 
          depth of tree is 4
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_parent`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_parent and get_ancestors
-      :name: get_parent-and-get_ancestors
+:py:func:`~msticpy.sectools.process_tree_utils.get_ancestors`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   Get the parent process or all ancestors.
+
+Get the parent process or all ancestors.
+
+get_ancestors takes an ``include_source`` parameter. Setting this to
+True returns the source process with the result set.
 
 .. container:: cell code
 
@@ -526,13 +546,18 @@ Plotting Using a color gradient
 
          [4 rows x 35 columns]
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_process`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:func:`~msticpy.sectools.process_tree_utils.build_process_key`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_process and build_process_key
-      :name: get_process-and-build_process_key
 
-   Get a process record by its key. Build a key from a process object
-   (pandas Series).
+get_process retrieves a process record by its key.
+build_process_key creates and returns a process key from a process object.
+The latter may be useful if have a process record from another data set that
+you want to find in the process tree data.
+
+In both cases the process returned is a single row - a pandas Series.
 
 .. container:: cell code
 
@@ -559,15 +584,13 @@ Plotting Using a color gradient
 
          'c:\\windows\\system32\\conhost.exe0x15842019-02-10 15:24:56.050000'
 
-.. container:: cell markdown
+:py:func:`~msticpy.sectools.process_tree_utils.get_siblings`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   .. rubric:: get_siblings
-      :name: get_siblings
+Get the siblings of a process.
 
-   Get the siblings of a process.
-
-   Some functions take an ``include_source`` parameter. Setting this to
-   True returns the source process with the result set.
+get_siblings takes an ``include_source`` parameter. Setting this to
+True returns the source process with the result set.
 
 .. container:: cell code
 
@@ -589,10 +612,9 @@ Plotting Using a color gradient
 
          [5 rows x 35 columns]
 
-.. container:: cell markdown
 
-   .. rubric:: Display a Tree using Networkx
-      :name: display-a-tree-using-networkx
+Create a network from a Tree using Networkx
+-------------------------------------------
 
 .. container:: cell code
 

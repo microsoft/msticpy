@@ -128,13 +128,13 @@ example uses a Kql query executed by KqlMagic in Python.
     | where Computer has '{hostname}'
     | where TimeGenerated >= datetime({start})
     | where TimeGenerated <= datetime({end})
-    | extend mssg_parts = extract_all(@"type=(?P<type>[^\s]+)\s+msg=audit\((?P<mssg_id>[^)]+)\):\s+(?P<mssg>[^\r]+)\r?", 
+    | extend mssg_parts = extract_all(@"type=(?P<type>[^\s]+)\s+msg=audit\((?P<mssg_id>[^)]+)\):\s+(?P<mssg>[^\r]+)\r?",
         dynamic(['type', 'mssg_id', 'mssg']), RawData)
     | extend mssg_type = tostring(mssg_parts[0][0]), mssg_id = tostring(mssg_parts[0][1])
     | project TenantId, TimeGenerated, Computer, mssg_type, mssg_id, mssg_parts
     | extend mssg_content = split(mssg_parts[0][2],' ')
     | extend typed_mssg = pack(mssg_type, mssg_content)
-    | summarize AuditdMessage = makelist(typed_mssg) by TenantId, 
+    | summarize AuditdMessage = makelist(typed_mssg) by TenantId,
         TimeGenerated, Computer, mssg_id
     '''.format(start=host1_q_times.start, end=host1_q_times.end,
             hostname=security_alert.hostname)
@@ -145,13 +145,13 @@ example uses a Kql query executed by KqlMagic in Python.
 
 An explanation of some more involved lines of the query:
 
-- lines 6-8: Split the rawdata field into message type, message Id 
+- lines 6-8: Split the rawdata field into message type, message Id
   and timestamp and message data fields
 - line 9: get rid of unwanted columns
 - line 10: split the message body into an array of key=value strings
-- line 11: pack the message type and list of contents into a 
+- line 11: pack the message type and list of contents into a
   dictionary {'Type': [k1=v1, k2=v2...]}
-- line 12-13: group by messageId and pack the individual typed_mssg 
+- line 12-13: group by messageId and pack the individual typed_mssg
   dictionaries into a list of dictionaries
 
 The processing library is used as follows. Note with large data
@@ -171,7 +171,7 @@ The call to ``extract_events_to_df()`` does the following:
   the executable that ran and re-assemble the commandline arguments
 - extracts the real timestamp and replacing the original TimeGenerated
   columns (since this was just the log import time, not the event time,
-  which is what we are after)    
+  which is what we are after)
 
 This example splits out Process call and Login events into two
 separate data streams:
@@ -182,11 +182,11 @@ separate data streams:
     print(f'{len(lx_proc_create)} Process Create Events')
 
     lx_login = (get_event_subset(linux_events_all, 'LOGIN')
-            .merge(get_event_subset(linux_events_all, 'CRED_ACQ'), 
+            .merge(get_event_subset(linux_events_all, 'CRED_ACQ'),
                 how='inner',
-                left_on=['old-ses', 'pid', 'uid'], 
+                left_on=['old-ses', 'pid', 'uid'],
                 right_on=['ses', 'pid', 'uid'],
-                suffixes=('', '_cred')).drop(['old-ses','TenantId_cred', 
+                suffixes=('', '_cred')).drop(['old-ses','TenantId_cred',
                                                 'Computer_cred'], axis=1)
             .dropna(axis=1, how='all'))
     print(f'{len(lx_login)} Login Events')
