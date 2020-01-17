@@ -9,14 +9,33 @@ from pprint import pprint
 from collections import defaultdict
 from typing import List, Dict, Any
 
-from ..msticpy._version import VERSION
+from . import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def analyze(src_file, quiet=True, node_types: List[str] = None):
+def analyze(
+    src_file: str, quiet: bool = True, node_types: List[str] = None
+) -> Dict[str, Any]:
+    """
+    Analyze AST of module using Analyser visitor class.
 
+    Parameters
+    ----------
+    src_file : [type]
+        Input file
+    quiet : bool, optional
+        Hide reported information, by default True
+    node_types : List[str], optional
+        The node types to be returned, by default None
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary of node results keyed by node type.
+
+    """
     with open(src_file, "r") as source:
         tree = ast.parse(source.read())
 
@@ -95,6 +114,8 @@ class Analyzer(ast.NodeVisitor):
         """
         if hasattr(node, "func") and hasattr(node.func, "id"):
             self.nodes["calls"][node.func.id].append(node.lineno)
+        if hasattr(node, "func") and hasattr(node.func, "attr"):
+            self.nodes["calls"][node.func.attr].append(node.lineno)
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: Any):  # noqa: N802

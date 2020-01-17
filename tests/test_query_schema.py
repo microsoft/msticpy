@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """query_schema test class."""
 import unittest
+import warnings
 
 from ..msticpy.nbtools.query_schema import DataSchema
 from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment

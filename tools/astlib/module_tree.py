@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
-import argparse
 from typing import Dict, Any, Tuple
 
 import networkx as nx
@@ -17,7 +16,7 @@ import matplotlib.pyplot as plt
 #     circos = False
 
 from .ast_parser import analyze
-from ..msticpy._version import VERSION
+from . import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -48,7 +47,7 @@ def analyze_calls(module: str, all_calls=False) -> nx.DiGraph:
 
 def _create_call_graph(
     calls: Dict[str, Any], funcs: Dict[str, Any], all_calls=False
-) -> nx.DiGraph:
+) -> nx.MultiDiGraph:
     # Calculate the span (line numbers) of each function
     func_span = dict()
     last_func = None
@@ -60,7 +59,7 @@ def _create_call_graph(
         last_func = name
 
     # create graph and add funcs as nodes
-    call_graph = nx.DiGraph()
+    call_graph = nx.MultiDiGraph()
     call_graph.add_nodes_from(
         [(name, {"start": span[0], "end": span[1]}) for name, span in func_span.items()]
     )
@@ -74,7 +73,8 @@ def _create_call_graph(
 
     for node in call_graph.nodes():
         n_callers = len(list(call_graph.predecessors(node)))
-        call_graph.add_node(node, degree=n_callers)
+        color = "red" if not n_callers else "blue"
+        call_graph.add_node(node, color=color, degree=n_callers)
 
     return call_graph
 
@@ -99,10 +99,15 @@ def _add_call_edge(
 
 def _print_decendents(graph, par_node, indent=0):
     for node in graph.successors(par_node):
-        edge_line = graph.edges[par_node, node]["line"]
-        print(" " * indent, f"+->({edge_line}) {node}")
-        if par_node != node:
-            _print_decendents(graph, node, indent + 4)
+        edge_list = []
+        for p_node, t_node, attr in graph.edges([par_node, node], data=True):
+            if p_node == par_node and t_node == node:
+                edge_line = attr["line"]
+                edge_list.append((edge_line, par_node, node))
+        for e_line, p_node, t_node in sorted(edge_list, key=lambda k: k[0]):
+            print(" " * indent, f"+->({e_line}) {t_node}")
+            if p_node != t_node:
+                _print_decendents(graph, t_node, indent + 4)
 
 
 def plot_graph(call_graph: nx.Graph, size: Tuple[int, int] = (10, 10)):
@@ -163,39 +168,3 @@ def print_call_tree(call_graph: nx.Graph, level="top"):
             )
             print("-" * len(str(node)))
             _print_decendents(call_graph, node, indent=0)
-
-
-def _add_script_args():
-    parser = argparse.ArgumentParser(description="Module static call tree analyer.")
-    parser.add_argument(
-        "--module", "-m", default=".", required=True, help="Path to module to analyze."
-    )
-    parser.add_argument(
-        "--all",
-        "-a",
-        action="store_true",
-        default=False,
-        help="Show all functions in module. Default shows only top-level functions",
-    )
-    parser.add_argument(
-        "--external",
-        "-e",
-        action="store_true",
-        default=False,
-        help="Show all calls including to external functions.",
-    )
-    return parser
-
-
-# pylint: disable=invalid-name
-if __name__ == "__main__":
-    arg_parser = _add_script_args()
-    args = arg_parser.parse_args()
-
-    mod_call_graph = analyze_calls(args.module, all_calls=args.external)
-    p_level = "all" if args.all else "top"
-    print_call_tree(call_graph=mod_call_graph, level=p_level)
-
-    # mod_call_graph = analyze_calls("E:/src/microsoft/msticpy/msticpy/sectools/domain_utils.py", all_calls=True)
-    # p_level = "all"
-    # print_call_tree(call_graph=mod_call_graph, level=p_level)

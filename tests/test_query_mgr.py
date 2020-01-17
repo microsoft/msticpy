@@ -6,6 +6,7 @@
 """query_mgr test class."""
 import unittest
 from datetime import datetime
+import pytest
 
 from ..msticpy.nbtools import query_builtin_queries as queries
 from ..msticpy.nbtools import kql
@@ -18,6 +19,7 @@ from ..msticpy.nbtools.query_defns import (
 )
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class QPTest(QueryParamProvider):
     """Unit test class."""
 
@@ -30,6 +32,7 @@ class QPTest(QueryParamProvider):
         return self._p_dict
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestQueryManager(unittest.TestCase):
     """Unit test class."""
 
