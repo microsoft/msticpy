@@ -57,7 +57,7 @@ def risky_cmd_line(
     detection_rules: str, optional
         Path to json file containing patterns of risky activity to detect.
         (Defaults to msticpy/resources/cmd_line_rules.json)
-    cmd_field: str, optiona;
+    cmd_field: str, optional;
         The column in the events dataset that contains the command lines to
         be analysed.
         (Defaults to "Command")
