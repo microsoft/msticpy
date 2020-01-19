@@ -24,9 +24,18 @@ def test_missing_pkgs_req():
     mod_imports = analyze_imports(
         package_root=PKG_ROOT, package_name=PKG_NAME, req_file=REQS_FILE
     )
+    import_errs = set([v for s in mod_imports.values() for v in s.unknown])
+    print("re module path:", re.__file__)
+    print("Import errors:\n", import_errs)
+    paths = (str(Path(p).resolve()) for p in sys.path)
+    stdlib_paths = {
+        p for p in paths if p.startswith(sys.prefix) and "site-packages" not in p
+    }
+    print("Stdlib paths:\b", stdlib_paths)
+
     missing_reqs = set([v for s in mod_imports.values() for v in s.missing_reqs])
     if missing_reqs:
-        print(missing_reqs)
+        print("Missing packages:\n", "\n".join(missing_reqs))
     assert not missing_reqs
 
 
