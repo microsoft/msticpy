@@ -31,6 +31,9 @@ def test_missing_pkgs_req():
     stdlib_paths = {
         p for p in paths if p.startswith(sys.prefix) and "site-packages" not in p
     }
+    print("sys.path", sys.path)
+    print("paths", paths)
+    print("sys.prefix", sys.prefix)
     print("Stdlib paths:\b", stdlib_paths)
 
     missing_reqs = set([v for s in mod_imports.values() for v in s.missing_reqs])
