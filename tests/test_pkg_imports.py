@@ -27,9 +27,11 @@ def test_missing_pkgs_req():
     import_errs = set([v for s in mod_imports.values() for v in s.unknown])
     print("re module path:", re.__file__)
     print("Import errors:\n", import_errs)
-    paths = (str(Path(p).resolve()) for p in sys.path)
+    paths = {str(Path(p).resolve()) for p in sys.path}
     stdlib_paths = {
-        p for p in paths if p.startswith(sys.prefix) and "site-packages" not in p
+        p
+        for p in paths
+        if p.lower().startswith(sys.prefix.lower()) and "site-packages" not in p
     }
     print("sys.path", sys.path)
     print("paths", paths)
