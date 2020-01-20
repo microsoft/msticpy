@@ -96,9 +96,11 @@ def _check_std_lib(modules):
     external = set()
     std_libs = set()
     imp_errors = set()
-    paths = (str(Path(p).resolve()) for p in sys.path)
+    paths = {str(Path(p).resolve()).lower() for p in sys.path}
     stdlib_paths = {
-        p for p in paths if p.startswith(sys.prefix) and "site-packages" not in p
+        p
+        for p in paths
+        if p.startswith(sys.prefix.lower()) and "site-packages" not in p
     }
     for mod_name in modules:
         if mod_name not in sys.modules:
@@ -121,7 +123,7 @@ def _check_std_lib(modules):
                 # already listed or exempted
                 break
             if partial in sys.modules and sys.modules[partial]:
-                # just list the parent name and be done with it
+                # if match, add as external import
                 external.add(mod_name)
                 break
     return std_libs, external, imp_errors
@@ -140,12 +142,12 @@ def _check_stdlib_path(module, mod_name, stdlib_paths):
     if fname.endswith(("__init__.py", "__init__.pyc", "__init__.pyo")):
         fname = Path(fname).parent
 
-    if "site-packages" in str(fname):
+    if "site-packages" in str(fname).lower():
         return None
 
     # step up the module path
     while Path(fname) != Path(fname).parent:
-        if str(fname) in stdlib_paths:
+        if str(fname).lower() in stdlib_paths:
             # stdlib path, skip
             return mod_name
         fname = Path(fname).parent
