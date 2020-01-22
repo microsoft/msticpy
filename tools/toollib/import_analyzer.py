@@ -12,6 +12,7 @@ from typing import Dict, Set
 
 import networkx as nx
 
+# pylint: disable=relative-beyond-top-level
 from .ast_parser import analyze
 from . import VERSION
 

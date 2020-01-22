@@ -6,15 +6,17 @@
 """Python file import analyzer."""
 import argparse
 
-from astlib import VERSION
-from astlib.import_analyzer import analyze_imports
+from toollib import VERSION
+from toollib.import_analyzer import analyze_imports
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
 def _add_script_args():
-    parser = argparse.ArgumentParser(description="Package imports analyer.")
+    parser = argparse.ArgumentParser(
+        description=f"Package imports analyer. v.{VERSION}"
+    )
     parser.add_argument(
         "--path",
         "-p",
@@ -109,6 +111,8 @@ def _print_all_imports(mod_imports, p_args):
 if __name__ == "__main__":
     arg_parser = _add_script_args()
     args = arg_parser.parse_args()
+    if args.version:
+        print(f"Version {VERSION}")
 
     package_imports = analyze_imports(args.path, args.package, req_file=args.req_file)
     if args.modules:

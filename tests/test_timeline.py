@@ -3,12 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import unittest
 import os
+import unittest
 from pathlib import Path
+
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+import notebook
 import pytest
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventTimeline.ipynb"

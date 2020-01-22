@@ -6,8 +6,8 @@
 """Python file import analyzer."""
 import argparse
 
-from astlib import VERSION
-from astlib.module_tree import analyze_calls, print_call_tree
+from toollib import VERSION
+from toollib.module_tree import analyze_calls, print_call_tree
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

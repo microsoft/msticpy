@@ -8,9 +8,9 @@ import re
 from pathlib import Path
 
 # pylint: disable=invalid-name
-VER_PATH = "msticpy/_version.py"
+VER_PATH = "../msticpy/_version.py"
 
-for check_path in Path(".").absolute().parents:
+for check_path in Path(__file__).absolute().parents:
     if check_path.joinpath(VER_PATH).is_file():
         ver_text = check_path.joinpath(VER_PATH).read_text()
         break

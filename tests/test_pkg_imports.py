@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..tools.astlib.import_analyzer import analyze_imports, PKG_TOKENS, _get_setup_reqs
+from ..tools.toollib.import_analyzer import analyze_imports, PKG_TOKENS, _get_setup_reqs
 
 PKG_ROOT = "."
 PKG_NAME = "msticpy"
