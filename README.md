@@ -26,7 +26,7 @@ or for the latest dev build
 
 ## Documentation
 
-Full documentation is at [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/overview.html)
+Full documentation is at [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/)
 
 Sample notebooks for many of the modules are in the [docs/notebooks](https://github.com/microsoft/msticpy/blob/master/docs/notebooks) folder and accompanying notebooks.
 
