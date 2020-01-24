@@ -204,14 +204,23 @@ Requires sign-in to Azure Notebooks
 <img src="https://notebooks.azure.com/launch.png" />
 </a>
 
-## More Notebook Examples
+## More Notebooks
+
+- [Account Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb)
+- [Domain and URL Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20%26%20URL.ipynb)
+- [IP Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb)
+- [Linux Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb)
+- [Windows Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb)
+
+View directly on GitHub or copy and paste the link into [nbviewer.org](https://nbviewer.jupyter.org/)
+
+## Notebook examples with saved data
 
 See the following notebooks for more examples of the use of this package in practice:
 
 - Windows Alert Investigation in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-- Windows Host Explorer in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Windows-Host-Explorer.ipynb)
-- Office 365 Exploration in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-- Cross-Network Hunting in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Linux-Windows-Office.ipynb)
+- Office 365 Exploration in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
+- Cross-Network Hunting in [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb) or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)
 
 ## To-Do Items
 

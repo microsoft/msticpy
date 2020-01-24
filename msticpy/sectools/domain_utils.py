@@ -99,11 +99,20 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 class DomainValidator:
     """Assess a domain's validity."""
 
-    def __init__(self):
-        """Pull IANA TLD list and save to internal attribute."""
-        self.__class__.tld_index: Set[str] = self.get_tlds()
+    tld_index: Set[str] = set()
+    ssl_bl: pd.DataFrame = pd.DataFrame()
 
-        self.__class__.ssl_bl: pd.DataFrame = self._get_ssl_bl()
+    @classmethod
+    def _check_and_load_tls(cls):
+        """Pull IANA TLD list and save to internal attribute."""
+        if not cls.tld_index:
+            cls.tld_index: Set[str] = cls.get_tlds()
+
+    @classmethod
+    def _check_and_load_sslbl(cls):
+        """Pull IANA TLD list and save to internal attribute."""
+        if cls.ssl_bl is None or cls.ssl_bl.empty:
+            cls.ssl_bl: pd.DataFrame = cls._get_ssl_bl()
 
     def validate_tld(self, url_domain: str) -> bool:
         """
@@ -169,6 +178,8 @@ class DomainValidator:
             True if valid blacklisted, False if not.
 
         """
+        self._check_and_load_sslbl()
+
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
             backend = crypto.hazmat.backends.default_backend()  # type: ignore
