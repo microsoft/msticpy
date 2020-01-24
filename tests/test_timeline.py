@@ -3,10 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import os
 import unittest
 from pathlib import Path
+
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+import notebook
+import pytest
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventTimeline.ipynb"
@@ -15,6 +19,9 @@ _NB_NAME = "EventTimeline.ipynb"
 class TestnTimeline(unittest.TestCase):
     """Unit test class."""
 
+    @pytest.mark.skipif(
+        not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+    )
     def test_timeline_controls(self):
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
         abs_path = Path(_NB_FOLDER).absolute()

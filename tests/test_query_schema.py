@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """query_schema test class."""
 import unittest
+import warnings
 
 from ..msticpy.nbtools.query_schema import DataSchema
 from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment
@@ -14,47 +15,61 @@ class TestQuerySchema(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
-        self.schema = DataSchema(
-            environment="LogAnalytics",
-            data_family="WindowsSecurity",
-            data_source="process_create",
-        )
-
-    def test_global_properties(self):
-        self.assertGreaterEqual(len(self.schema.data_environments), 2)
-        self.assertGreaterEqual(len(self.schema.data_families), 2)
-        self.assertGreaterEqual(len(self.schema.data_source_types), 3)
-
-    def test_SecurityAlert(self):
-        for src in ["security_alert"]:
-            schema = DataSchema(
-                environment="LogAnalytics", data_family="SecurityAlert", data_source=src
-            )
-            self.assertTrue("table" in schema)
-            self.assertTrue("query_project" in schema)
-            if src == "security_alert":
-                self.assertGreaterEqual(len(schema["query_project"].split(",")), 23)
-                self.assertEqual(schema["table"], "SecurityAlert")
-
-    def test_WindowsSecurity(self):
-        for src in ["process_create", "account_logon"]:
-            schema = DataSchema(
+        with warnings.catch_warnings():
+            # We want to ignore warnings from our own deprecations
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            self.schema = DataSchema(
                 environment="LogAnalytics",
                 data_family="WindowsSecurity",
-                data_source=src,
+                data_source="process_create",
             )
-            self.assertTrue("table" in schema)
-            self.assertTrue("query_project" in schema)
-            if src == "proc_create":
-                self.assertGreaterEqual(len(schema["query_project"].split(",")), 17)
-                self.assertEqual(
-                    schema["table"], "SecurityEvent | where EventID == 4688"
+
+    def test_global_properties(self):
+        with warnings.catch_warnings():
+            # We want to ignore warnings from our own deprecations
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            self.assertGreaterEqual(len(self.schema.data_environments), 2)
+            self.assertGreaterEqual(len(self.schema.data_families), 2)
+            self.assertGreaterEqual(len(self.schema.data_source_types), 3)
+
+    def test_SecurityAlert(self):
+        with warnings.catch_warnings():
+            # We want to ignore warnings from our own deprecations
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            for src in ["security_alert"]:
+                schema = DataSchema(
+                    environment="LogAnalytics",
+                    data_family="SecurityAlert",
+                    data_source=src,
                 )
-            elif src == "account_logon":
-                self.assertGreaterEqual(len(schema["query_project"].split(",")), 19)
-                self.assertEqual(
-                    schema["table"], "SecurityEvent | where EventID == 4624"
+                self.assertTrue("table" in schema)
+                self.assertTrue("query_project" in schema)
+                if src == "security_alert":
+                    self.assertGreaterEqual(len(schema["query_project"].split(",")), 23)
+                    self.assertEqual(schema["table"], "SecurityAlert")
+
+    def test_WindowsSecurity(self):
+        with warnings.catch_warnings():
+            # We want to ignore warnings from our own deprecations
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            for src in ["process_create", "account_logon"]:
+                schema = DataSchema(
+                    environment="LogAnalytics",
+                    data_family="WindowsSecurity",
+                    data_source=src,
                 )
+                self.assertTrue("table" in schema)
+                self.assertTrue("query_project" in schema)
+                if src == "proc_create":
+                    self.assertGreaterEqual(len(schema["query_project"].split(",")), 17)
+                    self.assertEqual(
+                        schema["table"], "SecurityEvent | where EventID == 4688"
+                    )
+                elif src == "account_logon":
+                    self.assertGreaterEqual(len(schema["query_project"].split(",")), 19)
+                    self.assertEqual(
+                        schema["table"], "SecurityEvent | where EventID == 4624"
+                    )
 
     def test_LinuxSecurity(self):
         for src in ["process_create", "account_logon"]:
@@ -94,7 +109,3 @@ class TestQuerySchema(unittest.TestCase):
         )
         self.assertIsNotNone(schemas)
         self.assertGreaterEqual(len(schemas), 1)
-
-
-if __name__ == "__main__":
-    unittest.main()
