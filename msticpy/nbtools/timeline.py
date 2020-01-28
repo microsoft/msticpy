@@ -27,7 +27,7 @@ from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
-from .utility import export
+from .utility import export, check_kwargs
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -36,6 +36,22 @@ __author__ = "Ian Hellen"
 # Constants
 _WRAP = 50
 _WRAP_CMDL = "WrapCmdl"
+_DEFAULT_KWARGS = [
+    "data",
+    "time_column",
+    "source_columns",
+    "title",
+    "ref_event",
+    "ref_time",
+    "group_by",
+    "yaxis",
+    "range_tool",
+    "height",
+    "width",
+    "color",
+]
+
+_TL_KWARGS = ["overlay_color", "alert", "legend", "ygrid", "xgrid"]
 
 
 @export
@@ -116,6 +132,7 @@ def display_timeline(
 
     """
     # Get args
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_KWARGS)
     overlay_data: pd.DataFrame = kwargs.pop("overlay_data", None)
     overlay_columns: list = kwargs.pop("overlay_columns", source_columns)
     color: str = kwargs.get("color", "navy")  # don't remove this from kwargs
@@ -158,6 +175,8 @@ def display_timeline(
         return _display_timeline_dict(data, **kwargs_sub)
     return None
 
+
+_TL_VALUE_KWARGS = ["legend_column", "y", "x", "kind"]
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
@@ -224,6 +243,8 @@ def display_timeline_values(
         The bokeh plot figure.
 
     """
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_KWARGS)
+
     reset_output()
     output_notebook()
 

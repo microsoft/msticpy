@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
+import difflib
 import re
 import subprocess  # nosec
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, Optional, Tuple, Union, List
 
 import pandas as pd
 import pkg_resources
@@ -331,3 +332,63 @@ class MsticpyException(Exception):
 
 class MsticpyConfigException(Exception):
     """Configuration exception class for msticpy."""
+
+
+def check_kwarg(arg_name: str, legal_args: List[str]):
+    """
+    Check argument names against a list.
+
+    Parameters
+    ----------
+    arg_name : str
+        Argument to check
+    legal_args : List[str]
+        List of possible arguments.
+
+    Raises
+    ------
+    NameError
+        If the argument is not legal. If the `arg_name` is
+        a close match to one or more, `legal_args` these are
+        returned in the exception.
+
+    """
+    if arg_name not in legal_args:
+        closest = difflib.get_close_matches(arg_name, legal_args)
+        mssg = f"{arg_name} is not a recognized argument. "
+        if len(closest) == 1:
+            mssg += f"Closest match is {closest[0]}"
+        elif closest:
+            mssg += f"Closest matches are {', '.join(closest)}"
+        else:
+            mssg += f"Valid arguments are {', '.join(legal_args)}"
+        raise NameError(arg_name, mssg)
+
+
+def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
+    """
+    Check all kwargs names against a list.
+
+    Parameters
+    ----------
+    supplied_args : Dict[str, Any]
+        Arguments to check
+    legal_args : List[str]
+        List of possible arguments.
+
+    Raises
+    ------
+    NameError
+        If any of the arguments are not legal. If the an arg is
+        a close match to one or more `legal_args`, these are
+        returned in the exception.
+
+    """
+    name_errs = []
+    for name in supplied_args:
+        try:
+            check_kwarg(name, legal_args)
+        except NameError as err:
+            name_errs.append(err)
+    if name_errs:
+        raise NameError(name_errs)
