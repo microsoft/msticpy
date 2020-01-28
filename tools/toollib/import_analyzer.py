@@ -43,6 +43,7 @@ _PKG_RENAME_NAME = {
     "pkg_resources": "setuptools",
     "sklearn": "scikit_learn",
     "yaml": "pyyaml",
+    "bs4": "beautifulsoup4",
     "azure.common": "azure-common",
 }
 

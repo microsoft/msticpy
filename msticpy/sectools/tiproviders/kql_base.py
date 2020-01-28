@@ -209,13 +209,13 @@ class KqlTIProvider(TIProvider):
                     and data_result.records_count == 0
                 ):
                     warnings.warn("No results return from data provider.")
-                else:
+                elif data_result and hasattr(data_result, "completion_query_info"):
                     warnings.warn(
                         "No results return from data provider. "
                         + str(data_result.completion_query_info)
-                        if data_result
-                        else "Unknown error"
                     )
+                else:
+                    warnings.warn("Unknown response from provider: " + str(data_result))
 
             src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
@@ -229,7 +229,9 @@ class KqlTIProvider(TIProvider):
                 src_ioc_frame["Details"] = "Query failure"
                 src_ioc_frame["Status"] = TILookupStatus.query_failed.value
                 src_ioc_frame["Severity"] = TISeverity.information.value
-            elif data_result.empty:
+                all_results.append(src_ioc_frame)
+                continue
+            if data_result.empty:
                 src_ioc_frame["Result"] = False
                 src_ioc_frame["Details"] = "Not found."
                 src_ioc_frame["Status"] = TILookupStatus.ok.value
