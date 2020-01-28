@@ -459,6 +459,7 @@ class AzureData:
 
         return ip_df, nsg_df
 
+    # ToDo Refactor metrics functions to a single function
     def get_cpu_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
         """
         Return CPU monitoring details for an Azure resource
@@ -492,7 +493,7 @@ class AzureData:
         mon_details = self.monitoring_client.metrics.list(
             resource_id,
             timespan=f"{end}/{start}",
-            interval="PT1H",
+            interval="PT1M",
             metricnames="Percentage CPU",
             aggregation="Total",
         )
@@ -546,7 +547,7 @@ class AzureData:
             resource_id,
             timespan=f"{end}/{start}",
             interval="PT1H",
-            metricnames="Network In,Network Out",
+            metricnames="BytesSentRate,BytesReceivedRate",
             aggregation="Total",
         )
         # Extract the Network timeseries data
@@ -554,12 +555,12 @@ class AzureData:
         network_in = []
         network_out = []
         for net in net_mon.value:
-            if net.name.value == "Network In":
+            if net.name.value == "BytesReceivedRate":
                 for time in net.timeseries:
                     for data in time.data:
                         times.append(data.time_stamp)
                         network_in.append(data.total)
-            elif net.name.value == "Network Out":
+            elif net.name.value == "BytesSentRate":
                 for time in net.timeseries:
                     for data in time.data:
                         network_out.append(data.total)
@@ -577,4 +578,70 @@ class AzureData:
         details = pd.concat([in_details, out_details])
         details.replace(np.nan, 0, inplace=True)
 
+        return details
+
+    def get_disk_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
+        """
+        Return CPU monitoring details for an Azure resource
+
+        Parameters
+        ----------
+        resource_id: str
+            The ID of the Azure resource to return details on
+        sub_id: str
+            The subscription ID that the network interface is part of
+
+        Returns
+        -------
+        details: pd.DataFrame
+            A DataFrame of CPU metrics
+
+        """
+        # Check if connection and client required are already present
+        if self.connected is False:
+            raise MsticpyAzureException("Please connect before continuing")
+
+        if self.monitoring_client is None:
+            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+            if not self.monitoring_client:
+                raise CloudError("Could not create a MonitorManagementClient.")
+
+        # Get CPU metrics in one hour chunks for the last 30 days
+        start = datetime.datetime.now().date()
+        end = start - datetime.timedelta(days=30)
+        self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+        mon_details = self.monitoring_client.metrics.list(
+            resource_id,
+            timespan=f"{end}/{start}",
+            interval="PT1H",
+            metricnames="Disk Read Bytes,Disk Write Bytes",
+            aggregation="Total",
+        )
+
+        # Parse the timeseries data into a dataframe
+        times = []
+        disk_read = []
+        disk_write = []
+        for mon_detail in mon_details.value:
+            if mon_detail.name.value == "Disk Read Bytes":
+                for time in mon_detail.timeseries:
+                    for data in time.data:
+                        times.append(data.time_stamp)
+                        disk_read.append(data.total)
+            elif mon_detail.name.value == "Disk Write Bytes":
+                for time in mon_detail.timeseries:
+                    for data in time.data:
+                        disk_write.append(data.total)
+
+        details = pd.DataFrame(
+            {"Time": times, "Disk Read": disk_read, "Disk Write": disk_write}
+        )
+        read_details = details[["Time", "Disk Read"]]
+        read_details["Value"] = "Disk Read"
+        read_details.rename(columns={"Disk Read": "Data"}, inplace=True)
+        write_details = details[["Time", "Disk Write"]]
+        write_details["Value"] = "Disk Write"
+        write_details.rename(columns={"Disk Write": "Data"}, inplace=True)
+        details = pd.concat([write_details, read_details])
+        details.replace(np.nan, 0, inplace=True)
         return details

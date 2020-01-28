@@ -226,12 +226,12 @@ def display_timeline_values(
     """
     reset_output()
     output_notebook()
-
     height: int = kwargs.pop("height", None)
     width: int = kwargs.pop("width", 900)
     title: str = kwargs.pop("title", None)
     time_column = kwargs.get("x", time_column)
     group_by: str = kwargs.get("group_by", None)
+    legend_column: str = kwargs.pop("legend_column", group_by)
     show_yaxis: bool = kwargs.pop("yaxis", True)
     show_range: bool = kwargs.pop("range_tool", True)
     color: str = kwargs.get("color", "navy")
@@ -295,18 +295,15 @@ def display_timeline_values(
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column,
-                alpha=0.7,
-                source=row_source,
-                legend_label=str(inline_legend),
+                x=time_column, alpha=0.7, source=row_source, legend_group=legend_column
             )
             if "vbar" in plot_kinds:
-                p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
+                p_series.append(plot.vbar(top=y, width=4, color=color, **plot_args))
             if "circle" in plot_kinds:
-                p_series.append(plot.circle(y=y, size=4, color="color", **plot_args))
+                p_series.append(plot.circle(y=y, size=4, color=color, **plot_args))
             if "line" in plot_kinds:
                 p_series.append(
-                    plot.line(y=y, line_width=1, line_color=group_color, **plot_args)
+                    plot.line(y=y, line_width=2, line_color=group_color, **plot_args)
                 )
             if not inline_legend:
                 legend_items.append((legend_label, p_series))
@@ -326,14 +323,14 @@ def display_timeline_values(
             plot.add_layout(ext_legend, legend_pos)
     else:
         plot_args = dict(
-            x=time_column, color="color", alpha=0.7, source=ColumnDataSource(graph_df)
+            x=time_column, color=color, alpha=0.7, source=ColumnDataSource(graph_df)
         )
         if "vbar" in plot_kinds:
             plot.vbar(top=y, width=4, **plot_args)
         if "circle" in plot_kinds:
             plot.circle(y=y, size=4, **plot_args)
         if "line" in plot_kinds:
-            plot.line(y=y, line_width=4, **plot_args)
+            plot.line(y=y, line_width=2, **plot_args)
 
     # if we have a reference, plot the time as a line
     if ref_time is not None:
