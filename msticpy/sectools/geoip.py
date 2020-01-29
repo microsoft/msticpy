@@ -40,7 +40,7 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..nbtools.utility import export, MsticpyConfigException
+from ..nbtools.utility import MsticpyConfigException, export
 from .provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION

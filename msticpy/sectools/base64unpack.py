@@ -45,22 +45,24 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_RESULT_FIELDS = [
-    "reference",
-    "original_string",
-    "file_name",
-    "file_type",
-    "input_bytes",
-    "decoded_string",
-    "encoding_type",
-    "file_hashes",
-    "md5",
-    "sha1",
-    "sha256",
-    "printable_bytes",
-]  # List[str]
 
-BinaryRecord = namedtuple("BinaryRecord", _RESULT_FIELDS)  # type: ignore
+BinaryRecord = namedtuple(
+    "BinaryRecord",
+    [
+        "reference",
+        "original_string",
+        "file_name",
+        "file_type",
+        "input_bytes",
+        "decoded_string",
+        "encoding_type",
+        "file_hashes",
+        "md5",
+        "sha1",
+        "sha256",
+        "printable_bytes",
+    ],
+)
 
 # pylint: disable=locally-disabled, line-too-long
 _BASE64_HEADER_TYPES = {
@@ -102,7 +104,7 @@ _debug_trace = False
 _STRIP_TAGS = r"</?decoded[^>]*>"
 
 
-def _get_trace_setting() -> Callable[[bool], bool]:
+def _get_trace_setting() -> Callable[[Optional[bool]], bool]:
     """Closure for holding trace setting."""
     _trace = False
 
@@ -118,7 +120,7 @@ def _get_trace_setting() -> Callable[[bool], bool]:
 _GET_TRACE = _get_trace_setting()
 
 
-def _get_utf16_setting() -> Callable[[bool], bool]:
+def _get_utf16_setting() -> Callable[[Optional[bool]], bool]:
     """Closure for holding utf16 decoding setting."""
     _utf16 = False
 
@@ -329,7 +331,7 @@ def unpack_df(
     _GET_TRACE(trace)
     _GET_UTF16(utf16)
 
-    output_df = pd.DataFrame(columns=_RESULT_FIELDS)
+    output_df = pd.DataFrame(columns=BinaryRecord._fields)
     row_results: List[pd.DataFrame] = []
     rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX_NG)]
     for input_row in rows_with_b64_match[[column]].itertuples():
@@ -356,7 +358,7 @@ def _decode_b64_string_recursive(
 
     decoded_string = input_string
 
-    df_results = pd.DataFrame(columns=_RESULT_FIELDS)
+    df_results = pd.DataFrame(columns=BinaryRecord._fields)
     fragment_index = 0
     match_pos = 0
     decode_success = False
@@ -567,7 +569,7 @@ def _print_bytes(bytes_array: bytes):
 
     else:
         print("Could not decode bytes to string. Hashes:")
-        print(get_hashes(_binary_to_bytesio(bytes_array).getbuffer()))
+        print(get_hashes(_binary_to_bytesio(bytes_array)))
         print(enc_results.printable_bytes)
 
 
@@ -611,7 +613,7 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
     except UnicodeDecodeError:
         pass
 
-    if _GET_UTF16():
+    if _GET_UTF16():  # type: ignore
         try:
             # Difficult to tell the difference between a real unicode string
             # and a binary string that happens to decode to a utf-16 string
@@ -627,7 +629,7 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
 
 
 def _is_known_b64_prefix(
-    input_string: str
+    input_string: str,
 ) -> Union[Tuple[str, str], Tuple[None, None]]:
     """If this is known file type return the prefix and file type."""
     first160chars = input_string[0:160].replace("\n", "").replace("\r", "")
@@ -662,7 +664,7 @@ def _decode_b64_binary(
 
 def _unpack_and_hash_b64_binary(
     input_bytes: bytes, file_type: str = None
-) -> Dict[str, BinaryRecord]:
+) -> Optional[Dict[str, BinaryRecord]]:
     """
     If this is a known archive type extract the contents.
 
@@ -783,7 +785,7 @@ def get_items_from_zip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
 
 
 @export
-def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, Optional[bytes]]]:
+def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
     """
     Return dictionary of tar file contents.
 
@@ -841,7 +843,7 @@ def get_hashes(binary: bytes) -> Dict[str, str]:
     return hash_dict
 
 
-def _binary_to_bytesio(binary: io.BytesIO) -> memoryview:
+def _binary_to_bytesio(binary: Union[bytes, io.BytesIO]) -> memoryview:
     if isinstance(binary, io.BytesIO):
         return binary.getbuffer()
     return io.BytesIO(binary).getbuffer()

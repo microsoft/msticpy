@@ -10,7 +10,7 @@ import subprocess  # nosec
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, Union, List
+from typing import Any, Callable, Iterable, Optional, Tuple, Union, List, Dict
 
 import pandas as pd
 import pkg_resources
@@ -359,7 +359,7 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
         if len(closest) == 1:
             mssg += f"Closest match is {closest[0]}"
         elif closest:
-            mssg += f"Closest matches are {', '.join(closest)}"
+            mssg += f"Closest matches are {', '.join(str(closest))}"
         else:
             mssg += f"Valid arguments are {', '.join(legal_args)}"
         raise NameError(arg_name, mssg)
