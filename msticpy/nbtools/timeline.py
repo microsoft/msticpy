@@ -41,6 +41,7 @@ _DEFAULT_KWARGS = [
     "data",
     "group_by",
     "height",
+    "legend",
     "range_tool",
     "ref_event",
     "ref_time",
@@ -51,15 +52,7 @@ _DEFAULT_KWARGS = [
     "yaxis",
 ]
 
-_TL_KWARGS = [
-    "alert",
-    "legend",
-    "overlay_color",
-    "overlay_data",
-    "ref_time",
-    "ygrid",
-    "xgrid",
-]
+_TL_KWARGS = ["alert", "overlay_color", "overlay_data", "ref_time", "ygrid", "xgrid"]
 
 
 @export
@@ -184,7 +177,7 @@ def display_timeline(
     return None
 
 
-_TL_VALUE_KWARGS = ["kind", "legend_column", "y", "x"]
+_TL_VALUE_KWARGS = ["kind", "y", "x"]
 
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
@@ -226,10 +219,10 @@ def display_timeline_values(
     group_by : str
         (where `data` is a DataFrame)
         The column to group timelines on
-    legend_column : str, optional
-        (where `data` is a DataFrame)
-        Name of the column used to generate the legend labels if a legend is
-        to be displayed. Default is `group_by` parameter.
+    legend: str, optional
+        "left", "right", "inline" or "none"
+        (the default is to show a legend when plotting multiple series
+        and not to show one when plotting a single series)
     yaxis : bool, optional
         Whether to show the yaxis and labels
     range_tool : bool, optional
