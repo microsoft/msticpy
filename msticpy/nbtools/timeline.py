@@ -37,21 +37,29 @@ __author__ = "Ian Hellen"
 _WRAP = 50
 _WRAP_CMDL = "WrapCmdl"
 _DEFAULT_KWARGS = [
+    "color",
     "data",
-    "time_column",
-    "source_columns",
-    "title",
+    "group_by",
+    "height",
+    "range_tool",
     "ref_event",
     "ref_time",
-    "group_by",
-    "yaxis",
-    "range_tool",
-    "height",
+    "source_columns",
+    "time_column",
+    "title",
     "width",
-    "color",
+    "yaxis",
 ]
 
-_TL_KWARGS = ["overlay_color", "alert", "legend", "ygrid", "xgrid"]
+_TL_KWARGS = [
+    "alert",
+    "legend",
+    "overlay_color",
+    "overlay_data",
+    "ref_time",
+    "ygrid",
+    "xgrid",
+]
 
 
 @export
@@ -176,7 +184,8 @@ def display_timeline(
     return None
 
 
-_TL_VALUE_KWARGS = ["legend_column", "y", "x", "kind"]
+_TL_VALUE_KWARGS = ["kind", "legend_column", "y", "x"]
+
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
@@ -243,7 +252,7 @@ def display_timeline_values(
         The bokeh plot figure.
 
     """
-    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_KWARGS)
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
 
     reset_output()
     output_notebook()

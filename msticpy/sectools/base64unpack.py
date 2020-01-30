@@ -39,7 +39,7 @@ from collections import namedtuple
 
 import pandas as pd
 
-from ..nbtools.utility import pd_version_23, export
+from ..nbtools.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -224,12 +224,9 @@ def unpack_items(
             if output_df is None:
                 output_df = output_frame
             else:
-                if pd_version_23():
-                    output_df = output_df.append(
-                        output_frame, ignore_index=True, sort=False
-                    )
-                else:
-                    output_df = output_df.append(output_frame, ignore_index=True)
+                output_df = output_df.append(
+                    output_frame, ignore_index=True, sort=False
+                )
         return output_df
     return None
 

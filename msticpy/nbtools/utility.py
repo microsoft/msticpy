@@ -11,16 +11,16 @@ import sys
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, Tuple, Union, List, Dict
-
-import pandas as pd
 import pkg_resources
-from IPython.core.display import HTML, Markdown, display
+
+from IPython.core.display import HTML, display
+from deprecated.sphinx import deprecated
 
 from tqdm import tqdm, tqdm_notebook
 
-from .._version import VERSION
+# from .._version import VERSION
 
-__version__ = VERSION
+# __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
@@ -105,16 +105,7 @@ def unescape_windows_path(str_path: str) -> str:
     return str_path
 
 
-_PD_INSTALLED_VERSION = tuple(pd.__version__.split("."))
-_PD_VER_23 = ("0", "23", "0")
-
-
-@export
-def pd_version_23() -> bool:
-    """Return True if pandas version 0.23.0 or later is installed."""
-    return _PD_INSTALLED_VERSION >= _PD_VER_23
-
-
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     """
@@ -140,6 +131,7 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     return None
 
 
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_nb_query_params(nb_url_search: str) -> dict:
     """
@@ -165,6 +157,7 @@ def get_nb_query_params(nb_url_search: str) -> dict:
     return nb_params
 
 
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_notebook_query_string():
     """Execute javascript to publish notebook query string as python variable."""
@@ -298,7 +291,7 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
-    display(Markdown(f"<p style='{style_str}'>{string}</p>"))
+    display(HTML(f"<p style='{style_str}'>{string}</p>"))
 
 
 def md_warn(string: str):
@@ -357,9 +350,10 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
         closest = difflib.get_close_matches(arg_name, legal_args)
         mssg = f"{arg_name} is not a recognized argument. "
         if len(closest) == 1:
-            mssg += f"Closest match is {closest[0]}"
+            mssg += f"Closest match is '{closest[0]}'"
         elif closest:
-            mssg += f"Closest matches are {', '.join(str(closest))}"
+            match_list = [f"'{mtch}'" for mtch in closest]
+            mssg += f"Closest matches are {', '.join(match_list)}"
         else:
             mssg += f"Valid arguments are {', '.join(legal_args)}"
         raise NameError(arg_name, mssg)

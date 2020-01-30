@@ -37,10 +37,13 @@ from ..sectools.process_tree_utils import (
     ProcessTreeSchemaException,
 )
 
+from ..nbtools.utility import check_kwargs
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_DEFAULT_KWARGS = ["height", "title", "width"]
 
 
 def build_and_show_process_tree(
@@ -48,6 +51,7 @@ def build_and_show_process_tree(
     schema: ProcSchema = None,
     output_var: str = None,
     legend_col: str = None,
+    **kwargs,
 ):
     """
     Build process tree from data and plot a tree.
@@ -64,6 +68,8 @@ def build_and_show_process_tree(
         by default None
     legend_col : str, optional
         The column used to color the tree items, by default None
+    kwargs : Dict[str, Any]
+        Additional arguments passed to plot_process_tree
 
     """
     # Check if this table already seems to have the proc_tree metadata
@@ -86,7 +92,9 @@ def build_and_show_process_tree(
     if not expected_cols.issubset(input_cols):
         data = build_process_tree(data)
 
-    plot_process_tree(data, schema, output_var=output_var, legend_col=legend_col)
+    plot_process_tree(
+        data, schema, output_var=output_var, legend_col=legend_col, **kwargs
+    )
 
 
 # pylint: disable=too-many-locals
@@ -96,6 +104,7 @@ def plot_process_tree(
     output_var: str = None,
     legend_col: str = None,
     show_table: bool = False,
+    **kwargs,
 ):
     """
     Plot a Process Tree Visualization.
@@ -115,6 +124,16 @@ def plot_process_tree(
     show_table: bool
         Set to True to show a data table, by default False.
 
+    Other Parameters
+    ----------------
+    height : int, optional
+        The height of the plot figure
+        (the default is 700)
+    width : int, optional
+        The width of the plot figure (the default is 900)
+    title : str, optional
+        Title to display (the default is None)
+
     Raises
     ------
     ProcessTreeSchemaException
@@ -126,6 +145,7 @@ def plot_process_tree(
     values.
 
     """
+    check_kwargs(kwargs, _DEFAULT_KWARGS)
     reset_output()
     output_notebook()
 
@@ -134,15 +154,21 @@ def plot_process_tree(
         raise ProcessTreeSchemaException("Could not infer schema from data set.")
 
     source = ColumnDataSource(data=data)
+    # Get legend/color bar map
+    fill_map, color_bar = _create_fill_map(source, legend_col)
 
     max_level = max(levels) + 3
     min_level = min(levels)
-    plot_height = 700
+    plot_height: int = kwargs.pop("height", 700)
+    plot_width: int = kwargs.pop("width", 900)
+    title: str = kwargs.pop("title", "ProcessTree")
+    if color_bar:
+        title += " (color bar = {legend_col})"
     visible_range = int(plot_height / 35)
     y_start_range = (n_rows - visible_range, n_rows + 1)
     b_plot = figure(
-        title="ProcessTree",
-        plot_width=900,
+        title=title,
+        plot_width=plot_width,
         plot_height=plot_height,
         x_range=(min_level, max_level),
         y_range=y_start_range,
@@ -155,8 +181,6 @@ def plot_process_tree(
     )
     b_plot.add_tools(hover)
 
-    # Get legend/color bar map
-    fill_map, color_bar = _create_fill_map(source, legend_col)
     # dodge to align rectangle with grid
     rect_x = dodge("Level", 1.75, range=b_plot.x_range)
     rect_plot_params = dict(
