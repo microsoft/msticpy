@@ -16,7 +16,7 @@ _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventTimeline.ipynb"
 
 
-class TestnTimeline(unittest.TestCase):
+class TestTimeline(unittest.TestCase):
     """Unit test class."""
 
     @pytest.mark.skipif(

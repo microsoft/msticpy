@@ -3,10 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""
-msticpy IPython magics.
-
-"""
+"""msticpy IPython magics."""
 import re
 from typing import List, Tuple
 
@@ -89,7 +86,7 @@ class Base64Magic(Magics):
 
 @magics_class
 class IoCExtractMagic(Magics):
-    """IoCExtract IPython magic extension."""
+    """Ioc Extract IPython magic extension."""
 
     def __init__(self, shell):
         """
@@ -112,7 +109,7 @@ class IoCExtractMagic(Magics):
     )
     def ioc(self, line="", cell=None) -> List[Tuple[str, List[str]]]:
         """
-        IoCExtract IPython magic extension.
+        Ioc Extract IPython magic extension.
 
         Parameters
         ----------

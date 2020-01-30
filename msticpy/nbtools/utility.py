@@ -184,12 +184,12 @@ def check_py_version(min_ver: Tuple = (3, 6)):
     """
     if isinstance(min_ver, (float, str)):
         min_ver_list = str(min_ver).split(".")
-        min_ver = (min_ver_list[0], min_ver_list[1])
+        min_ver = (int(min_ver_list[0]), int(min_ver_list[1]))
     if sys.version_info < min_ver:
         print("Check the Kernel->Change Kernel menu and ensure that Python 3.6")
         print("or later is selected as the active kernel.")
         raise SystemExit(
-            "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
+            "Python %s.%s or later is required.\n" % (min_ver[0], min_ver[1])
         )
 
 
@@ -207,12 +207,12 @@ def resolve_pkg_path(part_path: str):
     if Path(part_path).is_absolute():
         return part_path
 
-    resolved_path = str(Path(__file__).resolve().parent.joinpath(part_path))
+    resolved_path = str(Path(__file__).resolve().parent.parent.joinpath(part_path))
     if Path(resolved_path).exists():
         return str(resolved_path)
 
     searched_paths = list(
-        Path(__file__).resolve().parent.glob(str(Path("**").joinpath(part_path)))
+        Path(__file__).resolve().parent.parent.glob(str(Path("**").joinpath(part_path)))
     )
     if not searched_paths or len(searched_paths) > 1:
         warnings.warn(f"No path or ambiguous match for {part_path} not found")

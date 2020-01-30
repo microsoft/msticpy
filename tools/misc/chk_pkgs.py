@@ -1,3 +1,9 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""Test script for checking package version alignment."""
 import re
 
 KQL_REQUIRES = [
@@ -28,6 +34,7 @@ PKG_VER_PATTERN = r"([\w\-_]+)\s*([><=]{2})\s*([\d.]+)"
 
 
 def extract_pkgs(req_file=None, pkg_reqs=None):
+    """Get reqs from requirements.txt."""
     if req_file is not None:
         with open(req_file, "r") as req_fh:
             pkg_reqs = req_fh.readlines()
@@ -42,22 +49,24 @@ def extract_pkgs(req_file=None, pkg_reqs=None):
     return pkg_dict
 
 
-bh_path = "E:/temp/pkg_comp/bluehound-req.txt"
-mp_path = "E:/src/microsoft/msticpy/msticpy/requirements.txt"
+BH_PATH = "E:/temp/pkg_comp/bluehound-req.txt"
+MP_PATH = "E:/src/microsoft/msticpy/msticpy/requirements.txt"
 
-bh_reqs = extract_pkgs(req_file=bh_path)
-mp_reqs = extract_pkgs(req_file=mp_path)
-km_reqs = extract_pkgs(pkg_reqs=KQL_REQUIRES)
+BH_REQS = extract_pkgs(req_file=BH_PATH)
+MP_REQS = extract_pkgs(req_file=MP_PATH)
+KM_REQS = extract_pkgs(pkg_reqs=KQL_REQUIRES)
 
 
 def solve_all(ver1, op1, ver2, op2):
-    ok, problem = solve(ver1, op1, ver2, op2)
-    if not ok:
-        return ok, problem
-    return solve(ver2, op2, ver1, op1)
+    """Solve conflicts in both directions."""
+    ver_ok, problem = solve(ver1, op1, ver2, op2)
+    if not ver_ok:
+        return ver_ok, problem
+    return solve(ver1=ver2, op1=op2, ver2=ver1, op2=op1)
 
 
 def solve(ver1, op1, ver2, op2):
+    """Solve conflicts."""
     ver1_t = tuple(ver1.split("."))
     ver2_t = tuple(ver2.split("."))
     if op1 == "==":
@@ -69,6 +78,7 @@ def solve(ver1, op1, ver2, op2):
 
 
 def check_conflicts(src_pkg, dest_pkg):
+    """Check conflicts in between packages."""
     conflicts = []
     compats = []
     matches = []
@@ -78,8 +88,8 @@ def check_conflicts(src_pkg, dest_pkg):
             if ver[1] == dest_pkg[pkg][1]:
                 matches.append(pkg)
             else:
-                ok, mssg = solve_all(ver[1], ver[0], ver2[1], ver2[0])
-                if ok:
+                ver_ok, mssg = solve_all(ver[1], ver[0], ver2[1], ver2[0])
+                if ver_ok:
                     compats.append((pkg, ver, dest_pkg[pkg]))
                 else:
                     conflicts.append((pkg, ver, dest_pkg[pkg], mssg))
@@ -95,8 +105,8 @@ def check_conflicts(src_pkg, dest_pkg):
 
 
 print("msticpy vs. bluehound")
-check_conflicts(mp_reqs, bh_reqs)
+check_conflicts(MP_REQS, BH_REQS)
 print("\nmsticpy vs. kqlmagic")
-check_conflicts(mp_reqs, km_reqs)
+check_conflicts(MP_REQS, KM_REQS)
 print("\nbluehound vs. kqlmagic")
-check_conflicts(bh_reqs, km_reqs)
+check_conflicts(BH_REQS, KM_REQS)
