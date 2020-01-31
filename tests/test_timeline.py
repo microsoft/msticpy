@@ -20,7 +20,7 @@ class TestTimeline(unittest.TestCase):
     """Unit test class."""
 
     @pytest.mark.skipif(
-        not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+        not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
     )
     def test_timeline_controls(self):
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
