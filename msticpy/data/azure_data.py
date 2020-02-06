@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Optional
+from typing import Optional, Dict, Tuple
 import datetime
 
 import attr
@@ -16,6 +16,7 @@ from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.monitor import MonitorManagementClient
+from azure.mgmt.compute import ComputeManagementClient
 from azure.common.exceptions import CloudError
 
 from ..nbtools import pkg_config as config
@@ -43,11 +44,12 @@ class Items:
     managed_by = attr.ib()
     sku = attr.ib()
     identity = attr.ib()
+    state = attr.ib()
 
 
 @attr.s
 class NsgItems:
-    """attr class to build NSG rule dictionary. """
+    """attr class to build NSG rule dictionary."""
 
     rule_name = attr.ib()
     description = attr.ib()
@@ -62,7 +64,7 @@ class NsgItems:
 
 @attr.s
 class InterfaceItems:
-    """attr class to build network interface details dictionary. """
+    """attr class to build network interface details dictionary."""
 
     interface_id = attr.ib()
     private_ip = attr.ib()
@@ -93,6 +95,7 @@ class AzureData:
         self.resource_client: Optional[ResourceManagementClient] = None
         self.network_client: Optional[NetworkManagementClient] = None
         self.monitoring_client: Optional[MonitorManagementClient] = None
+        self.compute_client: Optional[ComputeManagementClient] = None
         if connect is True:
             self.connect()
 
@@ -212,16 +215,24 @@ class AzureData:
         # Get properites for each resource, if standard API version isn't usable look up latest API
         for resource in resources:
             if get_props is True:
+                if resource.type == "Microsoft.Compute/virtualMachines":
+                    state = self._get_compute_state(
+                        resource_id=resource.id, sub_id=sub_id
+                    )
+                else:
+                    state = None
                 try:
                     props = self.resource_client.resources.get_by_id(
                         resource.id, "2019-08-01"
                     ).properties
+
                 except CloudError:
                     props = self.resource_client.resources.get_by_id(
                         resource.id, self.get_api(resource.id)
                     ).properties
             else:
                 props = resource.properties
+                state = None
 
             # Parse relevent resource attributes into a dataframe and return it
             resource_details = attr.asdict(
@@ -237,6 +248,7 @@ class AzureData:
                     resource.managed_by,
                     resource.sku,
                     resource.identity,
+                    state,
                 )
             )
             resource_items.append(resource_details)
@@ -246,7 +258,7 @@ class AzureData:
         return resource_df
 
     def get_resource_details(
-        self, resource_id: str = None, resource_details: dict = None, sub_id: str = None
+        self, sub_id: str, resource_id: str = None, resource_details: dict = None
     ) -> dict:
         """
         Return the details of a specific Azure resource.
@@ -262,7 +274,7 @@ class AzureData:
                 -resource_type
                 -resource_name
                 -parent_resource_path
-        sub_id: str, optional
+        sub_id: str
             The ID of the subscription to get resources from
 
         Returns
@@ -285,6 +297,10 @@ class AzureData:
             resource = self.resource_client.resources.get_by_id(
                 resource_id, api_version=self.get_api(resource_id)
             )
+            if resource.type == "Microsoft.Compute/virtualMachines":
+                state = self._get_compute_state(resource_id=resource_id, sub_id=sub_id)
+            else:
+                state = None
         # If resource details are provided use get to get details
         elif resource_details is not None:
             resource = self.resource_client.resources.get(
@@ -301,6 +317,7 @@ class AzureData:
                     )
                 ),
             )
+            state = None
         else:
             raise ValueError("Please provide either a resource ID or resource details")
 
@@ -318,6 +335,7 @@ class AzureData:
                 resource.managed_by,
                 resource.sku,
                 resource.identity,
+                state,
             )
         )
 
@@ -385,9 +403,11 @@ class AzureData:
 
         return str(api_ver)
 
-    def get_network_details(self, network_id: str, sub_id: str) -> dict:
+    def get_network_details(
+        self, network_id: str, sub_id: str
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Return details related to an Azure network interface and associated NSG
+        Return details related to an Azure network interface and associated NSG.
 
         Parameters
         ----------
@@ -400,6 +420,7 @@ class AzureData:
         -------
         details: dict
             A dictionary of items related to the network interface
+
         """
         # Check if connection and client required are already present
         if self.connected is False:
@@ -459,189 +480,116 @@ class AzureData:
 
         return ip_df, nsg_df
 
-    # ToDo Refactor metrics functions to a single function
-    def get_cpu_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
+    # pylint: disable=too-many-locals, too-many-arguments
+    def get_metrics(
+        self,
+        metrics: str,
+        resource_id: str,
+        sub_id: str,
+        sample_time: str = "hour",
+        start_time: int = 30,
+    ) -> Dict[str, pd.DataFrame]:
         """
-        Return CPU monitoring details for an Azure resource
+        Return specified metrics on Azure Resource.
 
         Parameters
         ----------
+        metrics: str
+            A string list of metrics you wish to collect
+            (https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported)
         resource_id: str
-            The ID of the Azure resource to return details on
+            The resource ID of the resource to collet the metrics from
         sub_id: str
-            The subscription ID that the network interface is part of
+            The subscription ID that the resource is part of
+        sample_time: str (Optional)
+            You can select to collect the metrics every hour of minute - default is hour
+        start_time: int (Optional)
+            The number of days prior to today that you wish to collect metrics for - default is 30
 
         Returns
         -------
-        details: pd.DataFrame
-            A DataFrame of CPU metrics
+        results: dict
+            A Dictionary of DataFrames containing the metrics details
 
         """
+        if sample_time.lower() == "h" or sample_time.lower() == "hour":
+            interval = "PT1H"
+        elif sample_time.lower() == "m" or sample_time.lower() == "minute":
+            interval = "PT1M"
+        else:
+            raise MsticpyAzureException(
+                "Please select how often you want to sample data - either 'hour', or 'minute'"
+            )
+
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
-
         if self.monitoring_client is None:
             self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
             if not self.monitoring_client:
                 raise CloudError("Could not create a MonitorManagementClient.")
 
-        # Get CPU metrics in one hour chunks for the last 30 days
+        # Get metrics in one hour chunks for the last 30 days
         start = datetime.datetime.now().date()
-        end = start - datetime.timedelta(days=30)
-        self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
+        end = start - datetime.timedelta(days=start_time)
+
         mon_details = self.monitoring_client.metrics.list(
             resource_id,
             timespan=f"{end}/{start}",
-            interval="PT1M",
-            metricnames="Percentage CPU",
+            interval=interval,
+            metricnames=f"{metrics}",
             aggregation="Total",
         )
 
-        # Parse the timeseries data into a dataframe
-        times = []
-        datas = []
-        for mon_detail in mon_details.value:
-            for time in mon_detail.timeseries:
+        results = {}
+        # Create a dict of all the results returned
+        for metric in mon_details.value:
+            times = []
+            output = []
+            for time in metric.timeseries:
                 for data in time.data:
                     times.append(data.time_stamp)
-                    datas.append(data.total)
+                    output.append(data.total)
+            details = pd.DataFrame({"Time": times, "Data": output})
+            details.replace(np.nan, 0, inplace=True)
+            results.update({metric.name.value: details})
 
-        details = pd.DataFrame({"Time": times, "CPU Usage": datas})
-        details.replace(np.nan, 0, inplace=True)
-        return details
+        return results
 
-    def get_network_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
+    # pylint: enable=too-many-locals, too-many-arguments
+
+    def _get_compute_state(self, resource_id: str, sub_id: str):
         """
-        Return network monitoring details for an Azure resource
+        Return the details on a Virtual Machine instance.
 
         Parameters
         ----------
         resource_id: str
-            The ID of the Azure resource to return details on
+            The Resource ID of the Virtual Machine
         sub_id: str
-            The subscription ID that the network interface is part of
+            The Subscription the Virtual Machine is part of
 
         Returns
         -------
-        details: dict
-            A DataFrame of network metrics
+        instance_details: VirtualMachineInstanceView
+            The details of the Virtual Machine
 
         """
-        # ToDo add check for if resource is not a VM
-
-        # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        if self.monitoring_client is None:
-            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
-            if not self.monitoring_client:
-                raise CloudError("Could not create a MonitorManagementClient.")
+        if self.compute_client is None:
+            self.compute_client = ComputeManagementClient(self.credentials, sub_id)
+        if not self.compute_client:
+            raise CloudError("Could not create a ComputeManagementClient.")
 
-        # Get network in and network out metrics for the last 30 days
-        start = datetime.datetime.now().date()
-        end = start - datetime.timedelta(days=30)
+        # Parse the Resource ID to extract Resource Group and Resource Name
+        r_details = resource_id.split("/")
+        r_group = r_details[r_details.index("resourceGroups") + 1]
+        name = r_details[r_details.index("virtualMachines") + 1]
 
-        net_mon = self.monitoring_client.metrics.list(
-            resource_id,
-            timespan=f"{end}/{start}",
-            interval="PT1H",
-            metricnames="BytesSentRate,BytesReceivedRate",
-            aggregation="Total",
+        # Get VM instance details and return them
+        instance_details = self.compute_client.virtual_machines.instance_view(
+            r_group, name
         )
-        # Extract the Network timeseries data
-        times = []
-        network_in = []
-        network_out = []
-        for net in net_mon.value:
-            if net.name.value == "BytesReceivedRate":
-                for time in net.timeseries:
-                    for data in time.data:
-                        times.append(data.time_stamp)
-                        network_in.append(data.total)
-            elif net.name.value == "BytesSentRate":
-                for time in net.timeseries:
-                    for data in time.data:
-                        network_out.append(data.total)
-
-        # Build dataframe and transform it into a grouped set
-        details = pd.DataFrame(
-            {"Time": times, "Network In": network_in, "Network Out": network_out}
-        )
-        in_details = details[["Time", "Network In"]]
-        in_details["Value"] = "Network In"
-        in_details.rename(columns={"Network In": "Data"}, inplace=True)
-        out_details = details[["Time", "Network Out"]]
-        out_details["Value"] = "Network Out"
-        out_details.rename(columns={"Network Out": "Data"}, inplace=True)
-        details = pd.concat([in_details, out_details])
-        details.replace(np.nan, 0, inplace=True)
-
-        return details
-
-    def get_disk_metrics(self, resource_id: str, sub_id: str) -> pd.DataFrame:
-        """
-        Return CPU monitoring details for an Azure resource
-
-        Parameters
-        ----------
-        resource_id: str
-            The ID of the Azure resource to return details on
-        sub_id: str
-            The subscription ID that the network interface is part of
-
-        Returns
-        -------
-        details: pd.DataFrame
-            A DataFrame of CPU metrics
-
-        """
-        # Check if connection and client required are already present
-        if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
-
-        if self.monitoring_client is None:
-            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
-            if not self.monitoring_client:
-                raise CloudError("Could not create a MonitorManagementClient.")
-
-        # Get CPU metrics in one hour chunks for the last 30 days
-        start = datetime.datetime.now().date()
-        end = start - datetime.timedelta(days=30)
-        self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
-        mon_details = self.monitoring_client.metrics.list(
-            resource_id,
-            timespan=f"{end}/{start}",
-            interval="PT1H",
-            metricnames="Disk Read Bytes,Disk Write Bytes",
-            aggregation="Total",
-        )
-
-        # Parse the timeseries data into a dataframe
-        times = []
-        disk_read = []
-        disk_write = []
-        for mon_detail in mon_details.value:
-            if mon_detail.name.value == "Disk Read Bytes":
-                for time in mon_detail.timeseries:
-                    for data in time.data:
-                        times.append(data.time_stamp)
-                        disk_read.append(data.total)
-            elif mon_detail.name.value == "Disk Write Bytes":
-                for time in mon_detail.timeseries:
-                    for data in time.data:
-                        disk_write.append(data.total)
-
-        details = pd.DataFrame(
-            {"Time": times, "Disk Read": disk_read, "Disk Write": disk_write}
-        )
-        read_details = details[["Time", "Disk Read"]]
-        read_details["Value"] = "Disk Read"
-        read_details.rename(columns={"Disk Read": "Data"}, inplace=True)
-        write_details = details[["Time", "Disk Write"]]
-        write_details["Value"] = "Disk Write"
-        write_details.rename(columns={"Disk Write": "Data"}, inplace=True)
-        details = pd.concat([write_details, read_details])
-        details.replace(np.nan, 0, inplace=True)
-        return details
+        return instance_details

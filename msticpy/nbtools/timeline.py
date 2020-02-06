@@ -818,10 +818,16 @@ def _create_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1):
+def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=100):
     """Add a reference marker line and label at `ref_time`."""
     ref_label_tm = pd.Timestamp(ref_time)
-    plot.line(x=[ref_label_tm, ref_label_tm], y=[0, series_count])
+    plot.line(
+        x=[ref_label_tm, ref_label_tm],
+        y=[0, series_count],
+        line_width=2,
+        line_color="red",
+        line_dash="dashed",
+    )
     ref_label = Label(
         x=ref_label_tm,
         y=0,
