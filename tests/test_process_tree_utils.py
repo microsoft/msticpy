@@ -8,7 +8,10 @@ import ast
 import os
 from pathlib import Path
 
+import nbformat
+from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
+import pytest
 
 from ..msticpy.sectools import process_tree_utils as ptutil
 
@@ -135,3 +138,29 @@ def test_tree_utils_lx():
     }
 
     assert ptutil.infer_schema(p_tree_l) == ptutil.LX_EVENT_SCH
+
+
+_NB_FOLDER = "docs/notebooks"
+_NB_NAME = "ProcessTree.ipynb"
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+)
+def test_process_tree_notebook():
+    nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
+    abs_path = Path(_NB_FOLDER).absolute()
+    with open(nb_path) as f:
+        nb = nbformat.read(f, as_version=4)
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+
+    try:
+        ep.preprocess(nb, {"metadata": {"path": abs_path}})
+    except CellExecutionError:
+        nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
+        msg = f"Error executing the notebook '{nb_path}'.\n"
+        msg += f"See notebook '{nb_err}' for the traceback."
+        print(msg)
+        with open(nb_err, mode="w", encoding="utf-8") as f:
+            nbformat.write(nb, f)
+        raise

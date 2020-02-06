@@ -1,0 +1,62 @@
+AzureSentinel:
+  Workspaces:
+    Default:
+      WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+      TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+    MyTestWS:
+      WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+QueryDefinitions:
+  Default:
+    - 'queries'
+  Custom:
+    - 'testdata'
+TIProviders:
+  OTX:
+    Args:
+      AuthKey:
+        EnvironmentVar: "OTX_AUTH"
+    Primary: True
+    Provider: "OTX"
+  VirusTotal:
+    Args:
+      AuthKey:
+        EnvironmentVar: "VIRUSTOTAL_AUTH"
+    Primary: True
+    Provider: "VirusTotal"
+  XForce:
+    Args:
+      ApiID:
+        EnvironmentVar: "XFORCE_ID"
+      AuthKey:
+        EnvironmentVar: "XFORCE_AUTH"
+    Primary: False
+    Provider: "XForce"
+  AzureSentinel:
+    Args:
+      # TBD
+      WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+    Primary: True
+    Provider: "NoLoad-AzSTI"
+  OpenPageRank:
+    Args:
+      AuthKey:
+        EnvironmentVar: "OPR_AUTH"
+    Primary: True
+    Provider: "OPR"
+  TorExitNodes:
+    Primary: True
+    Provider: Tor
+OtherProviders:
+  GeoIPLite:
+    Args:
+      AuthKey:
+        EnvironmentVar: "MAXMIND_AUTH"
+      DBFolder: "~/.msticpy"
+    Provider: "GeoLiteLookup"
+  IPStack:
+    Args:
+      AuthKey:
+        EnvironmentVar: "IPSTACK_AUTH"
+    Provider: "IPStackLookup"

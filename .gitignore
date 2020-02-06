@@ -105,3 +105,4 @@ venv.bak/
 /msticpy.code-workspace
 /docs/source/_build/**
 **/.vscode*
+**/Kqlmagic_temp_files/**

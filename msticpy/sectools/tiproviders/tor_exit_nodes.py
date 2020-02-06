@@ -12,6 +12,8 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from datetime import datetime
+from threading import Lock
 from typing import Tuple, Iterable, Dict, Any
 
 import requests
@@ -31,17 +33,30 @@ class Tor(TIProvider):
     _BASE_URL = "https://check.torproject.org/exit-addresses"
 
     _IOC_QUERIES: dict = {"ipv4": None}
+    _nodelist: Dict[str, Dict[str, str]] = {}
+    _last_cached = datetime.min
+    _cache_lock = Lock()
 
     def __init__(self, **kwargs):
-        """Pull down Tor exit node list and save to internal attribute."""
+        """Instantiate Tor class."""
         super().__init__(**kwargs)
+        self._check_and_get_nodelist()
 
-        try:
-            resp = requests.get(self._BASE_URL)
-            tor_raw_list = resp.content.decode()
-            self._nodelist = dict(self._tor_splitter(tor_raw_list))
-        except ConnectionError:
-            self._nodelist = {}
+    @classmethod
+    def _check_and_get_nodelist(cls):
+        """Pull down Tor exit node list and save to internal attribute."""
+        if cls._cache_lock.locked():
+            return
+        now = datetime.utcnow()
+        if not cls._nodelist or (now - cls._last_cached).days > 1:
+            try:
+                resp = requests.get(cls._BASE_URL)
+                tor_raw_list = resp.content.decode()
+                with cls._cache_lock:
+                    cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
+                    cls._last_cached = datetime.utcnow()
+            except ConnectionError:
+                pass
 
     @staticmethod
     def _tor_splitter(node_list) -> Iterable[Tuple[str, Dict[str, str]]]:

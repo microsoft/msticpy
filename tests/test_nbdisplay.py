@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 import unittest
+import os
 from pathlib import Path
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+import pytest
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventClustering.ipynb"
@@ -15,6 +17,9 @@ _NB_NAME = "EventClustering.ipynb"
 class Testnbdisplay(unittest.TestCase):
     """Unit test class."""
 
+    @pytest.mark.skipif(
+        not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+    )
     def test_clustering_nbdisplay_notebook(self):
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
         abs_path = Path(_NB_FOLDER).absolute()

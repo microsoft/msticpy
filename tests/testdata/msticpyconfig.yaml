@@ -14,7 +14,6 @@ QueryDefinitions:
 TIProviders:
   OTX:
     Args:
-      ApiID: "123456789"
       AuthKey: "987654321"
     Primary: True
     Provider: "OTX" # Explicitly name provider to override
@@ -48,3 +47,14 @@ TIProviders:
   TorExitNodes:
     Primary: True
     Provider: Tor
+OtherProviders:
+  GeoIPLite:
+    Args:
+      AuthKey:
+        EnvironmentVar: "MAXMIND_AUTH"
+      DBFolder: "~/.msticpy"
+    Provider: "GeoLiteLookup"
+  IPStack:
+    Args:
+      AuthKey: "987654321-222"
+    Provider: "IPStackLookup"

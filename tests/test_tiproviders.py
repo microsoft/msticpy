@@ -11,12 +11,13 @@ from pathlib import Path
 import random
 import string
 from typing import Union, Any, Tuple
+import warnings
 
 from ..msticpy.nbtools import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
-    TIProviderSettings,
+    ProviderSettings,
     get_provider_settings,
     preprocess_observable,
     LookupResult,
@@ -222,13 +223,18 @@ class TestTIProviders(unittest.TestCase):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
 
-        pkg_config.refresh_config()
-        return TILookup()
+        with warnings.catch_warnings():
+            # We want to ignore warnings from missing config
+            warnings.simplefilter("ignore", category=UserWarning)
+
+            pkg_config.refresh_config()
+            return TILookup()
 
     def test_ti_config_and_load(self):
         self.load_ti_lookup()
 
-        ti_settings = get_provider_settings()
+        with self.assertWarns(UserWarning):
+            ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
         self.assertGreaterEqual(len(ti_settings), 4)
