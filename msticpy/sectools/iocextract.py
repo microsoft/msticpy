@@ -602,3 +602,62 @@ class IoCExtract:
             return
 
         iocs_found[current_match] = (current_def.ioc_type, current_def.priority)
+
+
+# pylint: disable=too-few-public-methods
+@pd.api.extensions.register_dataframe_accessor("mp_ioc")
+class IoCExtractAccessor:
+    """Pandas api extension for IoC Extractor."""
+
+    def __init__(self, pandas_obj):
+        """Instantiate pandas extension class."""
+        self._df = pandas_obj
+        self._ioc = IoCExtract()
+
+    def extract(self, cols, **kwargs):
+        """
+        Extract IoCs from either a pandas DataFrame.
+
+        Parameters
+        ----------
+        columns : list
+            The list of columns to use as source strings,
+
+        Other Parameters
+        ----------------
+        os_family : str, optional
+            'Linux' or 'Windows' (the default is 'Windows'). This
+            is used to toggle between Windows or Linux path matching.
+        ioc_types : list, optional
+            Restrict matching to just specified types.
+            (default is all types)
+        include_paths : bool, optional
+            Whether to include path matches (which can be noisy)
+            (the default is false - excludes 'windows_path'
+            and 'linux_path'). If `ioc_types` is specified
+            this parameter is ignored.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of observables
+
+        Notes
+        -----
+        Extract takes a pandas DataFrame as input.
+        The results will be returned as a new
+        DataFrame with the following columns:
+        - IoCType: the mnemonic used to distinguish different IoC Types
+        - Observable: the actual value of the observable
+        - SourceIndex: the index of the row in the input DataFrame from
+        which the source for the IoC observable was extracted.
+
+        IoCType Pattern selection
+        The default list is:  ['ipv4', 'ipv6', 'dns', 'url',
+        'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
+        user-defined types.
+        'windows_path', 'linux_path' are excluded unless `include_paths`
+        is True or explicitly included in `ioc_paths`.
+
+        """
+        return self._ioc.extract_df(data=self._df, columns=cols, **kwargs)

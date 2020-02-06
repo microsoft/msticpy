@@ -4,15 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
-from typing import Iterable, List
+from typing import Iterable, List, Tuple, Union
 from numbers import Number
+import statistics as stats
 import warnings
 
 import folium
 
 # pylint: enable=locally-disabled, unused-import
 from .utility import export
-from .entityschema import IpAddress, GeoLocation
+from .entityschema import IpAddress, GeoLocation, Entity
 from .._version import VERSION
 
 __version__ = VERSION
@@ -68,12 +69,17 @@ class FoliumMap:
             location=location,
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
+        self.locations: List[Tuple[Number, Number]] = []
 
     def _repr_html_(self):
         """Return folium map as HTML."""
         # pylint: disable=protected-access
         return self.folium_map._repr_html_()
         # pylint: enable=protected-access
+
+    def center_map(self):
+        """Calculate and set map center based on current coordinates."""
+        self.folium_map.location = _get_center_coords(self.locations)
 
     def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
         """
@@ -142,9 +148,12 @@ class FoliumMap:
                 icon=folium.Icon(**kwargs),
             )
             marker.add_to(self.folium_map)
+            self.locations.append(
+                (ip_entity.Location.Latitude, ip_entity.Location.Longitude)
+            )
 
 
-def get_map_center(ip_entities: list):
+def get_map_center(entities: List[Entity], mode: str = "modal"):
     """
     Calculate median point between IP Entity locations.
 
@@ -152,6 +161,9 @@ def get_map_center(ip_entities: list):
     ----------
     ip_entities: list
         A list of ip entities to get a center point from
+    mode : str, optional
+        The averaging method to use, by default "modal"
+        "modal" and "mean" are the supported values.
 
     Returns
     -------
@@ -159,26 +171,99 @@ def get_map_center(ip_entities: list):
         The Lattitude and Longitude calculated
 
     """
-    longs: List[int] = []
-    lats: List[int] = []
-    for entity in ip_entities:
-        for ip_addr in entity:
-            for i in ip_addr:
-                if "Location" in i:
-                    if (
-                        i["Location"]["Longitude"] not in longs
-                        and i["Location"]["Latitude"] not in lats
-                    ):
-                        longs.append(i["Location"]["Longitude"])
-                        lats.append(i["Location"]["Latitude"])
-                elif "Longitude" in i:
-                    if i["Longitude"] not in longs and i["Latitude"] not in lats:
-                        longs.append(i["Longitude"])
-                        lats.append(i["Latitude"])
-                else:
-                    pass
-    lat_count = len(lats) if lats else 1
-    long_count = len(longs) if longs else 1
-    avglat = sum(lats) / lat_count
-    avglong = sum(longs) / long_count
-    return (avglat, avglong)
+    ip_entities: List[IpAddress] = []
+    loc_entities: List[GeoLocation] = []
+    if not entities:
+        return (0, 0)
+    if isinstance(entities[0], IpAddress):
+        return get_center_ip_entities(entities)  # type: ignore
+    loc_props = [
+        p_name
+        for p_name, p_val in entities[0].properties.items()
+        if isinstance(p_val, (IpAddress, GeoLocation))
+    ]
+    for entity in entities:
+        for prop in loc_props:
+            loc_entity = entity[prop]
+            if isinstance(loc_entity, IpAddress):
+                ip_entities.append(loc_entity)
+            elif isinstance(loc_entity, GeoLocation):
+                loc_entities.append(loc_entity)
+    locs_ips = _extract_locs_ip_entities(ip_entities)
+    return get_center_geo_locs(locs_ips + loc_entities, mode=mode)
+
+
+def _extract_locs_ip_entities(ip_entities: List[IpAddress]):
+    return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
+
+
+def get_center_ip_entities(
+    ip_entities: List[IpAddress], mode: str = "modal"
+) -> Tuple[Union[int, float], Union[int, float]]:
+    """
+    Return the geographical center of the IP address locations.
+
+    Parameters
+    ----------
+    ip_entities : List[IpAddress]
+        IpAddress entities with location information
+    mode : str, optional
+        The averaging method to us, by default "modal"
+        "modal" and "mean" are the supported values.
+
+    Returns
+    -------
+    Tuple[Union[int, float], Union[int, float]]
+        Tuple of latitude, longitude
+
+    """
+    ip_locs_longs = _extract_locs_ip_entities(ip_entities)
+    return get_center_geo_locs(ip_locs_longs, mode=mode)
+
+
+def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
+    return [
+        (loc["Latitude"], loc["Longitude"])
+        for loc in loc_entities
+        if "Latitude" in loc and "Logitude" in loc
+    ]
+
+
+def get_center_geo_locs(
+    loc_entities: List[GeoLocation], mode: str = "modal"
+) -> Tuple[Union[int, float], Union[int, float]]:
+    """
+    Return the geographical center of the geo locations.
+
+    Parameters
+    ----------
+    loc_entities : List[GeoLocation]
+        GeoLocation entities with location information
+    mode : str, optional
+        The averaging method to use, by default "modal"
+        "modal" and "mean" are the supported values.
+
+    Returns
+    -------
+    Tuple[Union[int, float], Union[int, float]]
+        Tuple of latitude, longitude
+
+    """
+    lat_longs = _extract_coords_loc_entities(loc_entities)
+    return _get_center_coords(lat_longs, mode=mode)
+
+
+def _get_center_coords(
+    locations: Iterable[Tuple[Union[int, float], Union[int, float]]],
+    mode: str = "modal",
+) -> Tuple[Union[int, float], Union[int, float]]:
+    locs = list(locations)
+    if mode == "modal":
+        try:
+            return (
+                stats.mode([loc[0] for loc in locs]),
+                stats.mode([loc[1] for loc in locs]),
+            )
+        except stats.StatisticsError:
+            pass
+    return (stats.mean([loc[0] for loc in locs]), stats.mean([loc[1] for loc in locs]))

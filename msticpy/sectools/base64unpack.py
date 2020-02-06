@@ -854,3 +854,65 @@ def _b64_string_pad(string: str) -> str:
     while len(string) % 4 != 0:
         string = string + "A"
     return string
+
+
+@pd.api.extensions.register_dataframe_accessor("mp_b64")
+class B64ExtractAccessor:
+    """Base64 Unpack pandas extension."""
+
+    def __init__(self, pandas_obj):
+        """Initialize the extension."""
+        self._df = pandas_obj
+
+    def extract(self, column, **kwargs) -> pd.DataFrame:
+        """
+        Base64 decode strings taken from a pandas dataframe.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            dataframe containing column to decode
+        column : str
+            Name of dataframe text column
+        trace : bool, optional
+            Show additional status (the default is None)
+        utf16 : bool, optional
+            Attempt to decode UTF16 byte strings
+
+        Returns
+        -------
+        pd.DataFrame
+            Decoded string and additional metadata in dataframe
+
+        Notes
+        -----
+        Items that decode to utf-8 or utf-16 strings will be returned as decoded
+        strings replaced in the original string. If the encoded string is a
+        known binary type it will identify the file type and return the hashes
+        of the file. If any binary types are known archives (zip, tar, gzip) it
+        will unpack the contents of the archive.
+        For any binary it will return the decoded file as a byte array, and as a
+        printable list of byte values.
+
+        The columns of the output DataFrame are:
+
+        - decoded string: this is the input string with any decoded sections
+        replaced by the results of the decoding
+        - reference : this is an index that matches an index number in the
+        decoded string (e.g. <<encoded binary type=pdf index=1.2').
+        - original_string : the string prior to decoding - file_type : the type
+        of file if this could be determined
+        - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
+        are broken out into separate columns)
+        - input_bytes : the binary image as a byte array
+        - decoded_string : printable form of the decoded string (either string
+        or list of hex byte values)
+        - encoding_type : utf-8, utf-16 or binary
+        - md5, sha1, sha256 : the respective hashes of the binary file_type,
+        file_hashes, input_bytes, md5, sha1, sha256 will be null if this item is
+        decoded to a string
+        - src_index - the index of the source row in the input
+        frame.
+
+        """
+        return unpack_df(data=self._df, column=column, **kwargs)

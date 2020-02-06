@@ -18,13 +18,14 @@ try:
 except ImportError:
     _BS_AVAILABLE = False
 
-from ..sectools import base64unpack as base64
-from ..sectools.iocextract import IoCExtract
+from . import base64unpack as base64
+from .iocextract import IoCExtract
 
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+print("mpmagics")
 
 
 @magics_class
@@ -78,7 +79,6 @@ class Base64Magic(Magics):
                 xml_str = f"<decoded_string>{results}</decoded_string>"
                 b_soup = BeautifulSoup(xml_str, "xml")
                 results = b_soup.prettify()
-        print(results)
         if args.out is not None:
             self.shell.user_ns[args.out] = (results, df_results)
         return results
@@ -136,5 +136,6 @@ class IoCExtractMagic(Magics):
 
 
 IPYTHON = get_ipython()
-IPYTHON.register_magics(Base64Magic)
-IPYTHON.register_magics(IoCExtractMagic)
+if IPYTHON:
+    IPYTHON.register_magics(Base64Magic)
+    IPYTHON.register_magics(IoCExtractMagic)

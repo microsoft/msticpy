@@ -25,8 +25,10 @@ from bokeh.models import (
 from bokeh.palettes import viridis
 
 # pylint: enable=no-name-in-module
-from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
 from bokeh.layouts import column, row
+from bokeh.models import LayoutDOM
+from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
+
 import numpy as np
 import pandas as pd
 
@@ -52,7 +54,7 @@ def build_and_show_process_tree(
     output_var: str = None,
     legend_col: str = None,
     **kwargs,
-):
+) -> Tuple[figure, LayoutDOM]:
     """
     Build process tree from data and plot a tree.
 
@@ -71,28 +73,23 @@ def build_and_show_process_tree(
     kwargs : Dict[str, Any]
         Additional arguments passed to plot_process_tree
 
+    Returns
+    -------
+    Tuple[figure, LayoutDOM]:
+        figure - The main bokeh.plotting.figure
+        Layout - Bokeh layout structure.
+
+    See Also
+    --------
+    plot_process_tree
+
     """
     # Check if this table already seems to have the proc_tree metadata
-    input_cols = set(data.columns)
-    expected_cols = set(
-        [
-            "new_process_lc",
-            "parent_proc_lc",
-            "source_index",
-            "new_process_lc_par",
-            "source_index_par",
-            "parent_key",
-            "IsRoot",
-            "IsLeaf",
-            "IsBranch",
-            "path",
-            "parent_index",
-        ]
-    )
-    if not expected_cols.issubset(input_cols):
-        data = build_process_tree(data)
+    missing_cols = _check_proc_tree_schema(data)
+    if missing_cols:
+        data = build_process_tree(procs=data, schema=schema)
 
-    plot_process_tree(
+    return plot_process_tree(
         data, schema, output_var=output_var, legend_col=legend_col, **kwargs
     )
 
@@ -105,7 +102,7 @@ def plot_process_tree(
     legend_col: str = None,
     show_table: bool = False,
     **kwargs,
-):
+) -> Tuple[figure, LayoutDOM]:
     """
     Plot a Process Tree Visualization.
 
@@ -134,6 +131,12 @@ def plot_process_tree(
     title : str, optional
         Title to display (the default is None)
 
+    Returns
+    -------
+    Tuple[figure, LayoutDOM]:
+        figure - The main bokeh.plotting.figure
+        Layout - Bokeh layout structure.
+
     Raises
     ------
     ProcessTreeSchemaException
@@ -141,7 +144,7 @@ def plot_process_tree(
 
     Notes
     -----
-    The `selected_keys` variable will be overwritten with any selected
+    The `output_var` variable will be overwritten with any selected
     values.
 
     """
@@ -162,6 +165,7 @@ def plot_process_tree(
     plot_height: int = kwargs.pop("height", 700)
     plot_width: int = kwargs.pop("width", 900)
     title: str = kwargs.pop("title", "ProcessTree")
+
     if color_bar:
         title += " (color bar = {legend_col})"
     visible_range = int(plot_height / 35)
@@ -242,6 +246,7 @@ def plot_process_tree(
         data_table = _create_data_table(source, schema, legend_col)
         plot_elems = column(plot_elems, data_table)
     show(plot_elems)
+    return b_plot, plot_elems
 
 
 # pylint: enable=too-many-locals
@@ -456,3 +461,107 @@ def _create_data_table(
         source=source, columns=columns + columns2, width=950, height=150
     )
     return data_table
+
+
+def _check_proc_tree_schema(data):
+    """Return true if expected process tree columns are present."""
+    input_cols = set(data.columns)
+    expected_cols = set(
+        [
+            "new_process_lc",
+            "parent_proc_lc",
+            "source_index",
+            "new_process_lc_par",
+            "source_index_par",
+            "parent_key",
+            "IsRoot",
+            "IsLeaf",
+            "IsBranch",
+            "path",
+            "parent_index",
+        ]
+    )
+    return expected_cols - input_cols
+
+
+# pylint: disable=too-few-public-methods
+@pd.api.extensions.register_dataframe_accessor("mp_process_tree")
+class ProcessTreeAccessor:
+    """Pandas api extension for Process Tree."""
+
+    def __init__(self, pandas_obj):
+        """Instantiate pandas extension class."""
+        self._df = pandas_obj
+
+    def plot(self, **kwargs) -> Tuple[figure, LayoutDOM]:
+        """
+        Build and plot a process tree.
+
+        Parameters
+        ----------
+        schema : ProcSchema, optional
+            The data schema to use for the data set, by default None
+            (if None the schema is inferred)
+        output_var : str, optional
+            Output variable for selected items in the tree,
+            by default None
+        legend_col : str, optional
+            The column used to color the tree items, by default None
+        show_table: bool
+            Set to True to show a data table, by default False.
+
+        Other Parameters
+        ----------------
+        height : int, optional
+            The height of the plot figure
+            (the default is 700)
+        width : int, optional
+            The width of the plot figure (the default is 900)
+        title : str, optional
+            Title to display (the default is None)
+
+        Returns
+        -------
+        Tuple[figure, LayoutDOM]:
+            figure - The main bokeh.plotting.figure
+            Layout - Bokeh layout structure.
+
+        """
+        return build_and_show_process_tree(data=self._df, **kwargs)
+
+    def build(self, schema: ProcSchema = None, **kwargs) -> pd.DataFrame:
+        """
+        Build process trees from the process events.
+
+        Parameters
+        ----------
+        procs : pd.DataFrame
+            Process events (Windows 4688 or Linux Auditd)
+        schema : ProcSchema, optional
+            The column schema to use, by default None
+            If None, then the schema is inferred
+        show_progress : bool
+            Shows the progress of the process (helpful for
+            very large data sets)
+        debug : bool
+            If True produces extra debugging output,
+            by default False
+
+        Returns
+        -------
+        pd.DataFrame
+            Process tree dataframe.
+
+        Notes
+        -----
+        It is not necessary to call this before `plot`. The process
+        tree is built automatically. This is only needed if you want
+        to return the processed tree data as a DataFrame
+
+        """
+        return build_process_tree(
+            procs=self._df,
+            schema=schema,
+            show_progress=kwargs.get("show_progress", False),
+            debug=kwargs.get("debug", False),
+        )

@@ -19,11 +19,6 @@ from .observationlist import Observations
 from .wsconfig import WorkspaceConfig
 from . import nbdisplay
 
-try:
-    from IPython import get_ipython
-    from . import mp_magics
-except ImportError:
-    pass
 # pylint: enable=W0401
 
 from .._version import VERSION

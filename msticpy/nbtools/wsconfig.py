@@ -135,6 +135,28 @@ class WorkspaceConfig:
                 return json_config
         return {}
 
+    @classmethod
+    def list_workspaces(cls) -> Dict:
+        """
+        Return list of available workspaces.
+
+        Returns
+        -------
+        Dict
+            Dictionary of workspaces with workspace and tenantIds.
+
+        """
+        ws_settings = pkg_config.settings.get("AzureSentinel", {}).get("Workspaces")
+        if not ws_settings:
+            return {}
+        return {
+            ws_name: {
+                cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
+                cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+            }
+            for ws_name, ws in ws_settings.items()
+        }
+
     def _read_pkg_config_values(self, workspace_name: str = None):
         as_settings = pkg_config.settings.get("AzureSentinel")
         if not as_settings:
