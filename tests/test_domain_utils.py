@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """domain_utilstes extract test class."""
-
 from ..msticpy.sectools import domain_utils
 
 
@@ -27,3 +26,10 @@ def test_validate_domain_fail():
     assert resolvable == False
     assert blacklisted[0] == False
     assert blacklisted[1] == None
+
+
+def test_TLD_file():
+    test_dom_val = domain_utils.DomainValidator()
+    tlds = test_dom_val.get_tlds()
+    assert ("COM" in tlds) == True
+    assert len(tlds) > 0
