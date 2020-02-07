@@ -856,6 +856,7 @@ def _b64_string_pad(string: str) -> str:
     return string
 
 
+# pylint: disable=too-few-public-methods
 @pd.api.extensions.register_dataframe_accessor("mp_b64")
 class B64ExtractAccessor:
     """Base64 Unpack pandas extension."""

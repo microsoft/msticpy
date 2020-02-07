@@ -5,8 +5,13 @@
 # --------------------------------------------------------------------------
 """msticpy IPython magics."""
 import re
-from typing import List, Tuple
+from typing import Tuple, List
 
+# pylint: disable=unused-import
+# flake8: noqa: F403
+import pandas as pd
+
+# pylint: enable=unused-import
 from IPython import get_ipython
 from IPython.core import magic_arguments
 from IPython.core.magic import line_cell_magic, Magics, magics_class
@@ -25,7 +30,6 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-print("mpmagics")
 
 
 @magics_class
@@ -107,6 +111,11 @@ class IoCExtractMagic(Magics):
     @magic_arguments.argument(
         "--out", "-o", help="The variable to return the results in"
     )
+    @magic_arguments.argument(
+        "--ioc_types",
+        "-i",
+        help="The types of IoC to search for (comma-separated string)",
+    )
     def ioc(self, line="", cell=None) -> List[Tuple[str, List[str]]]:
         """
         Ioc Extract IPython magic extension.
@@ -121,15 +130,20 @@ class IoCExtractMagic(Magics):
         Returns
         -------
         List[Tuple[str, List[str]]]
-            List of IoCs found grouped by type.
+            List of tuples of IoCs found grouped by type.
 
         """
-        if cell is None:
-            results = self._ioc_extract.extract(src=line)
-        else:
-            results = self._ioc_extract.extract(src=cell)
-        iocs = [(ioc_type, list(ioc_res)) for ioc_type, ioc_res in results.items()]
         args = magic_arguments.parse_argstring(self.ioc, line)
+        ioc_types = None
+        if args.ioc_types:
+            ioc_types = [ioc_type.strip() for ioc_type in args.ioc_types.split(",")]
+
+        if cell is None:
+            results = self._ioc_extract.extract(src=line, ioc_types=ioc_types)
+        else:
+            results = self._ioc_extract.extract(src=cell, ioc_types=ioc_types)
+        iocs = [(ioc_type, list(ioc_res)) for ioc_type, ioc_res in results.items()]
+
         if args.out is not None:
             self.shell.user_ns[args.out] = results
         return iocs

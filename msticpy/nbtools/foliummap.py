@@ -159,11 +159,12 @@ def get_map_center(entities: List[Entity], mode: str = "modal"):
 
     Parameters
     ----------
-    ip_entities: list
-        A list of ip entities to get a center point from
+    entities : List[Entity]
+        A list of entities containing IpAddress properties
+        to get a center point from.
     mode : str, optional
-        The averaging method to use, by default "modal"
-        "modal" and "mean" are the supported values.
+        The averaging method to use, by default "median".
+        "median" and "mean" are the supported values.
 
     Returns
     -------
@@ -194,11 +195,12 @@ def get_map_center(entities: List[Entity], mode: str = "modal"):
 
 
 def _extract_locs_ip_entities(ip_entities: List[IpAddress]):
+    """Return the list of IP entities that have a Location property."""
     return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
 
 
 def get_center_ip_entities(
-    ip_entities: List[IpAddress], mode: str = "modal"
+    ip_entities: List[IpAddress], mode: str = "median"
 ) -> Tuple[Union[int, float], Union[int, float]]:
     """
     Return the geographical center of the IP address locations.
@@ -208,8 +210,8 @@ def get_center_ip_entities(
     ip_entities : List[IpAddress]
         IpAddress entities with location information
     mode : str, optional
-        The averaging method to us, by default "modal"
-        "modal" and "mean" are the supported values.
+        The averaging method to us, by default "median".
+        "median" and "mean" are the supported values.
 
     Returns
     -------
@@ -222,6 +224,7 @@ def get_center_ip_entities(
 
 
 def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
+    """Return list of coordinate tuples from GeoLocation entities."""
     return [
         (loc["Latitude"], loc["Longitude"])
         for loc in loc_entities
@@ -230,7 +233,7 @@ def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
 
 
 def get_center_geo_locs(
-    loc_entities: List[GeoLocation], mode: str = "modal"
+    loc_entities: List[GeoLocation], mode: str = "median"
 ) -> Tuple[Union[int, float], Union[int, float]]:
     """
     Return the geographical center of the geo locations.
@@ -240,8 +243,8 @@ def get_center_geo_locs(
     loc_entities : List[GeoLocation]
         GeoLocation entities with location information
     mode : str, optional
-        The averaging method to use, by default "modal"
-        "modal" and "mean" are the supported values.
+        The averaging method to use, by default "median".
+        "median" and "mean" are the supported values.
 
     Returns
     -------
@@ -255,14 +258,15 @@ def get_center_geo_locs(
 
 def _get_center_coords(
     locations: Iterable[Tuple[Union[int, float], Union[int, float]]],
-    mode: str = "modal",
+    mode: str = "median",
 ) -> Tuple[Union[int, float], Union[int, float]]:
+    """Return the center (harmonic mean) of the coordinates."""
     locs = list(locations)
-    if mode == "modal":
+    if mode == "median":
         try:
             return (
-                stats.mode([loc[0] for loc in locs]),
-                stats.mode([loc[1] for loc in locs]),
+                stats.harmonic_mean([loc[0] for loc in locs]),
+                stats.harmonic_mean([loc[1] for loc in locs]),
             )
         except stats.StatisticsError:
             pass

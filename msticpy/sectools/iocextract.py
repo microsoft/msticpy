@@ -127,7 +127,7 @@ class IoCExtract:
             (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
             (?P<host>([a-z0-9-._~!$&\'()*+,;=]|%[0-9A-F]{2})*)
             (:(?P<port>\d*))?
-            (/(?P<path>([^?\#"<> ]|%[0-9A-F]{2})*/?))?
+            (/(?P<path>([^?\#"<>\s]|%[0-9A-F]{2})*/?))?
             (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
             (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?"""
 
@@ -256,9 +256,6 @@ class IoCExtract:
 
         Other Parameters
         ----------------
-        os_family : str, optional
-            'Linux' or 'Windows' (the default is 'Windows'). This
-            is used to toggle between Windows or Linux path matching.
         ioc_types : list, optional
             Restrict matching to just specified types.
             (default is all types)
@@ -294,14 +291,11 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
-        os_family = kwargs.get("os_family", "Windows")
         ioc_types = kwargs.get("ioc_types", None)
         include_paths = kwargs.get("include_paths", False)
 
         if src and src.strip():
-            return self._scan_for_iocs(
-                src=src, os_family=os_family, ioc_types=ioc_types
-            )
+            return self._scan_for_iocs(src=src, ioc_types=ioc_types)
 
         if data is None:
             raise Exception("No source data was supplied to extract")
@@ -309,14 +303,7 @@ class IoCExtract:
         if columns is None:
             raise Exception("No values were supplied for the columns parameter")
 
-        # Use only requested IoC Type patterns
-        if ioc_types:
-            ioc_types_to_use = list(set(ioc_types))
-        else:
-            ioc_types_to_use = list(set(self._content_regex.keys()))
-            if not include_paths:
-                ioc_types_to_use.remove("windows_path")
-                ioc_types_to_use.remove("linux_path")
+        ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
 
         col_set = set(columns)
         if not col_set <= set(data.columns):
@@ -332,7 +319,7 @@ class IoCExtract:
         for idx, datarow in data.iterrows():
             result_rows.extend(
                 self._search_in_row(
-                    datarow, idx, columns, result_columns, os_family, ioc_types_to_use
+                    datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
         result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
@@ -345,13 +332,12 @@ class IoCExtract:
         idx: Any,
         columns: List[str],
         result_columns: List[str],
-        os_family: str,
         ioc_types_to_use: List[str],
     ) -> List[pd.Series]:
         """Return results for a single input row."""
         result_rows = []
         for col in columns:
-            ioc_results = self._scan_for_iocs(datarow[col], os_family, ioc_types_to_use)
+            ioc_results = self._scan_for_iocs(datarow[col], ioc_types_to_use)
             for result_type, result_set in ioc_results.items():
                 if result_set:
                     for observable in result_set:
@@ -376,9 +362,6 @@ class IoCExtract:
 
         Other Parameters
         ----------------
-        os_family : str, optional
-            'Linux' or 'Windows' (the default is 'Windows'). This
-            is used to toggle between Windows or Linux path matching.
         ioc_types : list, optional
             Restrict matching to just specified types.
             (default is all types)
@@ -411,19 +394,10 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
-        os_family = kwargs.get("os_family", "Windows")
         ioc_types = kwargs.get("ioc_types", None)
         include_paths = kwargs.get("include_paths", False)
 
-        # Use only requested IoC Type patterns
-        if ioc_types:
-            ioc_types_to_use = list(set(ioc_types))
-        else:
-            ioc_types_to_use = list(set(self._content_regex.keys()))
-            if not include_paths:
-                ioc_types_to_use.remove("windows_path")
-                ioc_types_to_use.remove("linux_path")
-
+        ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
         col_set = set(columns)
         if not col_set <= set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
@@ -438,11 +412,26 @@ class IoCExtract:
         for idx, datarow in data.iterrows():
             result_rows.extend(
                 self._search_in_row(
-                    datarow, idx, columns, result_columns, os_family, ioc_types_to_use
+                    datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
         result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
         return result_frame
+
+    def _get_ioc_types_to_use(
+        self, ioc_types: List[str], include_paths: bool
+    ) -> List[str]:
+        # Use only requested IoC Type patterns
+        if ioc_types:
+            ioc_types_to_use = list(set(ioc_types))
+        else:
+            ioc_types_to_use = list(set(self._content_regex.keys()))
+            # don't include linux paths unless explicitly included
+            ioc_types_to_use.remove(IoCType.linux_path.name)
+            if not include_paths:
+                # windows path matching is less noisy
+                ioc_types_to_use.remove(IoCType.windows_path.name)
+        return ioc_types_to_use
 
     def validate(self, input_str: str, ioc_type: str) -> bool:
         """
@@ -518,11 +507,11 @@ class IoCExtract:
             The IoC type enumeration (unknown, if no match)
 
         """
-        results = self._scan_for_iocs(src=observable, os_family="Windows")
+        results = self._scan_for_iocs(src=observable)
 
         if not results:
             results = self._scan_for_iocs(
-                src=observable, os_family="Linux", ioc_types=[IoCType.linux_path.name]
+                src=observable, ioc_types=[IoCType.linux_path.name]
             )
             if not results:
                 return IoCType.unknown.name
@@ -537,7 +526,7 @@ class IoCExtract:
 
     # Private methods
     def _scan_for_iocs(
-        self, src: str, os_family: str, ioc_types: List[str] = None
+        self, src: str, ioc_types: List[str] = None
     ) -> Dict[str, Set[str]]:
         """Return IoCs found in the string."""
         ioc_results: Dict[str, Set] = defaultdict(set)
@@ -546,11 +535,6 @@ class IoCExtract:
         # pylint: disable=too-many-nested-blocks
         for (ioc_type, rgx_def) in self._content_regex.items():
             if ioc_types and ioc_type not in ioc_types:
-                continue
-
-            if (os_family == "Linux" and rgx_def.ioc_type == "windows_path") or (
-                os_family == "Windows" and rgx_def.ioc_type == "linux_path"
-            ):
                 continue
 
             match_pos = 0
@@ -614,7 +598,7 @@ class IoCExtractAccessor:
         self._df = pandas_obj
         self._ioc = IoCExtract()
 
-    def extract(self, cols, **kwargs):
+    def extract(self, columns, **kwargs):
         """
         Extract IoCs from either a pandas DataFrame.
 
@@ -625,9 +609,6 @@ class IoCExtractAccessor:
 
         Other Parameters
         ----------------
-        os_family : str, optional
-            'Linux' or 'Windows' (the default is 'Windows'). This
-            is used to toggle between Windows or Linux path matching.
         ioc_types : list, optional
             Restrict matching to just specified types.
             (default is all types)
@@ -660,4 +641,4 @@ class IoCExtractAccessor:
         is True or explicitly included in `ioc_paths`.
 
         """
-        return self._ioc.extract_df(data=self._df, columns=cols, **kwargs)
+        return self._ioc.extract_df(data=self._df, columns=columns, **kwargs)
