@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
-from typing import Iterable, List, Tuple, Union
-from numbers import Number
+from typing import Iterable, List, Tuple
+import math
 import statistics as stats
 import warnings
 
@@ -69,7 +69,7 @@ class FoliumMap:
             location=location,
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
-        self.locations: List[Tuple[Number, Number]] = []
+        self.locations: List[Tuple[float, float]] = []
 
     def _repr_html_(self):
         """Return folium map as HTML."""
@@ -108,9 +108,13 @@ class FoliumMap:
                 ip_entity.Location = geo_entity  # type: ignore
 
         for ip_entity in ip_entities:
-            if not (
-                isinstance(ip_entity.Location.Latitude, Number)
-                and isinstance(ip_entity.Location.Longitude, Number)
+            if (
+                not (
+                    isinstance(ip_entity.Location.Latitude, (int, float))
+                    and isinstance(ip_entity.Location.Longitude, (int, float))
+                )
+                or math.isnan(ip_entity.Location.Latitude)
+                or math.isnan(ip_entity.Location.Longitude)
             ):
                 warnings.warn(
                     "Invalid location information for IP: " + ip_entity.Address,
@@ -124,12 +128,20 @@ class FoliumMap:
                     if val
                 ]
             )
-            popup_text = "{loc_props}<br>{IP}".format(
+            popup_text = "{loc_props}<br>IP: {IP}".format(
                 IP=ip_entity.Address, loc_props=loc_props
             )
-            tooltip_text = "{City}, {CountryName}".format(
-                **ip_entity.Location.properties
-            )
+            if (
+                "City" in ip_entity.Location.properties
+                or "CountryName" in ip_entity.Location.properties
+            ):
+                tooltip_text = "{City}, {CountryName}".format(
+                    **ip_entity.Location.properties
+                )
+            else:
+                tooltip_text = "{Latitude}, {Longitude}".format(
+                    **ip_entity.Location.properties
+                )
 
             if ip_entity.AdditionalData:
                 addl_props = ", ".join(
@@ -151,6 +163,36 @@ class FoliumMap:
             self.locations.append(
                 (ip_entity.Location.Latitude, ip_entity.Location.Longitude)
             )
+
+    def add_geoloc_cluster(self, geo_locations: Iterable[GeoLocation], **kwargs):
+        """
+        Add a collection of GeoLocation objects to the map.
+
+        Parameters
+        ----------
+        geo_locations : Iterable[GeoLocation]
+            Iterable of GeoLocation entities.
+
+        """
+        ip_entities = []
+        for geo in geo_locations:
+            ip_entities.append(IpAddress(Address="na", Location=geo))
+        self.add_ip_cluster(ip_entities=ip_entities, **kwargs)
+
+    def add_locations(self, locations: Iterable[Tuple[float, float]], **kwargs):
+        """
+        Add a collection of lat/long tuples to the map.
+
+        Parameters
+        ----------
+        locations : Iterable[Tuple[float, float]]
+            Iterable of location tuples.
+
+        """
+        geo_entities = [
+            GeoLocation(Latitude=lat, Longitude=long) for lat, long in locations
+        ]
+        self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
 
 
 def get_map_center(entities: List[Entity], mode: str = "modal"):
@@ -201,7 +243,7 @@ def _extract_locs_ip_entities(ip_entities: List[IpAddress]):
 
 def get_center_ip_entities(
     ip_entities: List[IpAddress], mode: str = "median"
-) -> Tuple[Union[int, float], Union[int, float]]:
+) -> Tuple[float, float]:
     """
     Return the geographical center of the IP address locations.
 
@@ -228,13 +270,13 @@ def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
     return [
         (loc["Latitude"], loc["Longitude"])
         for loc in loc_entities
-        if "Latitude" in loc and "Logitude" in loc
+        if "Latitude" in loc and "Longitude" in loc
     ]
 
 
 def get_center_geo_locs(
     loc_entities: List[GeoLocation], mode: str = "median"
-) -> Tuple[Union[int, float], Union[int, float]]:
+) -> Tuple[float, float]:
     """
     Return the geographical center of the geo locations.
 
@@ -257,17 +299,21 @@ def get_center_geo_locs(
 
 
 def _get_center_coords(
-    locations: Iterable[Tuple[Union[int, float], Union[int, float]]],
-    mode: str = "median",
-) -> Tuple[Union[int, float], Union[int, float]]:
-    """Return the center (harmonic mean) of the coordinates."""
+    locations: Iterable[Tuple[float, float]], mode: str = "median"
+) -> Tuple[float, float]:
+    """Return the center (median) of the coordinates."""
+    if not locations:
+        return 0, 0
     locs = list(locations)
     if mode == "median":
         try:
             return (
-                stats.harmonic_mean([loc[0] for loc in locs]),
-                stats.harmonic_mean([loc[1] for loc in locs]),
+                stats.median([loc[0] for loc in locs if not math.isnan(loc[0])]),
+                stats.median([loc[1] for loc in locs if not math.isnan(loc[1])]),
             )
         except stats.StatisticsError:
             pass
-    return (stats.mean([loc[0] for loc in locs]), stats.mean([loc[1] for loc in locs]))
+    return (
+        stats.mean([loc[0] for loc in locs if not math.isnan(loc[0])]),
+        stats.mean([loc[1] for loc in locs if not math.isnan(loc[1])]),
+    )
