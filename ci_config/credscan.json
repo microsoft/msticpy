@@ -1,0 +1,9 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+        {
+            "placeholder": "secret=secret",
+            "_justification": "This is code usage example and does not contain a secret"
+        }
+    ]
+}
