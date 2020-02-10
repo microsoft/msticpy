@@ -176,7 +176,7 @@ parameter to specify which column or columns that you want to search.
 .. code:: ipython3
 
     ioc_extractor = IoCExtract()
-    ioc_df = ioc_extractor.extract(data=process_tree, columns=['CommandLine'], os_family='Windows')
+    ioc_df = ioc_extractor.extract(data=process_tree, columns=['CommandLine'])
     if len(ioc_df):
         display(HTML("<h3>IoC patterns found in process tree.</h3>"))
         display(ioc_df)
@@ -404,7 +404,7 @@ add_ioc_type parameters:
     print(extractor.ioc_types['win_named_pipe'])
 
     # Use it in our data set
-    ioc_extractor.extract(data=process_tree, columns=['CommandLine'], os_family='Windows').query('IoCType == \'win_named_pipe\'')
+    ioc_extractor.extract(data=process_tree, columns=['CommandLine']).query('IoCType == \'win_named_pipe\'')
 
 
 .. parsed-literal::
@@ -450,6 +450,18 @@ add_ioc_type parameters:
     </table>
     </div>
     <br>
+extract_df()
+~~~~~~~~~~~~
+
+``extract_df`` functions identically to ``extract`` with a ``data``
+parameter. It may be more convenient to use this when you know that your
+input is a DataFrame
+
+.. code:: ipython3
+
+    ioc_extractor.extract_df(process_tree, columns=['NewProcessName', 'CommandLine']).head(10)
+
+
 
 
 
@@ -678,5 +690,365 @@ to match the type of your index column.
       </tbody>
     </table>
     </div>
+    <br>
 
+
+IPython magic
+-------------
+
+You can use the line magic ``%ioc`` or cell magic ``%%ioc`` to extract
+IoCs from text pasted directly into a cell
+
+The ioc magic supports the following options:
+
+::
+
+   --out OUT, -o OUT
+       The variable to return the results in the variable `OUT`
+       Note: the output variable is a dictionary iocs grouped by IoC Type
+   --ioc_types IOC_TYPES, -i IOC_TYPES
+       The types of IoC to search for (comma-separated string)
+
+.. code:: ipython3
+
+    %%ioc --out ioc_capture
+    netsh  start capture=yes IPv4.Address=1.2.3.4 tracefile=C:\Users\user\AppData\Local\Temp\bzzzzzz.txt
+    hostname	customers-service.ddns.net		Feb 5, 2020, 2:20:35 PM		7
+    URL	https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
+    hostname	mobile.phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		8
+    hostname	youtube.service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		8
+    hostname	www.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
+    hostname	google.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
+    domain	niaconucil.org		Feb 5, 2020, 2:20:35 PM		11
+    domain	isis-online.net		Feb 5, 2020, 2:20:35 PM		11
+    domain	bahaius.info		Feb 5, 2020, 2:20:35 PM		11
+    domain	w3-schools.org		Feb 5, 2020, 2:20:35 PM		12
+    domain	system-services.site		Feb 5, 2020, 2:20:35 PM		11
+    domain	accounts-drive.com		Feb 5, 2020, 2:20:35 PM		8
+    domain	drive-accounts.com		Feb 5, 2020, 2:20:35 PM		10
+    domain	service-issues.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	two-step-checkup.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	customers-activities.site		Feb 5, 2020, 2:20:35 PM		11
+    domain	seisolarpros.org		Feb 5, 2020, 2:20:35 PM		11
+    domain	yah00.site		Feb 5, 2020, 2:20:35 PM		4
+    domain	skynevvs.com		Feb 5, 2020, 2:20:35 PM		11
+    domain	recovery-options.site		Feb 5, 2020, 2:20:35 PM		4
+    domain	malcolmrifkind.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	instagram-com.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	leslettrespersanes.net		Feb 5, 2020, 2:20:35 PM		11
+    domain	software-updating-managers.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	cpanel-services.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		7
+    domain	inztaqram.ga		Feb 5, 2020, 2:20:35 PM		8
+    domain	unirsd.com		Feb 5, 2020, 2:20:35 PM		8
+    domain	phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		7
+    domain	acconut-verify.com		Feb 5, 2020, 2:20:35 PM		11
+    domain	finance-usbnc.info		Feb 5, 2020, 2:20:35 PM		8
+    FileHash-MD5	542128ab98bda5ea139b169200a50bce		Feb 5, 2020, 2:20:35 PM		3
+    FileHash-MD5	3d67ce57aab4f7f917cf87c724ed7dab		Feb 5, 2020, 2:20:35 PM		3
+    hostname	x09live-ix3b.account-profile-users.info		Feb 6, 2020, 2:56:07 PM		0
+    hostname	www.phonechallenges-submit.site		Feb 6, 2020, 2:56:07 PM
+
+
+
+
+.. parsed-literal::
+
+    [('ipv4', ['1.2.3.4']),
+     ('dns',
+      ['malcolmrifkind.site',
+       'w3-schools.org',
+       'niaconucil.org',
+       'software-updating-managers.site',
+       'isis-online.net',
+       'accounts-drive.com',
+       'cpanel-services.site',
+       'service-activity-checkup.site',
+       'service-issues.site',
+       'recovery-options.site',
+       'instagram-com.site',
+       'mobile.phonechallenges-submit.site',
+       'youtube.service-activity-checkup.site',
+       'google.drive-accounts.com',
+       'phonechallenges-submit.site',
+       'drive-accounts.com',
+       'www.phonechallenges-submit.site',
+       'yah00.site',
+       'seisolarpros.org',
+       'customers-activities.site',
+       'bahaius.info',
+       'system-services.site',
+       'two-step-checkup.site',
+       'x09live-ix3b.account-profile-users.info',
+       'customers-service.ddns.net',
+       'leslettrespersanes.net',
+       'www.drive-accounts.com',
+       'acconut-verify.com',
+       'finance-usbnc.info',
+       'unirsd.com',
+       'skynevvs.com',
+       'inztaqram.ga']),
+     ('url',
+      ['https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password']),
+     ('windows_path', ['C:\\Users\\user\\AppData\\Local\\Temp\\bzzzzzz.txt']),
+     ('linux_path',
+      ['//two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password\t\tFeb']),
+     ('md5_hash',
+      ['3d67ce57aab4f7f917cf87c724ed7dab', '542128ab98bda5ea139b169200a50bce'])]
+
+
+.. code:: ipython3
+
+    %%ioc --ioc_types "ipv4, ipv6, linux_path, md5_hash"
+    netsh  start capture=yes IPv4.Address=1.2.3.4 tracefile=C:\Users\user\AppData\Local\Temp\bzzzzzz.txt
+    tracefile2=/usr/localbzzzzzz.sh
+    hostname	customers-service.ddns.net		Feb 5, 2020, 2:20:35 PM		7
+    URL	https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
+    hostname	mobile.phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		8
+    hostname	youtube.service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		8
+    hostname	www.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
+    hostname	google.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
+    domain	niaconucil.org		Feb 5, 2020, 2:20:35 PM		11
+    domain	isis-online.net		Feb 5, 2020, 2:20:35 PM		11
+    domain	bahaius.info		Feb 5, 2020, 2:20:35 PM		11
+    domain	w3-schools.org		Feb 5, 2020, 2:20:35 PM		12
+    domain	system-services.site		Feb 5, 2020, 2:20:35 PM		11
+    domain	accounts-drive.com		Feb 5, 2020, 2:20:35 PM		8
+    domain	drive-accounts.com		Feb 5, 2020, 2:20:35 PM		10
+    domain	service-issues.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	two-step-checkup.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	customers-activities.site		Feb 5, 2020, 2:20:35 PM		11
+    domain	seisolarpros.org		Feb 5, 2020, 2:20:35 PM		11
+    domain	yah00.site		Feb 5, 2020, 2:20:35 PM		4
+    domain	skynevvs.com		Feb 5, 2020, 2:20:35 PM		11
+    domain	recovery-options.site		Feb 5, 2020, 2:20:35 PM		4
+    domain	malcolmrifkind.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	instagram-com.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	leslettrespersanes.net		Feb 5, 2020, 2:20:35 PM		11
+    domain	software-updating-managers.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	cpanel-services.site		Feb 5, 2020, 2:20:35 PM		8
+    domain	service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		7
+    domain	inztaqram.ga		Feb 5, 2020, 2:20:35 PM		8
+    domain	unirsd.com		Feb 5, 2020, 2:20:35 PM		8
+    domain	phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		7
+    domain	acconut-verify.com		Feb 5, 2020, 2:20:35 PM		11
+    domain	finance-usbnc.info		Feb 5, 2020, 2:20:35 PM		8
+    FileHash-MD5	542128ab98bda5ea139b169200a50bce		Feb 5, 2020, 2:20:35 PM		3
+    FileHash-MD5	3d67ce57aab4f7f917cf87c724ed7dab		Feb 5, 2020, 2:20:35 PM		3
+    hostname	x09live-ix3b.account-profile-users.info		Feb 6, 2020, 2:56:07 PM		0
+    hostname	www.phonechallenges-submit.site		Feb 6, 2020, 2:56:07 PM
+
+
+
+
+.. parsed-literal::
+
+    [('ipv4', ['1.2.3.4']),
+     ('linux_path',
+      ['//two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password\t\tFeb',
+       '/usr/localbzzzzzz.sh']),
+     ('md5_hash',
+      ['3d67ce57aab4f7f917cf87c724ed7dab', '542128ab98bda5ea139b169200a50bce'])]
+
+
+
+
+Pandas Extension
+----------------
+
+The decoding functionality is also available in a pandas extension
+``mp_ioc``. This supports a single method ``extract()``.
+
+This supports the same syntax as ``extract`` (described earlier).
+
+.. code:: ipython3
+
+    process_tree.mp_ioc.extract(columns=['CommandLine'])
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>IoCType</th>
+          <th>Observable</th>
+          <th>SourceIndex</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>dns</td>
+          <td>microsoft.com</td>
+          <td>24</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>url</td>
+          <td>http://server/file.sct</td>
+          <td>31</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>dns</td>
+          <td>server</td>
+          <td>31</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>dns</td>
+          <td>evil.ps</td>
+          <td>35</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>url</td>
+          <td>http://somedomain/best-kitten-names-1.jpg'</td>
+          <td>37</td>
+        </tr>
+        <tr>
+          <th>5</th>
+          <td>dns</td>
+          <td>somedomain</td>
+          <td>37</td>
+        </tr>
+        <tr>
+          <th>6</th>
+          <td>dns</td>
+          <td>blah.ps</td>
+          <td>40</td>
+        </tr>
+        <tr>
+          <th>7</th>
+          <td>md5_hash</td>
+          <td>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td>
+          <td>40</td>
+        </tr>
+        <tr>
+          <th>8</th>
+          <td>dns</td>
+          <td>blah.ps</td>
+          <td>41</td>
+        </tr>
+        <tr>
+          <th>9</th>
+          <td>md5_hash</td>
+          <td>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td>
+          <td>41</td>
+        </tr>
+        <tr>
+          <th>10</th>
+          <td>md5_hash</td>
+          <td>81ed03caf6901e444c72ac67d192fb9c</td>
+          <td>44</td>
+        </tr>
+        <tr>
+          <th>11</th>
+          <td>url</td>
+          <td>http://badguyserver/pwnme</td>
+          <td>46</td>
+        </tr>
+        <tr>
+          <th>12</th>
+          <td>dns</td>
+          <td>badguyserver</td>
+          <td>46</td>
+        </tr>
+        <tr>
+          <th>13</th>
+          <td>url</td>
+          <td>http://badguyserver/pwnme</td>
+          <td>47</td>
+        </tr>
+        <tr>
+          <th>14</th>
+          <td>dns</td>
+          <td>badguyserver</td>
+          <td>47</td>
+        </tr>
+        <tr>
+          <th>15</th>
+          <td>dns</td>
+          <td>Invoke-Shellcode.ps</td>
+          <td>48</td>
+        </tr>
+        <tr>
+          <th>16</th>
+          <td>dns</td>
+          <td>Invoke-ReverseDnsLookup.ps</td>
+          <td>49</td>
+        </tr>
+        <tr>
+          <th>17</th>
+          <td>dns</td>
+          <td>Wscript.Shell</td>
+          <td>67</td>
+        </tr>
+        <tr>
+          <th>18</th>
+          <td>url</td>
+          <td>http://system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').se...</td>
+          <td>77</td>
+        </tr>
+        <tr>
+          <th>19</th>
+          <td>dns</td>
+          <td>system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').setvalue(...</td>
+          <td>77</td>
+        </tr>
+        <tr>
+          <th>20</th>
+          <td>ipv4</td>
+          <td>1.2.3.4</td>
+          <td>78</td>
+        </tr>
+        <tr>
+          <th>21</th>
+          <td>dns</td>
+          <td>wscript.shell</td>
+          <td>81</td>
+        </tr>
+        <tr>
+          <th>22</th>
+          <td>dns</td>
+          <td>abc.com</td>
+          <td>90</td>
+        </tr>
+        <tr>
+          <th>23</th>
+          <td>ipv4</td>
+          <td>127.0.0.1</td>
+          <td>102</td>
+        </tr>
+        <tr>
+          <th>24</th>
+          <td>url</td>
+          <td>http://127.0.0.1/</td>
+          <td>102</td>
+        </tr>
+        <tr>
+          <th>25</th>
+          <td>win_named_pipe</td>
+          <td>\\.\pipe\blahtest"</td>
+          <td>107</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
