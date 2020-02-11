@@ -19,9 +19,9 @@ _NB_NAME = "GeoIPLookups.ipynb"
 class TestGeoIP(unittest.TestCase):
     """Unit test class."""
 
-    # @pytest.mark.skipif(
-    #     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-    # )
+    @pytest.mark.skipif(
+        not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+    )
     def test_geoip_notebook(self):
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
         abs_path = Path(_NB_FOLDER).absolute()
