@@ -84,11 +84,6 @@ kwargs.
         client_id = input('Client ID')
         secret = input('Client Secret')
         az = AzureData()
-.. [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine",
-   Justification="Code sample - there is no secret in the text")]
-
-.. code:: ipython3
-
         az.connect(tenant_id=ten_id, client_id=client_id, secret=secret)
 
 Alternatively you can store these details in the ``msticpyconfig.yaml``
