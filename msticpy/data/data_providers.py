@@ -43,6 +43,13 @@ class AttribHolder:
         """Return iterator over the attributes."""
         return iter(self.__dict__.items())
 
+    def __getattr__(self, name):
+        """Print usable error message if attribute not found."""
+        if name not in self.__dict__:
+            print(f"Query attribute {name} not found.")
+            print("Use QueryProvider.list_queries() to see available queries.")
+        return super().__getattribute__(name)
+
 
 @export
 class QueryProvider:
