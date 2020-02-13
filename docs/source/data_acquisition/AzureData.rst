@@ -53,7 +53,7 @@ The first step in using this package is to install the msticpy package.
     Imports Complete
 
 
-Instantiating and Connecting with an Azzre Data Connector
+Instantiating and Connecting with an Azure Data Connector
 ---------------------------------------------------------
 
 See :py:class:`Azure Data <msticpy.data.azure_data.AzureData>`
