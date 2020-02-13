@@ -7,8 +7,8 @@ authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-
 Many of the included tools can be used in other security scenarios for threat hunting
 and threat investigation.
 
-<img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Timeline-08.png" alt="Timeline"
-	title="Msticpy Timeline Control" width="150" height="100" />
+<img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Timeline-08.png"
+alt="Timeline" title="Msticpy Timeline Control" width="300" height="200" />
 
 There are three main sub-packages:
 
@@ -106,6 +106,11 @@ Support IoC Types:
 ### geoip
 
 Geographic location lookup for IP addresses.
+
+<img src="https://github.com/microsoft/msticpy/blob/PandasMagicExtensions/docs/source/visualization/_static/FoliumMap-01.png"
+  alt="Folium map"
+  title="Plotting Geo IP Location" width="150" height="100" />
+
 This module has two classes for different services:
 
 - GeoLiteLookup - Maxmind Geolite (see <https://www.maxmind.com>)
@@ -123,6 +128,10 @@ while IPStack is an online lookup (API key required).
 This module is intended to be used to summarize large numbers of
 events into clusters of different patterns. High volume repeating
 events can often make it difficult to see unique and interesting items.
+
+<img src="https://github.com/microsoft/msticpy/blob/PandasMagicExtensions/docs/source/data_analysis/_static/EventClustering_2a.png"
+  alt="Clustering"
+  title="Clustering based on command-line variability" width="150" height="200" />
 
 This is an unsupervised learning module implemented using SciKit Learn DBScan.
 
