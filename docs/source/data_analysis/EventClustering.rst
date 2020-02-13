@@ -856,11 +856,11 @@ alert timeline.
 
 .. code:: ipython3
 
-    nbdisplay.display_timeline(data=clus_logons, group_by="Account",
+    nbdisplay.display_timeline(data=clus_logons,
+                               group_by="Account",
                                source_columns=['Account', 'LogonType'],
                                title='Clustered Host Logons',
                                legend="right",
-                               legend_column="Account",
                                yaxis=True)
 
 
