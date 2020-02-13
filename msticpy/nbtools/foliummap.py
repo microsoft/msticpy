@@ -4,17 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
-from typing import Iterable, List, Tuple
 import math
 import statistics as stats
 import warnings
+from typing import Iterable, List, Tuple
 
 import folium
 
+from .._version import VERSION
+from .entityschema import Entity, GeoLocation, IpAddress
+
 # pylint: enable=locally-disabled, unused-import
 from .utility import export
-from .entityschema import IpAddress, GeoLocation, Entity
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -195,15 +196,17 @@ class FoliumMap:
         self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
 
 
-def get_map_center(entities: List[Entity], mode: str = "modal"):
+def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     """
-    Calculate median point between IP Entity locations.
+    Calculate median point between Entity IP locations.
 
     Parameters
     ----------
-    entities : List[Entity]
-        A list of entities containing IpAddress properties
-        to get a center point from.
+    entities : Iterable[Entity]
+        An iterable of entities containing IpAddress geolocation information.
+        The entities can be IpAddress entities or other entities that
+        have IpAddress properties.
+        The entities must all be of the same type.
     mode : str, optional
         The averaging method to use, by default "median".
         "median" and "mean" are the supported values.
@@ -213,11 +216,19 @@ def get_map_center(entities: List[Entity], mode: str = "modal"):
     Tuple
         The Lattitude and Longitude calculated
 
+    Notes
+    -----
+    The function uses the first entity in the `entities` to determine
+    how to process the collection. E.g. if the first entity has properties
+    src_ip and dest_ip of type `IpAddress`, these are the only properties
+    that will be processed for the remainder of the entities.
+
     """
     ip_entities: List[IpAddress] = []
     loc_entities: List[GeoLocation] = []
     if not entities:
         return (0, 0)
+    entities = list(entities)
     if isinstance(entities[0], IpAddress):
         return get_center_ip_entities(entities)  # type: ignore
     loc_props = [
@@ -227,6 +238,8 @@ def get_map_center(entities: List[Entity], mode: str = "modal"):
     ]
     for entity in entities:
         for prop in loc_props:
+            if prop not in entity:
+                continue
             loc_entity = entity[prop]
             if isinstance(loc_entity, IpAddress):
                 ip_entities.append(loc_entity)
@@ -236,20 +249,20 @@ def get_map_center(entities: List[Entity], mode: str = "modal"):
     return get_center_geo_locs(locs_ips + loc_entities, mode=mode)
 
 
-def _extract_locs_ip_entities(ip_entities: List[IpAddress]):
+def _extract_locs_ip_entities(ip_entities: Iterable[IpAddress]):
     """Return the list of IP entities that have a Location property."""
     return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
 
 
 def get_center_ip_entities(
-    ip_entities: List[IpAddress], mode: str = "median"
+    ip_entities: Iterable[IpAddress], mode: str = "median"
 ) -> Tuple[float, float]:
     """
     Return the geographical center of the IP address locations.
 
     Parameters
     ----------
-    ip_entities : List[IpAddress]
+    ip_entities : Iterable[IpAddress]
         IpAddress entities with location information
     mode : str, optional
         The averaging method to us, by default "median".
@@ -265,7 +278,7 @@ def get_center_ip_entities(
     return get_center_geo_locs(ip_locs_longs, mode=mode)
 
 
-def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
+def _extract_coords_loc_entities(loc_entities: Iterable[GeoLocation]):
     """Return list of coordinate tuples from GeoLocation entities."""
     return [
         (loc["Latitude"], loc["Longitude"])
@@ -275,14 +288,14 @@ def _extract_coords_loc_entities(loc_entities: List[GeoLocation]):
 
 
 def get_center_geo_locs(
-    loc_entities: List[GeoLocation], mode: str = "median"
+    loc_entities: Iterable[GeoLocation], mode: str = "median"
 ) -> Tuple[float, float]:
     """
     Return the geographical center of the geo locations.
 
     Parameters
     ----------
-    loc_entities : List[GeoLocation]
+    loc_entities : Iterable[GeoLocation]
         GeoLocation entities with location information
     mode : str, optional
         The averaging method to use, by default "median".

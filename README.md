@@ -5,7 +5,12 @@ Microsoft Threat Intelligence Python Security Tools.
 The **msticpy** package was initially developed to support [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/What%20is%20the%20Jupyter%20Notebook.html)
 authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
 Many of the included tools can be used in other security scenarios for threat hunting
-and threat investigation. There are three main sub-packages:
+and threat investigation.
+
+<img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Timeline-08.png" alt="Timeline"
+	title="Msticpy Timeline Control" width="150" height="100" />
+
+There are three main sub-packages:
 
 - **sectools** - Python security tools to help with data enrichment,
   analysis or investigation.
@@ -52,7 +57,7 @@ Output is to a decoded string (for single string input) or a DataFrame (for data
 
 ### iocextract
 
-Uses a set of builtin regular expressions to look for Indicator of Compromise (IoC) patterns.
+Uses a set of built-in regular expressions to look for Indicator of Compromise (IoC) patterns.
 Input can be a single string or a pandas dataframe with one or more columns specified as input.
 
 The following types are built-in:
@@ -62,7 +67,7 @@ The following types are built-in:
 - DNS domain
 - Hashes (MD5, SHA1, SHA256)
 - Windows file paths
-- Linux file paths (this is kind of noisy because a legal linux file path can have almost any character)
+- Linux file paths (this is kind of noisy because a legal Linux file path can have almost any character)
 
 You can modify or add to the regular expressions used at runtime.
 
@@ -72,7 +77,7 @@ Output is a dictionary of matches (for single string input) or a DataFrame (for 
 
 ### tiproviders
 
-The TILookup class can lookup IoCs across multiple TI providers. builtin
+The TILookup class can lookup IoCs across multiple TI providers. built-in
 providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
 
 The input can be a single IoC observable or a pandas DataFrame containing
