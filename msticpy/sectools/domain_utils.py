@@ -99,20 +99,48 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 class DomainValidator:
     """Assess a domain's validity."""
 
-    tld_index: Set[str] = set()
-    ssl_bl: pd.DataFrame = pd.DataFrame()
+    _tld_index: Set[str] = set()
+    _ssl_bl: pd.DataFrame = pd.DataFrame()
 
     @classmethod
-    def _check_and_load_tls(cls):
+    def _check_and_load_tlds(cls):
         """Pull IANA TLD list and save to internal attribute."""
-        if not cls.tld_index:
-            cls.tld_index: Set[str] = cls.get_tlds()
+        if not cls._tld_index:
+            cls._tld_index: Set[str] = cls._get_tlds()
 
     @classmethod
     def _check_and_load_sslbl(cls):
         """Pull IANA TLD list and save to internal attribute."""
-        if cls.ssl_bl is None or cls.ssl_bl.empty:
-            cls.ssl_bl: pd.DataFrame = cls._get_ssl_bl()
+        if cls._ssl_bl is None or cls._ssl_bl.empty:
+            cls._ssl_bl: pd.DataFrame = cls._get_ssl_bl()
+
+    @property
+    def tld_index(self) -> Set[str]:
+        """
+        Return the class TLD index.
+
+        Returns
+        -------
+        Set[str]
+            The current TLD index
+
+        """
+        self._check_and_load_tlds()
+        return self._tld_index
+
+    @property
+    def ssl_bl(self) -> pd.DataFrame:
+        """
+        Return the class SSL Blacklist.
+
+        Returns
+        -------
+        pd.DataFrame
+            SSL Blacklist
+
+        """
+        self._check_and_load_sslbl()
+        return self._ssl_bl
 
     def validate_tld(self, url_domain: str) -> bool:
         """
@@ -129,9 +157,12 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
-        if not self.tld_index:  # type: ignore
-            self.tld_index = self.get_tlds()
         if not self.tld_index:
+            warnings.warn(
+                f"No top-level domain list available - {url_domain}"
+                + " could not be verified. ",
+                RuntimeWarning,
+            )
             return True
         _, _, tld = tldextract.extract(url_domain.lower())
         if "." in tld:
@@ -178,8 +209,6 @@ class DomainValidator:
             True if valid blacklisted, False if not.
 
         """
-        self._check_and_load_sslbl()
-
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
             backend = crypto.hazmat.backends.default_backend()  # type: ignore
@@ -199,7 +228,7 @@ class DomainValidator:
         return result, x509
 
     @classmethod
-    def get_tlds(cls) -> Set[str]:
+    def _get_tlds(cls) -> Set[str]:
         """
         Return IANA Top Level Domains.
 
@@ -251,7 +280,7 @@ class DomainValidator:
     @classmethod
     def _write_tld_seed_file(cls):
         """Write existing TLD list to a text file."""
-        if cls.tld_index:
+        if cls._tld_index:
             seed_file = "tld_seed.txt"
             with open(seed_file, "w") as file_handle:
                 file_handle.write("\n".join(sorted(cls.tld_index)))
@@ -263,7 +292,7 @@ class DomainValidator:
             ssl_bl = pd.read_csv(
                 "https://sslbl.abuse.ch/blacklist/sslblacklist.csv", skiprows=8
             )
-        except ConnectionError:
+        except (ConnectionError, HTTPError, URLError):
             ssl_bl = pd.DataFrame({"SHA1": []})
 
         return ssl_bl

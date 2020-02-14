@@ -4,22 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
+import difflib
 import re
 import subprocess  # nosec
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, Union
-
-import pandas as pd
+from typing import Any, Callable, Iterable, Optional, Tuple, Union, List, Dict
 import pkg_resources
-from IPython.core.display import HTML, Markdown, display
+
+from IPython.core.display import HTML, display
+from deprecated.sphinx import deprecated
 
 from tqdm import tqdm, tqdm_notebook
 
-from .._version import VERSION
+# from .._version import VERSION
 
-__version__ = VERSION
+# __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
@@ -104,16 +105,7 @@ def unescape_windows_path(str_path: str) -> str:
     return str_path
 
 
-_PD_INSTALLED_VERSION = tuple(pd.__version__.split("."))
-_PD_VER_23 = ("0", "23", "0")
-
-
-@export
-def pd_version_23() -> bool:
-    """Return True if pandas version 0.23.0 or later is installed."""
-    return _PD_INSTALLED_VERSION >= _PD_VER_23
-
-
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     """
@@ -139,6 +131,7 @@ def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
     return None
 
 
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_nb_query_params(nb_url_search: str) -> dict:
     """
@@ -164,6 +157,7 @@ def get_nb_query_params(nb_url_search: str) -> dict:
     return nb_params
 
 
+@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
 @export
 def get_notebook_query_string():
     """Execute javascript to publish notebook query string as python variable."""
@@ -190,12 +184,12 @@ def check_py_version(min_ver: Tuple = (3, 6)):
     """
     if isinstance(min_ver, (float, str)):
         min_ver_list = str(min_ver).split(".")
-        min_ver = (min_ver_list[0], min_ver_list[1])
+        min_ver = (int(min_ver_list[0]), int(min_ver_list[1]))
     if sys.version_info < min_ver:
         print("Check the Kernel->Change Kernel menu and ensure that Python 3.6")
         print("or later is selected as the active kernel.")
         raise SystemExit(
-            "Python %s.%s or later is required.\n" % min_ver[0], min_ver[1]
+            "Python %s.%s or later is required.\n" % (min_ver[0], min_ver[1])
         )
 
 
@@ -213,12 +207,12 @@ def resolve_pkg_path(part_path: str):
     if Path(part_path).is_absolute():
         return part_path
 
-    resolved_path = str(Path(__file__).resolve().parent.joinpath(part_path))
+    resolved_path = str(Path(__file__).resolve().parent.parent.joinpath(part_path))
     if Path(resolved_path).exists():
         return str(resolved_path)
 
     searched_paths = list(
-        Path(__file__).resolve().parent.glob(str(Path("**").joinpath(part_path)))
+        Path(__file__).resolve().parent.parent.glob(str(Path("**").joinpath(part_path)))
     )
     if not searched_paths or len(searched_paths) > 1:
         warnings.warn(f"No path or ambiguous match for {part_path} not found")
@@ -297,7 +291,7 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
-    display(Markdown(f"<p style='{style_str}'>{string}</p>"))
+    display(HTML(f"<p style='{style_str}'>{string}</p>"))
 
 
 def md_warn(string: str):
@@ -331,3 +325,64 @@ class MsticpyException(Exception):
 
 class MsticpyConfigException(Exception):
     """Configuration exception class for msticpy."""
+
+
+def check_kwarg(arg_name: str, legal_args: List[str]):
+    """
+    Check argument names against a list.
+
+    Parameters
+    ----------
+    arg_name : str
+        Argument to check
+    legal_args : List[str]
+        List of possible arguments.
+
+    Raises
+    ------
+    NameError
+        If the argument is not legal. If the `arg_name` is
+        a close match to one or more, `legal_args` these are
+        returned in the exception.
+
+    """
+    if arg_name not in legal_args:
+        closest = difflib.get_close_matches(arg_name, legal_args)
+        mssg = f"{arg_name} is not a recognized argument. "
+        if len(closest) == 1:
+            mssg += f"Closest match is '{closest[0]}'"
+        elif closest:
+            match_list = [f"'{mtch}'" for mtch in closest]
+            mssg += f"Closest matches are {', '.join(match_list)}"
+        else:
+            mssg += f"Valid arguments are {', '.join(legal_args)}"
+        raise NameError(arg_name, mssg)
+
+
+def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
+    """
+    Check all kwargs names against a list.
+
+    Parameters
+    ----------
+    supplied_args : Dict[str, Any]
+        Arguments to check
+    legal_args : List[str]
+        List of possible arguments.
+
+    Raises
+    ------
+    NameError
+        If any of the arguments are not legal. If the an arg is
+        a close match to one or more `legal_args`, these are
+        returned in the exception.
+
+    """
+    name_errs = []
+    for name in supplied_args:
+        try:
+            check_kwarg(name, legal_args)
+        except NameError as err:
+            name_errs.append(err)
+    if name_errs:
+        raise NameError(name_errs)

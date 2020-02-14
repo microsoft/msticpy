@@ -4,13 +4,13 @@ Azure Data Enrichment
 Description
 -----------
 
-This package contains functionality for enriching data regarding Azuure 
+This package contains functionality for enriching data regarding Azure
 host details with additional host details exposed via the Azure API.
 By providing an Azure Resource or Azure Subscription the package returns
-key contexutal information regarding the Subscription or Resource.
+key contextual information regarding the Subscription or Resource.
 This package is primarily aimed at Azure IaaS resources but will work
 with any Azure Resource type.
-This feature is currently a work in progress and additional data 
+This feature is currently a work in progress and additional data
 enrichment capabilities will be added over time.
 
 :py:mod:`Azure Data API documentation<msticpy.data.azure_data>`
@@ -55,26 +55,28 @@ The first step in using this package is to install the msticpy package.
 
 Instantiating and Connecting with an Azure Data Connector
 ---------------------------------------------------------
+
 See :py:class:`Azure Data <msticpy.data.azure_data.AzureData>`
 
-In order to connect to the Azure API and retreive the required data 
+In order to connect to the Azure API and retrieve the required data
 we need to instantiate an Azure Data Connector and connect to the API.
-Authentication to the Azure API is handled via an Azure Service 
-Principal and token credentials. Before using this package you will 
+Authentication to the Azure API is handled via an Azure Service
+Principal and token credentials. Before using this package you will
 need to register a Service Principal and collect the required details.
-Details on registering the Service Principal with the correct 
+Details on registering the Service Principal with the correct
 permissions can be found `here <https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?toc=%2Fazure%2Fazure-resource-manager%2Ftoc.json&view=azure-cli-latest>`__.
 
-Once the Service Principal has been registered the following details 
-are required (they can be found in the Azure Portal under 
+Once the Service Principal has been registered the following details
+are required (they can be found in the Azure Portal under
 Azure Active Directory > App Registrations):
 
 * tenant_id -- The tenant ID of the Azure tenant the Service Principal is in.
-* client_id -- The ID of the application associated with the Service Principal.
+* client_id -- The ID of the application associated with the Service
+  Principal.
 * secret -- The password of the Service Principal.
 
 When connecting the required elements for connection can be passed in
-a number of ways. The simpliest is to pass the required elements as 
+a number of ways. The simplest is to pass the required elements as
 kwargs.
 
 .. code:: ipython3
@@ -85,7 +87,7 @@ kwargs.
         az = AzureData()
         az.connect(tenant_id=ten_id, client_id=client_id, secret=secret)
 
-Alternatively you can store these details in the ``msticpyconfig.yaml`` 
+Alternatively you can store these details in the ``msticpyconfig.yaml``
 file. Details should be included in the following format:
 
 .. code:: yaml
@@ -93,10 +95,10 @@ file. Details should be included in the following format:
       AzureCLI:
         Args:
         clientId: "CLIENT ID"
-        clientSecret: "CLIENT SECRET" 
+        clientSecret: "CLIENT SECRET"
         tenantId: "TENANT ID"
 
-To use the stored variables when connecting simply provide no arguements.
+To use the stored variables when connecting simply provide no arguments.
 
 .. code:: ipython3
 
@@ -108,11 +110,11 @@ Get Azure Subscription Details
 
 See :py:meth:`get_subscriptions <msticpy.data.azure_data.AzureData.get_subscriptions>`
 
-Details about the subscription a resource is a member of can provide 
+Details about the subscription a resource is a member of can provide
 vital context to a security analyst when conducting an investigation.
 This package contains 2 functions to support this.
 
-AZURE_DATA_CONNECTOR.list_subscriptions() returns a pandas DataFrame 
+AZURE_DATA_CONNECTOR.list_subscriptions() returns a pandas DataFrame
 with details of all the subscriptions within the tenant.
 
 .. code:: ipython3
@@ -127,11 +129,11 @@ with details of all the subscriptions within the tenant.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -160,7 +162,7 @@ with details of all the subscriptions within the tenant.
 
 See :py:meth:`get_subscription_info <msticpy.data.azure_data.AzureData.get_subscription_info>`
 
-AZURE_DATA_CONNECTOR.get_subscription_info() gets information on a 
+AZURE_DATA_CONNECTOR.get_subscription_info() gets information on a
 specific subscription ID.
 
 
@@ -183,12 +185,12 @@ Get Azure Resource Details
 
 See :py:meth:`get_resources <msticpy.data.azure_data.AzureData.get_resources>`
 
-As well as subscriptions we can return details on a specific Azure 
+As well as subscriptions we can return details on a specific Azure
 resource.
-AZURE_DATA_CONNECTOR.get_resources() returns a pandas DataFrame with 
+AZURE_DATA_CONNECTOR.get_resources() returns a pandas DataFrame with
 details on all resources within a Subscription or Resource Group.
-In addition, you can request full properties on each Resource with the 
-get_props = True parmater. However, this can take some time to return 
+In addition, you can request full properties on each Resource with the
+get_props = True parameter. However, this can take some time to return
 results.
 
 .. code:: ipython3
@@ -204,11 +206,11 @@ results.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -362,7 +364,7 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
      'identity': None}
 
 
-.. note:: You can also provide a dictionary of resource details if you 
+.. note:: You can also provide a dictionary of resource details if you
           don't have a complete Resource ID.
           The details dictionary must contain:
           * resource_group_name

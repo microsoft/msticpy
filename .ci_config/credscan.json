@@ -1,0 +1,13 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+        {
+            "placeholder": ", secret=secret)",
+            "_justification": "This is code usage example and does not contain a secret."
+        },
+        {
+            "file": "AzureData.rst.txt",
+            "_justification": "This is code usage example and does not contain a secret."
+        }
+    ]
+}
