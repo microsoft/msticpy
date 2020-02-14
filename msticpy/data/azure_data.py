@@ -195,6 +195,7 @@ class AzureData:
 
         """
         # Check if connection and client required are already present
+        # ToDo make these checks into a function to avoid code-reuse
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 

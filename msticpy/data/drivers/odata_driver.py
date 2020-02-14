@@ -101,6 +101,7 @@ class OData(DriverBase):
         elif kwargs:
             cs_dict = kwargs
             # Allow user to specify location of connection variables in config file.
+            # ToDo add exception catch if app_name not in kwargs
             if "app_name" in cs_dict:
                 app_config = config.settings.get(cs_dict["app_name"])
                 if not app_config:

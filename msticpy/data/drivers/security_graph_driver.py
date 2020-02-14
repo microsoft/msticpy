@@ -40,7 +40,7 @@ class SecurityGraphDriver(OData):
             "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
         )
         self.api_root = "https://graph.microsoft.com/"
-        self.api_ver = "v1.0"
+        self.api_ver = kwargs.get("api_ver", "v1.0")
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
         """
