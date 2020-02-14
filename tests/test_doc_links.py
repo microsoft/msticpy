@@ -17,7 +17,7 @@ HTML_PATH = "build/html"
 
 
 @pytest.mark.skipif(
-    not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_readme_md():
     readme_file = "README.md"
@@ -41,7 +41,7 @@ def test_readme_md():
 
 
 @pytest.mark.skipif(
-    not os.environ.get("MSTICPY_TEST_NOTEBOOKS"), reason="Skipped for local tests."
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_html_doc_links():
 

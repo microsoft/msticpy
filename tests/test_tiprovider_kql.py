@@ -34,6 +34,10 @@ else:
     _TEST_DATA = "./tests/testdata"
 
 
+class Kql_Result:
+    pass
+
+
 class KqlTestDriver(DriverBase):
     """KqlTestDriver class to execute kql queries."""
 
@@ -70,8 +74,36 @@ class KqlTestDriver(DriverBase):
             result_df = self.url_df[self.url_df["IoC"].isin(query_toks)]
             return result_df
 
+        if "empty_result" in query:
+            return pd.DataFrame()
+
+        if "failed_query" in query:
+            query_result = Kql_Result()
+            query_result.completion_query_info = {"StatusCode": 0}
+            query_result.records_count = 0
+            return query_result
+
+        if "no_dataframe" in query:
+            return Kql_Result()
+
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
         pass
+
+
+class mock_ip:
+    def run_cell_magic(*args, **kwargs):
+        pass
+
+    def run_line_magic(*args, **kwargs):
+        if kwargs.get("line") == "--schema":
+            return {}
+
+    def find_magic(*args, **kwargs):
+        return True
+
+
+def get_mock_ip():
+    return mock_ip()
 
 
 test_data_provider = KqlTestDriver()
@@ -109,6 +141,14 @@ class TestASKqlTIProvider(unittest.TestCase):
         pkg_config.refresh_config()
         as_byoti_prov = AzSTI(query_provider=qry_prov)
         return TILookup(primary_providers=[as_byoti_prov])
+
+    # Need to work out how to mock IPython/Kqlmagic startup
+    # def test_create_query_provider(self):
+    #     # Calling init with no parameters should invoke _create_query_provider
+    #     get_ipython = get_mock_ip
+    #     as_byoti_prov = AzSTI(query_provider=qry_prov)
+    #     prov = as_byoti_prov._create_query_provider()
+    #     self.assertIsNotNone(as_byoti_prov)
 
     def test_ASByoti_provider(self):
         ti_lookup = self.load_ti_lookup()
@@ -197,3 +237,16 @@ class TestASKqlTIProvider(unittest.TestCase):
         self.assertIsNotNone(results)
         self.assertEqual(20, len(ioc_ips))
         self.assertEqual(15, len(results[results["Result"] == True]))
+
+        # Fail Lookups
+        results = ti_lookup.lookup_iocs(data={"c:\\empty_result.txt": "windows_path"})
+        self.assertEqual(results.iloc[0]["Details"], "Not found.")
+        self.assertEqual(len(results), 1)
+
+        results = ti_lookup.lookup_iocs(data={"c:\\failed_query.txt": "windows_path"})
+        self.assertEqual(results.iloc[0]["Details"], "Query failure")
+        self.assertEqual(len(results), 1)
+
+        results = ti_lookup.lookup_iocs(data={"c:\\no_dataframe.txt": "windows_path"})
+        self.assertEqual(results.iloc[0]["Details"], "Query failure")
+        self.assertEqual(len(results), 1)

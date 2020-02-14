@@ -151,7 +151,6 @@ Two other examples using logon events.
                                source_columns=["Account",
                                                "TargetLogonId",
                                                "LogonType"],
-                               legend_column="Account",
                                legend="left",
                                height=200);
 
@@ -275,7 +274,6 @@ for a description of all of the parameters.
                                       time_column="FlowStartTime",
                                       y="TotalAllowedFlows",
                                       legend="right",
-                                      legend_column="L7Protocol",
                                       height=500);
 
 
@@ -304,7 +302,6 @@ the hover value.
                                                   time_column="FlowStartTime",
                                                   y="TotalAllowedFlows",
                                                   legend="right",
-                                                  legend_column="L7Protocol",
                                                   height=500,
                                                   kind=["vbar", "circle"]
                                                 );
@@ -365,7 +362,6 @@ function.
                                                  time_column="FlowStartTime",
                                                  y="TotalAllowedFlows",
                                                  legend="right",
-                                                 legend_column="L7Protocol",
                                                  height=500,
                                                  kind=["vbar", "circle"]
                                                );

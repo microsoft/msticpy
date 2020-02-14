@@ -40,7 +40,7 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..nbtools.utility import export, MsticpyConfigException
+from ..nbtools.utility import MsticpyConfigException, export
 from .provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION
@@ -394,11 +394,11 @@ https://www.maxmind.com.
         else:
             self._api_key = self.settings.args.get("AuthKey")  # type: ignore
 
-        if db_folder is None:
-            self._dbfolder = self.settings.args.get("DBFolder")
-        if not self._dbfolder:
-            self._dbfolder = self._DB_HOME
-        self._dbfolder = str(Path(self._dbfolder).expanduser())
+        self._dbfolder = db_folder
+        if self._dbfolder is None:
+            self._dbfolder = self.settings.args.get("DBFolder", self._DB_HOME)
+
+        self._dbfolder = str(Path(self._dbfolder).expanduser())  # type: ignore
         self._force_update = force_update
         self._auto_update = auto_update
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
@@ -448,8 +448,14 @@ https://www.maxmind.com.
         db_file_path = os.path.join(db_folder, self._DB_FILE)
 
         try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
+            with requests.get(url, stream=True) as response:
+                response = requests.get(url, stream=True)
+                response.raise_for_status()
+                print("Downloading and extracting GeoLite DB archive from MaxMind....")
+                with open(db_archive_path, "wb") as file_hdl:
+                    for chunk in response.iter_content(chunk_size=10000):
+                        file_hdl.write(chunk)
+                        file_hdl.flush()
         except HTTPError as http_err:
             warnings.warn(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
@@ -459,10 +465,6 @@ https://www.maxmind.com.
             warnings.warn(f"Other error occurred trying to download GeoLite DB: {err}")
         # pylint: enable=broad-except
         else:
-            print("Downloading and extracting GeoLite DB archive from MaxMind....")
-            with open(db_archive_path, "wb") as file_hdl:
-                for chunk in response.iter_content(chunk_size=10000):
-                    file_hdl.write(chunk)
             try:
                 tar_archive = tarfile.open(db_archive_path)
                 for member in tar_archive.getmembers():
@@ -475,7 +477,7 @@ https://www.maxmind.com.
                 print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
                 return True
             except IOError as err:
-                warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
+                warnings.warn(f"Error writing GeoIP DB file: {db_file_path} - {err}")
         return False
 
     @staticmethod
@@ -554,8 +556,9 @@ https://www.maxmind.com.
         else:
             # Create a reader object to retrive db info and build date
             # to check age from build_epoch property.
-            reader = geoip2.database.Reader(geoip_db_path)
-            last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
+            with geoip2.database.Reader(geoip_db_path) as reader:
+                last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
+
             # Check for out of date DB file according to db_age
             db_age = datetime.utcnow() - last_mod_time
             db_is_current = True

@@ -484,7 +484,7 @@ def build_process_key(source_proc: pd.Series, schema: ProcSchema = None) -> str:
         schema = infer_schema(source_proc)
     proc_path = source_proc[schema.process_name].lower()
     pid = source_proc[schema.process_id]
-    tstamp = source_proc[schema.time_stamp].strftime(TS_FMT_STRING)
+    tstamp = pd.to_datetime(source_proc[schema.time_stamp]).strftime(TS_FMT_STRING)
     return f"{proc_path}{pid}{tstamp}"
 
 
