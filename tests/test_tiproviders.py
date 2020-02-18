@@ -4,24 +4,26 @@
 # license information.
 # --------------------------------------------------------------------------
 """TIProviders test class."""
-import unittest
-from unittest import mock
+import io
 import os
-from pathlib import Path
 import random
 import string
-from typing import Union, Any, Tuple
+import unittest
 import warnings
+from contextlib import redirect_stdout
+from pathlib import Path
+from typing import Any, Tuple, Union
+from unittest import mock
 
 from ..msticpy.nbtools import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
+    HttpProvider,
+    LookupResult,
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,
-    LookupResult,
-    HttpProvider,
 )
 
 _test_data_folders = [
@@ -248,6 +250,13 @@ class TestTIProviders(unittest.TestCase):
         self.assertGreaterEqual(len(ti_lookup.loaded_providers), 3)
         self.assertGreaterEqual(len(ti_lookup.provider_status), 3)
 
+    def test_tilookup_utils(self):
+        av_provs = self.ti_lookup.available_providers
+        self.assertGreaterEqual(len(av_provs), 1)
+        self.ti_lookup.provider_usage()
+        self.ti_lookup.list_available_providers(show_query_types=True)
+        self.ti_lookup.reload_providers()
+
     def test_xforce(self):
         self.exercise_provider("XForce")
 
@@ -304,6 +313,15 @@ class TestTIProviders(unittest.TestCase):
                 self.assertIsNotNone(lu_result.details)
                 self.assertIsNotNone(lu_result.raw_result)
                 self.assertIsNotNone(lu_result.reference)
+                # exercise summary functions of Lookup class
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    lu_result.summary
+                self.assertIsNotNone(output.getvalue())
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    lu_result.raw_result_fmtd
+                self.assertIsNotNone(output.getvalue())
 
     def test_opr_single_lookup(self):
         ti_lookup = self.ti_lookup
@@ -417,3 +435,16 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(len(all_ips), len(tor_results_df))
         self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
         self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)
+
+    def test_check_ioc_type(self):
+        provider = self.ti_lookup.loaded_providers["OTX"]
+        lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv4")
+        self.assertEqual(lu_result.status, 2)
+        lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv6")
+        self.assertEqual(lu_result.status, 2)
+        lu_result = provider._check_ioc_type(ioc="url", ioc_type="ipv4")
+        self.assertEqual(lu_result.status, 2)
+        lu_result = provider._check_ioc_type(ioc="123", ioc_type="dns")
+        self.assertEqual(lu_result.status, 2)
+        lu_result = provider._check_ioc_type(ioc="123456", ioc_type="file_hash")
+        self.assertEqual(lu_result.status, 2)

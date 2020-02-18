@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 from datetime import datetime
-from typing import Any, Union, Set, Dict, Tuple
+from typing import Any, Union, Set, Dict, Tuple, List
 
 import pandas as pd
 from bokeh.io import output_notebook, show
@@ -19,6 +19,7 @@ from bokeh.models import (
     Title,
 )
 
+# pylint: disable=too-many-lines
 # pylint: disable=no-name-in-module
 from bokeh.palettes import viridis
 
@@ -27,7 +28,7 @@ from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
-from .utility import export
+from .utility import export, check_kwargs
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -36,6 +37,23 @@ __author__ = "Ian Hellen"
 # Constants
 _WRAP = 50
 _WRAP_CMDL = "WrapCmdl"
+_DEFAULT_KWARGS = [
+    "color",
+    "data",
+    "group_by",
+    "height",
+    "legend",
+    "range_tool",
+    "ref_event",
+    "ref_time",
+    "source_columns",
+    "time_column",
+    "title",
+    "width",
+    "yaxis",
+]
+
+_TL_KWARGS = ["alert", "overlay_color", "overlay_data", "ref_time", "ygrid", "xgrid"]
 
 
 @export
@@ -116,6 +134,7 @@ def display_timeline(
 
     """
     # Get args
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_KWARGS)
     overlay_data: pd.DataFrame = kwargs.pop("overlay_data", None)
     overlay_columns: list = kwargs.pop("overlay_columns", source_columns)
     color: str = kwargs.get("color", "navy")  # don't remove this from kwargs
@@ -159,6 +178,9 @@ def display_timeline(
     return None
 
 
+_TL_VALUE_KWARGS = ["kind", "y", "x"]
+
+
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline_values(
@@ -198,10 +220,10 @@ def display_timeline_values(
     group_by : str
         (where `data` is a DataFrame)
         The column to group timelines on
-    legend_column : str, optional
-        (where `data` is a DataFrame)
-        Name of the column used to generate the legend labels if a legend is
-        to be displayed. Default is `group_by` parameter.
+    legend: str, optional
+        "left", "right", "inline" or "none"
+        (the default is to show a legend when plotting multiple series
+        and not to show one when plotting a single series)
     yaxis : bool, optional
         Whether to show the yaxis and labels
     range_tool : bool, optional
@@ -224,6 +246,8 @@ def display_timeline_values(
         The bokeh plot figure.
 
     """
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
+
     reset_output()
     output_notebook()
     height: int = kwargs.pop("height", None)
@@ -245,9 +269,10 @@ def display_timeline_values(
         data, source_columns, time_column, group_by, color
     )
 
-    # build the tool tips from columns (excluding these)
-    tool_tip_items = [(f"{col}", f"@{col}") for col in tool_tip_columns]
-    hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
+    hover = HoverTool(
+        tooltips=_create_tool_tips(data, tool_tip_columns),
+        formatters={"Tooltip": "printf"},
+    )
 
     # Create the Plot figure
     title = title if title else "Timeline"
@@ -423,9 +448,10 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
     series_count = len(data)
 
-    # build the tool tips from all specified columns
-    tool_tip_items = [(f"{col}", f"@{col}") for col in tool_tip_columns]
-    hover = HoverTool(tooltips=tool_tip_items, formatters={"Tooltip": "printf"})
+    hover = HoverTool(
+        tooltips=_create_tool_tips(data, tool_tip_columns),
+        formatters={"Tooltip": "printf"},
+    )
 
     title = f"Timeline: {title}" if title else "Event Timeline"
     start_range = min_time - ((max_time - min_time) * 0.1)
@@ -690,6 +716,27 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
     return ref_time, kwargs.get("ref_label", ref_label)
 
 
+def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
+    """Create formatting for tool tip columns."""
+    if isinstance(data, dict):
+        tool_tip_dict = {}
+        for series_df in data.values():
+            for col in columns:
+                if col in data and str(series_df[col].dtype) == "datetime64[ns]":
+                    tool_tip_dict[col] = f"@{col}{{%F %T}}"
+                elif col not in tool_tip_dict:
+                    tool_tip_dict[col] = f"@{col}"
+        return list(tool_tip_dict.items())
+
+    tool_tip_items = []
+    for col in columns:
+        if col in data and str(data[col].dtype) == "datetime64[ns]":
+            tool_tip_items.append((f"{col}", f"@{col}{{%F %T}}"))
+        else:
+            tool_tip_items.append((f"{col}", f"@{col}"))
+    return tool_tip_items
+
+
 def _get_color_palette(series_count):
     palette_size = min(256, series_count + int(series_count / 5))
     return viridis(palette_size), palette_size
@@ -844,3 +891,125 @@ def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=100):
     )
 
     plot.add_layout(ref_label)
+
+
+@pd.api.extensions.register_dataframe_accessor("mp_timeline")
+class ProcessTreeAccessor:
+    """Pandas api extension for Timeline."""
+
+    def __init__(self, pandas_obj):
+        """Instantiate pandas extension class."""
+        self._df = pandas_obj
+
+    def plot(self, **kwargs) -> figure:
+        """
+        Display a timeline of events.
+
+        Parameters
+        ----------
+        time_column : str, optional
+            Name of the timestamp column
+            (the default is 'TimeGenerated')
+        source_columns : list, optional
+            List of default source columns to use in tooltips
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        title : str, optional
+            Title to display (the default is None)
+        alert : SecurityAlert, optional
+            Add a reference line/label using the alert time (the default is None)
+        ref_event : Any, optional
+            Add a reference line/label using the alert time (the default is None)
+        ref_time : datetime, optional
+            Add a reference line/label using `ref_time` (the default is None)
+        group_by : str
+            (where `data` is a DataFrame)
+            The column to group timelines on
+        legend: str, optional
+            "left", "right", "inline" or "none"
+            (the default is to show a legend when plotting multiple series
+            and not to show one when plotting a single series)
+        yaxis : bool, optional
+            Whether to show the yaxis and labels (default is False)
+        ygrid : bool, optional
+            Whether to show the yaxis grid (default is False)
+        xgrid : bool, optional
+            Whether to show the xaxis grid (default is True)
+        range_tool : bool, optional
+            Show the the range slider tool (default is True)
+        height : int, optional
+            The height of the plot figure
+            (the default is auto-calculated height)
+        width : int, optional
+            The width of the plot figure (the default is 900)
+        color : str
+            Default series color (default is "navy")
+        overlay_color : str
+            Overlay series color (default is "green")
+
+        Returns
+        -------
+        figure
+            The bokeh plot figure.
+
+        """
+        return display_timeline(data=self._df, **kwargs)
+
+    # pylint: disable=invalid-name
+    def plot_values(self, y: str, **kwargs) -> figure:
+        """
+        Display a timeline of events.
+
+        Parameters
+        ----------
+        time_column : str, optional
+            Name of the timestamp column
+            (the default is 'TimeGenerated')
+        y : str
+            The column name holding the value to plot vertically
+        source_columns : list, optional
+            List of default source columns to use in tooltips
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        x : str, optional
+            alias of `time_column`
+        title : str, optional
+            Title to display (the default is None)
+        ref_event : Any, optional
+            Add a reference line/label using the alert time (the default is None)
+        ref_time : datetime, optional
+            Add a reference line/label using `ref_time` (the default is None)
+        group_by : str
+            (where `data` is a DataFrame)
+            The column to group timelines on
+        legend: str, optional
+            "left", "right", "inline" or "none"
+            (the default is to show a legend when plotting multiple series
+            and not to show one when plotting a single series)
+        yaxis : bool, optional
+            Whether to show the yaxis and labels
+        range_tool : bool, optional
+            Show the the range slider tool (default is True)
+        height : int, optional
+            The height of the plot figure
+            (the default is auto-calculated height)
+        width : int, optional
+            The width of the plot figure (the default is 900)
+        color : str
+            Default series color (default is "navy"). This is overridden by
+            automatic color assignments if plotting a grouped chart
+        kind : Union[str, List[str]]
+            one or more glyph types to plot., optional
+            Supported types are "circle", "line" and "vbar" (default is "vbar")
+
+        Returns
+        -------
+        figure
+            The bokeh plot figure.
+
+        """
+        return display_timeline_values(data=self._df, y=y, **kwargs)

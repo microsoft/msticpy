@@ -20,7 +20,7 @@ import os
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 
 import pkg_resources
 import yaml
@@ -37,6 +37,35 @@ _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 default_settings: Dict[str, Any] = {}
 custom_settings: Dict[str, Any] = {}
 settings: Dict[str, Any] = {}
+
+
+def _get_current_config() -> Callable[[Any], Optional[str]]:
+    """Closure for holding path of config file."""
+    _current_conf_file: Optional[str] = None
+
+    def _current_config(file_path: Optional[str] = None) -> Optional[str]:
+        nonlocal _current_conf_file
+        if file_path is not None:
+            _current_conf_file = file_path
+        return _current_conf_file
+
+    return _current_config
+
+
+_CURRENT_CONF_FILE = _get_current_config()
+
+
+def current_config_path() -> Optional[str]:
+    """
+    Return the path of the current config file, if any.
+
+    Returns
+    -------
+    Optional[str]
+        path of the current config file
+
+    """
+    return _CURRENT_CONF_FILE(None)
 
 
 def refresh_config():
@@ -119,9 +148,11 @@ def _get_default_config():
 def _get_custom_config():
     config_path = os.environ.get(_CONFIG_ENV_VAR, None)
     if config_path and Path(config_path).is_file():
+        _CURRENT_CONF_FILE(str(Path(config_path).resolve()))
         return _read_config_file(config_path)
 
     if Path(_CONFIG_FILE).is_file():
+        _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
         return _read_config_file(_CONFIG_FILE)
     return {}
 

@@ -27,14 +27,12 @@ TEST_CASES = {
 class TestIoCExtractor(unittest.TestCase):
     """Unit test class."""
 
-    def __run_extract(
-        self, extractor=None, testcase=None, expected_items=None, os_family="Windows"
-    ):
+    def __run_extract(self, extractor=None, testcase=None, expected_items=None):
         if extractor is None or testcase is None or expected_items is None:
             raise Exception("One or more required parameters were missing")
 
         test_input = TEST_CASES[testcase + "_test"]
-        results = extractor.extract(test_input, os_family=os_family, include_paths=True)
+        results = extractor.extract(test_input, include_paths=True)
         for k, v in expected_items.items():
             self.assertEqual(len(results[k]), v, "Unexpected value for " + k)
 
@@ -55,9 +53,7 @@ class TestIoCExtractor(unittest.TestCase):
         self.__run_extract(self.extractor, "windows_path", {"windows_path": 3})
 
     def test_linux_path(self):
-        self.__run_extract(
-            self.extractor, "linux_path", {"linux_path": 3}, os_family="Linux"
-        )
+        self.__run_extract(self.extractor, "linux_path", {"linux_path": 3})
 
     def test_hashes(self):
         self.__run_extract(self.extractor, "md5_hash", {"md5_hash": 3})
@@ -75,7 +71,7 @@ class TestIoCExtractor(unittest.TestCase):
             data=TEST_CASES, orient="index", columns=["input"]
         )
         output_df = self.extractor.extract(
-            data=input_df, columns=["input"], os_family="Windows", include_paths=True
+            data=input_df, columns=["input"], include_paths=True
         )
 
         self.assertGreater(output_df.shape[0], 0)
@@ -91,8 +87,17 @@ class TestIoCExtractor(unittest.TestCase):
         input_df = pd.DataFrame.from_dict(
             data=TEST_CASES, orient="index", columns=["input"]
         )
+        ioc_types = [
+            "ipv4",
+            "ipv6",
+            "url",
+            "linux_path",
+            "md5_hash",
+            "sha1_hash",
+            "sha256_hash",
+        ]
         output_df = self.extractor.extract(
-            data=input_df, columns=["input"], os_family="Linux", include_paths=True
+            data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
         )
         # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
         #     print(row.Observable)
@@ -112,10 +117,7 @@ class TestIoCExtractor(unittest.TestCase):
             data=TEST_CASES, orient="index", columns=["input"]
         )
         output_df = self.extractor.extract(
-            data=input_df,
-            columns=["input"],
-            os_family="Windows",
-            ioc_types=["ipv4", "url", "md5_hash"],
+            data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
         )
 
         self.assertGreater(output_df.shape[0], 0)
@@ -134,7 +136,7 @@ class TestIoCExtractor(unittest.TestCase):
             data=TEST_CASES, orient="index", columns=["input"]
         )
         output_df = self.extractor.extract_df(
-            data=input_df, columns=["input"], os_family="Windows", include_paths=True
+            data=input_df, columns=["input"], include_paths=True
         )
 
         self.assertGreater(output_df.shape[0], 0)
@@ -150,8 +152,17 @@ class TestIoCExtractor(unittest.TestCase):
         input_df = pd.DataFrame.from_dict(
             data=TEST_CASES, orient="index", columns=["input"]
         )
+        ioc_types = [
+            "ipv4",
+            "ipv6",
+            "url",
+            "linux_path",
+            "md5_hash",
+            "sha1_hash",
+            "sha256_hash",
+        ]
         output_df = self.extractor.extract_df(
-            data=input_df, columns=["input"], os_family="Linux", include_paths=True
+            data=input_df, columns=["input"], include_paths=True, ioc_types=ioc_types
         )
         # for _, row in output_df[output_df['IoCType'] == 'url'].iterrows():
         #     print(row.Observable)
@@ -171,10 +182,7 @@ class TestIoCExtractor(unittest.TestCase):
             data=TEST_CASES, orient="index", columns=["input"]
         )
         output_df = self.extractor.extract_df(
-            data=input_df,
-            columns=["input"],
-            os_family="Windows",
-            ioc_types=["ipv4", "url", "md5_hash"],
+            data=input_df, columns=["input"], ioc_types=["ipv4", "url", "md5_hash"]
         )
 
         self.assertGreater(output_df.shape[0], 0)

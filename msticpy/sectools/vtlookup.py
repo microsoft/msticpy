@@ -30,7 +30,7 @@ import requests
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
-from ..nbtools.utility import export, pd_version_23
+from ..nbtools.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -740,17 +740,9 @@ class VTLookup:
             original_indices = [v[0] for v in duplicate[["SourceIndex"]].values]
             duplicate["SourceIndex"] = source_index
             duplicate["Status"] = "Duplicate"
-            if pd_version_23():
-                new_results = pd.concat(
-                    objs=[self.results, duplicate],
-                    ignore_index=True,
-                    sort=False,
-                    axis=0,
-                )
-            else:
-                new_results = pd.concat(
-                    objs=[self.results, duplicate], ignore_index=True, axis=0
-                )
+            new_results = pd.concat(
+                objs=[self.results, duplicate], ignore_index=True, sort=False, axis=0
+            )
             self.results = new_results
 
             return DuplicateStatus(True, "Duplicates of {}".format(original_indices))
