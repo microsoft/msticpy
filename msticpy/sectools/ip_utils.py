@@ -112,40 +112,46 @@ def get_ip_type(ip_str: str) -> str:
     except ValueError:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
+        if ip.ip_address(ip_str).is_multicast:
+            return "Multicast"
+        if ip.ip_address(ip_str).is_global:
+            return "Public"
+        if ip.ip_address(ip_str).is_loopback:
+            return "Loopback"
+        if ip.ip_address(ip_str).is_link_local:
+            return "Link Local"
+        if ip.ip_address(ip_str).is_unspecified:
+            return "Unspecified"
         if ip.ip_address(ip_str).is_private:
-            ip_type = "Private"
-        elif ip.ip_address(ip_str).is_multicast:
-            ip_type = "Multicast"
-        elif ip.ip_address(ip_str).is_unspecified:
-            ip_type = "Unspecified"
-        elif ip.ip_address(ip_str).is_reserved:
-            ip_type = "Reserved"
-        elif ip.ip_address(ip_str).is_loopback:
-            ip_type = "Loopback"
-        elif ip.ip_address(ip_str).is_global:
-            ip_type = "Public"
-        elif ip.ip_address(ip_str).is_link_local:
-            ip_type = "Link Local"
-    return ip_type
+            return "Private"
+        if ip.ip_address(ip_str).is_reserved:
+            return "Reserved"
+
+    return "Unspecified"
 
 
 @lru_cache(maxsize=1024)
-# pylint: disable=no-else-return
-def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
+def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]:
     """
     Retrieve whois ASN information for given IP address using IPWhois python package.
 
     Parameters
     ----------
     ip_str : str
-        [description]
+        IP Address to look up.
     show_progress : bool, optional
-        [description], by default False
+        Show progress for each query, by default False
 
     Returns
     -------
     IP
         Details of the IP data collected
+
+    Notes
+    -----
+    This function uses the Python functools lru_cache and
+    will return answers from the cache for previously queried
+    IP addresses.
 
     """
     ip_type = get_ip_type(ip_str)
@@ -155,8 +161,90 @@ def get_whois_info(ip_str: str, show_progress=False) -> Tuple[str, dict]:
         if show_progress:
             print(".", end="")
         return whois_result["asn_description"], whois_result
+    return f"No ASN Information for IP type: {ip_type}", {}
+
+
+def get_whois_df(
+    data: pd.DataFrame,
+    ip_column: str,
+    asn_col="AsnDescription",
+    whois_col=None,
+    show_progress: bool = False,
+) -> pd.DataFrame:
+    """
+    Retrieve Whois ASN information for DataFrame of IP Addresses.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input DataFrame
+    ip_column : str
+        Column name of IP Address to look up.
+    asn_col : str, optional
+        Name of the output column for ASN description,
+        by default "ASNDescription"
+    whois_col : str, optional
+        Name of the output column for full whois data,
+        by default "WhoIsData"
+    show_progress : bool, optional
+        Show progress for each query, by default False
+
+    Returns
+    -------
+    pd.DataFrame
+        Output DataFrame with results in added columns.
+
+    """
+    if whois_col is not None:
+        data[[asn_col, whois_col]] = data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress),
+            axis=1,
+            result_type="expand",
+        )
     else:
-        return f"N ASN Information since IP address is of type: {ip_type}", {}
+        data[asn_col] = data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[0],
+            axis=1,
+        )
+    return data
+
+
+# pylint: disable=too-few-public-methods
+@pd.api.extensions.register_dataframe_accessor("mp_whois")
+class IpWhoisAccessor:
+    """Pandas api extension for IP Whois lookup."""
+
+    def __init__(self, pandas_obj):
+        """Instantiate pandas extension class."""
+        self._df = pandas_obj
+
+    def lookup(self, ip_column, **kwargs):
+        """
+        Extract IoCs from either a pandas DataFrame.
+
+        Parameters
+        ----------
+        ip_column : str
+            Column name of IP Address to look up.
+
+        Other Parameters
+        ----------------
+        asn_col : str, optional
+            Name of the output column for ASN description,
+            by default "ASNDescription"
+        whois_col : str, optional
+            Name of the output column for full whois data,
+            by default "WhoIsData"
+        show_progress : bool, optional
+            Show progress for each query, by default False
+
+        Returns
+        -------
+        pd.DataFrame
+            Output DataFrame with results in added columns.
+
+        """
+        return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
 
 
 @export
