@@ -30,6 +30,6 @@ def test_validate_domain_fail():
 
 def test_TLD_file():
     test_dom_val = domain_utils.DomainValidator()
-    tlds = test_dom_val.get_tlds()
+    tlds = test_dom_val._get_tlds()
     assert ("COM" in tlds) == True
     assert len(tlds) > 0
