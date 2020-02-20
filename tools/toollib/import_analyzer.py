@@ -68,10 +68,15 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
             setup_reqs.pop(tgt)
             setup_reqs[src] = tgt
     # Rename Azure packages replace "." with "-"
+    az_mgmt_reqs = {}
     for pkg in setup_reqs:
         if pkg.startswith("azure-mgmt"):
-            setup_reqs.pop(pkg)
-            setup_reqs[pkg.replace("-", ".")] = pkg
+            az_mgmt_reqs[pkg.replace("-", ".")] = pkg
+
+    for key, pkg in az_mgmt_reqs.items():
+        setup_reqs.pop(pkg)
+        setup_reqs[key] = pkg
+
     return setup_reqs, setup_versions
 
 

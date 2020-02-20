@@ -17,6 +17,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
 from ..nbtools import pkg_config as config
@@ -26,6 +27,13 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
+_CLIENT_MAPPING = {
+    "sub_client": SubscriptionClient,
+    "resource_client": ResourceManagementClient,
+    "network_client": NetworkManagementClient,
+    "monitoring_client": MonitorManagementClient,
+    "compute_client": ComputeManagementClient,
+}
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 # attr class doesn't need a method
@@ -165,7 +173,7 @@ class AzureData:
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
-            "Subscription Location Limits": sub.subscription_policies.location_placement_id,
+            "Subscription Location": sub.subscription_policies.location_placement_id,
             "Subscription Quota": sub.subscription_policies.quota_id,
             "Spending Limit": sub.subscription_policies.spending_limit,
         }
@@ -195,13 +203,11 @@ class AzureData:
 
         """
         # Check if connection and client required are already present
-        # ToDo make these checks into a function to avoid code-reuse
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        self.resource_client = ResourceManagementClient(self.credentials, sub_id)
-        if not self.resource_client:
-            raise CloudError("Could not create a ResourceManagementClient.")
+        self._check_client("resource_client", sub_id)
+
         if rgroup is None:
             resources = self.resource_client.resources.list()
         else:
@@ -213,7 +219,7 @@ class AzureData:
 
         resource_items = []
 
-        # Get properites for each resource, if standard API version isn't usable look up latest API
+        # Get properites for each resource
         for resource in resources:
             if get_props is True:
                 if resource.type == "Microsoft.Compute/virtualMachines":
@@ -288,10 +294,7 @@ class AzureData:
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        if self.resource_client is None:
-            self.resource_client = ResourceManagementClient(self.credentials, sub_id)
-            if not self.resource_client:
-                raise CloudError("Could not create a ResourceManagementClient.")
+        self._check_client("resource_client", sub_id)
 
         # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
@@ -367,10 +370,7 @@ class AzureData:
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        if self.resource_client is None:
-            self.resource_client = ResourceManagementClient(self.credentials, sub_id)
-            if not self.resource_client:
-                raise CloudError("Could not create a ResourceManagementClient.")
+        self._check_client("resource_client", sub_id)
 
         # Normalise elements depending on user input type
         if resource_id is not None:
@@ -427,10 +427,7 @@ class AzureData:
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        if self.network_client is None:
-            self.network_client = NetworkManagementClient(self.credentials, sub_id)
-            if not self.network_client:
-                raise CloudError("Could not create a NetworkManagementClient.")
+        self._check_client("network_client", sub_id)
 
         # Get interface details and parse relevent elements into a dataframe
         details = self.network_client.network_interfaces.get(
@@ -505,7 +502,7 @@ class AzureData:
         sample_time: str (Optional)
             You can select to collect the metrics every hour of minute - default is hour
         start_time: int (Optional)
-            The number of days prior to today that you wish to collect metrics for - default is 30
+            The number of days prior to today to collect metrics for, default is 30
 
         Returns
         -------
@@ -519,16 +516,14 @@ class AzureData:
             interval = "PT1M"
         else:
             raise MsticpyAzureException(
-                "Please select how often you want to sample data - either 'hour', or 'minute'"
+                "Select how often you want to sample data - 'hour', or 'minute'"
             )
 
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
-        if self.monitoring_client is None:
-            self.monitoring_client = MonitorManagementClient(self.credentials, sub_id)
-            if not self.monitoring_client:
-                raise CloudError("Could not create a MonitorManagementClient.")
+
+        self._check_client("monitoring_client", sub_id)
 
         # Get metrics in one hour chunks for the last 30 days
         start = datetime.datetime.now().date()
@@ -559,7 +554,9 @@ class AzureData:
 
     # pylint: enable=too-many-locals, too-many-arguments
 
-    def _get_compute_state(self, resource_id: str, sub_id: str):
+    def _get_compute_state(
+        self, resource_id: str, sub_id: str
+    ) -> VirtualMachineInstanceView:
         """
         Return the details on a Virtual Machine instance.
 
@@ -579,10 +576,7 @@ class AzureData:
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        if self.compute_client is None:
-            self.compute_client = ComputeManagementClient(self.credentials, sub_id)
-        if not self.compute_client:
-            raise CloudError("Could not create a ComputeManagementClient.")
+        self._check_client("compute_client", sub_id)
 
         # Parse the Resource ID to extract Resource Group and Resource Name
         r_details = resource_id.split("/")
@@ -594,3 +588,22 @@ class AzureData:
             r_group, name
         )
         return instance_details
+
+    def _check_client(self, client_name: str, sub_id: str):
+        """
+        Check required client is present, if not create it.
+
+        Parameters
+        ----------
+        self:
+        client_name:
+            The name of the client to be checked.
+        sub_id:
+            The subscription ID for the client to connect to.
+
+        """
+        client = _CLIENT_MAPPING[client_name]
+        if getattr(self, client_name) is None:
+            setattr(self, client_name, client(self.credentials, sub_id))
+            if getattr(self, client_name) is None:
+                raise CloudError("Could not create client")

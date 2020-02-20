@@ -3,15 +3,17 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 import os
 from pathlib import Path
 import pandas as pd
 import warnings
 
+from pytest import raises
+
 from ..msticpy.nbtools import pkg_config
 from ..msticpy.nbtools.entityschema import Host
 from ..msticpy.sectools import syslog_utils as ls
+from ..msticpy.nbtools.utility import MsticpyException
 from ..msticpy.sectools import cmd_line as cl
 from ..msticpy.sectools.provider_settings import get_provider_settings
 from ..msticpy.sectools.geoip import GeoIPDatabaseException
@@ -30,6 +32,9 @@ def test_cluster_syslog_logons_df():
     input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
     output = ls.cluster_syslog_logons_df(input_df)
     assert len(output.index) >= 1  # nosec
+    with raises(MsticpyException):
+        empty_logons = pd.DataFrame(columns=["TimeGenerated", "SyslogMessage"])
+        ls.cluster_syslog_logons_df(logon_events=empty_logons)
 
 
 def test_host_data():
@@ -94,3 +99,5 @@ def test_risky_sudo_sessions():
     )
     assert len(output) == 2  # nosec
     assert type(output) == dict  # nosec
+    with raises(MsticpyException):
+        ls.risky_sudo_sessions(sudo_sessions=sudo_sessions)
