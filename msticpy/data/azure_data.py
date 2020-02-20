@@ -212,7 +212,7 @@ class AzureData:
         if rgroup is None:
             resources = self.resource_client.resources.list()  # type: ignore
         else:
-            resources = self.resource_client.resources.list_by_resource_group(
+            resources = self.resource_client.resources.list_by_resource_group(  # type: ignore
                 rgroup
             )  # type: ignore
 
