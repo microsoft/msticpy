@@ -41,7 +41,7 @@ _PKG_RENAME_NAME = {
     "attr": "attrs",
     "dns": "dnspython",
     "pkg_resources": "setuptools",
-    "sklearn": "scikit_learn",
+    "sklearn": "scikit-learn",
     "yaml": "pyyaml",
     "bs4": "beautifulsoup4",
     "azure.common": "azure-common",

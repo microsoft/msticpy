@@ -17,6 +17,7 @@ from msticpy.data.data_providers import AttribHolder
 from msticpy.data import QueryProvider
 
 
+# pylint: disable=too-few-public-methods
 class _DataDriver:
     """Demo data provider."""
 
@@ -32,6 +33,9 @@ class _DataDriver:
         self.connected = True
         self.connection_str = connection_str
         print("Connected.")
+
+
+# pylint: enable=too-few-public-methods
 
 
 class QueryProviderDemo(QueryProvider):
@@ -202,12 +206,13 @@ def read_pd_df(data_file, query_name):
 
 
 class TILookupDemo:
-    """TILookup demo class"""
+    """TILookup demo class."""
 
     _DATA_DEFS = {"ipv4": "data/ti_results_ipv4.pkl", "url": "data/ti_results_url.pkl"}
 
     def lookup_ioc(self, ioc_type, **kwargs):
         """Lookup single IoC."""
+        del kwargs
         sleep(1)
         return read_pd_df(self._DATA_DEFS.get(ioc_type), ioc_type)
 
@@ -216,8 +221,10 @@ class TILookupDemo:
         """Convert IoC results to DataFrame."""
         if isinstance(results, pd.DataFrame):
             return results
+        return pd.DataFrame()
 
 
+# pylint: disable=too-few-public-methods
 class GeoLiteLookupDemo:
     """GeoLitLookup demo class."""
 
@@ -232,8 +239,11 @@ class GeoLiteLookupDemo:
         """Look up location."""
         del ip_address, ip_addr_list, ip_entity
         with open(self._DATA_DEFS["ip_locs"], "rb") as iploc_file:
-            ip_locs = pickle.load(iploc_file)
+            ip_locs = pickle.load(iploc_file)  # noqa: B301
         return str(ip_locs), ip_locs
+
+
+# pylint: enable=too-few-public-methods
 
 
 _ASN_DATA = pd.read_pickle("data/az_whois.df.pkl")
