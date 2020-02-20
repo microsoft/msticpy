@@ -112,22 +112,23 @@ def get_ip_type(ip_str: str) -> str:
     except ValueError:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
+        ip_type = "Unspecified"
         if ip.ip_address(ip_str).is_multicast:
-            return "Multicast"
+            ip_type = "Multicast"
         if ip.ip_address(ip_str).is_global:
-            return "Public"
+            ip_type = "Public"
         if ip.ip_address(ip_str).is_loopback:
-            return "Loopback"
+            ip_type = "Loopback"
         if ip.ip_address(ip_str).is_link_local:
-            return "Link Local"
+            ip_type = "Link Local"
         if ip.ip_address(ip_str).is_unspecified:
-            return "Unspecified"
+            ip_type = "Unspecified"
         if ip.ip_address(ip_str).is_private:
-            return "Private"
+            ip_type = "Private"
         if ip.ip_address(ip_str).is_reserved:
-            return "Reserved"
+            ip_type = "Reserved"
 
-    return "Unspecified"
+    return ip_type
 
 
 @lru_cache(maxsize=1024)
