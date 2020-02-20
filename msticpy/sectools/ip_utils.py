@@ -89,7 +89,7 @@ def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
 
 
 @export
-# pylint: disable=no-else-return
+# pylint: disable=too-many-return-statements
 def get_ip_type(ip_str: str) -> str:
     """
     Validate value is an IP address and deteremine IPType category.
@@ -112,23 +112,25 @@ def get_ip_type(ip_str: str) -> str:
     except ValueError:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
-        ip_type = "Unspecified"
         if ip.ip_address(ip_str).is_multicast:
-            ip_type = "Multicast"
+            return "Multicast"
         if ip.ip_address(ip_str).is_global:
-            ip_type = "Public"
+            return "Public"
         if ip.ip_address(ip_str).is_loopback:
-            ip_type = "Loopback"
+            return "Loopback"
         if ip.ip_address(ip_str).is_link_local:
-            ip_type = "Link Local"
+            return "Link Local"
         if ip.ip_address(ip_str).is_unspecified:
-            ip_type = "Unspecified"
+            return "Unspecified"
         if ip.ip_address(ip_str).is_private:
-            ip_type = "Private"
+            return "Private"
         if ip.ip_address(ip_str).is_reserved:
-            ip_type = "Reserved"
+            return "Reserved"
 
-    return ip_type
+    return "Unspecified"
+
+
+# pylint: enable=too-many-return-statements
 
 
 @lru_cache(maxsize=1024)
