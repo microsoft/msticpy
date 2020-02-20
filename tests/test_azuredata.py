@@ -35,8 +35,8 @@ def test_azure_connect_exp():
         az.connect()
 
 
-@patch("msticpy.data.azure_data.SubscriptionClient")
-@patch("msticpy.data.azure_data.ServicePrincipalCredentials")
+@patch("msticpy.msticpy.data.azure_data.SubscriptionClient")
+@patch("msticpy.msticpy.data.azure_data.ServicePrincipalCredentials")
 def test_azure_connect(mock_sub_client, mock_creds):
     mock_sub_client.return_value = "Client"
     mock_creds.return_value = "Creds"
