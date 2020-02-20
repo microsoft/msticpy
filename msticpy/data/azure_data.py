@@ -35,6 +35,7 @@ _CLIENT_MAPPING = {
     "compute_client": ComputeManagementClient,
 }
 
+
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 # attr class doesn't need a method
 @attr.s
@@ -209,9 +210,11 @@ class AzureData:
         self._check_client("resource_client", sub_id)
 
         if rgroup is None:
-            resources = self.resource_client.resources.list()
+            resources = self.resource_client.resources.list()  # type: ignore
         else:
-            resources = self.resource_client.resources.list_by_resource_group(rgroup)
+            resources = self.resource_client.resources.list_by_resource_group(
+                rgroup
+            )  # type: ignore
 
         # Warn users about getting full properties for each resource
         if get_props is True:
@@ -229,12 +232,12 @@ class AzureData:
                 else:
                     state = None
                 try:
-                    props = self.resource_client.resources.get_by_id(
+                    props = self.resource_client.resources.get_by_id(  # type: ignore
                         resource.id, "2019-08-01"
                     ).properties
 
                 except CloudError:
-                    props = self.resource_client.resources.get_by_id(
+                    props = self.resource_client.resources.get_by_id(  # type: ignore
                         resource.id, self.get_api(resource.id)
                     ).properties
             else:
@@ -298,7 +301,7 @@ class AzureData:
 
         # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
-            resource = self.resource_client.resources.get_by_id(
+            resource = self.resource_client.resources.get_by_id(  # type: ignore
                 resource_id, api_version=self.get_api(resource_id)
             )
             if resource.type == "Microsoft.Compute/virtualMachines":
@@ -307,7 +310,7 @@ class AzureData:
                 state = None
         # If resource details are provided use get to get details
         elif resource_details is not None:
-            resource = self.resource_client.resources.get(
+            resource = self.resource_client.resources.get(  # type: ignore
                 resource_details["resource_group_name"],
                 resource_details["resource_provider_namespace"],
                 resource_details["parent_resource_path"],
@@ -370,7 +373,7 @@ class AzureData:
         if self.connected is False:
             raise MsticpyAzureException("Please connect before continuing")
 
-        self._check_client("resource_client", sub_id)
+        self._check_client("resource_client", sub_id)  # type: ignore
 
         # Normalise elements depending on user input type
         if resource_id is not None:
@@ -385,7 +388,7 @@ class AzureData:
             )
 
         # Get list of API versions for the service
-        provider = self.resource_client.providers.get(namespace)
+        provider = self.resource_client.providers.get(namespace)  # type: ignore
         resource_types = next(
             (t for t in provider.resource_types if t.resource_type == service), None
         )
@@ -430,7 +433,7 @@ class AzureData:
         self._check_client("network_client", sub_id)
 
         # Get interface details and parse relevent elements into a dataframe
-        details = self.network_client.network_interfaces.get(
+        details = self.network_client.network_interfaces.get(  # type: ignore
             network_id.split("/")[4], network_id.split("/")[8]
         )
         ips = []
@@ -453,7 +456,7 @@ class AzureData:
         ip_df = pd.DataFrame(ips)
 
         # Get NSG details and parse relevent elements into a dataframe
-        nsg_details = self.network_client.network_security_groups.get(
+        nsg_details = self.network_client.network_security_groups.get(  # type: ignore
             details.network_security_group.id.split("/")[4],
             details.network_security_group.id.split("/")[8],
         )
@@ -529,7 +532,7 @@ class AzureData:
         start = datetime.datetime.now().date()
         end = start - datetime.timedelta(days=start_time)
 
-        mon_details = self.monitoring_client.metrics.list(
+        mon_details = self.monitoring_client.metrics.list(  # type: ignore
             resource_id,
             timespan=f"{end}/{start}",
             interval=interval,
@@ -584,7 +587,7 @@ class AzureData:
         name = r_details[r_details.index("virtualMachines") + 1]
 
         # Get VM instance details and return them
-        instance_details = self.compute_client.virtual_machines.instance_view(
+        instance_details = self.compute_client.virtual_machines.instance_view(  # type: ignore
             r_group, name
         )
         return instance_details

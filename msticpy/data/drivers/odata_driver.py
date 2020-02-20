@@ -121,8 +121,10 @@ class OData(DriverBase):
             raise ConnectionError("Could not obtain access token")
 
         self.req_headers["Authorization"] = "Bearer " + self.aad_token
-        self.api_root = cs_dict.get("apiRoot", self.api_root) + cs_dict.get(
-            "apiVersion", self.api_ver
+        self.api_root = cs_dict.get(
+            "apiRoot", self.api_root
+        ) + cs_dict.get(  # type: ignore
+            "apiVersion", self.api_ver  # type: ignore
         )
 
         print("Connected.")
