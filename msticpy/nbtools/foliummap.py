@@ -251,10 +251,12 @@ def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
 
 def _extract_locs_ip_entities(ip_entities: Iterable[IpAddress]):
     """Return the list of IP entities that have a Location property."""
-    if isinstance(ip_entities[0], list):
-        return [ip[0]["Location"] for ip in ip_entities if bool(ip[0].Location)]
-    else: 
-        return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
+    if isinstance(ip_entities[0], list):  # type: ignore
+        ip_locs = [ip[0]["Location"] for ip in ip_entities if bool(ip[0].Location)]
+    else:
+        ip_locs = [ip["Location"] for ip in ip_entities if bool(ip.Location)]
+    return ip_locs
+
 
 def get_center_ip_entities(
     ip_entities: Iterable[IpAddress], mode: str = "median"
