@@ -1,0 +1,5 @@
+Kqlmagic>=0.1.106
+geoip2>=2.9.0
+ipwhois>=1.1.0
+tldextract>=2.2.2
+azure-mgmt-subscription>=0.2.0
