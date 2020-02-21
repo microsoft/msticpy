@@ -238,7 +238,7 @@ class AzureData:
 
                 except CloudError:
                     props = self.resource_client.resources.get_by_id(  # type: ignore
-                        resource.id, self.get_api(resource.id)
+                        resource.id, self._get_api(resource.id)
                     ).properties
             else:
                 props = resource.properties
@@ -302,7 +302,7 @@ class AzureData:
         # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
             resource = self.resource_client.resources.get_by_id(  # type: ignore
-                resource_id, api_version=self.get_api(resource_id)
+                resource_id, api_version=self._get_api(resource_id)
             )
             if resource.type == "Microsoft.Compute/virtualMachines":
                 state = self._get_compute_state(resource_id=resource_id, sub_id=sub_id)
@@ -316,7 +316,7 @@ class AzureData:
                 resource_details["parent_resource_path"],
                 resource_details["resource_type"],
                 resource_details["resource_name"],
-                api_version=self.get_api(
+                api_version=self._get_api(
                     resource_provider=(
                         resource_details["resource_provider_namespace"]
                         + "/"
@@ -348,7 +348,7 @@ class AzureData:
 
         return resource_details
 
-    def get_api(
+    def _get_api(
         self, resource_id: str = None, sub_id: str = None, resource_provider: str = None
     ) -> str:
         """

@@ -6,7 +6,6 @@
 from pytest import raises
 from ..msticpy.data.drivers import MDATPDriver, SecurityGraphDriver
 from ..msticpy.nbtools.utility import MsticpyException
-from unittest.mock import patch
 
 _JSON_RESP = {
     "token_type": "Bearer",
