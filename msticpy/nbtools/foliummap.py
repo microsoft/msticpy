@@ -253,7 +253,7 @@ def _extract_locs_ip_entities(ip_entities: Iterable[IpAddress]):
     """Return the list of IP entities that have a Location property."""
     if isinstance(ip_entities[0], list):  # type: ignore
         ip_locs = [
-            ip[0]["Location"]
+            ip[0]["Location"]  # type: ignore
             for ip in ip_entities
             if bool(ip[0].Location)  # type: ignore
         ]
