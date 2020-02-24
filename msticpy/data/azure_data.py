@@ -383,7 +383,7 @@ class AzureData:
             except IndexError:
                 raise MsticpyAzureException(
                     """Provided Resource ID isn't in the correct format. It should look like:
-                       /subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME """
+                       /subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME """  # pylint: disable=line-too-long
                 )
 
         elif resource_provider is not None:
