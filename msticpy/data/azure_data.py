@@ -377,11 +377,24 @@ class AzureData:
 
         # Normalise elements depending on user input type
         if resource_id is not None:
-            namespace = resource_id.split("/")[6]
-            service = resource_id.split("/")[7]
+            try:
+                namespace = resource_id.split("/")[6]
+                service = resource_id.split("/")[7]
+            except IndexError:
+                raise MsticpyAzureException(
+                    """Provided Resource ID isn't in the correct format. It should look like:
+                       /subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME """
+                )
+
         elif resource_provider is not None:
-            namespace = resource_provider.split("/")[0]
-            service = resource_provider.split("/")[1]
+            try:
+                namespace = resource_provider.split("/")[0]
+                service = resource_provider.split("/")[1]
+            except IndexError:
+                raise MsticpyAzureException(
+                    """Provided Resource Provider isn't in the correct format. It should look like:
+                       NAMESPACE/SERVICE_NAME"""
+                )
         else:
             raise ValueError(
                 "Please provide an resource ID or resource provider namespace"
@@ -504,6 +517,7 @@ class AzureData:
             The subscription ID that the resource is part of
         sample_time: str (Optional)
             You can select to collect the metrics every hour of minute - default is hour
+            Accepted inputs = 'hour' or 'minute'
         start_time: int (Optional)
             The number of days prior to today to collect metrics for, default is 30
 
@@ -513,9 +527,9 @@ class AzureData:
             A Dictionary of DataFrames containing the metrics details
 
         """
-        if sample_time.lower() == "h" or sample_time.lower() == "hour":
+        if sample_time.casefold().startswith("h"):
             interval = "PT1H"
-        elif sample_time.lower() == "m" or sample_time.lower() == "minute":
+        elif sample_time.casefold().startswith("m"):
             interval = "PT1M"
         else:
             raise MsticpyAzureException(

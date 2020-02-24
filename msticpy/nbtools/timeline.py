@@ -255,7 +255,6 @@ def display_timeline_values(
     title: str = kwargs.pop("title", None)
     time_column = kwargs.get("x", time_column)
     group_by: str = kwargs.get("group_by", None)
-    legend_column: str = kwargs.pop("legend_column", group_by)
     show_yaxis: bool = kwargs.pop("yaxis", True)
     show_range: bool = kwargs.pop("range_tool", True)
     color: str = kwargs.get("color", "navy")
@@ -314,18 +313,21 @@ def display_timeline_values(
         for _, group_id in group_count_df[group_by].items():
             first_group_item = graph_df[graph_df[group_by] == group_id].iloc[0]
             legend_label = str(first_group_item[group_by])
-            inline_legend = str(group_id) if legend_pos == "inline" else None
+            inline_legend = str(group_id)
             group_color = first_group_item["color"]
             row_source = ColumnDataSource(graph_df[graph_df[group_by] == group_id])
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column, alpha=0.7, source=row_source, legend_group=legend_column
+                x=time_column, alpha=0.7, source=row_source
             )
+            if legend_pos != "none":
+                plot_args["legend_label"] = str(inline_legend)
+
             if "vbar" in plot_kinds:
-                p_series.append(plot.vbar(top=y, width=4, color=color, **plot_args))
+                p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
             if "circle" in plot_kinds:
-                p_series.append(plot.circle(y=y, size=4, color=color, **plot_args))
+                p_series.append(plot.circle(y=y, size=4, color="color", **plot_args))
             if "line" in plot_kinds:
                 p_series.append(
                     plot.line(y=y, line_width=2, line_color=group_color, **plot_args)
@@ -359,7 +361,7 @@ def display_timeline_values(
 
     # if we have a reference, plot the time as a line
     if ref_time is not None:
-        _add_ref_line(plot, ref_time, ref_label, series_count)
+        _add_ref_line(plot, ref_time, ref_label, data[y].max())
 
     if show_range:
         rng_select = _create_range_tool(
@@ -865,7 +867,7 @@ def _create_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=100):
+def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1):
     """Add a reference marker line and label at `ref_time`."""
     ref_label_tm = pd.Timestamp(ref_time)
     plot.line(
