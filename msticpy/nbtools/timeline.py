@@ -250,7 +250,6 @@ def display_timeline_values(
 
     reset_output()
     output_notebook()
-
     height: int = kwargs.pop("height", None)
     width: int = kwargs.pop("width", 900)
     title: str = kwargs.pop("title", None)
@@ -314,24 +313,24 @@ def display_timeline_values(
         for _, group_id in group_count_df[group_by].items():
             first_group_item = graph_df[graph_df[group_by] == group_id].iloc[0]
             legend_label = str(first_group_item[group_by])
-            inline_legend = str(group_id) if legend_pos == "inline" else None
+            inline_legend = str(group_id)
             group_color = first_group_item["color"]
             row_source = ColumnDataSource(graph_df[graph_df[group_by] == group_id])
             p_series = []
             # create default plot args
             plot_args: Dict[str, Any] = dict(
-                x=time_column,
-                alpha=0.7,
-                source=row_source,
-                legend_label=str(inline_legend),
+                x=time_column, alpha=0.7, source=row_source
             )
+            if legend_pos != "none":
+                plot_args["legend_label"] = str(inline_legend)
+
             if "vbar" in plot_kinds:
                 p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
             if "circle" in plot_kinds:
                 p_series.append(plot.circle(y=y, size=4, color="color", **plot_args))
             if "line" in plot_kinds:
                 p_series.append(
-                    plot.line(y=y, line_width=1, line_color=group_color, **plot_args)
+                    plot.line(y=y, line_width=2, line_color=group_color, **plot_args)
                 )
             if not inline_legend:
                 legend_items.append((legend_label, p_series))
@@ -351,18 +350,18 @@ def display_timeline_values(
             plot.add_layout(ext_legend, legend_pos)
     else:
         plot_args = dict(
-            x=time_column, color="color", alpha=0.7, source=ColumnDataSource(graph_df)
+            x=time_column, color=color, alpha=0.7, source=ColumnDataSource(graph_df)
         )
         if "vbar" in plot_kinds:
             plot.vbar(top=y, width=4, **plot_args)
         if "circle" in plot_kinds:
             plot.circle(y=y, size=4, **plot_args)
         if "line" in plot_kinds:
-            plot.line(y=y, line_width=4, **plot_args)
+            plot.line(y=y, line_width=2, **plot_args)
 
     # if we have a reference, plot the time as a line
     if ref_time is not None:
-        _add_ref_line(plot, ref_time, ref_label, series_count)
+        _add_ref_line(plot, ref_time, ref_label, data[y].max())
 
     if show_range:
         rng_select = _create_range_tool(
@@ -871,7 +870,13 @@ def _create_range_tool(
 def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1):
     """Add a reference marker line and label at `ref_time`."""
     ref_label_tm = pd.Timestamp(ref_time)
-    plot.line(x=[ref_label_tm, ref_label_tm], y=[0, series_count])
+    plot.line(
+        x=[ref_label_tm, ref_label_tm],
+        y=[0, series_count],
+        line_width=2,
+        line_color="red",
+        line_dash="dashed",
+    )
     ref_label = Label(
         x=ref_label_tm,
         y=0,

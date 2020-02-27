@@ -27,16 +27,14 @@ class OData(DriverBase):
 
     # pylint: disable=too-many-instance-attributes
     # Large number needed due to variability of APIs
-    def __init__(self, connection_str: str = None, **kwargs):
+    def __init__(self, **kwargs):
         """
         Instantiaite MDATPDriver and optionally connect.
 
         Parameters
         ----------
-        connection_str : str, optional
-            Connection string
         connect: bool, optional
-            Set true if you want to connect to the provider at initialization using cachced details
+            Set true if you want to connect to the provider at initialization
 
         """
         super().__init__()
@@ -52,10 +50,6 @@ class OData(DriverBase):
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
-
-        if connection_str:
-            self.current_connection = connection_str
-            self.connect(connection_str)
 
     # pylint: enable=too-many-instance-attributes
     @abc.abstractmethod
@@ -88,9 +82,9 @@ class OData(DriverBase):
         Notes
         -----
         Connection string fields:
-        tenantId
-        clientId
-        clientSecret
+        tenant_id
+        client_id
+        clien_secret
         apiRoot
         apiVersion
 
@@ -108,6 +102,8 @@ class OData(DriverBase):
                         f"No configuration settings found for {cs_dict['app_name']}."
                     )
                 cs_dict = app_config["Args"]
+        else:
+            raise MsticpyException("No connection details provided.")
 
         # self.oauth_url and self.req_body are correctly set in concrete
         # instances __init__
@@ -125,8 +121,10 @@ class OData(DriverBase):
             raise ConnectionError("Could not obtain access token")
 
         self.req_headers["Authorization"] = "Bearer " + self.aad_token
-        self.api_root = cs_dict.get("apiRoot", self.api_root) + cs_dict.get(
-            "apiVersion", self.api_ver
+        self.api_root = cs_dict.get(  # type: ignore
+            "apiRoot", self.api_root
+        ) + cs_dict.get(  # type: ignore
+            "apiVersion", self.api_ver  # type: ignore
         )
 
         print("Connected.")
@@ -184,9 +182,7 @@ class OData(DriverBase):
                 )
             # Raise an exception to handle hittng API limits
             if response.status_code == 429:
-                raise ConnectionRefusedError(
-                    "You have likely hit the API limit, please wait some time and try again. "
-                )
+                raise ConnectionRefusedError("You have likely hit the API limit. ")
             response.raise_for_status()
 
         json_response = response.json()

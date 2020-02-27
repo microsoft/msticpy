@@ -37,6 +37,7 @@ class QPTest(QueryParamProvider):
 class TestQueryManager(unittest.TestCase):
     """Unit test class."""
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_nbqueries(self):
         with warnings.catch_warnings():
             # We want to ignore warnings from our own deprecations
@@ -89,6 +90,7 @@ class TestQueryManager(unittest.TestCase):
             # This returns None and prints output but should execute with error
             self.assertRaises(LookupError, kql.get_process_parent)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_query_params(self):
         with warnings.catch_warnings():
             # We want to ignore warnings from our own deprecations
@@ -136,6 +138,7 @@ class TestQueryManager(unittest.TestCase):
             self.assertIn("SystemAlertId", q_result3)
             self.assertIn("{some guid}", q_result3)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_builtin_query_params(self):
         with warnings.catch_warnings():
             # We want to ignore warnings from our own deprecations

@@ -6,6 +6,10 @@
 
 import os
 import pandas as pd
+
+from pytest import raises
+
+from ..msticpy.nbtools.utility import MsticpyException
 from ..msticpy.nbtools.entityschema import Host
 from ..msticpy.sectools import cmd_line as cl
 
@@ -25,6 +29,8 @@ def test_risky_cmd_line():
     assert len(output) >= 1  # nosec
     assert type(output) == dict  # nosec
     assert output["2019-07-05T18:19:52.873Z"] == "/bin/bash"  # nosec
+    with raises(MsticpyException):
+        cl.risky_cmd_line(events=input_df, log_type="Syslog", cmd_field="Test")
 
 
 def test_cmd_speed():
@@ -33,6 +39,8 @@ def test_cmd_speed():
     output = cl.cmd_speed(cmd_events=input_df, cmd_field="Command")
     assert len(output) >= 1  # nosec
     assert type(output[0]) == dict  # nosec
+    with raises(MsticpyException):
+        output = cl.cmd_speed(cmd_events=input_df, cmd_field="Test")
 
 
 def test_syslog_risky_actions():

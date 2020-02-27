@@ -79,12 +79,17 @@ GeoLiteLookup class.
 The example shown here shows part of the ``OtherProviders`` section of
 msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
 For example, ``AuthKey: abcd123456789`` or use a reference to an
-environment variable holding the key value, as shown in the example.
+environment variable holding the key value.
+The API key you need to specify in the ``AuthKey`` setting is you MaxMind
+License Key that can be found on the MaxMind website under Account > Services.
 
 The DBFolder setting specifies a folder where the downloaded Maxmind
 database files will be stored and referenced from. Thefolder path
 can be prefixed with "~" to specify a path relative to the current
 users home directory (this works cross-platform).
+
+.. note:: You can specify the MaxMind API key value as an environment
+  variable as follows:
 
 .. code:: yaml
 
@@ -94,6 +99,19 @@ users home directory (this works cross-platform).
         Args:
           AuthKey:
             EnvironmentVar: "MAXMIND_AUTH"
+          DBFolder: "~/.msticpy"
+        Provider: "GeoLiteLookup"
+
+.. note:: Alternatively you can specify it directly in the config file
+  in AuthKey:
+
+.. code:: yaml
+
+    ...
+    OtherProviders:
+      GeoIPLite:
+        Args:
+          AuthKey: "your_maxmind_key"
           DBFolder: "~/.msticpy"
         Provider: "GeoLiteLookup"
 
