@@ -21,7 +21,7 @@ import pandas as pd
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
-from ..nbtools.utility import export
+from ..nbtools.utility import export, MsticpyException
 from .ip_utils import convert_to_ip_entities
 
 __version__ = VERSION
@@ -33,14 +33,6 @@ WIDGET_DEFAULTS = {
     "layout": widgets.Layout(width="95%"),
     "style": {"description_width": "initial"},
 }
-
-
-class Error(Exception):
-    """Base class for other exceptions."""
-
-
-class DataError(Error):
-    """Raised when thereis a data input error."""
 
 
 @export
@@ -127,10 +119,7 @@ def create_host_record(
 @export
 def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     """
-    Clusters logon sessions in syslog by start/end time based on PAM events.
-
-    Will return a LogonDataError if supplied dataframe does not contain
-    complete logon sessions.
+    Cluster logon sessions in syslog by start/end time based on PAM events.
 
     Parameters
     ----------
@@ -146,7 +135,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
 
     Raises
     ------
-    DataError
+    MsticpyException
         There are no logon sessions in the supplied data set
 
     """
@@ -176,7 +165,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         .sort_index(ascending=True)
     )
     if logons_opened.empty or logons_closed.empty:
-        raise DataError("There are no logon sessions in the supplied data set")
+        raise MsticpyException("There are no logon sessions in the supplied data set")
 
     # For each session identify the likely start and end times
     while ses_opened < len(logons_opened.index) and ses_closed < len(
@@ -236,7 +225,7 @@ def risky_sudo_sessions(
     sessions = sudo_sessions[["User", "Start", "End"]].to_dict("index")
 
     if risky_actions is None and suspicious_actions is None:
-        raise DataError(
+        raise MsticpyException(
             "At least one of risky_actions or suspicious_actions must be supplied"
         )
 

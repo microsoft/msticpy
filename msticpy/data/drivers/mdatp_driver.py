@@ -29,7 +29,7 @@ class MDATPDriver(OData):
             Connection string
 
         """
-        super().__init__(connection_str)
+        super().__init__()
         self.req_body = {
             "client_id": None,
             "client_secret": None,
@@ -39,6 +39,10 @@ class MDATPDriver(OData):
         self.oauth_url = "https://login.windows.net/{tenantId}/oauth2/token"
         self.api_root = "https://api.securitycenter.windows.com/"
         self.api_ver = "api"
+
+        if connection_str:
+            self.current_connection = connection_str
+            self.connect(connection_str)
 
     def query(self, query: str) -> Union[pd.DataFrame, Any]:
         """

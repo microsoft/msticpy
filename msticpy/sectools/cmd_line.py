@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from .._version import VERSION
-from ..nbtools.utility import export
+from ..nbtools.utility import export, MsticpyException
 from .base64unpack import unpack
 
 __version__ = VERSION
@@ -69,12 +69,12 @@ def risky_cmd_line(
 
     Raises
     ------
-    AttributeError
+    MsticpyException
         The provided dataset does not contain the cmd_field field
 
     """
     if cmd_field not in events.columns:
-        raise AttributeError(
+        raise MsticpyException(
             f"The provided dataset does not contain the {cmd_field} field"
         )
 
@@ -146,10 +146,10 @@ def cmd_speed(
 
     """
     if cmd_field not in cmd_events.columns:
-        raise AttributeError(f"Dataframe does not contain {cmd_field} column")
+        raise MsticpyException(f"Dataframe does not contain {cmd_field} column")
 
     if isinstance(cmd_events["TimeGenerated"].iloc[0], dt.datetime) is False:
-        raise AttributeError("TimeGenerated is not a datetime format")
+        raise MsticpyException("TimeGenerated is not a datetime format")
 
     suspicious_actions = []
     cmd_events[cmd_field].replace("", np.nan, inplace=True)
