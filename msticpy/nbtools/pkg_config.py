@@ -225,7 +225,7 @@ def _fetch_setting(config_setting: Dict[str, Any]) -> Optional[str]:
                 + " was not set"
             )
         return env_value
-    if "KeyVaultURI" in config_setting:
+    if "KeyVault" in config_setting:
         raise NotImplementedError("Keyvault support not yet implemented.")
     return None
 
