@@ -1,5 +1,8 @@
+adal>=1.2.2
 attrs>=18.2.0
 azure-common>=1.1.18
+azure-keyvault==1.1.0
+azure-mgmt-keyvault==1.1.0
 azure-mgmt-resource>=2.2.0
 azure-mgmt-subscription>=0.2.0
 azure-mgmt-network>=2.7.0
@@ -15,8 +18,10 @@ geoip2>=2.9.0
 ipwhois>=1.1.0
 ipython>=7.2.0
 ipywidgets>=7.4.2
+keyring>=18.0.0
 Kqlmagic>=0.1.106
 matplotlib>=3.0.2
+msrest>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=0.25.0

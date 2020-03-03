@@ -4,11 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Keyvault client - adapted from Bluehound code."""
+import base64
+import datetime
 import json
 from typing import List, Any
 
-from adal import AuthenticationContext
-from azure.keyvault import KeyVaultClient, KeyVaultAuthentication, KeyVaultId, Vault
+from adal import AuthenticationContext, AdalError
+from azure.keyvault import KeyVaultClient, KeyVaultAuthentication, KeyVaultId
+from azure.keyvault.models import KeyVaultErrorException  # , KeyVaultError
 from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
@@ -19,16 +22,14 @@ from azure.mgmt.keyvault.models import (
     CertificatePermissions,
     Permissions,
     VaultCreateOrUpdateParameters,
+    Vault,
 )
-import base64
-import keyring
-import datetime
 
+import keyring
+from keyring.errors import KeyringError
 from msrest.authentication import BasicTokenAuthentication
-import requests
 
 from ..nbtools.utility import export
-from ..nbtools import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION
@@ -38,18 +39,15 @@ __author__ = "Matt Richard"
 class KeyVaultMissingSecretException(Exception):
     """Missing secret exception."""
 
-    pass
-
 
 class KeyVaultMissingVaultException(Exception):
     """Missing vault exception."""
-
-    pass
 
 
 class AuthClient(object):
     """Authentication class base."""
 
+    # Will need to modify for non-public clouds
     _AUTHORITY_URL = "https://login.microsoftonline.com/{tenant_id}"
 
     def __init__(
@@ -60,9 +58,27 @@ class AuthClient(object):
         name: str = None,
         debug: bool = False,
     ):
+        """
+        Base authentication client for credential caching.
+
+        Parameters
+        ----------
+        tenant_id : str
+            Tenant ID of Azure User
+        client_id : str
+            Client ID of application client
+        client_url : str
+            [description]
+        name : str, optional
+            Name of the secret store, by default None
+        debug : bool, optional
+            Output debug information if True, by default False
+
+        """
         self.name = name
         self.client_id = client_id
         self.client_url = client_url
+        self.tenant_id = tenant_id
         self.authority_url = self._AUTHORITY_URL.format(tenant_id=tenant_id)
         self.debug = debug
         if self.debug:
@@ -74,7 +90,7 @@ class AuthClient(object):
             try:
                 self._refresh_creds()
                 return
-            except:
+            except AdalError:
                 if self.debug:
                     print("Token was no longer valid, forcing a new one.")
             self._get_token()
@@ -96,16 +112,32 @@ class AuthClient(object):
 
     def _is_valid_config_data(self):
         keys = ["accessToken", "refreshToken", "expiresOn"]
-        if all([key in self.config_data for key in keys]) == True:
+        if all([key in self.config_data for key in keys]):
             if all([self.config_data.get(key) for key in keys]):
                 if all([len(self.config_data.get(key)) > 0 for key in keys]):
                     return True
         return False
 
-    def __repr__(self):
+    @property
+    def auth_id(self) -> str:
+        """Return name or ID of client."""
         return self.name if self.name is not None else self.client_id
 
-    def get_parsed_token_data(self) -> Any:
+    @property
+    def user_oid(self) -> str:
+        """
+        Return the user Object ID.
+
+        Returns
+        -------
+        str
+            User OID.
+
+        """
+        data = self._get_parsed_token_data()
+        return data.get("oid")
+
+    def _get_parsed_token_data(self) -> Any:
         tok_data = self.token
         tok_data = tok_data.split(".")[1]
         tok_data += "=" * ((4 - len(tok_data) % 4) % 4)
@@ -120,28 +152,60 @@ class AuthClient(object):
             print(f"got new token expiring {self.config_data['expiresOn']}")
             self._cache_creds()
 
-    def _expired_creds(self):
-        return (
-            datetime.datetime.strptime(
-                self.config_data["expiresOn"], "%Y-%m-%d %H:%M:%S.%f"
-            )
-            < datetime.datetime.now()
+    def _expired_creds(self) -> bool:
+        return self._expires_on < datetime.datetime.now()
+
+    @property
+    def _expires_on(self) -> datetime:
+        """Return token expiry date as string."""
+        return datetime.datetime.strptime(
+            self.config_data["expiresOn"], "%Y-%m-%d %H:%M:%S.%f"
         )
 
     @property
-    def expires_on(self) -> str:
-        return self.config_data["expiresOn"]
-
-    @property
     def token(self) -> str:
+        """
+        Return the access token.
+
+        Returns
+        -------
+        str
+            Access Token
+
+        """
         if self._expired_creds():
             try:
                 self._refresh_creds()
-            except:
+            except AdalError:
                 self._get_token()
         return self.config_data["accessToken"]
 
-    def adal_callback(self, server, resource, scope, scheme):
+    def _adal_callback(self, server: str, resource: str, scope: str, scheme: str):
+        """
+        ADAL Callback for authentication.
+
+        Parameters
+        ----------
+        server : str
+            Not used
+        resource : str
+            Not used
+        scope : str
+            Not used
+        scheme : str
+            Not used
+
+        Returns
+        -------
+        Tuple(str, str)
+            Bearer, Token
+
+        Notes
+        -----
+        None of the parameters are used in this function. However,
+        they are required because of the expected callback signature.
+
+        """
         del (server, resource, scope, scheme)
         return "Bearer", self.token
 
@@ -155,11 +219,33 @@ class KeyringAuthClient(AuthClient):
     """
 
     def __init__(
-        self, client_id: str, client_url: str, name: str = None, debug: bool = False
+        self,
+        tenant_id: str,
+        client_id: str,
+        client_url: str,
+        name: str = None,
+        debug: bool = False,
     ):
+        """
+        Initialize KeyringAuthClient.
+
+        Parameters
+        ----------
+        tenant_id : str
+            Tenant ID of Azure User
+        client_id : str
+            Client ID of application client
+        client_url : str
+            [description]
+        name : str, optional
+            Name of the secret store, by default None
+        debug : bool, optional
+            Output debug information if True, by default False
+
+        """
         self.name = name
-        self.keyring = repr(self)
-        super().__init__(client_id, client_url, name=name, debug=debug)
+        self.keyring = self.auth_id
+        super().__init__(tenant_id, client_id, client_url, name=name, debug=debug)
 
     def _get_creds(self):
         if self.debug:
@@ -182,7 +268,7 @@ class KeyringAuthClient(AuthClient):
                 "refreshToken": refresh_token,
                 "expiresOn": expires_on,
             }
-        except:
+        except KeyringError:
             if self.debug:
                 print("No valid credentials in keyring %s" % self.keyring)
             self._get_token()
@@ -220,49 +306,68 @@ class KeyringAuthClient(AuthClient):
         )
 
 
-class KeyvaultAuthClient(AuthClient):
-    """
-    Keyvault Auth client.
+# class KeyVaultAuthClient(AuthClient):
+#     """
+#     Keyvault Auth client.
 
-    Handles management of authentication tokens in keyvault.
-    """
+#     Handles management of authentication tokens in keyvault.
+#     """
 
-    def __init__(
-        self,
-        client_id: str,
-        client_url: str,
-        secret_name: str,
-        name: str = None,
-        debug: bool = False,
-    ):
-        self.secret_name = secret_name
-        self._get_creds = self._get_keyvault_creds
-        self._cache_creds = self._cache_creds_keyvault
-        self.keyvault_client = BHKeyVaultClient(vault_uri=client_url)
-        super().__init__(client_id, client_url, name=name, debug=debug)
+#     def __init__(
+#         self,
+#         tenant_id: str,
+#         client_id: str,
+#         client_url: str,
+#         secret_name: str,
+#         name: str = None,
+#         debug: bool = False,
+#     ):
+#         """
+#         Initialize KeyvaultAuthClient.
 
-    def _get_keyvault_creds(self):
-        if self.debug:
-            print("getting tokens from keyvault")
-        try:
-            self.config_data = json.loads(
-                self.keyvault_client.get_secret(self.secret_name)
-            )
-        except KeyVaultMissingSecretException:
-            if self.debug:
-                print("missing secret from keyvault, fetching manually")
-            self._get_token()
-        except Exception as e:
-            if self.debug:
-                print("bad creds in keyvault, you gotta getem")
-                print("here is what went wrong: %s" % str(e))
-            self._get_token()
+#         Parameters
+#         ----------
+#         tenant_id : str
+#             Tenant ID of Azure User
+#         client_id : str
+#             Client ID of application client
+#         client_url : str
+#             [description]
+#         name : str, optional
+#             Name of the secret store, by default None
+#         debug : bool, optional
+#             Output debug information if True, by default False
 
-    def _cache_creds_keyvault(self):
-        self.keyvault_client.put_secret(self.secret_name, json.dumps(self.config_data))
+#         """
+#         self.secret_name = secret_name
+#         self._get_creds = self._get_keyvault_creds
+#         self._cache_creds = self._cache_creds_keyvault
+#         self.keyvault_client = BHKeyVaultClient(tenant_id=tenant_id, vault_uri=client_url)
+#         self.config_data: Any = None
+#         super().__init__(tenant_id, client_id, client_url, name=name, debug=debug)
+
+#     def _get_keyvault_creds(self):
+#         if self.debug:
+#             print("getting tokens from keyvault")
+#         try:
+#             self.config_data = json.loads(
+#                 self.keyvault_client.get_secret(self.secret_name)
+#             )
+#         except KeyVaultMissingSecretException:
+#             if self.debug:
+#                 print("missing secret from keyvault, fetching manually")
+#             self._get_token()
+#         except KeyVaultErrorException as err:
+#             if self.debug:
+#                 print("bad creds in keyvault, you gotta getem")
+#                 print("here is what went wrong: %s" % str(err))
+#             self._get_token()
+
+#     def _cache_creds_keyvault(self):
+#         self.keyvault_client.set_secret(self.secret_name, json.dumps(self.config_data))
 
 
-class BHKeyVaultClient(object):
+class BHKeyVaultClient:
     """Core KeyVault client."""
 
     # client id is the app id used in the oauth grant
@@ -270,36 +375,67 @@ class BHKeyVaultClient(object):
     # on all tenants and subscriptions
     _CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
     _CLIENT_URI = "https://vault.azure.net"
-    _VAULT_URI_TMPLT = "https://{vault}.vault.azure.net/"
+    _VAULT_PUB_URI_TMPLT = "https://{vault}.vault.azure.net/"
     _KEYRING_NAME = "keyvault"
 
     def __init__(
-        self, vault_uri: str = None, vault_name: str = None, debug: bool = False
+        self,
+        tenant_id: str,
+        vault_uri: str = None,
+        vault_name: str = None,
+        debug: bool = False,
     ):
-        self.debug = debug
+        """
+        Initialize the BHKeyVault client.
 
+        Parameters
+        ----------
+        tenant_id : str
+            The tenant ID of the service
+        vault_uri : str, optional
+            The full URI of the keyvault, by default None
+        vault_name : str, optional
+            The name of the keyvault in the public cloud, by default None
+        debug : bool, optional
+            [description], by default False
+
+        Raises
+        ------
+        KeyVaultMissingVaultException
+            No Vault name or URI supplied.
+
+        """
+        self.debug = debug
+        self.tenant_id = tenant_id
         if not vault_uri and not vault_name:
             raise KeyVaultMissingVaultException("No vault name or URI was supplied.")
         if vault_uri:
             self.vault_uri = vault_uri
         else:
-            self.vault_uri = self._VAULT_URI_TMPLT.format(vault=vault_name)
+            self.vault_uri = self._VAULT_PUB_URI_TMPLT.format(vault=vault_name)
         if debug:
             print("Using Vault URI {self.vault_uri}")
         self.auth_client = KeyringAuthClient(
-            self._CLIENT_ID, self._CLIENT_URI, self._KEYRING_NAME, debug=self.debug
+            tenant_id,
+            self._CLIENT_ID,
+            self._CLIENT_URI,
+            self._KEYRING_NAME,
+            debug=self.debug,
         )
         kv_auth = KeyVaultAuthentication(
-            authorization_callback=self.auth_client.adal_callback
+            authorization_callback=self.auth_client._adal_callback
         )
         self.kv_client = KeyVaultClient(kv_auth)
         self.secrets: List[str] = []
-        self._get_secrets()
+        # self._get_secrets()
 
     def _get_secrets(self):
+        """Fetch the list of secret names from the vault."""
         try:
-            self.secrets = [x.id for x in self.kv_client.get_secrets(self.vault_uri)]
-        except:
+            self.secrets = [
+                x.id for x in self.kv_client.get_secrets(vault_base_url=self.vault_uri)
+            ]
+        except KeyVaultErrorException:
             if self.debug:
                 print(
                     "You appear to be missing a proper Vault config: %s"
@@ -308,11 +444,32 @@ class BHKeyVaultClient(object):
             raise KeyVaultMissingVaultException(self.vault_uri)
 
     def get_secret(self, secret_name: str) -> Any:
+        """
+        Retrieve a secret from the Vault.
+
+        Parameters
+        ----------
+        secret_name : str
+            Name of the secret
+
+        Returns
+        -------
+        Any
+            The secret value
+
+        Raises
+        ------
+        KeyVaultMissingSecretException
+            Secret not found in the Vault.
+
+        """
         try:
             secret_bundle = self.kv_client.get_secret(
-                self.vault_uri, secret_name, secret_version=KeyVaultId.version_none
+                vault_base_url=self.vault_uri,
+                secret_name=secret_name,
+                secret_version=KeyVaultId.version_none,
             )
-        except:
+        except Exception as err:  # KeyVaultErrorException:
             if self.debug:
                 print(
                     "Secret: '%s' missing from vault: %s"
@@ -327,15 +484,33 @@ class BHKeyVaultClient(object):
             raise KeyVaultMissingSecretException(secret_name, self.vault_uri)
         return secret_bundle.value
 
-    def set_secret(self, secret_name: str, value: Any):
+    def set_secret(self, secret_name: str, value: Any) -> "SecretBundle":
+        """
+        Set a secret in the Vault.
+
+        Parameters
+        ----------
+        secret_name : str
+            Name of the secret
+        value: Any
+            Secret value
+
+        Returns
+        -------
+        SecretBundle
+            The secrets bundle for the secret
+
+        """
         if self.debug:
             print("Storing %s in %s" % (secret_name, self.vault_uri))
-        secret_bundle = self.kv_client.set_secret(self.vault_uri, secret_name, value)
+        secret_bundle = self.kv_client.set_secret(
+            vault_base_url=self.vault_uri, secret_name=secret_name, value=value
+        )
 
         return secret_bundle
 
 
-class BHKeyVaultMgmtClient(object):
+class BHKeyVaultMgmtClient:
     """Core KeyVault Management client."""
 
     CLIENT_URI = "https://management.azure.com"
@@ -349,30 +524,84 @@ class BHKeyVaultMgmtClient(object):
         tenant_id: str,
         subscription_id: str,
         resource_group: str,
-        azure_region: str,
+        azure_region: str = None,
     ):
+        """
+        Initialize BH KeyVault Management Client.
+
+        Parameters
+        ----------
+        tenant_id : str
+            Tenant ID
+        subscription_id : str
+            Subscription ID
+        resource_group : str
+            Resource Group name
+        azure_region : str
+            Azure region - needed to create a new vault.
+            By default, None
+
+        """
         self.tenant_id = tenant_id
         self.auth_client = AuthClient(self.CLIENT_ID, self.CLIENT_URI, "mgmt")
         self.subscription_id = subscription_id
         self.resource_group = resource_group
         self.azure_region = azure_region
 
-    def _get_user_oid(self):
-        data = self.auth_client.get_parsed_token_data()
-        return data.get("oid")
-
     def list_vaults(self) -> List[str]:
+        """
+        Return a list of vaults for the subscription.
+
+        Returns
+        -------
+        List[str]
+            Vault names
+
+        """
         cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
         mgmt = KeyVaultManagementClient(cred, self.subscription_id)
         return [v.name for v in mgmt.vaults.list()]
 
     def get_vault_uri(self, vault_name: str) -> str:
+        """
+        Return the URI for a vault name.
+
+        Parameters
+        ----------
+        vault_name : str
+            The Vault name.
+
+        Returns
+        -------
+        str
+            Vault URI.
+
+        """
         cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
         mgmt = KeyVaultManagementClient(cred, self.subscription_id)
         vault = mgmt.vaults.get(self.resource_group, vault_name)
         return vault.properties.vault_uri
 
     def create_vault(self, vault_name: str) -> Vault:
+        """
+        Create new or update existing vault.
+
+        Parameters
+        ----------
+        vault_name : str
+            Name of the Vault
+
+        Returns
+        -------
+        Vault
+            The Vault object.
+
+        """
+        if not self.azure_region:
+            raise KeyVaultErrorException(
+                "You must supply an Azure region when you create the client",
+                "in order to create new vaults.",
+            )
         parameters = self._get_params()
         cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
         mgmt = KeyVaultManagementClient(cred, self.subscription_id)
@@ -382,7 +611,8 @@ class BHKeyVaultMgmtClient(object):
         return vault
 
     def _get_params(self):
-        oid = self._get_user_oid()
+        """Build the vault parameters block."""
+        oid = self.auth_client.user_oid
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]
         cert_perms_all = [perm.value for perm in CertificatePermissions]

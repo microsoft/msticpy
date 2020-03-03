@@ -4,13 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
+import os
 from typing import Any, Dict, Optional
+import warnings
 
 import attr
 from attr import Factory
 
 from .._version import VERSION
+from ..common.secret_settings import SecretsClient
 from ..nbtools import pkg_config as config
+from ..nbtools.utility import MsticpyConfigException
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -28,6 +32,11 @@ class ProviderSettings:
     primary: bool = False
 
 
+_SECRETS_SETTINGS: Optional[SecretsClient] = None
+if "KeyVault" in config.settings:
+    _SECRETS_SETTINGS = SecretsClient()
+
+
 def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
     """
     Read Provider settings from package config.
@@ -43,6 +52,11 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
         Provider settings indexed by provider name.
 
     """
+    global _SECRETS_SETTINGS
+    if "KeyVault" in config.settings:
+        _SECRETS_SETTINGS = SecretsClient()
+    else:
+        _SECRETS_SETTINGS = None
     prov_settings = config.settings.get(config_section)
     if not prov_settings:
         return {}
@@ -53,7 +67,11 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
         prov_settings = ProviderSettings(
             name=provider,
             description=item_settings.get("Description"),
-            args=_get_setting_args(prov_args),
+            args=_get_setting_args(
+                config_section=config_section,
+                provider_name=provider,
+                prov_args=prov_args,
+            ),
             primary=item_settings.get("Primary", False),
             provider=item_settings.get("Provider", provider),
         )
@@ -67,13 +85,102 @@ def reload_settings():
     config.refresh_config()
 
 
-def _get_setting_args(prov_args: Optional[Dict[str, Any]]) -> Dict[Any, Any]:
+def _get_setting_args(
+    config_section: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
+) -> Dict[Any, Any]:
     """Extract the provider args from the settings."""
     if not prov_args:
         return {}
     name_map = {
-        "WorkspaceID": "workspace_id",
-        "TenantID": "tenant_id",
-        "SubscriptionID": "subscription_id",
+        "workspaceid": "workspace_id",
+        "tenantid": "tenant_id",
+        "subscriptionid": "subscription_id",
     }
-    return config.get_settings(conf_group=prov_args, name_map=name_map)
+    return _get_settings(
+        config_section=config_section,
+        provider_name=provider_name,
+        conf_group=prov_args,
+        name_map=name_map,
+    )
+
+
+def _get_settings(
+    config_section: str,
+    provider_name: str,
+    conf_group: Optional[Dict[str, Any]],
+    name_map: Optional[Dict[str, str]] = None,
+) -> Dict[Any, Any]:
+    """
+    Lookup configuration values config, environment or KeyVault.
+
+    Parameters
+    ----------
+    config_section : str
+        Configuration section
+    provider_name: str
+        The name of the provider section
+    conf_group : Optional[Dict[str, Any]]
+        The configuration dictionary
+    name_map : Optional[Dict[str, str]], optional
+        Optional mapping to re-write setting names,
+        by default None
+
+    Returns
+    -------
+    Dict[Any, Any]
+        Dictionary of resolved settings
+
+    Raises
+    ------
+    NotImplementedError
+        Keyvault storage is not yet implemented
+
+    """
+    if not conf_group:
+        return {}
+    setting_dict: Dict[str, Any] = conf_group.copy()
+
+    for arg_name, arg_value in conf_group.items():
+        target_name = arg_name
+        if name_map:
+            target_name = name_map.get(target_name.casefold(), target_name)
+
+        if isinstance(arg_value, str):
+            setting_dict[target_name] = arg_value
+        elif isinstance(arg_value, dict):
+            try:
+                setting_dict[target_name] = _fetch_setting(
+                    config_section, provider_name, arg_name, arg_value
+                )  # type: ignore
+            except NotImplementedError:
+                warnings.warn(
+                    f"Setting type for setting {arg_value} not yet implemented. "
+                )
+    return setting_dict
+
+
+def _fetch_setting(
+    config_section: str,
+    provider_name: str,
+    arg_name: str,
+    config_setting: Dict[str, Any],
+) -> Optional[str]:
+    """Return required value for indirect settings (e.g. getting env var)."""
+    if "EnvironmentVar" in config_setting:
+        env_value = os.environ.get(config_setting["EnvironmentVar"])
+        if not env_value:
+            warnings.warn(
+                f"Environment variable {config_setting['EnvironmentVar']}"
+                + " was not set"
+            )
+        return env_value
+    if "KeyVault" in config_setting:
+        if not _SECRETS_SETTINGS:
+            raise MsticpyConfigException(
+                "Cannot use a KeyVault configuration setting without",
+                "a KeyVault configuration section in msticpyconfig.yaml.",
+            )
+        config_path = [config_section, provider_name, "Args", arg_name]
+        sec_func = _SECRETS_SETTINGS.add_keyvault_setting(".".join(config_path))
+        return sec_func
+    return None
