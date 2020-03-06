@@ -83,6 +83,7 @@ class VirusTotal(HttpProvider):
             Object with match details
 
         """
+
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, TISeverity.information, "Not found."
 
@@ -145,13 +146,16 @@ class VirusTotal(HttpProvider):
                     ]
                 )
                 result_dict["positives"] += positives
-
-        if result_dict["positives"] > 1:
-            severity = TISeverity.high
-        elif result_dict["positives"] > 0:
-            severity = TISeverity.warning
+        
+        if "positives" in result_dict:
+            if result_dict["positives"] > 1:
+                severity = TISeverity.high
+            elif result_dict["positives"] > 0:
+                severity = TISeverity.warning
+            else:
+                severity = TISeverity.information
         else:
-            severity = TISeverity.information
+            severity = None
 
         return True, severity, result_dict
 
