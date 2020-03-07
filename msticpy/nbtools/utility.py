@@ -5,22 +5,23 @@
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import difflib
+import os
 import re
 import subprocess  # nosec
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, Union, List, Dict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+
 import pkg_resources
-
-from IPython.core.display import HTML, display
 from deprecated.sphinx import deprecated
-
+from IPython import get_ipython
+from IPython.core.display import HTML, display
 from tqdm import tqdm, tqdm_notebook
 
-# from .._version import VERSION
+from .._version import VERSION
 
-# __version__ = VERSION
+__version__ = VERSION
 __author__ = "Ian Hellen"
 
 
@@ -269,6 +270,7 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
 
 
 # pylint: disable=invalid-name
+@export
 def md(string: str, styles: Union[str, Iterable[str]] = None):
     """
     Return string as Markdown with optional style.
@@ -294,6 +296,7 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
     display(HTML(f"<p style='{style_str}'>{string}</p>"))
 
 
+@export
 def md_warn(string: str):
     """
     Return string as a warning - red text prefixed by "Warning".
@@ -317,6 +320,20 @@ _F_STYLES = {
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
 }
+
+
+@export
+def is_ipython() -> bool:
+    """
+    Return True if running in IPython environment.
+
+    Returns
+    -------
+    bool
+        True if running in IPython environment,
+        otherwise False
+    """
+    return bool(get_ipython())
 
 
 class MsticpyException(Exception):
@@ -386,3 +403,35 @@ def check_kwargs(supplied_args: Dict[str, Any], legal_args: List[str]):
             name_errs.append(err)
     if name_errs:
         raise NameError(name_errs)
+
+
+_U_TEST_ENV = "MP_UNIT_TEST"
+
+
+def unit_testing() -> bool:
+    """
+    Return True if in unit testing.
+
+    Returns
+    -------
+    bool
+        True if in unit testing
+
+    """
+    return _U_TEST_ENV in os.environ
+
+
+def set_unit_testing(on: bool = True):
+    """
+    Set flag env var to indicated that code is being unit-tested.
+
+    Parameters
+    ----------
+    on : bool, optional
+        Turn unit testing flag on or off, by default True
+
+    """
+    if on:
+        os.environ[_U_TEST_ENV] = "True"
+    else:
+        os.environ.pop(_U_TEST_ENV, None)

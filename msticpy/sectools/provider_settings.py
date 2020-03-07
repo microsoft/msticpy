@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
+from collections import UserDict
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, Callable
 import warnings
 
 import attr
@@ -20,7 +21,17 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-ancestors
+class ProviderArgs(UserDict):
+    """ProviderArgs dictionary."""
+
+    def __getitem__(self, key):
+        """Return key value via SecretsClient.read_secret."""
+        if key not in self.data:
+            raise KeyError(key)
+        return SecretsClient.read_secret(self.data[key])
+
+
 @attr.s(auto_attribs=True)
 class ProviderSettings:
     """Provider settings."""
@@ -28,8 +39,11 @@ class ProviderSettings:
     name: str
     description: str
     provider: Optional[str] = None
-    args: Dict[Optional[str], Any] = Factory(dict)
+    args: Dict[Optional[str], Any] = Factory(ProviderArgs)  # type: ignore
     primary: bool = False
+
+
+# pylint: enable=too-few-public-methods, too-many-ancestors
 
 
 _SECRETS_SETTINGS: Optional[SecretsClient] = None
@@ -52,7 +66,9 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
         Provider settings indexed by provider name.
 
     """
+    # pylint: disable=global-statement
     global _SECRETS_SETTINGS
+    # pylint: enable=global-statement
     if "KeyVault" in config.settings:
         _SECRETS_SETTINGS = SecretsClient()
     else:
@@ -164,7 +180,7 @@ def _fetch_setting(
     provider_name: str,
     arg_name: str,
     config_setting: Dict[str, Any],
-) -> Optional[str]:
+) -> Union[Optional[str], Callable[[], Any]]:
     """Return required value for indirect settings (e.g. getting env var)."""
     if "EnvironmentVar" in config_setting:
         env_value = os.environ.get(config_setting["EnvironmentVar"])
@@ -181,6 +197,6 @@ def _fetch_setting(
                 "a KeyVault configuration section in msticpyconfig.yaml.",
             )
         config_path = [config_section, provider_name, "Args", arg_name]
-        sec_func = _SECRETS_SETTINGS.add_keyvault_setting(".".join(config_path))
+        sec_func = _SECRETS_SETTINGS.get_secret_accessor(".".join(config_path))
         return sec_func
     return None

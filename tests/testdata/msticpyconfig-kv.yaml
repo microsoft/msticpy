@@ -13,6 +13,7 @@ KeyVault:
   AzureRegion: East US
   VaultName: "mstic-ianhelle"
   UseKeyring: True
+  Authority: global
 QueryDefinitions:
   Default:
     - 'queries'
