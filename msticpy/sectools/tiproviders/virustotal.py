@@ -146,7 +146,7 @@ class VirusTotal(HttpProvider):
                     ]
                 )
                 result_dict["positives"] += positives
-        
+
         if "positives" in result_dict:
             if result_dict["positives"] > 1:
                 severity = TISeverity.high
