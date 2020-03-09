@@ -818,7 +818,7 @@ def _calc_auto_plot_height(group_count):
 
 # pylint: disable=too-many-arguments
 def _create_range_tool(
-    data, min_time, max_time, plot_range, width, height, time_column: str = None
+    data, min_time, max_time, plot_range, width, height, time_column: str = None, y:str = "y_index"
 ):
     """Create plot bar to act as as range selector."""
     ext_min = min_time - ((max_time - min_time) * 0.15)
@@ -846,13 +846,13 @@ def _create_range_tool(
         for _, series_def in data.items():
             rng_select.circle(
                 x=series_def["time_column"],
-                y="y_index",
+                y=y,
                 color=series_def["color"],
                 source=series_def["source"],
             )
     elif isinstance(data, pd.DataFrame):
         rng_select.circle(
-            x=time_column, y="y_index", color="blue", source=ColumnDataSource(data)
+            x=time_column, y=y, color="blue", source=ColumnDataSource(data)
         )
 
     range_tool = RangeTool(x_range=plot_range)
