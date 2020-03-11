@@ -49,8 +49,8 @@ sources:
     args:
       query: '
             {table}
-            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
@@ -60,8 +60,8 @@ sources:
     args:
       query: '
             {table}
-            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause}
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
@@ -74,27 +74,28 @@ sources:
     args:
       query: '
             {table}
-            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause} 
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn}) 
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
             | project {timestampcolumn}, {aggregatecolumn}, baseline
-            | render timechart with (Title="Time Series Decomposition - Baseline vs Actual TimeChart")
+            | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
             '
   plot_timeseries_scoreanomolies:
     description: Plot timeseries anomaly score using built-in KQL render method
     args:
       query: '
             {table}
-            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             {where_clause} 
+            | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
             | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
             | project {timestampcolumn}, score
-            | render timechart with (Title="Time Series Anomalies TimeChart")
+            | render timechart with (title="Time Series Anomalies TimeChart")
             '
