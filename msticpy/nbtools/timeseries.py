@@ -24,7 +24,7 @@ from .timeline import (
     _create_range_tool,
     _get_tick_formatter,
     _add_ref_line,
-    _get_ref_event_time
+    _get_ref_event_time,
 )
 
 __version__ = VERSION
@@ -53,17 +53,18 @@ _TL_VALUE_KWARGS = ["kind", "y", "x"]
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
-def display_timeseries(
+def display_timeseries_anomolies(
     data: pd.DataFrame,
     y: str = "Total",
     time_column: str = "TimeGenerated",
+    anomalies_column: str = "anomalies",
     source_columns: list = None,
     period: int = 30,
     **kwargs
 ) -> figure:
     """
     Display time series anomalies visualization
-   
+
     Parameters
     ----------
     data : pd.DataFrame
@@ -72,16 +73,19 @@ def display_timeseries(
 
     Other Parameters
     ----------------
-    ref_time : datetime, optional
-        Input reference line to display (the default is None)
-    title : str, optional
-        Title to display (the default is None)
     y : str, optional
-        Name of column holding values to plot against time series
+        Name of column holding numeric values to plot against time series to determine anomolies
         (the default is 'Total')
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
+    anomolies_column : str, optional
+        Name of the column holding binary status(1/0) for anomaly/benign
+        (the default is 'anomolies')
+    ref_time : datetime, optional
+        Input reference line to display (the default is None)
+    title : str, optional
+        Title to display (the default is None)
     legend: str, optional
         Where to position the legend
         None, left, right or inline (default is None)
@@ -97,7 +101,7 @@ def display_timeseries(
         (the default is auto-calculated height)
     width : int, optional
         The width of the plot figure (the default is 900)
-    
+
     Returns
     -------
     figure
@@ -120,6 +124,7 @@ def display_timeseries(
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
 
+    # Manually append or set default color scheme if user provides one or two colors
     if len(color) == 1:
         color.extend(("green", "firebrick"))
     elif len(color) == 2:
@@ -132,8 +137,8 @@ def display_timeseries(
     series_count = int(len(data) / period)
 
     # Filtering anomalies to create new dataframe
-    source_columns = [col for col in data.columns if col not in ["anomalies"]]
-    data_anomaly = data[data["anomalies"] == 1][source_columns].reset_index()
+    source_columns = [col for col in data.columns if col not in [anomalies_column]]
+    data_anomaly = data[data[anomalies_column] == 1][source_columns].reset_index()
 
     hover = HoverTool(
         tooltips=_create_tool_tips(data, source_columns),
@@ -182,7 +187,12 @@ def display_timeseries(
     plot.yaxis.formatter = NumeralTickFormatter(format="00")
 
     plot.circle(
-        time_column, y, line_color=color[0], size=4, source=source, legend_label="actual"
+        time_column,
+        y,
+        line_color=color[0],
+        size=4,
+        source=source,
+        legend_label="actual",
     )
     plot.line(
         time_column,
@@ -192,6 +202,7 @@ def display_timeseries(
         legend_label="baseline",
     )
 
+    # setting the visualization types for anomalies based on user input to kind
     if kind == "diamond_cross":
         plot.diamond_cross(
             time_column,
@@ -233,10 +244,11 @@ def display_timeseries(
             legend_label="anomalies",
         )
 
+    #interactive legend to hide single/multiple plots if selected
     plot.legend.location = legend_pos
     plot.legend.click_policy = "hide"
 
-    # Create plot bar to act as as range selector
+    # Create plot for the score column to act as as range selector
     rng_select = _create_range_tool(
         data=data,
         y="score",
@@ -248,7 +260,7 @@ def display_timeseries(
         time_column=time_column,
     )
 
-    # if we have a reference, plot the time as a line
+    # if we have a reference timestamp, plot the time as a line
     if ref_time is not None:
         _add_ref_line(plot, ref_time, ref_label, data[y].max())
 

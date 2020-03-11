@@ -816,9 +816,16 @@ def _calc_auto_plot_height(group_count):
     return max(ht_per_row * group_count, 300)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, invalid-name
 def _create_range_tool(
-    data, min_time, max_time, plot_range, width, height, time_column: str = None, y:str = "y_index"
+    data,
+    min_time,
+    max_time,
+    plot_range,
+    width,
+    height,
+    time_column: str = None,
+    y: str = "y_index",
 ):
     """Create plot bar to act as as range selector."""
     ext_min = min_time - ((max_time - min_time) * 0.15)
