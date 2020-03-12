@@ -82,6 +82,13 @@ def display_timeseries_anomolies(
     anomolies_column : str, optional
         Name of the column holding binary status(1/0) for anomaly/benign
         (the default is 'anomolies')
+    source_columns : list, optional
+        List of default source columns to use in tooltips
+        (the default is None)
+    period : int, optional
+        Period of the dataset for hourly-no of days, for daily-no of weeks.
+        This is used to correctly calculate the plot height.
+        (the default is 30)
     ref_time : datetime, optional
         Input reference line to display (the default is None)
     title : str, optional
@@ -93,9 +100,6 @@ def display_timeseries_anomolies(
         Whether to show the yaxis and labels
     range_tool : bool, optional
         Show the the range slider tool (default is True)
-    source_columns : list, optional
-        List of default source columns to use in tooltips
-        (the default is None)
     height : int, optional
         The height of the plot figure
         (the default is auto-calculated height)
@@ -192,7 +196,7 @@ def display_timeseries_anomolies(
         line_color=color[0],
         size=4,
         source=source,
-        legend_label="actual",
+        legend_label="observed",
     )
     plot.line(
         time_column,
