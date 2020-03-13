@@ -47,7 +47,7 @@ from msticpy.common.keyvault_client import (
 from msticpy.common import pkg_config as config
 
 try:
-    from .toollib import VERSION
+    from .toollib import VERSION  # type: ignore
 
     __version__ = VERSION
 except ImportError:
