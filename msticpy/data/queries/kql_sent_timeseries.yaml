@@ -55,8 +55,8 @@ sources:
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             '
-  get_timeseries_alerts:
-    description: Time Series anomaly alerts generated using built-in KQL time series functions
+  get_timeseries_anomalies:
+    description: Time Series anomalies generated using built-in KQL time series functions
     args:
       query: '
             {table}
