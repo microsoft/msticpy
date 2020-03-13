@@ -10,6 +10,7 @@ import random
 import string
 import unittest
 import warnings
+import datetime as dt
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any, Tuple, Union
@@ -129,11 +130,14 @@ class mock_req_session:
         elif kwargs["url"].startswith("https://www.virustotal.com/"):
             if is_benign_ioc(kwargs["params"]):
                 return MockResponse(None, 404)
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%d %H:%M:%S")
             mocked_result = {
                 "resource": "ioc",
                 "permalink": "https://virustotal.com/report.html",
                 "positives": 1,
-                "detected_urls": [{"url": "http://bad.com/foo", "positives": 1}],
+                "detected_urls": [
+                    {"url": "http://bad.com/foo", "positives": 1, "scan_date": date}
+                ],
                 "verbose_msg": "A long description....",
                 "response_code": 1,
             }
@@ -379,7 +383,10 @@ class TestTIProviders(unittest.TestCase):
         gen_doms = {self._generate_rand_domain(): "dns" for i in range(n_requests)}
         results_df = ti_lookup.lookup_iocs(data=gen_doms, providers=["OPR"])
         self.assertEqual(n_requests, len(results_df))
-        self.assertGreater(len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]), n_requests / 3)
+        self.assertGreater(
+            len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]),
+            n_requests / 3,
+        )
         self.assertEqual(n_requests, len(results_df[results_df["Result"] == True]))
 
     def _generate_rand_domain(self):
@@ -432,8 +439,12 @@ class TestTIProviders(unittest.TestCase):
         all_ips = tor_nodes + other_ips
         tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
         self.assertEqual(len(all_ips), len(tor_results_df))
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"].isin(["warning", "high"])]), 4)
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 'information']), 5)
+        self.assertEqual(
+            len(tor_results_df[tor_results_df["Severity"].isin(["warning", "high"])]), 4
+        )
+        self.assertEqual(
+            len(tor_results_df[tor_results_df["Severity"] == "information"]), 5
+        )
 
     def test_check_ioc_type(self):
         provider = self.ti_lookup.loaded_providers["OTX"]
