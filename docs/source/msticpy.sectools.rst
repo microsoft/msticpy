@@ -68,14 +68,6 @@ msticpy.sectools.process\_tree\_utils module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.provider\_settings module
-------------------------------------------
-
-.. automodule:: msticpy.sectools.provider_settings
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.sectools.syslog_utils module
 ------------------------------------
 

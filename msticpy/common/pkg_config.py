@@ -23,7 +23,9 @@ from typing import Any, Dict, Optional, Callable
 
 import pkg_resources
 import yaml
+from yaml.error import YAMLError
 
+from .utility import MsticpyConfigException
 from .._version import VERSION
 
 __version__ = VERSION
@@ -119,7 +121,12 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
     if Path(config_file).is_file():
         with open(config_file) as f_handle:
             # use safe_load instead of load
-            return yaml.safe_load(f_handle)
+            try:
+                return yaml.safe_load(f_handle)
+            except YAMLError as yml_err:
+                raise MsticpyConfigException(
+                    f"Error reading config file {config_file}", yml_err
+                )
     return {}
 
 

@@ -41,7 +41,7 @@ from sklearn.preprocessing import Normalizer
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from ..nbtools.utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

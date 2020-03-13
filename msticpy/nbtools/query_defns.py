@@ -11,7 +11,7 @@ from typing import List, Union
 import attr
 from attr import Factory
 
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

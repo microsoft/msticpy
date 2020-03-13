@@ -14,6 +14,7 @@ ipywidgets
 keyring
 matplotlib
 msrest
+msrestazure
 networkx
 numpy
 pandas

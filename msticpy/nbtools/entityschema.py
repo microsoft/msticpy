@@ -16,7 +16,7 @@ from enum import Enum
 # pylint: disable=locally-disabled, unused-import
 from typing import Mapping, Any, Union, Dict, Type
 
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

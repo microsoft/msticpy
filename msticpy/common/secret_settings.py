@@ -6,15 +6,19 @@
 """Settings provider for secrets."""
 from functools import partial
 import re
-from typing import Any, Callable, Dict, Tuple, Optional
+from typing import Any, Callable, Dict, Tuple, Optional, Set
 
 import keyring
 from keyring.errors import KeyringError, KeyringLocked
 
-from .keyvault_client import BHKeyVaultClient, KeyVaultSettings
+from .keyvault_client import (
+    BHKeyVaultClient,
+    KeyVaultSettings,
+    MPKeyVaultConfigException,
+)
 
-from ..nbtools.utility import export, MsticpyConfigException
-from ..nbtools import pkg_config as config
+from .utility import export
+from . import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION
@@ -25,7 +29,7 @@ __author__ = "Ian Hellen"
 class KeyringClient:
     """Keyring client wrapper."""
 
-    def __init__(self, name: str = "system", debug: bool = False):
+    def __init__(self, name: str = "key-cache", debug: bool = False):
         """
         Initialize the keyring client.
 
@@ -39,6 +43,7 @@ class KeyringClient:
         """
         self.debug = debug
         self.keyring = name
+        self._secret_names: Set[str] = set()
 
     def __getitem__(self, key: str):
         """Get key name."""
@@ -93,6 +98,7 @@ class KeyringClient:
         """
         if self.debug:
             print(f"Saving {secret_name} to keyring {self.keyring}")
+        self._secret_names.add(secret_name)
         keyring.set_password(self.keyring, secret_name, secret_value)
 
 
@@ -125,15 +131,15 @@ class SecretsClient:
 
         self.tenant_id = tenant_id or self._kv_settings.get("tenantid")
         if not self.tenant_id:
-            raise MsticpyConfigException(
+            raise MPKeyVaultConfigException(
                 "TenantID must be specified in KeyVault settings section",
                 "in msticpyconfig.yaml",
             )
-        self.kv_secrets: Dict[str, BHKeyVaultClient] = {}
+        self.kv_secret_vault: Dict[str, str] = {}
         self.kv_vaults: Dict[str, BHKeyVaultClient] = {}
-        if use_keyring or self._kv_settings.get("UseKeyring", False):
+        self._use_keyring = use_keyring or self._kv_settings.get("UseKeyring", False)
+        if self._use_keyring:
             self._keyring_client = KeyringClient("Providers")
-        self._use_keyring = use_keyring
 
     def get_secret_accessor(self, setting_path: str) -> Callable[[], Any]:
         """
@@ -153,16 +159,15 @@ class SecretsClient:
         vault_name, secret_name = self._get_kv_vault_and_name(setting_path)
         if vault_name is None or secret_name is None:
             return lambda: secret_name if secret_name else ""
-        self._add_kv_setting(vault_name, secret_name)
-        return self._get_secret_func(secret_name)
+        return self._get_secret_func(secret_name, vault_name)
 
-    def _add_kv_setting(self, vault_name: str, secret_name: str):
+    def _add_key_vault(self, vault_name: str, secret_name: str):
         """Add the KeyVault instance responsible for storing `secret_name`."""
         vault = self.kv_vaults.get(vault_name)
         if not vault:
             vault = BHKeyVaultClient(self.tenant_id, vault_name=vault_name)
             self.kv_vaults[vault_name] = vault
-        self.kv_secrets[secret_name] = vault
+        self.kv_secret_vault[secret_name] = vault_name
 
     @staticmethod
     def format_kv_name(setting_path):
@@ -192,28 +197,30 @@ class SecretsClient:
                 vault_name, secret_name = kv_val.split("/")
                 return vault_name, self.format_kv_name(secret_name)
             if not def_vault_name:
-                raise ValueError("No VaultName defined in KeyVault settings.")
+                raise MPKeyVaultConfigException(
+                    f"No VaultName defined in KeyVault settings for {setting_path}."
+                )
             # If there is a single string - take that as the secret name
             return def_vault_name, self.format_kv_name(kv_val)
         return None, None
 
-    def _get_secret_func(self, secret_name: str) -> Callable[[], Any]:
+    def _get_secret_func(self, secret_name: str, vault_name: str) -> Callable[[], Any]:
         """Return a func to access a secret."""
         if self._use_keyring:
             if self._keyring_client.get_secret(secret_name):
                 return self._create_secret_func(self._keyring_client, secret_name)
 
-        # If the value is not in keyring, get the vault holding this secret
-        vault = self.kv_secrets.get(secret_name)
-        if not vault:
-            raise MsticpyConfigException(
-                f"{secret_name} was not registered for a KeyVault"
-            )
+        # If the secret is not in keyring, get the vault holding this secret
+        if not self.kv_secret_vault.get(secret_name):
+            self._add_key_vault(secret_name=secret_name, vault_name=vault_name)
+
+        vault = self.kv_vaults[vault_name]
         if self._use_keyring:
             # store the secret in keyring and return an accessor
             # to the keyring value.
             self._keyring_client.set_secret(secret_name, vault.get_secret(secret_name))
             return self._create_secret_func(self._keyring_client, secret_name)
+        # if not using Keyring - return a KeyVault accessor
         return self._create_secret_func(vault, secret_name)
 
     @staticmethod
@@ -235,6 +242,7 @@ class SecretsClient:
         -------
         Any
             The secret value
+
         """
         if callable(secret_object):
             return secret_object()

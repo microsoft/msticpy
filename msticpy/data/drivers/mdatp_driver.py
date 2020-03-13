@@ -8,7 +8,7 @@ from typing import Union, Any
 import pandas as pd
 
 from .odata_driver import OData
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION

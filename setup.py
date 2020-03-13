@@ -36,6 +36,7 @@ INSTALL_REQUIRES = [
     "Kqlmagic>=0.1.106",
     "matplotlib>=3.0.2",
     "msrest>=0.6.0",
+    "msrestazure>=0.6.0",
     "networkx>=2.2",
     "numpy>=1.15.4",
     "pandas>=0.25.0",

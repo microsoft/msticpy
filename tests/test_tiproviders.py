@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Tuple, Union
 from unittest import mock
 
-from ..msticpy.nbtools import pkg_config
+from ..msticpy.common import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
@@ -218,6 +218,7 @@ class TestTIProviders(unittest.TestCase):
     ti_lookup = None
 
     def setUp(self):
+        self._mp_conf_env = os.environ[pkg_config._CONFIG_ENV_VAR]
         self.ti_lookup = self.load_ti_lookup()
 
     @staticmethod
@@ -448,3 +449,18 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(lu_result.status, 2)
         lu_result = provider._check_ioc_type(ioc="123456", ioc_type="file_hash")
         self.assertEqual(lu_result.status, 2)
+
+    # Used for local testing only
+    # def test_interactive(self):
+    #     saved_env = os.environ[pkg_config._CONFIG_ENV_VAR]
+    #     os.environ[pkg_config._CONFIG_ENV_VAR] = "e:\\src\\microsoft\\msticpyconfig.yaml"
+    #     pkg_config.refresh_config()
+    #     if "AzureSentinel" in pkg_config.custom_settings["TIProviders"]:
+    #         pkg_config.custom_settings["TIProviders"].pop("AzureSentinel")
+    #     ti_lookup = TILookup()
+
+    #     result = ti_lookup.lookup_ioc(
+    #         observable="www.401k.com", providers=["OPR", "VirusTotal", "XForce"]
+    #         )
+
+    #     os.environ[pkg_config._CONFIG_ENV_VAR] = saved_env

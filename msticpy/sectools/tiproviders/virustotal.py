@@ -16,7 +16,7 @@ from typing import Any, Tuple
 
 from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION

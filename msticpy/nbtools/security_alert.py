@@ -13,7 +13,7 @@ import pandas as pd
 from .._version import VERSION
 from .entityschema import Entity, UnknownEntity
 from .security_base import SecurityBase
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -25,7 +25,7 @@ from .query_mgr import (  # noqa: F401
 )
 
 # pylint: enable=locally-disabled, unused-import
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

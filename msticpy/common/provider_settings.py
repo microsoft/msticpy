@@ -13,9 +13,9 @@ import attr
 from attr import Factory
 
 from .._version import VERSION
-from ..common.secret_settings import SecretsClient
-from ..nbtools import pkg_config as config
-from ..nbtools.utility import MsticpyConfigException
+from .secret_settings import SecretsClient
+from . import pkg_config as config
+from .utility import MsticpyConfigException
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -39,16 +39,16 @@ class ProviderSettings:
     name: str
     description: str
     provider: Optional[str] = None
-    args: Dict[Optional[str], Any] = Factory(ProviderArgs)  # type: ignore
+    args: ProviderArgs = Factory(ProviderArgs)  # type: ignore
     primary: bool = False
 
 
 # pylint: enable=too-few-public-methods, too-many-ancestors
 
 
-_SECRETS_SETTINGS: Optional[SecretsClient] = None
+_SECRETS_CLIENT: Optional[SecretsClient] = None
 if "KeyVault" in config.settings:
-    _SECRETS_SETTINGS = SecretsClient()
+    _SECRETS_CLIENT = SecretsClient()
 
 
 def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:
@@ -67,18 +67,22 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
     """
     # pylint: disable=global-statement
-    global _SECRETS_SETTINGS
+    global _SECRETS_CLIENT
     # pylint: enable=global-statement
     if "KeyVault" in config.settings:
-        _SECRETS_SETTINGS = SecretsClient()
+        if _SECRETS_CLIENT is None:
+            print(
+                "KeyVault enabled. Secrets access may require additional authentication."
+            )
+            _SECRETS_CLIENT = SecretsClient()
     else:
-        _SECRETS_SETTINGS = None
-    prov_settings = config.settings.get(config_section)
-    if not prov_settings:
+        _SECRETS_CLIENT = None
+    section_settings = config.settings.get(config_section)
+    if not section_settings:
         return {}
 
     settings = {}
-    for provider, item_settings in prov_settings.items():
+    for provider, item_settings in section_settings.items():
         prov_args = item_settings.get("Args")
         prov_settings = ProviderSettings(
             name=provider,
@@ -97,16 +101,24 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
 
 def reload_settings():
-    """Reload settings from config files."""
+    """
+    Reload settings from config files.
+
+    Parameters
+    ----------
+    clear_keyring : bool, optional
+        Clears any secrets cached in keyring, by default False
+
+    """
     config.refresh_config()
 
 
 def _get_setting_args(
     config_section: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
-) -> Dict[Any, Any]:
+) -> ProviderArgs:
     """Extract the provider args from the settings."""
     if not prov_args:
-        return {}
+        return ProviderArgs()
     name_map = {
         "workspaceid": "workspace_id",
         "tenantid": "tenant_id",
@@ -125,7 +137,7 @@ def _get_settings(
     provider_name: str,
     conf_group: Optional[Dict[str, Any]],
     name_map: Optional[Dict[str, str]] = None,
-) -> Dict[Any, Any]:
+) -> ProviderArgs:
     """
     Lookup configuration values config, environment or KeyVault.
 
@@ -143,7 +155,7 @@ def _get_settings(
 
     Returns
     -------
-    Dict[Any, Any]
+    ProviderArgs
         Dictionary of resolved settings
 
     Raises
@@ -153,8 +165,8 @@ def _get_settings(
 
     """
     if not conf_group:
-        return {}
-    setting_dict: Dict[str, Any] = conf_group.copy()
+        return ProviderArgs()
+    setting_dict: ProviderArgs = ProviderArgs(conf_group.copy())
 
     for arg_name, arg_value in conf_group.items():
         target_name = arg_name
@@ -191,12 +203,12 @@ def _fetch_setting(
             )
         return env_value
     if "KeyVault" in config_setting:
-        if not _SECRETS_SETTINGS:
+        if not _SECRETS_CLIENT:
             raise MsticpyConfigException(
                 "Cannot use a KeyVault configuration setting without",
                 "a KeyVault configuration section in msticpyconfig.yaml.",
             )
         config_path = [config_section, provider_name, "Args", arg_name]
-        sec_func = _SECRETS_SETTINGS.get_secret_accessor(".".join(config_path))
+        sec_func = _SECRETS_CLIENT.get_secret_accessor(".".join(config_path))
         return sec_func
     return None

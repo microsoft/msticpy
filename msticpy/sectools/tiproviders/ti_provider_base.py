@@ -30,7 +30,7 @@ from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from ..._version import VERSION
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..iocextract import IoCExtract, IoCType
 
 __version__ = VERSION

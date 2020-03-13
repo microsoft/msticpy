@@ -27,8 +27,8 @@ import pandas as pd
 from . import tiproviders
 from .tiproviders import *  # noqa:F401, F403
 from .tiproviders.ti_provider_base import TIProvider, LookupResult, TILookupStatus
-from .provider_settings import get_provider_settings, reload_settings
-from ..nbtools.utility import export
+from ..common.provider_settings import get_provider_settings, reload_settings
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -174,9 +174,21 @@ class TILookup:
     def reload_provider_settings(cls):
         """Reload provider settings from config."""
         reload_settings()
+        print(
+            "Settings reloaded. Use reload_providers to update settings",
+            "for loaded providers.",
+        )
 
     def reload_providers(self):
-        """Reload providers based on currret settings in config."""
+        """
+        Reload providers based on currrent settings in config.
+
+        Parameters
+        ----------
+        clear_keyring : bool, optional
+            Clears any secrets cached in keyring, by default False
+
+        """
         self.reload_provider_settings()
         self._load_providers()
 

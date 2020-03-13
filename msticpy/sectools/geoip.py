@@ -40,8 +40,8 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..nbtools.utility import MsticpyConfigException, export
-from .provider_settings import ProviderSettings, get_provider_settings
+from ..common.utility import MsticpyConfigException, export
+from ..common.provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

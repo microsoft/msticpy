@@ -27,16 +27,16 @@ from ..msticpy.common.keyvault_client import (
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
-    KeyVaultMissingSecretException,
-    KeyVaultConfigException,
-    KeyVaultMissingVaultException,
+    MPKeyVaultMissingSecretException,
+    MPKeyVaultConfigException,
+    MPKeyVaultMissingVaultException,
     _prompt_for_code,
 )
-from ..msticpy.nbtools import pkg_config
-from ..msticpy.sectools.provider_settings import get_provider_settings
+from ..msticpy.common import pkg_config
+from ..msticpy.common.provider_settings import get_provider_settings, reload_settings
 from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 from ..msticpy.sectools.tiproviders import ProviderSettings, get_provider_settings
-from ..msticpy.nbtools.utility import set_unit_testing
+from ..msticpy.common.utility import set_unit_testing
 
 
 _test_data_folders = [
@@ -227,6 +227,16 @@ class TestSecretsConfig(unittest.TestCase):
 
         kv_settings.authority = "usgov"
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.us")
+        self.assertEqual(
+            kv_settings.keyvault_uri, "https://{vault}.vault.usgovcloudapi.net/"
+        )
+        self.assertEqual(kv_settings.mgmt_uri, "https://management.usgovcloudapi.net/")
+
+        kv_settings.authority = "de"
+        self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.de")
+
+        kv_settings.authority = "chi"
+        self.assertEqual(kv_settings.authority_uri, "https://login.chinacloudapi.cn")
 
     @patch(auth_context_patch)
     def test_auth_client(self, auth_context):
@@ -237,7 +247,7 @@ class TestSecretsConfig(unittest.TestCase):
         auth_client = AuthClient(
             tenant_id=kv_settings.tenantid,
             client_id=TEST_TOKEN["_clientId"],
-            client_url=TEST_TOKEN["resource"],
+            client_uri=TEST_TOKEN["resource"],
             name="auth_test",
             debug=True,
         )
@@ -322,7 +332,7 @@ class TestSecretsConfig(unittest.TestCase):
         # Check missing tenantid
         no_tenant_id = deepcopy(kv_settings)
         no_tenant_id.tenantid = None
-        with self.assertRaises(KeyVaultConfigException):
+        with self.assertRaises(MPKeyVaultConfigException):
             BHKeyVaultClient(settings=no_tenant_id, debug=True)
 
         # Device auth - simulating IPython
@@ -352,11 +362,11 @@ class TestSecretsConfig(unittest.TestCase):
             kv_val = keyvault_client.get_secret(sec)
             self.assertEqual(val, kv_val)
 
-        with self.assertRaises(KeyVaultMissingSecretException):
+        with self.assertRaises(MPKeyVaultMissingSecretException):
             keyvault_client.get_secret("DoesntExist")
 
         kv_sec_client.set_secret("NoSecret", "")
-        with self.assertRaises(KeyVaultMissingSecretException):
+        with self.assertRaises(MPKeyVaultMissingSecretException):
             keyvault_client.get_secret("NoSecret")
 
         kv_sec_client.set_secret("MyTestSecret", "TheActualValue")
@@ -389,11 +399,14 @@ class TestSecretsConfig(unittest.TestCase):
             vault_mgmt.get_vault_uri("mynewvault"), "https://mynewvault.vault.azure.net"
         )
 
-        with self.assertRaises(KeyVaultConfigException):
+        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
+        kv_settings["azureregion"] = None
+        with self.assertRaises(MPKeyVaultConfigException):
             nr_vault_mgmt = BHKeyVaultMgmtClient(
                 tenant_id=kv_settings.tenantid,
                 subscription_id=kv_settings.subscriptionid,
                 resource_group=kv_settings.resourcegroup,
+                settings=kv_settings,
             )
             nr_vault_mgmt.create_vault("mynewvault")
 
@@ -432,6 +445,13 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual(KV_SECRETS[kv_entry_name], sec_value)
 
         # Check all TIProvider settings
+        self._check_provider_settings(sec_settings)
+
+        # Reload without using keyring cache
+        sec_settings = secret_settings.SecretsClient(use_keyring=False)
+        self._check_provider_settings(sec_settings)
+
+    def _check_provider_settings(self, sec_settings):
         prov_settings = get_provider_settings()
         for p_name, p_settings in prov_settings.items():
             args = prov_settings[p_name].args

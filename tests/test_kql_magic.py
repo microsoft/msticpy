@@ -6,13 +6,17 @@
 """security_alert test class."""
 import unittest
 
-# import pandas as pd
 
-# from IPython import get_ipython, embed_kernel
+from ..msticpy.common.wsconfig import WorkspaceConfig
 
 # from .. nbtools import kql
 # from .. nbtools.security_alert_graph import create_alert_graph
 # from .. nbtools.nbdisplay import display_alert
+from ..msticpy.data import QueryProvider
+
+# import pandas as pd
+
+# from IPython import get_ipython, embed_kernel
 
 
 class TestKqlMagic(unittest.TestCase):
@@ -30,4 +34,8 @@ SecurityAlert
 
     def test_kql_magic(self):
         """Run query using KqlMagic."""
+        ws_conf = WorkspaceConfig()
+
+        # q_prov = QueryProvider("LogAnalytics")
+        # q_prov.connect(ws_conf.code_connect_str)
         self.assertTrue(True)

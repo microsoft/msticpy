@@ -13,7 +13,7 @@ import pandas as pd
 
 from .security_alert import SecurityAlert
 from .entityschema import Entity
-from .utility import export, is_not_empty
+from ..common.utility import export, is_not_empty
 from .._version import VERSION
 
 __version__ = VERSION

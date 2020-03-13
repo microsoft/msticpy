@@ -17,7 +17,7 @@ from typing import Any, Dict, Tuple
 import pandas as pd
 
 from ..._version import VERSION
-from ...nbtools.utility import export
+from ...common.utility import export
 from .ti_provider_base import LookupResult, TISeverity
 from .kql_base import KqlTIProvider
 

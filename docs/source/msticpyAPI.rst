@@ -8,3 +8,4 @@ msticpy API
     msticpy.nbtools
     msticpy.sectools
     msticpy.data
+    msticpy.common

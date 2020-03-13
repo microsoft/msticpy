@@ -21,8 +21,8 @@ import warnings
 import pandas as pd
 
 from ..._version import VERSION
-from ...nbtools.utility import export
-from ...nbtools.wsconfig import WorkspaceConfig
+from ...common.utility import export
+from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
 from .ti_provider_base import (
     LookupResult,

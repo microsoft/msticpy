@@ -20,7 +20,7 @@ from ipywidgets import Layout
 from .._version import VERSION
 from . import kql as qry
 from .query_defns import QueryParamProvider
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
