@@ -25,33 +25,16 @@ from .timeline import (
     _get_tick_formatter,
     _add_ref_line,
     _get_ref_event_time,
+    _DEFAULT_KWARGS,
+    _TL_VALUE_KWARGS,
 )
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 
 
-# Constants
-_DEFAULT_KWARGS = [
-    "color",
-    "data",
-    "height",
-    "legend",
-    "range_tool",
-    "ref_event",
-    "ref_time",
-    "source_columns",
-    "time_column",
-    "title",
-    "width",
-    "yaxis",
-]
-
-_TL_KWARGS = ["alert", "overlay_color", "overlay_data", "ref_time", "ygrid", "xgrid"]
-
-_TL_VALUE_KWARGS = ["kind", "y", "x"]
-
-# pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
+# pylint: disable=invalid-name, too-many-locals, too-many-statements,
+# pylint: too-many-branches, too-many-function-args, too-many-arguments
 @export  # noqa: C901, MC0001
 def display_timeseries_anomolies(
     data: pd.DataFrame,
@@ -248,7 +231,7 @@ def display_timeseries_anomolies(
             legend_label="anomalies",
         )
 
-    #interactive legend to hide single/multiple plots if selected
+    # interactive legend to hide single/multiple plots if selected
     plot.legend.location = legend_pos
     plot.legend.click_policy = "hide"
 
