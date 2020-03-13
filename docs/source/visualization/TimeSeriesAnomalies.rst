@@ -1,4 +1,4 @@
-msticpy - Time Series Analysis and anomalies Visualization
+msticpy - Time Series Analysis and Anomalies Visualization
 ==========================================================
 
 This notebook demonstrates the time series analysis and anomalies
@@ -77,7 +77,7 @@ dataset
 Using LogAnalytics Query Provider
 ---------------------------------
 
-msticpy has QueryProvider through which you can connect to LogAnalytics
+msticpy has a QueryProvider through which you can connect to LogAnalytics
 Data environment. via ``QueryProvider(data_environment="LogAnalytics")``
 Once you connect to data environment (``qry_prov.connect()``), you can
 list the available queries (``qry_prov.list_queries()``) for the data
@@ -592,49 +592,53 @@ Documentation for display_timeseries_anomalies
        **kwargs,
    ) -> <function figure at 0x7f0de9ae2598>
    Docstring:
-   Display time series anomalies visualization
+    Display time series anomalies visualization.
 
-   Parameters
-   ----------
-   data : pd.DataFrame
-       DataFrame as a time series data set retreived from KQL time series functions
-       dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
+    Parameters
+    ----------
+    data : pd.DataFrame
+        DataFrame as a time series data set retreived from KQL time series functions
+        dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
+    y : str, optional
+        Name of column holding numeric values to plot against time series to determine anomolies
+        (the default is 'Total')
+    time_column : str, optional
+        Name of the timestamp column
+        (the default is 'TimeGenerated')
+    anomalies_column : str, optional
+        Name of the column holding binary status(1/0) for anomaly/benign
+        (the default is 'anomolies')
+    source_columns : list, optional
+        List of default source columns to use in tooltips
+        (the default is None)
+    period : int, optional
+        Period of the dataset for hourly-no of days, for daily-no of weeks.
+        This is used to correctly calculate the plot height.
+        (the default is 30)
 
-   Other Parameters
-   ----------------
-   y : str, optional
-       Name of column holding numeric values to plot against time series to determine anomolies
-       (the default is 'Total')
-   time_column : str, optional
-       Name of the timestamp column
-       (the default is 'TimeGenerated')
-   anomolies_column : str, optional
-       Name of the column holding binary status(1/0) for anomaly/benign
-       (the default is 'anomolies')
-   ref_time : datetime, optional
-       Input reference line to display (the default is None)
-   title : str, optional
-       Title to display (the default is None)
-   legend: str, optional
-       Where to position the legend
-       None, left, right or inline (default is None)
-   yaxis : bool, optional
-       Whether to show the yaxis and labels
-   range_tool : bool, optional
-       Show the the range slider tool (default is True)
-   source_columns : list, optional
-       List of default source columns to use in tooltips
-       (the default is None)
-   height : int, optional
-       The height of the plot figure
-       (the default is auto-calculated height)
-   width : int, optional
-       The width of the plot figure (the default is 900)
+    Other Parameters
+    ----------------
+    ref_time : datetime, optional
+        Input reference line to display (the default is None)
+    title : str, optional
+        Title to display (the default is None)
+    legend: str, optional
+        Where to position the legend
+        None, left, right or inline (default is None)
+    yaxis : bool, optional
+        Whether to show the yaxis and labels
+    range_tool : bool, optional
+        Show the the range slider tool (default is True)
+    height : int, optional
+        The height of the plot figure
+        (the default is auto-calculated height)
+    width : int, optional
+        The width of the plot figure (the default is 900)
 
-   Returns
-   -------
-   figure
-       The bokeh plot figure.
+    Returns
+    -------
+    figure
+        The bokeh plot figure.
 
 .. code:: ipython3
 

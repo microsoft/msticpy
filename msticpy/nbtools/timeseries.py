@@ -59,7 +59,7 @@ def display_timeseries_anomolies(
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
-    anomolies_column : str, optional
+    anomalies_column : str, optional
         Name of the column holding binary status(1/0) for anomaly/benign
         (the default is 'anomolies')
     source_columns : list, optional
