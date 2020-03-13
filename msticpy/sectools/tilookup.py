@@ -112,6 +112,22 @@ class TILookup:
         return prim + sec
 
     @property
+    def configured_providers(self) -> List[str]:
+        """
+        Return a list of avaliable providers that have configuration details present.
+
+        Returns
+        -------
+        List[str]
+            List of TI Provider classes.
+
+        """
+        prim_conf = list(self._providers.keys())
+        sec_conf = list(self._secondary_providers.keys())
+
+        return prim_conf + sec_conf
+
+    @property
     def available_providers(self) -> List[str]:
         """
         Return a list of builtin providers.
