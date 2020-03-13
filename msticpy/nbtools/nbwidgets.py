@@ -424,8 +424,8 @@ class AlertSelector(QueryParamProvider):
                 "AlertName",
                 "CompromisedEntity",
                 "SystemAlertId",
-                "TI Risk",
             ]
+
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
