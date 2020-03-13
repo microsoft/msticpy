@@ -53,9 +53,6 @@ def display_timeseries_anomolies(
     data : pd.DataFrame
         DataFrame as a time series data set retreived from KQL time series functions
         dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
-
-    Other Parameters
-    ----------------
     y : str, optional
         Name of column holding numeric values to plot against time series to determine anomolies
         (the default is 'Total')
@@ -72,6 +69,9 @@ def display_timeseries_anomolies(
         Period of the dataset for hourly-no of days, for daily-no of weeks.
         This is used to correctly calculate the plot height.
         (the default is 30)
+
+    Other Parameters
+    ----------------
     ref_time : datetime, optional
         Input reference line to display (the default is None)
     title : str, optional
@@ -93,6 +93,7 @@ def display_timeseries_anomolies(
     -------
     figure
         The bokeh plot figure.
+
     """
     check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
 

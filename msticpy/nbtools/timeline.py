@@ -816,7 +816,7 @@ def _calc_auto_plot_height(group_count):
     return max(ht_per_row * group_count, 300)
 
 
-# pylint: disable=too-many-arguments, invalid-name
+# pylint: disable=too-many-arguments, invalid-name, too-many-locals
 def _create_range_tool(
     data,
     min_time,
