@@ -89,7 +89,7 @@ class FoliumMap:
         Parameters
         ----------
         ip_entities : Iterable[IpAddress]
-            a iterable of IpAddress Entities
+            a iterable of IpAddress Entities 
 
         Other Parameters
         ----------------
