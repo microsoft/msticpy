@@ -33,8 +33,8 @@ __version__ = VERSION
 __author__ = "Ashwin Patil"
 
 
-# pylint: disable=invalid-name, too-many-locals, too-many-statements,
-# pylint: too-many-branches, too-many-function-args, too-many-arguments
+# pylint: disable=invalid-name, too-many-locals, too-many-statements
+# pylint: disable=too-many-branches, too-many-function-args, too-many-arguments
 @export  # noqa: C901, MC0001
 def display_timeseries_anomolies(
     data: pd.DataFrame,
@@ -46,7 +46,7 @@ def display_timeseries_anomolies(
     **kwargs
 ) -> figure:
     """
-    Display time series anomalies visualization
+    Display time series anomalies visualization.
 
     Parameters
     ----------
