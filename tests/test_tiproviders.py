@@ -347,7 +347,7 @@ class TestTIProviders(unittest.TestCase):
             for prov, lu_result in result[1]:
                 self.assertIsNotNone(lu_result.ioc)
                 self.assertIsNotNone(lu_result.ioc_type)
-                if lu_result.severity > 0:
+                if lu_result.severity in ["warning", "high"]:
                     self.assertTrue(
                         "rank" in lu_result.details
                         and lu_result.details["rank"] is None
@@ -378,9 +378,8 @@ class TestTIProviders(unittest.TestCase):
         n_requests = 250
         gen_doms = {self._generate_rand_domain(): "dns" for i in range(n_requests)}
         results_df = ti_lookup.lookup_iocs(data=gen_doms, providers=["OPR"])
-
         self.assertEqual(n_requests, len(results_df))
-        self.assertGreater(len(results_df[results_df["Severity"] > 0]), n_requests / 3)
+        self.assertGreater(len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]), n_requests / 3)
         self.assertEqual(n_requests, len(results_df[results_df["Result"] == True]))
 
     def _generate_rand_domain(self):
@@ -420,7 +419,7 @@ class TestTIProviders(unittest.TestCase):
             lu_result = result[1][0][1]
             self.assertTrue(lu_result.result)
             self.assertTrue(bool(lu_result.reference))
-            if lu_result.severity > 0:
+            if lu_result.severity in ["warning", "high"]:
                 self.assertTrue(bool(lu_result.details))
                 self.assertTrue(bool(lu_result.raw_result))
                 pos_results.append(lu_result)
@@ -433,8 +432,8 @@ class TestTIProviders(unittest.TestCase):
         all_ips = tor_nodes + other_ips
         tor_results_df = ti_lookup.lookup_iocs(data=all_ips, providers=["Tor"])
         self.assertEqual(len(all_ips), len(tor_results_df))
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] > 0]), 4)
-        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 0]), 5)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"].isin(["warning", "high"])]), 4)
+        self.assertEqual(len(tor_results_df[tor_results_df["Severity"] == 'information']), 5)
 
     def test_check_ioc_type(self):
         provider = self.ti_lookup.loaded_providers["OTX"]
