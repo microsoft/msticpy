@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+import datetime as dt
 from typing import Any, Tuple
 
 from .ti_provider_base import LookupResult, TISeverity
@@ -82,6 +83,7 @@ class VirusTotal(HttpProvider):
             Object with match details
 
         """
+
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, TISeverity.information, "Not found."
 
@@ -99,26 +101,62 @@ class VirusTotal(HttpProvider):
             result_dict["resource"] = response.raw_result.get("resource", None)
             result_dict["permalink"] = response.raw_result.get("permalink", None)
             result_dict["positives"] = response.raw_result.get("positives", 0)
-        if "detected_urls" in response.raw_result:
-            result_dict["detected_urls"] = [
-                item["url"]
-                for item in response.raw_result["detected_urls"]
-                if "url" in item
-            ]
-            # positives are listed per detected_url so we need to
-            # pull those our and sum them.
-            positives = sum(
-                [
-                    item["positives"]
-                    for item in response.raw_result["detected_urls"]
-                    if "positives" in item
-                ]
-            )
-            result_dict["positives"] = positives
 
-        severity = (
-            TISeverity.high if result_dict["positives"] > 0 else TISeverity.information
-        )
+        else:
+            if "detected_urls" in response.raw_result:
+                time_scope = dt.datetime.now() - dt.timedelta(days=30)
+                result_dict["detected_urls"] = [
+                    item["url"]
+                    for item in response.raw_result["detected_urls"]
+                    if "url" in item
+                    and dt.datetime.strptime(item["scan_date"], "%Y-%m-%d %H:%M:%S")
+                    > time_scope
+                ]
+                # positives are listed per detected_url so we need to
+                # pull those our and sum them.
+                positives = sum(
+                    [
+                        item["positives"]
+                        for item in response.raw_result["detected_urls"]
+                        if "positives" in item
+                        and dt.datetime.strptime(item["scan_date"], "%Y-%m-%d %H:%M:%S")
+                        > time_scope
+                    ]
+                )
+                result_dict["positives"] = positives
+
+            if "detected_downloaded_samples" in response.raw_result:
+                time_scope = dt.datetime.now() - dt.timedelta(days=30)
+                result_dict["detected_downloaded_samples"] = [
+                    item["sha256"]
+                    for item in response.raw_result["detected_downloaded_samples"]
+                    if "sha256" in item
+                    and dt.datetime.strptime(item["date"], "%Y-%m-%d %H:%M:%S")
+                    > time_scope
+                ]
+                # positives are listed per detected_url so we need to
+                # pull those our and sum them.
+                positives = sum(
+                    [
+                        item["positives"]
+                        for item in response.raw_result["detected_downloaded_samples"]
+                        if "positives" in item
+                        and dt.datetime.strptime(item["date"], "%Y-%m-%d %H:%M:%S")
+                        > time_scope
+                    ]
+                )
+                result_dict["positives"] += positives
+
+        if "positives" in result_dict:
+            if result_dict["positives"] > 1:
+                severity = TISeverity.high
+            elif result_dict["positives"] > 0:
+                severity = TISeverity.warning
+            else:
+                severity = TISeverity.information
+        else:
+            severity = None
+
         return True, severity, result_dict
 
     # pylint: enable=duplicate-code

@@ -131,13 +131,23 @@ class SecurityAlert(SecurityBase):
 
     def _extract_entities(self, src_row):
         input_entities = []
+
+        if isinstance(src_row.ExtendedProperties, str):
+            try:
+                ext_props = json.loads(src_row["ExtendedProperties"])
+                for ent, val in ext_props.items():
+                    if ent in ["IpAddress", "Username"]:
+                        input_entities.append({"Entity": val, "Type": ent})
+            except json.JSONDecodeError:
+                pass
+
         if isinstance(src_row.Entities, str):
             try:
-                input_entities = json.loads(src_row["Entities"])
+                input_entities += json.loads(src_row["Entities"])
             except json.JSONDecodeError:
                 pass
         elif isinstance(src_row.Entities, list):
-            input_entities = src_row.Entities
+            input_entities += src_row.Entities
 
         for ent in input_entities:
             try:

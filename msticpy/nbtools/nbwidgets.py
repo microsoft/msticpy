@@ -425,6 +425,7 @@ class AlertSelector(QueryParamProvider):
                 "CompromisedEntity",
                 "SystemAlertId",
             ]
+
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
@@ -463,11 +464,19 @@ class AlertSelector(QueryParamProvider):
     @staticmethod
     def _alert_summary(alert_row):
         """Return summarized string of alert properties."""
-        return (
-            f"{alert_row.StartTimeUtc}  {alert_row.AlertName} "
-            + f"({alert_row.CompromisedEntity}) "
-            + f"[id:{alert_row.SystemAlertId}]"
-        )
+        if "TI Risk" in alert_row:
+            return (
+                f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
+                + f" - ({alert_row.CompromisedEntity}) "
+                + f" - [id:{alert_row.SystemAlertId}]"
+                + f" - TI Risk: {alert_row['TI Risk']}"
+            )
+        else:
+            return (
+                f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
+                + f" - ({alert_row.CompromisedEntity}) "
+                + f" - [id:{alert_row.SystemAlertId}]"
+            )
 
     def _update_options(self, change):
         """Filter the alert list by substring."""

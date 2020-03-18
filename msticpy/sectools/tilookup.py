@@ -112,6 +112,22 @@ class TILookup:
         return prim + sec
 
     @property
+    def configured_providers(self) -> List[str]:
+        """
+        Return a list of avaliable providers that have configuration details present.
+
+        Returns
+        -------
+        List[str]
+            List of TI Provider classes.
+
+        """
+        prim_conf = list(self._providers.keys())
+        sec_conf = list(self._secondary_providers.keys())
+
+        return prim_conf + sec_conf
+
+    @property
     def available_providers(self) -> List[str]:
         """
         Return a list of builtin providers.
@@ -135,7 +151,9 @@ class TILookup:
                 providers.append(provider_class.__name__)
         return providers
 
-    def list_available_providers(self, show_query_types=False):  # type: ignore
+    def list_available_providers(
+        self, show_query_types=False, return_list: bool = False
+    ):  # type: ignore
         """
         Print a list of builtin providers with optional usage.
 
@@ -145,11 +163,16 @@ class TILookup:
             Show query types supported by providers, by default False
 
         """
+        providers = []
         for provider_name in self.available_providers:
             provider_class = getattr(tiproviders, provider_name, None)
-            print(provider_name)
+            if return_list is False:
+                print(provider_name)
+            providers.append(provider_name)
             if show_query_types:
                 provider_class.usage()
+        if return_list is True:
+            return providers
 
     def provider_usage(self):
         """Print usage of loaded providers."""

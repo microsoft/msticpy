@@ -70,13 +70,13 @@ class LookupResult:
     def _check_severity(self, attribute, value):
         del attribute
         if isinstance(value, TISeverity):
-            self.severity = value.value
+            self.severity = value.name
         elif isinstance(value, str) and value.lower() in TISeverity.__members__:
-            self.severity = TISeverity[value.lower()].value
+            self.severity = TISeverity[value.lower()].name
         elif isinstance(value, int) and 0 <= value <= 2:
-            self.severity = TISeverity(value).value
+            self.severity = TISeverity(value).name
         else:
-            self.severity = TISeverity.information.value
+            self.severity = TISeverity.information.name
 
     @property
     def summary(self):
