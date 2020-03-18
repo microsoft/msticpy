@@ -535,131 +535,6 @@ details
     </table>
     </div>
 
-
-
-
-Time Series Anomalies Visualization
-===================================
-
-Time series anomalies once discovered, you can visualize with line chart
-type to display outliers. Below we will see 2 types to visualize, using
-built-in KQL ``render`` operator as well as using msticpy function
-``display_timeseries_anomalies()`` via Bokeh library.
-
-Using Built-in KQL render operator
-----------------------------------
-
-Render operator instructs the user agent to render the results of the
-query in a particular way. In this case, we are using timechart which
-will display linegraph.
-
-**KQL Reference Documentation:** -
-`render <https://docs.microsoft.com/en-us/azure/kusto/query/renderoperator?pivots=azuremonitor>`__
-
-.. code:: ipython3
-
-    timechartquery = """
-    let TimeSeriesData = PaloAltoTimeSeriesDemo_CL
-    | extend TimeGenerated = todatetime(EventTime_s), TotalBytesSent = todouble(TotalBytesSent_s) 
-    | summarize TimeGenerated=make_list(TimeGenerated, 10000),TotalBytesSent=make_list(TotalBytesSent, 10000) by deviceVendor_s
-    | project TimeGenerated, TotalBytesSent;
-    TimeSeriesData
-    | extend (baseline,seasonal,trend,residual) = series_decompose(TotalBytesSent)
-    | mv-expand TotalBytesSent to typeof(double), TimeGenerated to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
-    | project TimeGenerated, TotalBytesSent, baseline
-    | render timechart with (title="Palo Alto Outbound Data Transfer Time Series decomposition")
-    """
-    %kql -query timechartquery
-
-
-.. image:: _static/TimeSeriesKQLPlotly.PNG
-
-Using Bokeh Visualization Library
----------------------------------
-
-Documentation for display_timeseries_anomalies
-----------------------------------------------
-
-::
-
-   display_timeseries_anomolies(
-       data: pandas.core.frame.DataFrame,
-       y: str = 'Total',
-       time_column: str = 'TimeGenerated',
-       anomalies_column: str = 'anomalies',
-       source_columns: list = None,
-       period: int = 30,
-       **kwargs,
-   ) -> <function figure at 0x7f0de9ae2598>
-   Docstring:
-    Display time series anomalies visualization.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        DataFrame as a time series data set retreived from KQL time series functions
-        dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
-    y : str, optional
-        Name of column holding numeric values to plot against time series to determine anomolies
-        (the default is 'Total')
-    time_column : str, optional
-        Name of the timestamp column
-        (the default is 'TimeGenerated')
-    anomalies_column : str, optional
-        Name of the column holding binary status(1/0) for anomaly/benign
-        (the default is 'anomolies')
-    source_columns : list, optional
-        List of default source columns to use in tooltips
-        (the default is None)
-    period : int, optional
-        Period of the dataset for hourly-no of days, for daily-no of weeks.
-        This is used to correctly calculate the plot height.
-        (the default is 30)
-
-    Other Parameters
-    ----------------
-    ref_time : datetime, optional
-        Input reference line to display (the default is None)
-    title : str, optional
-        Title to display (the default is None)
-    legend: str, optional
-        Where to position the legend
-        None, left, right or inline (default is None)
-    yaxis : bool, optional
-        Whether to show the yaxis and labels
-    range_tool : bool, optional
-        Show the the range slider tool (default is True)
-    height : int, optional
-        The height of the plot figure
-        (the default is auto-calculated height)
-    width : int, optional
-        The width of the plot figure (the default is 900)
-
-    Returns
-    -------
-    figure
-        The bokeh plot figure.
-
-.. code:: ipython3
-
-    display_timeseries_anomolies(data=timeseriesdemo, y= 'TotalBytesSent')
-
-
-
-.. raw:: html
-
-    
-        <div class="bk-root">
-            <a href="https://bokeh.org" target="_blank" class="bk-logo bk-logo-small bk-logo-notebook"></a>
-            <span id="1001">Loading BokehJS ...</span>
-        </div>
-
-
-
-.. image:: _static/TimeSeriesAnomalieswithRangeTool.png
-
-
-
 Displaying Anomalies Separately
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -732,6 +607,110 @@ other suspicious activity from other datasources.
     </div>
 
 
+Time Series Anomalies Visualization
+===================================
+
+Time series anomalies once discovered, you can visualize with line chart
+type to display outliers. Below we will see 2 types to visualize using msticpy function
+``display_timeseries_anomalies()`` via Bokeh library as well as using
+built-in KQL ``render``.
+
+Using Bokeh Visualization Library
+---------------------------------
+
+Documentation for display_timeseries_anomalies
+----------------------------------------------
+
+::
+
+   display_timeseries_anomolies(
+       data: pandas.core.frame.DataFrame,
+       y: str = 'Total',
+       time_column: str = 'TimeGenerated',
+       anomalies_column: str = 'anomalies',
+       source_columns: list = None,
+       period: int = 30,
+       **kwargs,
+   ) -> <function figure at 0x7f0de9ae2598>
+   Docstring:
+    Display time series anomalies visualization.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        DataFrame as a time series data set retreived from KQL time series functions
+        dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
+    y : str, optional
+        Name of column holding numeric values to plot against time series to determine anomolies
+        (the default is 'Total')
+    time_column : str, optional
+        Name of the timestamp column
+        (the default is 'TimeGenerated')
+    anomalies_column : str, optional
+        Name of the column holding binary status(1/0) for anomaly/benign
+        (the default is 'anomolies')
+    source_columns : list, optional
+        List of default source columns to use in tooltips
+        (the default is None)
+    period : int, optional
+        Period of the dataset for hourly-no of days, for daily-no of weeks.
+        This is used to correctly calculate the plot height.
+        (the default is 30)
+
+    Other Parameters
+    ----------------
+    ref_time : datetime, optional
+        Input reference line to display (the default is None)
+    title : str, optional
+        Title to display (the default is None)
+    legend: str, optional
+        Where to position the legend
+        None, left, right or inline (default is None)
+    yaxis : bool, optional
+        Whether to show the yaxis and labels
+    range_tool : bool, optional
+        Show the the range slider tool (default is True)
+    height : int, optional
+        The height of the plot figure
+        (the default is auto-calculated height)
+    width : int, optional
+        The width of the plot figure (the default is 900)
+    xgrid : bool, optional
+        Whether to show the xaxis grid (default is True)
+    ygrid : bool, optional
+        Whether to show the yaxis grid (default is False)
+    color : list, optional
+        List of colors to use in 3 plots as specified in order 
+        3 plots- line(observed), circle(baseline), circle_x/user specified(anomalies).
+        (the default is ["navy", "green", "firebrick"])
+
+    Returns
+    -------
+    figure
+        The bokeh plot figure.
+
+.. code:: ipython3
+
+    display_timeseries_anomolies(data=timeseriesdemo, y= 'TotalBytesSent')
+
+
+
+.. raw:: html
+
+    
+        <div class="bk-root">
+            <a href="https://bokeh.org" target="_blank" class="bk-logo bk-logo-small bk-logo-notebook"></a>
+            <span id="1001">Loading BokehJS ...</span>
+        </div>
+
+
+
+.. image:: _static/TimeSeriesAnomalieswithRangeTool.png
+
+
+
+
+
 Exporting Plots as PNGs
 =======================
 
@@ -785,3 +764,30 @@ Here is our saved plot: plot.png
 .. image:: _static/TimeSeriesAnomaliesExport.png
 
 
+Using Built-in KQL render operator
+----------------------------------
+
+Render operator instructs the user agent to render the results of the
+query in a particular way. In this case, we are using timechart which
+will display linegraph.
+
+**KQL Reference Documentation:** -
+`render <https://docs.microsoft.com/en-us/azure/kusto/query/renderoperator?pivots=azuremonitor>`__
+
+.. code:: ipython3
+
+    timechartquery = """
+    let TimeSeriesData = PaloAltoTimeSeriesDemo_CL
+    | extend TimeGenerated = todatetime(EventTime_s), TotalBytesSent = todouble(TotalBytesSent_s) 
+    | summarize TimeGenerated=make_list(TimeGenerated, 10000),TotalBytesSent=make_list(TotalBytesSent, 10000) by deviceVendor_s
+    | project TimeGenerated, TotalBytesSent;
+    TimeSeriesData
+    | extend (baseline,seasonal,trend,residual) = series_decompose(TotalBytesSent)
+    | mv-expand TotalBytesSent to typeof(double), TimeGenerated to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
+    | project TimeGenerated, TotalBytesSent, baseline
+    | render timechart with (title="Palo Alto Outbound Data Transfer Time Series decomposition")
+    """
+    %kql -query timechartquery
+
+
+.. image:: _static/TimeSeriesKQLPlotly.PNG

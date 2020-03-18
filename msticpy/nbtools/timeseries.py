@@ -4,6 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
+from typing import Any, Dict
+from itertools import zip_longest
+
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.models import (
@@ -88,6 +91,14 @@ def display_timeseries_anomolies(
         (the default is auto-calculated height)
     width : int, optional
         The width of the plot figure (the default is 900)
+    xgrid : bool, optional
+        Whether to show the xaxis grid (default is True)
+    ygrid : bool, optional
+        Whether to show the yaxis grid (default is False)
+    color : list, optional
+        List of colors to use in 3 plots as specified in order
+        3 plots- line(observed), circle(baseline), circle_x/user specified(anomalies).
+        (the default is ["navy", "green", "firebrick"])
 
     Returns
     -------
@@ -105,20 +116,16 @@ def display_timeseries_anomolies(
     time_column = kwargs.get("x", time_column)
     show_range: bool = kwargs.pop("range_tool", True)
     color: list = kwargs.get("color", ["navy", "green", "firebrick"])
+    color = [
+        col1 or col2
+        for col1, col2 in zip_longest(color[:3], ["navy", "green", "firebrick"])
+    ]
     legend_pos: str = kwargs.pop("legend", "top_left")
     xgrid: bool = kwargs.pop("xgrid", False)
     ygrid: bool = kwargs.pop("ygrid", False)
     kind: str = kwargs.pop("kind", "circle_x")
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
-
-    # Manually append or set default color scheme if user provides one or two colors
-    if len(color) == 1:
-        color.extend(("green", "firebrick"))
-    elif len(color) == 2:
-        color.append("firebrick")
-    else:
-        color = ["navy", "green", "firebrick"]
 
     source = ColumnDataSource(data)
 
@@ -190,47 +197,26 @@ def display_timeseries_anomolies(
         legend_label="baseline",
     )
 
+    # create default plot args
+    arg_dict: Dict[str, Any] = dict(
+        x=time_column,
+        y=y,
+        size=12,
+        color=color[2],
+        fill_alpha=0.2,
+        legend_label="anomalies",
+        source=ColumnDataSource(data_anomaly),
+    )
+
     # setting the visualization types for anomalies based on user input to kind
     if kind == "diamond_cross":
-        plot.diamond_cross(
-            time_column,
-            y,
-            size=12,
-            color=color[2],
-            fill_alpha=0.2,
-            source=ColumnDataSource(data_anomaly),
-            legend_label="anomalies",
-        )
+        plot.diamond_cross(**arg_dict)
     elif kind == "cross":
-        plot.cross(
-            time_column,
-            y,
-            size=12,
-            color=color[2],
-            fill_alpha=0.2,
-            source=ColumnDataSource(data_anomaly),
-            legend_label="anomalies",
-        )
+        plot.cross(**arg_dict)
     elif kind == "diamond":
-        plot.diamond(
-            time_column,
-            y,
-            size=12,
-            color=color[2],
-            fill_alpha=0.2,
-            source=ColumnDataSource(data_anomaly),
-            legend_label="anomalies",
-        )
+        plot.diamond(**arg_dict)
     else:
-        plot.circle_x(
-            time_column,
-            y,
-            size=12,
-            color=color[2],
-            fill_alpha=0.2,
-            source=ColumnDataSource(data_anomaly),
-            legend_label="anomalies",
-        )
+        plot.circle_x(**arg_dict)
 
     # interactive legend to hide single/multiple plots if selected
     plot.legend.location = legend_pos
