@@ -72,6 +72,9 @@ class Entity(ABC):
             self.__dict__.update(kwargs)
 
         self.Type = type(self).__name__.lower()
+        # If we have an unknown entity see if we a type passed in
+        if self.Type == "unknownentity" and "Type" in kwargs:
+            self.Type = kwargs["Type"]
         self._entity_schema["Type"] = None
 
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
