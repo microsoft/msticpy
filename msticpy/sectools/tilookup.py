@@ -153,7 +153,7 @@ class TILookup:
 
     def list_available_providers(
         self, show_query_types=False, return_list: bool = False
-    ):  # type: ignore
+    ) -> Optional[List[str]]:  # type: ignore
         """
         Print a list of builtin providers with optional usage.
 
@@ -161,6 +161,13 @@ class TILookup:
         ----------
         show_query_types : bool, optional
             Show query types supported by providers, by default False
+        return_list : bool, optional
+            Return list of providers as well as printing to stdout.
+
+        Returns
+        -------
+        Optional[List[str]]
+            A list of provider names (if `return_list=True`)
 
         """
         providers = []
@@ -173,6 +180,7 @@ class TILookup:
                 provider_class.usage()
         if return_list is True:
             return providers
+        return None
 
     def provider_usage(self):
         """Print usage of loaded providers."""

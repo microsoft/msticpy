@@ -9,18 +9,14 @@ from itertools import zip_longest
 
 import pandas as pd
 from bokeh.io import output_notebook, show
-from bokeh.models import (
-    ColumnDataSource,
-    NumeralTickFormatter,
-    HoverTool,
-)
+from bokeh.models import ColumnDataSource, NumeralTickFormatter, HoverTool
 
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
-from .utility import export, check_kwargs
+from ..common.utility import export, check_kwargs
 from .timeline import (
     _create_tool_tips,
     _calc_auto_plot_height,

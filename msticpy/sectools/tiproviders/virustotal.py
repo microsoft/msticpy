@@ -13,7 +13,7 @@ requests per minute for the account type that you have.
 
 """
 import datetime as dt
-from typing import Any, Tuple
+from typing import Any, Tuple, Dict
 
 from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
@@ -83,7 +83,6 @@ class VirusTotal(HttpProvider):
             Object with match details
 
         """
-
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, TISeverity.information, "Not found."
 
@@ -104,48 +103,22 @@ class VirusTotal(HttpProvider):
 
         else:
             if "detected_urls" in response.raw_result:
-                time_scope = dt.datetime.now() - dt.timedelta(days=30)
-                result_dict["detected_urls"] = [
-                    item["url"]
-                    for item in response.raw_result["detected_urls"]
-                    if "url" in item
-                    and dt.datetime.strptime(item["scan_date"], "%Y-%m-%d %H:%M:%S")
-                    > time_scope
-                ]
-                # positives are listed per detected_url so we need to
-                # pull those our and sum them.
-                positives = sum(
-                    [
-                        item["positives"]
-                        for item in response.raw_result["detected_urls"]
-                        if "positives" in item
-                        and dt.datetime.strptime(item["scan_date"], "%Y-%m-%d %H:%M:%S")
-                        > time_scope
-                    ]
+                self._extract_url_results(
+                    response=response,
+                    result_dict=result_dict,
+                    hit_type="detected_urls",
+                    item_type="url",
+                    date_name="scan_date",
                 )
-                result_dict["positives"] = positives
 
             if "detected_downloaded_samples" in response.raw_result:
-                time_scope = dt.datetime.now() - dt.timedelta(days=30)
-                result_dict["detected_downloaded_samples"] = [
-                    item["sha256"]
-                    for item in response.raw_result["detected_downloaded_samples"]
-                    if "sha256" in item
-                    and dt.datetime.strptime(item["date"], "%Y-%m-%d %H:%M:%S")
-                    > time_scope
-                ]
-                # positives are listed per detected_url so we need to
-                # pull those our and sum them.
-                positives = sum(
-                    [
-                        item["positives"]
-                        for item in response.raw_result["detected_downloaded_samples"]
-                        if "positives" in item
-                        and dt.datetime.strptime(item["date"], "%Y-%m-%d %H:%M:%S")
-                        > time_scope
-                    ]
+                self._extract_url_results(
+                    response=response,
+                    result_dict=result_dict,
+                    hit_type="detected_downloaded_samples",
+                    item_type="sha256",
+                    date_name="date",
                 )
-                result_dict["positives"] += positives
 
         if "positives" in result_dict:
             if result_dict["positives"] > 1:
@@ -155,8 +128,38 @@ class VirusTotal(HttpProvider):
             else:
                 severity = TISeverity.information
         else:
-            severity = None
+            severity = TISeverity.unknown
 
         return True, severity, result_dict
 
     # pylint: enable=duplicate-code
+
+    @staticmethod
+    def _extract_url_results(
+        response: LookupResult,
+        result_dict: Dict[str, Any],
+        hit_type: str,
+        item_type: str,
+        date_name: str,
+    ):
+        if not isinstance(response.raw_result, dict):
+            return
+        time_scope = dt.datetime.now() - dt.timedelta(days=30)
+        result_dict[hit_type] = [
+            item[item_type]
+            for item in response.raw_result[hit_type]
+            if item_type in item
+            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
+        ]
+        # positives are listed per detected_url so we need to
+        # pull those our and sum them.
+        positives = sum(
+            [
+                item["positives"]
+                for item in response.raw_result[hit_type]
+                if "positives" in item
+                and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S")
+                > time_scope
+            ]
+        )
+        result_dict["positives"] = positives

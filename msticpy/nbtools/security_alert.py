@@ -129,7 +129,7 @@ class SecurityAlert(SecurityBase):
                     if entity_id in self._src_entities:
                         entity[prop_name] = self._src_entities[entity_id]
 
-    def _extract_entities(self, src_row):
+    def _extract_entities(self, src_row):  # noqa: MC0001
         input_entities = []
 
         if isinstance(src_row.ExtendedProperties, str):

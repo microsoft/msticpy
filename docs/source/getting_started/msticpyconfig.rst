@@ -389,5 +389,5 @@ See also
 :doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
 
 :py:mod:`wsconfig<msticpy.common.wsconfig>`
-:py:mod:`provider_settings<msticpy.nbtools.provider_settings>`
-:py:mod:`wsconfig<msticpy.common.wsconfig>`
+:py:mod:`provider_settings<msticpy.common.provider_settings>`
+:py:mod:`wsconfig<msticpy.common.pkg_config>`
