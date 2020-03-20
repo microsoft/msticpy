@@ -405,7 +405,12 @@ class SecurityBase(QueryParamProvider):
             The entities matching `entity_type`.
 
         """
-        return [p for p in self.entities if p["Type"] == entity_type]
+        class_type = Entity.ENTITY_NAME_MAP.get(entity_type, None)
+        return [
+            p
+            for p in self.entities
+            if p["Type"] == entity_type or class_type and isinstance(p, class_type)
+        ]
 
     def get_all_entities(self) -> pd.DataFrame:
         """
