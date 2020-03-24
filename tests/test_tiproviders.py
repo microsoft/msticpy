@@ -26,6 +26,7 @@ from ..msticpy.sectools.tiproviders import (
     get_provider_settings,
     preprocess_observable,
 )
+from ..msticpy.sectools.tiproviders.ti_provider_base import TISeverity
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
@@ -459,6 +460,22 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(lu_result.status, 2)
         lu_result = provider._check_ioc_type(ioc="123456", ioc_type="file_hash")
         self.assertEqual(lu_result.status, 2)
+
+    def test_tiseverity(self):
+        sev_inf = TISeverity.parse("information")
+        self.assertEqual(sev_inf, TISeverity.information)
+        sev_warn = TISeverity.parse(1)
+        self.assertEqual(sev_warn, TISeverity.warning)
+        sev_warn2 = TISeverity.parse(sev_warn)
+        self.assertEqual(sev_warn2, TISeverity.warning)
+
+        sev_unknown = TISeverity.unknown
+        sev_high = TISeverity.high
+        self.assertTrue(sev_inf == TISeverity.information)
+        self.assertTrue(sev_inf <= "information")
+        self.assertTrue(sev_inf < 1)
+        self.assertTrue(sev_warn > TISeverity.information)
+        self.assertFalse(sev_unknown > "high")
 
     # Used for local testing only
     # def test_interactive(self):

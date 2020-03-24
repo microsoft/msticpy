@@ -64,6 +64,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     _LICENSE_TXT: Optional[str] = None
     _LICENSE_HTML: Optional[str] = None
+    _license_shown: bool = False
 
     def __init__(self):
         """Initialize instance of GeoIpLookup class."""
@@ -125,10 +126,13 @@ class GeoIpLookup(metaclass=ABCMeta):
         return data.merge(df_out, how="left", left_on=column, right_on="IpAddress")
 
     def _print_license(self):
+        if self.__class__._license_shown:
+            return
         if self._LICENSE_HTML and get_ipython():
             display(HTML(self._LICENSE_HTML))
         elif self._LICENSE_TXT:
             print(self._LICENSE_TXT)
+        self.__class__._license_shown = True
 
 
 @export

@@ -14,13 +14,12 @@ requests per minute for the account type that you have.
 """
 import abc
 from abc import ABC
-from enum import Enum
 import math  # noqa
 import pprint
 import re
 from collections import Counter, namedtuple
-
-from functools import singledispatch, lru_cache
+from enum import Enum
+from functools import lru_cache, singledispatch, total_ordering
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
@@ -41,6 +40,7 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 
 
 # pylint: disable=too-few-public-methods
+@total_ordering
 class TISeverity(Enum):
     """Threat intelligence report severity."""
 
@@ -48,6 +48,69 @@ class TISeverity(Enum):
     information = 0
     warning = 1
     high = 2
+
+    @classmethod
+    def parse(cls, value) -> "TISeverity":
+        """
+        Parse string or numeric value to TISeverity.
+
+        Parameters
+        ----------
+        value : Any
+            TISeverity, str or int
+
+        Returns
+        -------
+        TISeverity
+            TISeverity instance.
+
+        """
+        if isinstance(value, TISeverity):
+            return value
+        if isinstance(value, str) and value.lower() in cls.__members__:
+            return cls[value.lower()]
+        if isinstance(value, int):
+            if value in [v.value for v in cls.__members__.values()]:
+                return cls(value)
+        return TISeverity.unknown
+
+    def __eq__(self, other) -> bool:
+        """
+        Return True if severities are equal.
+
+        Parameters
+        ----------
+        other : Any
+            TISeverity to compare to.
+            Can be a numeric value or name of TISeverity value.
+
+        Returns
+        -------
+        bool
+            If severities are equal
+
+        """
+        other_sev = TISeverity.parse(other)
+        return self.value == other_sev.value
+
+    def __gt__(self, other) -> bool:
+        """
+        Return True self is greater than other.
+
+        Parameters
+        ----------
+        other : Any
+            TISeverity to compare to.
+            Can be a numeric value or name of TISeverity value.
+
+        Returns
+        -------
+        bool
+            If severities are equal
+
+        """
+        other_sev = TISeverity.parse(other)
+        return self.value > other_sev.value
 
 
 # pylint: disable=too-many-instance-attributes
@@ -71,12 +134,8 @@ class LookupResult:
         del attribute
         if isinstance(value, TISeverity):
             self.severity = value.name
-        elif isinstance(value, str) and value.lower() in TISeverity.__members__:
-            self.severity = TISeverity[value.lower()].name
-        elif isinstance(value, int) and 0 <= value <= 2:
-            self.severity = TISeverity(value).name
-        else:
-            self.severity = TISeverity.information.name
+            return
+        self.severity = TISeverity.parse(value).name
 
     @property
     def summary(self):
