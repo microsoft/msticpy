@@ -50,17 +50,19 @@ def display_timeseries_anomolies(
     Parameters
     ----------
     data : pd.DataFrame
-        DataFrame as a time series data set retreived from KQL time series functions
-        dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
+        DataFrame as a time series data set retreived from KQL time series
+        functions. Dataframe must have columns specified in `y`, `time_column`
+        and `anomalies_column` parameters
     y : str, optional
-        Name of column holding numeric values to plot against time series to determine anomolies
+        Name of column holding numeric values to plot against time series to
+        determine anomolies
         (the default is 'Total')
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
     anomalies_column : str, optional
         Name of the column holding binary status(1/0) for anomaly/benign
-        (the default is 'anomolies')
+        (the default is 'anomalies')
     source_columns : list, optional
         List of default source columns to use in tooltips
         (the default is None)

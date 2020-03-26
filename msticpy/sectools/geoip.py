@@ -64,7 +64,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     _LICENSE_TXT: Optional[str] = None
     _LICENSE_HTML: Optional[str] = None
-    license_shown: bool = False
+    _license_shown: bool = False
 
     def __init__(self):
         """Initialize instance of GeoIpLookup class."""

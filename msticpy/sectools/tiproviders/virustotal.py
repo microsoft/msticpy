@@ -58,7 +58,7 @@ class VirusTotal(HttpProvider):
         ),
     }
 
-    # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code, too-many-branches
     # aliases
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
@@ -132,7 +132,7 @@ class VirusTotal(HttpProvider):
 
         return True, severity, result_dict
 
-    # pylint: enable=duplicate-code
+    # pylint: enable=duplicate-code, too-many-branches
 
     @staticmethod
     def _extract_url_results(
