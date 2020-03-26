@@ -42,7 +42,7 @@ def display_timeseries_anomolies(
     anomalies_column: str = "anomalies",
     source_columns: list = None,
     period: int = 30,
-    **kwargs
+    **kwargs,
 ) -> figure:
     """
     Display time series anomalies visualization.
