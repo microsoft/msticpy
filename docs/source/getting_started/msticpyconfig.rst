@@ -37,10 +37,10 @@ OtherProviders
 This section is similar to the TIProviders section, allowing you
 specify configuration options for other data providers.
 
-KeyVault
+Key Vault
 ~~~~~~~~
-This section contains Azure KeyVault settings. This is only used if you
-choose to store secrets (e.g. API keys) in KeyVault.
+This section contains Azure Key Vault settings. This is only used if you
+choose to store secrets (e.g. API keys) in Key Vault.
 
 
 Specifying secrets as Environment Variables
@@ -54,9 +54,9 @@ supports storing values as simple strings or as references to named
 environment variables. You can see examples of both in the sample
 file below.
 
-Specifying secrets as KeyVault secrets
---------------------------------------
-msticpy can read secret values from KeyVault for use with TI and
+Specifying secrets as Key Vault secrets
+---------------------------------------
+msticpy can read secret values from Key Vault for use with TI and
 other providers. To use this you need to specify settings for your
 keyvault.
 
@@ -74,7 +74,7 @@ keyvault.
 
 Under the top level ``KeyVault`` section the following entries
 are accepted. Some of these are only required if you plan to
-use msticpy to create a new KeyVault vault.
+use msticpy to create a new Key Vault vault.
 
 Required Settings
 ~~~~~~~~~~~~~~~~~
@@ -94,13 +94,13 @@ For most users ``Authority`` is "global" (default). Other values are:
 - **de**: German cloud
 - **chi**: China cloud
 
-Required to Create a KeyVault
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Required to Create a Key Vault
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. list-table::
    :widths: 15, 30
 
    * - SubscriptionId
-     - the Azure subscription holding the KeyVault
+     - the Azure subscription holding the Key Vault
    * - ResourceGroup
      - the Azure resource group in which to create the vault
    * - AzureRegion
@@ -113,7 +113,7 @@ Optional Settings
 
    * - UseKeyring
      - if True (default) uses the Python keyring package
-       to securely cache KeyVault secrets in your client session.
+       to securely cache Key Vault secrets in your client session.
    * - VaultName
      - the name of the vault to use (note this can be
        overridden in the individual secret specifications)
@@ -125,13 +125,13 @@ Optional Settings
        default is "interactive".
 
 .. note:: The ``AuthnType`` does not affect the authentication used by
-   the KeyVault **Management** client (the creation and enumeration
+   the Key Vault **Management** client (the creation and enumeration
    of vaults). This always uses device code authentication.
 
-Specifying KeyVault Secrets in Provider Settings
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying Key Vault Secrets in Provider Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways to specify the KeyVault vault and secret name
+There are three ways to specify the Key Vault *vault* and *secret* names
 to use for a given setting.
 
 .. code:: yaml
@@ -143,7 +143,7 @@ to use for a given setting.
           AuthKey:
             KeyVault:
 
-Adding an empty subkey named "KeyVault" will cause msticpy to use
+Adding an empty subkey named ``KeyVault`` will cause msticpy to use
 a secret name build from the path of the setting. This is the default
 usage. In this example,
 the secret name will be "TIProviders-OpenPageRank-Args-AuthKey".
@@ -175,10 +175,10 @@ The final example specifies both a vault name and a secret name.
 The ``VaultName`` setting in the ``KeyVault`` section is ignored
 for this setting.
 
-Populating KeyVault from an existing msticpyconfig.yaml
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Populating Key Vault secrets from an existing msticpyconfig.yaml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The easiest way to move your secrets to KeyVault is to use the
+The easiest way to move your secrets to Key Vault is to use the
 ``config2ky.py`` tool available in the msticpy GitHub repo.
 You can find it in the tools folder.
 
@@ -198,7 +198,7 @@ configuration section in the file, supplying the values described
 earlier. If you already have a vault that you want to use, put
 the name of the vault in the ``VaultName`` setting and run
 ``config2kv.py`` with the ``--exists`` parameter. This will bypass
-the KeyVault Management client section and the extra authentication
+the Key Vault Management client section and the extra authentication
 step that this requires. If you do not have a vault or wish to
 create a new one, omit the ``--exists`` parameter and you will
 be prompted to create one.
@@ -217,7 +217,7 @@ You can then delete or securely store your old configuration file
 and replace it with the one output by ``config2kv``.
 
 .. tip:: you can run ``config2ky`` with the ``--show`` parameter to
-   perform a rehearsal. This will show you the KeyVault secrets
+   perform a rehearsal. This will show you the Key Vault secrets
    that will be created and show the text of the msticpyconfig.yaml
    file that would have been created.
 
@@ -237,10 +237,10 @@ information.
    ``Keyring: false`` to you configuration settings.
 
 The advantage of using *keyring* is that you do not need to re-authenticate
-to KeyVault for each notebook that you use in each session. If you
+to Key Vault for each notebook that you use in each session. If you
 have ``UseKeyring: true`` in your ``msticpyconfig.yaml`` file, the
-first time that you access a KeyVault secret the secret value is
-stored as a keyring password with the same name as the KeyVault secret.
+first time that you access a Key Vault secret the secret value is
+stored as a keyring password with the same name as the Key Vault secret.
 
 Unfortunately *keyring* provides no way to list or delete stored
 secrets. If you need to remove the locally-stored secrets use the platform
@@ -248,13 +248,13 @@ utility for the appropriate backend. For example, on Windows, ``cmdkey``
 lets you list and manipulate local stored credentials.
 
 .. warning:: *keyring* secrets are not automatically synchronized
-   with the KeyVault secret values. If you change the value of a
-   secret in KeyVault you must delete the keyring secret so that
-   the new value will be re-read from KeyVault.
+   with the Key Vault secret values. If you change the value of a
+   secret in Key Vault you must delete the keyring secret so that
+   the new value will be re-read from Key Vault.
 
 
-Manually managing your KeyVault secrets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Manually managing your Key Vault secrets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the Azure portal to create and manage your secrets. If you
 prefer to do this, simply enter the name of the secret in the
