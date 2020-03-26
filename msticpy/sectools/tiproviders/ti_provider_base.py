@@ -74,6 +74,7 @@ class TISeverity(Enum):
                 return cls(value)
         return TISeverity.unknown
 
+    # pylint: disable=comparison-with-callable
     def __eq__(self, other) -> bool:
         """
         Return True if severities are equal.
@@ -113,6 +114,7 @@ class TISeverity(Enum):
         return self.value > other_sev.value
 
 
+# pylint: enable=comparison-with-callable
 # pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True)
 class LookupResult:

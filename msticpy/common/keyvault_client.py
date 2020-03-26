@@ -41,6 +41,7 @@ __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
 
 
+# pylint: disable=too-many-lines
 class MPKeyVaultMissingSecretException(MsticpyException):
     """Missing secret exception."""
 
@@ -581,7 +582,9 @@ class KeyringAuthClient(AuthClient):
 #         self.secret_name = secret_name
 #         self._get_creds = self._get_keyvault_creds
 #         self._cache_creds = self._cache_creds_keyvault
-#         self.keyvault_client = BHKeyVaultClient(tenant_id=tenant_id, vault_uri=client_url)
+#         self.keyvault_client = BHKeyVaultClient(
+#             tenant_id=tenant_id, vault_uri=client_url
+#         )
 #         self.config_data: Any = None
 #         super().__init__(tenant_id, client_id, client_url, name=name, debug=debug)
 
