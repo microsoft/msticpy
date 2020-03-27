@@ -9,7 +9,7 @@ import pandas as pd
 
 from pytest import raises
 
-from ..msticpy.nbtools.utility import MsticpyException
+from ..msticpy.common.utility import MsticpyException
 from ..msticpy.nbtools.entityschema import Host
 from ..msticpy.sectools import cmd_line as cl
 

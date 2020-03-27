@@ -98,6 +98,58 @@ def test_reqs_match_setup():
     assert set(setup_reqs.values()) == set(reqtxt_ver.values())
 
 
+def test_conda_reqs():
+    main_reqs_file = file_path = Path(PKG_ROOT) / REQS_FILE
+    conda_reqs_file = file_path = Path(PKG_ROOT) / "conda/conda-reqs.txt"
+    conda_reqs_pip_file = file_path = Path(PKG_ROOT) / "conda/conda-reqs-pip.txt"
+
+    main_reqs_dict = {}
+    with open(str(main_reqs_file), "r") as f:
+        reqs = f.readlines()
+        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+            main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
+
+    conda_reqs_dict = {}
+    with open(str(conda_reqs_file), "r") as f:
+        reqs = f.readlines()
+        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+            conda_reqs_dict[item[0].strip()] = (
+                item[1].strip() if len(item) > 1 else None
+            )
+
+    conda_reqs_pip_dict = {}
+    with open(str(conda_reqs_pip_file), "r") as f:
+        reqs = f.readlines()
+        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+            conda_reqs_pip_dict[item[0].strip()] = (
+                item[1].strip() if len(item) > 1 else None
+            )
+
+    for key, val in main_reqs_dict.items():
+        print(f"Checking {key} in conda-reqs.txt", bool(key in conda_reqs_dict))
+        print(f"Checking {key} in conda-reqs-pip.txt", bool(key in conda_reqs_pip_dict))
+        assert key in conda_reqs_dict or key in conda_reqs_pip_dict
+        if key in conda_reqs_dict:
+            if conda_reqs_dict[key]:
+                print(
+                    f"Checking version {val} in conda-reqs.txt matches {conda_reqs_dict[key]}"
+                )
+                assert val == conda_reqs_dict[key]
+            conda_reqs_dict.pop(key)
+        if key in conda_reqs_pip_dict:
+            if conda_reqs_pip_dict[key]:
+                print(
+                    f"Checking version {val} in conda-reqs-pip.txt matches {conda_reqs_pip_dict[key]}"
+                )
+                assert val == conda_reqs_pip_dict[key]
+            conda_reqs_pip_dict.pop(key)
+
+    print(f"Checking version no extra items in conda-reqs-pip.txt", conda_reqs_dict)
+    assert not conda_reqs_dict
+    print(f"Checking version no extra items in conda-reqs.txt", conda_reqs_pip_dict)
+    assert not conda_reqs_pip_dict
+
+
 def _get_setup_module():
     file_path = Path(PKG_ROOT) / "setup.py"
 

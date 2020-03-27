@@ -44,7 +44,6 @@ _PKG_RENAME_NAME = {
     "sklearn": "scikit-learn",
     "yaml": "pyyaml",
     "bs4": "beautifulsoup4",
-    "azure.common": "azure-common",
 }
 
 
@@ -70,7 +69,7 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
     # Rename Azure packages replace "." with "-"
     az_mgmt_reqs = {}
     for pkg in setup_reqs:
-        if pkg.startswith("azure-mgmt"):
+        if pkg.startswith("azure-"):
             az_mgmt_reqs[pkg.replace("-", ".")] = pkg
 
     for key, pkg in az_mgmt_reqs.items():

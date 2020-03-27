@@ -12,7 +12,7 @@ from typing import Dict
 from deprecated.sphinx import deprecated
 
 from .query_defns import DataFamily, DataEnvironment
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

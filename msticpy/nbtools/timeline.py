@@ -28,7 +28,7 @@ from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
-from .utility import export, check_kwargs
+from ..common.utility import export, check_kwargs
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

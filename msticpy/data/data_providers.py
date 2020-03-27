@@ -15,8 +15,8 @@ from .drivers import DriverBase, KqlDriver, SecurityGraphDriver, MDATPDriver
 from .query_store import QueryStore
 from .param_extractor import extract_query_params
 from ..nbtools.query_defns import DataEnvironment
-from ..nbtools.utility import export
-from ..nbtools import pkg_config as config
+from ..common.utility import export
+from ..common import pkg_config as config
 from .._version import VERSION
 
 __version__ = VERSION

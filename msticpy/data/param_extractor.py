@@ -7,7 +7,7 @@
 from typing import List, Dict, Tuple, Any, Iterable
 
 from .query_store import QuerySource
-from ..nbtools.utility import export
+from ..common.utility import export
 from ..nbtools.query_defns import QueryParamProvider
 from .._version import VERSION
 

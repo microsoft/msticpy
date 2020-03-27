@@ -30,7 +30,7 @@ import requests
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
-from ..nbtools.utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

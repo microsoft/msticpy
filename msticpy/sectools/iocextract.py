@@ -32,7 +32,7 @@ from urllib.parse import unquote
 import pandas as pd
 
 from .._version import VERSION
-from ..nbtools.utility import export
+from ..common.utility import export
 from .domain_utils import DomainValidator
 
 __version__ = VERSION

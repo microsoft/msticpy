@@ -13,10 +13,10 @@ from . import entityschema as entities
 from .security_alert import SecurityAlert
 from .security_event import SecurityEvent
 from .security_alert_graph import *
-from . import utility as utils
+from ..common import utility as utils
 
 from .observationlist import Observations
-from .wsconfig import WorkspaceConfig
+from ..common.wsconfig import WorkspaceConfig
 from . import nbdisplay
 
 # pylint: enable=W0401

@@ -10,7 +10,7 @@ import pandas as pd
 from IPython import get_ipython
 
 from .driver_base import DriverBase
-from ...nbtools.utility import export, MsticpyException
+from ...common.utility import export, MsticpyException
 from ..._version import VERSION
 
 __version__ = VERSION

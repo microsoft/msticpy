@@ -52,21 +52,6 @@ msticpy.nbtools.timeline module
     :undoc-members:
     :show-inheritance:
 
-msticpy.nbtools.utility module
-------------------------------
-
-.. automodule:: msticpy.nbtools.utility
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-msticpy.nbtools.wsconfig module
--------------------------------
-
-.. automodule:: msticpy.nbtools.wsconfig
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 
 Module contents

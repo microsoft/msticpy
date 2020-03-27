@@ -101,6 +101,7 @@ will filter and display only those.
 
     MultiDataSource.get_timeseries_anomalies
     MultiDataSource.get_timeseries_data
+    MultiDataSource.get_timeseries_decompose
     MultiDataSource.plot_timeseries_datawithbaseline
     MultiDataSource.plot_timeseries_scoreanomolies
 
@@ -114,41 +115,42 @@ Query, data source, parameters and parameterized raw KQL query
 
 ::
 
-   Query:  get_timeseries_data
-   Data source:  LogAnalytics
-   Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
+    Query:  get_timeseries_data
+    Data source:  LogAnalytics
+    Retrieves TimeSeriesData prepared to use with built-in KQL time series functions
 
-   Parameters
-   ----------
-   aggregatecolumn: str (optional)
-       field to agregate from source dataset
-       (default value is: Total)
-   aggregatefunction: str (optional)
-       Aggregation functions to use - count(), sum(), avg() etc
-       (default value is: count())
-   end: datetime
-       Query end time
-   groupbycolumn: str (optional)
-       Group by field to aggregate results
-       (default value is: Type)
-   scorethreshold: str (optional)
-       Score threshold for alerting
-       (default value is: 3)
-   start: datetime
-       Query start time
-   table: str
-       Table name
-   timeframe: str (optional)
-       Aggregation TimeFrame
-       (default value is: 1h)
-   timestampcolumn: str (optional)
-       Timestamp field to use from source dataset
-       (default value is: TimeGenerated)
-   where_clause: str (optional)
-       Optional additional filter clauses
-   Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
-
+    Parameters
+    ----------
+    add_query_items: str (optional)
+        Additional query clauses
+    aggregatecolumn: str (optional)
+        field to agregate from source dataset
+        (default value is: Total)
+    aggregatefunction: str (optional)
+        Aggregation functions to use - count(), sum(), avg() etc
+        (default value is: count())
+    end: datetime
+        Query end time
+    groupbycolumn: str (optional)
+        Group by field to aggregate results
+        (default value is: Type)
+    scorethreshold: str (optional)
+        Score threshold for alerting
+        (default value is: 3)
+    start: datetime
+        Query start time
+    table: str
+        Table name
+    timeframe: str (optional)
+        Aggregation TimeFrame
+        (default value is: 1h)
+    timestampcolumn: str (optional)
+        Timestamp field to use from source dataset
+        (default value is: TimeGenerated)
+    where_clause: str (optional)
+        Optional additional filter clauses
+    Query:
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} {add_query_items}
 
 .. code:: ipython3
 
@@ -156,7 +158,18 @@ Query, data source, parameters and parameterized raw KQL query
     start='2020-02-09 00:00:00.000000'
     end='2020-03-10 00:00:00.000000'
     #Execute the query by passing required and optional parameters
-    time_series_data = qry_prov.MultiDataSource.get_timeseries_data(start=start, end =end, table='CommonSecurityLog',timestampcolumn = 'TimeGenerated', aggregatecolumn='SentBytes',groupbycolumn='DeviceVendor',aggregatefunction='sum(SentBytes)', where_clause='|where DeviceVendor=="Palo Alto Networks"')
+    time_series_data = qry_prov.MultiDataSource.get_timeseries_data(
+    start=start,
+    end=end,
+    table="CommonSecurityLog",
+    timestampcolumn="TimeGenerated",
+    aggregatecolumn="SentBytes",
+    groupbycolumn="DeviceVendor",
+    aggregatefunction="sum(SentBytes)",
+    where_clause='|where DeviceVendor=="Palo Alto Networks"',
+    add_query_items='|mv-expand TimeGenerated to typeof(datetime), SentBytes to typeof(long)',
+    )
+    #display the output
     time_series_data
 
 
@@ -196,104 +209,6 @@ Query, data source, parameters and parameterized raw KQL query
     </table>
     </div>
 
-
-Read From External Sources
---------------------------
-
-If you have time series data in other locations, you can read it via
-pandas or respective data store API where data is stored. The pandas I/O
-API is a set of top level reader functions accessed like
-pandas.read_csv() that generally return a pandas object.
-
-Read More at Pandas Documentation: - `I/O Tools (Text
-,CSV,HDF5..) <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__
-
-Example of using Pandas ``read_csv`` to read local csv file containing
-TimeSeries demo dataset. Additional columns in the csv such as
-``baseline``, ``score`` and ``anoamlies`` are generated using built-in
-KQL Time series functions such as ``series_decompose_anomalies()``.
-
-.. code:: ipython3
-
-    timeseriesdemo = pd.read_csv('TimeSeriesDemo.csv',
-                              parse_dates=["TimeGenerated"], 
-                              infer_datetime_format=True)
-    timeseriesdemo.head()
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeGenerated</th>
-          <th>TotalBytesSent</th>
-          <th>baseline</th>
-          <th>score</th>
-          <th>anomalies</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>2019-05-01 06:00:00</td>
-          <td>873713587</td>
-          <td>782728212</td>
-          <td>0.224776</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2019-05-01 07:00:00</td>
-          <td>882187669</td>
-          <td>838492449</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2019-05-01 08:00:00</td>
-          <td>852506841</td>
-          <td>816772273</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>2019-05-01 09:00:00</td>
-          <td>898793650</td>
-          <td>878871426</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>2019-05-01 10:00:00</td>
-          <td>891598085</td>
-          <td>862639955</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
 
 
 
@@ -430,7 +345,105 @@ the similar details
     </table>
     </div>
 
+Read From External Sources
+--------------------------
 
+If you have time series data in other locations, you can read it via
+pandas or respective data store API where data is stored. The pandas I/O
+API is a set of top level reader functions accessed like
+pandas.read_csv() that generally return a pandas object.
+
+Read More at Pandas Documentation: - `I/O Tools (Text
+,CSV,HDF5..) <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__
+
+Example of using Pandas ``read_csv`` to read local csv file containing
+TimeSeries demo dataset. Additional columns in the csv such as
+``baseline``, ``score`` and ``anoamlies`` are generated using built-in
+KQL Time series functions such as ``series_decompose_anomalies()``.
+
+.. code:: ipython3
+
+    timeseriesdemo = pd.read_csv('TimeSeriesDemo.csv',
+                              parse_dates=["TimeGenerated"], 
+                              infer_datetime_format=True)
+    timeseriesdemo.head()
+
+
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>TimeGenerated</th>
+          <th>TotalBytesSent</th>
+          <th>baseline</th>
+          <th>score</th>
+          <th>anomalies</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>2019-05-01 06:00:00</td>
+          <td>873713587</td>
+          <td>782728212</td>
+          <td>0.224776</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>2019-05-01 07:00:00</td>
+          <td>882187669</td>
+          <td>838492449</td>
+          <td>0.000000</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>2019-05-01 08:00:00</td>
+          <td>852506841</td>
+          <td>816772273</td>
+          <td>0.000000</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>2019-05-01 09:00:00</td>
+          <td>898793650</td>
+          <td>878871426</td>
+          <td>0.000000</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>2019-05-01 10:00:00</td>
+          <td>891598085</td>
+          <td>862639955</td>
+          <td>0.000000</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    
 Displaying Time Series anomaly alerts
 -------------------------------------
 

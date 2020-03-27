@@ -12,8 +12,8 @@ import warnings
 
 import yaml
 
-from ..msticpy.nbtools import pkg_config
-from ..msticpy.nbtools.wsconfig import WorkspaceConfig
+from ..msticpy.common import pkg_config
+from ..msticpy.common.wsconfig import WorkspaceConfig
 from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 
 _test_data_folders = [

@@ -14,7 +14,7 @@ from deprecated.sphinx import deprecated
 from .query_schema import DataSchema
 from .query_builtin_queries import query_definitions
 from .query_defns import KqlQuery, QueryParamProvider, DataFamily, DataEnvironment
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

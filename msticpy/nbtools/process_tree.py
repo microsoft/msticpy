@@ -39,7 +39,7 @@ from ..sectools.process_tree_utils import (
     ProcessTreeSchemaException,
 )
 
-from ..nbtools.utility import check_kwargs
+from ..common.utility import check_kwargs
 from .._version import VERSION
 
 __version__ = VERSION

@@ -24,7 +24,7 @@ from attr import Factory
 import requests
 
 from ..._version import VERSION
-from ...nbtools.utility import export
+from ...common.utility import export
 from .ti_provider_base import LookupResult, TIProvider, TISeverity, TILookupStatus
 
 __version__ = VERSION

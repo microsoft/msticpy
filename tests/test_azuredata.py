@@ -9,7 +9,7 @@ from unittest.mock import patch
 from pytest import raises
 
 from ..msticpy.data.azure_data import AzureData
-from ..msticpy.nbtools.utility import MsticpyException
+from ..msticpy.common.utility import MsticpyException
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

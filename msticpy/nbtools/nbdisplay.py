@@ -21,7 +21,7 @@ from .timeline import display_timeline, display_timeline_values  # noqa
 from .process_tree import build_and_show_process_tree, plot_process_tree  # noqa
 
 # pylint: enable=unused-import
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -14,8 +14,8 @@ import requests
 import pandas as pd
 
 from .driver_base import DriverBase
-from ...nbtools import pkg_config as config
-from ...nbtools.utility import MsticpyException
+from ...common import pkg_config as config
+from ...common.utility import MsticpyException
 from ..._version import VERSION
 
 __version__ = VERSION
