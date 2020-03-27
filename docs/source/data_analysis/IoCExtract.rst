@@ -450,6 +450,7 @@ add_ioc_type parameters:
     </table>
     </div>
     <br>
+
 extract_df()
 ~~~~~~~~~~~~
 
@@ -492,205 +493,16 @@ to match the type of your index column.
 
 
 
+====  ====================================  ==========================  =========  =======================  ===============  ============================================  =================  ===================  ================  ==============  ===================================  ====================  ===========  ==================================================================  ===========================  ===============  ====================================  =======================  ==========  =======  ============  ===============  =========  ============  =============
+  ..  TenantId                              Account                       EventID  TimeGenerated            Computer         SubjectUserSid                                SubjectUserName    SubjectDomainName    SubjectLogonId    NewProcessId    NewProcessName                       TokenElevationType    ProcessId    CommandLine                                                         ParentProcessName            TargetLogonId    SourceComputerId                      TimeCreatedUtc           NodeRole      Level    ProcessId1    NewProcessId1    IoCType    Observable    SourceIndex
+====  ====================================  ==========================  =========  =======================  ===============  ============================================  =================  ===================  ================  ==============  ===================================  ====================  ===========  ==================================================================  ===========================  ===============  ====================================  =======================  ==========  =======  ============  ===============  =========  ============  =============
+   0  802d39e1-9d70-404d-832c-2de5e2478eda  MSTICAlertsWin1\MSTICAdmin       4688  2019-01-15 05:15:15.677  MSTICAlertsWin1  S-1-5-21-996632719-2361334927-4038480536-500  MSTICAdmin         MSTICAlertsWin1      0xfaac27          0x1580          C:\Diagnostics\UserTmp\ftp.exe       %%1936                0xbc8        .\ftp  -s:C:\RECYCLER\xxppyy.exe                                    C:\Windows\System32\cmd.exe  0x0              46fe7078-61bb-4bed-9430-7ac01d91c273  2019-01-15 05:15:15.677  source            0           nan              nan        nan           nan              0
+   1  802d39e1-9d70-404d-832c-2de5e2478eda  MSTICAlertsWin1\MSTICAdmin       4688  2019-01-15 05:15:16.167  MSTICAlertsWin1  S-1-5-21-996632719-2361334927-4038480536-500  MSTICAdmin         MSTICAlertsWin1      0xfaac27          0x16fc          C:\Diagnostics\UserTmp\reg.exe       %%1936                0xbc8        .\reg  not /domain:everything that /sid:shines is /krbtgt:golden !  C:\Windows\System32\cmd.exe  0x0              46fe7078-61bb-4bed-9430-7ac01d91c273  2019-01-15 05:15:16.167  sibling           1           nan              nan        nan           nan              1
+   2  802d39e1-9d70-404d-832c-2de5e2478eda  MSTICAlertsWin1\MSTICAdmin       4688  2019-01-15 05:15:16.277  MSTICAlertsWin1  S-1-5-21-996632719-2361334927-4038480536-500  MSTICAdmin         MSTICAlertsWin1      0xfaac27          0x1700          C:\Diagnostics\UserTmp\cmd.exe       %%1936                0xbc8        cmd  /c "systeminfo && systeminfo"                                  C:\Windows\System32\cmd.exe  0x0              46fe7078-61bb-4bed-9430-7ac01d91c273  2019-01-15 05:15:16.277  sibling           1           nan              nan        nan           nan              2
+   3  802d39e1-9d70-404d-832c-2de5e2478eda  MSTICAlertsWin1\MSTICAdmin       4688  2019-01-15 05:15:16.340  MSTICAlertsWin1  S-1-5-21-996632719-2361334927-4038480536-500  MSTICAdmin         MSTICAlertsWin1      0xfaac27          0x1728          C:\Diagnostics\UserTmp\rundll32.exe  %%1936                0xbc8        .\rundll32  /C 12345.exe                                            C:\Windows\System32\cmd.exe  0x0              46fe7078-61bb-4bed-9430-7ac01d91c273  2019-01-15 05:15:16.340  sibling           1           nan              nan        nan           nan              3
+   4  802d39e1-9d70-404d-832c-2de5e2478eda  MSTICAlertsWin1\MSTICAdmin       4688  2019-01-15 05:15:16.400  MSTICAlertsWin1  S-1-5-21-996632719-2361334927-4038480536-500  MSTICAdmin         MSTICAlertsWin1      0xfaac27          0x175c          C:\Diagnostics\UserTmp\rundll32.exe  %%1936                0xbc8        .\rundll32  /C c:\users\MSTICAdmin\12345.exe                        C:\Windows\System32\cmd.exe  0x0              46fe7078-61bb-4bed-9430-7ac01d91c273  2019-01-15 05:15:16.400  sibling           1           nan              nan        nan           nan              4
+====  ====================================  ==========================  =========  =======================  ===============  ============================================  =================  ===================  ================  ==============  ===================================  ====================  ===========  ==================================================================  ===========================  ===============  ====================================  =======================  ==========  =======  ============  ===============  =========  ============  =============
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>Unnamed: 0</th>
-          <th>TenantId</th>
-          <th>Account</th>
-          <th>EventID</th>
-          <th>TimeGenerated</th>
-          <th>Computer</th>
-          <th>SubjectUserSid</th>
-          <th>SubjectUserName</th>
-          <th>SubjectDomainName</th>
-          <th>SubjectLogonId</th>
-          <th>NewProcessId</th>
-          <th>NewProcessName</th>
-          <th>TokenElevationType</th>
-          <th>ProcessId</th>
-          <th>CommandLine</th>
-          <th>ParentProcessName</th>
-          <th>TargetLogonId</th>
-          <th>SourceComputerId</th>
-          <th>TimeCreatedUtc</th>
-          <th>NodeRole</th>
-          <th>Level</th>
-          <th>ProcessId1</th>
-          <th>NewProcessId1</th>
-          <th>IoCType</th>
-          <th>Observable</th>
-          <th>SourceIndex</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>0</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4688</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>0xfaac27</td>
-          <td>0x1580</td>
-          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
-          <td>%%1936</td>
-          <td>0xbc8</td>
-          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>0x0</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>source</td>
-          <td>0</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>windows_path</td>
-          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>0</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4688</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>0xfaac27</td>
-          <td>0x1580</td>
-          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
-          <td>%%1936</td>
-          <td>0xbc8</td>
-          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>0x0</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>source</td>
-          <td>0</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>windows_path</td>
-          <td>C:\RECYCLER\xxppyy.exe</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>0</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4688</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>0xfaac27</td>
-          <td>0x1580</td>
-          <td>C:\Diagnostics\UserTmp\ftp.exe</td>
-          <td>%%1936</td>
-          <td>0xbc8</td>
-          <td>.\ftp  -s:C:\RECYCLER\xxppyy.exe</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>0x0</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>2019-01-15 05:15:15.677</td>
-          <td>source</td>
-          <td>0</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>windows_path</td>
-          <td>.\ftp</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>1</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4688</td>
-          <td>2019-01-15 05:15:16.167</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>0xfaac27</td>
-          <td>0x16fc</td>
-          <td>C:\Diagnostics\UserTmp\reg.exe</td>
-          <td>%%1936</td>
-          <td>0xbc8</td>
-          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>0x0</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>2019-01-15 05:15:16.167</td>
-          <td>sibling</td>
-          <td>1</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>windows_path</td>
-          <td>C:\Diagnostics\UserTmp\reg.exe</td>
-          <td>1</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>1</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4688</td>
-          <td>2019-01-15 05:15:16.167</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>0xfaac27</td>
-          <td>0x16fc</td>
-          <td>C:\Diagnostics\UserTmp\reg.exe</td>
-          <td>%%1936</td>
-          <td>0xbc8</td>
-          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>0x0</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>2019-01-15 05:15:16.167</td>
-          <td>sibling</td>
-          <td>1</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>windows_path</td>
-          <td>.\reg</td>
-          <td>1</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-    <br>
 
 
 IPython magic

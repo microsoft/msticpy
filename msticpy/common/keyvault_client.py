@@ -62,16 +62,17 @@ class KeyVaultSettings:
     Notes
     -----
     The KeyVault section in msticpyconfig.yaml can contain
-    the following:
-    `KeyVault:
-        TenantId: {tenantid-to-use-for-authentication}
-        SubscriptionId: {subscriptionid-containing-vault}
-        ResourceGroup: {resource-group-containing-vault}
-        AzureRegion: {region-for-vault}
-        VaultName: {vault-name}
-        UseKeyring: True
-        Authority: global
-    `
+    the following::
+
+        KeyVault:
+            TenantId: {tenantid-to-use-for-authentication}
+            SubscriptionId: {subscriptionid-containing-vault}
+            ResourceGroup: {resource-group-containing-vault}
+            AzureRegion: {region-for-vault}
+            VaultName: {vault-name}
+            UseKeyring: True
+            Authority: global
+
     `SubscriptionId`, `ResourceGroup` and `AzureRegion` are only
     used when creating new vaults.
     `UseKeyring` instructs the `SecretsClient` to cache Keyvault
