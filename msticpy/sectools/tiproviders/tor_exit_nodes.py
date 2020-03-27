@@ -19,7 +19,7 @@ from typing import Tuple, Iterable, Dict, Any
 import requests
 
 from .ti_provider_base import TIProvider, LookupResult, TISeverity, TILookupStatus
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION

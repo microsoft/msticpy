@@ -6,7 +6,7 @@
 """Demo QueryProvider."""
 from functools import partial
 from pathlib import Path
-import pickle
+import pickle  # nosec
 from typing import List, Dict, Union, Any, Iterable
 from time import sleep
 
@@ -239,7 +239,8 @@ class GeoLiteLookupDemo:
         """Look up location."""
         del ip_address, ip_addr_list, ip_entity
         with open(self._DATA_DEFS["ip_locs"], "rb") as iploc_file:
-            ip_locs = pickle.load(iploc_file)  # noqa: B301
+            # B301 - pickled file is trusted
+            ip_locs = pickle.load(iploc_file)  # nosec
         return str(ip_locs), ip_locs
 
 

@@ -39,7 +39,7 @@ from collections import namedtuple
 
 import pandas as pd
 
-from ..nbtools.utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

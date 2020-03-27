@@ -14,7 +14,7 @@ import pandas as pd
 
 from ..msticpy.data import QueryProvider
 from ..msticpy.data.data_providers import DriverBase
-from ..msticpy.nbtools import pkg_config
+from ..msticpy.common import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (

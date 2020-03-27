@@ -28,9 +28,9 @@ import pandas as pd
 from ipywidgets import IntProgress
 from IPython import display
 import tldextract
-from ..nbtools import pkg_config as config
+from ..common import pkg_config as config
 from .._version import VERSION
-from ..nbtools.utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

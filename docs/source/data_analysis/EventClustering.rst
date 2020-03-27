@@ -43,7 +43,7 @@ to find.
     import sys
     import warnings
 
-    from msticpy.nbtools.utility import check_py_version
+    from msticpy.common.utility import check_py_version
     MIN_REQ_PYTHON = (3,6)
     check_py_version(MIN_REQ_PYTHON)
 

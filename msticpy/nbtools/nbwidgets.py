@@ -20,7 +20,7 @@ from ipywidgets import Layout
 from .._version import VERSION
 from . import kql as qry
 from .query_defns import QueryParamProvider
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -471,12 +471,12 @@ class AlertSelector(QueryParamProvider):
                 + f" - [id:{alert_row.SystemAlertId}]"
                 + f" - TI Risk: {alert_row['TI Risk']}"
             )
-        else:
-            return (
-                f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
-                + f" - ({alert_row.CompromisedEntity}) "
-                + f" - [id:{alert_row.SystemAlertId}]"
-            )
+
+        return (
+            f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
+            + f" - ({alert_row.CompromisedEntity}) "
+            + f" - [id:{alert_row.SystemAlertId}]"
+        )
 
     def _update_options(self, change):
         """Filter the alert list by substring."""

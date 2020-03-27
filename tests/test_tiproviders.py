@@ -4,19 +4,22 @@
 # license information.
 # --------------------------------------------------------------------------
 """TIProviders test class."""
+import datetime as dt
 import io
 import os
+import pdb
 import random
 import string
 import unittest
 import warnings
-import datetime as dt
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any, Tuple, Union
 from unittest import mock
 
-from ..msticpy.nbtools import pkg_config
+import pandas as pd
+
+from ..msticpy.common import pkg_config
 from ..msticpy.sectools.iocextract import IoCExtract
 from ..msticpy.sectools.tilookup import TILookup
 from ..msticpy.sectools.tiproviders import (
@@ -25,6 +28,11 @@ from ..msticpy.sectools.tiproviders import (
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,
+)
+from ..msticpy.sectools.tiproviders.ti_provider_base import (
+    TISeverity,
+    _clean_url,
+    generate_items,
 )
 
 _test_data_folders = [
@@ -222,6 +230,7 @@ class TestTIProviders(unittest.TestCase):
     ti_lookup = None
 
     def setUp(self):
+        self._mp_conf_env = os.environ[pkg_config._CONFIG_ENV_VAR]
         self.ti_lookup = self.load_ti_lookup()
 
     @staticmethod
@@ -458,3 +467,82 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(lu_result.status, 2)
         lu_result = provider._check_ioc_type(ioc="123456", ioc_type="file_hash")
         self.assertEqual(lu_result.status, 2)
+
+    def test_tiseverity(self):
+        sev_inf = TISeverity.parse("information")
+        self.assertEqual(sev_inf, TISeverity.information)
+        sev_warn = TISeverity.parse(1)
+        self.assertEqual(sev_warn, TISeverity.warning)
+        sev_warn2 = TISeverity.parse(sev_warn)
+        self.assertEqual(sev_warn2, TISeverity.warning)
+
+        sev_unknown = TISeverity.unknown
+        sev_high = TISeverity.high
+        self.assertTrue(sev_inf == TISeverity.information)
+        self.assertTrue(sev_inf <= "information")
+        self.assertTrue(sev_inf < 1)
+        self.assertTrue(sev_warn > TISeverity.information)
+        self.assertFalse(sev_unknown > "high")
+
+    def test_preprocess_observables(self):
+        t_url = "https://me@www.microsoft.com:443/test1?testparam=x"
+        self.assertEqual(_clean_url(t_url), t_url.split("?")[0])
+
+        loopback_mssg = "Host part of URL is a private IP address"
+        result = preprocess_observable(
+            "https://127.0.0.1/test1?testparam=x", ioc_type="url"
+        )
+        self.assertEqual(result.status, loopback_mssg)
+        result = preprocess_observable("127.0.0.1", ioc_type="ipv4")
+        self.assertEqual(result.status, "IP address is not global")
+        result = preprocess_observable("not an ip address", ioc_type="ipv4")
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for ipv4"
+        )
+        result = preprocess_observable("185.92.220.35", ioc_type="ipv6")
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for ipv6"
+        )
+        result = preprocess_observable(
+            "2001:0db8:85a3:0000:0000:8a2e:0370:7334", ioc_type="ipv4"
+        )
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for ipv4"
+        )
+        result = preprocess_observable("localhost", ioc_type="dns")
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for dns"
+        )
+        result = preprocess_observable("185.92.220.35", ioc_type="dns")
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for dns"
+        )
+        result = preprocess_observable("AAAAAAAAAAAAAAAA", ioc_type="md5")
+        self.assertEqual(
+            result.status, "Observable does not match expected pattern for md5"
+        )
+
+    def test_iterable_generator(self):
+        test_df = pd.DataFrame({"col1": ioc_ips, "col2": ioc_ips})
+
+        for ioc, _ in generate_items(test_df, obs_col="col1", ioc_type_col="col2"):
+            self.assertIn(ioc, ioc_ips)
+
+        for ioc, ioc_type in generate_items(test_df[["col1"]], obs_col="col1"):
+            self.assertIn(ioc, ioc_ips)
+            self.assertEqual(ioc_type, "ipv4")
+
+    # Used for local testing only
+    # def test_interactive(self):
+    #     saved_env = os.environ[pkg_config._CONFIG_ENV_VAR]
+    #     os.environ[pkg_config._CONFIG_ENV_VAR] = "e:\\src\\microsoft\\msticpyconfig.yaml"
+    #     pkg_config.refresh_config()
+    #     if "AzureSentinel" in pkg_config.custom_settings["TIProviders"]:
+    #         pkg_config.custom_settings["TIProviders"].pop("AzureSentinel")
+    #     ti_lookup = TILookup()
+
+    #     result = ti_lookup.lookup_ioc(
+    #         observable="www.401k.com", providers=["OPR", "VirusTotal", "XForce"]
+    #         )
+
+    #     os.environ[pkg_config._CONFIG_ENV_VAR] = saved_env

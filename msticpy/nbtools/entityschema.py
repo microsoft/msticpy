@@ -16,7 +16,7 @@ from enum import Enum
 # pylint: disable=locally-disabled, unused-import
 from typing import Mapping, Any, Union, Dict, Type
 
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -57,6 +57,13 @@ class Entity(ABC):
             kw arguments.
 
         """
+        self.Type = type(self).__name__.lower()
+        # If we have an unknown entity see if we a type passed in
+        if self.Type == "unknownentity" and "Type" in kwargs:
+            self.Type = kwargs["Type"]
+        # Make sure Type is in the class schema dictionary
+        self._entity_schema["Type"] = None
+
         # if we didn't populate AdditionalData, add an empty dict in case it's
         # needed
         if "AdditionalData" not in self:
@@ -71,12 +78,6 @@ class Entity(ABC):
         if kwargs:
             self.__dict__.update(kwargs)
 
-        self.Type = type(self).__name__.lower()
-        # If we have an unknown entity see if we a type passed in
-        if self.Type == "unknownentity" and "Type" in kwargs:
-            self.Type = kwargs["Type"]
-        self._entity_schema["Type"] = None
-
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.
@@ -88,7 +89,9 @@ class Entity(ABC):
             extract entity properties.
 
         """
-        for k, v in self._entity_schema.items():
+        schema_dict = dict(**(self._entity_schema))
+        schema_dict["Type"] = None
+        for k, v in schema_dict.items():
             if k not in src_entity:
                 continue
             self[k] = src_entity[k]

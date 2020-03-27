@@ -15,7 +15,7 @@ from .._version import VERSION
 from .entityschema import Entity, GeoLocation, IpAddress
 
 # pylint: enable=locally-disabled, unused-import
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

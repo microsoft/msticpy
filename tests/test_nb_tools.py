@@ -16,7 +16,7 @@ from ..msticpy.nbtools.entityschema import (
     File,
     IpAddress,
 )
-from ..msticpy.nbtools.wsconfig import WorkspaceConfig
+from ..msticpy.common.wsconfig import WorkspaceConfig
 from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment
 
 

@@ -11,7 +11,10 @@ from .ti_provider_base import (  # noqa:F401
     LookupResult,
 )
 from .http_base import HttpProvider  # noqa:F401
-from ..provider_settings import ProviderSettings, get_provider_settings  # noqa:F401
+from ...common.provider_settings import (  # noqa:F401
+    ProviderSettings,
+    get_provider_settings,
+)
 from ..._version import VERSION
 
 __version__ = VERSION

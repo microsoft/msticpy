@@ -21,7 +21,7 @@ from ipwhois import IPWhois
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress
-from ..nbtools.utility import export
+from ..common.utility import export
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION

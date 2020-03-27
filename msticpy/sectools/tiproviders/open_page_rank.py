@@ -20,7 +20,7 @@ import pandas as pd
 
 from .ti_provider_base import LookupResult, TISeverity, generate_items, TILookupStatus
 from .http_base import HttpProvider, IoCLookupParams
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION

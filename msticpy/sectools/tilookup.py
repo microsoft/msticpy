@@ -27,8 +27,8 @@ import pandas as pd
 from . import tiproviders
 from .tiproviders import *  # noqa:F401, F403
 from .tiproviders.ti_provider_base import TIProvider, LookupResult, TILookupStatus
-from .provider_settings import get_provider_settings, reload_settings
-from ..nbtools.utility import export
+from ..common.provider_settings import get_provider_settings, reload_settings
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -153,7 +153,7 @@ class TILookup:
 
     def list_available_providers(
         self, show_query_types=False, return_list: bool = False
-    ):  # type: ignore
+    ) -> Optional[List[str]]:  # type: ignore
         """
         Print a list of builtin providers with optional usage.
 
@@ -161,6 +161,13 @@ class TILookup:
         ----------
         show_query_types : bool, optional
             Show query types supported by providers, by default False
+        return_list : bool, optional
+            Return list of providers as well as printing to stdout.
+
+        Returns
+        -------
+        Optional[List[str]]
+            A list of provider names (if `return_list=True`)
 
         """
         providers = []
@@ -173,6 +180,7 @@ class TILookup:
                 provider_class.usage()
         if return_list is True:
             return providers
+        return None
 
     def provider_usage(self):
         """Print usage of loaded providers."""
@@ -197,9 +205,21 @@ class TILookup:
     def reload_provider_settings(cls):
         """Reload provider settings from config."""
         reload_settings()
+        print(
+            "Settings reloaded. Use reload_providers to update settings",
+            "for loaded providers.",
+        )
 
     def reload_providers(self):
-        """Reload providers based on currret settings in config."""
+        """
+        Reload providers based on currrent settings in config.
+
+        Parameters
+        ----------
+        clear_keyring : bool, optional
+            Clears any secrets cached in keyring, by default False
+
+        """
         self.reload_provider_settings()
         self._load_providers()
 

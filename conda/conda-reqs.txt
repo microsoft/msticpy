@@ -1,5 +1,7 @@
+adal
 attrs
 azure-common
+azure-mgmt-network
 azure-mgmt-resource
 beautifulsoup4
 bokeh
@@ -9,7 +11,10 @@ dnspython
 folium
 ipython
 ipywidgets
+keyring
 matplotlib
+msrest
+msrestazure
 networkx
 numpy
 pandas

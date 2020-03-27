@@ -20,8 +20,8 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
-from ..nbtools import pkg_config as config
-from ..nbtools.utility import MsticpyException
+from ..common import pkg_config as config
+from ..common.utility import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION

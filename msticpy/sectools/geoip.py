@@ -40,8 +40,8 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..nbtools.utility import MsticpyConfigException, export
-from .provider_settings import ProviderSettings, get_provider_settings
+from ..common.utility import MsticpyConfigException, export
+from ..common.provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -64,6 +64,7 @@ class GeoIpLookup(metaclass=ABCMeta):
 
     _LICENSE_TXT: Optional[str] = None
     _LICENSE_HTML: Optional[str] = None
+    _license_shown: bool = False
 
     def __init__(self):
         """Initialize instance of GeoIpLookup class."""
@@ -124,11 +125,17 @@ class GeoIpLookup(metaclass=ABCMeta):
         df_out = pd.DataFrame(data=ip_dicts)
         return data.merge(df_out, how="left", left_on=column, right_on="IpAddress")
 
+    # pylint: disable=protected-access
     def _print_license(self):
+        if self.__class__._license_shown:
+            return
         if self._LICENSE_HTML and get_ipython():
             display(HTML(self._LICENSE_HTML))
         elif self._LICENSE_TXT:
             print(self._LICENSE_TXT)
+        self.__class__._license_shown = True
+
+    # pylint: enable=protected-access
 
 
 @export

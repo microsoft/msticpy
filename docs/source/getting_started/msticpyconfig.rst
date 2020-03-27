@@ -37,6 +37,11 @@ OtherProviders
 This section is similar to the TIProviders section, allowing you
 specify configuration options for other data providers.
 
+Key Vault
+~~~~~~~~
+This section contains Azure Key Vault settings. This is only used if you
+choose to store secrets (e.g. API keys) in Key Vault.
+
 
 Specifying secrets as Environment Variables
 -------------------------------------------
@@ -49,6 +54,220 @@ supports storing values as simple strings or as references to named
 environment variables. You can see examples of both in the sample
 file below.
 
+Specifying secrets as Key Vault secrets
+---------------------------------------
+msticpy can read secret values from Key Vault for use with TI and
+other providers. To use this you need to specify settings for your
+keyvault.
+
+.. code:: yaml
+
+    KeyVault:
+      TenantId: 5d6a50cf-b1b6-4bfd-ad54-b9822b06ff92
+      SubscriptionId: 40dcc8bf-0478-4f3b-b275-ed0a94f2c013
+      ResourceGroup: YourResourceGroup
+      AzureRegion: RegionToCreateKV
+      VaultName: "myvault"
+      UseKeyring: True
+      Authority: global
+      AuthnType: device
+
+Under the top level ``KeyVault`` section the following entries
+are accepted. Some of these are only required if you plan to
+use msticpy to create a new Key Vault vault.
+
+Required Settings
+~~~~~~~~~~~~~~~~~
+.. list-table::
+   :widths: 15, 30
+
+   * - TenantId
+     - the Identifier of your Azure tenant
+   * - VaultName
+     - the name of the vault to use (note this can be
+       overridden in the individual secret specifications
+   * - Authority
+     - this specifies the Azure cloud instance to use.
+
+For most users ``Authority`` is "global" (default). Other values are:
+- **usgov**: Azure US Government
+- **de**: German cloud
+- **chi**: China cloud
+
+Required to Create a Key Vault
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. list-table::
+   :widths: 15, 30
+
+   * - SubscriptionId
+     - the Azure subscription holding the Key Vault
+   * - ResourceGroup
+     - the Azure resource group in which to create the vault
+   * - AzureRegion
+     - the Azure region in which to create the vault
+
+Optional Settings
+~~~~~~~~~~~~~~~~~
+.. list-table::
+   :widths: 15, 30
+
+   * - UseKeyring
+     - if True (default) uses the Python keyring package
+       to securely cache Key Vault secrets in your client session.
+   * - VaultName
+     - the name of the vault to use (note this can be
+       overridden in the individual secret specifications)
+   * - AuthnType
+     - this governs the authentication type used by
+       the KeyVault client (to read and write secrets). The choices
+       are "interactive" for interactive browser authentication or
+       "device" for authentication using a user/device code. The
+       default is "interactive".
+
+.. note:: The ``AuthnType`` does not affect the authentication used by
+   the Key Vault **Management** client (the creation and enumeration
+   of vaults). This always uses device code authentication.
+
+Specifying Key Vault Secrets in Provider Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are three ways to specify the Key Vault *vault* and *secret* names
+to use for a given setting.
+
+.. code:: yaml
+
+    TIProviders:
+
+      OpenPageRank:
+        Args:
+          AuthKey:
+            KeyVault:
+
+Adding an empty subkey named ``KeyVault`` will cause msticpy to use
+a secret name build from the path of the setting. This is the default
+usage. In this example,
+the secret name will be "TIProviders-OpenPageRank-Args-AuthKey".
+The vault name is taken from the setting in the ``KeyVault`` settings
+section.
+
+.. code:: yaml
+
+    OtherProviders:
+      IPStack:
+        Args:
+          AuthKey:
+            KeyVault: my_secret
+
+
+This example specifies "my_secret" as the secret name.
+The vault name is taken from the setting in the ``KeyVault`` settings
+section.
+
+.. code:: yaml
+
+    OtherProviders:
+      Contoso-GeopIp:
+        Args:
+          AuthKey:
+            KeyVault: my_vault/my_secret
+
+The final example specifies both a vault name and a secret name.
+The ``VaultName`` setting in the ``KeyVault`` section is ignored
+for this setting.
+
+Populating Key Vault secrets from an existing msticpyconfig.yaml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The easiest way to move your secrets to Key Vault is to use the
+``config2ky.py`` tool available in the msticpy GitHub repo.
+You can find it in the tools folder.
+
+Running ``config2kv.py --help`` shows the usage of this utility.
+
+The simplest way to use this tool is to populate your existing
+secrets as strings in your ``msticpyconfig.yaml``. (as shown in
+some of the provider settings in the example at the end of this
+page).
+
+You can specify this as the input file using the ``--path`` parameter.
+Alternatively, the tool will look for a msticpyconfig.yaml in the
+location specified by the ``MSTICPYCONFIG`` environment variable.
+
+Create a ``KeyVault``
+configuration section in the file, supplying the values described
+earlier. If you already have a vault that you want to use, put
+the name of the vault in the ``VaultName`` setting and run
+``config2kv.py`` with the ``--exists`` parameter. This will bypass
+the Key Vault Management client section and the extra authentication
+step that this requires. If you do not have a vault or wish to
+create a new one, omit the ``--exists`` parameter and you will
+be prompted to create one.
+
+The tool will read secrets and create secret names based on the
+path of the secret (as described above).
+
+.. warning:: ``config2ky`` will only read and convert
+   items in the provider ``Args`` sections. Currently, only
+   ``ApiID`` and ``AuthKey`` values will be used.
+
+The tool will then write the
+secret values to the vault. Finally a replacement ``msticpyconfig.yaml``
+is written to the location specified in the ``--path`` argument.
+You can then delete or securely store your old configuration file
+and replace it with the one output by ``config2kv``.
+
+.. tip:: you can run ``config2ky`` with the ``--show`` parameter to
+   perform a rehearsal. This will show you the Key Vault secrets
+   that will be created and show the text of the msticpyconfig.yaml
+   file that would have been created.
+
+
+Using **keyring** to cache secrets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**keyring** is available on most Python platforms: Windows, Linux
+and MacOS. On Linux it requires the installation of optional
+components - either KWallet or Secret Service. See the
+`Keyring Readme <https://github.com/jaraco/keyring>`__ for more
+information.
+
+.. warning:: *keyring* caching is enabled by default. If you are working
+   in an environment that does not have one of the supported *keyring*
+   backends installed you should disable keyring caching by adding
+   ``Keyring: false`` to you configuration settings.
+
+The advantage of using *keyring* is that you do not need to re-authenticate
+to Key Vault for each notebook that you use in each session. If you
+have ``UseKeyring: true`` in your ``msticpyconfig.yaml`` file, the
+first time that you access a Key Vault secret the secret value is
+stored as a keyring password with the same name as the Key Vault secret.
+
+Unfortunately *keyring* provides no way to list or delete stored
+secrets. If you need to remove the locally-stored secrets use the platform
+utility for the appropriate backend. For example, on Windows, ``cmdkey``
+lets you list and manipulate local stored credentials.
+
+.. warning:: *keyring* secrets are not automatically synchronized
+   with the Key Vault secret values. If you change the value of a
+   secret in Key Vault you must delete the keyring secret so that
+   the new value will be re-read from Key Vault.
+
+
+Manually managing your Key Vault secrets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use the Azure portal to create and manage your secrets. If you
+prefer to do this, simply enter the name of the secret in the
+corresponding section for the AuthKey or ApiID of your providers.
+
+You can also use powershell or Python to manage these programmatically.
+*msticpy* has some convenience wrappers around the Azure SDK functions.
+
+The documentation for these is available here:
+:py:mod:`keyvault_client<msticpy.common.keyvault_client>`
+:py:mod:`secrets_settings<msticpy.common.secrets_settings>`
+
+
 Extending msticpyconfig.yaml
 ----------------------------
 
@@ -58,19 +277,19 @@ API connections. Refer to documentation on these features for required
 structures.
 
 Settings are read by the
-:py:mod:`refresh_config<msticpy.nbtools.pkg_config>` module.
+:py:mod:`refresh_config<msticpy.common.pkg_config>` module.
 Combined settings are available as the ``settings`` attribute of this
 module. Default settings and custom settings (the settings that you
 specify in your own msticpyconfig.yaml) also available separately in
 the ``default_settings`` and ``custom_settngs`` attributes, respectively.
 
 To force settings to be re-read after the package has been imported,
-call :py:func:`refresh_config<msticpy.nbtools.pkg_config.refresh_config>`.
+call :py:func:`refresh_config<msticpy.common.pkg_config.refresh_config>`.
 
 The settings exposed in these attributes are python dictionaries that
 reflect the underlying YAML data in the configuration file.
 
-.. note:: the :py:mod:`~msticpy.nbtools.wsconfig` module, TIProviders,
+.. note:: the :py:mod:`~msticpy.common.wsconfig` module, TIProviders,
    OtherProviders and the data libraries use additional functionality
    to provide higher-level views of the configuration data. An example
    of this is the using environment variable references to replace
@@ -138,7 +357,8 @@ Comment configuration file sample
         Provider: "AzSTI"
       OpenPageRank:
         Args:
-          AuthKey: "c88dd3c2-d657-4eb3-b913-58d58d811a41"
+          AuthKey:
+            KeyVault:
         Primary: False
         Provider: "OPR"
       TorExitNodes:
@@ -153,8 +373,14 @@ Comment configuration file sample
         Provider: "GeoLiteLookup"
       IPStack:
         Args:
-          AuthKey: "987654321-222"
+          AuthKey:
+            KeyVault: my_secret
         Provider: "IPStackLookup"
+      Contoso-GeopIp:
+        Args:
+          AuthKey:
+            KeyVault: my_vault/my_secret
+        Provider: "ContosoLookup"
 
 
 See also
@@ -162,6 +388,6 @@ See also
 
 :doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
 
-:py:mod:`wsconfig<msticpy.nbtools.wsconfig>`
-:py:mod:`provider_settings<msticpy.nbtools.provider_settings>`
-:py:mod:`wsconfig<msticpy.nbtools.wsconfig>`
+:py:mod:`wsconfig<msticpy.common.wsconfig>`
+:py:mod:`provider_settings<msticpy.common.provider_settings>`
+:py:mod:`wsconfig<msticpy.common.pkg_config>`
