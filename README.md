@@ -2,8 +2,10 @@
 
 Microsoft Threat Intelligence Python Security Tools.
 
-The **msticpy** package was initially developed to support [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/What%20is%20the%20Jupyter%20Notebook.html)
-authoring for [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
+The **msticpy** package was initially developed to support
+[Jupyter Notebooks](https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/)
+authoring for
+[Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
 Many of the included tools can be used in other security scenarios for threat hunting
 and threat investigation.
 
