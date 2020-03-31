@@ -44,6 +44,14 @@ msticpy.nbtools.process_tree module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.timeseries module
+---------------------------------
+
+.. automodule:: msticpy.nbtools.timeseries
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.timeline module
 -------------------------------
 

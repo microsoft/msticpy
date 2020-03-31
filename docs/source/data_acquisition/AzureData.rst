@@ -433,12 +433,13 @@ Get Azure Network Details
 
 See :py:meth:`get_network_details <msticpy.data.azure_data.AzureData.get_network_details>`
 
-If your Azure resources has a network interface associated with it (for example a VM) you can return details on the 
+If your Azure resources has a network interface associated with it (for example a VM) you can return details on the
 interface as associated Network Security Group (NSG). Calling this function is very similar to getting resource details
-however instead of passing it a resource ID you provide the network interface ID for the network device you want details 
+however instead of passing it a resource ID you provide the network interface ID for the network device you want details
 for.
 
 .. code:: ipython3
+
     az.get_network_details(networkID=NETWORK_INTERFACE_ID, sub_id=SUBSCRIPTION_ID)
 
 .. note:: If youa are looking for a VM network interface ID you can use get_resource_details to get details on the VM.
@@ -452,21 +453,22 @@ Get Azure Metrics
 
 See :py:meth:`get_metrics <msticpy.data.azure_data.AzureData.get_metrics>`
 
-Azure provides a range of metrics for resources. The types of metrics avaliable depends on the Azure resource in question, 
+Azure provides a range of metrics for resources. The types of metrics avaliable depends on the Azure resource in question,
 a full list of metrics can be found `here <https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported>`__.
- 
+
 You can return all of these metrics with get_metrics.
 
 In order to call this function you need to provide the metrics you want to retrieve in a comma seperated string
-e.g. ""Percentage CPU,Disk Read Bytes,Disk Write Bytes", along with the resource ID of the item you wish to retreive 
-the metrics for, and the subscription ID that resource is part of. You can also choose to get the metrics sampled 
-at either the minute or the hour interval, and for how many days preceeding you want metrics for. By default the 
+e.g. ""Percentage CPU,Disk Read Bytes,Disk Write Bytes", along with the resource ID of the item you wish to retreive
+the metrics for, and the subscription ID that resource is part of. You can also choose to get the metrics sampled
+at either the minute or the hour interval, and for how many days preceeding you want metrics for. By default the
 function returns hourly metrics for the last 30 days.
 
 .. code:: ipython3
+
     az.get_metrics(metrics="Percentage CPU", resource_id=resource_details['resource_id'], sub_id=sub_details['Subscription ID'], sample_time="hour", start_time=15)
 
-This returns a dictionary of items with the metric name as they key and a DataFrame of the metrics as the value. 
+This returns a dictionary of items with the metric name as they key and a DataFrame of the metrics as the value.
 
-.. note:: get_metrics is resource specific, so if you want to get metrics from more than one resource you will need 
+.. note:: get_metrics is resource specific, so if you want to get metrics from more than one resource you will need
     seperate function calls.

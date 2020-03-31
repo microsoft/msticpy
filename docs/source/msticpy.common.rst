@@ -1,6 +1,6 @@
 
-msticpy.data package
-====================
+msticpy.common package
+======================
 
 Submodules
 ----------
@@ -29,10 +29,10 @@ msticpy.common.keyvault\_client module
     :undoc-members:
     :show-inheritance:
 
-msticpy.common.secrets\_client module
--------------------------------------
+msticpy.common.secret\_settings module
+---------------------------------------
 
-.. automodule:: msticpy.common.secrets_client
+.. automodule:: msticpy.common.secret_settings
     :members:
     :undoc-members:
     :show-inheritance:
