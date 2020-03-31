@@ -9,3 +9,4 @@ Displaying/Visualizing Data
    visualization/ProcessTree
    visualization/NotebookWidgets
    visualization/FoliumMap
+   visualization/TimeSeriesAnomalies

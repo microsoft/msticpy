@@ -38,7 +38,7 @@ This section is similar to the TIProviders section, allowing you
 specify configuration options for other data providers.
 
 Key Vault
-~~~~~~~~
+~~~~~~~~~
 This section contains Azure Key Vault settings. This is only used if you
 choose to store secrets (e.g. API keys) in Key Vault.
 
