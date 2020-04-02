@@ -125,7 +125,7 @@ class HttpProvider(TIProvider):
 
         try:
             verb, req_params = self._substitute_parms(
-                result.ioc, result.ioc_type, query_type
+                result.safe_ioc, result.ioc_type, query_type
             )
             if verb == "GET":
                 response = self._requests_session.get(**req_params)
@@ -134,8 +134,14 @@ class HttpProvider(TIProvider):
             result.status = response.status_code
             result.reference = req_params["url"]
             if result.status == 200:
-                result.raw_result = response.json()
-                result.result, severity, result.details = self.parse_results(result)
+                try:
+                    result.raw_result = response.json()
+                    result.result, severity, result.details = self.parse_results(result)
+                except JSONDecodeError:
+                    result.raw_result = f"There was a problem parsing results from this lookup: {response.text}"
+                    result.result = False
+                    severity = TISeverity.information
+                    result.details = {}
                 result.set_severity(severity)
                 result.status = TILookupStatus.ok.value
             else:
