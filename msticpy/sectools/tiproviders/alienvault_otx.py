@@ -69,6 +69,7 @@ class OTX(HttpProvider):
     _REQUIRED_PARAMS = ["API_KEY"]
 
     def __init__(self, **kwargs):
+        """Set OTX specific settings."""
         super(OTX, self).__init__(**kwargs)
         self.require_url_encoding = True
 

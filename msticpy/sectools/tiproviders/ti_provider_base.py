@@ -515,7 +515,9 @@ def _preprocess_url(
     Parameters
     ----------
     url : str
-        the URL to check
+        The URL to check
+    require_url_encoding : bool
+        Set to True if url's require encoding before passing to provider
 
     Returns
     -------
@@ -558,6 +560,8 @@ def get_schema_and_host(
     ----------
     url : str
         Input URL
+    require_url_encoding : bool
+        Set to True if url needs encoding. Defualt is False.
 
     Returns
     -------

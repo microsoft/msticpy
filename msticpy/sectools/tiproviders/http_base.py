@@ -138,7 +138,8 @@ class HttpProvider(TIProvider):
                     result.raw_result = response.json()
                     result.result, severity, result.details = self.parse_results(result)
                 except JSONDecodeError:
-                    result.raw_result = f"There was a problem parsing results from this lookup: {response.text}"
+                    result.raw_result = f"""There was a problem parsing results from this lookup:
+                                        {response.text}"""
                     result.result = False
                     severity = TISeverity.information
                     result.details = {}
