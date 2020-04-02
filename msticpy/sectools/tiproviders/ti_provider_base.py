@@ -122,8 +122,8 @@ class LookupResult:
     """Lookup result for IoCs."""
 
     ioc: str
-    safe_ioc: str
     ioc_type: str
+    safe_ioc: str = None
     query_subtype: Optional[str] = None
     provider: Optional[str] = None
     result: bool = False

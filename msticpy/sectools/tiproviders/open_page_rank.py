@@ -57,6 +57,7 @@ class OPR(HttpProvider):
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        safe_ioc: str = None,
         obs_col: str = None,
         ioc_type_col: str = None,
         query_type: str = None,
