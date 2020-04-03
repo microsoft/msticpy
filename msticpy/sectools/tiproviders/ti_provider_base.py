@@ -477,7 +477,7 @@ def preprocess_observable(
     observable, ioc_type, require_url_encoding: bool = False
 ) -> SanitizedObservable:
     """
-    Preprocesses and checks validity observable against declared IoC type.
+    Preprocesses and checks validity of observable against declared IoC type.
 
         :param observable: the value of the IoC
         :param ioc_type: the IoC type
