@@ -1,5 +1,5 @@
 Time Series Analysis and Anomalies Visualization
-==========================================================
+================================================
 
 This notebook demonstrates the time series analysis and anomalies
 visualization built using the `Bokeh
@@ -67,7 +67,7 @@ TechCommunity blog posts
     qry_prov.connect(connection_str=ws_config.code_connect_str)
 
 Generating Time Series Data
----------------------------------
+---------------------------
 
 Time Series is a series of data points indexed (or listed or graphed) in
 time order. The data points are often discrete numeric points such as
@@ -778,7 +778,7 @@ Here is our saved plot: plot.png
 
 
 Using Built-in KQL render operator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Render operator instructs the user agent to render the results of the
 query in a particular way. In this case, we are using timechart which
