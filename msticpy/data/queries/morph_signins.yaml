@@ -1,0 +1,42 @@
+metadata:
+  version: 1
+  description: MoprhChart elements SigninLogs
+  data_environments: [LogAnalytics]
+  data_families: [SigninLogs]
+  tags: ['signins', 'morph']
+  morph_chart: msticpy/data/queries/morph_charts/signins.json
+defaults:
+  metadata:
+    data_source: 'security_event'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'SigninLogs'
+      query_project:
+        description: Column project statement
+        type: str
+        default: ''
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  morph_signins:
+    description: Retrieves list of all events on a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend Result = iif(ResultType==0, "Sucess", "Failed")
+        | extend Latitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).latitude)
+        | extend Longitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).longitude)'
+    parameters:
