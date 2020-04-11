@@ -123,4 +123,20 @@ sources:
       resource:
         description: ResourceId or substring
         type: str
+  morph_signins:
+    description: Gets Signin data used by morph charts
+    metadata:
+    args:
+      query: '
+        {table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend Result = iif(ResultType==0, "Sucess", "Failed")
+        | extend Latitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).latitude)
+        | extend Longitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).longitude)'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: SigninLogs
 
