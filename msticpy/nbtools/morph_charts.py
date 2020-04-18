@@ -7,9 +7,9 @@
 import json
 from pathlib import Path
 import yaml
-import IPython
+from IPython.display import IFrame
 import pandas as pd
-
+from .utility import MsticpyException
 
 from .._version import VERSION
 
@@ -26,7 +26,7 @@ class MorphCharts:
         """Create object and populate charts container."""
         self.charts = _get_charts(_CHART_FOLDER)
 
-    def display(self, data: pd.DataFrame, chart_name: str):
+    def display(self, data: pd.DataFrame, chart_name: str) -> IFrame:
         """
         Prepare package data and display MorphChart in an IFrame.
 
@@ -39,6 +39,17 @@ class MorphCharts:
             The name of the Morph Chart to plot.
 
         """
+        # Check input data is correct format and that the chart being requested exists
+        if not isinstance(data, pd.DataFrame):
+            raise MsticpyException("Data provided must be in pandas.DataFrame format")
+
+        try:
+            self.charts[chart_name]
+        except KeyError:
+            raise MsticpyException(
+                f"{chart_name} is not a vaid chart. Run list_charts() to see avaliable charts"  # pylint: disable=line-too-long
+            )
+
         # Create description file with length of our data set
         description_dict = self.charts[chart_name]["DescriptionFile"]
         description_dict["tables"][0]["rows"] = len(data)
@@ -57,9 +68,8 @@ class MorphCharts:
         print(
             f"Navigate to {Path.cwd().joinpath('morphchart_package')} and upload the files below"
         )
-        return IPython.display.IFrame(
-            "http://morphcharts.com/designer.html", "100%", "600px"
-        )
+        print("Charts provided by http://morphcharts.com/")
+        return IFrame("http://morphcharts.com/designer.html", "100%", "600px")
 
     def list_charts(self):
         """Get a list of avaliable charts."""
@@ -76,8 +86,18 @@ class MorphCharts:
             The name of the chart you get description for.
 
         """
-        print(chart_name, ":")
-        print(self.charts[chart_name]["Description"])
+        try:
+            print(
+                chart_name,
+                ":",
+                "\n",
+                self.charts[chart_name]["Description"],
+                "\n",
+                "Query: ",
+                self.charts[chart_name]["Query"],
+            )
+        except KeyError:
+            raise KeyError(f"Unknown chart {chart_name}")
 
     def search_charts(self, keyword):
         """
@@ -90,14 +110,17 @@ class MorphCharts:
 
         """
         for key, value in self.charts.items():
-            if keyword in value["Tags"]:
-                print(key, ":")
-                print(value["Description"])
+            if keyword.casefold() in [tag.casefold() for tag in value["Tags"]]:
+                print(key, ":", "\n", self.charts[key]["Description"])
+            elif keyword.casefold() in [
+                word.casefold() for word in value["Description"].split()
+            ]:
+                print(key, ":", "\n", self.charts[key]["Description"])
             else:
                 print("No matching charts found")
 
 
-def _get_charts(path: str = "MorphCharts"):
+def _get_charts(path: str = "MorphCharts") -> dict:
     """
     Return dictionary of yaml files found in the Morph Charts folder.
 
@@ -123,6 +146,7 @@ def _get_charts(path: str = "MorphCharts"):
             {
                 details["Name"]: {
                     "Description": details["Description"],
+                    "Query": details["Query"],
                     "Tags": details["Tags"],
                     "DescriptionFile": details["DescriptionFile"],
                 }
