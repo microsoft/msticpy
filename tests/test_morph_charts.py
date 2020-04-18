@@ -62,7 +62,10 @@ class TestMorph:
         test_morph.search_charts("signinLogs")
         assert mocked_print.mock_calls == [
             call(
-                "SigninsChart", ":", "\n", "Charts for visualizing Azure AD Signin Logs"
+                "SigninsChart",
+                ":",
+                "\n",
+                "Charts for visualizing Azure AD Signin Logs.",
             )
         ]
 
