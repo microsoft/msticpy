@@ -11,14 +11,6 @@ from pytest import raises
 from ..msticpy.data.azure_data import AzureData
 from ..msticpy.common.utility import MsticpyException
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
-
 
 def test_azure_init():
     az = AzureData()

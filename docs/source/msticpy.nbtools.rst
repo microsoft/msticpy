@@ -12,6 +12,14 @@ msticpy.nbtools.foliummap module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.morph_charts module
+--------------------------------
+
+.. automodule:: msticpy.nbtools.morph_charts
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.nbdisplay module
 --------------------------------
 
