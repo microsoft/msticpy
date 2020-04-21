@@ -7,6 +7,7 @@
 from datetime import datetime
 from typing import Any, Union, Set, Dict, Tuple, List
 
+import numpy as np
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.models import (
@@ -720,11 +721,12 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
 
 def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
     """Create formatting for tool tip columns."""
+    ts_dtypes = [np.dtype("<M8[ns]"), np.dtype(">M8[ns]")]
     if isinstance(data, dict):
         tool_tip_dict = {}
         for series_df in data.values():
             for col in columns:
-                if col in data and str(series_df[col].dtype) == "datetime64[ns]":
+                if col in data and series_df[col].dtype in ts_dtypes:
                     tool_tip_dict[col] = f"@{col}{{%F %T}}"
                 elif col not in tool_tip_dict:
                     tool_tip_dict[col] = f"@{col}"
@@ -732,7 +734,7 @@ def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
 
     tool_tip_items = []
     for col in columns:
-        if col in data and str(data[col].dtype) == "datetime64[ns]":
+        if col in data and data[col].dtype in ts_dtypes:
             tool_tip_items.append((f"{col}", f"@{col}{{%F %T}}"))
         else:
             tool_tip_items.append((f"{col}", f"@{col}"))

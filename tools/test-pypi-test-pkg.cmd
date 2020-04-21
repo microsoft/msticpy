@@ -1,10 +1,21 @@
 @echo off
 if "%1" equ "" goto usage
+if "%2" equ "" goto usage
+if "%1" equ "/?" goto usage
+if /I "%1" equ "--help" goto usage
+if /I "%1" equ "-h" goto usage
 set h_rule=------------------------------------------------------------
 echo %h_rule%
 echo MSTICPY Package release test
 echo %h_rule%
 
+REM test folder
+pushd %2 > nul 2>&1
+if %ERRORLEVEL% equ 0 goto check_env
+echo %2 is not a valid directory
+goto :EOF
+
+:check_env
 conda env list | findstr "%1"
 if %ERRORLEVEL% neq 0 goto create_env
 echo %1 is a current conda environment.
@@ -40,7 +51,7 @@ pushd %nb_path%
 echo.
 echo %h_rule%
 echo Running notebooks from %nb_path%...
-set nbconver_opts=--ExecutePreprocessor.timeout=60 --ExecutePreprocessor.kernel_name=python3 --to notebook
+set nbconver_opts=--execute --ExecutePreprocessor.timeout=60 --ExecutePreprocessor.kernel_name=python3 --to notebook
 set NB=Base64Unpack.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error

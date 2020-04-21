@@ -119,6 +119,28 @@ class TestPkgConfig(unittest.TestCase):
             and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
         )
 
+        # Fallback to config.json
+        test_config2 = Path(_TEST_DATA).joinpath("msticpyconfig-noAzSentSettings.yaml")
+        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config2)
+        pkg_config.refresh_config()
+        _NAMED_WS = {
+            "WorkspaceId": "9997809c-8142-43e1-96b3-4ad87cfe95a3",
+            "TenantId": "99928fd7-42a5-48bc-a619-af56397b9f28",
+        }
+        with self.assertWarns(UserWarning):
+            wstest_config = WorkspaceConfig()
+        self.assertIn("workspace_id", wstest_config)
+        self.assertIsNotNone(wstest_config["workspace_id"])
+        self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
+        self.assertIn("tenant_id", wstest_config)
+        self.assertEqual(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
+        self.assertIsNotNone(wstest_config.code_connect_str)
+        self.assertTrue(
+            wstest_config.code_connect_str.startswith("loganalytics://code().tenant(")
+            and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
+            and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
+        )
+
     def test_geo_ip_settings(self):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
@@ -148,3 +170,17 @@ class TestPkgConfig(unittest.TestCase):
 
         ipstack = IPStackLookup()
         self.assertEqual(ipstack._api_key, "987654321-222")
+
+    def test_validate_config(self):
+        test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
+        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+        pkg_config.refresh_config()
+
+        results = pkg_config.validate_config()
+        self.assertGreater(len(results[0]), 1)
+        os.environ["XFORCE_ID"] = "myXfId"
+        os.environ["XFORCE_KEY"] = "myXfId"
+        os.environ["MAXMIND_AUTH"] = "myXfId"
+        pkg_config.refresh_config()
+        results = pkg_config.validate_config()
+        self.assertIsNone(results)

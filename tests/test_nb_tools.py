@@ -76,10 +76,12 @@ class Testnbtools(unittest.TestCase):
         file = input_file = os.path.join(_TEST_DATA, "config.json")
 
         ws_conf = WorkspaceConfig(file)
-        self.assertEqual(ws_conf["tenant_id"], "My Tenant Id")
+        self.assertEqual(ws_conf["tenant_id"], "99928fd7-42a5-48bc-a619-af56397b9f28")
         self.assertEqual(ws_conf["subscription_id"], "My Sub Id")
         self.assertEqual(ws_conf["resource_group"], "OMSWorkspaceRG")
-        self.assertEqual(ws_conf["workspace_id"], "My Workspace Id")
+        self.assertEqual(
+            ws_conf["workspace_id"], "9997809c-8142-43e1-96b3-4ad87cfe95a3"
+        )
         self.assertEqual(ws_conf["workspace_name"], "OMSWorkspace")
 
         ws_conf["workspace_name"] = "My other workspace"

@@ -4,12 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 from pytest import raises
 
 from ..msticpy.data.azure_data import AzureData
 from ..msticpy.common.utility import MsticpyException
+from ..msticpy.common import pkg_config
+from ..msticpy.common.provider_settings import get_provider_settings
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
@@ -39,3 +42,19 @@ def test_azure_connect(mock_sub_client, mock_creds):
     az = AzureData()
     az.connect(client_id="XXX", tenant_id="XXX", secret="XXX")
     assert az.connected == True
+
+
+def test_get_config():
+    test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
+    os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+    pkg_config.refresh_config()
+    data_provs = get_provider_settings(config_section="DataProviders")
+    az_cli_config = data_provs.get("AzureCLI")
+
+    assert bool(az_cli_config)
+    config_items = az_cli_config.args
+    assert bool(config_items)
+
+    assert bool(config_items["clientId"])
+    assert bool(config_items["tenantId"])
+    assert bool(config_items["clientSecret"])
