@@ -18,10 +18,11 @@ from typing import List, Tuple, Callable
 
 import pandas as pd
 from ipwhois import IPWhois
+from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, IpAddress
-from ..common.utility import export
+from ..nbtools.entityschema import GeoLocation, IpAddress, Host
+from ..common.utility import export, is_ipython
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -198,16 +199,20 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
+    if show_progress:
+        if is_ipython():
+            tqdm.pandas(tqdm_notebook)
+        else:
+            tqdm.pandas()
     if whois_col is not None:
-        data[[asn_col, whois_col]] = data.apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=show_progress),
+        data[[asn_col, whois_col]] = data.progress_apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=False),
             axis=1,
             result_type="expand",
         )
     else:
-        data[asn_col] = data.apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[0],
-            axis=1,
+        data[asn_col] = data.progress_apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=False)[0], axis=1
         )
     return data
 
@@ -307,3 +312,78 @@ def create_ip_record(
                 ip_entity["public_ips"] = []
 
     return ip_entity
+
+
+@export
+def populate_host_entity(
+    heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None, host_entity: Host = None
+) -> Host:
+    """
+    Populate host with IP and other data.
+
+    Parameters
+    ----------
+    heartbeat_df : pd.DataFrame
+        A dataframe of heartbeat data for the host
+    az_net_df : pd.DataFrame
+        Optional dataframe of Azure network data for the host
+    host_entity : Host
+        Host entity in which to populate data. By default,
+        a new host entity will be created.
+
+    Returns
+    -------
+    Host
+        How with details of the IP data collected
+
+    """
+    if host_entity is None:
+        host_entity = Host()
+
+    # Extract data from available dataframes
+    ip_hb = heartbeat_df.iloc[0]
+    if not host_entity.HostName:
+        host_entity.HostName = ip_hb["Computer"]  # type: ignore
+    host_entity.SourceComputerId = ip_hb["SourceComputerId"]  # type: ignore
+    host_entity.OSType = ip_hb["OSType"]  # type: ignore
+    host_entity.OSName = ip_hb["OSName"]  # type: ignore
+    host_entity.OSVMajorVersion = ip_hb["OSMajorVersion"]  # type: ignore
+    host_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
+    host_entity.Environment = ip_hb["ComputerEnvironment"]  # type: ignore
+    host_entity.OmsSolutions = [  # type: ignore
+        sol.strip() for sol in ip_hb["Solutions"].split(",")
+    ]
+    host_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
+    if host_entity.Environment == "Azure":
+        host_entity.AzureDetails = {  # type: ignore
+            "SubscriptionId": ip_hb["SubscriptionId"],
+            "ResourceProvider": ip_hb["ResourceProvider"],
+            "ResourceType": ip_hb["ResourceType"],
+            "ResourceGroup": ip_hb["ResourceGroup"],
+            "ResourceId": ip_hb["ResourceId"],
+            "Solutions": ip_hb["Solutions"],
+        }
+
+    # Populate IP data
+    ip_entity = IpAddress(Address=ip_hb["ComputerIP"])
+    geoloc_entity = GeoLocation()  # type: ignore
+    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
+    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
+    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
+    ip_entity.Location = geoloc_entity  # type: ignore
+    host_entity.IPAddress = ip_entity  # type: ignore
+
+    # If Azure network data present add this to host record
+    if az_net_df is not None and not az_net_df.empty:
+        if len(az_net_df) == 1:
+            priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
+            ip_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
+            pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
+            ip_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
+        else:
+            if "private_ips" not in ip_entity:
+                host_entity["private_ips"] = []
+            if "public_ips" not in ip_entity:
+                host_entity["public_ips"] = []
+
+    return host_entity

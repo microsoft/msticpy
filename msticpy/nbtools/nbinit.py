@@ -9,7 +9,7 @@ import importlib
 import sys
 import warnings
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Dict
+from typing import Any, List, Optional, Tuple, Dict, Callable
 
 from IPython.display import display, HTML
 import ipywidgets as widgets
@@ -53,11 +53,72 @@ follow the instructions there.
 _PANDAS_REQ_VERSION = (0, 25, 0)
 
 
+def _get_verbose_setting() -> Callable[[Optional[bool]], bool]:
+    """Closure for holding trace setting."""
+    _verbose_enabled = False
+
+    def _verbose(verbose: Optional[bool] = None) -> bool:
+        nonlocal _verbose_enabled
+        if verbose is not None:
+            _verbose_enabled = verbose
+        return _verbose_enabled
+
+    return _verbose
+
+
+_VERBOSE = _get_verbose_setting()
+
+
 def init_notebook(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
-):
+    verbose: bool = False,
+) -> bool:
+    """
+    Initialize the notebook environment.
+
+    Parameters
+    ----------
+    namespace : Dict[str, Any]
+        Namespace (usually globals()) into which imports
+        are to be populated.
+    additional_packages : List[str], optional
+        Additional packages to be pip installed,
+        by default None.
+        Packages are specified by name only or version
+        specification (e.g. "pandas>=0.25")
+    extra_imports : List[str], optional
+        Additional import definitions, by default None.
+        Imports are specified as up to 3 comma-delimited values
+        in a string:
+        "{source_pkg}, [{import_tgt}], [{alias}]"
+        `source_pkg` is mandatory - equivalent to a simple "import xyz"
+        statement.
+        `{import_tgt}` specifies an object to import from the package
+        equivalent to "from source_pkg import import_tgt"
+        `alias` allows renaming of the imported object - equivent to
+        the "as alias" part of the import statement.
+        If you want to provide just `source_pkg` and `alias` include
+        an additional placeholder comma: e.g. "pandas, , pd"
+    verbose : bool, optional
+        Display more verbose status, by default False
+
+    Returns
+    -------
+    bool
+        True if successful
+
+    Raises
+    ------
+    MsticpyException
+        If extra_imports data format is incorrect.
+        If package with required version check has no version
+        information.
+
+    """
+    _VERBOSE(verbose)
+
     print("Processing imports....")
     imp_ok = _global_imports(namespace, additional_packages, extra_imports)
 
@@ -80,37 +141,21 @@ def _global_imports(
     extra_imports: List[str] = None,
 ):
     try:
-
-        _imp_from_package(
-            namespace=namespace, package_name="IPython", target_name="get_ipython"
-        )
-        _imp_from_package(
-            namespace=namespace, package_name="ipywidgets", alias="widgets"
-        )
-        _imp_from_package(
-            namespace=namespace, package_name="pathlib", target_name="Path"
-        )
-        _imp_from_package(
-            namespace=namespace, package_name="matplotlib.pyplot", alias="plt"
-        )
-        _imp_from_package(
-            namespace=namespace,
-            package_name="matplotlib",
-            target_name="MatplotlibDeprecationWarning",
-        )
-        _imp_from_package(namespace=namespace, package_name="seaborn", alias="sns")
-        _imp_from_package(namespace=namespace, package_name="numpy", alias="np")
-        _imp_from_package(namespace=namespace, package_name="pandas", alias="pd")
-
+        _imp_from_package(nm_spc=namespace, pkg="pandas", alias="pd")
         _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
+        _imp_from_package(nm_spc=namespace, pkg="IPython", tgt="get_ipython")
+        _imp_from_package(nm_spc=namespace, pkg="ipywidgets", alias="widgets")
+        _imp_from_package(nm_spc=namespace, pkg="pathlib", tgt="Path")
+        _imp_from_package(nm_spc=namespace, pkg="matplotlib.pyplot", alias="plt")
         _imp_from_package(
-            namespace=namespace,
-            package_name="msticpy.data",
-            target_name="QueryProvider",
+            nm_spc=namespace, pkg="matplotlib", tgt="MatplotlibDeprecationWarning"
         )
-        _imp_module_all(namespace=namespace, module_name="msticpy.nbtools")
-        _imp_module_all(namespace=namespace, module_name="msticpy.sectools")
+        _imp_from_package(nm_spc=namespace, pkg="seaborn", alias="sns")
+        _imp_from_package(nm_spc=namespace, pkg="numpy", alias="np")
+        _imp_from_package(nm_spc=namespace, pkg="msticpy.data", tgt="QueryProvider")
+        _imp_module_all(nm_spc=namespace, module_name="msticpy.nbtools")
+        _imp_module_all(nm_spc=namespace, module_name="msticpy.sectools")
         #     from msticpy.data import QueryProvider
         #     from msticpy.nbtools import *
         #     from msticpy.sectools import *
@@ -118,24 +163,14 @@ def _global_imports(
         #     from msticpy.nbtools.utility import md, md_warn
         #     from msticpy.nbtools.wsconfig import WorkspaceConfig
         _imp_from_package(
-            namespace=namespace,
-            package_name="msticpy.nbtools.foliummap",
-            target_name="FoliumMap",
+            nm_spc=namespace, pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"
+        )
+        _imp_from_package(nm_spc=namespace, pkg="msticpy.nbtools.utility", tgt="md")
+        _imp_from_package(
+            nm_spc=namespace, pkg="msticpy.nbtools.utility", tgt="md_warn"
         )
         _imp_from_package(
-            namespace=namespace,
-            package_name="msticpy.nbtools.utility",
-            target_name="md",
-        )
-        _imp_from_package(
-            namespace=namespace,
-            package_name="msticpy.nbtools.utility",
-            target_name="md_warn",
-        )
-        _imp_from_package(
-            namespace=namespace,
-            package_name="msticpy.nbtools.wsconfig",
-            target_name="WorkspaceConfig",
+            nm_spc=namespace, pkg="msticpy.nbtools.wsconfig", tgt="WorkspaceConfig"
         )
 
         if additional_packages:
@@ -147,14 +182,11 @@ def _global_imports(
                     params[idx] = param.strip() or None
 
                 if params[0] is None:
-                    raise ValueError(
+                    raise MsticpyException(
                         f"First parameter in extra_imports is mandatory: {imp_spec}"
                     )
                 _imp_from_package(
-                    namespace=namespace,
-                    package_name=params[0],
-                    target_name=params[1],
-                    alias=params[2],
+                    nm_spc=namespace, pkg=params[0], tgt=params[1], alias=params[2]
                 )
         return True
     except ImportError as imp_err:
@@ -199,53 +231,53 @@ def _set_nb_options():
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
 
 
-def _imp_module(namespace: Dict[str, Any], module_name: str, alias: str = None):
+def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     """Import named module and assign to global alias."""
     mod = importlib.import_module(module_name)
     if alias:
-        namespace[alias] = mod
+        nm_spc[alias] = mod
     else:
-        namespace[module_name] = mod
-    print(f"{module_name} imported (alias={alias})")
+        nm_spc[module_name] = mod
+    if _VERBOSE():  # type: ignore
+        print(f"{module_name} imported (alias={alias})")
     return mod
 
 
-def _imp_module_all(namespace: Dict[str, Any], module_name):
+def _imp_module_all(nm_spc: Dict[str, Any], module_name):
     """Import all from named module add to globals."""
     imported_mod = importlib.import_module(module_name)
     for item in dir(imported_mod):
         if item.startswith("_"):
             continue
-        namespace[item] = getattr(imported_mod, item)
-    print(f"All items imported from {module_name}")
+        nm_spc[item] = getattr(imported_mod, item)
+    if _VERBOSE():  # type: ignore
+        print(f"All items imported from {module_name}")
 
 
 def _imp_from_package(
-    namespace: Dict[str, Any],
-    package_name: str,
-    target_name: str = None,
-    alias: str = None,
+    nm_spc: Dict[str, Any], pkg: str, tgt: str = None, alias: str = None
 ):
-    """Import object or submodule from `package_name`."""
-    if not target_name:
-        return _imp_module(namespace=namespace, module_name=package_name, alias=alias)
+    """Import object or submodule from `pkg`."""
+    if not tgt:
+        return _imp_module(nm_spc=nm_spc, module_name=pkg, alias=alias)
     try:
         # target could be a module
-        obj = importlib.import_module(f".{target_name}", package_name)
+        obj = importlib.import_module(f".{tgt}", pkg)
     except (ImportError, ModuleNotFoundError):
         # if not, it must be an attribute (class, func, etc.)
-        mod = importlib.import_module(package_name)
-        obj = getattr(mod, target_name)
+        mod = importlib.import_module(pkg)
+        obj = getattr(mod, tgt)
     if alias:
-        namespace[alias] = obj
+        nm_spc[alias] = obj
     else:
-        namespace[target_name] = obj
-    print(f"{target_name} imported from {package_name} (alias={alias})")
+        nm_spc[tgt] = obj
+    if _VERBOSE():  # type: ignore
+        print(f"{tgt} imported from {pkg} (alias={alias})")
     return obj
 
 
 def _check_and_reload_pkg(
-    namespace: Dict[str, Any], pkg: Any, req_version: Tuple[int, ...], alias: str = None
+    nm_spc: Dict[str, Any], pkg: Any, req_version: Tuple[int, ...], alias: str = None
 ):
     """Check package version matches required version and reload."""
     warn_mssg = []
@@ -256,7 +288,7 @@ def _check_and_reload_pkg(
     if pkg_version < req_version:
         display(HTML(_MISSING_PKG_WARN.format(package=pkg_name)))
         if not unit_testing():
-            resp = input("Install the package now? (y/n)")
+            resp = input("Install the package now? (y/n)")  # nosec
         else:
             resp = "y"
         if resp.casefold().startswith("y"):
@@ -268,6 +300,7 @@ def _check_and_reload_pkg(
             if pkg_name in sys.modules:
                 importlib.reload(pkg)
             else:
-                _imp_module(namespace, pkg_name, alias=alias)
-    print(f"{pkg_name} imported version {pkg.__version__}")
+                _imp_module(nm_spc, pkg_name, alias=alias)
+    if _VERBOSE():  # type: ignore
+        print(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg

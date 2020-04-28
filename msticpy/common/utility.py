@@ -258,7 +258,7 @@ def check_and_install_missing_packages(
         except pkg_resources.VersionConflict:
             found_pkg = None
         if found_pkg is None:
-            missing_reqs.append(req)
+            missing_packages.append(req)
 
     if not missing_packages:
         print("All packages are already installed")
