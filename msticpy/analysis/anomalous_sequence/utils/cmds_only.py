@@ -1,8 +1,16 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""Helper module for computations when each session is a list of strings."""
+
 from collections import defaultdict
-import numpy as np
 from typing import Tuple, List, Union
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
+import numpy as np
+
+from ..utils.data_structures import StateMatrix
 
 
 def compute_counts(
@@ -12,11 +20,11 @@ def compute_counts(
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    computes counts of individual commands and of sequences of two commands.
+    Computes counts of individual commands and of sequences of two commands.
 
     Laplace smoothing is applied to the counts.
-    This is so we shift some of the probability mass from the very probable commands and command sequences to
-    the unseen and very unlikely commands and command sequences.
+    This is so we shift some of the probability mass from the very probable commands and command
+    sequences to the unseen and very unlikely commands and command sequences.
     The `unk_token` means we can handle unseen commands and sequences of commands
 
     Parameters
@@ -37,6 +45,7 @@ def compute_counts(
     tuple of counts:
         individual command counts,
         sequence command (length 2) counts
+
     """
     assert start_token != end_token != unk_token, (
         "start_token, end_token, unk_tokens should all be set to something " "different"
@@ -73,6 +82,7 @@ def compute_counts(
     return seq1_counts, seq2_counts
 
 
+# pylint: disable=too-many-arguments
 def compute_likelihood_window(
     window: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -83,7 +93,7 @@ def compute_likelihood_window(
     end_token: str = None,
 ) -> float:
     """
-    computes the likelihood of the input `window`
+    Computes the likelihood of the input `window`.
 
     Parameters
     ----------
@@ -109,14 +119,15 @@ def compute_likelihood_window(
     Returns
     -------
     likelihood of the window
+
     """
     if use_start_token:
         assert start_token is not None
     if use_end_token:
         assert end_token is not None
 
-    n = len(window)
-    if n == 0:
+    w_len = len(window)
+    if w_len == 0:
         return np.nan
     prob = 1
 
@@ -126,7 +137,7 @@ def compute_likelihood_window(
     else:
         prob *= prior_probs[cur]
 
-    for i in range(1, n):
+    for i in range(1, w_len):
         prev, cur = window[i - 1], window[i]
         prob *= trans_probs[prev][cur]
 
@@ -136,6 +147,8 @@ def compute_likelihood_window(
     return prob
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 def compute_likelihood_windows_in_session(
     session: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -147,7 +160,7 @@ def compute_likelihood_windows_in_session(
     use_geo_mean: bool = False,
 ) -> List[float]:
     """
-    computes the likelihoods of a sliding window of length `window_len` throughout the session
+    Computes the likelihoods of a sliding window of length `window_len` throughout the session.
 
     Parameters
     ----------
@@ -175,6 +188,7 @@ def compute_likelihood_windows_in_session(
     Returns
     -------
     list of likelihoods
+
     """
     if use_start_end_tokens:
         assert start_token is not None and end_token is not None
@@ -207,6 +221,7 @@ def compute_likelihood_windows_in_session(
     return likelihoods
 
 
+# pylint: disable=too-many-arguments
 def rarest_window_session(
     session: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -218,7 +233,7 @@ def rarest_window_session(
     use_geo_mean: bool = False,
 ) -> Tuple[List[str], float]:
     """
-    finds and computes the likelihood of the rarest window of length `window_len` from the `session`
+    Finds and computes the likelihood of the rarest window of length `window_len` from the session.
 
     Parameters
     ----------
@@ -246,6 +261,7 @@ def rarest_window_session(
     Returns
     -------
     (rarest window part of the session, likelihood of the rarest window)
+
     """
     likelihoods = compute_likelihood_windows_in_session(
         session=session,

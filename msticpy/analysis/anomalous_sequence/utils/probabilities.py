@@ -1,7 +1,14 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""Helper module for computing training probabilities when modelling sessions."""
+
 from collections import defaultdict
 from typing import Tuple, Union
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
+from ..utils.data_structures import StateMatrix
 
 
 def compute_cmds_probs(
@@ -10,7 +17,10 @@ def compute_cmds_probs(
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    computes the probabilities for the individual commands, and also the probabilities for the transitions of commands
+    Computes command related probabilities.
+
+    In particular, computes the probabilities for the individual commands, and also the
+    probabilities for the transitions of commands.
 
     Parameters
     ----------
@@ -26,8 +36,8 @@ def compute_cmds_probs(
     Tuple:
         individual command probabilities,
         sequence command (length 2) probabilities
-    """
 
+    """
     total_cmds = sum(seq1_counts.values())
 
     prior_probs = defaultdict(lambda: 0)
@@ -56,8 +66,10 @@ def compute_params_probs(
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    computes the probabilities of the individual params, and also the probabilities of the params conditional on the
-    command
+    Computes param related probabilities.
+
+    In particular, computes the probabilities of the individual params, and also the probabilities
+    of the params conditional on the command.
 
     Parameters
     ----------
@@ -73,8 +85,8 @@ def compute_params_probs(
     Tuple:
         individual param probabilities,
         param conditional on command probabilities
-    """
 
+    """
     param_probs = defaultdict(lambda: 0)
     param_cond_cmd_probs = defaultdict(lambda: defaultdict(lambda: 0))
 
@@ -99,8 +111,10 @@ def compute_values_probs(
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    computes the probabilities of the individual values, and also the probabilities of the values conditional on the
-    param
+    Computes value related probabilities.
+
+    In particular, computes the probabilities of the individual values, and also the probabilities
+    of the values conditional on the param.
 
     Parameters
     ----------
@@ -116,8 +130,8 @@ def compute_values_probs(
     Tuple:
         individual value probabilities,
         value conditional on param probabilities
-    """
 
+    """
     value_probs = defaultdict(lambda: 0)
     value_cond_param_probs = defaultdict(lambda: defaultdict(lambda: 0))
 

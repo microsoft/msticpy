@@ -1,10 +1,24 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""
+Helper module for computations when modelling sessions.
+
+In particular, this module is for when each session is a list of the Cmd datatype with the params
+attribute set to a set of accompanying params.
+"""
+
 from collections import defaultdict
-import numpy as np
 from typing import Tuple, List, Union
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
+import numpy as np
+
+from ..utils.data_structures import StateMatrix, Cmd
 
 
+# pylint: disable=too-many-locals
 def compute_counts(
     sessions: List[List[Cmd]],
     start_token: str = "##START##",
@@ -12,22 +26,25 @@ def compute_counts(
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix, StateMatrix, StateMatrix]:
     """
-    computes counts of individual commands and of sequences of two commands. It also computes the counts of
-    individual params as well as counts of params conditional on the command
+    Computes the training counts for the sessions.
+
+    In particular, computes counts of individual commands and of sequences of two commands. It
+    also computes the counts of individual params as well as counts of params conditional on the
+    command.
 
     Laplace smoothing is applied to the counts.
-    This is so we shift some of the probability mass from the very probable commands/params to the unseen and very
-    unlikely commands/params.
-    The `unk_token` means we can handle unseen commands, sequences of commands and params
+    This is so we shift some of the probability mass from the very probable commands/params to the
+    unseen and very unlikely commands/params. The `unk_token` means we can handle unseen commands,
+    sequences of commands and params
 
     Parameters
     ----------
     sessions: List[List[Cmd]]
-        each session is a list of the Cmd datatype. Where the Cmd datatype has a name attribute (command name) and a
-        params attribute (set containing params associated with the command)
+        each session is a list of the Cmd datatype. Where the Cmd datatype has a name attribute
+        (command name) and a params attribute (set containing params associated with the command)
         an example session:
-            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox', params={'Identity',
-            'AuditEnabled'})]
+            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
+             params={'Identity', 'AuditEnabled'})]
     start_token: str
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
@@ -44,7 +61,6 @@ def compute_counts(
         param conditional on command counts
 
     """
-
     seq1_counts = defaultdict(lambda: 0)
     seq2_counts = defaultdict(lambda: defaultdict(lambda: 0))
 
@@ -58,9 +74,9 @@ def compute_counts(
             seq1_counts[cmd.name] += 1
             seq2_counts[prev][cmd.name] += 1
             prev = cmd.name
-            for p in cmd.params:
-                param_counts[p] += 1
-                cmd_param_counts[cmd.name][p] += 1
+            for par in cmd.params:
+                param_counts[par] += 1
+                cmd_param_counts[cmd.name][par] += 1
         seq2_counts[prev][end_token] += 1
         seq1_counts[end_token] += 1
 
@@ -96,8 +112,7 @@ def compute_prob_setofparams_given_cmd(
     use_geo_mean: bool = True,
 ) -> float:
     """
-    Given a command and its accompanying params, compute the probabilty of that set of params appearing,
-    conditional on the command
+    Computes probability of a set of params given the cmd.
 
     Parameters
     ----------
@@ -113,29 +128,33 @@ def compute_prob_setofparams_given_cmd(
         if True, then the likelihood will be raised to the power of (1/K) where K is the number of
         distinct params which appeared for the given `cmd` across our training set.
         Note:
-        Some commands may have more params set in general compared with other commands. It can be useful to use the
-        geo mean so that you can compare this probability across different commands with differing number of params
+        Some commands may have more params set in general compared with other commands. It can be
+        useful to use the geo mean so that you can compare this probability across different
+        commands with differing number of params
 
     Returns
     -------
     computed likelihood
+
     """
     if len(params) == 0:
         return 1
     ref = param_cond_cmd_probs[cmd]
-    prob = 1
-    for param, p in ref.items():
+    lik = 1
+    for param, prob in ref.items():
         if param in params:
-            prob *= p
+            lik *= prob
         else:
-            prob *= 1 - p
+            lik *= 1 - prob
     if use_geo_mean:
         k = len(ref)
-        prob = prob ** (1 / k)
+        lik = lik ** (1 / k)
 
-    return prob
+    return lik
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 def compute_likelihood_window(
     window: List[Cmd],
     prior_probs: Union[StateMatrix, dict],
@@ -147,15 +166,15 @@ def compute_likelihood_window(
     end_token: str = None,
 ) -> float:
     """
-    computes the likelihood of the input `window`
+    Computes the likelihood of the input `window`.
 
     Parameters
     ----------
     window: List[Cmd]
         part or all of a session, where a session is a list of the Cmd datatype
         an example session:
-            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox', params={'Identity',
-            'AuditEnabled'})]
+            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
+            params={'Identity', 'AuditEnabled'})]
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -176,14 +195,15 @@ def compute_likelihood_window(
     Returns
     -------
     likelihood of the window
+
     """
     if use_start_token:
         assert start_token is not None
     if use_end_token:
         assert end_token is not None
 
-    n = len(window)
-    if n == 0:
+    w_len = len(window)
+    if w_len == 0:
         return np.nan
     prob = 1
 
@@ -201,10 +221,10 @@ def compute_likelihood_window(
     else:
         prob *= prior_probs[cur_cmd] * param_cond_prob
 
-    for i, cmdparam in enumerate(window[1:]):
+    for i in range(1, w_len):
         prev, cur = window[i - 1], window[i]
         prev_cmd, cur_cmd = prev.name, cur.name
-        prev_par, cur_par = prev.params, cur.params
+        cur_par = cur.params
         prob *= trans_probs[prev_cmd][cur_cmd]
         param_cond_prob = compute_prob_setofparams_given_cmd(
             cmd=cur_cmd,
@@ -220,6 +240,8 @@ def compute_likelihood_window(
     return prob
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
 def compute_likelihood_windows_in_session(
     session: List[Cmd],
     prior_probs: Union[StateMatrix, dict],
@@ -232,15 +254,15 @@ def compute_likelihood_windows_in_session(
     use_geo_mean: bool = False,
 ) -> List[float]:
     """
-    computes the likelihoods of a sliding window of length `window_len` throughout the session
+    Computes the likelihoods of a sliding window of length `window_len` throughout the session.
 
     Parameters
     ----------
     session: List[Cmd]
         list of Cmd datatype
         an example session:
-            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox', params={'Identity',
-            'AuditEnabled'})]
+            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
+            params={'Identity', 'AuditEnabled'})]
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -263,8 +285,8 @@ def compute_likelihood_windows_in_session(
     Returns
     -------
     list of likelihoods
-    """
 
+    """
     if use_start_end_tokens:
         assert start_token is not None and end_token is not None
 
@@ -297,6 +319,7 @@ def compute_likelihood_windows_in_session(
     return likelihoods
 
 
+# pylint: disable=too-many-arguments
 def rarest_window_session(
     session: List[Cmd],
     prior_probs: StateMatrix,
@@ -309,15 +332,15 @@ def rarest_window_session(
     use_geo_mean=False,
 ) -> Tuple[List[Cmd], float]:
     """
-    finds and computes the likelihood of the rarest window of length `window_len` from the `session`
+    Finds and computes the likelihood of the rarest window of length `window_len` from the session.
 
     Parameters
     ----------
     session: List[Cmd]
         list of Cmd datatype
         an example session:
-            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox', params={'Identity',
-            'AuditEnabled'})]
+            [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
+            params={'Identity', 'AuditEnabled'})]
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -342,8 +365,8 @@ def rarest_window_session(
     Tuple:
         rarest window part of the session,
         likelihood of the rarest window
-    """
 
+    """
     likelihoods = compute_likelihood_windows_in_session(
         session=session,
         prior_probs=prior_probs,
