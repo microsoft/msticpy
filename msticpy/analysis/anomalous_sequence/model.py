@@ -53,15 +53,17 @@ class Model:
 
         """
         if not isinstance(sessions, list):
-            raise MsticpyException('`sessions` should be a list')
+            raise MsticpyException("`sessions` should be a list")
         if len(sessions) == 0:
-            raise MsticpyException('`sessions` should not be an empty list')
+            raise MsticpyException("`sessions` should not be an empty list")
         for i, ses in enumerate(sessions):
             if not isinstance(ses, list):
-                raise MsticpyException('each session in `sessions` should be a list')
+                raise MsticpyException("each session in `sessions` should be a list")
             if len(ses) == 0:
-                raise MsticpyException('session at index {} of `sessions` is empty. Each session '
-                                       'should contain at least one command'.format(i))
+                raise MsticpyException(
+                    "session at index {} of `sessions` is empty. Each session "
+                    "should contain at least one command".format(i)
+                )
 
         self.start_token = "##START##"
         self.end_token = "##END##"
@@ -157,7 +159,7 @@ class Model:
 
         """
         if self.session_type is None:
-            raise MsticpyException('session_type attribute should not be None')
+            raise MsticpyException("session_type attribute should not be None")
 
         if self.session_type == SessionType.cmds_only:
             seq1_counts, seq2_counts = cmds_only.compute_counts(
@@ -265,10 +267,12 @@ class Model:
 
         """
         if self.param_probs is None:
-            raise MsticpyException("please train the model first before using this method")
+            raise MsticpyException(
+                "please train the model first before using this method"
+            )
 
         if self.session_type is None:
-            raise MsticpyException('session_type attribute should not be None')
+            raise MsticpyException("session_type attribute should not be None")
 
         if self.session_type == SessionType.cmds_only:
             raise MsticpyException(
@@ -500,9 +504,9 @@ class Model:
     def _compute_probs_cmds(self):
         """Computes the individual and transition command probabilties."""
         if self.seq1_counts is None:
-            raise MsticpyException('seq1_counts attribute should not be None')
+            raise MsticpyException("seq1_counts attribute should not be None")
         if self.seq2_counts is None:
-            raise MsticpyException('seq2_counts attribute should not be None')
+            raise MsticpyException("seq2_counts attribute should not be None")
 
         prior_probs, trans_probs = probabilities.compute_cmds_probs(
             seq1_counts=self.seq1_counts,
@@ -516,9 +520,9 @@ class Model:
     def _compute_probs_params(self):
         """Computes the individual param probs and param conditional on command probs."""
         if self.param_counts is None:
-            raise MsticpyException('param_counts attribute should not be None')
+            raise MsticpyException("param_counts attribute should not be None")
         if self.cmd_param_counts is None:
-            raise MsticpyException('cmd_param_counts attribute should not be None')
+            raise MsticpyException("cmd_param_counts attribute should not be None")
 
         param_probs, param_cond_cmd_probs = probabilities.compute_params_probs(
             param_counts=self.param_counts,
@@ -532,9 +536,9 @@ class Model:
     def _compute_probs_values(self):
         """Computes the individual value probs and value conditional on param probs."""
         if self.value_counts is None:
-            raise MsticpyException('value_counts attribute should not be None')
+            raise MsticpyException("value_counts attribute should not be None")
         if self.param_value_counts is None:
-            raise MsticpyException('param_value_counts attribute should not be None')
+            raise MsticpyException("param_value_counts attribute should not be None")
 
         value_probs, value_cond_param_probs = probabilities.compute_values_probs(
             value_counts=self.value_counts,

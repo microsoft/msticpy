@@ -50,9 +50,11 @@ def score_sessions(
 
     """
     if not isinstance(data, pd.DataFrame):
-        raise MsticpyException('`data` should be a pandas dataframe')
+        raise MsticpyException("`data` should be a pandas dataframe")
     if session_column not in data.columns:
-        raise MsticpyException('"{}" should be a column in the `data`'.format(session_column))
+        raise MsticpyException(
+            '"{}" should be a column in the `data`'.format(session_column)
+        )
 
     sessions_df = data.copy()
     sessions = sessions_df[session_column].values.tolist()

@@ -40,7 +40,7 @@ class StateMatrix(dict):
         """
         super().__init__(states)
         if unk_token not in states:
-            raise MsticpyException('`unk_token` should be a key in `states`')
+            raise MsticpyException("`unk_token` should be a key in `states`")
         self.states = dict(states)
         self.unk_token = unk_token
         for key, val in self.states.items():
