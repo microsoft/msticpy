@@ -133,7 +133,9 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise Exception("please train the model first before using this method")
+            raise MsticpyException(
+                "please train the model first before using this method"
+            )
         self.compute_likelihoods_of_sessions(use_start_end_tokens=use_start_end_tokens)
         self.compute_geomean_lik_of_sessions()
         self.compute_rarest_windows(
@@ -278,7 +280,7 @@ class Model:
             raise MsticpyException(
                 'this method is not available for your type of input data "sessions"'
             )
-        elif self.session_type == SessionType.cmds_params_only:
+        if self.session_type == SessionType.cmds_params_only:
             result = defaultdict(lambda: defaultdict(lambda: 0))
             for ses in self.sessions:
                 for cmd in ses:
@@ -336,7 +338,9 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise Exception("please train the model first before using this method")
+            raise MsticpyException(
+                "please train the model first before using this method"
+            )
 
         result = []
 
@@ -443,7 +447,9 @@ class Model:
 
         """
         if self.prior_probs is None:
-            raise Exception("please train the model first before using this method")
+            raise MsticpyException(
+                "please train the model first before using this method"
+            )
 
         if self.session_type == SessionType.cmds_only:
             rare_tuples = [
@@ -568,11 +574,11 @@ class Model:
             elif isinstance(cmd.params, dict):
                 self.session_type = SessionType.cmds_params_values
             else:
-                raise Exception(
+                raise MsticpyException(
                     "params attribute of Cmd data structure should be either a set or a dict"
                 )
         else:
-            raise Exception(
+            raise MsticpyException(
                 'each element of "sessions" should be a list of either strings, or Cmd data types'
             )
 

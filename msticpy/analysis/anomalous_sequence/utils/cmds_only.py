@@ -48,7 +48,7 @@ def compute_counts(
         sequence command (length 2) counts
 
     """
-    if not (start_token != end_token != unk_token):
+    if not start_token != end_token != unk_token:
         raise MsticpyException(
             "start_token, end_token, unk_tokens should all be set to something "
             "different"

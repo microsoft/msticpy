@@ -1,7 +1,8 @@
 import unittest
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
-from msticpy.analysis.anomalous_sequence.model import Model
+from ..msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
+from ..msticpy.analysis.anomalous_sequence.model import Model
+from ..msticpy.common.utility import MsticpyException
 
 
 class TestModel(unittest.TestCase):
@@ -39,10 +40,10 @@ class TestModel(unittest.TestCase):
         self.sessions3 = None
 
     def test__init__(self):
-        self.assertRaises(AssertionError, lambda: Model(sessions=[]))
-        self.assertRaises(AssertionError, lambda: Model(sessions=[[]]))
-        self.assertRaises(AssertionError, lambda: Model(sessions=["Set-User"]))
-        self.assertRaises(AssertionError, lambda: Model(sessions=[["Set-User"], []]))
+        self.assertRaises(MsticpyException, lambda: Model(sessions=[]))
+        self.assertRaises(MsticpyException, lambda: Model(sessions=[[]]))
+        self.assertRaises(MsticpyException, lambda: Model(sessions=["Set-User"]))
+        self.assertRaises(MsticpyException, lambda: Model(sessions=[["Set-User"], []]))
         self.assertRaises(
             Exception, lambda: Model(sessions=[[{"Set-User": {"Identity"}}]])
         )
@@ -121,7 +122,7 @@ class TestModel(unittest.TestCase):
     def test_compute_scores(self):
         model = Model(sessions=self.sessions3)
         self.assertRaises(
-            Exception, lambda: model.compute_scores(use_start_end_tokens=True)
+            MsticpyException, lambda: model.compute_scores(use_start_end_tokens=True)
         )
 
         model.train()
@@ -136,7 +137,7 @@ class TestModel(unittest.TestCase):
     def test_compute_likelihoods_of_sessions(self):
         model = Model(sessions=self.sessions3)
         self.assertRaises(
-            Exception,
+            MsticpyException,
             lambda: model.compute_likelihoods_of_sessions(use_start_end_tokens=True),
         )
 
@@ -147,7 +148,7 @@ class TestModel(unittest.TestCase):
     def test_compute_rarest_windows(self):
         model = Model(sessions=self.sessions2)
         self.assertRaises(
-            Exception,
+            MsticpyException,
             lambda: model.compute_rarest_windows(
                 window_len=3, use_start_end_tokens=True, use_geo_mean=False
             ),

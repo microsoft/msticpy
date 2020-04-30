@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from msticpy.analysis.anomalous_sequence.utils import cmds_only
-from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
+from ..msticpy.analysis.anomalous_sequence.utils import cmds_only
+from ..msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
 
 START_TOKEN = "##START##"
 END_TOKEN = "##END##"

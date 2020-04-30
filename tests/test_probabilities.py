@@ -1,7 +1,7 @@
 import unittest
 
-from msticpy.analysis.anomalous_sequence.utils import probabilities
-from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
+from ..msticpy.analysis.anomalous_sequence.utils import probabilities
+from ..msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
 
 START_TOKEN = "##START##"
 END_TOKEN = "##END##"
