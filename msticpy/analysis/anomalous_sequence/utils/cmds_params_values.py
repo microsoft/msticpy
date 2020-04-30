@@ -16,6 +16,7 @@ from typing import Tuple, List, Union
 import numpy as np
 
 from ..utils.data_structures import StateMatrix, Cmd
+from ....common.utility import MsticpyException
 
 
 # pylint: disable=too-many-locals
@@ -282,9 +283,11 @@ def compute_likelihood_window(
 
     """
     if use_start_token:
-        assert start_token is not None
+        if start_token is None:
+            raise MsticpyException('start_token should not be None, when use_start_token is True')
     if use_end_token:
-        assert end_token is not None
+        if end_token is None:
+            raise MsticpyException('end_token should not be None, when use_end_token is True')
 
     w_len = len(window)
     if w_len == 0:
@@ -383,7 +386,9 @@ def compute_likelihood_windows_in_session(
 
     """
     if use_start_end_tokens:
-        assert start_token is not None and end_token is not None
+        if start_token is None or end_token is None:
+            raise MsticpyException('start_token and end_token should not be set to None when '
+                                   'use_start_end_tokens is set to True')
 
     likelihoods = []
     sess = session.copy()

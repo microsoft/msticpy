@@ -13,6 +13,7 @@ import pandas as pd
 
 from ...nbtools import timeline
 from ..anomalous_sequence.model import Model
+from ...common.utility import MsticpyException
 
 
 def score_sessions(
@@ -48,10 +49,10 @@ def score_sessions(
     input dataframe with two additional columns appended.
 
     """
-    assert isinstance(data, pd.DataFrame), "`data` should be a pandas dataframe"
-    assert session_column in data.columns, '"{}" should be a column in "data"'.format(
-        session_column
-    )
+    if not isinstance(data, pd.DataFrame):
+        raise MsticpyException('`data` should be a pandas dataframe')
+    if session_column not in data.columns:
+        raise MsticpyException('"{}" should be a column in the `data`'.format(session_column))
 
     sessions_df = data.copy()
     sessions = sessions_df[session_column].values.tolist()
@@ -65,7 +66,9 @@ def score_sessions(
     sessions_df[
         "rarest_window{}_likelihood".format(window_length)
     ] = model.rare_window_likelihoods[window_length]
-    sessions_df["rarest_window{}".format(window_length)] = model.rare_windows[window_length]
+    sessions_df["rarest_window{}".format(window_length)] = model.rare_windows[
+        window_length
+    ]
 
     return sessions_df
 
