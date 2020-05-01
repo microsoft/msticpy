@@ -179,10 +179,6 @@ References
    is the official documentation for using Jupyter notebooks in Azure
    Sentinel.
 
--  `Get Started <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Get%20Started.ipynb>`__
-   is a Jupyter notebook that demonstrates the use of Kqlmagic to
-   retrieve data from Azure Sentinel.
-
 Notebooks
 ---------
 
