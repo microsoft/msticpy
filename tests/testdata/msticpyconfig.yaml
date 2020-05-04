@@ -20,7 +20,7 @@ TIProviders:
   VirusTotal:
     Args:
       AuthKey:
-        KeyVault: vtauthkey
+        EnvironmentVar: VTAUTHKEY
     Primary: True
     Provider: "VirusTotal"
   XForce:

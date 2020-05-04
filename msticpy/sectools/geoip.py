@@ -159,6 +159,17 @@ This library uses services provided by ipstack (https://ipstack.com)"""
 
     _IPSTACK_API = "http://api.ipstack.com/{iplist}?access_key={access_key}&output=json"
 
+    _NO_API_KEY_MSSG = """
+No API Key was found to access the IPStack service.
+If you do not have an account, go here to create one and obtain and API key.
+https://ipstack.com/product
+
+Add this API key to your msticpyconfig.yaml
+https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#ipstack-geo-lookup-class.
+Alternatively, you can pass this to the IPStackLookup class when creating it:
+>>> iplookup = IPStackLookup(api_key="your_api_key")
+"""
+
     def __init__(self, api_key: Optional[str] = None, bulk_lookup: bool = False):
         """
         Create a new instance of IPStackLookup.
@@ -183,10 +194,7 @@ This library uses services provided by ipstack (https://ipstack.com)"""
         else:
             self._api_key = self.settings.args.get("AuthKey")  # type: ignore
         if not self._api_key:
-            raise MsticpyConfigException(
-                "No API key was found in configuration or supplied as parameter.",
-                "Obtain an API Key from IPStack - see https://ipstack.com.",
-            )
+            raise MsticpyConfigException(self._NO_API_KEY_MSSG)
         self.bulk_lookup = bulk_lookup
 
     def lookup_ip(
@@ -360,6 +368,17 @@ This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com.
 """
 
+    _NO_API_KEY_MSSG = """
+No API Key was found to download the Maxmind GeoIPLite database.
+If you do not have an account, go here to create one and obtain and API key.
+https://www.maxmind.com/en/geolite2/signup
+
+Add this API key to your msticpyconfig.yaml
+https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class.
+Alternatively, you can pass this to the GeoLiteLookup class when creating it:
+>>> iplookup = GeoLiteLookup(api_key="your_api_key")
+"""
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -437,11 +456,7 @@ https://www.maxmind.com.
 
         """
         if not self._api_key:
-            raise MsticpyConfigException(
-                "No API key was found in configuration or supplied as parameter.",
-                "Obtain an API Key from MaxMind and configure in msticpyconfig.yaml.",
-                "Sign up for an account at https://www.maxmind.com/en/geolite2/signup.",
-            )
+            raise MsticpyConfigException(self._NO_API_KEY_MSSG)
         if url is None:
             url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 

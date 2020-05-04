@@ -209,13 +209,15 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
         mp_config[_DP_KEY] = {}
     data_providers = mp_config[_DP_KEY]
 
-    if mp_config.get(_AZ_SENTINEL, {}).get("Workspaces"):
+    az_sent_config = mp_config.get(_AZ_SENTINEL)
+    if az_sent_config and az_sent_config.get("Workspaces"):
         for section, prov_settings in mp_config[_AZ_SENTINEL]["Workspaces"].items():
             sec_name = f"{_AZ_SENTINEL}_{section}"
             if sec_name in data_providers:
                 continue
             data_providers[sec_name] = {"Args": prov_settings}
-    if _AZ_CLI in mp_config and _AZ_CLI not in data_providers:
+    az_cli_config = mp_config.get(_AZ_CLI)
+    if az_cli_config and _AZ_CLI not in data_providers:
         data_providers[_AZ_CLI] = mp_config[_AZ_CLI]
     return mp_config
 

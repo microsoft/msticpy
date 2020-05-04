@@ -18,11 +18,10 @@ from typing import List, Tuple, Callable
 
 import pandas as pd
 from ipwhois import IPWhois
-from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress, Host
-from ..common.utility import export, is_ipython
+from ..common.utility import export
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -199,20 +198,16 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
-    if show_progress:
-        if is_ipython():
-            tqdm.pandas(tqdm_notebook)
-        else:
-            tqdm.pandas()
     if whois_col is not None:
-        data[[asn_col, whois_col]] = data.progress_apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=False),
+        data[[asn_col, whois_col]] = data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress),
             axis=1,
             result_type="expand",
         )
     else:
-        data[asn_col] = data.progress_apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=False)[0], axis=1
+        data[asn_col] = data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[0],
+            axis=1,
         )
     return data
 

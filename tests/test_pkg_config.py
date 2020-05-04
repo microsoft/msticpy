@@ -178,6 +178,7 @@ class TestPkgConfig(unittest.TestCase):
 
         results = pkg_config.validate_config()
         self.assertGreater(len(results[0]), 1)
+        os.environ["VTAUTHKEY"] = "myXfId"
         os.environ["XFORCE_ID"] = "myXfId"
         os.environ["XFORCE_KEY"] = "myXfId"
         os.environ["MAXMIND_AUTH"] = "myXfId"

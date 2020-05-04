@@ -375,8 +375,9 @@ def display_timeline_values(
             time_column=time_column,
         )
         show(column(plot, rng_select))
-    else:
-        show(plot)
+        return column(plot, rng_select)
+
+    show(plot)
     return plot
 
 
@@ -553,8 +554,9 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
 
     if show_range:
         show(column(plot, rng_select))
-    else:
-        show(plot)
+        return column(plot, rng_select)
+
+    show(plot)
     return plot
 
 
