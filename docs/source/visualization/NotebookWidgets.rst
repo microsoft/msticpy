@@ -24,6 +24,7 @@ picking items from a list or tracking progress of a long-running event.
 
 
 QueryTime
+---------
 
 See :py:class:`QueryTime<msticpy.nbtools.nbwidgets.QueryTime>`
 
@@ -196,6 +197,7 @@ dictionary of items.
 
 
 GetEnvironmentKey
+-----------------
 
 See :py:class:`GetEnvironmentKey<msticpy.nbtools.nbwidgets.GetEnvironmentKey>`
 

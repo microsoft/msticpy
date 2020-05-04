@@ -1,5 +1,5 @@
-msticpy - Time Series Analysis and Anomalies Visualization
-==========================================================
+Time Series Analysis and Anomalies Visualization
+================================================
 
 This notebook demonstrates the time series analysis and anomalies
 visualization built using the `Bokeh
@@ -67,7 +67,7 @@ TechCommunity blog posts
     qry_prov.connect(connection_str=ws_config.code_connect_str)
 
 Generating Time Series Data
-===========================
+---------------------------
 
 Time Series is a series of data points indexed (or listed or graphed) in
 time order. The data points are often discrete numeric points such as
@@ -75,7 +75,7 @@ frequency of counts or occurrences against a timestamp column of the
 dataset
 
 Using LogAnalytics Query Provider
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 msticpy has a QueryProvider through which you can connect to LogAnalytics
 Data environment. via ``QueryProvider(data_environment="LogAnalytics")``
@@ -213,7 +213,7 @@ Query, data source, parameters and parameterized raw KQL query
 
 
 Time Series Analysis and discovering Anomalies
-==============================================
+----------------------------------------------
 
 By analyzing time series data over an extended period, we can identify
 time-based patterns (e.g. seasonality, trend etc.) in the data and
@@ -227,7 +227,7 @@ from the input data and take it into consideration when flagging
 anomalies.
 
 Using Built-in KQL to generate TimeSeries decomposition
--------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this case, we will use built-in KQL function ``series_decompose()``
 to decompose time series to generate additional data points such as
@@ -346,7 +346,7 @@ the similar details
     </div>
 
 Read From External Sources
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have time series data in other locations, you can read it via
 pandas or respective data store API where data is stored. The pandas I/O
@@ -445,7 +445,7 @@ KQL Time series functions such as ``series_decompose_anomalies()``.
 
     
 Displaying Time Series anomaly alerts
--------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also use ``series_decompose_anomalies()`` which will run Anomaly
 Detection based on series decomposition. This takes an expression
@@ -621,7 +621,7 @@ other suspicious activity from other datasources.
 
 
 Time Series Anomalies Visualization
-===================================
+-----------------------------------
 
 Time series anomalies once discovered, you can visualize with line chart
 type to display outliers. Below we will see 2 types to visualize using msticpy function
@@ -629,10 +629,10 @@ type to display outliers. Below we will see 2 types to visualize using msticpy f
 built-in KQL ``render``.
 
 Using Bokeh Visualization Library
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Documentation for display_timeseries_anomalies
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -725,7 +725,7 @@ Documentation for display_timeseries_anomalies
 
 
 Exporting Plots as PNGs
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 To use bokeh.io image export functions you need selenium, phantomjs and
 pillow installed:
@@ -771,14 +771,14 @@ function.
 
 
 Here is our saved plot: plot.png
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. image:: _static/TimeSeriesAnomaliesExport.png
 
 
 Using Built-in KQL render operator
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Render operator instructs the user agent to render the results of the
 query in a particular way. In this case, we are using timechart which
