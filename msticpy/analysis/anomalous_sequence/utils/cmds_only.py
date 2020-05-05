@@ -6,7 +6,7 @@
 """Helper module for computations when each session is a list of strings."""
 
 from collections import defaultdict
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, DefaultDict
 
 import numpy as np
 
@@ -21,7 +21,7 @@ def compute_counts(
     unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    Computes counts of individual commands and of sequences of two commands.
+    Compute counts of individual commands and of sequences of two commands.
 
     Laplace smoothing is applied to the counts.
     This is so we shift some of the probability mass from the very probable commands and command
@@ -54,8 +54,9 @@ def compute_counts(
             "different"
         )
 
-    seq1_counts = defaultdict(lambda: 0)
-    seq2_counts = defaultdict(lambda: defaultdict(lambda: 0))
+    seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(lambda:
+                                                                       defaultdict(lambda: 0))
 
     for session in sessions:
         prev = start_token
@@ -79,13 +80,13 @@ def compute_counts(
     # remove start token from prior counts
     # seq1_counts.pop(start_token)
 
-    seq1_counts = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts = StateMatrix(states=seq2_counts, unk_token=unk_token)
+    seq1_counts_st = StateMatrix(states=seq1_counts, unk_token=unk_token)
+    seq2_counts_st = StateMatrix(states=seq2_counts, unk_token=unk_token)
 
-    return seq1_counts, seq2_counts
+    return seq1_counts_st, seq2_counts_st
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-branches
 def compute_likelihood_window(
     window: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -96,7 +97,7 @@ def compute_likelihood_window(
     end_token: str = None,
 ) -> float:
     """
-    Computes the likelihood of the input `window`.
+    Compute the likelihood of the input `window`.
 
     Parameters
     ----------
@@ -156,8 +157,7 @@ def compute_likelihood_window(
     return prob
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 def compute_likelihood_windows_in_session(
     session: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -169,7 +169,7 @@ def compute_likelihood_windows_in_session(
     use_geo_mean: bool = False,
 ) -> List[float]:
     """
-    Computes the likelihoods of a sliding window of length `window_len` throughout the session.
+    Compute the likelihoods of a sliding window of length `window_len` throughout the session.
 
     Parameters
     ----------
@@ -209,10 +209,10 @@ def compute_likelihood_windows_in_session(
     likelihoods = []
     sess = session.copy()
     if use_start_end_tokens:
-        sess += [end_token]
+        sess += [str(end_token)]
     end = len(sess) - window_len
     for i in range(end + 1):
-        window = sess[i : i + window_len]
+        window = sess[i: i + window_len]
         if i == 0:
             use_start = use_start_end_tokens
         else:
@@ -246,7 +246,7 @@ def rarest_window_session(
     use_geo_mean: bool = False,
 ) -> Tuple[List[str], float]:
     """
-    Finds and computes the likelihood of the rarest window of length `window_len` from the session.
+    Find and compute the likelihood of the rarest window of length `window_len` from the session.
 
     Parameters
     ----------
@@ -290,4 +290,4 @@ def rarest_window_session(
         return [], np.nan
     min_lik = min(likelihoods)
     ind = likelihoods.index(min_lik)
-    return session[ind : ind + window_len], min_lik
+    return session[ind: ind + window_len], min_lik

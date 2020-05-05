@@ -16,7 +16,7 @@ class StateMatrix(dict):
 
     def __init__(self, states: Union[dict, defaultdict], unk_token: str):
         """
-        Takes in a dict or dict of dicts of counts/probs or conditional counts/probs respectively.
+        Take in a dict or dict of dicts of counts/probs or conditional counts/probs respectively.
 
         If you try and retrieve the count/probability for an unseen command/param/value from the
         resulting object, it will return the value associated with the `unk_token` key.

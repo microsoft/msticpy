@@ -20,7 +20,7 @@ def score_sessions(
     data: pd.DataFrame, session_column: str, window_length: int
 ) -> pd.DataFrame:
     """
-    Models sessions using a sliding window approach within a markov model.
+    Model sessions using a sliding window approach within a markov model.
 
     Parameters
     ----------
@@ -85,7 +85,7 @@ def visualise_scored_sessions(
     source_columns: list = None,
 ):
     """
-    Takes scored sessions data as input and visualises them on an interactive timeline figure.
+    Take scored sessions data as input and visualise them on an interactive timeline figure.
 
     Parameters
     ----------
@@ -150,7 +150,7 @@ def score_and_visualise_sessions(
     source_columns: list = None,
 ):
     """
-    Models sessions and then produces an interactive timeline visualisation plot.
+    Model sessions and then produce an interactive timeline visualisation plot.
 
     In particular, the sessions are modelled using a sliding window approach within a markov
     model. The visualisation plot has time on the x-axis and the modelled session likelihood

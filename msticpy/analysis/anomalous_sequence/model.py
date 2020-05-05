@@ -6,7 +6,7 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import List, Union
+from typing import List, Union, Dict
 
 from .utils.data_structures import Cmd
 from .utils import (
@@ -21,7 +21,6 @@ from ...common.utility import MsticpyException
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-few-public-methods
 class Model:
-
     """Class for modelling sessions data."""
 
     def __init__(self, sessions: List[List[Union[str, Cmd]]]):
@@ -89,16 +88,16 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs = dict()
+        self.set_params_cond_cmd_probs = dict()  # type: Dict[str, Dict[str, float]]
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows = dict()
-        self.rare_window_likelihoods = dict()
+        self.rare_windows = dict()  # type: Dict[int, list]
+        self.rare_window_likelihoods = dict()  # type: Dict[int, list]
 
-        self.rare_windows_geo = dict()
-        self.rare_window_likelihoods_geo = dict()
+        self.rare_windows_geo = dict()  # type: Dict[int, list]
+        self.rare_window_likelihoods_geo = dict()  # type: Dict[int, list]
 
     def train(self):
         """
@@ -113,7 +112,7 @@ class Model:
 
     def compute_scores(self, use_start_end_tokens: bool):
         """
-        Computes some likelihood based scores/metrics for each of the sessions.
+        Compute some likelihood based scores/metrics for each of the sessions.
 
         In particular, computes the likelihoods and geometric mean of the likelihoods for each of
         the sessions. Also, uses the sliding window approach to compute the rarest window
@@ -147,7 +146,7 @@ class Model:
 
     def _compute_counts(self):
         """
-        Computes all the counts for the model.
+        Compute all the counts for the model.
 
         The items we will count depend on the the `session_type` attribute. We will compute the
         individual command and transition command counts.
@@ -222,7 +221,7 @@ class Model:
 
     def _compute_probs(self):
         """
-        Computes all the probabilities for the model.
+        Compute all the probabilities for the model.
 
         The probabilities we compute depends on the `session_type` attribute. We will compute the
         individual command and transition command probabilities.
@@ -245,7 +244,7 @@ class Model:
 
     def compute_setof_params_cond_cmd(self, use_geo_mean: bool):
         """
-        Computes likelihood of combinations of params conditional on the cmd.
+        Compute likelihood of combinations of params conditional on the cmd.
 
         In particular, go through each command from each session and compute the probability of
         that set of params (and values if provided) appearing conditional on the command.
@@ -321,7 +320,7 @@ class Model:
 
     def compute_likelihoods_of_sessions(self, use_start_end_tokens: bool = True):
         """
-        Computes the likelihoods for each of the sessions.
+        Compute the likelihoods for each of the sessions.
 
         Note: If the lengths (number of commands) of the sessions vary a lot, then you may not be
         able to fairly compare the likelihoods between a long session and a short session. This is
@@ -386,7 +385,7 @@ class Model:
 
     def compute_geomean_lik_of_sessions(self):
         """
-        Computes the geometric mean of the likelihood for each of the sessions.
+        Compute the geometric mean of the likelihood for each of the sessions.
 
         This is done by raising the likelihood of the session to the power of (1 / k) where k is the
         length of the session.
@@ -416,7 +415,7 @@ class Model:
         use_geo_mean: bool = False,
     ):
         """
-        Finds the rarest window and corresponding likelihood for each session.
+        Find the rarest window and corresponding likelihood for each session.
 
         In particular, uses a sliding window approach to find the rarest window and corresponding
         likelihood for that window for each session.
@@ -508,7 +507,7 @@ class Model:
             self.rare_window_likelihoods[window_len] = [rare[1] for rare in rare_tuples]
 
     def _compute_probs_cmds(self):
-        """Computes the individual and transition command probabilties."""
+        """Compute the individual and transition command probabilties."""
         if self.seq1_counts is None:
             raise MsticpyException("seq1_counts attribute should not be None")
         if self.seq2_counts is None:
@@ -524,7 +523,7 @@ class Model:
         self.trans_probs = trans_probs
 
     def _compute_probs_params(self):
-        """Computes the individual param probs and param conditional on command probs."""
+        """Compute the individual param probs and param conditional on command probs."""
         if self.param_counts is None:
             raise MsticpyException("param_counts attribute should not be None")
         if self.cmd_param_counts is None:
@@ -540,7 +539,7 @@ class Model:
         self.param_cond_cmd_probs = param_cond_cmd_probs
 
     def _compute_probs_values(self):
-        """Computes the individual value probs and value conditional on param probs."""
+        """Compute the individual value probs and value conditional on param probs."""
         if self.value_counts is None:
             raise MsticpyException("value_counts attribute should not be None")
         if self.param_value_counts is None:
@@ -557,7 +556,7 @@ class Model:
 
     def _asses_input(self):
         """
-        Determines what type of sessions we have.
+        Determine what type of sessions we have.
 
         In particular, assess the input `self.sessions` to see whether each session is a list of
         strings, or list of the Cmd datatype. And if each session is a list of the Cmd datatype, it
@@ -583,7 +582,7 @@ class Model:
             )
 
     def _check_cmd_type(self):
-        """Checks whether the Cmd datatype has the expected attributes."""
+        """Check whether the Cmd datatype has the expected attributes."""
         session = self.sessions[0]
         cmd = session[0]
         if "name" in dir(cmd) and "params" in dir(cmd):
@@ -592,7 +591,6 @@ class Model:
 
 
 class SessionType:
-
     """Class for storing the types of accepted sessions."""
 
     cmds_only = "cmds_only"
