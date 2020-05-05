@@ -22,9 +22,9 @@ from ....common.utility import MsticpyException
 # pylint: disable=too-many-locals
 def compute_counts(
     sessions: List[List[Cmd]],
-    start_token: str = "##START##",
-    end_token: str = "##END##",
-    unk_token: str = "##UNK##",
+    start_token: str,
+    end_token: str,
+    unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix, StateMatrix, StateMatrix]:
     """
     Computes the training counts for the sessions.

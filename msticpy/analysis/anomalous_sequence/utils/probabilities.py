@@ -14,7 +14,7 @@ from ..utils.data_structures import StateMatrix
 def compute_cmds_probs(
     seq1_counts: Union[StateMatrix, dict],
     seq2_counts: Union[StateMatrix, dict],
-    unk_token: str = "##UNK##",
+    unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Computes command related probabilities.
@@ -63,7 +63,7 @@ def compute_cmds_probs(
 def compute_params_probs(
     param_counts: Union[StateMatrix, dict],
     cmd_param_counts: Union[StateMatrix, dict],
-    unk_token: str = "##UNK##",
+    unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Computes param related probabilities.
@@ -108,7 +108,7 @@ def compute_params_probs(
 def compute_values_probs(
     value_counts: Union[StateMatrix, dict],
     param_value_counts: Union[StateMatrix, dict],
-    unk_token: str = "##UNK##",
+    unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Computes value related probabilities.

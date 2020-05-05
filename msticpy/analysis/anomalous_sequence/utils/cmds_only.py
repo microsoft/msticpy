@@ -16,9 +16,9 @@ from ....common.utility import MsticpyException
 
 def compute_counts(
     sessions: List[List[str]],
-    start_token: str = "##START##",
-    end_token: str = "##END##",
-    unk_token: str = "##UNK##",
+    start_token: str,
+    end_token: str,
+    unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Computes counts of individual commands and of sequences of two commands.
