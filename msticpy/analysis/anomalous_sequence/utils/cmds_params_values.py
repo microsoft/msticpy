@@ -21,10 +21,7 @@ from ....common.utility import MsticpyException
 
 # pylint: disable=too-many-locals
 def compute_counts(
-    sessions: List[List[Cmd]],
-    start_token: str,
-    end_token: str,
-    unk_token: str,
+    sessions: List[List[Cmd]], start_token: str, end_token: str, unk_token: str,
 ) -> Tuple[
     StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix
 ]:
@@ -69,16 +66,19 @@ def compute_counts(
 
     """
     seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(lambda:
-                                                                       defaultdict(lambda: 0))
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     param_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(lambda:
-                                                                            defaultdict(lambda: 0))
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     value_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    param_value_counts: DefaultDict[str, DefaultDict[str, int]] = \
-        defaultdict(lambda: defaultdict(lambda: 0))
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for session in sessions:
         prev = start_token

@@ -41,8 +41,9 @@ def compute_cmds_probs(
     total_cmds = sum(seq1_counts.values())
 
     prior_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    trans_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(lambda:
-                                                                         defaultdict(lambda: 0))
+    trans_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     # compute prior probs
     for cmd in seq1_counts:
@@ -89,8 +90,9 @@ def compute_params_probs(
 
     """
     param_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    param_cond_cmd_probs: DefaultDict[str, DefaultDict[str, float]] = \
-        defaultdict(lambda: defaultdict(lambda: 0))
+    param_cond_cmd_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for cmd, params in cmd_param_counts.items():
         n_param = sum(params.values())
@@ -102,7 +104,9 @@ def compute_params_probs(
         param_probs[param] = count / tot_param
 
     param_probs_sm = StateMatrix(states=param_probs, unk_token=unk_token)
-    param_cond_cmd_probs_sm = StateMatrix(states=param_cond_cmd_probs, unk_token=unk_token)
+    param_cond_cmd_probs_sm = StateMatrix(
+        states=param_cond_cmd_probs, unk_token=unk_token
+    )
 
     return param_probs_sm, param_cond_cmd_probs_sm
 
@@ -135,8 +139,9 @@ def compute_values_probs(
 
     """
     value_probs: DefaultDict[str, float] = defaultdict(lambda: 0)
-    value_cond_param_probs: DefaultDict[str, DefaultDict[str, float]] = \
-        defaultdict(lambda: defaultdict(lambda: 0))
+    value_cond_param_probs: DefaultDict[str, DefaultDict[str, float]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for param, values in param_value_counts.items():
         n_val = sum(values.values())

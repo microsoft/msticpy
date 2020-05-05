@@ -15,10 +15,7 @@ from ....common.utility import MsticpyException
 
 
 def compute_counts(
-    sessions: List[List[str]],
-    start_token: str,
-    end_token: str,
-    unk_token: str,
+    sessions: List[List[str]], start_token: str, end_token: str, unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Compute counts of individual commands and of sequences of two commands.
@@ -55,8 +52,9 @@ def compute_counts(
         )
 
     seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
-    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(lambda:
-                                                                       defaultdict(lambda: 0))
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for session in sessions:
         prev = start_token
