@@ -158,3 +158,23 @@ sources:
         description: Table name
         type: str
         default: 'SecurityEvent | where EventID == 4625'
+  list_all_logons_by_host:
+    description: Retrevies all failed or successful logons to a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where {subscription_filter}
+        | where Computer has "{host_name}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | extend LogonResult = iif(EventID==4624, "Success", "Failure")
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+      table:
+        description: Table name
+        type: str
+        default: 'SecurityEvent | where EventID == 4625 or EventID == 4624'
