@@ -43,7 +43,7 @@ class TestMorph:
                 "Charts for visualizing Azure AD Signin Logs.",
                 "\n",
                 "Query: ",
-                "Azure.morph_signins",
+                "Azure.list_all_signins_geo",
             )
         ]
 

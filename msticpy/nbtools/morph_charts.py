@@ -43,9 +43,7 @@ class MorphCharts:
         if not isinstance(data, pd.DataFrame):
             raise MsticpyException("Data provided must be in pandas.DataFrame format")
 
-        try:
-            self.charts[chart_name]
-        except KeyError:
+        if chart_name not in self.charts:
             raise MsticpyException(
                 f"{chart_name} is not a vaid chart. Run list_charts() to see avaliable charts"  # pylint: disable=line-too-long
             )
@@ -120,7 +118,7 @@ class MorphCharts:
                 print("No matching charts found")
 
 
-def _get_charts(path: str = "MorphCharts") -> dict:
+def _get_charts(path: str = "morph_charts") -> dict:
     """
     Return dictionary of yaml files found in the Morph Charts folder.
 
@@ -142,15 +140,18 @@ def _get_charts(path: str = "MorphCharts") -> dict:
     for chart in chart_files:
         chart_data = open(chart, "r")
         details = yaml.safe_load(chart_data)
-        chart_details.update(
-            {
-                details["Name"]: {
-                    "Description": details["Description"],
-                    "Query": details["Query"],
-                    "Tags": details["Tags"],
-                    "DescriptionFile": details["DescriptionFile"],
+        try:
+            chart_details.update(
+                {
+                    details["Name"]: {
+                        "Description": details["Description"],
+                        "Query": details["Query"],
+                        "Tags": details["Tags"],
+                        "DescriptionFile": details["DescriptionFile"],
+                    }
                 }
-            }
-        )
+            )
+        except KeyError:
+            raise Exception(f"{chart} description does not appear to be in the correct format.")
 
     return chart_details
