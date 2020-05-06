@@ -222,8 +222,8 @@ def resolve_pkg_path(part_path: str):
     return str(searched_paths[0])
 
 
-@export
-# pylint: disable=not-an-iterable
+# pylint: disable=not-an-iterable, too-many-branches
+@export  # noqa: MC0001
 def check_and_install_missing_packages(
     required_packages: List[str],
     notebook: bool = True,
@@ -247,6 +247,8 @@ def check_and_install_missing_packages(
         Boolean value to toggle user flag while installing pip packages,
         by default True
     upgrade: bool, option
+        If true supply `--upgrade` flag to pip to install the latest
+        version (applies to all package in `required_packages`)
 
     """
     missing_packages = []
@@ -284,6 +286,9 @@ def check_and_install_missing_packages(
             print("Execution of pip installation failed:", err)
 
 
+# pylint: enable=not-an-iterable, too-many-branches
+
+
 # pylint: disable=invalid-name
 @export
 def md(string: str, styles: Union[str, Iterable[str]] = None):
@@ -309,6 +314,9 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
     display(HTML(f"<p style='{style_str}'>{string}</p>"))
+
+
+# pylint: enable=invalid-name
 
 
 @export
@@ -437,6 +445,7 @@ def unit_testing() -> bool:
     return _U_TEST_ENV in os.environ
 
 
+# pylint: disable=invalid-name
 def set_unit_testing(on: bool = True):
     """
     Set flag env var to indicated that code is being unit-tested.
@@ -451,6 +460,9 @@ def set_unit_testing(on: bool = True):
         os.environ[_U_TEST_ENV] = "True"
     else:
         os.environ.pop(_U_TEST_ENV, None)
+
+
+# pylint: enable=invalid-name
 
 
 def is_valid_uuid(uuid_str: Any) -> bool:

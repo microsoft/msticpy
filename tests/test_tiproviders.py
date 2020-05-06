@@ -230,7 +230,6 @@ class TestTIProviders(unittest.TestCase):
     ti_lookup = None
 
     def setUp(self):
-        self._mp_conf_env = os.environ[pkg_config._CONFIG_ENV_VAR]
         self.ti_lookup = self.load_ti_lookup()
 
     @staticmethod
@@ -248,8 +247,7 @@ class TestTIProviders(unittest.TestCase):
     def test_ti_config_and_load(self):
         self.load_ti_lookup()
 
-        with self.assertWarns(UserWarning):
-            ti_settings = get_provider_settings()
+        ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
         self.assertGreaterEqual(len(ti_settings), 4)

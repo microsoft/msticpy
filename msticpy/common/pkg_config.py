@@ -48,7 +48,7 @@ def _get_current_config() -> Callable[[Any], Optional[str]]:
     _current_conf_file: Optional[str] = None
 
     def _current_config(file_path: Optional[str] = None) -> Optional[str]:
-        nonlocal _current_conf_file
+        nonlocal _current_conf_file  # noqa
         if file_path is not None:
             _current_conf_file = file_path
         return _current_conf_file
@@ -302,10 +302,10 @@ def _validate_azure_sentinel(mp_config):
     mp_errors = []
     as_settings = mp_config.get("AzureSentinel", {})
     if not as_settings:
-        mp_errors.append(f"Missing or empty 'AzureSentinel' section")
+        mp_errors.append("Missing or empty 'AzureSentinel' section")
     ws_settings = as_settings.get("Workspaces", {})
     if not ws_settings:
-        mp_errors.append(f"Missing or empty 'Workspaces' section in")
+        mp_errors.append("Missing or empty 'Workspaces' section in")
     no_default = True
     for ws, ws_settings in ws_settings.items():
         if ws == "Default":
