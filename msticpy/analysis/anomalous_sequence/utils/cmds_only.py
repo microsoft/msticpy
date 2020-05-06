@@ -6,7 +6,7 @@
 """Helper module for computations when each session is a list of strings."""
 
 from collections import defaultdict
-from typing import Tuple, List, Union, Dict, Any
+from typing import Tuple, List, Union, DefaultDict
 
 import numpy as np
 
@@ -15,10 +15,7 @@ from ....common.utility import MsticpyException
 
 
 def compute_counts(  # nosec
-    sessions: List[List[str]],
-    start_token: str = "##START##",
-    end_token: str = "##END##",
-    unk_token: str = "##UNK##",
+    sessions: List[List[str]], start_token: str, end_token: str, unk_token: str
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
     Compute counts of individual commands and of sequences of two commands.
@@ -57,8 +54,10 @@ def compute_counts(  # nosec
             "different"
         )
 
-    seq1_counts: Dict[Any, Any] = defaultdict(lambda: 0)
-    seq2_counts: Dict[Any, Any] = defaultdict(lambda: defaultdict(lambda: 0))
+    seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for session in sessions:
         prev = start_token
@@ -82,10 +81,10 @@ def compute_counts(  # nosec
     # remove start token from prior counts
     # seq1_counts.pop(start_token)
 
-    seq1_counts = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts = StateMatrix(states=seq2_counts, unk_token=unk_token)
+    seq1_counts_st = StateMatrix(states=seq1_counts, unk_token=unk_token)
+    seq2_counts_st = StateMatrix(states=seq2_counts, unk_token=unk_token)
 
-    return seq1_counts, seq2_counts
+    return seq1_counts_st, seq2_counts_st
 
 
 # pylint: disable=too-many-arguments, too-many-branches
@@ -159,7 +158,7 @@ def compute_likelihood_window(
     return prob
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 # pylint: disable=too-many-locals, too-many-branches
 def compute_likelihood_windows_in_session(
     session: List[str],
@@ -212,7 +211,7 @@ def compute_likelihood_windows_in_session(
     likelihoods = []
     sess = session.copy()
     if use_start_end_tokens and end_token:
-        sess += [end_token]
+        sess += [str(end_token)]
     end = len(sess) - window_len
     for i in range(end + 1):
         window = sess[i : i + window_len]  # noqa: E203

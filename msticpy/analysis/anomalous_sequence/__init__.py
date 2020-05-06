@@ -3,4 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Anomalous Sequence sub-package."""
+"""MSTIC Anomalous Sequence Modelling Tools."""
+
+from ..._version import VERSION
+
+__version__ = VERSION

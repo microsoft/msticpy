@@ -12,7 +12,7 @@ accompanying params and values.
 """
 
 from collections import defaultdict
-from typing import Tuple, List, Union, Any
+from typing import Tuple, List, Union, DefaultDict
 
 import numpy as np
 
@@ -22,10 +22,7 @@ from ....common.utility import MsticpyException
 
 # pylint: disable=too-many-locals, too-many-branches
 def compute_counts(  # noqa MC0001  # nosec
-    sessions: List[List[Cmd]],
-    start_token: str = "##START##",
-    end_token: str = "##END##",
-    unk_token: str = "##UNK##",
+    sessions: List[List[Cmd]], start_token: str, end_token: str, unk_token: str
 ) -> Tuple[
     StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix
 ]:
@@ -80,14 +77,20 @@ def compute_counts(  # noqa MC0001  # nosec
         value conditional on param counts
 
     """
-    seq1_counts: Any = defaultdict(lambda: 0)
-    seq2_counts: Any = defaultdict(lambda: defaultdict(lambda: 0))
+    seq1_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
-    param_counts: Any = defaultdict(lambda: 0)
-    cmd_param_counts: Any = defaultdict(lambda: defaultdict(lambda: 0))
+    param_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
-    value_counts: Any = defaultdict(lambda: 0)
-    param_value_counts: Any = defaultdict(lambda: defaultdict(lambda: 0))
+    value_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]] = defaultdict(
+        lambda: defaultdict(lambda: 0)
+    )
 
     for session in sessions:
         prev = start_token
@@ -96,9 +99,10 @@ def compute_counts(  # noqa MC0001  # nosec
             seq1_counts[cmd.name] += 1
             seq2_counts[prev][cmd.name] += 1
             prev = cmd.name
-            if not isinstance(cmd.params, dict):
-                continue
-            for par, val in cmd.params.items():
+            pars = cmd.params
+            if isinstance(pars, set):
+                pars = dict.fromkeys(pars)
+            for par, val in pars.items():
                 param_counts[par] += 1
                 value_counts[val] += 1
                 cmd_param_counts[cmd.name][par] += 1
@@ -107,7 +111,7 @@ def compute_counts(  # noqa MC0001  # nosec
         seq1_counts[end_token] += 1
 
     # apply laplace smoothing for the cmds
-    cmds = list(seq1_counts.keys()) + [unk_token]
+    cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
     for cmd1 in cmds:
         for cmd2 in cmds:
             if cmd1 != end_token and cmd2 != start_token:
@@ -116,35 +120,35 @@ def compute_counts(  # noqa MC0001  # nosec
                 seq1_counts[cmd2] += 1
 
     # apply laplace smoothing for the params
-    params = list(param_counts.keys()) + [unk_token]
-    for cmd in cmds:
+    params: List[str] = list(param_counts.keys()) + [unk_token]
+    for comd in cmds:
         for param in params:
-            if param in cmd_param_counts[cmd] or param == unk_token:
+            if param in cmd_param_counts[comd] or param == unk_token:
                 param_counts[param] += 1
-                cmd_param_counts[cmd][param] += 1
+                cmd_param_counts[comd][param] += 1
 
     # apply laplace smoothing for the values
-    values = list(value_counts.keys()) + [unk_token]
+    values: List[str] = list(value_counts.keys()) + [unk_token]
     for param in params:
         for value in values:
             if value in param_value_counts[param] or value == unk_token:
                 value_counts[value] += 1
                 param_value_counts[param][value] += 1
 
-    seq1_counts = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts = StateMatrix(states=seq2_counts, unk_token=unk_token)
-    param_counts = StateMatrix(states=param_counts, unk_token=unk_token)
-    cmd_param_counts = StateMatrix(states=cmd_param_counts, unk_token=unk_token)
-    value_counts = StateMatrix(states=value_counts, unk_token=unk_token)
-    param_value_counts = StateMatrix(states=param_value_counts, unk_token=unk_token)
+    seq1_counts_sm = StateMatrix(states=seq1_counts, unk_token=unk_token)
+    seq2_counts_sm = StateMatrix(states=seq2_counts, unk_token=unk_token)
+    param_counts_sm = StateMatrix(states=param_counts, unk_token=unk_token)
+    cmd_param_counts_sm = StateMatrix(states=cmd_param_counts, unk_token=unk_token)
+    value_counts_sm = StateMatrix(states=value_counts, unk_token=unk_token)
+    param_value_counts_sm = StateMatrix(states=param_value_counts, unk_token=unk_token)
 
     return (
-        seq1_counts,
-        seq2_counts,
-        param_counts,
-        cmd_param_counts,
-        value_counts,
-        param_value_counts,
+        seq1_counts_sm,
+        seq2_counts_sm,
+        param_counts_sm,
+        cmd_param_counts_sm,
+        value_counts_sm,
+        param_value_counts_sm,
     )
 
 
@@ -199,10 +203,12 @@ def compute_prob_setofparams_given_cmd(
     ----------
     cmd: str
         name of command (e.g. for Exchange powershell commands: "Set-Mailbox")
-    params_with_vals: dict
+    params_with_vals: Union[dict, set]
         dict of accompanying params and values for the cmd
         e.g for Exchange powershell commands:
             {'Identity': 'an_identity' , 'ForwardingEmailAddress': 'email@email.com'}
+            If params is set to be a set, then an artificial dictionary will
+            be created with the set as the keys and Nones for the values.
     param_cond_cmd_probs: Union[StateMatrix, dict]
         computed probabilities of params conditional on the command
     value_cond_param_probs: Union[StateMatrix, dict]
@@ -226,17 +232,20 @@ def compute_prob_setofparams_given_cmd(
     computed probability
 
     """
-    if len(params_with_vals) == 0 or isinstance(params_with_vals, set):
+    pars = params_with_vals.copy()
+    if isinstance(pars, set):
+        pars = dict.fromkeys(pars)
+    if len(pars) == 0:
         return 1.0
     ref_cmd = param_cond_cmd_probs[cmd]
-    lik = 1.0
+    lik: float = 1
     num = 0
     for param, prob in ref_cmd.items():
-        if param in params_with_vals:
+        if param in pars:
             lik *= prob
             if param in modellable_params:
                 num += 1
-                val = params_with_vals[param]
+                val = pars[param]
                 lik *= value_cond_param_probs[param][val]
         else:
             lik *= 1 - prob
@@ -248,8 +257,7 @@ def compute_prob_setofparams_given_cmd(
     return lik
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-locals, too-many-branches
+# pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 def compute_likelihood_window(
     window: List[Cmd],
     prior_probs: Union[StateMatrix, dict],
@@ -316,7 +324,7 @@ def compute_likelihood_window(
     w_len = len(window)
     if w_len == 0:
         return np.nan
-    prob = 1.0
+    prob: float = 1
 
     cur_cmd = window[0].name
     params = window[0].params
@@ -355,8 +363,7 @@ def compute_likelihood_window(
     return prob
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-locals, too-many-branches
+# pylint: disable=too-many-locals, too-many-arguments
 def compute_likelihood_windows_in_session(
     session: List[Cmd],
     prior_probs: Union[StateMatrix, dict],
@@ -428,7 +435,7 @@ def compute_likelihood_windows_in_session(
     likelihoods = []
     sess = session.copy()
     if use_start_end_tokens and end_token:
-        sess += [Cmd(name=end_token, params=dict())]
+        sess += [Cmd(name=str(end_token), params=dict())]
     end = len(sess) - window_len
     for i in range(end + 1):
         window = sess[i : i + window_len]  # noqa E203

@@ -3,4 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Analysis sub-package."""
+"""MSTIC Analysis Tools."""
+
+from .._version import VERSION
+
+__version__ = VERSION

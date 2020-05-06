@@ -20,7 +20,7 @@ def score_sessions(
     data: pd.DataFrame, session_column: str, window_length: int
 ) -> pd.DataFrame:
     """
-    Models sessions using a sliding window approach within a markov model.
+    Model sessions using a sliding window approach within a markov model.
 
     Parameters
     ----------

@@ -88,16 +88,16 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs: Dict[Any, Any] = dict()
+        self.set_params_cond_cmd_probs = dict()  # type: Dict[str, Dict[str, float]]
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows: Dict[Any, Any] = dict()
-        self.rare_window_likelihoods: Dict[Any, Any] = dict()
+        self.rare_windows = dict()  # type: Dict[int, list]
+        self.rare_window_likelihoods = dict()  # type: Dict[int, list]
 
-        self.rare_windows_geo: Dict[Any, Any] = dict()
-        self.rare_window_likelihoods_geo: Dict[Any, Any] = dict()
+        self.rare_windows_geo = dict()  # type: Dict[int, list]
+        self.rare_window_likelihoods_geo = dict()  # type: Dict[int, list]
 
     def train(self):
         """
