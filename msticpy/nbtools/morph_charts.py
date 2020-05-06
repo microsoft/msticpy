@@ -152,6 +152,8 @@ def _get_charts(path: str = "morph_charts") -> dict:
                 }
             )
         except KeyError:
-            raise Exception(f"{chart} description does not appear to be in the correct format.")
+            raise Exception(
+                f"{chart} description does not appear to be in the correct format."
+            )
 
     return chart_details
