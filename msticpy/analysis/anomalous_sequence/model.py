@@ -6,7 +6,7 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict
 
 from .utils.data_structures import Cmd
 from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
