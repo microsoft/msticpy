@@ -423,9 +423,16 @@ class TILookup:
             provider response.
 
         """
-        return pd.DataFrame(
-            {r_item[0]: pd.Series(attr.asdict(r_item[1])) for r_item in ioc_lookup[1]}
-        ).T.rename(columns=LookupResult.column_map())
+        return (
+            pd.DataFrame(
+                {
+                    r_item[0]: pd.Series(attr.asdict(r_item[1]))
+                    for r_item in ioc_lookup[1]
+                }
+            )
+            .T.rename(columns=LookupResult.column_map())
+            .drop("SafeIoc", axis=1)
+        )
 
     def _select_providers(
         self, providers: List[str] = None, prov_scope: str = "primary"
