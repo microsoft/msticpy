@@ -20,7 +20,7 @@ import pandas as pd
 from ipwhois import IPWhois
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, IpAddress, Host
+from ..nbtools.entityschema import GeoLocation, IpAddress
 from ..common.utility import export
 from .geoip import GeoLiteLookup
 
