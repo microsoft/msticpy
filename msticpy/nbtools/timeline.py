@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any, Union, Set, Dict, Tuple, List
 
 import pandas as pd
+from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
 from bokeh.models import (
     ColumnDataSource,
@@ -473,8 +474,14 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     )
 
     title = f"Timeline: {title}" if title else "Event Timeline"
-    start_range = min_time - ((max_time - min_time) * 0.1)
-    end_range = max_time + ((max_time - min_time) * 0.1)
+    try:
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
+    except OutOfBoundsDatetime:
+        min_time = min_time.to_pydatetime()
+        max_time = max_time.to_pydatetime()
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
     height = height if height else _calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
     plot = figure(
