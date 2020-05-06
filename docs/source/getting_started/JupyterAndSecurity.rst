@@ -169,7 +169,7 @@ References
 - `python <https://python.org>`__
 - `PyPi <https://pypi.org>`__
 - `Github <https://github.com/search?q=python>`__
-- `Kusto Query Language <https://kusto.azurewebsites.net/docs/query/index.html>`__
+- `Kusto Query Language <https://docs.microsoft.com/en-us/azure/kusto/query/>`__
 - `pandas <https://pandas.pydata.org/>`__
 - `matplotlib <https://matplotlib.org>`__
 - `holoviews <https://holoviews.org>`__
