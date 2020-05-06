@@ -164,7 +164,7 @@ class Observations:
             missing_fields = req_fields.difference(kwargs.keys())
             if missing_fields:
                 raise ValueError(
-                    f"The following fields are required",
+                    "The following fields are required",
                     f"in an Observation: {missing_fields}",
                 )
 
