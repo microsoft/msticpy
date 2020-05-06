@@ -134,7 +134,7 @@ def _get_charts(path: str = "morph_charts") -> dict:
 
     """
     full_path = Path(__file__).parent.parent.joinpath("data").joinpath(path)
-    file_glob = Path(full_path).glob(f"*.yaml")
+    file_glob = Path(full_path).glob("*.yaml")
     chart_files = [file_path for file_path in file_glob if file_path.is_file()]
     chart_details = {}
     for chart in chart_files:
