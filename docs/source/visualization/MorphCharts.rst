@@ -32,7 +32,7 @@ well as the name of the associated KQL query.
 The queries can be found under the data source containers and are prefixed with
 'morph'. These queries are called in the same way other queries are:
 .. code:: ipython3
-    query_provider.Azure.morph_signins(start=datetime(2020,4,8), end=datetime(2020,4,10))
+    query_provider.Azure.list_all_signins_geo(start=datetime(2020,4,8), end=datetime(2020,4,10))
 
 Formatting and Rendering
 ------------------------
