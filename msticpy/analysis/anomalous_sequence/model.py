@@ -6,48 +6,47 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import List, Union
+from typing import List, Union, Dict, Any
 
 from .utils.data_structures import Cmd
-from .utils import (
-    cmds_only,
-    cmds_params_only,
-    cmds_params_values,
-    probabilities,
-)
+from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
 from ...common.utility import MsticpyException
 
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-few-public-methods
 class Model:
-
     """Class for modelling sessions data."""
 
     def __init__(self, sessions: List[List[Union[str, Cmd]]]):
         """
         Instantiate the Model class.
 
-        This Model class can be used to model sessions, where each session is a sequence of
-        commands. We use a sliding window approach to calculate the rarest part of each session. We
-        can view the sessions in ascending order of this metric to see if the top sessions are
-        anomalous/malicious.
+        This Model class can be used to model sessions, where each
+        session is a sequence of commands. We use a sliding window
+        approach to calculate the rarest part of each session. We
+        can view the sessions in ascending order of this metric to
+        see if the top sessions are anomalous/malicious.
 
         Parameters
         ----------
         sessions: List[List[Union[str, Cmd]]]
-            list of sessions, where each session is a list of either strings or a list of the Cmd
-            datatype.
+            list of sessions, where each session is a list of either
+            strings or a list of the Cmd datatype.
 
-            The Cmd datatype should have "name" and "params" as attributes where "name" is the name
-            of the command (string) and "params" is either a set of accompanying params or a dict of
+            The Cmd datatype should have "name" and "params" as attributes
+            where "name" is the name of the command (string) and "params"
+            is either a set of accompanying params or a dict of
             accompanying params and values.
 
             examples formats of a session:
                 1) ['Set-User', 'Set-Mailbox']
-                2) [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
-                    params={'Identity', 'AuditEnabled'})]
-                3) [Cmd(name='Set-User', params={'Identity': 'blahblah', 'Force': 'true'}),
+                2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+                    Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+                3) [Cmd(
+                        name='Set-User',
+                        params={'Identity': 'blahblah', 'Force': 'true'}
+                    ),
                     Cmd(name='Set-Mailbox',
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
 
@@ -89,23 +88,23 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs = dict()
+        self.set_params_cond_cmd_probs: Dict[Any, Any] = dict()
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows = dict()
-        self.rare_window_likelihoods = dict()
+        self.rare_windows: Dict[Any, Any] = dict()
+        self.rare_window_likelihoods: Dict[Any, Any] = dict()
 
-        self.rare_windows_geo = dict()
-        self.rare_window_likelihoods_geo = dict()
+        self.rare_windows_geo: Dict[Any, Any] = dict()
+        self.rare_window_likelihoods_geo: Dict[Any, Any] = dict()
 
     def train(self):
         """
-        Trains the model by computing counts and probabilities.
+        Train the model by computing counts and probabilities.
 
-        In particular, computes the counts and probabilities of the commands (and possibly the
-        params if provided, and possibly the values if provided)
+        In particular, computes the counts and probabilities of the commands
+        (and possibly the params if provided, and possibly the values if provided)
 
         """
         self._compute_counts()
@@ -113,22 +112,26 @@ class Model:
 
     def compute_scores(self, use_start_end_tokens: bool):
         """
-        Computes some likelihood based scores/metrics for each of the sessions.
+        Compute some likelihood based scores/metrics for each of the sessions.
 
-        In particular, computes the likelihoods and geometric mean of the likelihoods for each of
-        the sessions. Also, uses the sliding window approach to compute the rarest window
-        likelihoods for each of the sessions. It does this for windows of length 2 and 3.
+        In particular, computes the likelihoods and geometric mean of
+        the likelihoods for each of the sessions. Also, uses the sliding
+        window approach to compute the rarest window likelihoods for each
+        of the sessions. It does this for windows of length 2 and 3.
 
-        Note that if we have a session of length k, and we use a sliding window of length k+1, then
-        we will end up with np.nan for the rarest window likelihood metric for that session.
-        However, if `use_start_end_tokens` is set to True, then because we will be appending
-        self.end_token to the session, the session will be treated as a session of length k+1,
+        Note that if we have a session of length k, and we use a sliding
+        window of length k+1, then we will end up with np.nan for the
+        rarest window likelihood metric for that session.
+        However, if `use_start_end_tokens` is set to True, then
+        because we will be appending self.end_token to the session,
+        the session will be treated as a session of length k+1,
         therefore, we will end up with a non np.nan value for that session.
 
         Parameters
         ----------
         use_start_end_tokens: bool
-            if True, then self.start_token and self.end_token will be prepended and appended to each
+            if True, then self.start_token and self.end_token will be
+            prepended and appended to each
             of the sessions respectively before the calculations are done.
 
         """
@@ -147,17 +150,20 @@ class Model:
 
     def _compute_counts(self):
         """
-        Computes all the counts for the model.
+        Compute all the counts for the model.
 
-        The items we will count depend on the the `session_type` attribute. We will compute the
-        individual command and transition command counts.
+        The items we will count depend on the the `session_type` attribute.
+        We will compute the individual command and transition command counts.
 
-        If params are provided with the commands, then, in addition, we will compute the individual
-        param counts and param conditional on the command counts.
+        If params are provided with the commands, then, in addition,
+        we will compute the individual param counts and param conditional
+        on the command counts.
 
-        If values are provided with the params, then in addition, we will compute the individual
-        value counts and value conditional on the param counts. Also, we will use rough heuristics
-        to determine which params take categorical values, and hence have modellable values.
+        If values are provided with the params, then in addition, we
+        will compute the individual value counts and value conditional
+        on the param counts. Also, we will use rough heuristics
+        to determine which params take categorical values, and hence
+        have modellable values.
 
         """
         if self.session_type is None:
@@ -222,16 +228,19 @@ class Model:
 
     def _compute_probs(self):
         """
-        Computes all the probabilities for the model.
+        Compute all the probabilities for the model.
 
-        The probabilities we compute depends on the `session_type` attribute. We will compute the
-        individual command and transition command probabilities.
+        The probabilities we compute depends on the `session_type` attribute.
+        We will compute the individual command and transition
+        command probabilities.
 
-        If params are provided with the commands, then, in addition, we will compute the individual
-        param probabilities and param conditional on the command probabilities.
+        If params are provided with the commands, then, in addition,
+        we will compute the individual param probabilities and param
+        conditional on the command probabilities.
 
-        If values are provided with the params, then in addition, we will compute the individual
-        value probabilities and value conditional on the param probabilities.
+        If values are provided with the params, then in addition,
+        we will compute the individual value probabilities and
+        value conditional on the param probabilities.
 
         """
         self._compute_probs_cmds()
@@ -243,29 +252,33 @@ class Model:
         if self.session_type == SessionType.cmds_params_values:
             self._compute_probs_values()
 
-    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):
+    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):  # noqa: MC0001
         """
-        Computes likelihood of combinations of params conditional on the cmd.
+        Compute likelihood of combinations of params conditional on the cmd.
 
-        In particular, go through each command from each session and compute the probability of
-        that set of params (and values if provided) appearing conditional on the command.
+        In particular, go through each command from each session and
+        compute the probability of that set of params (and values if provided)
+        appearing conditional on the command.
 
-        This can help us to identify unlikely combinations of params (and values if provided) for
-        each distinct command.
+        This can help us to identify unlikely combinations of params
+        (and values if provided) for each distinct command.
 
-        Note, this method is only available if each session is a list of the Cmd datatype. It will
-        result in an Exception if you try and use it when each session is a list of strings.
+        Note, this method is only available if each session is a list
+         of the Cmd datatype. It will result in an Exception if you
+         try and use it when each session is a list of strings.
 
         Parameters
         ----------
         use_geo_mean: bool
-            if True, then the probabilities will be raised to the power of (1/K)
+            if True, then the probabilities will be raised to
+            the power of (1/K)
             case1: we have only params:
-                Then K is the number of distinct params which appeared for the given cmd across all
-                the sessions.
+                Then K is the number of distinct params which appeared
+                for the given cmd across all the sessions.
             case2: we have params and values:
-                Then K is the number of distinct params which appeared for the given cmd across all
-                the sessions + the number of values which we included in the modelling for this cmd.
+                Then K is the number of distinct params which appeared
+                for the given cmd across all the sessions + the number
+                of values which we included in the modelling for this cmd.
 
         """
         if self.param_probs is None:
@@ -321,20 +334,23 @@ class Model:
 
     def compute_likelihoods_of_sessions(self, use_start_end_tokens: bool = True):
         """
-        Computes the likelihoods for each of the sessions.
+        Compute the likelihoods for each of the sessions.
 
-        Note: If the lengths (number of commands) of the sessions vary a lot, then you may not be
-        able to fairly compare the likelihoods between a long session and a short session. This is
-        because longer sessions involve multiplying more numbers together which are between 0 and 1.
-        Therefore the length of the session will be negatively correlated with the likelihoods. If
-        you take the geometric mean of the likelihood, then you can compare the likelihoods more
-        fairly across different session lengths.
+        Note: If the lengths (number of commands) of the sessions vary a lot,
+        then you may not be able to fairly compare the likelihoods between a
+        long session and a short session. This is because longer sessions
+        involve multiplying more numbers together which are between 0 and 1.
+        Therefore the length of the session will be negatively correlated with
+        the likelihoods. If you take the geometric mean of the likelihood, then
+        you can compare the likelihoods more fairly across different session
+        lengths
 
         Parameters
         ----------
         use_start_end_tokens: bool
-            if True, then `start_token` and `end_token` will be prepended and appended to the
-            session respectively before the calculations are done
+            if True, then `start_token` and `end_token` will be prepended
+            and appended to the session respectively before the calculations
+            are done
 
         """
         if self.prior_probs is None:
@@ -386,17 +402,19 @@ class Model:
 
     def compute_geomean_lik_of_sessions(self):
         """
-        Computes the geometric mean of the likelihood for each of the sessions.
+        Compute the geometric mean of the likelihood for each of the sessions.
 
-        This is done by raising the likelihood of the session to the power of (1 / k) where k is the
-        length of the session.
+        This is done by raising the likelihood of the session to the power of
+        (1 / k) where k is the length of the session.
 
-        Note: If the lengths (number of commands) of the sessions vary a lot, then you may not be
-        able to fairly compare the likelihoods between a long session and a short session. This is
-        because longer sessions involve multiplying more numbers together which are between 0 and 1.
-        Therefore the length of the session will be negatively correlated with the likelihoods. If
-        you take the geometric mean of the likelihood, then you can compare the likelihoods more
-        fairly across different session lengths.
+        Note: If the lengths (number of commands) of the sessions vary a lot,
+        then you may not be able to fairly compare the likelihoods between a
+        long session and a short session. This is because longer sessions
+        involve multiplying more numbers together which are between 0 and 1.
+        Therefore the length of the session will be negatively correlated with
+        the likelihoods. If you take the geometric mean of the likelihood, then
+        you can compare the likelihoods more fairly across different session
+        lengths.
 
         """
         if self.session_likelihoods is None:
@@ -416,22 +434,24 @@ class Model:
         use_geo_mean: bool = False,
     ):
         """
-        Finds the rarest window and corresponding likelihood for each session.
+        Find the rarest window and corresponding likelihood for each session.
 
-        In particular, uses a sliding window approach to find the rarest window and corresponding
-        likelihood for that window for each session.
+        In particular, uses a sliding window approach to find the rarest window
+        and corresponding likelihood for that window for each session.
 
-        If we have a long session filled with benign activity except for a small window of
-        suspicious behaviour, then this approach should be able to identity the session as
-        anomalous. This approach should be more effective than simply taking the geometric mean of
-        the full session likelihood. This is because the small window of suspicious behaviour
-        might get averaged out by the majority benign behaviour in the session when using the
-        geometric mean approach.
+        If we have a long session filled with benign activity except for a small
+        window of suspicious behaviour, then this approach should be able to
+        identity the session as anomalous. This approach should be more
+        effective than simply taking the geometric mean of the full session
+        likelihood. This is because the small window of suspicious behaviour
+        might get averaged out by the majority benign behaviour in the session
+        when using the geometric mean approach.
 
-        Note that if we have a session of length k, and we use a sliding window of length k+1, then
-        we will end up with np.nan for the rarest window likelihood metric for that session.
-        However, if `use_start_end_tokens` is set to True, then because we will be appending
-        self.end_token to the session, the session will be treated as a session of length k+1,
+        Note that if we have a session of length k, and we use a sliding window
+        of length k+1, then we will end up with np.nan for the rarest window
+        likelihood metric for that session. However, if `use_start_end_tokens`
+        is set to True, then because we will be appending self.end_token to the
+        session, the session will be treated as a session of length k+1,
         therefore, we will end up with a non np.nan value.
 
         Parameters
@@ -439,10 +459,12 @@ class Model:
         window_len: int
             length of sliding window for likelihood calculations
         use_start_end_tokens: bool
-            if True, then `start_token` and `end_token` will be prepended and appended to each
+            if True, then `start_token` and `end_token` will be prepended
+            and appended to each
             session respectively before the calculations are done
         use_geo_mean: bool
-            if True, then each of the likelihoods of the sliding windows will be raised to the power
+            if True, then each of the likelihoods of the sliding windows
+            will be raised to the power
             of (1/`window_len`)
 
         """
@@ -508,7 +530,7 @@ class Model:
             self.rare_window_likelihoods[window_len] = [rare[1] for rare in rare_tuples]
 
     def _compute_probs_cmds(self):
-        """Computes the individual and transition command probabilties."""
+        """Compute the individual and transition command probabilties."""
         if self.seq1_counts is None:
             raise MsticpyException("seq1_counts attribute should not be None")
         if self.seq2_counts is None:
@@ -524,7 +546,7 @@ class Model:
         self.trans_probs = trans_probs
 
     def _compute_probs_params(self):
-        """Computes the individual param probs and param conditional on command probs."""
+        """Compute the individual param probs and param conditional on command probs."""
         if self.param_counts is None:
             raise MsticpyException("param_counts attribute should not be None")
         if self.cmd_param_counts is None:
@@ -540,7 +562,7 @@ class Model:
         self.param_cond_cmd_probs = param_cond_cmd_probs
 
     def _compute_probs_values(self):
-        """Computes the individual value probs and value conditional on param probs."""
+        """Compute the individual value probs and value conditional on param probs."""
         if self.value_counts is None:
             raise MsticpyException("value_counts attribute should not be None")
         if self.param_value_counts is None:
@@ -557,11 +579,12 @@ class Model:
 
     def _asses_input(self):
         """
-        Determines what type of sessions we have.
+        Determine what type of sessions we have.
 
-        In particular, assess the input `self.sessions` to see whether each session is a list of
-        strings, or list of the Cmd datatype. And if each session is a list of the Cmd datatype, it
-        will assess whether the params attribute of the Cmd datatype is a set or a dict.
+        In particular, assess the input `self.sessions` to see whether each
+        session is a list of strings, or list of the Cmd datatype. And if each
+        session is a list of the Cmd datatype, it will assess whether the params
+        attribute of the Cmd datatype is a set or a dict.
 
         """
         session = self.sessions[0]
@@ -575,15 +598,17 @@ class Model:
                 self.session_type = SessionType.cmds_params_values
             else:
                 raise MsticpyException(
-                    "params attribute of Cmd data structure should be either a set or a dict"
+                    "Params attribute of Cmd data structure should "
+                    + "be either a set or a dict"
                 )
         else:
             raise MsticpyException(
-                'each element of "sessions" should be a list of either strings, or Cmd data types'
+                "Each element of 'sessions' should be a list of either "
+                + "strings, or Cmd data types"
             )
 
     def _check_cmd_type(self):
-        """Checks whether the Cmd datatype has the expected attributes."""
+        """Check whether the Cmd datatype has the expected attributes."""
         session = self.sessions[0]
         cmd = session[0]
         if "name" in dir(cmd) and "params" in dir(cmd):
@@ -592,7 +617,6 @@ class Model:
 
 
 class SessionType:
-
     """Class for storing the types of accepted sessions."""
 
     cmds_only = "cmds_only"

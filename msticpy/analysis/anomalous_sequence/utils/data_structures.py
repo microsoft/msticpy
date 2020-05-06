@@ -16,26 +16,28 @@ class StateMatrix(dict):
 
     def __init__(self, states: Union[dict, defaultdict], unk_token: str):
         """
-        Takes in a dict or dict of dicts of counts/probs or conditional counts/probs respectively.
+        Containr for dict of counts/probs or dict of dicts of cond counts/probs.
 
-        If you try and retrieve the count/probability for an unseen command/param/value from the
-        resulting object, it will return the value associated with the `unk_token` key.
+        If you try and retrieve the count/probability for an unseen
+        command/param/value from the resulting object, it will return
+        the value associated with the `unk_token` key.
 
         Parameters
         ----------
         states: Union[dict, defaultdict]
-            Either a dict representing counts or probabilities. Or a dict of dicts representing
+            Either a dict representing counts or probabilities.
+            Or a dict of dicts representing
             conditional counts or conditional probabilities.
             E.g.
                 {'Set-Mailbox': 20,'##UNK##': 1}
             or
-                {'Set-Mailbox': {'Set-Mailbox': 5, '##UNK##': 1}, '##UNK##': {'Set-Mailbox': 1,
-                '##UNK##': 1}}
+                {'Set-Mailbox': {'Set-Mailbox': 5, '##UNK##': 1},
+                '##UNK##': {'Set-Mailbox': 1, '##UNK##': 1}}
         unk_token: str
             dummy token to signify an unseen command (e.g. "##UNK##").
-            This token should be present in the `states` keys. And if `states` is a dict of dicts,
-            then the `unk_token` should be present in the keys of the outer dict and all the inner
-            dicts.
+            This token should be present in the `states` keys. And if `states`
+            is a dict of dicts, then the `unk_token` should be present in
+            the keys of the outer dict and all the inner dicts.
 
         """
         super().__init__(states)
@@ -49,7 +51,7 @@ class StateMatrix(dict):
 
     def __getitem__(self, item):
         """
-        Edit magic method to return value for self.unk_token for unseen cmds/params/values.
+        Get value or self.unk_token for unseen cmds/params/values.
 
         Parameters
         ----------
@@ -58,8 +60,8 @@ class StateMatrix(dict):
 
         Returns
         -------
-        Value associated with the key `item` if it exists, else the value associated with the
-        `unk_token`
+        Value associated with the key `item` if it exists, else the
+        value associated with the `unk_token`
 
         """
         if item not in self.states:
@@ -83,7 +85,8 @@ class Cmd:
             e.g.
                 {'Identity', 'ForwardingEmailAddress'}
             of
-                {'Identity': 'some identity', 'ForwardingEmailAddress': 'an_email@email.com'}
+                {'Identity': 'some identity', 'ForwardingEmailAddress':
+                 'an_email@email.com'}
 
         """
         self.name = name

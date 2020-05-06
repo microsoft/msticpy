@@ -6,7 +6,7 @@
 """Helper module for computations when each session is a list of strings."""
 
 from collections import defaultdict
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Dict, Any
 
 import numpy as np
 
@@ -14,19 +14,22 @@ from ..utils.data_structures import StateMatrix
 from ....common.utility import MsticpyException
 
 
-def compute_counts(
+def compute_counts(  # nosec
     sessions: List[List[str]],
     start_token: str = "##START##",
     end_token: str = "##END##",
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    Computes counts of individual commands and of sequences of two commands.
+    Compute counts of individual commands and of sequences of two commands.
 
     Laplace smoothing is applied to the counts.
-    This is so we shift some of the probability mass from the very probable commands and command
-    sequences to the unseen and very unlikely commands and command sequences.
-    The `unk_token` means we can handle unseen commands and sequences of commands
+    This is so we shift some of the probability mass from the very probable
+    commands and command sequences to the unseen and very unlikely commands
+    and command sequences. The `unk_token` means we can handle unseen
+    commands and sequences of commands
+
+
 
     Parameters
     ----------
@@ -54,8 +57,8 @@ def compute_counts(
             "different"
         )
 
-    seq1_counts = defaultdict(lambda: 0)
-    seq2_counts = defaultdict(lambda: defaultdict(lambda: 0))
+    seq1_counts: Dict[Any, Any] = defaultdict(lambda: 0)
+    seq2_counts: Dict[Any, Any] = defaultdict(lambda: defaultdict(lambda: 0))
 
     for session in sessions:
         prev = start_token
@@ -85,7 +88,7 @@ def compute_counts(
     return seq1_counts, seq2_counts
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-branches
 def compute_likelihood_window(
     window: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -96,7 +99,7 @@ def compute_likelihood_window(
     end_token: str = None,
 ) -> float:
     """
-    Computes the likelihood of the input `window`.
+    Compute the likelihood of the input `window`.
 
     Parameters
     ----------
@@ -109,11 +112,11 @@ def compute_likelihood_window(
     trans_probs: Union[StateMatrix, dict]
         computed probabilities of sequences of commands (length 2)
     use_start_token: bool
-        if set to True, the start_token will be prepended to the window before the likelihood
-        calculation is done
+        if set to True, the start_token will be prepended to the window
+        before the likelihood calculation is done
     use_end_token: bool
-        if set to True, the end_token will be appended to the window before the likelihood
-        calculation is done
+        if set to True, the end_token will be appended to the window
+        before the likelihood calculation is done
     start_token: str
         dummy command to signify the start of the session (e.g. "##START##")
     end_token: str
@@ -157,7 +160,7 @@ def compute_likelihood_window(
 
 
 # pylint: disable=too-many-arguments
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-branches
 def compute_likelihood_windows_in_session(
     session: List[str],
     prior_probs: Union[StateMatrix, dict],
@@ -169,7 +172,7 @@ def compute_likelihood_windows_in_session(
     use_geo_mean: bool = False,
 ) -> List[float]:
     """
-    Computes the likelihoods of a sliding window of length `window_len` throughout the session.
+    Compute the likelihoods of a sliding window of length `window_len` in the session.
 
     Parameters
     ----------
@@ -191,8 +194,8 @@ def compute_likelihood_windows_in_session(
     end_token: str
         dummy command to signify the end of the session (e.g. "##END##")
     use_geo_mean: bool
-        if True, then each of the likelihoods of the sliding windows will be raised to the power of
-        (1/`window_len`)
+        if True, then each of the likelihoods of the sliding windows will be
+        raised to the power of (1/`window_len`)
 
     Returns
     -------
@@ -208,11 +211,11 @@ def compute_likelihood_windows_in_session(
 
     likelihoods = []
     sess = session.copy()
-    if use_start_end_tokens:
+    if use_start_end_tokens and end_token:
         sess += [end_token]
     end = len(sess) - window_len
     for i in range(end + 1):
-        window = sess[i : i + window_len]
+        window = sess[i : i + window_len]  # noqa: E203
         if i == 0:
             use_start = use_start_end_tokens
         else:
@@ -246,7 +249,7 @@ def rarest_window_session(
     use_geo_mean: bool = False,
 ) -> Tuple[List[str], float]:
     """
-    Finds and computes the likelihood of the rarest window of length `window_len` from the session.
+    Find and compute likelihood of the rarest window in the session.
 
     Parameters
     ----------
@@ -261,15 +264,15 @@ def rarest_window_session(
     window_len: int
         length of sliding window for likelihood calculations
     use_start_end_tokens: bool
-        if True, then `start_token` and `end_token` will be prepended and appended to the
-        session respectively before the calculations are done
+        if True, then `start_token` and `end_token` will be prepended
+        and appended to the session respectively before the calculations are done
     start_token: str
         dummy command to signify the start of the session (e.g. "##START##")
     end_token: str
         dummy command to signify the end of the session (e.g. "##END##")
     use_geo_mean: bool
-        if True, then each of the likelihoods of the sliding windows will be raised to the power of
-        (1/`window_len`)
+        if True, then each of the likelihoods of the sliding windows will be
+        raised to the power of (1/`window_len`)
 
     Returns
     -------
@@ -290,4 +293,4 @@ def rarest_window_session(
         return [], np.nan
     min_lik = min(likelihoods)
     ind = likelihoods.index(min_lik)
-    return session[ind : ind + window_len], min_lik
+    return session[ind : ind + window_len], min_lik  # noqa: E203

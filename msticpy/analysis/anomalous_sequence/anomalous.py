@@ -12,7 +12,7 @@ In particular, this module is for both modelling and visualising your session da
 import pandas as pd
 
 from ...nbtools import timeline
-from ..anomalous_sequence.model import Model
+from .model import Model
 from ...common.utility import MsticpyException
 
 
@@ -31,18 +31,26 @@ def score_sessions(
         The values in the session column should take one of the following formats:
             examples formats of a session:
             1) ['Set-User', 'Set-Mailbox']
-            2) [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
-                params={'Identity', 'AuditEnabled'})]
-            3) [Cmd(name='Set-User', params={'Identity': 'blahblah', 'Force': 'true'}),
-                Cmd(name='Set-Mailbox', params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
-        The Cmd datatype can be accessed from anomalous_sequence.utils.data_structures.Cmd
+            2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+                Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+            3) [Cmd(
+                    name='Set-User',
+                    params={'Identity': 'blahblah', 'Force': 'true'}
+                ),
+                Cmd(
+                    name='Set-Mailbox',
+                    params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
+                )]
+        The Cmd datatype can be accessed from
+        anomalous_sequence.utils.data_structures.Cmd
     window_length: int
-        length of the sliding window to use when computing the likelihood metrics for each session.
-            This should be set to an integer >= 2.
-            Note that sessions which have fewer commands than the chosen window_length + 1 will
-            end up with a np.nan score. (The + 1 is because we append a dummy `end_token` to each
-            session before starting the sliding window, so a session of length 2, would be treated
-            as length 3)
+        length of the sliding window to use when computing the likelihood
+        metrics for each session.
+        This should be set to an integer >= 2. Note that sessions which have
+        fewer commands than the chosen window_length + 1 will end up with a
+        np.nan score. (The + 1 is because we append a dummy `end_token` to each
+        session before starting the sliding window, so a session of length 2,
+        would be treated as length 3)
 
     Returns
     -------
@@ -85,28 +93,31 @@ def visualise_scored_sessions(
     source_columns: list = None,
 ):
     """
-    Takes scored sessions data as input and visualises them on an interactive timeline figure.
+    Visualise the scored sessions on an interactive timeline.
 
     Parameters
     ----------
     data_with_scores: pd.DataFrame
-        Dataframe which contains at least columns for time, session score, window representing the
-        session
+        Dataframe which contains at least columns for time,
+        session score, window representing the session
     time_column: str
         name of the column which contains a timestamp
     score_column: str
-        name of the column which contains a numerical score for each of the sessions
+        name of the column which contains a numerical score for each
+        of the sessions
     window_column: str
         name of the column which contains a representation of each of the sessions.
         This representation will appear in the tooltips in the figure.
-        For example, it could be the rarest window of the session, or the full session etc.
+        For example, it could be the rarest window of the session,
+        or the full session etc.
     score_upper_bound: float, optional
         an optional upper bound on the score for the visualisation figure.
         This can help to zoom in on the more anomalous sessions
     source_columns: list, optional
-        an optional list of source columns to include in the tooltips in the visualisation.
-        Note, the content of each of these columns should be json serializable in order to be
-        compatible with the figure
+        an optional list of source columns to include in the tooltips
+        in the visualisation.
+        Note, the content of each of these columns should be json serializable
+        in order to be compatible with the figure
 
     Returns
     -------
@@ -150,11 +161,11 @@ def score_and_visualise_sessions(
     source_columns: list = None,
 ):
     """
-    Models sessions and then produces an interactive timeline visualisation plot.
+    Model sessions and then produces an interactive timeline visualisation plot.
 
-    In particular, the sessions are modelled using a sliding window approach within a markov
-    model. The visualisation plot has time on the x-axis and the modelled session likelihood
-    metric on the y-axis.
+    In particular, the sessions are modelled using a sliding window approach
+    within a markov model. The visualisation plot has time on the x-axis and
+    the modelled session likelihood metric on the y-axis.
 
     Parameters
     ----------
@@ -165,27 +176,38 @@ def score_and_visualise_sessions(
         The values in the session column should take one of the following formats:
             examples formats of a session:
             1) ['Set-User', 'Set-Mailbox']
-            2) [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
-                params={'Identity', 'AuditEnabled'})]
-            3) [Cmd(name='Set-User', params={'Identity': 'blahblah', 'Force': 'true'}),
-                Cmd(name='Set-Mailbox', params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
-        The Cmd datatype can be accessed from seqeunce.utils.data_structures.Cmd
+            2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+                Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+            3) [Cmd(
+                    name='Set-User',
+                    params={'Identity': 'blahblah', 'Force': 'true'}
+                ),
+                Cmd(
+                    name='Set-Mailbox',
+                    params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
+                )]
+        The Cmd datatype can be accessed from
+        seqeunce.utils.data_structures.Cmd
     window_length: int
-        length of the sliding window to use when computing the likelihood metrics for each session.
-            This should be set to an integer >= 2.
-            Note that sessions which have fewer commands than the chosen window_length + 1 will not
-            appear in the visualisation. (The + 1 is because we append a dummy `end_token` to each
-            session before starting the sliding window, so a session of length 2, would be treated
-            as length 3)
+        length of the sliding window to use when computing the
+        likelihood metrics for each session.
+
+        This should be set to an integer >= 2.
+        Note that sessions which have fewer commands than the chosen
+        window_length + 1 will not appear in the visualisation. (The + 1 is
+        because we append a dummy `end_token` to each session before starting
+        the sliding window, so a session of length 2, would be treated as length
+        3)
     time_column: str
         name of the column which contains a timestamp
     likelihood_upper_bound: float, optional
-        an optional upper bound on the likelihood metrics for the visualisation plot. This can help
-        to zoom in on the more anomalous sessions
+        an optional upper bound on the likelihood metrics for the visualisation
+        plot. This can help to zoom in on the more anomalous sessions
     source_columns: list, optional
-        An optional list of source columns to include in the tooltips in the visualisation.
-        Note, the content of each of these columns should be json serializable in order to be
-        compatible with the figure
+        An optional list of source columns to include in the tooltips
+        in the visualisation.
+        Note, the content of each of these columns should be json
+        serializable in order to be compatible with the figure
 
     Returns
     -------

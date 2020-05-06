@@ -6,21 +6,21 @@
 """Helper module for computing training probabilities when modelling sessions."""
 
 from collections import defaultdict
-from typing import Tuple, Union
+from typing import Tuple, Union, Any
 
 from ..utils.data_structures import StateMatrix
 
 
-def compute_cmds_probs(
+def compute_cmds_probs(  # nosec
     seq1_counts: Union[StateMatrix, dict],
     seq2_counts: Union[StateMatrix, dict],
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    Computes command related probabilities.
+    Compute command related probabilities.
 
-    In particular, computes the probabilities for the individual commands, and also the
-    probabilities for the transitions of commands.
+    In particular, computes the probabilities for the individual commands,
+    and also the probabilities for the transitions of commands.
 
     Parameters
     ----------
@@ -40,8 +40,8 @@ def compute_cmds_probs(
     """
     total_cmds = sum(seq1_counts.values())
 
-    prior_probs = defaultdict(lambda: 0)
-    trans_probs = defaultdict(lambda: defaultdict(lambda: 0))
+    prior_probs: Any = defaultdict(lambda: 0)
+    trans_probs: Any = defaultdict(lambda: defaultdict(lambda: 0))
 
     # compute prior probs
     for cmd in seq1_counts:
@@ -60,16 +60,16 @@ def compute_cmds_probs(
     return prior_probs, trans_probs
 
 
-def compute_params_probs(
+def compute_params_probs(  # nosec
     param_counts: Union[StateMatrix, dict],
     cmd_param_counts: Union[StateMatrix, dict],
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    Computes param related probabilities.
+    Compute param related probabilities.
 
-    In particular, computes the probabilities of the individual params, and also the probabilities
-    of the params conditional on the command.
+    In particular, computes the probabilities of the individual params,
+    and also the probabilities of the params conditional on the command.
 
     Parameters
     ----------
@@ -87,8 +87,8 @@ def compute_params_probs(
         param conditional on command probabilities
 
     """
-    param_probs = defaultdict(lambda: 0)
-    param_cond_cmd_probs = defaultdict(lambda: defaultdict(lambda: 0))
+    param_probs: Any = defaultdict(lambda: 0)
+    param_cond_cmd_probs: Any = defaultdict(lambda: defaultdict(lambda: 0))
 
     for cmd, params in cmd_param_counts.items():
         n_param = sum(params.values())
@@ -105,16 +105,16 @@ def compute_params_probs(
     return param_probs, param_cond_cmd_probs
 
 
-def compute_values_probs(
+def compute_values_probs(  # nosec
     value_counts: Union[StateMatrix, dict],
     param_value_counts: Union[StateMatrix, dict],
     unk_token: str = "##UNK##",
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
-    Computes value related probabilities.
+    Compute value related probabilities.
 
-    In particular, computes the probabilities of the individual values, and also the probabilities
-    of the values conditional on the param.
+    In particular, computes the probabilities of the individual values,
+    and also the probabilities of the values conditional on the param.
 
     Parameters
     ----------
@@ -132,8 +132,8 @@ def compute_values_probs(
         value conditional on param probabilities
 
     """
-    value_probs = defaultdict(lambda: 0)
-    value_cond_param_probs = defaultdict(lambda: defaultdict(lambda: 0))
+    value_probs: Any = defaultdict(lambda: 0)
+    value_cond_param_probs: Any = defaultdict(lambda: defaultdict(lambda: 0))
 
     for param, values in param_value_counts.items():
         n_val = sum(values.values())
