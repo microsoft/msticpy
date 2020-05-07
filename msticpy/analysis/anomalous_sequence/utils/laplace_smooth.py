@@ -92,3 +92,44 @@ def laplace_smooth_param_counts(cmds: List[str], param_counts: DefaultDict[str, 
                 cmd_param_counts_ls[cmd][param] += 1
 
     return param_counts_ls, cmd_param_counts_ls
+
+
+def laplace_smooth_value_counts(params: List[str], value_counts: DefaultDict[str, int],
+                                param_value_counts: DefaultDict[str, DefaultDict[str, int]],
+                                unk_token: str)\
+        -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+    """
+    Apply laplace smoothing to the input counts for the values.
+
+    In particular, add 1 to each of the counts, including the unk_token. By including the
+    unk_token, we can handle unseen values.
+
+    Parameters
+    ----------
+    params: List[str]
+        list of all possible params, including the unk_token
+    value_counts: DefaultDict[str, int]
+        individual value counts
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]]
+        value conditional on param counts
+    unk_token: str
+        dummy command to signify an unseen command (e.g. "##UNK##")
+
+    Returns
+    -------
+    Tuple:
+        individual value probabilities,
+        value conditional on param probabilities
+
+    """
+    value_counts_ls = value_counts.copy()
+    param_value_counts_ls = param_value_counts.copy()
+
+    values: List[str] = list(value_counts_ls.keys()) + [unk_token]
+    for param in params:
+        for value in values:
+            if value in param_value_counts_ls[param] or value == unk_token:
+                value_counts_ls[value] += 1
+                param_value_counts_ls[param][value] += 1
+
+    return value_counts_ls, param_value_counts_ls

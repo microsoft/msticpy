@@ -17,7 +17,8 @@ from typing import Tuple, List, Union, DefaultDict
 import numpy as np
 
 from ..utils.data_structures import StateMatrix, Cmd
-from ..utils.laplace_smooth import laplace_smooth_cmd_counts, laplace_smooth_param_counts
+from ..utils.laplace_smooth import laplace_smooth_cmd_counts, laplace_smooth_param_counts, \
+    laplace_smooth_value_counts
 from ....common.utility import MsticpyException
 
 
@@ -133,12 +134,12 @@ def compute_counts(  # noqa MC0001  # nosec
     )
 
     # apply laplace smoothing for the values
-    values: List[str] = list(value_counts.keys()) + [unk_token]
-    for param in params:
-        for value in values:
-            if value in param_value_counts[param] or value == unk_token:
-                value_counts[value] += 1
-                param_value_counts[param][value] += 1
+    value_counts, param_value_counts = laplace_smooth_value_counts(
+        params=params,
+        value_counts=value_counts,
+        param_value_counts=param_value_counts,
+        unk_token=unk_token
+    )
 
     seq1_counts_sm = StateMatrix(states=seq1_counts, unk_token=unk_token)
     seq2_counts_sm = StateMatrix(states=seq2_counts, unk_token=unk_token)
