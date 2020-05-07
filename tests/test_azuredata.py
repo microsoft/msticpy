@@ -14,6 +14,10 @@ from ..msticpy.common.utility import MsticpyException
 from ..msticpy.common import pkg_config
 from ..msticpy.common.provider_settings import get_provider_settings
 
+from .unit_test_lib import _get_test_data_path
+
+_TEST_DATA = _get_test_data_path()
+
 
 def test_azure_init():
     az = AzureData()
