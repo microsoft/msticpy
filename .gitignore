@@ -107,5 +107,9 @@ venv.bak/
 **/.vscode*
 **/Kqlmagic_temp_files/**
 
+# pycharm project settings
+*\.idea*
+
 #MorphChart test output
 morphchart_package/
+
