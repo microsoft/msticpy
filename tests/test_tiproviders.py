@@ -34,14 +34,9 @@ from ..msticpy.sectools.tiproviders.ti_provider_base import (
     _clean_url,
     generate_items,
 )
+from .unit_test_lib import get_test_data_path, custom_mp_config
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+_TEST_DATA = get_test_data_path()
 
 
 ioc_ips = [
@@ -235,14 +230,11 @@ class TestTIProviders(unittest.TestCase):
     @staticmethod
     def load_ti_lookup():
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
-
-        with warnings.catch_warnings():
-            # We want to ignore warnings from missing config
-            warnings.simplefilter("ignore", category=UserWarning)
-
-            pkg_config.refresh_config()
-            return TILookup()
+        with custom_mp_config(test_config1):
+            with warnings.catch_warnings():
+                # We want to ignore warnings from missing config
+                warnings.simplefilter("ignore", category=UserWarning)
+                return TILookup()
 
     def test_ti_config_and_load(self):
         self.load_ti_lookup()

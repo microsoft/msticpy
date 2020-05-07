@@ -14,9 +14,9 @@ from ..msticpy.common.utility import MsticpyException
 from ..msticpy.common import pkg_config
 from ..msticpy.common.provider_settings import get_provider_settings
 
-from .unit_test_lib import _get_test_data_path
+from .unit_test_lib import get_test_data_path, custom_mp_config
 
-_TEST_DATA = _get_test_data_path()
+_TEST_DATA = get_test_data_path()
 
 
 def test_azure_init():
@@ -42,15 +42,14 @@ def test_azure_connect(mock_sub_client, mock_creds):
 
 def test_get_config():
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
-    os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
-    pkg_config.refresh_config()
-    data_provs = get_provider_settings(config_section="DataProviders")
-    az_cli_config = data_provs.get("AzureCLI")
+    with custom_mp_config(test_config1):
+        data_provs = get_provider_settings(config_section="DataProviders")
+        az_cli_config = data_provs.get("AzureCLI")
 
-    assert bool(az_cli_config)
-    config_items = az_cli_config.args
-    assert bool(config_items)
+        assert bool(az_cli_config)
+        config_items = az_cli_config.args
+        assert bool(config_items)
 
-    assert bool(config_items["clientId"])
-    assert bool(config_items["tenantId"])
-    assert bool(config_items["clientSecret"])
+        assert bool(config_items["clientId"])
+        assert bool(config_items["tenantId"])
+        assert bool(config_items["clientSecret"])

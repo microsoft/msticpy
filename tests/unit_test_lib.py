@@ -4,15 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """Unit test common utilities."""
+from contextlib import contextmanager
+from pathlib import Path
 import os
+from typing import Union, Dict, Any, Generator
 
+from ..msticpy.common import pkg_config
 from ..msticpy.common.utility import export
 
 __author__ = "Ian Hellen"
 
 
 @export
-def _get_test_data_path():
+def get_test_data_path():
+    """Get path to testdata folder."""
     _test_data_folders = [
         d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
     ]
@@ -21,4 +26,40 @@ def _get_test_data_path():
     return "./tests/testdata"
 
 
-TEST_DATA_PATH = _get_test_data_path()
+TEST_DATA_PATH = get_test_data_path()
+
+
+# pylint: disable=protected-access
+@contextmanager
+def custom_mp_config(
+    mp_path: Union[str, Path]
+) -> Generator[Dict[str, Any], None, None]:
+    """
+    Context manager to temporarily set MSTICPYCONFIG path.
+
+    Parameters
+    ----------
+    mp_path : Union[str, Path]
+        Path to msticpy config yaml
+
+    Yields
+    ------
+    Dict[str, Any]
+        Custom settings.
+
+    Raises
+    ------
+    FileNotFoundError
+        If mp_path does not exist.
+
+    """
+    current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR, "")
+    if not Path(mp_path).is_file():
+        raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
+    try:
+        os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
+        pkg_config.refresh_config()
+        yield pkg_config.settings
+    finally:
+        os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
+        pkg_config.refresh_config()
