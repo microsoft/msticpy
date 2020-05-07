@@ -35,6 +35,11 @@ supply any authorization keys needed to access the service.
 OtherProviders
 ~~~~~~~~~~~~~~
 This section is similar to the TIProviders section, allowing you
+specify configuration options for specialist data providers.
+
+DataProviders
+~~~~~~~~~~~~~~
+This section is similar to the previous two sections, allowing you
 specify configuration options for other data providers.
 
 Key Vault
@@ -297,8 +302,8 @@ reflect the underlying YAML data in the configuration file.
    environment variables.
 
 
-Comment configuration file sample
----------------------------------
+Commented configuration file sample
+-----------------------------------
 
 
 .. code:: yaml
@@ -381,6 +386,12 @@ Comment configuration file sample
           AuthKey:
             KeyVault: my_vault/my_secret
         Provider: "ContosoLookup"
+    DataProviders:
+      AzureCLI:
+        Args:
+          clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
+          tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+          clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
 
 
 See also

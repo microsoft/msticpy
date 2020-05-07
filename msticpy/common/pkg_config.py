@@ -257,7 +257,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         "GeoIPLite",
         "IPStack",
     ]
-    for conf_section in ["TIProviders", "OtherProviders", "DataProviders"]:
+    for conf_section in ["TIProviders", "OtherProviders", _DP_KEY]:
         prov_errors, prov_warn = _check_provider_settings(
             mp_config=mp_config.get(conf_section, {}),
             section=conf_section,
@@ -266,11 +266,14 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
 
-    if "AzureCLI" not in mp_config:
+    if _AZ_CLI not in mp_config and _AZ_CLI not in mp_config.get(_DP_KEY, {}):
         mp_warn.append("No AzureCLI section in settings.")
     else:
+        az_cli_settings = mp_config.get(_AZ_CLI) or mp_config.get(_DP_KEY, {}).get(
+            _AZ_CLI
+        )
         prov_errors, prov_warn = _check_provider_settings(
-            mp_config=mp_config, section=None, key_provs=None
+            mp_config=az_cli_settings, section=None, key_provs=None
         )
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
@@ -300,12 +303,12 @@ def _print_validation_report(mp_errors, mp_warn):
 
 def _validate_azure_sentinel(mp_config):
     mp_errors = []
-    as_settings = mp_config.get("AzureSentinel", {})
+    as_settings = mp_config.get(_AZ_SENTINEL, {})
     if not as_settings:
         mp_errors.append("Missing or empty 'AzureSentinel' section")
     ws_settings = as_settings.get("Workspaces", {})
     if not ws_settings:
-        mp_errors.append("Missing or empty 'Workspaces' section in")
+        mp_errors.append("Missing or empty 'Workspaces' key in 'AzureSentinel' section")
     no_default = True
     for ws, ws_settings in ws_settings.items():
         if ws == "Default":
@@ -334,13 +337,13 @@ def _check_provider_settings(mp_config, section, key_provs):
             _check_required_key(mp_errors, sec_args, "AuthKey", sec_path)
         if p_name == "XForce":
             _check_required_key(mp_errors, sec_args, "ApiID", sec_path)
-        if p_name == "AzureSentinel":
+        if p_name == _AZ_SENTINEL:
             _check_is_uuid(mp_errors, sec_args, "WorkspaceID", sec_path)
             _check_is_uuid(mp_errors, sec_args, "TenantID", sec_path)
         if p_name.startswith("AzureSentinel_"):
             _check_is_uuid(mp_errors, sec_args, "WorkspaceId", sec_path)
             _check_is_uuid(mp_errors, sec_args, "TenantId", sec_path)
-        if p_name == "AzureCLI":
+        if p_name == _AZ_CLI:
             _check_required_key(mp_errors, sec_args, "clientId", sec_path)
             _check_required_key(mp_errors, sec_args, "tenantId", sec_path)
             _check_required_key(mp_errors, sec_args, "clientSecret", sec_path)
