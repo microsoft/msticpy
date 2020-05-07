@@ -11,6 +11,7 @@ from typing import Tuple, List, Union, DefaultDict
 import numpy as np
 
 from ..utils.data_structures import StateMatrix
+from ..utils.laplace_smooth import laplace_smooth_cmd_counts
 from ....common.utility import MsticpyException
 
 
@@ -70,16 +71,13 @@ def compute_counts(  # nosec
         seq1_counts[end_token] += 1
 
     # apply laplace smoothing
-    cmds = list(seq1_counts.keys()) + [unk_token]
-    for cmd1 in cmds:
-        for cmd2 in cmds:
-            if cmd1 != end_token and cmd2 != start_token:
-                seq1_counts[cmd1] += 1
-                seq2_counts[cmd1][cmd2] += 1
-                seq1_counts[cmd2] += 1
-
-    # remove start token from prior counts
-    # seq1_counts.pop(start_token)
+    seq1_counts, seq2_counts = laplace_smooth_cmd_counts(
+        seq1_counts=seq1_counts,
+        seq2_counts=seq2_counts,
+        start_token=start_token,
+        end_token=end_token,
+        unk_token=unk_token
+    )
 
     seq1_counts_st = StateMatrix(states=seq1_counts, unk_token=unk_token)
     seq2_counts_st = StateMatrix(states=seq2_counts, unk_token=unk_token)
