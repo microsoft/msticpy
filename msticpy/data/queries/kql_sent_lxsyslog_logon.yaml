@@ -195,6 +195,51 @@ sources:
       ip_address:
         description: The source IP Address to search on
         type: str
+  list_logons_for_host:
+    description: All logon events on a host
+    args:
+      query: '
+        {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        | where Facility == "auth" or Facility == "authpriv"
+        | where ProcessName != "sudo" and ProcessName != "CRON"
+        | extend LogonResult = iif(
+                                (SyslogMessage contains "failure"
+                                or SyslogMessage contains "invalid"
+                                or SyslogMessage contains "Unable to negotiate"
+                                or SyslogMessage contains "authentication failures"
+                                or SyslogMessage contains "Did not receive identification"
+                                or SyslogMessage contains " Bad protocol version identification"
+                                or SyslogMessage matches regex "^Connection closed .* [preauth]")
+                                or (Facility == "authpriv" and ProcessName == "su"
+                                  and SyslogMessage contains "FAILED" and SyslogMessage !contains "pam_"),
+                                "Failure",
+                                iif(
+                                    SyslogMessage contains "Accepted" or
+                                    (ProcessName == "su" and SyslogMessage contains "Successful"),
+                                    "Success", "Unknown"
+                                  )
+                                )
+        | extend
+          User = iif(SyslogMessage contains "publickey",
+            extract("(for )([[:alnum:]]+)", 2, SyslogMessage),
+            extract("(user |user=)([[:alnum:]]+)",2,SyslogMessage)),
+          LogonType = strcat(extract("Accepted\\s+([^\\s]+)", 1, SyslogMessage),
+                             " (", ProcessName, ")"),
+          SourceIP = extract("((?:[0-9]{{1,3}}\\.){{3}}[0-9]{{1,3}})", 1, SyslogMessage),
+          SourcePort = extract("port ([0-9]+)",1,SyslogMessage),
+          UID = extract("uid=([0-9]+)",1,SyslogMessage),
+          SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2, SyslogMessage)
+        | extend Account = User
+        | extend LogonProcessName = ProcessName
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
   list_host_logon_failures:
     description: All failed user logon events on a host
     args:

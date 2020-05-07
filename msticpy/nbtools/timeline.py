@@ -9,6 +9,7 @@ from typing import Any, Union, Set, Dict, Tuple, List
 
 import numpy as np
 import pandas as pd
+from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
 from bokeh.models import (
     ColumnDataSource,
@@ -54,7 +55,15 @@ _DEFAULT_KWARGS = [
     "yaxis",
 ]
 
-_TL_KWARGS = ["alert", "overlay_color", "overlay_data", "ref_time", "ygrid", "xgrid"]
+_TL_KWARGS = [
+    "alert",
+    "overlay_color",
+    "overlay_data",
+    "ref_time",
+    "ygrid",
+    "xgrid",
+    "hide",
+]
 
 
 @export
@@ -107,7 +116,7 @@ def display_timeline(
         (where `data` is a DataFrame)
         The column to group timelines on
     legend: str, optional
-        "left", "right", "inline" or "none"
+        "left", "right", "inline" or "none"[data]
         (the default is to show a legend when plotting multiple series
         and not to show one when plotting a single series)
     yaxis : bool, optional
@@ -262,6 +271,7 @@ def display_timeline_values(
     legend_pos: str = kwargs.pop("legend", None)
     kind: Any = kwargs.pop("kind", ["vbar"])
     plot_kinds = kind if isinstance(kind, list) else [kind]
+    hide: bool = kwargs.pop("hide", False)
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
 
@@ -374,11 +384,13 @@ def display_timeline_values(
             height=height,
             time_column=time_column,
         )
-        show(column(plot, rng_select))
-        return column(plot, rng_select)
+        plot_layout = column(plot, rng_select)
+    else:
+        plot_layout = plot
 
-    show(plot)
-    return plot
+    if not hide:
+        show(plot_layout)
+    return plot_layout
 
 
 # pylint: enable=invalid-name,too-many-locals, too-many-statements, too-many-branches
@@ -448,6 +460,7 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     show_range: bool = kwargs.pop("range_tool", True)
     xgrid: bool = kwargs.pop("xgrid", True)
     ygrid: bool = kwargs.pop("ygrid", False)
+    hide: bool = kwargs.pop("hide", False)
 
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
     series_count = len(data)
@@ -458,8 +471,14 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     )
 
     title = f"Timeline: {title}" if title else "Event Timeline"
-    start_range = min_time - ((max_time - min_time) * 0.1)
-    end_range = max_time + ((max_time - min_time) * 0.1)
+    try:
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
+    except OutOfBoundsDatetime:
+        min_time = min_time.to_pydatetime()
+        max_time = max_time.to_pydatetime()
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
     height = height if height else _calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
     plot = figure(
@@ -553,11 +572,14 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
         _add_ref_line(plot, ref_time, ref_label, len(data))
 
     if show_range:
-        show(column(plot, rng_select))
-        return column(plot, rng_select)
+        plot_layout = column(plot, rng_select)
+    else:
+        plot_layout = plot
 
-    show(plot)
-    return plot
+    if not hide:
+        show(plot_layout)
+
+    return plot_layout
 
 
 # pylint: enable=too-many-locals, too-many-statements, too-many-branches

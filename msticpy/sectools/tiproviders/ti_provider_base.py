@@ -22,6 +22,7 @@ from enum import Enum
 from functools import lru_cache, singledispatch, total_ordering
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from urllib.parse import quote_plus
 
 import attr
 import pandas as pd
@@ -122,6 +123,7 @@ class LookupResult:
 
     ioc: str
     ioc_type: str
+    safe_ioc: str = ""
     query_subtype: Optional[str] = None
     provider: Optional[str] = None
     result: bool = False
@@ -230,6 +232,8 @@ class TIProvider(ABC):
         }
         if IoCType.unknown in self._supported_types:
             self._supported_types.remove(IoCType.unknown)
+
+        self.require_url_encoding = False
 
     # pylint: disable=duplicate-code
     @abc.abstractmethod
@@ -428,6 +432,7 @@ class TIProvider(ABC):
         """
         result = LookupResult(
             ioc=ioc,
+            safe_ioc=ioc,
             ioc_type=ioc_type if ioc_type else self.resolve_ioc_type(ioc),
             query_subtype=query_subtype,
             result=False,
@@ -441,7 +446,12 @@ class TIProvider(ABC):
             result.status = TILookupStatus.not_supported.value
             return result
 
-        clean_ioc = preprocess_observable(ioc, result.ioc_type)
+        clean_ioc = preprocess_observable(
+            ioc, result.ioc_type, self.require_url_encoding
+        )
+
+        result.safe_ioc = clean_ioc.observable
+
         if clean_ioc.status != "ok":
             result.details = clean_ioc.status
             result.status = TILookupStatus.bad_format.value
@@ -463,7 +473,9 @@ _HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
 
 
 # pylint: disable=too-many-return-statements, too-many-branches
-def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
+def preprocess_observable(
+    observable, ioc_type, require_url_encoding: bool = False
+) -> SanitizedObservable:
     """
     Preprocesses and checks validity of observable against declared IoC type.
 
@@ -480,7 +492,7 @@ def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
             None, "Observable does not match expected pattern for " + ioc_type
         )
     if ioc_type == "url":
-        return _preprocess_url(observable)
+        return _preprocess_url(observable, require_url_encoding)
     if ioc_type == "ipv4":
         return _preprocess_ip(observable, version=4)
     if ioc_type == "ipv6":
@@ -494,14 +506,18 @@ def preprocess_observable(observable, ioc_type) -> SanitizedObservable:
 
 # Would complicate code with too many branches
 # pylint: disable=too-many-return-statements
-def _preprocess_url(url: str) -> SanitizedObservable:
+def _preprocess_url(
+    url: str, require_url_encoding: bool = False
+) -> SanitizedObservable:
     """
     Check that URL can be parsed.
 
     Parameters
     ----------
     url : str
-        the URL to check
+        The URL to check
+    require_url_encoding : bool
+        Set to True if url's require encoding before passing to provider
 
     Returns
     -------
@@ -509,7 +525,7 @@ def _preprocess_url(url: str) -> SanitizedObservable:
         Pre-processed result
 
     """
-    clean_url, scheme, host = get_schema_and_host(url)
+    clean_url, scheme, host = get_schema_and_host(url, require_url_encoding)
 
     if scheme is None or host is None:
         return SanitizedObservable(None, f"Could not obtain scheme or host from {url}")
@@ -534,7 +550,9 @@ def _preprocess_url(url: str) -> SanitizedObservable:
     return SanitizedObservable(clean_url, "ok")
 
 
-def get_schema_and_host(url: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def get_schema_and_host(
+    url: str, require_url_encoding: bool = False
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Return URL scheme and host and cleaned URL.
 
@@ -542,6 +560,8 @@ def get_schema_and_host(url: str) -> Tuple[Optional[str], Optional[str], Optiona
     ----------
     url : str
         Input URL
+    require_url_encoding : bool
+        Set to True if url needs encoding. Defualt is False.
 
     Returns
     -------
@@ -564,6 +584,8 @@ def get_schema_and_host(url: str) -> Tuple[Optional[str], Optional[str], Optiona
                 clean_url = cleaned_url
             except LocationParseError:
                 pass
+    if require_url_encoding and clean_url:
+        clean_url = quote_plus(clean_url)
     return clean_url, scheme, host
 
 
