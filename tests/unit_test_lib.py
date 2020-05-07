@@ -9,6 +9,7 @@ from pathlib import Path
 import os
 from typing import Union, Dict, Any, Generator
 
+# pylint: disable=relative-beyond-top-level
 from ..msticpy.common import pkg_config
 from ..msticpy.common.utility import export
 
