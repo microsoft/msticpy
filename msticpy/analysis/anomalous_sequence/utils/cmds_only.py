@@ -129,6 +129,7 @@ def compute_likelihood_window(
             raise MsticpyException(
                 "start_token should not be None, when use_start_token is True"
             )
+
     if use_end_token:
         if end_token is None:
             raise MsticpyException(
@@ -213,10 +214,12 @@ def compute_likelihood_windows_in_session(
     end = len(sess) - window_len
     for i in range(end + 1):
         window = sess[i : i + window_len]  # noqa: E203
+
         if i == 0:
             use_start = use_start_end_tokens
         else:
             use_start = False
+
         lik = compute_likelihood_window(
             window=window,
             prior_probs=prior_probs,
@@ -229,6 +232,7 @@ def compute_likelihood_windows_in_session(
         if use_geo_mean:
             k = window_len
             lik = lik ** (1 / k)
+
         likelihoods.append(lik)
 
     return likelihoods
@@ -286,6 +290,7 @@ def rarest_window_session(
         end_token=end_token,
         use_geo_mean=use_geo_mean,
     )
+
     if len(likelihoods) == 0:
         return [], np.nan
     min_lik = min(likelihoods)
