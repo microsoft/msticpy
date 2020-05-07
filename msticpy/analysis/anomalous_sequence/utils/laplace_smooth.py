@@ -8,11 +8,13 @@
 from typing import Tuple, List, DefaultDict
 
 
-def laplace_smooth_cmd_counts(seq1_counts: DefaultDict[str, int],
-                              seq2_counts: DefaultDict[str, DefaultDict[str, int]],
-                              start_token: str, end_token: str,
-                              unk_token: str) \
-        -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+def laplace_smooth_cmd_counts(
+    seq1_counts: DefaultDict[str, int],
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    start_token: str,
+    end_token: str,
+    unk_token: str,
+) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the cmds.
 
@@ -53,10 +55,12 @@ def laplace_smooth_cmd_counts(seq1_counts: DefaultDict[str, int],
     return seq1_counts_ls, seq2_counts_ls
 
 
-def laplace_smooth_param_counts(cmds: List[str], param_counts: DefaultDict[str, int],
-                                cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
-                                unk_token: str) \
-        -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+def laplace_smooth_param_counts(
+    cmds: List[str],
+    param_counts: DefaultDict[str, int],
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    unk_token: str,
+) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the params.
 
@@ -94,10 +98,12 @@ def laplace_smooth_param_counts(cmds: List[str], param_counts: DefaultDict[str, 
     return param_counts_ls, cmd_param_counts_ls
 
 
-def laplace_smooth_value_counts(params: List[str], value_counts: DefaultDict[str, int],
-                                param_value_counts: DefaultDict[str, DefaultDict[str, int]],
-                                unk_token: str)\
-        -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
+def laplace_smooth_value_counts(
+    params: List[str],
+    value_counts: DefaultDict[str, int],
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]],
+    unk_token: str,
+) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the values.
 

@@ -17,7 +17,10 @@ from typing import Tuple, List, Union, DefaultDict
 import numpy as np
 
 from ..utils.data_structures import StateMatrix, Cmd
-from ..utils.laplace_smooth import laplace_smooth_cmd_counts, laplace_smooth_param_counts
+from ..utils.laplace_smooth import (
+    laplace_smooth_cmd_counts,
+    laplace_smooth_param_counts,
+)
 from ....common.utility import MsticpyException
 
 
@@ -94,7 +97,7 @@ def compute_counts(  # nosec
         seq2_counts=seq2_counts,
         start_token=start_token,
         end_token=end_token,
-        unk_token=unk_token
+        unk_token=unk_token,
     )
 
     # apply laplace smoothing for params
@@ -102,7 +105,7 @@ def compute_counts(  # nosec
         cmds=cmds,
         param_counts=param_counts,
         cmd_param_counts=cmd_param_counts,
-        unk_token=unk_token
+        unk_token=unk_token,
     )
 
     seq1_counts_sm = StateMatrix(states=seq1_counts, unk_token=unk_token)
