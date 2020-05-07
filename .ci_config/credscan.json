@@ -8,6 +8,10 @@
         {
             "file": "AzureData.rst.txt",
             "_justification": "This is code usage example and does not contain a secret."
+        },
+        {
+            "file": "msticpyconfig.rst.txt",
+            "_justification": "This is code usage example and does not contain a secret."
         }
     ]
 }
