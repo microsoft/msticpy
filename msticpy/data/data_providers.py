@@ -50,6 +50,10 @@ class AttribHolder:
             print("Use QueryProvider.list_queries() to see available queries.")
         return super().__getattribute__(name)
 
+    def __repr__(self):
+        """Return list of attributes."""
+        return "\n".join(self.__dict__.keys())
+
 
 @export
 class QueryProvider:

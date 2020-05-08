@@ -10,3 +10,4 @@ Displaying/Visualizing Data
    visualization/NotebookWidgets
    visualization/FoliumMap
    visualization/TimeSeriesAnomalies
+   visualization/MorphCharts

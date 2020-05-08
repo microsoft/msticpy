@@ -25,7 +25,7 @@ import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
-from .utility import MsticpyConfigException
+from .utility import MsticpyConfigException, is_valid_uuid
 from .._version import VERSION
 
 __version__ = VERSION
@@ -33,6 +33,9 @@ __author__ = "Ian Hellen"
 
 _CONFIG_FILE: str = "msticpyconfig.yaml"
 _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
+_DP_KEY = "DataProviders"
+_AZ_SENTINEL = "AzureSentinel"
+_AZ_CLI = "AzureCLI"
 
 # pylint: disable=invalid-name
 default_settings: Dict[str, Any] = {}
@@ -45,7 +48,7 @@ def _get_current_config() -> Callable[[Any], Optional[str]]:
     _current_conf_file: Optional[str] = None
 
     def _current_config(file_path: Optional[str] = None) -> Optional[str]:
-        nonlocal _current_conf_file
+        nonlocal _current_conf_file  # noqa
         if file_path is not None:
             _current_conf_file = file_path
         return _current_conf_file
@@ -75,6 +78,7 @@ def refresh_config():
     global default_settings, custom_settings, settings
     default_settings = _get_default_config()
     custom_settings = _get_custom_config()
+    custom_settings = _create_data_providers(custom_settings)
     settings = _consolidate_configs(default_settings, custom_settings)
 
 
@@ -200,5 +204,182 @@ def _get_top_module():
     return top_module
 
 
+def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
+    if _DP_KEY not in mp_config:
+        mp_config[_DP_KEY] = {}
+    data_providers = mp_config[_DP_KEY]
+
+    az_sent_config = mp_config.get(_AZ_SENTINEL)
+    if az_sent_config and az_sent_config.get("Workspaces"):
+        for section, prov_settings in mp_config[_AZ_SENTINEL]["Workspaces"].items():
+            sec_name = f"{_AZ_SENTINEL}_{section}"
+            if sec_name in data_providers:
+                continue
+            data_providers[sec_name] = {"Args": prov_settings}
+    az_cli_config = mp_config.get(_AZ_CLI)
+    if az_cli_config and _AZ_CLI not in data_providers:
+        data_providers[_AZ_CLI] = mp_config[_AZ_CLI]
+    return mp_config
+
+
 # read initial config when first imported.
 refresh_config()
+
+
+def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
+    """
+    Validate msticpy config settings.
+
+    Parameters
+    ----------
+    mp_config : Dict[str, Any], optional
+        The settings dictionary, by default it will
+        check the currently loaded settings.
+    config_file : str
+        path to config file to check, by default None
+
+    """
+    if config_file:
+        mp_config = _read_config_file(config_file)
+    if not mp_config and not config_file:
+        mp_config = settings
+
+    if not isinstance(mp_config, dict):
+        raise TypeError("Unknown format for configuration settings.")
+
+    mp_errors, mp_warn = _validate_azure_sentinel(mp_config=mp_config)
+
+    auth_key_providers = [
+        "OTX",
+        "VirusTotal",
+        "XForce",
+        "OpenPageRank",
+        "GeoIPLite",
+        "IPStack",
+    ]
+    for conf_section in ["TIProviders", "OtherProviders", _DP_KEY]:
+        prov_errors, prov_warn = _check_provider_settings(
+            mp_config=mp_config.get(conf_section, {}),
+            section=conf_section,
+            key_provs=auth_key_providers,
+        )
+        mp_errors.extend(prov_errors)
+        mp_warn.extend(prov_warn)
+
+    # Special handling for AzureCLI if it is not in DataProviders
+    # but specified at the top level of the config file
+    if _AZ_CLI not in mp_config.get(_DP_KEY, {}):
+        if _AZ_CLI not in mp_config:
+            mp_warn.append("No AzureCLI section in settings.")
+        else:
+            az_cli_settings = {"DataProviders": mp_config.get(_AZ_CLI)}
+            prov_errors, prov_warn = _check_provider_settings(
+                mp_config=az_cli_settings, section=_AZ_CLI, key_provs=None
+            )
+            mp_errors.extend(prov_errors)
+            mp_warn.extend(prov_warn)
+
+    _print_validation_report(mp_errors, mp_warn)
+    if mp_errors or mp_warn:
+        return mp_errors, mp_warn
+    return None
+
+
+def _print_validation_report(mp_errors, mp_warn):
+    if mp_errors:
+        title = "\nThe following configuration errors were found:"
+        print(title, "\n", "-" * len(title))
+        for err in mp_errors:
+            print(err)
+    else:
+        print("No errors found.")
+    if mp_warn:
+        title = "\nThe following configuration warnings were found:"
+        print(title, "\n", "-" * len(title))
+        for err in mp_warn:
+            print(err)
+    else:
+        print("No warnings found.")
+
+
+def _validate_azure_sentinel(mp_config):
+    mp_errors = []
+    as_settings = mp_config.get(_AZ_SENTINEL, {})
+    if not as_settings:
+        mp_errors.append("Missing or empty 'AzureSentinel' section")
+    ws_settings = as_settings.get("Workspaces", {})
+    if not ws_settings:
+        mp_errors.append("Missing or empty 'Workspaces' key in 'AzureSentinel' section")
+    no_default = True
+    for ws, ws_settings in ws_settings.items():
+        if ws == "Default":
+            no_default = False
+        ws_id = ws_settings.get("WorkspaceId")
+        if not ws_id and not is_valid_uuid(ws_id):
+            mp_errors.append(f"Invalid GUID for WorkspaceId in {ws} section")
+        ten_id = ws_settings.get("TenantId")
+        if not ten_id and not is_valid_uuid(ten_id):
+            mp_errors.append(f"Invalid GUID for TenantId in {ws} section")
+    mp_warnings = ["No default workspace set"] if no_default else []
+    return mp_errors, mp_warnings
+
+
+def _check_provider_settings(mp_config, section, key_provs):
+    mp_errors = []
+    mp_warnings = []
+    if not mp_config:
+        mp_warnings.append(f"'{section}' section has no settings.")
+    for p_name, p_setting in mp_config.items():
+        sec_args = p_setting.get("Args")
+        if not sec_args:
+            continue
+        sec_path = f"{section}/{p_name}" if section else f"{p_name}"
+        if key_provs and p_name in key_provs:
+            _check_required_key(mp_errors, sec_args, "AuthKey", sec_path)
+        if p_name == "XForce":
+            _check_required_key(mp_errors, sec_args, "ApiID", sec_path)
+        if p_name == _AZ_SENTINEL:
+            _check_is_uuid(mp_errors, sec_args, "WorkspaceID", sec_path)
+            _check_is_uuid(mp_errors, sec_args, "TenantID", sec_path)
+        if p_name.startswith("AzureSentinel_"):
+            _check_is_uuid(mp_errors, sec_args, "WorkspaceId", sec_path)
+            _check_is_uuid(mp_errors, sec_args, "TenantId", sec_path)
+        if p_name == _AZ_CLI:
+            _check_required_key(mp_errors, sec_args, "clientId", sec_path)
+            _check_required_key(mp_errors, sec_args, "tenantId", sec_path)
+            _check_required_key(mp_errors, sec_args, "clientSecret", sec_path)
+
+        mp_errors.extend(
+            _check_env_vars(args_key=p_setting.get("Args"), section=sec_path)
+        )
+    return mp_errors, mp_warnings
+
+
+def _check_required_key(mp_errors, conf_section, key, sec_path):
+    if key not in conf_section or not conf_section[key]:
+        mp_errors.append(f"{sec_path}: Missing or invalid {key}.")
+
+
+def _check_is_uuid(mp_errors, conf_section, key, sec_path):
+    if (
+        key not in conf_section
+        or not conf_section[key]
+        or not is_valid_uuid(conf_section[key])
+    ):
+        mp_errors.append(f"{sec_path}: Missing or invalid {key}.")
+
+
+def _check_env_vars(args_key, section):
+    mp_errs = []
+    if not args_key:
+        return mp_errs
+    for val in args_key.values():
+        if "EnvironmentVar" in val:
+            env_name = val.get("EnvironmentVar")
+            if not env_name:
+                mp_errs.append(f"{section}: No environment variable name specified.")
+            elif env_name not in os.environ:
+                mp_errs.append(f"{section}: Env variable {env_name} not set.")
+            elif not os.environ[env_name]:
+                mp_errs.append(f"{section}: Env variable {env_name} value is not set.")
+    return mp_errs

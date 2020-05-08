@@ -25,13 +25,9 @@ from ..msticpy.sectools.tiproviders import (
     AzSTI,
 )
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from .unit_test_lib import get_test_data_path, custom_mp_config
+
+_TEST_DATA = get_test_data_path()
 
 
 class Kql_Result:
@@ -115,32 +111,27 @@ class TestASKqlTIProvider(unittest.TestCase):
 
     def test_ti_config_and_load(self):
         test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml")
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+        with custom_mp_config(test_config1):
+            ti_settings = get_provider_settings()
 
-        pkg_config.refresh_config()
+            self.assertIsInstance(ti_settings, dict)
+            self.assertGreaterEqual(1, len(ti_settings))
 
-        ti_settings = get_provider_settings()
+            # Try to load TIProviders - should throw a warning on
+            # missing provider class
+            as_byoti_prov = AzSTI(query_provider=qry_prov)
+            ti_lookup = TILookup(primary_providers=[as_byoti_prov])
 
-        self.assertIsInstance(ti_settings, dict)
-        self.assertGreaterEqual(1, len(ti_settings))
-
-        # Try to load TIProviders - should throw a warning on
-        # missing provider class
-        as_byoti_prov = AzSTI(query_provider=qry_prov)
-        ti_lookup = TILookup(primary_providers=[as_byoti_prov])
-
-        # should have 2 succesfully loaded providers
-        self.assertGreaterEqual(1, len(ti_lookup.loaded_providers))
-        self.assertGreaterEqual(1, len(ti_lookup.provider_status))
+            # should have 2 succesfully loaded providers
+            self.assertGreaterEqual(1, len(ti_lookup.loaded_providers))
+            self.assertGreaterEqual(1, len(ti_lookup.provider_status))
 
     @staticmethod
     def load_ti_lookup():
         test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
-
-        pkg_config.refresh_config()
-        as_byoti_prov = AzSTI(query_provider=qry_prov)
-        return TILookup(primary_providers=[as_byoti_prov])
+        with custom_mp_config(test_config1):
+            as_byoti_prov = AzSTI(query_provider=qry_prov)
+            return TILookup(primary_providers=[as_byoti_prov])
 
     # Need to work out how to mock IPython/Kqlmagic startup
     # def test_create_query_provider(self):

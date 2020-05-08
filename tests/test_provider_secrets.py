@@ -38,14 +38,9 @@ from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 from ..msticpy.sectools.tiproviders import ProviderSettings, get_provider_settings
 from ..msticpy.common.utility import set_unit_testing
 
+from .unit_test_lib import get_test_data_path, custom_mp_config
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+_TEST_DATA = get_test_data_path()
 
 # set a flag to indicate we're in a unit test
 set_unit_testing(True)
@@ -474,12 +469,11 @@ class TestSecretsConfig(unittest.TestCase):
 def get_kv_settings(config_file):
     test_config = Path(_TEST_DATA).joinpath(config_file)
     os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config)
-
     with warnings.catch_warnings():
         # We want to ignore warnings from missing config
         warnings.simplefilter("ignore", category=UserWarning)
-        pkg_config.refresh_config()
-    return KeyVaultSettings()
+        with custom_mp_config(test_config):
+            return KeyVaultSettings()
 
 
 def mock_auth_context_methods(expiry_time):
