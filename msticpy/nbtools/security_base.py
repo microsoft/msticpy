@@ -405,12 +405,39 @@ class SecurityBase(QueryParamProvider):
             The entities matching `entity_type`.
 
         """
-        class_type = Entity.ENTITY_NAME_MAP.get(entity_type, None)
-        return [
-            p
-            for p in self.entities
-            if p["Type"] == entity_type or class_type and isinstance(p, class_type)
-        ]
+        return [p for p in self.entities if p["Type"] == entity_type]
+
+    def get_all_entities(self) -> pd.DataFrame:
+        """
+        Return a DataFrame of the Alert or Event entities.
+
+        Returns
+        -------
+        DataFrame
+            Pandas DataFrame of the Alert or Event entities.
+
+        """
+        entity = []
+        ent_type = []
+        for item in self.entities:
+            if "Address" in item:
+                entity.append(item["Address"])
+                ent_type.append(item["Type"])
+            elif "Url" in item:
+                entity.append(item["Url"])
+                ent_type.append(item["Type"])
+            elif "HostName" in item:
+                entity.append(item["HostName"])
+                ent_type.append(item["Type"])
+            elif "Entity" in item:
+                entity.append(item["Entity"])
+                ent_type.append(item["Type"])
+            elif item["Type"] == "account":
+                entity.append(item["Name"])
+                ent_type.append(item["Type"])
+
+        entities = pd.DataFrame({"Entity": entity, "Type": ent_type})
+        return entities
 
     def to_html(self, show_entities: bool = False) -> str:
         """Return the item as HTML string."""
