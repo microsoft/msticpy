@@ -11,6 +11,7 @@ repos:
     hooks:
     - id: black
       language: python
+      language_version: python3.7
 -   repo: local
     hooks:
     - id: download_tlds
