@@ -9,6 +9,7 @@ import os
 import re
 import subprocess  # nosec
 import sys
+import uuid
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -221,16 +222,23 @@ def resolve_pkg_path(part_path: str):
     return str(searched_paths[0])
 
 
-@export
-# pylint: disable=not-an-iterable
-def check_and_install_missing_packages(required_packages, notebook=True, user=True):
+# pylint: disable=not-an-iterable, too-many-branches
+@export  # noqa: MC0001
+def check_and_install_missing_packages(
+    required_packages: List[str],
+    notebook: bool = True,
+    user: bool = True,
+    upgrade: bool = False,
+):
     """
     Check and install missing packages from provided list of packages.
 
     Parameters
     ----------
-    required_packages : [list]
+    required_packages : List[str]
         List of packages to check and install in a current environment
+        Note you can add package version constraints by appending them to
+        the package name, e.g. `pandas>=1.01`
     notebook : bool, optional
         Boolean value to toggle notebook view and console view to
         display correct progress bar,
@@ -238,35 +246,47 @@ def check_and_install_missing_packages(required_packages, notebook=True, user=Tr
     user : bool, optional
         Boolean value to toggle user flag while installing pip packages,
         by default True
+    upgrade: bool, option
+        If true supply `--upgrade` flag to pip to install the latest
+        version (applies to all package in `required_packages`)
 
     """
-    installed_packages = pkg_resources.working_set
-    installed_packages_list = sorted([f"{i.key}" for i in installed_packages])
-    missing_packages = [
-        pkg for pkg in required_packages if pkg not in installed_packages_list
-    ]
+    missing_packages = []
+    # Check package requirements against installed set
+    for req in required_packages:
+        pkg_req = pkg_resources.Requirement.parse(req)
+        try:
+            found_pkg = pkg_resources.working_set.find(pkg_req)
+        except pkg_resources.VersionConflict:
+            found_pkg = None
+        if found_pkg is None:
+            missing_packages.append(req)
+
     if not missing_packages:
         print("All packages are already installed")
     else:
-        print("Missing packages to be installed:: ", *missing_packages, sep=" ")
+        print("Missing packages to be installed: ", *missing_packages, sep=" ")
         if notebook:
             pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
         else:
             pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
         try:
+            pkg_command = ["pip", "install"]
+            if user:
+                pkg_command.append("--user")
+            if upgrade:
+                pkg_command.append("--upgrade")
             for package in pkgbar:
-                if user:
-                    retcode = subprocess.call(  # nosec
-                        ["pip", "install", "--user", package]
-                    )
-                else:
-                    retcode = subprocess.call(["pip", "install", package])  # nosec
+                retcode = subprocess.call(pkg_command + [package])  # nosec
                 if retcode > 0:
                     print(f"An Error has occured while installing {package}")
                 else:
                     print(f"{package} installed succesfully")
         except OSError as err:
-            print("Execution of Pip installation failed:", err)
+            print("Execution of pip installation failed:", err)
+
+
+# pylint: enable=not-an-iterable, too-many-branches
 
 
 # pylint: disable=invalid-name
@@ -294,6 +314,9 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
     display(HTML(f"<p style='{style_str}'>{string}</p>"))
+
+
+# pylint: enable=invalid-name
 
 
 @export
@@ -422,6 +445,7 @@ def unit_testing() -> bool:
     return _U_TEST_ENV in os.environ
 
 
+# pylint: disable=invalid-name
 def set_unit_testing(on: bool = True):
     """
     Set flag env var to indicated that code is being unit-tested.
@@ -436,3 +460,30 @@ def set_unit_testing(on: bool = True):
         os.environ[_U_TEST_ENV] = "True"
     else:
         os.environ.pop(_U_TEST_ENV, None)
+
+
+# pylint: enable=invalid-name
+
+
+def is_valid_uuid(uuid_str: Any) -> bool:
+    """
+    Return true if `uuid_str` is a value GUID/UUID.
+
+    Parameters
+    ----------
+    uuid_str : Any
+        String to test
+
+    Returns
+    -------
+    bool
+        True if valid GUID/UUID.
+
+    """
+    if not uuid_str:
+        return False
+    try:
+        uuid.UUID(uuid_str)
+    except (ValueError, TypeError):
+        return False
+    return True

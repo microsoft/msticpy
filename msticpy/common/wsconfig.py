@@ -8,13 +8,32 @@
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
+import warnings
 
-from .utility import export
+from .utility import export, is_valid_uuid
 from . import pkg_config
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+_NO_CONFIG_WARN = """
+Could not find msticpyconfig.yaml or config.json in the current directory.
+Using '{config_file}'.
+We recommend using an explicit msticpyconfig.yaml specified using the
+MSTICPYCONFIG environment variable. See
+https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+for more details.
+"""
+
+_NO_CONFIG_ERR = """
+Could not find msticpyconfig.yaml or config.json.
+We recommend using an explicit msticpyconfig.yaml specified using the
+MSTICPYCONFIG environment variable. See
+https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
+for more details.
+"""
 
 
 @export
@@ -60,10 +79,12 @@ class WorkspaceConfig:
             if Path("./config.json").exists():
                 config_file = "./config.json"
             else:
-                raise RuntimeError(
-                    "Could not find workspace configuration in "
-                    + "msticpyconfig.yaml or in config.json."
-                )
+                searched_configs = list(Path("..").glob("**/config.json"))
+                if not searched_configs:
+                    raise RuntimeError(_NO_CONFIG_ERR)
+
+                config_file = str(searched_configs[0])
+                warnings.warn(_NO_CONFIG_WARN.format(config_file=config_file))
         self._config_file = config_file
         self._config.update(self._read_config_values(config_file))
 
@@ -97,9 +118,9 @@ class WorkspaceConfig:
             True if configuration loaded.
 
         """
-        ws_ok = self._config.get(self.CONF_WS_ID_KEY, None)
-        ten_ok = self._config.get(self.CONF_TENANT_ID_KEY, None)
-        return ws_ok and ten_ok  # type: ignore
+        ws_value = self._config.get(self.CONF_WS_ID_KEY, None)
+        ten_value = self._config.get(self.CONF_TENANT_ID_KEY, None)
+        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)  # type: ignore
 
     @property
     def code_connect_str(self) -> str:

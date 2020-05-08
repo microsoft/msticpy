@@ -20,7 +20,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
-from ..common import pkg_config as config
+from ..common.provider_settings import get_provider_settings
 from ..common.utility import MsticpyException
 from .._version import VERSION
 
@@ -112,12 +112,14 @@ class AzureData:
         """Authenticate with the SDK."""
         # Use details of msticpyyaml if not provided
         if client_id is None and tenant_id is None and secret is None:
-            az_cli_config = config.settings.get("AzureCLI")
+            data_provs = get_provider_settings(config_section="DataProviders")
+            az_cli_config = data_provs.get("AzureCLI")
+            # az_cli_config = config.settings.get("AzureCLI")
             if not az_cli_config:
                 raise MsticpyAzureException(
                     "No AzureCLI configuration found in configuration settings."
                 )
-            config_items = az_cli_config["Args"]
+            config_items = az_cli_config.args
             client_id = config_items["clientId"]
             tenant_id = config_items["tenantId"]
             secret = config_items["clientSecret"]
@@ -214,7 +216,7 @@ class AzureData:
         else:
             resources = self.resource_client.resources.list_by_resource_group(  # type: ignore
                 rgroup
-            )  # type: ignore
+            )
 
         # Warn users about getting full properties for each resource
         if get_props is True:
@@ -382,8 +384,10 @@ class AzureData:
                 service = resource_id.split("/")[7]
             except IndexError:
                 raise MsticpyAzureException(
-                    """Provided Resource ID isn't in the correct format. It should look like:
-                       /subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME """  # pylint: disable=line-too-long
+                    "Provided Resource ID isn't in the correct format.",
+                    "It should look like:",
+                    "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
+                    + "providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME ",
                 )
 
         elif resource_provider is not None:

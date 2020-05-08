@@ -18,13 +18,9 @@ from ..msticpy.sectools import cmd_line as cl
 from ..msticpy.common.provider_settings import get_provider_settings
 from ..msticpy.sectools.geoip import GeoIPDatabaseException
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from .unit_test_lib import get_test_data_path, custom_mp_config
+
+_TEST_DATA = get_test_data_path()
 
 
 def test_cluster_syslog_logons_df():
@@ -39,42 +35,41 @@ def test_cluster_syslog_logons_df():
 
 def test_host_data():
     test_config1 = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")
-    os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
 
-    with warnings.catch_warnings():
-        # We want to ignore warnings from missing config
-        warnings.simplefilter("ignore", category=UserWarning)
-        pkg_config.refresh_config()
+    with custom_mp_config(test_config1):
+        with warnings.catch_warnings():
+            # We want to ignore warnings from missing config
+            warnings.simplefilter("ignore", category=UserWarning)
 
-        syslog_file = os.path.join(_TEST_DATA, "syslog_data.csv")
-        syslog_df = pd.read_csv(syslog_file, parse_dates=["TimeGenerated"])
-        heartbeat_file = os.path.join(_TEST_DATA, "host_hb.csv")
-        heartbeat_df = pd.read_csv(heartbeat_file)
-        az_net_file = os.path.join(_TEST_DATA, "az_net.csv")
-        az_net_df = pd.read_csv(az_net_file)
-        try:
-            host_record = ls.create_host_record(syslog_df, heartbeat_df, az_net_df)
-            assert type(host_record) == Host  # nosec
-            assert host_record.OSType == "Linux"  # nosec
+            syslog_file = os.path.join(_TEST_DATA, "syslog_data.csv")
+            syslog_df = pd.read_csv(syslog_file, parse_dates=["TimeGenerated"])
+            heartbeat_file = os.path.join(_TEST_DATA, "host_hb.csv")
+            heartbeat_df = pd.read_csv(heartbeat_file)
+            az_net_file = os.path.join(_TEST_DATA, "az_net.csv")
+            az_net_df = pd.read_csv(az_net_file)
+            try:
+                host_record = ls.create_host_record(syslog_df, heartbeat_df, az_net_df)
+                assert type(host_record) == Host  # nosec
+                assert host_record.OSType == "Linux"  # nosec
 
-        except GeoIPDatabaseException:
-            # test will fail if no GeoIP database exists or can be downloaded
-            other_provider_settings = get_provider_settings(
-                config_section="OtherProviders"
-            ).get("GeoIPLite", {})
-            geolite_key = None
-            if other_provider_settings:
-                geolite_key = other_provider_settings.args.get("AuthKey")
-            if not geolite_key:
-                warnings.resetwarnings()
-                warnings.warn(
-                    message=(
-                        "No configuration value found for GeoLite key. ",
-                        +"Test test_host_data skipped.",
+            except GeoIPDatabaseException:
+                # test will fail if no GeoIP database exists or can be downloaded
+                other_provider_settings = get_provider_settings(
+                    config_section="OtherProviders"
+                ).get("GeoIPLite", {})
+                geolite_key = None
+                if other_provider_settings:
+                    geolite_key = other_provider_settings.args.get("AuthKey")
+                if not geolite_key:
+                    warnings.resetwarnings()
+                    warnings.warn(
+                        message=(
+                            "No configuration value found for GeoLite key. ",
+                            +"Test test_host_data skipped.",
+                        )
                     )
-                )
-                return
-            assert False
+                    return
+                assert False
 
 
 def test_cluster_sudo_sessions():

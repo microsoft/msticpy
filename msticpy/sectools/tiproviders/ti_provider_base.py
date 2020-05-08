@@ -123,7 +123,7 @@ class LookupResult:
 
     ioc: str
     ioc_type: str
-    safe_ioc: str = None
+    safe_ioc: str = ""
     query_subtype: Optional[str] = None
     provider: Optional[str] = None
     result: bool = False
@@ -584,7 +584,7 @@ def get_schema_and_host(
                 clean_url = cleaned_url
             except LocationParseError:
                 pass
-    if require_url_encoding is True:
+    if require_url_encoding and clean_url:
         clean_url = quote_plus(clean_url)
     return clean_url, scheme, host
 

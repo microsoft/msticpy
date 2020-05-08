@@ -238,7 +238,7 @@ def display_timeseries_anomolies(
 
     if show_range:
         show(column(plot, rng_select))
-    else:
-        show(plot)
+        return column(plot, rng_select)
 
+    show(plot)
     return plot

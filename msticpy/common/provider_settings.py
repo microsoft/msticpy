@@ -15,7 +15,6 @@ from attr import Factory
 from .._version import VERSION
 from .secret_settings import SecretsClient
 from . import pkg_config as config
-from .utility import MsticpyConfigException
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -199,16 +198,20 @@ def _fetch_setting(
         if not env_value:
             warnings.warn(
                 f"Environment variable {config_setting['EnvironmentVar']}"
+                + f" (provider {provider_name})"
                 + " was not set"
             )
         return env_value
     if "KeyVault" in config_setting:
         if not _SECRETS_CLIENT:
-            raise MsticpyConfigException(
-                "Cannot use a KeyVault configuration setting without",
-                "a KeyVault configuration section in msticpyconfig.yaml.",
+            warnings.warn(
+                "Cannot use a KeyVault configuration setting without"
+                + "a KeyVault configuration section in msticpyconfig.yaml"
+                + f" (provider {provider_name})"
             )
         config_path = [config_section, provider_name, "Args", arg_name]
-        sec_func = _SECRETS_CLIENT.get_secret_accessor(".".join(config_path))
+        sec_func = _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
+            ".".join(config_path)
+        )
         return sec_func
     return None
