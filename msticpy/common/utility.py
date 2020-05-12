@@ -322,7 +322,7 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
 @export
 def md_warn(string: str):
     """
-    Return string as a warning - red text prefixed by "Warning".
+    Return string as a warning - orange text prefixed by "Warning".
 
     Parameters
     ----------
@@ -330,7 +330,21 @@ def md_warn(string: str):
         The warning message.
 
     """
-    md(f"Warning: {string}", "bold, red, large")
+    md(f"Warning: {string}", "bold, orange, large")
+
+
+@export
+def md_error(string: str):
+    """
+    Return string as an error - red text prefixed by "Error".
+
+    Parameters
+    ----------
+    string : str
+        The error message.
+
+    """
+    md(f"Error: {string}", "bold, orange, large")
 
 
 # Styles available to use in the above Markdown tools.
