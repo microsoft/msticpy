@@ -66,7 +66,7 @@ class QuerySource:
         self._source = source
         self.defaults = defaults
         self._global_metadata = dict(metadata) if metadata else dict()
-        self.query_store: Optional["QueryStore"] = None  # type: ignore
+        self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
 
         # consolidate source metadata - source-specifc
         # overrides global
