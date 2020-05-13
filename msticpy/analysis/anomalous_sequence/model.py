@@ -18,7 +18,7 @@ from ...common.utility import MsticpyException
 class Model:
     """Class for modelling sessions data."""
 
-    def __init__(self, sessions: List[List[Union[str, Cmd]]]):
+    def __init__(self, sessions: List[List[Union[str, Cmd]]], modellable_params: set = None):
         """
         Instantiate the Model class.
 
@@ -49,6 +49,13 @@ class Model:
                     ),
                     Cmd(name='Set-Mailbox',
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+        modellable_params: set, optional
+            set of params which you deem to have categorical values which are suitable
+            for modelling.
+            Note this argument will only have an effect if your sessions include commands,
+            params and values. If your sessions include commands, params and values and
+            this argument is not set, then some rough heuristics will be used to determine
+            which params have values which are suitable for modelling.
 
         """
         if not isinstance(sessions, list):
@@ -79,7 +86,7 @@ class Model:
         self.value_counts = None
         self.param_value_counts = None
 
-        self.modellable_params = None
+        self.modellable_params = modellable_params
 
         self.prior_probs = None
         self.trans_probs = None
@@ -213,9 +220,11 @@ class Model:
                 unk_token=self.unk_token,
             )
 
-            modellable_params = cmds_params_values.get_params_to_model_values(
-                param_counts=param_counts, param_value_counts=param_value_counts
-            )
+            if self.modellable_params is None:
+                modellable_params = cmds_params_values.get_params_to_model_values(
+                    param_counts=param_counts, param_value_counts=param_value_counts
+                )
+                self.modellable_params = modellable_params
 
             self.seq1_counts = seq1_counts
             self.seq2_counts = seq2_counts
@@ -223,8 +232,6 @@ class Model:
             self.cmd_param_counts = cmd_param_counts
             self.value_counts = value_counts
             self.param_value_counts = param_value_counts
-
-            self.modellable_params = modellable_params
 
     def _compute_probs(self):
         """
