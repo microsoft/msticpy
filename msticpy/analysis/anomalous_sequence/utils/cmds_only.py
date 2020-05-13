@@ -27,8 +27,6 @@ def compute_counts(  # nosec
     and command sequences. The `unk_token` means we can handle unseen
     commands and sequences of commands
 
-
-
     Parameters
     ----------
     sessions: List[List[str]]

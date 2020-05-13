@@ -18,7 +18,9 @@ from ...common.utility import MsticpyException
 class Model:
     """Class for modelling sessions data."""
 
-    def __init__(self, sessions: List[List[Union[str, Cmd]]], modellable_params: set = None):
+    def __init__(
+        self, sessions: List[List[Union[str, Cmd]]], modellable_params: set = None
+    ):
         """
         Instantiate the Model class.
 
