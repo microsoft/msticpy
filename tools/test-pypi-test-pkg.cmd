@@ -37,7 +37,7 @@ call conda install --yes pip
 echo.
 echo %h_rule%
 echo Installing msticpy...
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple msticpy
+pip install --user --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple msticpy
 
 echo %h_rule%
 echo Preparing to run notebooks. Crtl-C to abort.

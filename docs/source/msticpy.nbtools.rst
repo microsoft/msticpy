@@ -20,6 +20,14 @@ msticpy.nbtools.morph_charts module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.nbinit module
+--------------------------------
+
+.. automodule:: msticpy.nbtools.nbinit
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.nbdisplay module
 --------------------------------
 

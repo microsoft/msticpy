@@ -94,6 +94,13 @@ msticpy.data.drivers.kql\_driver module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.drivers.local\_data\_driver module
+-----------------------------------------------
+.. automodule:: msticpy.data.drivers.local_data_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.drivers.security\_graph\_driver module
 ---------------------------------------------------
 .. automodule:: msticpy.data.drivers.security_graph_driver

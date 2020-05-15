@@ -61,7 +61,7 @@ class DriverBase(ABC):
         authentication.
 
         """
-        return self._loaded
+        return self._connected
 
     @property
     def schema(self) -> Dict[str, Dict]:

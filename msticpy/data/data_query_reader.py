@@ -8,7 +8,7 @@ from typing import Tuple, Dict, Iterable, Any
 from pathlib import Path
 import yaml
 
-from ..nbtools.query_defns import DataFamily, DataEnvironment
+from .query_defns import DataFamily, DataEnvironment
 from .._version import VERSION
 
 __version__ = VERSION

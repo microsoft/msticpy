@@ -11,10 +11,16 @@ import warnings
 
 import pandas as pd
 
-from .drivers import DriverBase, KqlDriver, SecurityGraphDriver, MDATPDriver
+from .drivers import (
+    DriverBase,
+    KqlDriver,
+    SecurityGraphDriver,
+    MDATPDriver,
+    LocalDataDriver,
+)
 from .query_store import QueryStore
 from .param_extractor import extract_query_params
-from ..nbtools.query_defns import DataEnvironment
+from .query_defns import DataEnvironment
 from ..common.utility import export
 from ..common import pkg_config as config
 from .._version import VERSION
@@ -29,6 +35,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.AzureSecurityCenter: KqlDriver,
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
     DataEnvironment.MDATP: MDATPDriver,
+    DataEnvironment.LocalData: LocalDataDriver,
 }
 
 
@@ -65,8 +72,13 @@ class QueryProvider:
 
     """
 
+    # pylint: disable=too-many-branches
     def __init__(  # noqa: MC0001
-        self, data_environment: Union[str, DataEnvironment], driver: DriverBase = None
+        self,
+        data_environment: Union[str, DataEnvironment],
+        driver: DriverBase = None,
+        query_paths: List[str] = None,
+        **kwargs,
     ):
         """
         Query provider interface to queries.
@@ -79,9 +91,10 @@ class QueryProvider:
             Override the builtin driver (query execution class)
             and use your own driver (must inherit from
             `DriverBase`)
-        query_path: str, optional
-            Override the default location for query files to import
-            a custom set of query definitions at initialization.
+        query_paths : List[str]
+            Additional paths to look for query definitions.
+        kwargs :
+            Other arguments are passed to the data provider driver.
 
         See Also
         --------
@@ -100,11 +113,10 @@ class QueryProvider:
         if driver is None:
             driver_class = _ENVIRONMENT_DRIVERS[data_environment]
             if issubclass(driver_class, DriverBase):
-                driver = driver_class()  # type: ignore
+                driver = driver_class(**kwargs)  # type: ignore
             else:
                 raise LookupError(
-                    "Could not find suitable data provider for",
-                    f" {data_environment.name}",
+                    "Could not find suitable data provider for", f" {self._environment}"
                 )
 
         self._query_provider = driver
@@ -112,30 +124,37 @@ class QueryProvider:
         settings: Dict[str, Any] = config.settings.get(  # type: ignore
             "QueryDefinitions"
         )  # type: ignore
-        query_paths = []
+        all_query_paths = []
         for default_path in settings.get("Default"):  # type: ignore
             qry_path = self._resolve_path(default_path)
             if qry_path:
-                query_paths.append(qry_path)
+                all_query_paths.append(qry_path)
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
                 qry_path = self._resolve_path(custom_path)
                 if qry_path:
-                    query_paths.append(qry_path)
+                    all_query_paths.append(qry_path)
+        if query_paths:
+            all_query_paths.extend(query_paths)
 
-        if not query_paths:
+        if not all_query_paths:
             raise RuntimeError(
-                "No valid query definition files found. "
-                + "Please check your msticpyconfig.yaml settings."
+                "No valid query definition files found. ",
+                "Please check your msticpyconfig.yaml settings.",
             )
-        data_environments = QueryStore.import_files(
-            source_path=query_paths, recursive=True
+        data_env_queries = QueryStore.import_files(
+            source_path=all_query_paths, recursive=True
         )
 
-        self._query_store = data_environments[data_environment.name]
-        self.all_queries = AttribHolder()
-        self._add_query_functions()
+        if self._environment in data_env_queries:
+            self._query_store = data_env_queries[self._environment]
+            self.all_queries = AttribHolder()
+            self._add_query_functions()
+        else:
+            warnings.warn(f"No queries found for environment {self._environment}")
+
+    # pylint: disable=too-many-branches
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""

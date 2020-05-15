@@ -7,9 +7,10 @@
 from collections import defaultdict
 from os import path
 from typing import Any, Dict, Iterable, Set, Union, Optional
+import warnings
 
 from .._version import VERSION
-from ..nbtools.query_defns import DataEnvironment, DataFamily
+from .query_defns import DataEnvironment, DataFamily
 from .data_query_reader import find_yaml_files, read_query_def_file
 from .query_source import QuerySource
 
@@ -132,7 +133,7 @@ class QueryStore:
             new_source = QuerySource(source_name, source, defaults, metadata)
             self.add_data_source(new_source)
 
-    @classmethod
+    @classmethod  # noqa: MC0001
     def import_files(
         cls, source_path: list, recursive: bool = False
     ) -> Dict[str, "QueryStore"]:
@@ -155,7 +156,7 @@ class QueryStore:
 
         Raises
         ------
-        ImportError
+        FileNotFoundError
             File read error or Syntax or semantic error found in
             a source file.
 
@@ -163,9 +164,13 @@ class QueryStore:
         env_stores: Dict[str, QueryStore] = dict()
         for query_dir in source_path:
             if not path.isdir(query_dir):
-                raise ImportError(f"{query_dir} is not a directory")
+                raise FileNotFoundError(f"{query_dir} is not a directory")
             for file_path in find_yaml_files(query_dir, recursive):
-                sources, defaults, metadata = read_query_def_file(str(file_path))
+                try:
+                    sources, defaults, metadata = read_query_def_file(str(file_path))
+                except ValueError:
+                    warnings.warn(f"{file_path} is not a valid query definition file.")
+                    continue
 
                 for env_value in metadata["data_environments"]:
                     if "." in env_value:

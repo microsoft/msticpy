@@ -85,6 +85,7 @@ class DataEnvironment(Enum):
     AzureSecurityCenter = 3
     SecurityGraph = 4
     MDATP = 5
+    LocalData = 6
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

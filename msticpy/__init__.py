@@ -6,5 +6,6 @@ from . import data
 
 from ._version import VERSION
 from .common import pkg_config as settings
+from .nbtools.nbinit import init_notebook
 
 __version__ = VERSION

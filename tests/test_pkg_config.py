@@ -7,7 +7,7 @@
 import unittest
 import os
 from pathlib import Path
-from typing import Union, Any, Tuple
+from typing import Any, Tuple
 import warnings
 
 import yaml
@@ -19,6 +19,8 @@ from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 from .unit_test_lib import get_test_data_path, custom_mp_config
 
 _TEST_DATA = get_test_data_path()
+
+# pylint: disable=protected-access
 
 
 class TestPkgConfig(unittest.TestCase):
