@@ -109,38 +109,27 @@ msticpy.data.drivers.security\_graph\_driver module
     :show-inheritance:
 
 msticpy.data.drivers.odata\_driver module
----------------------------------------------------
+-----------------------------------------
 .. automodule:: msticpy.data.drivers.odata_driver
     :members:
     :undoc-members:
     :show-inheritance:
 
 msticpy.data.drivers.mdatp\_driver module
----------------------------------------------------
+-----------------------------------------
 .. automodule:: msticpy.data.drivers.mdatp_driver
     :members:
     :undoc-members:
     :show-inheritance:
 
-msticpy.nbtools.kql module
---------------------------
 
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-msticpy.nbtools.query\_builtin\_queries module
-----------------------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-msticpy.nbtools.query\_defns module
+msticpy.data.query\_defns module
 -----------------------------------
 
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
+.. automodule:: msticpy.data.query_defns
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 msticpy.nbtools.query\_mgr module

@@ -88,14 +88,14 @@ class KqlTestDriver(DriverBase):
 
 
 class mock_ip:
-    def run_cell_magic(*args, **kwargs):
+    def run_cell_magic(self, *args, **kwargs):
         pass
 
-    def run_line_magic(*args, **kwargs):
+    def run_line_magic(self, *args, **kwargs):
         if kwargs.get("line") == "--schema":
             return {}
 
-    def find_magic(*args, **kwargs):
+    def find_magic(self, *args, **kwargs):
         return True
 
 
