@@ -1252,7 +1252,7 @@ Some common parameters used in the queries are:
 
 - **add_query_items**: This is a useful way of extending queries by adding
   ad hoc statements to the end of the query (e.g. additional filtering order
-  summarization.
+  summarization).
 
 Using yaml aliases and macros in your queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
