@@ -211,7 +211,7 @@ class KqlTIProvider(TIProvider):
                     print("No results return from data provider.")
                 elif data_result and hasattr(data_result, "completion_query_info"):
                     print(
-                        "No results return from data provider. "
+                        "No results returned from data provider. "
                         + str(data_result.completion_query_info)
                     )
                 else:
