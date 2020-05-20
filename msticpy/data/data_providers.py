@@ -315,7 +315,7 @@ class QueryProvider:
         query_str = query_source.create_query(**params)
         if "print" in args or "query" in args:
             return query_str
-        return self._query_provider.query(query_str)
+        return self._query_provider.query(query_str, query_source)
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""

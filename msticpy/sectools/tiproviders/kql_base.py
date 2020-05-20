@@ -57,7 +57,7 @@ class KqlTIProvider(TIProvider):
         else:
             self._query_provider = self._create_query_provider(**kwargs)
 
-        if not self._query_provider:
+        if not self._query_provider or not self._query_provider.connected:
             raise RuntimeError("Query provider for KQL could not be created.")
 
     # pylint: disable=duplicate-code

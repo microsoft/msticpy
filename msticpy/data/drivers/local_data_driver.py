@@ -9,7 +9,7 @@ from typing import Union, Any, Dict, Optional, List
 
 import pandas as pd
 
-from .driver_base import DriverBase
+from .driver_base import DriverBase, QuerySource
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -29,6 +29,8 @@ class LocalDataDriver(DriverBase):
         ----------
         connection_str : str, optional
             Connection string (not used)
+        data_paths : List[str], optional
+            Paths from which to load data files
 
         """
         del connection_str
@@ -98,22 +100,27 @@ class LocalDataDriver(DriverBase):
 
         return self._schema
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: QuerySource = None
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
         Parameters
         ----------
         query : str
-            The kql query to execute
+            The query to execute
+        query_source : QuerySource
+            The query definition object
 
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
             A DataFrame (if successfull) or
-            Kql ResultSet if an error.
+            the underlying provider result if an error.
 
         """
+        del query_source
         file_path = self.data_files.get(query.casefold())
         if not file_path:
             raise FileNotFoundError(f"Data file for query {query} not found.")

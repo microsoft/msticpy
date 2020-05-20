@@ -59,7 +59,8 @@ class KqlTestDriver(DriverBase):
     def schema(self) -> Dict[str, Dict]:
         return self._schema
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(self, query: str, query_source) -> Union[pd.DataFrame, Any]:
+        del query_source
 
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
         if "where NetworkIP" in query:

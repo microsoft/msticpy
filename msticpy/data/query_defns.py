@@ -81,6 +81,7 @@ class DataEnvironment(Enum):
 
     Unknown = 0
     LogAnalytics = 1
+    AzureSentinel = 1  # alias of LogAnalytics
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4

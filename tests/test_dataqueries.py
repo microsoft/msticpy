@@ -26,7 +26,8 @@ class UTDataDriver(DriverBase):
         del connection_str
         self._connected = True
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(self, query: str, query_source) -> Union[pd.DataFrame, Any]:
+        del query_source
         return pd.DataFrame(data=query, index=[0], columns=["query"])
 
     def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:

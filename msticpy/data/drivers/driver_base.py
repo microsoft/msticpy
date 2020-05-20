@@ -10,6 +10,8 @@ from typing import Tuple, Any, Union, Dict, Optional
 
 import pandas as pd
 
+from ..query_source import QuerySource
+
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -90,7 +92,9 @@ class DriverBase(ABC):
         return None
 
     @abc.abstractmethod
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: QuerySource = None
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -98,6 +102,8 @@ class DriverBase(ABC):
         ----------
         query : str
             The query to execute
+        query_source : QuerySource
+            The query definition object
 
         Returns
         -------
