@@ -26,20 +26,19 @@ from ....common.utility import MsticpyException
 
 # pylint: disable=too-many-locals, too-many-branches
 def compute_counts(  # nosec
-    sessions: List[List[Cmd]], start_token: str, end_token: str, unk_token: str
-) -> Tuple[StateMatrix, StateMatrix, StateMatrix, StateMatrix]:
+    sessions: List[List[Cmd]], start_token: str, end_token: str
+) -> Tuple[
+    DefaultDict[str, int],
+    DefaultDict[str, DefaultDict[str, int]],
+    DefaultDict[str, int],
+    DefaultDict[str, DefaultDict[str, int]],
+]:
     """
     Compute the training counts for the sessions.
 
     In particular, computes counts of individual commands and of sequences
     of two commands. It also computes the counts of individual params as
     well as counts of params conditional on the command.
-
-    Laplace smoothing is applied to the counts.
-    This is so we shift some of the probability mass from the very probable
-    commands/params to the unseen and very unlikely commands/params. The
-    `unk_token` means we can handle unseen commands, sequences of commands
-    and params
 
     Parameters
     ----------
@@ -54,8 +53,6 @@ def compute_counts(  # nosec
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
         dummy command to signify the end of a session (e.g. "##END##")
-    unk_token: str
-        dummy command to signify an unseen command (e.g. "##UNK##")
 
     Returns
     -------
@@ -89,6 +86,53 @@ def compute_counts(  # nosec
         seq2_counts[prev][end_token] += 1
         seq1_counts[end_token] += 1
 
+    return seq1_counts, seq2_counts, param_counts, cmd_param_counts
+
+
+def laplace_smooth_counts(
+    seq1_counts: DefaultDict[str, int],
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    param_counts: DefaultDict[str, int],
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    start_token: str,
+    end_token: str,
+    unk_token: str,
+):
+    """
+    Laplace smoothing is applied to the counts.
+
+    We do this by adding 1 to each of the counts.
+    This is so we shift some of the probability mass from the very probable
+    commands/params to the unseen and very unlikely commands/params. The
+    `unk_token` means we can handle unseen commands, sequences of commands
+    and params
+
+    Parameters
+    ----------
+    seq1_counts: DefaultDict[str, int]
+        individual command counts
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]]
+        sequence command (length 2) counts
+    param_counts: DefaultDict[str, int]
+        individual param counts
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]]
+        param conditional on command counts
+    start_token: str
+        dummy command to signify the start of a session (e.g. "##START##")
+    end_token: str
+        dummy command to signify the end of a session (e.g. "##END##")
+    unk_token: str
+        dummy command to signify an unseen command (e.g. "##UNK##")
+
+    Returns
+    -------
+    tuple of StateMatrix counts:
+        individual command counts,
+        sequence command (length 2) counts,
+        individual param counts,
+        param conditional on command counts
+
+    """
     cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
 
     # apply laplace smoothing for cmds
