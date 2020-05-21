@@ -8,6 +8,8 @@
 from typing import Tuple, List, DefaultDict
 import copy
 
+from ..utils.data_structures import StateMatrix
+
 
 def laplace_smooth_cmd_counts(
     seq1_counts: DefaultDict[str, int],
@@ -57,9 +59,10 @@ def laplace_smooth_cmd_counts(
 
 
 def laplace_smooth_param_counts(
-    cmds: List[str],
     param_counts: DefaultDict[str, int],
     cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    seq1_counts: DefaultDict[str, int],
+    seq1_counts_ls: StateMatrix,
     unk_token: str,
 ) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
@@ -70,12 +73,14 @@ def laplace_smooth_param_counts(
 
     Parameters
     ----------
-    cmds: List[str]
-        list of all the possible commands (including the unk_token)
     param_counts: DefaultDict[str, int]
         individual param counts
     cmd_param_counts: DefaultDict[str, DefaultDict[str, int]]
         param conditional on command counts
+    seq1_counts: DefaultDict[str, int]
+        individual command counts before laplace smoothing is applied
+    seq1_counts_ls: StateMatrix
+        individual command counts after laplace smoothing is applied
     unk_token: str
         dummy command to signify an unseen command (e.g. "##UNK##")
 
@@ -89,12 +94,14 @@ def laplace_smooth_param_counts(
     param_counts_ls = copy.deepcopy(param_counts)
     cmd_param_counts_ls = copy.deepcopy(cmd_param_counts)
 
+    cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
     params: List[str] = list(param_counts.keys()) + [unk_token]
     for cmd in cmds:
+        diff = seq1_counts_ls[cmd] - seq1_counts[cmd]
         for param in params:
             if param in cmd_param_counts_ls[cmd] or param == unk_token:
-                param_counts_ls[param] += 1
-                cmd_param_counts_ls[cmd][param] += 1
+                param_counts_ls[param] += diff
+                cmd_param_counts_ls[cmd][param] += diff
 
     return param_counts_ls, cmd_param_counts_ls
 
