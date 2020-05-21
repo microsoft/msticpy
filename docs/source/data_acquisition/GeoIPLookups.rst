@@ -126,8 +126,8 @@ not work reliably cross-platform.
     iplocation = GeoLiteLookup(api_key="mykey", db_folder="/tmp/mmdb")
 
 
-Usage
-^^^^^
+GeoLite Usage
+^^^^^^^^^^^^^
 
 Creating an instance of the GeoLiteLookup class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,8 +227,8 @@ entity (see :py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>`)
       'Count...)
 
 
-Looking up a list of IP Addresses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Looking up a list of IP Addresses with GeoLiteLookup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. code:: ipython3
@@ -325,8 +325,8 @@ environment variable holding the key value, as shown in the example.
         Provider: "IPStackLookup"
 
 
-Usage
-^^^^^
+IPStack Usage
+^^^^^^^^^^^^^
 
 Manually Entering the IPStack Key
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -395,8 +395,8 @@ Lookup IP location from IPStack
     {"Address": "90.156.201.97", "Location": {"CountryCode": "RU", "CountryName": "Russia", "Longitude": 37.6068, "Latitude": 55.7386, "Type": "geolocation"}, "Type": "ipaddress"}
 
 
-Looking up a list of IP Addresses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Looking up a list of IP Addresses with IPStackLookup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 

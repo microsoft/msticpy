@@ -57,7 +57,7 @@ class KqlTIProvider(TIProvider):
         else:
             self._query_provider = self._create_query_provider(**kwargs)
 
-        if not self._query_provider:
+        if not self._query_provider or not self._query_provider.connected:
             raise RuntimeError("Query provider for KQL could not be created.")
 
     # pylint: disable=duplicate-code
@@ -208,14 +208,14 @@ class KqlTIProvider(TIProvider):
                     and data_result.completion_query_info["StatusCode"] == 0
                     and data_result.records_count == 0
                 ):
-                    warnings.warn("No results return from data provider.")
+                    print("No results return from data provider.")
                 elif data_result and hasattr(data_result, "completion_query_info"):
-                    warnings.warn(
-                        "No results return from data provider. "
+                    print(
+                        "No results returned from data provider. "
                         + str(data_result.completion_query_info)
                     )
                 else:
-                    warnings.warn("Unknown response from provider: " + str(data_result))
+                    print("Unknown response from provider: " + str(data_result))
 
             src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type

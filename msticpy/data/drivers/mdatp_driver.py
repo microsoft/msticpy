@@ -7,7 +7,7 @@
 from typing import Union, Any
 import pandas as pd
 
-from .odata_driver import OData
+from .odata_driver import OData, QuerySource
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -44,22 +44,27 @@ class MDATPDriver(OData):
             self.current_connection = connection_str
             self.connect(connection_str)
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: QuerySource = None
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
         Parameters
         ----------
         query : str
-            The kql query to execute
+            The query to execute
+        query_source : QuerySource
+            The query definition object
 
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
             A DataFrame (if successfull) or
-            Kql ResultSet if an error.
+            the underlying provider result if an error.
 
         """
+        del query_source
         return self.query_with_results(
             query, body=True, api_end="/advancedqueries/run"
         )[0]
