@@ -77,32 +77,51 @@ query directory.
 
 There are two other optional parameters we can pass when initializing
 our Query Providers to further customize it: \* We can also chose to
-initialize our Query Provider with a driver other than the defualt one
-with QueryProvider(data_environment=DATA_ENVIRONMENT,
-driver=QUERY_DRIVER) \* We can choose to import queries from a custom
-query directory (see - `Creating a new set of queries <#new>`__ for more
-details) with QueryProvider(data_environment=DATA_ENVIRONMENT,
-driver=QUERY_DRIVER, query_path=QUERY_DIRECTORY_PATH).
+initialize our Query Provider with a driver other than the default one
+with:
+
+.. code:: ipython3
+
+    QueryProvider(
+        data_environment=DATA_ENVIRONMENT,
+        driver=QUERY_DRIVER
+    )
+
+\* We can choose to import queries from a custom
+query directory (see `Creating a new set of queries <#new>`__ for more
+details) with:
+
+.. code:: ipython3
+
+    QueryProvider(
+        data_environment=DATA_ENVIRONMENT,
+        driver=QUERY_DRIVER,
+        query_path=QUERY_DIRECTORY_PATH
+    )
+
 
 For now we will simply create a Query Provider with default values.
 
 ::
 
-   Query provider interface to queries.
+    Query provider interface to queries.
 
-       Parameters
-       ----------
-       data_environment : Union[str, DataEnvironment]
-           Name or Enum of environment for the QueryProvider
-       driver : DriverBase, optional
-           Override the built-in driver (query execution class)
-           and use your own driver (must inherit from
-           `DriverBase`)
+    Parameters
+    ----------
+    data_environment : Union[str, DataEnvironment]
+        Name or Enum of environment for the QueryProvider
+    driver : DriverBase, optional
+        Override the built-in driver (query execution class)
+        and use your own driver (must inherit from
+        `DriverBase`)
 
 .. code:: ipython3
 
+    # List the data environments available
     data_environments = QueryProvider.list_data_environments()
     print(data_environments)
+
+    # Create a query provider for Azure Sentinel/Log Analytics
     qry_prov = QueryProvider(data_environment='LogAnalytics')
 
 
@@ -116,47 +135,33 @@ For now we will simply create a Query Provider with default values.
 .. raw:: html
 
     <html>
-                <head>
-                <style>
-                .kql-magic-banner {
-                    display: flex;
-                    background-color: #d9edf7;
-                }
-                .kql-magic-banner > div {
-                    margin: 10px;
-                    padding: 20px;
-                    color: #3a87ad;
-                    font-size: 13px;
-                }
-                </style>
-                </head>
-                <body>
-                    <div class='kql-magic-banner'>
-                        <div><img src='data:image/png;base64,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'></div>
-                        <div>
-                            <p>Kql Query Language, aka kql, is the query language for advanced analytics on Azure Monitor resources. The current supported data sources are
-                            Azure Data Explorer (Kusto), Log Analytics and Application Insights. To get more information execute '%kql --help "kql"'</p>
-                            <p>   &bull; kql reference: Click on 'Help' tab > and Select 'kql reference' or execute '%kql --help "kql"'<br>
-                              &bull; Kqlmagic configuration: execute '%config Kqlmagic'<br>
-                              &bull; Kqlmagic usage: execute '%kql --usage'<br>
-                        </div>
-                    </div>
-                </body>
-                </html>
-
-
-
-.. raw:: html
-
-    <html>
-            <head>
-
-            </head>
-            <body>
-            <div><p style='padding: 10px; color: #3a87ad; background-color: #d9edf7; border-color: #bce9f1'>Kqlmagic&nbsppackage&nbspis&nbspupdated&nbspfrequently.&nbspRun&nbsp&apos;!pip&nbspinstall&nbspKqlmagic&nbsp--no-cache-dir&nbsp--upgrade&apos;&nbspto&nbspuse&nbspthe&nbsplatest&nbspversion.<br>Kqlmagic&nbspversion:&nbsp0.1.100,&nbspsource:&nbsphttps://github.com/Microsoft/jupyter-Kqlmagic</p></div>
-            </body>
-            </html>
-
+        <head>
+        <style>
+        .kql-magic-banner {
+            display: flex;
+            background-color: #d9edf7;
+        }
+        .kql-magic-banner > div {
+            margin: 10px;
+            padding: 20px;
+            color: #3a87ad;
+            font-size: 13px;
+        }
+        </style>
+        </head>
+        <body>
+            <div class='kql-magic-banner'>
+                <div><img src='data:image/png;base64,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'></div>
+                <div>
+                    <p>Kql Query Language, aka kql, is the query language for advanced analytics on Azure Monitor resources. The current supported data sources are
+                    Azure Data Explorer (Kusto), Log Analytics and Application Insights. To get more information execute '%kql --help "kql"'</p>
+                    <p>   &bull; kql reference: Click on 'Help' tab > and Select 'kql reference' or execute '%kql --help "kql"'<br>
+                        &bull; Kqlmagic configuration: execute '%config Kqlmagic'<br>
+                        &bull; Kqlmagic usage: execute '%kql --usage'<br>
+                </div>
+            </div>
+        </body>
+    </html>
 
 
 Connecting to a Data Environment
@@ -171,6 +176,8 @@ For Log Analytics/Azure Sentinel the connection string is in the format
 of loganalytics://code().tenant(“TENANT_ID”).workspace(“WORKSPACE_ID”).
 Other Data Environments will have different connection string formats.
 
+Documentation string
+
 ::
 
    connect(self, connection_str: str, **kwargs):
@@ -181,6 +188,9 @@ Other Data Environments will have different connection string formats.
        ----------
        connection_string : str
            Connection string for the data source
+
+
+Example
 
 .. code:: ipython3
 
@@ -195,13 +205,14 @@ Other Data Environments will have different connection string formats.
     Workspace ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
     Tenant ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+
 Connecting to an OData Source
 -----------------------------
 :py:mod:`OData driver API documentation<msticpy.data.drivers.odata_driver>`
 
-You can also connect to OData based data sources such as the MDATP API, 
-or the Security Graph API. These connections often rely on having a 
-dedicated Azure AD app for handling the authentication process. 
+You can also connect to OData based data sources such as the MDATP API,
+or the Security Graph API. These connections often rely on having a
+dedicated Azure AD app for handling the authentication process.
 
 MDATP
 ~~~~~
@@ -210,15 +221,16 @@ MDATP
 Details on registering an Azure AD application for MDATP can be found
 `here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
 Once you have registered the application you can use it to connect to
-the MDATP API via the MDATP Data Environment. 
+the MDATP API via the MDATP Data Environment.
 
 When connecting the required elements for connection can be passed in
-a number of ways. The simpliest is to pass the required elements as 
+a number of ways. The simpliest is to pass the required elements as
 kwargs. The required elements are:
 
 * tenant_id -- The tenant ID of the MDATP workspace to connect to.
 * client_id -- The ID of the application registered for MDATP.
 * client_secret -- The secret used for by the application.
+
 
 .. code:: ipython3
 
@@ -228,7 +240,7 @@ kwargs. The required elements are:
         mdatp_prov = QueryProvider('MDATP')
         mdatp_prov.connect(tenant_id=ten_id, client_id=client_id, client_secret=client_secret)
 
-Alternatively you can store these details in the msticpyconfig.yaml 
+Alternatively you can store these details in the msticpyconfig.yaml
 file. Details should be included in the following format:
 
 .. code:: yaml
@@ -249,6 +261,7 @@ function with the value passed being the heading used in msticpyconfig.yaml
 
 For examples of using the MDATP connector see the sample MDATPQuery Notebook.
 
+
 Security Graph API
 ~~~~~~~~~~~~~~~~~~
 :py:mod:`Security Graph driver API documentation<msticpy.data.drivers.security_graph_driver>`
@@ -266,13 +279,162 @@ be found `here <https://docs.microsoft.com/en-us/graph/auth-register-app-v2?cont
         mdatp_prov.connect(app_name="SecurityGraphApp")
 
 
+Using Local Data - the LocalData provider
+-----------------------------------------
+
+:py:mod:`LocalData driver documentation<msticpy.data.drivers.local_data_driver>`
+
+The ``LocalData`` data provider is intended primarily for testing or demonstrations
+where you may not be able to connect to an online data source reliably.
+
+The data backing this driver can be in the form of a pickled pandas DataFrame
+or a CSV file. In either case the data is converted to a DataFrame to be returned
+from the query. Usage of this driver is a little different to most other drivers:
+
+* You will need to provide a path to your data files when initializing
+  the query provider (by default it will search in the current folder).
+* You will also need to provide a query definition file (see following
+  example) that maps the data file names that you are using to
+  query names. The path to search for this is specified in the ``query_paths``
+  parameter (see code examples below).
+* Parameters to queries are ignored.
+
+To define the queries you need to create a query definition file.
+This is an example of a LocalData yaml query file. It is similar to the query
+definition files for other providers but simpler. It only requires a
+description, the data family that the query should be grouped under and
+the name of the file containing the data.
+
+.. code:: yaml
+
+    metadata:
+        version: 1
+        description: Local Data Alert Queries
+        data_environments: [LocalData]
+        data_families: [SecurityAlert, WindowsSecurity, Network]
+        tags: ['alert', 'securityalert', 'process', 'account', 'network']
+    defaults:
+    sources:
+        list_alerts:
+            description: Retrieves list of alerts
+            metadata:
+                data_families: [SecurityAlert]
+            args:
+                query: alerts_list.pkl
+            parameters:
+        list_host_logons:
+            description: List logons on host
+            metadata:
+                data_families: [WindowsSecurity]
+            args:
+                query: host_logons.csv
+            parameters:
+        list_network_alerts:
+            description: List network alerts.
+            args:
+                query: net_alerts.csv
+            parameters:
+
+
+In this example the value for the "query" is just the file name.
+If the queries in your file are a mix of data from different data families,
+you can group them by specifyin one or more values for ``data_families``.
+If this isn't specified for an individual query, it will inherit the setting
+for ``data_families`` in the global ``metadata`` section at the top of the file.
+Specifying more than one value for ``data_families``
+will add links to the query under each data family grouping. This is to allow
+for cases where a query may be relevant to multiple categories.
+The ``data_families`` control only how the queries appear in query provider and
+don't affect any other aspects of the query operation.
+
+In the example shown, the ``list_alerts`` query has been added to the ``SecurityAlert``
+attribute of the query provider, while ``list_host_logons`` is member of
+``WindowsSecurity``. The entry for ``list_network_alerts`` had no ``data_families``
+attribute so inherits the values from the file's ``metadata``. Since this has multiple
+values, the query is added to all three families.
+
+.. code:: ipython3
+
+    # Structure of the query attributes added to the query provider
+    qry_prov.list_queries()
+
+.. parsed-literal::
+
+    Network.list_host_logons
+    Network.list_network_alerts
+            ...<other queries>
+    SecurityAlert.list_alerts
+    SecurityAlert.list_network_alerts
+            ...<other queries>
+    WindowsSecurity.list_host_logons
+    WindowsSecurity.list_network_alerts
+
+For more details about the query definition file structure see
+:ref:`creating-new-queries`.
+
+
+To use the ``LocalData`` provider:
+
+1. Collect your data files into one or more directories or directory trees
+   (the default location to search for data file is the current directory).
+   Subdirectories are searched for ".pkl" and ".csv" files but only file
+   names matching your query definitions will loaded.
+2. Create one or more query definition yaml files (following the pattern above)
+   and place these in a directory (this can be the same as the data files).
+   The query provider will load and merge definitions from multiple YAML files.
+
+QueryProvider defaults to searching for data files in the current directory
+and subdirectories. The default paths for query definition files are the
+built-in package queries path (``...msticpy/data/queries`` and any custom
+paths that you have added to msticpyconfig.yaml (see
+:doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`).
+
+.. note:: The query definition files must have a ``.yaml`` extension.
+
+
+.. code:: ipython3
+
+    # Creating a query provider with "LocalData" parameter
+    qry_prov = QueryProvider("LocalData")
+
+    # list the queries loaded
+    print(qry_prov.list_queries())
+
+    # run a query
+    my_alerts = qry_prov.SecurityAlert.list_alerts()
+
+    # Specify path to look for data files
+    data_path = "./my_data"
+    qry_prov = QueryProvider("LocalData", data_paths=[data_path])
+
+    # Show the schema of the data files read in
+    print(qry_prov.schema)
+
+    # Specify both data and query locations
+    data_path = "./my_data"
+    query_path = "./myqueries"
+    qry_prov = QueryProvider("LocalData", data_paths=[data_path], query_paths=[query_path])
+
+    host_logons_df = qry_prov.WindowsSecurity.list_host_logons()
+
+    # parameters are accepted but ignored
+    host_logons_df = qry_prov.WindowsSecurity.list_host_logons(
+        start=st_date,
+        end=end_date,
+        host_name="myhost.com",
+    )
+
+
 Listing available queries
 -------------------------
 
 Upon connecting to the relevant Data
 Environment we need to look at what query options we have available to
 us. In order to do this we can call QUERY_PROVIDER.list_queries(). This
-will return a generator with the names of all the queries in our store.
+will return a list all queries in our store.
+
+.. note:: An indivdual query may be listed multiple times if it was
+    added to multiple data familes.
 
 The results returned show the data family the query belongs to and the
 name of the specific query.
@@ -290,10 +452,7 @@ name of the specific query.
 
 .. code:: ipython3
 
-    queries = qry_prov.list_queries()
-    for query in queries:
-        print(query)
-
+    qry_prov.list_queries()
 
 .. parsed-literal::
 
@@ -322,11 +481,18 @@ name of the specific query.
 Each of these items is a callable function that will return results
 as a pandas DataFrame.
 
+Getting Help for a query
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 To get further details on a specific query call:
 
 qry_prov.{*query_group*}.{*query_name*}(‘?’) or
 
 qry_prov.{*query_group*}.{*query_name*}(‘help’)
+
+or you can use the builtin Python help:
+
+help(qry_prov.{*query_group*}.{*query_name*})
 
 ``qry_prov`` is the name of your query provider object.
 
@@ -390,22 +556,11 @@ reason an exception will be raised.
 
 .. code:: ipython3
 
-    alerts = qry_prov.SecurityAlert.list_alerts(start='2019-07-21 23:43:18.274492', end='2019-07-27 23:43:18.274492')
+    alerts = qry_prov.SecurityAlert.list_alerts(
+        start='2019-07-21 23:43:18.274492',
+        end='2019-07-27 23:43:18.274492'
+    )
     alerts.head()
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
 
 
 .. raw:: html
@@ -586,46 +741,18 @@ could simply pass a querytimes object to the pre-defined query.
 
 .. code:: ipython3
 
-    query_times = mas.nbwidgets.QueryTime(units='day',
-                                max_before=40, max_after=1, before=5)
+    query_times = mas.nbwidgets.QueryTime(
+        units='day', max_before=40, max_after=1, before=5
+    )
     query_times.display()
 
-
-
-.. parsed-literal::
-
-    HTML(value='<h4>Set query time boundaries</h4>')
-
-
-
-.. parsed-literal::
-
-    HBox(children=(DatePicker(value=datetime.date(2019, 7, 26), description='Origin Date'), Text(value='23:43:18.2…
-
-
-
-.. parsed-literal::
-
-    VBox(children=(IntRangeSlider(value=(-5, 1), description='Time Range (day):', layout=Layout(width='80%'), max=…
-
+Running the above cell will display an interactive data range selector. You
+can use that when running a query to automatically supply the ``start`` and
+``end`` parameters for the query
 
 .. code:: ipython3
 
     qry_prov.SecurityAlert.list_alerts(query_times)
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
 
 
 .. raw:: html
@@ -1023,38 +1150,251 @@ execute.
     </div>
 
 
+.. _creating-new-queries:
 
-Creating a new set of queries
------------------------------
+Creating new queries
+--------------------
 
-msticpy provides a number of
+*msticpy* provides a number of
 pre-defined queries to call with using the data package. You can also
 add in additional queries to be imported and used by your Query
 Provider, these are defined in YAML format files and examples of these
 files can be found at the msticpy GitHub site
 https://github.com/microsoft/msticpy/tree/master/msticpy/data/queries.
 
-The required structure of these query definition files is as follows: -
-metadata - version: The version number of the definition file -
-description: A description of the purpose of this collection of query
-definitions - data_environments[]: A list of the Data Environments that
-the defined queries can be run against (1 or more) - data_families[]: A
-list of Data Families the defined queries related to, these families are
-defined as part of misticpy.nbtools.query_defns - tags[]: A list of tags
-to help manage definition files - defaults: A set of defaults that apply
-to all queries in the file - metadata: Metadata regarding a query -
-data_source: The data source to be used for the query - parameters:
-Parameters to be passed to the query - name: The parameter name -
-description: A description of what the parameter is - type: The data
-type of the parameter - default: The default value for that parameter -
-sources: a set of queries - name: The name of the query -description: A
-description of the query’s function -metadata: Any metadata associated
-with the query -args: The arguments of the query -query: The query to be
-executed -uri: A URI associated with the query -parameters: Any
-parameters required by the query not covered by defaults - name: The
-parameter name - description: A description of what the parameter is -
-type: The data type of the parameter - default: The default value for
-that parameter
+The required structure of these query definition files is as follows.
+
+At the top level the file has the following keys:
+- **metadata**
+- **defaults**
+- **sources**
+
+These are described in the following sections.
+
+The metadata section
+~~~~~~~~~~~~~~~~~~~~
+
+- **version**: The version number of the definition file
+- **description**: A description of the purpose of this collection of query
+  definitions
+- **data_environments** []: A list of the Data Environments that
+  the defined queries can be run against (1 or more)
+- **data_families** []: A list of Data Families the defined queries related
+  to, these families are defined as part of msticpy.data.query_defns but
+  you can add custom ones.
+- **tags** []: A list of tags to help manage definition files (this is not
+  currently used
+
+
+The defaults section
+~~~~~~~~~~~~~~~~~~~~
+
+A set of defaults that apply to all queries in the file. You
+can use this section to define parameters that are common to all
+of the queries in the file. Child keys of the ``defaults`` section
+are inherited by the query definitions in the file.
+
+- **metadata**: Metadata regarding a query
+  - **data_source**: The data source to be used for the query
+- **parameters**: parameter defaults for the queries (the format of
+  the parameters section is the same as described in
+  the sources section.
+
+
+The sources section
+~~~~~~~~~~~~~~~~~~~
+
+Each key in the sources section defines a new query. The name of
+the key is the query name and must be unique and a valid Python identifier.
+Each query key has the following structure:
+
+- **description**: this is used to display help text for the query.
+- **metadata**: (optional) - if you want to override the global metadata
+  for this query
+- **args**: The primary item here is the query text.
+
+  - **query**: usually a multi-line string that will be passed to the
+    data provider. The string is usually parameterized, the parameters
+    being denoted by surrounding them with single braces ({}). If
+    you need to include literal braces in the query, type two braces.
+    For example::
+    "this {{literal_string}}" ->> "this {literal_string}"
+    Surround your query string with single quotes.
+  - **uri**: this is currently not used.
+- **parameters**: The parameters section defines the name, data type and
+  optional default value for each parameter that will be substituted into
+  the query before being passed to the data provider. Each parameter
+  must have a unique name (for each query, not globally). All parameters
+  specified in the query text must have an entry here or in the file
+  defauls section. The parameter subsection has the following sub-keys:
+
+  - **description**: A description of what the parameter is (used for generating
+    documentation strings.
+  - **type**: The data type of the parameter. Valid types include: "str", "int",
+    "float", "list" and "datetime". The list and datetime types cause additional
+    formatting to be applied (such as converting from a datestring)
+  - **default**: (optional) the default value for that parameter. Any parameter
+    that does not have a default value (here or in the file defaults section)
+    must be supplied at query time.
+
+Some common parameters used in the queries are:
+
+- **table**: making this a substitutable parameter allows you to use the same
+  query with different data sets. More commonly, you can add additional
+  filtering statements here, for example:
+
+.. code:: yaml
+
+    table:
+        description: The table name
+        type: str
+        default: SecurityEvent | where EventID == 4624
+
+- **add_query_items**: This is a useful way of extending queries by adding
+  ad hoc statements to the end of the query (e.g. additional filtering order
+  summarization).
+
+Using yaml aliases and macros in your queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use standard yaml aliasing to define substitutable strings in your
+query definitions. E.g. you might have a parameter default that is a long
+string expression. Define an alias in the ``aliases`` key of the file
+metadata section. An alias is defined by prefixing the name with "&".
+The alias is referenced (and inserted) by using the alias name prefixed
+with "*"
+
+.. code:: yaml
+
+    metadata:
+        ...
+        aliases:
+            - &azure_network_project '| project TenantId, TimeGenerated,
+                FlowStartTime = FlowStartTime_t,
+                FlowEndTime = FlowEndTime_t,
+                FlowIntervalEndTime = FlowIntervalEndTime_t,
+                FlowType = FlowType_s,
+                ResourceGroup = split(VM_s, "/")[0],
+                VMName = split(VM_s, "/")[1],
+                VMIPAddress = VMIP_s'
+        ...
+    sources:
+        list_azure_network_flows_by_host:
+            description: Retrieves Azure network analytics flow events.
+            ...
+            parameters:
+                ...
+                query_project:
+                    description: Column project statement
+                    type: str
+                    default: *azure_network_project
+
+
+You can also use *macros*, which work like parameters but are substituted
+into the query before any parameter substitution is carried out. This
+allows you to, for example, use a single base query but with different
+filter and summarization clauses defined as macros. The macro text is
+substituted into the main query.
+
+Macros are added to the ``query_macros`` subkey of a query. They have
+two subkeys: description and value. value defines the text to be inserted.
+The key name is the name of the macro.
+
+In the query, you denote the substition point by surrounding the macro name
+with "$<" and ">$". This is show in the example below.
+
+.. code:: yaml
+
+    - query: '
+        {table}
+        | where SubType_s == "FlowLog"
+        | where FlowStartTime_t >= datetime({start})
+        | where FlowEndTime_t <= datetime({end})
+        $<query_condition>$
+        | where (AllowedOutFlows_d > 0 or AllowedInFlows_d > 0)
+        {query_project}
+        | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP),
+                         iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
+                         )
+        | project-away ExtIP
+        | mvexpand AllExtIPs
+        {add_query_items}'
+
+Macros are particularly useful when combined with yaml aliases. You can, for
+example, define a base query (using a yaml alias) with a macro reference in the
+query body. Then in each query definition you can have different macro values
+for the macro to be substituted. For example:
+
+.. code:: yaml
+
+    metadata:
+        ...
+        aliases:
+            - &azure_network_base_query '
+                {table}
+                | where SubType_s == "FlowLog"
+                | where FlowStartTime_t >= datetime({start})
+                | where FlowEndTime_t <= datetime({end})
+                $<query_condition>$
+                | where (AllowedOutFlows_d > 0 or AllowedInFlows_d > 0)
+                {query_project}
+                | extend AllExtIPs = iif(isempty(PublicIPs), pack_array(ExtIP),
+                                iif(isempty(ExtIP), PublicIPs, array_concat(PublicIPs, pack_array(ExtIP)))
+                                )
+                | project-away ExtIP
+                | mvexpand AllExtIPs
+                {add_query_items}'
+        ...
+    sources:
+        list_azure_network_flows_by_ip:
+            description: Retrieves Azure network analytics flow events.
+        args:
+            query: *azure_network_base_query
+        parameters:
+            query_project:
+                ...
+            end:
+                description: Query end time
+                type: datetime
+        query_macros:
+            query_condition:
+                description: Query-specific where clause
+                value: '| where (VMIP_s in ({ip_address_list})
+                or SrcIP_s in ({ip_address_list})
+                or DestIP_s in ({ip_address_list})
+                )'
+
+This allows you define a series of related queries that have the
+same basic logic but have different filter clauses. This is extremely useful
+where the query is complex and allows you to keep a single copy.
+
+.. note:: Using aliases and macros complicates the logic for anyone
+    trying to read the query file, so use this sparingly.
+
+
+Guidelines for creating and debugging queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is often helpful to start with a working version of a query without
+using any parameters. Just paste in a query that you know is working. Once
+you have verified that this works and returns data as expected you can
+start to parameterize it.
+
+As you add parameters you can expect to find escaping and quoting
+issues with the parameter values. To see what the parameterized version
+of the query (without submitting it to the data provider) run the query
+with the first parameter "print". This will return the parameterized version
+of the query as a string:
+
+.. code:: ipython3
+
+    qry_prov.SecurityEvents.my_new_query(
+        "print",
+        start=start_dt,
+        end=end_dt,
+        account="ian",
+    )
+
 
 There are also a number of tools within the package to assist in
 validating new query definition files once created.
