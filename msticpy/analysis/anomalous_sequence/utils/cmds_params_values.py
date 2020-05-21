@@ -13,6 +13,7 @@ accompanying params and values.
 
 from collections import defaultdict
 from typing import Tuple, List, Union, DefaultDict
+import copy
 
 import numpy as np
 
@@ -180,9 +181,9 @@ def laplace_smooth_counts(
     cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
 
     # apply laplace smoothing to the cmds
-    seq1_counts, seq2_counts = laplace_smooth_cmd_counts(
-        seq1_counts=seq1_counts,
-        seq2_counts=seq2_counts,
+    seq1_counts_ls, seq2_counts_ls = laplace_smooth_cmd_counts(
+        seq1_counts=copy.deepcopy(seq1_counts),
+        seq2_counts=copy.deepcopy(seq2_counts),
         start_token=start_token,
         end_token=end_token,
         unk_token=unk_token,
@@ -191,27 +192,27 @@ def laplace_smooth_counts(
     params: List[str] = list(param_counts.keys()) + [unk_token]
 
     # apply laplace smoothing to the params
-    param_counts, cmd_param_counts = laplace_smooth_param_counts(
+    param_counts_ls, cmd_param_counts_ls = laplace_smooth_param_counts(
         cmds=cmds,
-        param_counts=param_counts,
-        cmd_param_counts=cmd_param_counts,
+        param_counts=copy.deepcopy(param_counts),
+        cmd_param_counts=copy.deepcopy(cmd_param_counts),
         unk_token=unk_token,
     )
 
     # apply laplace smoothing for the values
-    value_counts, param_value_counts = laplace_smooth_value_counts(
+    value_counts_ls, param_value_counts_ls = laplace_smooth_value_counts(
         params=params,
-        value_counts=value_counts,
-        param_value_counts=param_value_counts,
+        value_counts=copy.deepcopy(value_counts),
+        param_value_counts=copy.deepcopy(param_value_counts),
         unk_token=unk_token,
     )
 
-    seq1_counts_sm = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts_sm = StateMatrix(states=seq2_counts, unk_token=unk_token)
-    param_counts_sm = StateMatrix(states=param_counts, unk_token=unk_token)
-    cmd_param_counts_sm = StateMatrix(states=cmd_param_counts, unk_token=unk_token)
-    value_counts_sm = StateMatrix(states=value_counts, unk_token=unk_token)
-    param_value_counts_sm = StateMatrix(states=param_value_counts, unk_token=unk_token)
+    seq1_counts_sm = StateMatrix(states=seq1_counts_ls, unk_token=unk_token)
+    seq2_counts_sm = StateMatrix(states=seq2_counts_ls, unk_token=unk_token)
+    param_counts_sm = StateMatrix(states=param_counts_ls, unk_token=unk_token)
+    cmd_param_counts_sm = StateMatrix(states=cmd_param_counts_ls, unk_token=unk_token)
+    value_counts_sm = StateMatrix(states=value_counts_ls, unk_token=unk_token)
+    param_value_counts_sm = StateMatrix(states=param_value_counts_ls, unk_token=unk_token)
 
     return (
         seq1_counts_sm,

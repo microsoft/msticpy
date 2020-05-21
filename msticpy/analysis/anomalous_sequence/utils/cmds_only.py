@@ -7,6 +7,7 @@
 
 from collections import defaultdict
 from typing import Tuple, List, Union, DefaultDict
+import copy
 
 import numpy as np
 
@@ -102,16 +103,16 @@ def laplace_smooth_counts(
 
     """
     # apply laplace smoothing
-    seq1_counts, seq2_counts = laplace_smooth_cmd_counts(
-        seq1_counts=seq1_counts,
-        seq2_counts=seq2_counts,
+    seq1_counts_ls, seq2_counts_ls = laplace_smooth_cmd_counts(
+        seq1_counts=copy.deepcopy(seq1_counts),
+        seq2_counts=copy.deepcopy(seq2_counts),
         start_token=start_token,
         end_token=end_token,
         unk_token=unk_token,
     )
 
-    seq1_counts_st = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts_st = StateMatrix(states=seq2_counts, unk_token=unk_token)
+    seq1_counts_st = StateMatrix(states=seq1_counts_ls, unk_token=unk_token)
+    seq2_counts_st = StateMatrix(states=seq2_counts_ls, unk_token=unk_token)
 
     return seq1_counts_st, seq2_counts_st
 
