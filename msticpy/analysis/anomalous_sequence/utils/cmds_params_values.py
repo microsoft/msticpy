@@ -212,7 +212,9 @@ def laplace_smooth_counts(
     param_counts_sm = StateMatrix(states=param_counts_ls, unk_token=unk_token)
     cmd_param_counts_sm = StateMatrix(states=cmd_param_counts_ls, unk_token=unk_token)
     value_counts_sm = StateMatrix(states=value_counts_ls, unk_token=unk_token)
-    param_value_counts_sm = StateMatrix(states=param_value_counts_ls, unk_token=unk_token)
+    param_value_counts_sm = StateMatrix(
+        states=param_value_counts_ls, unk_token=unk_token
+    )
 
     return (
         seq1_counts_sm,

@@ -9,6 +9,27 @@ UNK_TOKEN = "##UNK##"
 
 
 class TestProbabilities(unittest.TestCase):
+    """
+    Test probabilities module.
+
+    Note that when modelling the params:
+
+    We make the modelling assumption that the parameters are independent
+    Bernoulii random variables conditional on the command.
+
+    Note also that because multiple parameters can appear at a time for
+    a command, and because we are computing the probability that each
+    parameter is present or not, we do NOT expect the probabilities to
+    sum to 1.
+
+    Note also that we use laplace smoothing in the counting
+    stage of the calculations. Therefore if you have parameter p which
+    appeared for every occurrence of command c, the resulting
+    probability for param p appearing conditional on command c would
+    NOT equal 1. It would be slightly less due to the laplace smoothing.
+
+    """
+
     def setUp(self):
         self.data1 = dict()
         self.data2 = dict()
@@ -28,9 +49,9 @@ class TestProbabilities(unittest.TestCase):
         )
         self.data1["prior_probs"] = StateMatrix({UNK_TOKEN: 1}, UNK_TOKEN)
         self.data1["trans_probs"] = StateMatrix({UNK_TOKEN: {UNK_TOKEN: 1}}, UNK_TOKEN)
-        self.data1["param_probs"] = StateMatrix({UNK_TOKEN: 1}, UNK_TOKEN)
+        self.data1["param_probs"] = StateMatrix({UNK_TOKEN: 0.5}, UNK_TOKEN)
         self.data1["param_cond_cmd_probs"] = StateMatrix(
-            {UNK_TOKEN: {UNK_TOKEN: 1}}, UNK_TOKEN
+            {UNK_TOKEN: {UNK_TOKEN: 0.5}}, UNK_TOKEN
         )
         self.data1["value_probs"] = StateMatrix({UNK_TOKEN: 1}, UNK_TOKEN)
         self.data1["value_cond_param_probs"] = StateMatrix(
@@ -75,12 +96,12 @@ class TestProbabilities(unittest.TestCase):
             },
             UNK_TOKEN,
         )
-        self.data2["param_probs"] = StateMatrix({UNK_TOKEN: 1}, UNK_TOKEN)
+        self.data2["param_probs"] = StateMatrix({UNK_TOKEN: 0.3}, UNK_TOKEN)
         self.data2["param_cond_cmd_probs"] = StateMatrix(
             {
-                START_TOKEN: {UNK_TOKEN: 1.0},
-                END_TOKEN: {UNK_TOKEN: 1.0},
-                UNK_TOKEN: {UNK_TOKEN: 1.0},
+                START_TOKEN: {UNK_TOKEN: 0.3333333333333333},
+                END_TOKEN: {UNK_TOKEN: 0.3333333333333333},
+                UNK_TOKEN: {UNK_TOKEN: 0.25},
             },
             UNK_TOKEN,
         )
@@ -150,22 +171,18 @@ class TestProbabilities(unittest.TestCase):
         )
         self.data3["param_probs"] = StateMatrix(
             {
-                UNK_TOKEN: 0.4444444444444444,
-                "Identity": 0.3333333333333333,
-                "City": 0.2222222222222222,
+                UNK_TOKEN: 0.18181818181818182,
+                "Identity": 0.13636363636363635,
+                "City": 0.09090909090909091,
             },
             UNK_TOKEN,
         )
         self.data3["param_cond_cmd_probs"] = StateMatrix(
             {
-                START_TOKEN: {UNK_TOKEN: 1.0},
-                END_TOKEN: {UNK_TOKEN: 1.0},
-                UNK_TOKEN: {UNK_TOKEN: 1.0},
-                cmd: {
-                    "City": 0.3333333333333333,
-                    "Identity": 0.5,
-                    UNK_TOKEN: 0.16666666666666666,
-                },
+                START_TOKEN: {UNK_TOKEN: 0.25},
+                END_TOKEN: {UNK_TOKEN: 0.25},
+                UNK_TOKEN: {UNK_TOKEN: 0.16666666666666666},
+                cmd: {"City": 0.25, "Identity": 0.375, UNK_TOKEN: 0.125,},
             },
             UNK_TOKEN,
         )
@@ -215,6 +232,7 @@ class TestProbabilities(unittest.TestCase):
         param_actual, param_cond_cmd_actual = probabilities.compute_params_probs(
             param_counts=self.data1["param_counts"],
             cmd_param_counts=self.data1["cmd_param_counts"],
+            seq1_counts=self.data1["seq1_counts"],
             unk_token=UNK_TOKEN,
         )
         self.assertDictEqual(param_actual, self.data1["param_probs"])
@@ -223,6 +241,7 @@ class TestProbabilities(unittest.TestCase):
         param_actual, param_cond_cmd_actual = probabilities.compute_params_probs(
             param_counts=self.data2["param_counts"],
             cmd_param_counts=self.data2["cmd_param_counts"],
+            seq1_counts=self.data2["seq1_counts"],
             unk_token=UNK_TOKEN,
         )
         self.assertDictEqual(param_actual, self.data2["param_probs"])
@@ -231,6 +250,7 @@ class TestProbabilities(unittest.TestCase):
         param_actual, param_cond_cmd_actual = probabilities.compute_params_probs(
             param_counts=self.data3["param_counts"],
             cmd_param_counts=self.data3["cmd_param_counts"],
+            seq1_counts=self.data3["seq1_counts"],
             unk_token=UNK_TOKEN,
         )
         self.assertDictEqual(param_actual, self.data3["param_probs"])
