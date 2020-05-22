@@ -9,7 +9,7 @@ from typing import Tuple, Union, Any, Dict, Optional
 import pandas as pd
 from IPython import get_ipython
 
-from .driver_base import DriverBase
+from .driver_base import DriverBase, QuerySource
 from ...common.utility import export, MsticpyException
 from ..._version import VERSION
 
@@ -59,9 +59,13 @@ class KqlDriver(DriverBase):
         if not connection_str:
             raise MsticpyException("No connection string supplied.")
         self.current_connection = connection_str
-        result = self._ip.run_cell_magic("kql", line="", cell=connection_str)
-        self._connected = True
-        self._schema = self._get_schema()
+        result = False
+        if self._ip is not None:
+            result = self._ip.run_cell_magic("kql", line="", cell=connection_str)
+            self._connected = True
+            self._schema = self._get_schema()
+        else:
+            print(f"Could not connect to kql query provider for {connection_str}")
         return result
 
     @property
@@ -77,22 +81,27 @@ class KqlDriver(DriverBase):
         """
         return self._schema
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: QuerySource = None
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
         Parameters
         ----------
         query : str
-            The kql query to execute
+            The query to execute
+        query_source : QuerySource
+            The query definition object
 
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
             A DataFrame (if successfull) or
-            Kql ResultSet if an error.
+            the underlying provider result if an error.
 
         """
+        del query_source
         data, result = self.query_with_results(query)
         return data if data is not None else result
 
@@ -159,9 +168,9 @@ class KqlDriver(DriverBase):
         """Load KqlMagic if not loaded."""
         # KqlMagic
         print("Please wait. Loading Kqlmagic extension...")
-
-        self._ip.run_line_magic("reload_ext", "Kqlmagic")
-        self._loaded = True
+        if self._ip is not None:
+            self._ip.run_line_magic("reload_ext", "Kqlmagic")
+            self._loaded = True
 
     def _is_kqlmagic_loaded(self) -> bool:
         """Return true if kql magic is loaded."""

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """vtlookup test class."""
+from pathlib import Path
 import unittest
 
 from ..msticpy.nbtools import utils
@@ -32,7 +33,12 @@ class TestUtils(unittest.TestCase):
         utils.check_py_version(3.6)
         utils.check_py_version("3.6")
 
-        self.assertEqual(utils.resolve_pkg_path("c:/windows"), "c:/windows")
+        if Path("/etc").is_absolute():
+            abs_path = "/etc"
+        else:
+            abs_path = "c:\\windows"
+
+        self.assertEqual(utils.resolve_pkg_path(abs_path), abs_path)
         self.assertIsNotNone(utils.resolve_pkg_path("sectools"))
         with self.assertWarns(UserWarning):
             utils.resolve_pkg_path("somefakefolder")

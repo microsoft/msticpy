@@ -241,7 +241,12 @@ class TILookup:
                 continue
 
             # instantiate class sending args from settings to init
-            provider_instance = provider_class(**(settings.args))
+            try:
+                provider_instance = provider_class(**(settings.args))
+            except RuntimeError:
+                # If the TI Provider didn't load, warn about it
+                warnings.warn(f"Could not load provider {provider_name}")
+                continue
             # set the description from settings, if one is provided, otherwise
             # use class docstring.
             provider_instance.description = (

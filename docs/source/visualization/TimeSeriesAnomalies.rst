@@ -6,15 +6,15 @@ visualization built using the `Bokeh
 library <https://bokeh.pydata.org>`__ as well as using built-in native
 KQL operators.
 
-Time Series analysis generally involves below steps 
- - Generating TimeSeries Data 
- - Use Time Series Analysis functions to discover anomalies 
+Time Series analysis generally involves below steps
+ - Generating TimeSeries Data
+ - Use Time Series Analysis functions to discover anomalies
  - Visualize Time Series anomalies
 
 Read more about time series analysis in detail from reference microsoft
 TechCommunity blog posts
 
-**Reference Blog Posts:** 
+**Reference Blog Posts:**
 
 - `Looking for unknown anomalies - what is normal? Time Series analysis & its applications in Security <https://techcommunity.microsoft.com/t5/azure-sentinel/looking-for-unknown-anomalies-what-is-normal-time-series/ba-p/555052>`__
 
@@ -25,38 +25,38 @@ TechCommunity blog posts
     # Imports
     import sys
     import warnings
-    
-    from msticpy.nbtools.utility import check_py_version
-    
+
+    from msticpy.common.utility import check_py_version
+
     MIN_REQ_PYTHON = (3, 6)
     check_py_version(MIN_REQ_PYTHON)
-    
+
     from IPython import get_ipython
     from IPython.display import display, HTML, Markdown
     import ipywidgets as widgets
-    
+
     import pandas as pd
-    
+
     #setting pandas display options for dataframe
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
-    
+
     # msticpy imports
     from msticpy.data import QueryProvider
     from msticpy.nbtools import *
     from msticpy.sectools import *
     from msticpy.nbtools.wsconfig import WorkspaceConfig
     from msticpy.nbtools.timeseries import display_timeseries_anomolies
-    
+
     WIDGET_DEFAULTS = {
         "layout": widgets.Layout(width="95%"),
         "style": {"description_width": "initial"},
     }
-    
+
     #Adjusting width of the screen
     display(HTML("<style>.container { width:80% !important; }</style>"))
-    
+
     ws_config = WorkspaceConfig()
 
 
@@ -180,11 +180,11 @@ Query, data source, parameters and parameterized raw KQL query
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -275,7 +275,7 @@ the similar details
    where_clause: str (optional)
        Optional additional filter clauses
    Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn}) | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long) | project {timestampcolumn}, {aggregatecolumn}, baseline | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart") 
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn}) | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long) | project {timestampcolumn}, {aggregatecolumn}, baseline | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
 
 .. code:: ipython3
 
@@ -292,11 +292,11 @@ the similar details
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -364,7 +364,7 @@ KQL Time series functions such as ``series_decompose_anomalies()``.
 .. code:: ipython3
 
     timeseriesdemo = pd.read_csv('TimeSeriesDemo.csv',
-                              parse_dates=["TimeGenerated"], 
+                              parse_dates=["TimeGenerated"],
                               infer_datetime_format=True)
     timeseriesdemo.head()
 
@@ -378,11 +378,11 @@ KQL Time series functions such as ``series_decompose_anomalies()``.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -443,7 +443,7 @@ KQL Time series functions such as ``series_decompose_anomalies()``.
     </table>
     </div>
 
-    
+
 Displaying Time Series anomaly alerts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -513,11 +513,11 @@ details
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -570,11 +570,11 @@ other suspicious activity from other datasources.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -693,7 +693,7 @@ Documentation for display_timeseries_anomalies
     ygrid : bool, optional
         Whether to show the yaxis grid (default is False)
     color : list, optional
-        List of colors to use in 3 plots as specified in order 
+        List of colors to use in 3 plots as specified in order
         3 plots- line(observed), circle(baseline), circle_x/user specified(anomalies).
         (the default is ["navy", "green", "firebrick"])
 
@@ -710,7 +710,7 @@ Documentation for display_timeseries_anomalies
 
 .. raw:: html
 
-    
+
         <div class="bk-root">
             <a href="https://bokeh.org" target="_blank" class="bk-logo bk-logo-small bk-logo-notebook"></a>
             <span id="1001">Loading BokehJS ...</span>
@@ -746,14 +746,14 @@ function.
 
     from bokeh.io import export_png
     from IPython.display import Image
-    
+
     # Create a plot
     timeseries_anomaly_plot = display_timeseries_anomolies(data=timeseriesdemo, y= 'TotalBytesSent')
-    
-    # Export 
+
+    # Export
     file_name = "plot.png"
     export_png(timeseries_anomaly_plot, filename=file_name)
-    
+
     # Read it and show it
     display(Markdown(f"## Here is our saved plot: {file_name}"))
     Image(filename=file_name)
@@ -762,7 +762,7 @@ function.
 
 .. raw:: html
 
-    
+
         <div class="bk-root">
             <a href="https://bokeh.org" target="_blank" class="bk-logo bk-logo-small bk-logo-notebook"></a>
             <span id="1407">Loading BokehJS ...</span>
@@ -791,7 +791,7 @@ will display linegraph.
 
     timechartquery = """
     let TimeSeriesData = PaloAltoTimeSeriesDemo_CL
-    | extend TimeGenerated = todatetime(EventTime_s), TotalBytesSent = todouble(TotalBytesSent_s) 
+    | extend TimeGenerated = todatetime(EventTime_s), TotalBytesSent = todouble(TotalBytesSent_s)
     | summarize TimeGenerated=make_list(TimeGenerated, 10000),TotalBytesSent=make_list(TotalBytesSent, 10000) by deviceVendor_s
     | project TimeGenerated, TotalBytesSent;
     TimeSeriesData

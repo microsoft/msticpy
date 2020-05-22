@@ -17,7 +17,7 @@ from ..msticpy.nbtools.entityschema import (
     IpAddress,
 )
 from ..msticpy.common.wsconfig import WorkspaceConfig
-from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment
+from ..msticpy.data.query_defns import DataFamily, DataEnvironment
 
 
 _test_data_folders = [
