@@ -64,8 +64,10 @@ def laplace_smooth_param_counts(
 ) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
     Apply laplace smoothing to the input counts for the params.
+
     In particular, add 1 to each of the counts, including the unk_token. By including the
     unk_token, we can handle unseen params.
+
     Parameters
     ----------
     cmds: List[str]
@@ -76,11 +78,13 @@ def laplace_smooth_param_counts(
         param conditional on command counts
     unk_token: str
         dummy command to signify an unseen command (e.g. "##UNK##")
+
     Returns
     -------
     Tuple:
         individual param probabilities,
         param conditional on command probabilities
+
     """
     param_counts_ls = copy.deepcopy(param_counts)
     cmd_param_counts_ls = copy.deepcopy(cmd_param_counts)
