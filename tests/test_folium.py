@@ -3,20 +3,18 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import math
 import os
 import unittest
-import math
 from pathlib import Path
-import pickle
 
 import folium
 import nbformat
-import notebook
 import pandas as pd
 import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from ..msticpy.nbtools.entityschema import IpAddress, GeoLocation, Host
+from ..msticpy.nbtools.entityschema import GeoLocation, Host, IpAddress
 from ..msticpy.nbtools.foliummap import (
     FoliumMap,
     get_center_geo_locs,

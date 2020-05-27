@@ -126,7 +126,7 @@ def init_notebook(
     conf_ok = _check_config
 
     print("Setting options....")
-    _set_nb_options()
+    _set_nb_options(namespace)
 
     if not imp_ok or not conf_ok:
         display(HTML("<font color='red'><h3>Notebook setup failed</h3>"))
@@ -145,6 +145,9 @@ def _global_imports(
         _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
         _imp_from_package(nm_spc=namespace, pkg="IPython", tgt="get_ipython")
+        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="display")
+        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="HTML")
+        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="Markdown")
         _imp_from_package(nm_spc=namespace, pkg="ipywidgets", alias="widgets")
         _imp_from_package(nm_spc=namespace, pkg="pathlib", tgt="Path")
         _imp_from_package(nm_spc=namespace, pkg="matplotlib.pyplot", alias="plt")
@@ -153,15 +156,11 @@ def _global_imports(
         )
         _imp_from_package(nm_spc=namespace, pkg="seaborn", alias="sns")
         _imp_from_package(nm_spc=namespace, pkg="numpy", alias="np")
+
+        # msticpy imports
         _imp_from_package(nm_spc=namespace, pkg="msticpy.data", tgt="QueryProvider")
         _imp_module_all(nm_spc=namespace, module_name="msticpy.nbtools")
         _imp_module_all(nm_spc=namespace, module_name="msticpy.sectools")
-        #     from msticpy.data import QueryProvider
-        #     from msticpy.nbtools import *
-        #     from msticpy.sectools import *
-        #     from msticpy.nbtools.foliummap import FoliumMap
-        #     from msticpy.nbtools.utility import md, md_warn
-        #     from msticpy.nbtools.wsconfig import WorkspaceConfig
         _imp_from_package(
             nm_spc=namespace, pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"
         )
@@ -214,8 +213,8 @@ def _check_config():
     return config_ok
 
 
-def _set_nb_options():
-    globals()["WIDGET_DEFAULTS"] = {
+def _set_nb_options(namespace):
+    namespace["WIDGET_DEFAULTS"] = {
         "layout": widgets.Layout(width="95%"),
         "style": {"description_width": "initial"},
     }

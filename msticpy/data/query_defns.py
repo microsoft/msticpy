@@ -6,18 +6,13 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Union
-
-import attr
-from attr import Factory
+from typing import Union
 
 from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-
-__all__ = ["KqlQuery"]
 
 
 @export
@@ -81,10 +76,12 @@ class DataEnvironment(Enum):
 
     Unknown = 0
     LogAnalytics = 1
+    AzureSentinel = 1  # alias of LogAnalytics
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
     MDATP = 5
+    LocalData = 6
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
@@ -136,18 +133,3 @@ class QueryParamProvider(ABC):
 
         """
         return {}
-
-
-# Query definition
-# pylint: disable=too-few-public-methods
-@attr.s(auto_attribs=True)
-class KqlQuery:
-    """KqlQuery definition."""
-
-    name: str = ""
-    query: str = ""
-    description: str = ""
-    data_source: str = ""
-    data_families: List[DataFamily] = Factory(list)
-    data_environments: List[DataEnvironment] = Factory(list)
-    optional_params: List[str] = Factory(list)

@@ -225,12 +225,11 @@ class TestTIProviders(unittest.TestCase):
     ti_lookup = None
 
     def setUp(self):
+        self.config_path = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         self.ti_lookup = self.load_ti_lookup()
 
-    @staticmethod
-    def load_ti_lookup():
-        test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
-        with custom_mp_config(test_config1):
+    def load_ti_lookup(self):
+        with custom_mp_config(self.config_path):
             with warnings.catch_warnings():
                 # We want to ignore warnings from missing config
                 warnings.simplefilter("ignore", category=UserWarning)
@@ -238,7 +237,6 @@ class TestTIProviders(unittest.TestCase):
 
     def test_ti_config_and_load(self):
         self.load_ti_lookup()
-
         ti_settings = get_provider_settings()
 
         self.assertIsInstance(ti_settings, dict)
@@ -246,8 +244,10 @@ class TestTIProviders(unittest.TestCase):
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class
-        with self.assertWarns(UserWarning):
-            ti_lookup = TILookup()
+
+        with custom_mp_config(self.config_path):
+            with self.assertWarns(UserWarning):
+                ti_lookup = TILookup()
 
         # should have 2 succesfully loaded providers
         self.assertGreaterEqual(len(ti_lookup.loaded_providers), 3)
@@ -258,7 +258,9 @@ class TestTIProviders(unittest.TestCase):
         self.assertGreaterEqual(len(av_provs), 1)
         self.ti_lookup.provider_usage()
         self.ti_lookup.list_available_providers(show_query_types=True)
-        self.ti_lookup.reload_providers()
+        with custom_mp_config(self.config_path):
+            with self.assertWarns(UserWarning):
+                self.ti_lookup.reload_providers()
 
     def test_xforce(self):
         self.exercise_provider("XForce")

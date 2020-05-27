@@ -1,0 +1,25 @@
+QueryDefinitions:
+
+TIProviders:
+  OTX:
+    Args:
+      AuthKey: "55f148f26043fae2509198190d9111e1f059b14494f2608f9b3ea43f744d7fb2"
+    Primary: True
+    Provider: "OTX" # Explicitly name provider to override
+  VirusTotal:
+    Args:
+      AuthKey: "fbe87704dae3d315967145642dedc8cf3301fa8186fc1358090aea9bb334b755"
+    Primary: True
+    Provider: "VirusTotal"
+  XForce:
+    Args:
+      ApiID: "d99c9637-3049-4c1e-b608-18c3bad769f9"
+      AuthKey: "f3531662-7849-4080-9e79-b728daadc2e8"
+    Primary: True
+    Provider: "XForce"
+  AzureSentinel:
+    Args:
+      WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantID: "35a9e601-82db-42da-b521-efc4a2f6783c"
+    Primary: False
+    Provider: "AzSTI"
