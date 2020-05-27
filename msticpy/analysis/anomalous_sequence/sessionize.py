@@ -7,6 +7,7 @@
 
 from typing import List
 
+import numpy as np
 import pandas as pd
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 
@@ -65,6 +66,10 @@ def sessionize_data(
         max_event_separation_mins=max_event_separation_mins,
     )
 
+    # aggregating will not work properly with nans. Temporarily replace nan values with dummy_str.
+    for col in user_identifier_cols:
+        df_with_sesind[col] = df_with_sesind[col].fillna("dummy_str")
+
     # aggregate by the session_ind column
     agg_df = (
         df_with_sesind.sort_values(["session_ind", time_col])
@@ -88,6 +93,10 @@ def sessionize_data(
     agg_df["number_events"] = agg_df["{}_list".format(event_col)].apply(len)
 
     agg_df = agg_df.drop("session_ind", axis=1)
+
+    # replace dummy_str with nan values
+    for col in user_identifier_cols:
+        agg_df[col] = agg_df[col].replace("dummy_str", np.nan)
 
     return agg_df
 
@@ -138,6 +147,10 @@ def create_session_col(
     if not isinstance(df_with_sesind[time_col].dtype, DatetimeTZDtype):
         df_with_sesind[time_col] = pd.to_datetime(df_with_sesind[time_col])
 
+    # Sessionising will not work properly with nans. Temporarily replace nan values with dummy_str.
+    for col in user_identifier_cols:
+        df_with_sesind[col] = df_with_sesind[col].fillna("dummy_str")
+
     df_with_sesind = df_with_sesind.sort_values(
         user_identifier_cols + [time_col]
     ).reset_index(drop=True)
@@ -175,5 +188,9 @@ def create_session_col(
             df_with_sesind.loc[i, "time_diff"] = dif
             df_with_sesind.loc[i, "cum_time"] = cum
             df_with_sesind.loc[i, "session_ind"] = ses_ind
+
+    # replace dummy_str with nan values
+    for col in user_identifier_cols:
+        df_with_sesind[col] = df_with_sesind[col].replace("dummy_str", np.nan)
 
     return df_with_sesind
