@@ -101,7 +101,7 @@ def sessionize_data(
     return agg_df
 
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-branches
 def create_session_col(
     data: pd.DataFrame,
     user_identifier_cols: List[str],
@@ -146,6 +146,12 @@ def create_session_col(
     df_with_sesind = data.copy()
     if not isinstance(df_with_sesind[time_col].dtype, DatetimeTZDtype):
         df_with_sesind[time_col] = pd.to_datetime(df_with_sesind[time_col])
+
+    final_cols = list(df_with_sesind.columns) + ["session_ind"]
+
+    if len(df_with_sesind) == 0:
+        df_with_sesind["session_ind"] = None
+        return df_with_sesind
 
     # Sessionising will not work properly with nans. Temporarily replace nan values with dummy_str.
     for col in user_identifier_cols:
@@ -193,4 +199,4 @@ def create_session_col(
     for col in user_identifier_cols:
         df_with_sesind[col] = df_with_sesind[col].replace("dummy_str", np.nan)
 
-    return df_with_sesind
+    return df_with_sesind[final_cols]
