@@ -2,8 +2,8 @@ metadata:
   version: 1
   description: Local Data Alert Queries
   data_environments: [LocalData]
-  data_families: [SecurityAlert, WindowsSecurity, Network]
-  tags: ['alert', 'securityalert', 'process', 'account', 'network']
+  data_families: [SecurityAlert, WindowsSecurity, Network, Azure]
+  tags: ['alert', 'securityalert', 'process', 'account', 'network', 'logon']
 defaults:
   metadata:
     data_source: 'security_alert'
@@ -64,4 +64,11 @@ sources:
       data_families: [Network]
     args:
       query: az_net_comms_df.pkl
+    parameters:
+  list_all_signins_geo:
+    description: List all Azure AD logon events
+    metadata:
+      data_families: [Azure]
+    args:
+      query: aad_logons.pkl
     parameters:
