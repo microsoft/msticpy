@@ -4,16 +4,16 @@ Anomalous Sessions
 Various types of security logs can be broken up into sessions/sequences
 where each session can be thought of as an ordered sequence of events.
 
-For example, we could treat the Exchange PowerShell cmdlets 
+For example, we could treat the Exchange PowerShell cmdlets
 ("Set-Mailbox", "Set-MailboxFolderPermission" etc)
-as "events" and then group the events into "sessions" on a per-user 
+as "events" and then group the events into "sessions" on a per-user
 basis.
 
 It can be useful to model such sessions in order to understand what the
 usual activity is like so that we can highlight anomalous sequences of
 events.
 
-`Msticpy <https://github.com/microsoft/msticpy/tree/master/msticpy/analysis/anomalous_sequence>`__ 
+`Msticpy <https://github.com/microsoft/msticpy/tree/master/msticpy/analysis/anomalous_sequence>`__
 has a subpackage called anomalous\_sequence. This library allows the user to sessionize, model and
 visualize their data via some high level functions.
 
@@ -26,18 +26,18 @@ demonstrate how some other log types can be sessionized as well.
 
     # Imports
     from msticpy.nbtools.utility import check_py_version
-    
+
     MIN_REQ_PYTHON = (3, 6)
     check_py_version(MIN_REQ_PYTHON)
-    
+
     from typing import List, Dict, Union
-    
+
     # setting pandas display options for dataframe
     import pandas as pd
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
-    
+
     # msticpy imports
     from msticpy.analysis.anomalous_sequence import sessionize
     from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
@@ -45,15 +45,15 @@ demonstrate how some other log types can be sessionized as well.
     from msticpy.analysis.anomalous_sequence.model import Model
     from msticpy.data import QueryProvider
     from msticpy.nbtools.wsconfig import WorkspaceConfig
-    
+
     %env KQLMAGIC_LOAD_MODE=silent
-    
+
     print('finished the imports')
 
 Creating the Sessions
 ---------------------
 
-What is a Session? 
+What is a Session?
 ^^^^^^^^^^^^^^^^^^
 
 In this context, a session is an ordered sequence of events/commands.
@@ -61,15 +61,25 @@ The anomalous\_sequence subpackage can handle 3 different formats for
 each of the sessions:
 
 | 1. sequence of just events/commands.
-|    ["Set-User", "Set-Mailbox"]
+
+.. code::
+
+    ["Set-User", "Set-Mailbox"]
+
 | 2. sequence of events/commands with accompanying parameters.
-|    [Cmd(name="Set-User", params={"Identity', "Force"}),
-   Cmd(name="Set-Mailbox", params={"Identity", "AuditEnabled"})]
-| 3. sequence of events/commands with accompanying parameters and their 
+
+.. code::
+
+    [Cmd(name="Set-User", params={"Identity', "Force"}),
+     Cmd(name="Set-Mailbox", params={"Identity", "AuditEnabled"})]
+
+| 3. sequence of events/commands with accompanying parameters and their
  corresponding values.
-| 	[Cmd(name="Set-User", params={"Identity": "blahblah", "Force":
-   'true'}), Cmd(name="Set-Mailbox", params={"Identity": "blahblah",
-   "AuditEnabled": "false"})]
+
+.. code::
+
+   [Cmd(name="Set-User", params={"Identity": "blahblah", "Force": 'true'}),
+    Cmd(name="Set-Mailbox", params={"Identity": "blahblah", "AuditEnabled": "false"})]
 
 The Cmd datatype can be accessed from
 msticpy.analysis.anomalous\_sequence.utils.data\_structures
@@ -101,11 +111,11 @@ csv. (The csv can be found `here <https://github.com/microsoft/msticpy/tree/mast
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -166,20 +176,20 @@ csv. (The csv can be found `here <https://github.com/microsoft/msticpy/tree/mast
     </table>
     </div>
 
+In the above example the ``Operation`` column will be our Cmd name.
 
+If you are only interested in modeling the commands (without the
+accompanying parameters), then you can skip this section and go straight
+to the next section, "Use the sessionize data function".
 
-If you are only interested in modelling the commands (without the 
-accompanying parameters), then you can skip this part where we
-create some additonal columns, and go straight to the sessionizing 
-part.
-
-The reason for this is because each session is allowed to be either a
+In this section we will create some additonal columns to extract the parameters
+and parameter values. This is optional because each session is allowed to be either a
 list of strings, or a list of the Cmd datatype. The "Operation" column
 is a string already.
 
 However, if you are interested in including the parameters (and possibly
-the values), then we need to define a custom cleaning function which will 
-combine the "Operation" and "Parameters" columns and convert them into one 
+the values), then we need to define a custom cleaning function which will
+combine the "Operation" and "Parameters" columns and convert them into one
 of the `allowed types <#what-is-a-session>`_. This cleaning function is specific
 to the format of the exchange demo data which we have read in.
 Therefore, you may need to tweak it before you can use it on other data
@@ -188,7 +198,7 @@ sets.
 .. code:: ipython3
 
     # let's define a helper function for creating columns which have the Cmd datatype
-    
+
     def clean_exchange_params(operation: str, parameters: Union[str, Dict], include_vals: bool):
         params = parameters
         if isinstance(parameters, str):
@@ -198,53 +208,53 @@ sets.
             new[dic['Name']] = dic['Value']
         if include_vals:
             return Cmd(name=operation, params=new)
-        return Cmd(name=operation, params=set(new.keys()))  
-            
+        return Cmd(name=operation, params=set(new.keys()))
+
 
 .. code:: ipython3
 
     # let's apply the helper function we defined to create columns which have the Cmd datatype
-    
+
     exchange['cmd_param'] = exchange.\
-        apply(lambda x: 
+        apply(lambda x:
               clean_exchange_params(operation=x['Operation'], parameters=x['Parameters'], include_vals=False), axis=1)
-    
+
     exchange['cmd_param_val'] = exchange.\
-        apply(lambda x: 
+        apply(lambda x:
               clean_exchange_params(operation=x['Operation'], parameters=x['Parameters'], include_vals=True), axis=1)
 
 
-Use the sessionize\_data function 
+Use the sessionize\_data function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We will do this for the first session type (with just commands).
+We will do this for the first session type (just commands and ignoring parameters).
 
-But because we created columns for all three session types, you can set
-the "event\_col" parameter in the "sessionize\_data" function below to
+However, because we created columns for all three session types in the previous
+section, you can set the ``event_col`` parameter in the ``sessionize_data`` function below to
 any of the following:
 
 1. Operation
 2. cmd\_param
 3. cmd\_param\_val
 
-Here are some details about the arguments for the sessionize\_data
+Here are some details about the arguments for the ``sessionize_data``
 function:
 
 ::
 
     Help on function sessionize_data in module msticpy.analysis.anomalous_sequence.sessionize:
 
-    sessionize_data(data: pd.DataFrame, user_identifier_cols: List[str], time_col: str, 
-					max_session_time_mins: int, max_event_separation_mins: int, 
-					event_col: str) -> pd.DataFrame
+    sessionize_data(data: pd.DataFrame, user_identifier_cols: List[str], time_col: str,
+               max_session_time_mins: int, max_event_separation_mins: int,
+               event_col: str) -> pd.DataFrame
 
         Sessionize the input data.
-        
+
         In particular, the resulting dataframe will have 1 row per session. It will contain the
         following columns: the user_identifier_cols, <time_col>_min, <time_col>_max,
         <event_col>_list, duration (<time_col>_max - <time_col>_min), number_events (length of the
         <event_col>_list value)
-        
+
         Parameters
         ----------
         data: pd.DataFrame
@@ -269,7 +279,7 @@ function:
             Name of the column which contains the event of interest.
             For example, if we are interested in sessionizing exchange admin commands,
             the "event_col" could contain values like: "Set-Mailbox" or "Set-User" etc.
-        
+
         Returns
         -------
         pd.DataFrame containing the sessionized data. 1 row per session.
@@ -277,7 +287,7 @@ function:
 .. code:: ipython3
 
     # sessionize the data
-    
+
     sessions_df = sessionize.sessionize_data(
         data=exchange,
         user_identifier_cols=['UserId', 'ClientIP'],
@@ -313,11 +323,11 @@ function:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -393,7 +403,7 @@ function:
 
 
 
-Model the sessions 
+Model the sessions
 ------------------
 
 Model Details
@@ -415,8 +425,8 @@ hood for each of the three session types.
 
 -  **Commands with Parameters**
 
-   -  All of the above ("commands only" case) except for one difference.
-   -  This time, we include the parameters in the modelling.
+   -  All of the above ("commands only" case) except for one difference
+      - this time, we include the parameters in the modelling.
    -  We make the assumption that the presence of each parameter is
       independent conditional on the command.
    -  We therefore model the presence of the parameters as independent
@@ -432,9 +442,8 @@ hood for each of the three session types.
 
 -  **Commands with Parameters and their Values**
 
-   -  All of the above ("commands with parameters" case) except for one
-      difference.
-   -  This time, we include the values in the modelling.
+   -  All of the above ("commands with parameters" case) except that
+      the parameter values are also included in the modelling.
    -  Some rough heuristics are used to determine which parameters have
       values which are categorical (e.g. "true" and "false" or "high",
       "medium" and "low") vs values which are arbitrary strings (such as
@@ -449,12 +458,11 @@ hood for each of the three session types.
       only" case.
 
 
-**Important note:**
-
-If you set the window length to be k, then only sessions which have at
-least k-1 commands will have a valid (not np.nan) score. The reason for
-the -1 is because we append an end token to each session by default, so
-a session of length k-1 gets treated as length k during the scoring.
+.. Important::
+   If you set the window length to be k, then only sessions which have at
+   least k-1 commands will have a valid (not np.nan) score. The reason for
+   the -1 is because we append an end token to each session by default, so
+   a session of length k-1 gets treated as length k during the scoring.
 
 **There are 3 high level functions available in this library**
 
@@ -465,18 +473,18 @@ a session of length k-1 gets treated as length k during the scoring.
 Use the score\_sessions function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We will do this for the "Commands Only" session type.
+In this example, we will do this for the "Commands Only" session type.
 
-But depending on which column you chose as the event\_col in the
-`sessionize\_data function <#use-the-sessionize-data-function>`_, you could set the
-"session\_column" parameter in the "score\_sessions" function below to
-any of the following:
+.. tip:: Depending on which column you chose as the event\_col in the
+   `sessionize\_data function <#use-the-sessionize-data-function>`_, you could set the
+   "session\_column" parameter in the "score\_sessions" function below to
+   any of the following:
 
-1. Operation\_list
-2. cmd\_param\_list
-3. cmd\_param\_val\_list
+    1. Operation\_list
+    2. cmd\_param\_list
+    3. cmd\_param\_val\_list
 
-Here are some details about the arguments for the score\_sessions
+Here are some details about the arguments for the ``score_sessions``
 function:
 
 ::
@@ -486,7 +494,7 @@ function:
     score_sessions(data: pd.DataFrame, session_column: str, window_length: int) -> pd.DataFrame
 
         Model sessions using a sliding window approach within a markov model.
-        
+
         Parameters
         ----------
         data: pd.DataFrame
@@ -516,26 +524,26 @@ function:
             np.nan score. (The + 1 is because we append a dummy `end_token` to each
             session before starting the sliding window, so a session of length 2,
             would be treated as length 3)
-        
+
         Returns
         -------
         input dataframe with two additional columns appended.
 
+This function will return a dataframe with two additonal columns appended:
+``rarest_window3_likelihood`` and ``rarest_window3``
+
 .. code:: ipython3
 
-    # This function will return a dataframe with two additonal columns appended:
-    # "rarest_window3_likelihood" and "rarest_window3"
-    
     modelled_df = anomalous.score_sessions(
         data=sessions_df,
         session_column='Operation_list',
         window_length=3
     )
 
+Let's view the resulting dataframe in ascending order of the computed likelihood metric
+
 .. code:: ipython3
 
-    # Let's view the resulting dataframe in ascending order of the computed likelihood metric
-    
     modelled_df.sort_values('rarest_window3_likelihood').head()
 
 
@@ -548,11 +556,11 @@ function:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -637,33 +645,30 @@ function:
     </table>
     </div>
 
-
+We can view individual sessions in more detail
 
 .. code:: ipython3
 
-    # we can view individual sessions in more detail
-    
     modelled_df.sort_values('rarest_window3_likelihood').rarest_window3.iloc[0]
-
 
 
 
 .. parsed-literal::
 
     ['New-Mailbox', 'Set-Mailbox']
-	
-	
-Access the Model Class Directly 
+
+
+Access the Model Class Directly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Users who would like to have more control over the arguments used during
 the modelling can access the Model class directly.
 
-In particular, the user can specify whether start and end tokens 
-are used during the likelihood calculations and also whether the 
-geometric mean is used. 
+In particular, the user can specify whether start and end tokens
+are used during the likelihood calculations and also whether the
+geometric mean is used.
 
-There is also the option to specify the modellable\_params argument if
+There is also the option to specify the ``modellable_params`` argument if
 you do not wish for rough heuristics to be used to determine which
 parameters take categorical values and are hence suitable for modelling.
 For example, if you wish to experiment with modelling the values of all the
@@ -679,29 +684,29 @@ Here are some details about the methods available for the Model class:
     class Model(builtins.object)
      |  Model(sessions: List[List[Union[str, msticpy.analysis.anomalous_sequence.utils.data_structures.Cmd]]], modellable_params: set = None)
      |  Class for modelling sessions data.
-     |  
+     |
      |  Methods defined here:
-     |  
+     |
      |  __init__(self, sessions: List[List[Union[str, msticpy.analysis.anomalous_sequence.utils.data_structures.Cmd]]], modellable_params: set = None)
      |      Instantiate the Model class.
-     |      
+     |
      |      This Model class can be used to model sessions, where each
      |      session is a sequence of commands. We use a sliding window
      |      approach to calculate the rarest part of each session. We
      |      can view the sessions in ascending order of this metric to
      |      see if the top sessions are anomalous/malicious.
-     |      
+     |
      |      Parameters
      |      ----------
      |      sessions: List[List[Union[str, Cmd]]]
      |          list of sessions, where each session is a list of either
      |          strings or a list of the Cmd datatype.
-     |      
+     |
      |          The Cmd datatype should have "name" and "params" as attributes
      |          where "name" is the name of the command (string) and "params"
      |          is either a set of accompanying params or a dict of
      |          accompanying params and values.
-     |      
+     |
      |          examples formats of a session:
      |              1) ['Set-User', 'Set-Mailbox']
      |              2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
@@ -719,13 +724,13 @@ Here are some details about the methods available for the Model class:
      |          params and values. If your sessions include commands, params and values and
      |          this argument is not set, then some rough heuristics will be used to determine
      |          which params have values which are suitable for modelling.
-     |  
-     |  compute_geomean_lik_of_sessions(self)	 
+     |
+     |  compute_geomean_lik_of_sessions(self)
      |      Compute the geometric mean of the likelihood for each of the sessions.
-     |      
+     |
      |      This is done by raising the likelihood of the session to the power of
      |      (1 / k) where k is the length of the session.
-     |      
+     |
      |      Note: If the lengths (number of commands) of the sessions vary a lot,
      |      then you may not be able to fairly compare the likelihoods between a
      |      long session and a short session. This is because longer sessions
@@ -734,10 +739,10 @@ Here are some details about the methods available for the Model class:
      |      the likelihoods. If you take the geometric mean of the likelihood, then
      |      you can compare the likelihoods more fairly across different session
      |      lengths.
-     |  
+     |
      |  compute_likelihoods_of_sessions(self, use_start_end_tokens: bool = True)
      |      Compute the likelihoods for each of the sessions.
-     |      
+     |
      |      Note: If the lengths (number of commands) of the sessions vary a lot,
      |      then you may not be able to fairly compare the likelihoods between a
      |      long session and a short session. This is because longer sessions
@@ -746,20 +751,20 @@ Here are some details about the methods available for the Model class:
      |      the likelihoods. If you take the geometric mean of the likelihood, then
      |      you can compare the likelihoods more fairly across different session
      |      lengths
-     |      
+     |
      |      Parameters
      |      ----------
      |      use_start_end_tokens: bool
      |          if True, then `start_token` and `end_token` will be prepended
      |          and appended to the session respectively before the calculations
      |          are done
-     |  
-     |  compute_rarest_windows(self, window_len: int, use_start_end_tokens: bool = True, use_geo_mean: bool = False)			   
+     |
+     |  compute_rarest_windows(self, window_len: int, use_start_end_tokens: bool = True, use_geo_mean: bool = False)
      |      Find the rarest window and corresponding likelihood for each session.
-     |      
+     |
      |      In particular, uses a sliding window approach to find the rarest window
      |      and corresponding likelihood for that window for each session.
-     |      
+     |
      |      If we have a long session filled with benign activity except for a small
      |      window of suspicious behaviour, then this approach should be able to
      |      identity the session as anomalous. This approach should be more
@@ -767,14 +772,14 @@ Here are some details about the methods available for the Model class:
      |      likelihood. This is because the small window of suspicious behaviour
      |      might get averaged out by the majority benign behaviour in the session
      |      when using the geometric mean approach.
-     |      
+     |
      |      Note that if we have a session of length k, and we use a sliding window
      |      of length k+1, then we will end up with np.nan for the rarest window
      |      likelihood metric for that session. However, if `use_start_end_tokens`
      |      is set to True, then because we will be appending self.end_token to the
      |      session, the session will be treated as a session of length k+1,
      |      therefore, we will end up with a non np.nan value.
-     |      
+     |
      |      Parameters
      |      ----------
      |      window_len: int
@@ -787,15 +792,15 @@ Here are some details about the methods available for the Model class:
      |          if True, then each of the likelihoods of the sliding windows
      |          will be raised to the power
      |          of (1/`window_len`)
-     |  
+     |
      |  compute_scores(self, use_start_end_tokens: bool)
      |      Compute some likelihood based scores/metrics for each of the sessions.
-     |      
+     |
      |      In particular, computes the likelihoods and geometric mean of
      |      the likelihoods for each of the sessions. Also, uses the sliding
      |      window approach to compute the rarest window likelihoods for each
      |      of the sessions. It does this for windows of length 2 and 3.
-     |      
+     |
      |      Note that if we have a session of length k, and we use a sliding
      |      window of length k+1, then we will end up with np.nan for the
      |      rarest window likelihood metric for that session.
@@ -803,28 +808,28 @@ Here are some details about the methods available for the Model class:
      |      because we will be appending self.end_token to the session,
      |      the session will be treated as a session of length k+1,
      |      therefore, we will end up with a non np.nan value for that session.
-     |      
+     |
      |      Parameters
      |      ----------
      |      use_start_end_tokens: bool
      |          if True, then self.start_token and self.end_token will be
      |          prepended and appended to each
      |          of the sessions respectively before the calculations are done.
-     |  
+     |
      |  compute_setof_params_cond_cmd(self, use_geo_mean: bool)
      |      Compute likelihood of combinations of params conditional on the cmd.
-     |      
+     |
      |      In particular, go through each command from each session and
      |      compute the probability of that set of params (and values if provided)
      |      appearing conditional on the command.
-     |      
+     |
      |      This can help us to identify unlikely combinations of params
      |      (and values if provided) for each distinct command.
-     |      
+     |
      |      Note, this method is only available if each session is a list
      |       of the Cmd datatype. It will result in an Exception if you
      |       try and use it when each session is a list of strings.
-     |      
+     |
      |      Parameters
      |      ----------
      |      use_geo_mean: bool
@@ -837,20 +842,20 @@ Here are some details about the methods available for the Model class:
      |              Then K is the number of distinct params which appeared
      |              for the given cmd across all the sessions + the number
      |              of values which we included in the modelling for this cmd.
-     |  
+     |
      |  train(self)
      |      Train the model by computing counts and probabilities.
-     |      
+     |
      |      In particular, computes the counts and probabilities of the commands
      |      (and possibly the params if provided, and possibly the values if provided)
      |
 
 .. code:: ipython3
 
-	model = Model(sessions=sessions_df.Operation_list.values.tolist())
-	model.train()
-	model.compute_rarest_windows(window_len=2)
-	model.rare_window_likelihoods[2][:5]
+   model = Model(sessions=sessions_df.Operation_list.values.tolist())
+   model.train()
+   model.compute_rarest_windows(window_len=2)
+   model.rare_window_likelihoods[2][:5]
 
 
 
@@ -863,8 +868,8 @@ Here are some details about the methods available for the Model class:
      0.06277653078978894,
      0.06277653078978894,
      0.06277653078978894]
-	 
-	 
+
+
 Visualise the Modelled Sessions
 -------------------------------
 
@@ -873,7 +878,7 @@ Use the visualise\_scored\_sessions function
 
 Now we demonstrate the visualization component of the library.
 
-We do this using the "visualise\_scored\_sessions" function. This
+We do this using the ``visualise_scored_sessions`` function. This
 function returns an interactive timeline plot which allows you to zoom
 into different sections etc.
 
@@ -881,14 +886,13 @@ into different sections etc.
 -  The computed likelihood metric will be on the y-axis.
 -  lower likelihoods correspond to rarer sessions.
 
-**Important note:**
-
-During the scoring/modelling stage, if you set the window length to be
-k, then only sessions which have at least k-1 commands will appear in
-the interactive timeline plot. This is because sessions with fewer than
-k-1 commands will have a score of np.nan. The reason for the -1 is
-because we append an end token to each session by default, so a session
-of length k-1 gets treated as length k during the scoring.
+.. important::
+   During the scoring/modelling stage, if you set the window length to be
+   k, then only sessions which have at least k-1 commands will appear in
+   the interactive timeline plot. This is because sessions with fewer than
+   k-1 commands will have a score of np.nan. The reason for the -1 is
+   because we append an end token to each session by default, so a session
+   of length k-1 gets treated as length k during the scoring.
 
 Here are some details about the arguments for the
 visualise\_scored\_sessions function:
@@ -897,13 +901,14 @@ visualise\_scored\_sessions function:
 
     Help on function visualise_scored_sessions in module msticpy.analysis.anomalous_sequence.anomalous:
 
-    visualise_scored_sessions(data_with_scores: pandas.core.frame.DataFrame, time_column: str, 
-							  score_column: str, window_column: str, 
-							  score_upper_bound: float = None, 
-							  source_columns: list = None)
+    visualise_scored_sessions(data_with_scores: pandas.core.frame.DataFrame,
+                              time_column: str,
+                              score_column: str, window_column: str,
+                              score_upper_bound: float = None,
+                              source_columns: list = None)
 
         Visualise the scored sessions on an interactive timeline.
-        
+
         Parameters
         ----------
         data_with_scores: pd.DataFrame
@@ -927,16 +932,15 @@ visualise\_scored\_sessions function:
             in the visualisation.
             Note, the content of each of these columns should be json serializable
             in order to be compatible with the figure
-        
+
         Returns
         -------
         figure
 
+Visualise the scored sessions in an interactive timeline plot.
 
 .. code:: ipython3
 
-    # visualise the scored sessions in an interactive timeline plot. 
-    
     anomalous.visualise_scored_sessions(
         data_with_scores=modelled_df,
         time_column='TimeGenerated_min',  # this will appear in the x-axis
@@ -954,7 +958,7 @@ visualise\_scored\_sessions function:
 Use the score\_and\_visualise\_sessions function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now we demonstrate how you can score and visualise your sessions in one go. 
+Now we demonstrate how you can score and visualise your sessions in one go.
 
 
 We will do this for the "Commands only" session type.
@@ -969,7 +973,7 @@ function below to any of the following:
 3. cmd\_param\_val\_list
 
 Here are some details about the arguments for the
-score\_and\_visualise\_sessions function:
+``score_and_visualise_sessions`` function:
 
 ::
 
@@ -978,11 +982,11 @@ score\_and\_visualise\_sessions function:
     score_and_visualise_sessions(data: pandas.core.frame.DataFrame, session_column: str, window_length: int, time_column: str, likelihood_upper_bound: float = None, source_columns: list = None)
 
         Model sessions and then produce an interactive timeline visualisation plot.
-        
+
         In particular, the sessions are modelled using a sliding window approach
         within a markov model. The visualisation plot has time on the x-axis and
         the modelled session likelihood metric on the y-axis.
-        
+
         Parameters
         ----------
         data: pd.DataFrame
@@ -1007,7 +1011,7 @@ score\_and\_visualise\_sessions function:
         window_length: int
             length of the sliding window to use when computing the
             likelihood metrics for each session.
-        
+
             This should be set to an integer >= 2.
             Note that sessions which have fewer commands than the chosen
             window_length + 1 will not appear in the visualisation. (The + 1 is
@@ -1024,15 +1028,15 @@ score\_and\_visualise\_sessions function:
             in the visualisation.
             Note, the content of each of these columns should be json
             serializable in order to be compatible with the figure
-        
+
         Returns
         -------
         figure
 
+Let's model and visualise these sessions in one go
+
 .. code:: ipython3
 
-    # let's model and visualise these sessions in one go
-    
     anomalous.score_and_visualise_sessions(
         data=sessions_df,
         session_column='Operation_list',
@@ -1044,24 +1048,24 @@ score\_and\_visualise\_sessions function:
 
 .. figure:: _static/exchange.png
    :alt: Timeline figure for Office Exchange sessions
-   
+
 
 Other Log Types + KQL
-------------------------------------
+---------------------
 
 The aim of this section is to provide some starter guidance on how one
-might start to sessionize + model some other types of logs. We 
+might start to sessionize + model some other types of logs. We
 demonstrate how to use KQL to sessionize directly.
 
 In order to do the sessionizing using KQL, we use the
 `row\_window\_session <https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/row-window-session-function>`__
 function.
 
-**Important note:** Throughout this section, the decisions made about which
-columns should be interpreted as commands/events and parameters are
-entirely subjective and alternative approaches may also be valid.
+.. important:: Throughout this section, the decisions made about which
+   columns should be interpreted as commands/events and parameters are
+   meant to be illustrative; alternative approaches may also be valid.
 
-Using LogAnalytics Query Provider 
+Using LogAnalytics Query Provider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 msticpy has a QueryProvider class which you can use to connect to your
@@ -1083,7 +1087,7 @@ Log Analytics data environment.
         qry_prov.connect(connection_str=la_connection_string)
 
 
-Office Activity Logs 
+Office Activity Logs
 ^^^^^^^^^^^^^^^^^^^^
 
 The cell below contains a kusto query which queries the OfficeActivity
@@ -1120,10 +1124,10 @@ Note that in KQL, comments are made using //
     | where RecordType == 'ExchangeAdmin'
     //
     // exclude some known automated users
-    | where UserId !startswith "NT AUTHORITY" and UserId !contains "prod.outlook.com"  
+    | where UserId !startswith "NT AUTHORITY" and UserId !contains "prod.outlook.com"
     //
     // create new dynamic variable with the command as the key, and the parameters as the values
-    | extend params = todynamic(strcat('{"', Operation, '" : ', tostring(Parameters), '}')) 
+    | extend params = todynamic(strcat('{"', Operation, '" : ', tostring(Parameters), '}'))
     | project TimeGenerated, UserId, ClientIP, Operation, params
     //
     // sort by the user related columns and the timestamp column in ascending order
@@ -1163,7 +1167,7 @@ Note that in KQL, comments are made using //
 .. parsed-literal::
 
     (252, 9)
-    
+
 
 .. code:: ipython3
 
@@ -1177,11 +1181,11 @@ Note that in KQL, comments are made using //
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1268,7 +1272,7 @@ Note that in KQL, comments are made using //
 
 
 
-Convert Exchange Sessions to Correct Format for the Model 
+Convert Exchange Sessions to Correct Format for the Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recall the allowed session types `here <#what-is-a-session>`__
@@ -1284,20 +1288,28 @@ So let's see what needs to be done to the exchange\_df
 .. code:: ipython3
 
     # define a helper function for converting the sessions with params (and values) into a suitable format
-    
+
     def process_exchange_session(session_with_params: [List[Dict[str, List[Dict[str, str]]]]], include_vals: bool) -> List[Cmd]:
         """
         Converts an exchange session with params to an allowed format.
-        
-        param session_with_params: example format:
+
+        Parameters
+        ----------
+        param session_with_params : list
+            example format:
             [
-                {'Set-Mailbox': [{'Name': 'MessageCopyForSentAsEnabled', 'Value': 'True'}, 
+                {'Set-Mailbox': [{'Name': 'MessageCopyForSentAsEnabled', 'Value': 'True'},
                 {'Name': 'Identity', 'Value': 'blahblah@blah.com'}]}
             ]
-        param include_vals: if True, then it will be transformed to a format which includes the values, 
+        include_vals : bool
+            if True, then it will be transformed to a format which includes the values,
             else the output will just contain the parameters
-        
-        return: list of the Cmd data type which includes either just the parameters, or also the corresponding values
+
+        Returns
+        -------
+        list :
+            list of the Cmd data type which includes either just the parameters,
+            or also the corresponding values
         """
         new_ses = []
         for cmd in session_with_params:
@@ -1312,30 +1324,30 @@ So let's see what needs to be done to the exchange\_df
                 else:
                     new_pars.add(p['Name'])
             new_ses.append(Cmd(name=c, params=new_pars))
-        return new_ses  
+        return new_ses
+
+Let's create suitable sessions for params, and suitable sessions for params + values
 
 .. code:: ipython3
 
-    # let's create suitable sessions for params, and suitable sessions for params + values
     sessions = exchange_df.cmds.values.tolist()
     param_sessions = []
     param_value_sessions = []
-    
+
     for ses in exchange_df.params.values.tolist():
         new_ses_set = process_exchange_session(session_with_params=ses, include_vals=False)
         new_ses_dict = process_exchange_session(session_with_params=ses, include_vals=True)
         param_sessions.append(new_ses_set)
         param_value_sessions.append(new_ses_dict)
 
+Let's see the differences between the three types of sessions.
+
 .. code:: ipython3
 
-    # let's see the differences between the three types of sessions
     ind = 0
-    
+
     print(sessions[ind][:3])
-    
     print(param_sessions[ind][:3])
-    
     print(param_value_sessions[ind][:3])
 
 
@@ -1344,7 +1356,7 @@ So let's see what needs to be done to the exchange\_df
     ['Remove-MailboxLocation', 'Set-User']
     [Cmd(name='Remove-MailboxLocation', params={'ErrorAction', 'Identity', 'Confirm'}), Cmd(name='Set-User', params={'ErrorAction', 'Identity', 'SyncMailboxLocationGuids'})]
     [Cmd(name='Remove-MailboxLocation', params={'Identity': '4b2462a4-bbee-495a-a0e1-f23ae524cc9c\\b81afc79-520a-4143-bbc4-b8cadc11d007', 'Confirm': 'False', 'ErrorAction': 'Stop'}), Cmd(name='Set-User', params={'Identity': '4b2462a4-bbee-495a-a0e1-f23ae524cc9c\\a2409f54-2a30-4647-ba61-3cb44edc1a5a', 'SyncMailboxLocationGuids': 'True', 'ErrorAction': 'Stop'})]
-    
+
 
 .. code:: ipython3
 
@@ -1354,10 +1366,8 @@ So let's see what needs to be done to the exchange\_df
     data['param_session'] = param_sessions
     data['param_value_session'] = param_value_sessions
 
-Now we will model and visualise these sessions in one go.
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-We do this using the score\_and\_visualise\_sessions function.
+Now we will model and visualise these sessions in one go using the
+``score_and_visualise_sessions`` function.
 
 Since we created columns for all 3 session types, the session\_column
 argument can be set to any of the following:
@@ -1369,7 +1379,7 @@ argument can be set to any of the following:
 .. code:: ipython3
 
     # let's model and visualise these sessions in one go
-    
+
     anomalous.score_and_visualise_sessions(
         data=data,
         session_column='param_session',
@@ -1383,7 +1393,7 @@ argument can be set to any of the following:
 
 
 
-AWS Cloud Trail Logs 
+AWS Cloud Trail Logs
 ^^^^^^^^^^^^^^^^^^^^
 
 The cell below contains a kusto query which queries the AWSCloudTrail
@@ -1413,7 +1423,7 @@ down.
     | where UserIdentityPrincipalid != '' and SessionIssuerUserName != ''
     //
     // create dynamic param variable which has the EventName as the key and the RequestParameters as the values
-    | extend par = iff(RequestParameters == '', '{}', RequestParameters) 
+    | extend par = iff(RequestParameters == '', '{}', RequestParameters)
     | extend param = todynamic(strcat('{"', EventName, '": ', tostring(par), '}'))
     //
     // rename some columns
@@ -1437,11 +1447,14 @@ down.
     | where nCmds > 1
     """
 
+Execute the query
+
 .. code:: ipython3
 
-    # execute the query
+
     aws_df = qry_prov.exec_query(query=query)
-    # I comment out this cell and run it again once it has run to prevent the notebook from slowing down
+    # I comment out this cell and run it again once it has run to prevent the
+    # notebook from slowing down
 
 .. code:: ipython3
 
@@ -1455,7 +1468,7 @@ down.
 .. parsed-literal::
 
     (2689, 11)
-    
+
 
 .. code:: ipython3
 
@@ -1471,11 +1484,11 @@ down.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1574,7 +1587,7 @@ down.
 
 
 
-Convert AWS sessions to the correct format for the model 
+Convert AWS sessions to the correct format for the model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recall the allowed session types `here <#what-is-a-session>`__
@@ -1589,23 +1602,32 @@ we need to transform the "params" column slightly
 .. code:: ipython3
 
     # define a helper function for converting the sessions with params (and values) into a suitable format
-    
+
     def process_aws_session(session_with_params: List[Dict[str, Dict[str, any]]], include_vals: bool) -> List[Cmd]:
         """
         Converts an aws session with params to an allowed format.
-        
-        param session_with_params: example format:
+
+        Parameters
+        ----------
+        session_with_params: example format:
             [
                 {'GetAuthorizationToken': {'registryIds': ['123456']}},
                 {'GetAuthorizationToken': {'registryIds': ['123456', '654321']}}
             ]
-            Note that the accompanying values for the parameters can take dynamic types like dict, list etc.
-            However, when we transform the aws session into an allowed format, the value will be cast into a string type.
-            
-        param include_vals: if True, then it will be transformed to a format which includes the values, 
-            else the output will just contain the parameters
-        
-        return: list of the Cmd data type which includes either just the parameters, or also the corresponding values    
+            Note that the accompanying values for the parameters can take dynamic
+            types like dict, list etc.
+            However, when we transform the aws session into an allowed format,
+            the value will be cast into a string type.
+
+        include_vals: bool
+            if True, then it will be transformed to a format which
+            includes the values, else the output will just contain the parameters
+
+        Returns
+        -------
+        list :
+            list of the Cmd data type which includes either just the parameters,
+            or also the corresponding values
         """
         new_ses = []
         for cmd in session_with_params:
@@ -1621,30 +1643,30 @@ we need to transform the "params" column slightly
                     new_pars.add(p)
             new_ses.append(Cmd(name=c, params=new_pars))
         return new_ses
-    
+
+Let's create suitable sessions for params, and suitable sessions for params + values.
 
 .. code:: ipython3
 
-    # let's create suitable sessions for params, and suitable sessions for params + values
+    #
     sessions = aws_df.cmds.values.tolist()
     param_sessions = []
     param_value_sessions = []
-    
+
     for ses in aws_df.params.values.tolist():
         new_ses_set = process_aws_session(session_with_params=ses, include_vals=False)
         new_ses_dict = process_aws_session(session_with_params=ses, include_vals=True)
         param_sessions.append(new_ses_set)
         param_value_sessions.append(new_ses_dict)
 
+Let's see the differences between the three types of sessions.
+
 .. code:: ipython3
 
-    # let's see the differences between the three types of sessions
     ind = 0
-    
+
     print(sessions[ind][:3])
-    
     print(param_sessions[ind][:3])
-    
     print(param_value_sessions[ind][:3])
 
 
@@ -1653,7 +1675,7 @@ we need to transform the "params" column slightly
     ['LookupEvents', 'LookupEvents', 'LookupEvents']
     [Cmd(name='LookupEvents', params={'startTime', 'endTime'}), Cmd(name='LookupEvents', params={'startTime', 'endTime'}), Cmd(name='LookupEvents', params={'startTime', 'endTime'})]
     [Cmd(name='LookupEvents', params={'startTime': 'May 28, 2020 3:57:26 AM', 'endTime': 'May 28, 2020 4:02:26 AM'}), Cmd(name='LookupEvents', params={'startTime': 'May 28, 2020 3:57:26 AM', 'endTime': 'May 28, 2020 4:02:26 AM'}), Cmd(name='LookupEvents', params={'startTime': 'May 28, 2020 3:57:26 AM', 'endTime': 'May 28, 2020 4:02:26 AM'})]
-    
+
 
 .. code:: ipython3
 
@@ -1663,10 +1685,8 @@ we need to transform the "params" column slightly
     data['param_session'] = param_sessions
     data['param_value_session'] = param_value_sessions
 
-Now we will model and visualise these sessions in one go.
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-We do this using the score\_and\_visualise\_sessions function.
+Now we will model and visualise these sessions in one go using the
+``score_and_visualise_sessions`` function.
 
 As before, since we created columns for all 3 session types, the
 session\_column argument can be set to any of the following:
@@ -1678,7 +1698,7 @@ session\_column argument can be set to any of the following:
 .. code:: ipython3
 
     # let's model and visualise these sessions in one go
-    
+
     anomalous.score_and_visualise_sessions(
         data=data,
         session_column='param_session',
@@ -1689,10 +1709,10 @@ session\_column argument can be set to any of the following:
 
 .. figure:: _static/aws.png
    :alt: Timeline figure for AWS Cloud Trail sessions
-   
 
 
-VM Process Logs 
+
+VM Process Logs
 ^^^^^^^^^^^^^^^
 
 The cell below contains a kusto query which queries the VMProcess table
@@ -1724,8 +1744,8 @@ In this example, we apply approach (2b). In particular, we use
 parameters: "DisplayName", "ProductName", "Group", "ProductVersion",
 "ExecutablePath".
 
-**Important note:** Some modelling assumptions are made in the
-anomalous\_sequence subpackage of msticpy.
+.. important:: Some modelling assumptions are made in the
+   anomalous\_sequence subpackage of msticpy.
 
 In particular, when we model the third session type (command + params +
 values), we make the assumption that the values depend only on the
@@ -1734,8 +1754,10 @@ parameter and not on the command.
 This means if we were to treat the parameters as a dictionary for
 example:
 
-Cmd(name="miiserver", params={"ProductVersion": "123542",
-"ExecutablePath": "a/path"})
+.. code::
+
+    Cmd(name="miiserver", params={"ProductVersion": "123542",
+        "ExecutablePath": "a/path"})
 
 Then the value "123542" will be conditioned only on param
 "ProductVersion" and value "a/path" will be conditioned only on param
@@ -1746,7 +1768,9 @@ want the values to be conditioned on the executable.
 Therefore, for this approach, we will use the second session type
 (command + params). For example:
 
-Cmd(name="miiserver", params={"123542", "a/path"})
+.. code::
+
+    Cmd(name="miiserver", params={"123542", "a/path"})
 
 Now, the presence of "123542" and "a/path" will be modelled
 independently conditional on the executable "miiserver"
@@ -1786,7 +1810,7 @@ likelihood of the rarer param settings conditional on the executable.)
     | extend begin = row_window_session(TimeGenerated, 20m, 2m, UserId != prev(UserId) or Computer != prev(Computer))
     //
     // summarize the executables and the params by the user related variables and the "begin" variable
-    | summarize executables=makelist(ExecutableName), end=max(TimeGenerated), nExecutables=count(), 
+    | summarize executables=makelist(ExecutableName), end=max(TimeGenerated), nExecutables=count(),
         nDistinctExecutables=dcount(ExecutableName), params=makelist(params) by UserId, Computer, begin
     //
     // optionally specify an order to the final columns
@@ -1814,7 +1838,7 @@ likelihood of the rarer param settings conditional on the executable.)
 .. parsed-literal::
 
     (3582, 9)
-    
+
 
 .. code:: ipython3
 
@@ -1830,11 +1854,11 @@ likelihood of the rarer param settings conditional on the executable.)
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1921,7 +1945,7 @@ likelihood of the rarer param settings conditional on the executable.)
 
 
 
-Convert VM Process sessions to the correct format for the model 
+Convert VM Process sessions to the correct format for the model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recall the allowed session types `here <#what-is-a-session>`__
@@ -1936,16 +1960,16 @@ slightly.
 .. code:: ipython3
 
     # define a helper function for converting the sessions with params into a suitable format
-    
+
     def process_vm_session(session_with_params: List[Dict[str, Dict[str, any]]]) -> List[Cmd]:
         """
         Converts a vm session with params to an allowed format.
-        
+
         param session_with_params: example format:
              [{'Explorer': ['Explorer','Microsoft® Windows® Operating System',
                'Microsoft® Windows® Operating System', '10.0.14393.0', 'c:/windows/explorer.exe']}]
-    
-        return: list of the Cmd data type which includes the parameters  
+
+        return: list of the Cmd data type which includes the parameters
         """
         new_ses = []
         for cmd in session_with_params:
@@ -1960,7 +1984,7 @@ slightly.
     # let's create suitable sessions for params
     sessions = vm_df.executables.values.tolist()
     param_sessions = []
-    
+
     for ses in vm_df.params.values.tolist():
         new_ses_set = process_vm_session(session_with_params=ses)
         param_sessions.append(new_ses_set)
@@ -1969,9 +1993,9 @@ slightly.
 
     # let's see the differences between the two types of sessions
     ind = 0
-    
+
     print(sessions[ind])
-    
+
     print(param_sessions[ind])
 
 
@@ -1979,7 +2003,7 @@ slightly.
 
     ['miiserver']
     [Cmd(name='miiserver', params={'c:/program files/microsoft azure ad sync/bin/miiserver.exe', 'miiserver', 'MicrosoftÂ® AzureÂ® AD Connect', '1.5.30.0'})]
-    
+
 
 .. code:: ipython3
 
@@ -1988,10 +2012,8 @@ slightly.
     data['session'] = sessions
     data['param_session'] = param_sessions
 
-Now we will model and visualise these sessions in one go.
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-We do this using the score\_and\_visualise\_sessions function.
+Now we will model and visualise these sessions using the
+``score_and_visualise_sessions`` function.
 
 As before, since we created columns for 2 of the 3 session types, the
 session\_column argument can be set to any of the following:
@@ -2002,7 +2024,7 @@ session\_column argument can be set to any of the following:
 .. code:: ipython3
 
     # let's model and visualise these sessions in one go
-    
+
     anomalous.score_and_visualise_sessions(
         data=data,
         session_column='param_session',
