@@ -18,6 +18,7 @@ msrestazure
 networkx
 numpy
 pandas
+pyperclip
 pytz
 pyyaml
 requests

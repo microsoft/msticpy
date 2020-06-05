@@ -169,6 +169,21 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         print("Secrets in vault:\n", "\n".join(kv_client.secrets))
 
 
+def _list_secrets(vault_name: str, confirm, **kwargs):
+    mssg = f"Show secret values (y/n)?"
+    print(f"Secrets currently in vault {vault_name}")
+    show_secrets = _prompt_yn(mssg, confirm)
+    kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
+    for sec_name in kv_client.secrets:
+        print(f"Secret: {sec_name}", end=": ")
+        if show_secrets:
+            secret = kv_client.get_secret(secret_name=sec_name)
+            print(secret.value)
+        else:
+            print("************")
+        print("Done")
+
+
 def _add_script_args(description):
     parser = argparse.ArgumentParser(
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -215,6 +230,13 @@ def _add_script_args(description):
         help=("Use the named existing vault. Do not try to create."),
     )
     parser.add_argument(
+        "--list",
+        "-l",
+        action="store_true",
+        default=False,
+        help=("View current secrets."),
+    )
+    parser.add_argument(
         "--show",
         action="store_true",
         default=False,
@@ -254,6 +276,10 @@ if __name__ == "__main__":
         "settings": kv_settings,
     }
 
+    prompt = not args.yes
+    if args.list:
+        _list_secrets(vault_name=vault, confirm=prompt, **kv_args)
+
     new_settings, kv_secrets = _transform_settings(curr_settings)
     if args.show or args.verbose:
         _show_settings(kv_secrets, new_settings)
@@ -262,7 +288,6 @@ if __name__ == "__main__":
     if not kv_secrets:
         print("No secrets found in config file. No action to take.")
         sys.exit(0)
-    prompt = not args.yes
     if not args.show:
         if not args.output:
             raise ValueError("No output file specified. --output value is required.")

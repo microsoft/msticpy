@@ -31,7 +31,8 @@ import keyring
 from keyring.errors import KeyringError
 from msrest.authentication import BasicTokenAuthentication
 from msrestazure.azure_exceptions import CloudError
-import pandas.io.clipboard as pyperclip
+import pyperclip
+from pyperclip import PyperclipException
 
 from . import pkg_config as config
 from .utility import export, is_ipython, MsticpyException
@@ -978,7 +979,11 @@ def _device_code_callback(verification_uri, user_code, expires_on):
 
 def _prompt_for_code(device_code):
     # copy code to clipboard
-    pyperclip.copy(device_code["user_code"])
+    try:
+        pyperclip.copy(device_code["user_code"])
+    except PyperclipException:
+        # On Linux this can fail if clipboard support not installed
+        pass
     verif_uri = device_code.get("verification_url", device_code.get("verification_uri"))
     title = "Authentication needed for KeyVault access."
     logon_mssg = "User code {} copied to clipboard.".format(device_code["user_code"])
