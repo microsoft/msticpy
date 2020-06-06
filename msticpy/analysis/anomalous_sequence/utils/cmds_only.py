@@ -7,6 +7,7 @@
 
 from collections import defaultdict
 from typing import Tuple, List, Union, DefaultDict
+import copy
 
 import numpy as np
 
@@ -17,17 +18,9 @@ from ....common.utility import MsticpyException
 
 def compute_counts(  # nosec
     sessions: List[List[str]], start_token: str, end_token: str, unk_token: str
-) -> Tuple[StateMatrix, StateMatrix]:
+) -> Tuple[DefaultDict[str, int], DefaultDict[str, DefaultDict[str, int]]]:
     """
     Compute counts of individual commands and of sequences of two commands.
-
-    Laplace smoothing is applied to the counts.
-    This is so we shift some of the probability mass from the very probable
-    commands and command sequences to the unseen and very unlikely commands
-    and command sequences. The `unk_token` means we can handle unseen
-    commands and sequences of commands
-
-
 
     Parameters
     ----------
@@ -70,17 +63,56 @@ def compute_counts(  # nosec
         seq2_counts[prev][end_token] += 1
         seq1_counts[end_token] += 1
 
+    return seq1_counts, seq2_counts
+
+
+def laplace_smooth_counts(
+    seq1_counts: DefaultDict[str, int],
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    start_token: str,
+    end_token: str,
+    unk_token: str,
+) -> Tuple[StateMatrix, StateMatrix]:
+    """
+    Laplace smoothing is applied to the counts.
+
+    We do this by adding 1 to each of the counts. This is so when we
+    compute the probabilities from the counts, we shift some of the
+    probability mass from the very probable commands and command sequences
+    to the unseen and very unlikely commands and command sequences.
+    The `unk_token` means we can handle unseen commands and sequences of commands.
+
+    Parameters
+    ----------
+    seq1_counts: DefaultDict[str, int]
+        individual command counts
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]]
+        sequence command (length 2) counts
+    start_token: str
+        dummy command to signify the start of a session (e.g. "##START##")
+    end_token: str
+        dummy command to signify the end of a session (e.g. "##END##")
+    unk_token: str
+        dummy command to signify an unseen command (e.g. "##UNK##")
+
+    Returns
+    -------
+    tuple of StateMatrix laplace smoothed counts:
+        individual command counts,
+        sequence command (length 2) counts
+
+    """
     # apply laplace smoothing
-    seq1_counts, seq2_counts = laplace_smooth_cmd_counts(
-        seq1_counts=seq1_counts,
-        seq2_counts=seq2_counts,
+    seq1_counts_ls, seq2_counts_ls = laplace_smooth_cmd_counts(
+        seq1_counts=copy.deepcopy(seq1_counts),
+        seq2_counts=copy.deepcopy(seq2_counts),
         start_token=start_token,
         end_token=end_token,
         unk_token=unk_token,
     )
 
-    seq1_counts_st = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts_st = StateMatrix(states=seq2_counts, unk_token=unk_token)
+    seq1_counts_st = StateMatrix(states=seq1_counts_ls, unk_token=unk_token)
+    seq2_counts_st = StateMatrix(states=seq2_counts_ls, unk_token=unk_token)
 
     return seq1_counts_st, seq2_counts_st
 
