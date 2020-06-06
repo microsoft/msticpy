@@ -18,7 +18,9 @@ from ...common.utility import MsticpyException
 class Model:
     """Class for modelling sessions data."""
 
-    def __init__(self, sessions: List[List[Union[str, Cmd]]]):
+    def __init__(
+        self, sessions: List[List[Union[str, Cmd]]], modellable_params: set = None
+    ):
         """
         Instantiate the Model class.
 
@@ -49,6 +51,13 @@ class Model:
                     ),
                     Cmd(name='Set-Mailbox',
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+        modellable_params: set, optional
+            set of params which you deem to have categorical values which are suitable
+            for modelling.
+            Note this argument will only have an effect if your sessions include commands,
+            params and values. If your sessions include commands, params and values and
+            this argument is not set, then some rough heuristics will be used to determine
+            which params have values which are suitable for modelling.
 
         """
         if not isinstance(sessions, list):
@@ -72,6 +81,15 @@ class Model:
         self.session_type = None
         self._asses_input()
 
+        # non laplace smoothed counts
+        self._seq1_counts = None
+        self._seq2_counts = None
+        self._param_counts = None
+        self._cmd_param_counts = None
+        self._value_counts = None
+        self._param_value_counts = None
+
+        # laplace smoothed counts
         self.seq1_counts = None
         self.seq2_counts = None
         self.param_counts = None
@@ -79,7 +97,7 @@ class Model:
         self.value_counts = None
         self.param_value_counts = None
 
-        self.modellable_params = None
+        self.modellable_params = modellable_params
 
         self.prior_probs = None
         self.trans_probs = None
@@ -108,6 +126,7 @@ class Model:
 
         """
         self._compute_counts()
+        self._laplace_smooth_counts()
         self._compute_probs()
 
     def compute_scores(self, use_start_end_tokens: bool):
@@ -176,9 +195,8 @@ class Model:
                 end_token=self.end_token,
                 unk_token=self.unk_token,
             )
-
-            self.seq1_counts = seq1_counts
-            self.seq2_counts = seq2_counts
+            self._seq1_counts = seq1_counts
+            self._seq2_counts = seq2_counts
 
         elif self.session_type == SessionType.cmds_params_only:
             (
@@ -190,13 +208,12 @@ class Model:
                 sessions=self.sessions,
                 start_token=self.start_token,
                 end_token=self.end_token,
-                unk_token=self.unk_token,
             )
 
-            self.seq1_counts = seq1_counts
-            self.seq2_counts = seq2_counts
-            self.param_counts = param_counts
-            self.cmd_param_counts = cmd_param_counts
+            self._seq1_counts = seq1_counts
+            self._seq2_counts = seq2_counts
+            self._param_counts = param_counts
+            self._cmd_param_counts = cmd_param_counts
 
         elif self.session_type == SessionType.cmds_params_values:
             (
@@ -210,21 +227,92 @@ class Model:
                 sessions=self.sessions,
                 start_token=self.start_token,
                 end_token=self.end_token,
+            )
+
+            if self.modellable_params is None:
+                modellable_params = cmds_params_values.get_params_to_model_values(
+                    param_counts=param_counts, param_value_counts=param_value_counts
+                )
+                self.modellable_params = modellable_params
+
+            self._seq1_counts = seq1_counts
+            self._seq2_counts = seq2_counts
+            self._param_counts = param_counts
+            self._cmd_param_counts = cmd_param_counts
+            self._value_counts = value_counts
+            self._param_value_counts = param_value_counts
+
+    def _laplace_smooth_counts(self):
+        """
+        Laplace smooth all the counts for the model.
+
+        We do this by adding 1 to all the counts. This is so we shift
+        some of the probability mass from the very probable
+        commands/params/values to the unseen and very unlikely
+        commands/params/values. The `unk_token` means we can handle
+        unseen commands, params, values, sequences of commands.
+
+        """
+        if self._seq1_counts is None:
+            raise MsticpyException("Please run the _compute_counts method first.")
+
+        if self.session_type == SessionType.cmds_only:
+            seq1_counts_ls, seq2_counts_ls = cmds_only.laplace_smooth_counts(
+                seq1_counts=self._seq1_counts,
+                seq2_counts=self._seq2_counts,
+                start_token=self.start_token,
+                end_token=self.end_token,
+                unk_token=self.unk_token,
+            )
+            self.seq1_counts = seq1_counts_ls
+            self.seq2_counts = seq2_counts_ls
+
+        elif self.session_type == SessionType.cmds_params_only:
+            (
+                seq1_counts_ls,
+                seq2_counts_ls,
+                param_counts_ls,
+                cmd_param_counts_ls,
+            ) = cmds_params_only.laplace_smooth_counts(
+                seq1_counts=self._seq1_counts,
+                seq2_counts=self._seq2_counts,
+                param_counts=self._param_counts,
+                cmd_param_counts=self._cmd_param_counts,
+                start_token=self.start_token,
+                end_token=self.end_token,
                 unk_token=self.unk_token,
             )
 
-            modellable_params = cmds_params_values.get_params_to_model_values(
-                param_counts=param_counts, param_value_counts=param_value_counts
+            self.seq1_counts = seq1_counts_ls
+            self.seq2_counts = seq2_counts_ls
+            self.param_counts = param_counts_ls
+            self.cmd_param_counts = cmd_param_counts_ls
+
+        elif self.session_type == SessionType.cmds_params_values:
+            (
+                seq1_counts_ls,
+                seq2_counts_ls,
+                param_counts_ls,
+                cmd_param_counts_ls,
+                value_counts_ls,
+                param_value_counts_ls,
+            ) = cmds_params_values.laplace_smooth_counts(
+                seq1_counts=self._seq1_counts,
+                seq2_counts=self._seq2_counts,
+                param_counts=self._param_counts,
+                cmd_param_counts=self._cmd_param_counts,
+                value_counts=self._value_counts,
+                param_value_counts=self._param_value_counts,
+                start_token=self.start_token,
+                end_token=self.end_token,
+                unk_token=self.unk_token,
             )
-
-            self.seq1_counts = seq1_counts
-            self.seq2_counts = seq2_counts
-            self.param_counts = param_counts
-            self.cmd_param_counts = cmd_param_counts
-            self.value_counts = value_counts
-            self.param_value_counts = param_value_counts
-
-            self.modellable_params = modellable_params
+            self.seq1_counts = seq1_counts_ls
+            self.seq2_counts = seq2_counts_ls
+            self.param_counts = param_counts_ls
+            self.cmd_param_counts = cmd_param_counts_ls
+            self.value_counts = value_counts_ls
+            self.param_value_counts = param_value_counts_ls
 
     def _compute_probs(self):
         """
@@ -555,6 +643,7 @@ class Model:
         param_probs, param_cond_cmd_probs = probabilities.compute_params_probs(
             param_counts=self.param_counts,
             cmd_param_counts=self.cmd_param_counts,
+            seq1_counts=self.seq1_counts,
             unk_token=self.unk_token,
         )
 
