@@ -8,16 +8,39 @@ import unittest
 from pathlib import Path
 
 import nbformat
-import notebook
+import pandas as pd
 import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
+
+from ..msticpy.nbtools.timeseries import timeseries_anomalies_stl
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "TimeSeriesAnomaliesVisualization.ipynb"
 
+_test_data_folders = [
+    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/docs/notebooks/data")
+]
+if len(_test_data_folders) == 1:
+    _TEST_DATA = _test_data_folders[0]
+else:
+    _TEST_DATA = "./docs/notebooks/data"
 
 class TestTimeSeries(unittest.TestCase):
     """Unit test class."""
+    def setUp(self):
+        input_file = os.path.join(_TEST_DATA, "TimeSeriesDemo.csv")
+        self.input_df = pd.read_csv(input_file, index_col=["TimeGenerated"], usecols=["TimeGenerated","TotalBytesSent"])
+
+    def test_timeseries_anomalies_stl(self):
+        out_df = timeseries_anomalies_stl(data=self.input_df)
+
+        self.assertIn("residual", out_df.columns)
+        self.assertIn("trend", out_df.columns)
+        self.assertIn("seasonal", out_df.columns)
+        self.assertIn("weights", out_df.columns)
+        self.assertIn("baseline", out_df.columns)
+        self.assertIn("score", out_df.columns)
+        self.assertIn("anomalies", out_df.columns)    
 
     @pytest.mark.skipif(
         not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
@@ -39,3 +62,5 @@ class TestTimeSeries(unittest.TestCase):
             with open(nb_err, mode="w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
             raise
+        
+
