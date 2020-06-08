@@ -6,9 +6,24 @@
 """
 Module for SQL to KQL Conversion.
 
-Supports Limited subset of ANSI SQL
+This is an experiment conversion utility built to support a limited subset
+of ANSI SQL.
+It relies on moz_sql_parser (https://github.com/mozilla/moz-sql-parser)
+to parse the SQL syntax tree. Some hacky additions have been done to
+allow table renaming and support for a few SparkSQL operators such as
+RLIKE.
+
+For a more complete translation help with SQL to KQL see
+
+Known limitations
+-----------------
+
+- Does not support aggregate functions in SELECT with no GROUP BY clause
+- Does not support IN, EXISTS, HAVING operators
+- Only partial support for AS naming (should work in SELECT expressions)
 
 """
+import random
 import re
 from typing import List, Tuple, Any, Union, Dict, Optional
 
@@ -20,11 +35,6 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
-# TODO:
-# count takes no argument
-# ordering of $left/$right?
-# renaming of columns after summarize
 
 SPARK_KQL_FUNC_MAP = {
     "avg": ("avg", None, None),
@@ -264,10 +274,41 @@ def _process_select(
     if parsed_sql != "*":
         print(expr_list, type(expr_list))
         select_list = expr_list if isinstance(expr_list, list) else [expr_list]
-        project_expr = ", ".join(
-            [_parse_expression(item["value"]) for item in select_list]
-        )
-        query_lines.append(f"| project {project_expr}")
+        project_items = []
+        extend_items = []
+        for item in select_list:
+            value = _parse_expression(item["value"])
+            name = item.get("name")
+            if value != item["value"]:
+                # if this isn't a simple rename - add to extend
+                name = name if name else _gen_expr_name(item["value"])
+                extend_items.append(f"{name} = {value}")
+                project_items.append(name)
+            else:
+                if name:
+                    project_items.append(f"{name} = {value}")
+                else:
+                    project_items.append(value)
+        if extend_items:
+            query_lines.append(f"| extend {', '.join(extend_items)}")
+        if project_items:
+            query_lines.append(f"| project {', '.join(project_items)}")
+
+
+def _gen_expr_name(value):
+    """Generate random expression name."""
+    pref = "expr"
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        first_val = next(iter(value.values()))
+        if isinstance(first_val, str):
+            return first_val
+        # prob a function so base the name on that
+        pref = next(iter(value.keys()))
+    # otherwise just generate a rand value as suffix
+    suffix = str(random.randint(1000, 9999))  # nosec
+    return f"{pref}_{suffix}"
 
 
 def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
@@ -280,10 +321,15 @@ def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
     _, expr_list = _is_distinct(parsed_sql[SELECT])
     group_by_expr_list = []
     for expr in expr_list:
+        name_expr = ""
+        if "name" in expr:
+            name_expr = f"{expr.get('name')} = "
         if isinstance(expr.get("value"), str):
-            group_by_expr_list.append(f"any({expr['value']})")
+            group_by_expr_list.append(f"{name_expr}any({expr['value']})")
         else:
-            group_by_expr_list.append(_parse_expression(expr.get("value")))
+            group_by_expr_list.append(
+                f"{name_expr}{_parse_expression(expr.get('value'))}"
+            )
     query_lines.append(f"| summarize {', '.join(group_by_expr_list)} by {by_clause}")
 
 
@@ -302,10 +348,12 @@ def _parse_expression(expression):  # noqa: MC0001
         return f" not ({_parse_expression(expression[NOT])})"
     if BETWEEN in expression:
         args = expression[BETWEEN]
-        return f"{args[0]} between ({args[1]} .. {args[2]})"
+        betw_expr = f"{_parse_expression(args[1])} .. {_parse_expression(args[2])}"
+        return f"{args[0]} between ({betw_expr})"
     if NOT_BETWEEN in expression:
         args = expression[NOT_BETWEEN]
-        return f"{args[0]} not between ({args[1]} .. {args[2]})"
+        betw_expr = f"{_parse_expression(args[1])} .. {_parse_expression(args[2])}"
+        return f"{args[0]} not between ({betw_expr})"
     if IN in expression or NOT_IN in expression:
         sql_op = IN if IN in expression else NOT_IN
         kql_op = IN if IN in expression else "!in"
@@ -322,8 +370,8 @@ def _parse_expression(expression):  # noqa: MC0001
     # Handle other operators
     oper = list(expression.keys())[0] if expression else None
     if oper in BINARY_OPS:
-        right = _quote_literal(expression[oper][1])
-        left = _quote_literal(expression[oper][0])
+        right = _parse_expression(expression[oper][1])
+        left = _parse_expression(expression[oper][0])
         return f"{left} {BINARY_OPS[oper]} {right}"
     if LIKE in expression:
         return _process_like(expression)
@@ -482,9 +530,9 @@ def _parse_join(join_expr) -> Optional[str]:
 
 def _process_like(expression: Dict[str, Any]) -> str:
     """Process Like clause."""
-    left = _quote_literal(expression[LIKE][0])
+    left = _parse_expression((expression[LIKE][0]))
     literal, right = _is_literal(expression[LIKE][1])
-    if isinstance(right, str):
+    if literal and isinstance(right, str):
         if re.match("^[^%_]+[%_]$", right):
             oper = "startswith"
             right = right.replace("%", "").replace("_", "")
@@ -497,7 +545,7 @@ def _process_like(expression: Dict[str, Any]) -> str:
         else:
             oper = "matches regex"
             right = right.replace("_", ".").replace("%", ".*")
-        if isinstance(left, dict):
-            left = _parse_expression(left)
-    right = _quote(right) if literal else right
+        right = _quote(right)
+    else:
+        right = _parse_expression(right)
     return f"{left} {oper} {right}"
