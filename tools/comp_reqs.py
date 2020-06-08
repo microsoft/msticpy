@@ -6,7 +6,7 @@
 """Compare two requirements files."""
 import argparse
 import re
-from packaging.version import parse, Version
+from packaging.version import parse
 from packaging.specifiers import SpecifierSet
 
 
