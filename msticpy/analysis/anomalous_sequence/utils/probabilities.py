@@ -65,6 +65,7 @@ def compute_cmds_probs(  # nosec
 def compute_params_probs(  # nosec
     param_counts: Union[StateMatrix, dict],
     cmd_param_counts: Union[StateMatrix, dict],
+    seq1_counts: Union[StateMatrix, dict],
     unk_token: str,
 ) -> Tuple[StateMatrix, StateMatrix]:
     """
@@ -73,12 +74,30 @@ def compute_params_probs(  # nosec
     In particular, computes the probabilities of the individual params,
     and also the probabilities of the params conditional on the command.
 
+    Note that we will be modelling whether a parameter is present or not
+    for each command. So we make the modelling assumption that the
+    parameters are independent Bernoulii random variables conditional
+    on the command.
+
+    Note also that because multiple parameters can appear at a time for
+    a command, and because we are computing the probability that each
+    parameter is present or not, we do NOT expect the probabilities to
+    sum to 1.
+
+    Note also that we use laplace smoothing in the counting
+    stage of the calculations. Therefore if you have parameter p which
+    appeared for every occurrence of command c, the resulting
+    probability for param p appearing conditional on command c would
+    NOT equal 1. It would be slightly less due to the laplace smoothing.
+
     Parameters
     ----------
     param_counts: Union[StateMatrix, dict]
         individual param counts
     cmd_param_counts: Union[StateMatrix, dict]
         param conditional on command counts
+    seq1_counts: Union[StateMatrix, dict]
+        individual command counts
     unk_token: str
         dummy command to signify an unseen command (e.g. "##UNK##")
 
@@ -95,13 +114,13 @@ def compute_params_probs(  # nosec
     )
 
     for cmd, params in cmd_param_counts.items():
-        n_param = sum(params.values())
+        n_cmd = seq1_counts[cmd]
         for param, count in params.items():
-            param_cond_cmd_probs[cmd][param] = count / n_param
+            param_cond_cmd_probs[cmd][param] = count / n_cmd
 
-    tot_param = sum(param_counts.values())
+    tot_cmd = sum(seq1_counts.values())
     for param, count in param_counts.items():
-        param_probs[param] = count / tot_param
+        param_probs[param] = count / tot_cmd
 
     param_probs_sm = StateMatrix(states=param_probs, unk_token=unk_token)
     param_cond_cmd_probs_sm = StateMatrix(
@@ -119,8 +138,15 @@ def compute_values_probs(  # nosec
     """
     Compute value related probabilities.
 
-    In particular, computes the probabilities of the individual values,
+    In particular, compute the probabilities of the individual values,
     and also the probabilities of the values conditional on the param.
+
+    Note that we will be modelling the values as categorical conditional
+    on the parameter. Therefore, we DO expect these probabilities to sum
+    to 1.
+
+    Note also that each parameter can only take one value at a time
+    (unlike how a command can take multiple parameters at a time).
 
     Parameters
     ----------

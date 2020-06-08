@@ -234,6 +234,7 @@ sources:
           UID = extract("uid=([0-9]+)",1,SyslogMessage),
           SourceUser = extract("(by |ruser=)([a-z_][a-z0-9_]*)",2, SyslogMessage)
         | extend Account = User
+        | extend LogonTypeName = ProcessName
         | extend LogonProcessName = ProcessName
         {add_query_items}'
     parameters:

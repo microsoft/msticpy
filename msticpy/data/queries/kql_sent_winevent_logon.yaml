@@ -32,6 +32,7 @@ defaults:
             TargetLogonId,
             LogonProcessName,
             LogonType,
+            LogonTypeName,
             AuthenticationPackageName,
             Status,
             IpAddress,
@@ -169,6 +170,7 @@ sources:
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | extend LogonResult = iif(EventID==4624, "Success", "Failure")
+        | extend SourceIP = IpAddress
         {add_query_items}'
     parameters:
       host_name:

@@ -1,4 +1,6 @@
+from collections import defaultdict
 import unittest
+
 import numpy as np
 
 from ..msticpy.analysis.anomalous_sequence.utils import cmds_only
@@ -36,10 +38,9 @@ class TestCmdsOnly(unittest.TestCase):
 
     def test_compute_counts(self):
         sessions = [[]]
-        seq1_expected = {START_TOKEN: 3, END_TOKEN: 3, UNK_TOKEN: 4}
+        seq1_expected = {START_TOKEN: 1, END_TOKEN: 1}
         seq2_expected = {
-            START_TOKEN: {END_TOKEN: 2, UNK_TOKEN: 1},
-            UNK_TOKEN: {END_TOKEN: 1, UNK_TOKEN: 1},
+            START_TOKEN: {END_TOKEN: 1},
         }
         seq1_actual, seq2_actual = cmds_only.compute_counts(
             sessions=sessions,
@@ -52,6 +53,47 @@ class TestCmdsOnly(unittest.TestCase):
 
         cmd = "Set-User"
         sessions = [[cmd]]
+        seq1_expected = {START_TOKEN: 1, cmd: 1, END_TOKEN: 1}
+        seq2_expected = {
+            START_TOKEN: {cmd: 1},
+            cmd: {END_TOKEN: 1},
+        }
+
+        seq1_actual, seq2_actual = cmds_only.compute_counts(
+            sessions=sessions,
+            start_token=START_TOKEN,
+            end_token=END_TOKEN,
+            unk_token=UNK_TOKEN,
+        )
+        self.assertDictEqual(seq1_actual, seq1_expected)
+        self.assertDictEqual(seq2_actual, seq2_expected)
+
+    def test_laplace_smooth_counts(self):
+        # sessions = [[]]
+        _seq1 = defaultdict(lambda: 0, {START_TOKEN: 1, END_TOKEN: 1})
+        _seq2 = defaultdict(lambda: defaultdict(lambda: 0))
+        _seq2[START_TOKEN][END_TOKEN] = 1
+        seq1_expected = {START_TOKEN: 3, END_TOKEN: 3, UNK_TOKEN: 4}
+        seq2_expected = {
+            START_TOKEN: {END_TOKEN: 2, UNK_TOKEN: 1},
+            UNK_TOKEN: {END_TOKEN: 1, UNK_TOKEN: 1},
+        }
+        seq1_actual, seq2_actual = cmds_only.laplace_smooth_counts(
+            seq1_counts=_seq1,
+            seq2_counts=_seq2,
+            start_token=START_TOKEN,
+            end_token=END_TOKEN,
+            unk_token=UNK_TOKEN,
+        )
+        self.assertDictEqual(seq1_actual, seq1_expected)
+        self.assertDictEqual(seq2_actual, seq2_expected)
+
+        cmd = "Set-User"
+        # sessions = [[cmd]]
+        _seq1 = defaultdict(lambda: 0, {START_TOKEN: 1, cmd: 1, END_TOKEN: 1})
+        _seq2 = defaultdict(lambda: defaultdict(lambda: 0))
+        _seq2[START_TOKEN][cmd] = 1
+        _seq2[cmd][END_TOKEN] = 1
         seq1_expected = {START_TOKEN: 4, cmd: 7, END_TOKEN: 4, UNK_TOKEN: 6}
         seq2_expected = {
             START_TOKEN: {cmd: 2, END_TOKEN: 1, UNK_TOKEN: 1},
@@ -59,8 +101,9 @@ class TestCmdsOnly(unittest.TestCase):
             UNK_TOKEN: {cmd: 1, END_TOKEN: 1, UNK_TOKEN: 1},
         }
 
-        seq1_actual, seq2_actual = cmds_only.compute_counts(
-            sessions=sessions,
+        seq1_actual, seq2_actual = cmds_only.laplace_smooth_counts(
+            seq1_counts=_seq1,
+            seq2_counts=_seq2,
             start_token=START_TOKEN,
             end_token=END_TOKEN,
             unk_token=UNK_TOKEN,

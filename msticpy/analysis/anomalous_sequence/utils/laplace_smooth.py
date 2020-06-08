@@ -6,6 +6,7 @@
 """Helper module for laplace smoothing counts."""
 
 from typing import Tuple, List, DefaultDict
+import copy
 
 
 def laplace_smooth_cmd_counts(
@@ -41,8 +42,8 @@ def laplace_smooth_cmd_counts(
         sequence command (length 2) counts
 
     """
-    seq1_counts_ls = seq1_counts.copy()
-    seq2_counts_ls = seq2_counts.copy()
+    seq1_counts_ls = copy.deepcopy(seq1_counts)
+    seq2_counts_ls = copy.deepcopy(seq2_counts)
 
     cmds: List[str] = list(seq1_counts_ls.keys()) + [unk_token]
     for cmd1 in cmds:
@@ -85,8 +86,8 @@ def laplace_smooth_param_counts(
         param conditional on command probabilities
 
     """
-    param_counts_ls = param_counts.copy()
-    cmd_param_counts_ls = cmd_param_counts.copy()
+    param_counts_ls = copy.deepcopy(param_counts)
+    cmd_param_counts_ls = copy.deepcopy(cmd_param_counts)
 
     params: List[str] = list(param_counts.keys()) + [unk_token]
     for cmd in cmds:
@@ -128,8 +129,8 @@ def laplace_smooth_value_counts(
         value conditional on param probabilities
 
     """
-    value_counts_ls = value_counts.copy()
-    param_value_counts_ls = param_value_counts.copy()
+    value_counts_ls = copy.deepcopy(value_counts)
+    param_value_counts_ls = copy.deepcopy(param_value_counts)
 
     values: List[str] = list(value_counts_ls.keys()) + [unk_token]
     for param in params:
