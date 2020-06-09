@@ -47,7 +47,7 @@ class TestTimeSeries(unittest.TestCase):
         self.assertIn("baseline", out_df.columns)
         self.assertIn("score", out_df.columns)
         self.assertIn("anomalies", out_df.columns)
-        self.assertGreater(len(out_df[out_df['anomalies'] == 1]), 0)
+        self.assertGreater(len(out_df[out_df["anomalies"] == 1]), 0)
 
     @pytest.mark.skipif(
         not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
