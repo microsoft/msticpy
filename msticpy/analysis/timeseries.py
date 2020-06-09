@@ -27,7 +27,7 @@ _DEFAULT_KWARGS = [
 @export
 def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs,) -> pd.DataFrame:
     """
-    Discover anomalies in Timeseries data using STL (Seasonal-Trend Decomposition using LOESS) method using statsmodels package.
+    Discover anomalies in Timeseries data using STL(Seasonal-Trend Decomposition using LOESS) method.
 
     Parameters
     ----------
