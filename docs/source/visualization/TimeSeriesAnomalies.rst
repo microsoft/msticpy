@@ -344,9 +344,9 @@ the similar details
     </div>
 
 Using MSTICPY - Seasonal-Trend decomposition using LOESS (STL)
---------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this case, we will use function msticpy function `timeseries_anomalies_stl` which leverages `STL` method from `statsmodels` API to decompose a time series into three components: trend, seasonal and residual. STL uses LOESS (locally estimated scatterplot smoothing) to extract smooths estimates of the three components. The key inputs into STL are:
+In this case, we will use msticpy function `timeseries_anomalies_stl` which leverages `STL` method from `statsmodels` API to decompose a time series into three components: trend, seasonal and residual. STL uses LOESS (locally estimated scatterplot smoothing) to extract smooths estimates of the three components. The key inputs into STL are:
 
 - season - The length of the seasonal smoother. Must be odd.
 - trend - The length of the trend smoother, usually around 150% of season. Must be odd and larger than season.
@@ -383,7 +383,7 @@ timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.
     pd.DataFrame
         Returns a dataframe with additional columns by decomposing time series data
         into residual, trend, seasonal, weights, baseline, score and anomalies.
-        The anomalies column will have 0, 1,-1 values based on score_threshold set.
+        The anomalies column will have 0,1,-1 values based on score_threshold set.
 
 .. code:: ipython3
 
