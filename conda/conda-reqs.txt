@@ -22,8 +22,10 @@ pytz
 pyyaml
 requests
 scikit-learn
+scipy
 seaborn
 setuptools
+statsmodels
 tqdm
 typing
 urllib3
