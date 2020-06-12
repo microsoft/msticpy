@@ -11,6 +11,7 @@ from collections import Counter
 from typing import List, Dict, Any, Optional, Union
 
 import pandas as pd
+from IPython.display import HTML
 
 from .entityschema import Entity, Process, Account, Host
 from ..data.query_defns import QueryParamProvider, DataFamily, DataEnvironment
@@ -104,6 +105,10 @@ class SecurityBase(QueryParamProvider):
         if len(params) > 80:
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
+
+    def _repr_html_(self) -> HTML:
+        """Display in IPython."""
+        return self.to_html()
 
     # def __getstate__(self):
     #     """Return dictionary of state for serialization/pickling."""
