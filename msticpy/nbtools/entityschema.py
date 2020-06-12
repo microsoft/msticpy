@@ -16,6 +16,8 @@ from enum import Enum
 # pylint: disable=locally-disabled, unused-import
 from typing import Mapping, Any, Union, Dict, Type
 
+from IPython.display import HTML
+
 from ..common.utility import export
 from .._version import VERSION
 
@@ -170,6 +172,33 @@ class Entity(ABC):
                 else:
                     ent_dict[prop] = val
         return ent_dict
+
+    def _repr_html_(self) -> HTML:
+        """
+        Display entity in IPython/Notebook.
+
+        Returns
+        -------
+        HTML
+            IPython HTML object
+
+        """
+        return self.to_html()
+
+    def to_html(self) -> str:
+        """
+        Return HTML representation of entity.
+
+        Returns
+        -------
+        str
+            HTML representation of entity
+
+        """
+        e_text = str(self)
+        e_type = self.Type
+        e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
+        return f"<h3>{e_type}</h3>{e_text}"
 
     @property
     def properties(self) -> dict:
