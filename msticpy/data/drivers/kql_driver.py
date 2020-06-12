@@ -40,11 +40,11 @@ class KqlDriver(DriverBase):
         if not self._loaded:
             self._load_kql_magic()
 
+        self._schema: Dict[str, Any] = {}
+
         if connection_str:
             self.current_connection = connection_str
             self.connect(connection_str)
-
-        self._schema: Dict[str, Any] = {}
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
