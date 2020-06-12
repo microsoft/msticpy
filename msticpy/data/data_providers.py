@@ -17,6 +17,7 @@ from .drivers import (
     SecurityGraphDriver,
     MDATPDriver,
     LocalDataDriver,
+    SplunkDriver,
 )
 from .query_store import QueryStore
 from .param_extractor import extract_query_params
@@ -36,6 +37,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
     DataEnvironment.MDATP: MDATPDriver,
     DataEnvironment.LocalData: LocalDataDriver,
+    DataEnvironment.Splunk: SplunkDriver,
 }
 
 
