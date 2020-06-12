@@ -268,19 +268,25 @@ def format_logon(
     if isinstance(logon_event, pd.DataFrame):
         for _, logon_row in logon_event.iterrows():
             logon_record = _fmt_single_row(logon_row, os_family)
-            logon_output.append(f"<tr><td>{'<br>'.join(logon_record)}</td></tr>")
+            logon_output.append(
+                "<tr class='cell_logon'><td class='cell_logon'>"
+                + f"{'<br>'.join(logon_record)}</td></tr>"
+            )
     elif isinstance(logon_event, pd.Series):
         logon_record = _fmt_single_row(logon_event, os_family)
-        logon_output.append(f"<tr><td>{'<br>'.join(logon_record)}</td></tr>")
+        logon_output.append(
+            "<tr class='cell_logon'><td class='cell_logon'>"
+            + f"{'<br>'.join(logon_record)}</td></tr>"
+        )
 
     t_style = """
         <style>
-            table, td, th {border: 1px solid #ddd !important; text-align: left !important;}
-            table {border-collapse: collapse; width: 30%;}
-            th, td {padding: 15px !important;}
+            .table_logon {border-collapse: collapse; width: 50%;}
+            .cell_logon {border: 1px solid #ddd !important;
+                text-align: left !important; padding: 15px !important;}
         </style>
         """
-    return HTML(f"{t_style}<table>{''.join(logon_output)}</table>")
+    return HTML(f"{t_style}<table class='table_logon'>{''.join(logon_output)}</table>")
 
 
 def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
