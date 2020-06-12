@@ -6,18 +6,16 @@
 """Module for SecurityAlert class."""
 import html
 import re
-from datetime import datetime
 from collections import Counter
-from typing import List, Dict, Any, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
-from IPython.display import HTML
 
-from .entityschema import Entity, Process, Account, Host
-from ..data.query_defns import QueryParamProvider, DataFamily, DataEnvironment
-from ..common.utility import escape_windows_path
-from ..common.utility import export
 from .._version import VERSION
+from ..common.utility import escape_windows_path, export
+from ..data.query_defns import DataEnvironment, DataFamily, QueryParamProvider
+from .entityschema import Account, Entity, Host, Process
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -106,7 +104,7 @@ class SecurityBase(QueryParamProvider):
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
 
-    def _repr_html_(self) -> HTML:
+    def _repr_html_(self) -> str:
         """Display in IPython."""
         return self.to_html()
 
