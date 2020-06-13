@@ -10,7 +10,7 @@ import pandas as pd
 
 from ..msticpy.nbtools.security_alert import SecurityAlert
 from ..msticpy.nbtools.security_alert_graph import create_alert_graph
-from ..msticpy.nbtools.nbdisplay import get_displayable_alert
+from ..msticpy.nbtools.nbdisplay import format_alert
 from ..msticpy.data.query_defns import DataFamily, DataEnvironment
 
 
@@ -224,9 +224,9 @@ class TestSecurityAlert(unittest.TestCase):
         alert_html = alert.to_html(show_entities=False)
         self.assertIsNotNone(alert_html)
 
-        alert_html = get_displayable_alert(alert)
+        alert_html = format_alert(alert)
         self.assertIsNotNone(alert_html)
-        alert_html = get_displayable_alert(self.raw_alert)
+        alert_html = format_alert(self.raw_alert)
         self.assertIsNotNone(alert_html)
 
     def test_alert_graph(self):
