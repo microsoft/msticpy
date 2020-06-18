@@ -374,14 +374,6 @@ def is_ipython() -> bool:
     return bool(get_ipython())
 
 
-class MsticpyException(Exception):
-    """Default exception class for msticpy."""
-
-
-class MsticpyConfigException(Exception):
-    """Configuration exception class for msticpy."""
-
-
 def check_kwarg(arg_name: str, legal_args: List[str]):
     """
     Check argument names against a list.

@@ -13,7 +13,7 @@ import pandas as pd
 
 from ...nbtools import timeline
 from .model import Model
-from ...common.utility import MsticpyException
+from ...common.exceptions import MsticpyException
 
 
 def score_sessions(
@@ -29,18 +29,15 @@ def score_sessions(
     session_column: str
         name of the column which contains the sessions
         The values in the session column should take one of the following formats:
-            examples formats of a session:
-            1) ['Set-User', 'Set-Mailbox']
-            2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
-                Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
-            3) [Cmd(
-                    name='Set-User',
-                    params={'Identity': 'blahblah', 'Force': 'true'}
-                ),
-                Cmd(
-                    name='Set-Mailbox',
-                    params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
-                )]
+
+        1) ['Set-User', 'Set-Mailbox']
+        2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+           Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+        3) [Cmd(name='Set-User',
+           params={'Identity': 'blahblah', 'Force': 'true'}),
+           Cmd(name='Set-Mailbox',
+           params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+
         The Cmd datatype can be accessed from
         anomalous_sequence.utils.data_structures.Cmd
     window_length: int
@@ -174,18 +171,15 @@ def score_and_visualise_sessions(
     session_column: str
         name of the column which contains the sessions
         The values in the session column should take one of the following formats:
-            examples formats of a session:
-            1) ['Set-User', 'Set-Mailbox']
-            2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
-                Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
-            3) [Cmd(
-                    name='Set-User',
-                    params={'Identity': 'blahblah', 'Force': 'true'}
-                ),
-                Cmd(
-                    name='Set-Mailbox',
-                    params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
-                )]
+
+        1) ['Set-User', 'Set-Mailbox']
+        2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+           Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+        3) [Cmd(name='Set-User',
+           params={'Identity': 'blahblah', 'Force': 'true'}),
+           Cmd(name='Set-Mailbox',
+           params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+
         The Cmd datatype can be accessed from
         seqeunce.utils.data_structures.Cmd
     window_length: int

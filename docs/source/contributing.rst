@@ -1,6 +1,9 @@
 Contributing
 ============
 
+For (brief) developer guidelines, see this wiki article
+`Contributor Guidelines <https://github.com/microsoft/msticpy/wiki/Contributor-guidelines>`__.
+
 This project welcomes contributions and suggestions. Most contributions
 require you to agree to a Contributor License Agreement (CLA) declaring
 that you have the right to, and actually do, grant us the rights to use

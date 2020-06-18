@@ -559,6 +559,8 @@ class SelectAlert:
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
+                if idx == len(self._disp_elems):
+                    break
                 self._disp_elems[idx].update(out_obj)
 
     def _ipython_display_(self):
@@ -864,6 +866,8 @@ class SelectItem:
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
+                if idx == len(self._disp_elems):
+                    break
                 self._disp_elems[idx].update(out_obj)
 
     def display(self):
