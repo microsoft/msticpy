@@ -199,115 +199,20 @@ results.
     resources.head()
 
 
-.. raw:: html
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
+|   | resource_id                                        | name                                               | resource_type                      | location    | tags                                        | plan  | properties  | kind     | managed_by                                         | sku                                                | identity  |
++===+====================================================+====================================================+====================================+=============+=============================================+=======+=============+==========+====================================================+====================================================+===========+
+| 0 | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | cloud-shell-storage-westeurope-vnet                | Microsoft.Network/virtualNetworks  | centralus   | {}                                          | None  | None        | None     | None                                               | None                                               | None      |
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
+| 1 | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | csb3b701f84d04bx4479x89b                           | Microsoft.Storage/storageAccounts  | westeurope  | {'ms-resource-usage': 'azure-cloud-shell'}  | None  | None        | Storage  | None                                               | {'additional_properties': {}, 'name': 'Standar...  | None      |
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
+| 2 | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | bluepot-01_OsDisk_1_ad7a7c0383444f02830ba46418...  | Microsoft.Compute/disks            | westus      | None                                        | None  | None        | None     | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | None                                               | None      |
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
+| 3 | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | bluepot-02_OsDisk_1_dce988e082e54617ae3622eca0...  | Microsoft.Compute/disks            | westus      | None                                        | None  | None        | None     | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | None                                               | None      |
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
+| 4 | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | CentOS-Test_OsDisk_1_7ee38d36b893481e8a68405c0...  | Microsoft.Compute/disks            | westus      | None                                        | None  | None        | None     | /subscriptions/3b701f84-d04b-4479-89b1-fa8827e...  | {'additional_properties': {}, 'name': 'Premium...  | None      |
++---+----------------------------------------------------+----------------------------------------------------+------------------------------------+-------------+---------------------------------------------+-------+-------------+----------+----------------------------------------------------+----------------------------------------------------+-----------+
 
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>resource_id</th>
-          <th>name</th>
-          <th>resource_type</th>
-          <th>location</th>
-          <th>tags</th>
-          <th>plan</th>
-          <th>properties</th>
-          <th>kind</th>
-          <th>managed_by</th>
-          <th>sku</th>
-          <th>identity</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>0</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>cloud-shell-storage-westeurope-vnet</td>
-          <td>Microsoft.Network/virtualNetworks</td>
-          <td>centralus</td>
-          <td>{}</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>csb3b701f84d04bx4479x89b</td>
-          <td>Microsoft.Storage/storageAccounts</td>
-          <td>westeurope</td>
-          <td>{'ms-resource-usage': 'azure-cloud-shell'}</td>
-          <td>None</td>
-          <td>None</td>
-          <td>Storage</td>
-          <td>None</td>
-          <td>{'additional_properties': {}, 'name': 'Standar...</td>
-          <td>None</td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>bluepot-01_OsDisk_1_ad7a7c0383444f02830ba46418...</td>
-          <td>Microsoft.Compute/disks</td>
-          <td>westus</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>None</td>
-          <td>None</td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>bluepot-02_OsDisk_1_dce988e082e54617ae3622eca0...</td>
-          <td>Microsoft.Compute/disks</td>
-          <td>westus</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>None</td>
-          <td>None</td>
-        </tr>
-        <tr>
-          <td>4</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>CentOS-Test_OsDisk_1_7ee38d36b893481e8a68405c0...</td>
-          <td>Microsoft.Compute/disks</td>
-          <td>westus</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>None</td>
-          <td>/subscriptions/3b701f84-d04b-4479-89b1-fa8827e...</td>
-          <td>{'additional_properties': {}, 'name': 'Premium...</td>
-          <td>None</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-|
 
 See :py:meth:`get_resource_details<msticpy.data.azure_data.AzureData.get_resource_details>`
 

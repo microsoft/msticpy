@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 
 from .._version import VERSION
-from ..common.utility import export, MsticpyException
+from ..common.exceptions import MsticpyException
+from ..common.utility import export
 from .base64unpack import unpack
 
 __version__ = VERSION

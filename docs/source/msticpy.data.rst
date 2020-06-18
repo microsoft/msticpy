@@ -1,9 +1,6 @@
 msticpy.data package
 ====================
 
-Submodules
-----------
-
 msticpy.nbtools.entityschema module
 -----------------------------------
 
@@ -144,11 +141,3 @@ msticpy.nbtools.query\_schema module
 .. deprecated:: version 0.2.0
    Use :py:class:`msticpy.data.QueryProvider` instead.
 
-
-Module contents
----------------
-
-.. automodule:: msticpy.data
-    :members:
-    :undoc-members:
-    :show-inheritance:

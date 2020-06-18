@@ -13,7 +13,7 @@ from pytest import raises
 from ..msticpy.common import pkg_config
 from ..msticpy.nbtools.entityschema import Host
 from ..msticpy.sectools import syslog_utils as ls
-from ..msticpy.common.utility import MsticpyException
+from ..msticpy.common.exceptions import MsticpyException
 from ..msticpy.sectools import cmd_line as cl
 from ..msticpy.common.provider_settings import get_provider_settings
 from ..msticpy.sectools.geoip import GeoIPDatabaseException

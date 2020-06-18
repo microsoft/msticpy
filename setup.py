@@ -57,14 +57,20 @@ INSTALL_REQUIRES = [
 ]
 
 
-# pylint: disable=locally-disabled, invalid-name
 with open("README.md", "r") as fh:
-    long_description = fh.read()
+    LONG_DESC = fh.read()
 
+# pylint: disable=locally-disabled, invalid-name
 with open("msticpy/_version.py", "r") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
 # pylint: enable=locally-disabled, invalid-name
+
+with open("requirements.txt", "r") as fh:
+    INSTALL_REQUIRES = fh.readlines()
+
+with open("requirements-dev.txt", "r") as fh:
+    INSTALL_DEV_REQUIRES = fh.readlines()
 
 setuptools.setup(
     name="msticpy",
@@ -73,7 +79,7 @@ setuptools.setup(
     author_email="ianhelle@microsoft.com",
     description="MSTIC Security Tools",
     license="MIT License",
-    long_description=long_description,
+    long_description=LONG_DESC,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/msticpy",
     project_urls={
@@ -89,6 +95,7 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
     ],
     install_requires=INSTALL_REQUIRES,
+    extras_require={"dev": INSTALL_DEV_REQUIRES},
     keywords=["security", "azure", "sentinel"],
     zip_safe=False,
     include_package_data=True,

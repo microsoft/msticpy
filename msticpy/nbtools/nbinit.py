@@ -5,24 +5,23 @@
 # --------------------------------------------------------------------------
 """Initialization for Jupyter Notebooks."""
 import os
+from functools import wraps
 import importlib
 import sys
 import warnings
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Dict, Callable
 
+from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import display, HTML
 import ipywidgets as widgets
 from matplotlib import MatplotlibDeprecationWarning
 import pandas as pd
 import seaborn as sns
 
-from ..common.utility import (
-    check_and_install_missing_packages,
-    MsticpyException,
-    unit_testing,
-)
-from ..common.pkg_config import validate_config
+from ..common.exceptions import MsticpyUserError, MsticpyException
+from ..common.utility import check_and_install_missing_packages, unit_testing
+from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .._version import VERSION
 
@@ -73,6 +72,7 @@ def init_notebook(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
+    friendly_exceptions: Optional[bool] = None,
     verbose: bool = False,
 ) -> bool:
     """
@@ -101,6 +101,11 @@ def init_notebook(
         the "as alias" part of the import statement.
         If you want to provide just `source_pkg` and `alias` include
         an additional placeholder comma: e.g. "pandas, , pd"
+    friendly_exceptions : Optional[bool]
+        Setting this to True causes msticpy to hook the notebook
+        exception hander. Any exceptions derived from MsticpyUserException
+        are displayed but do not produce a stack trace, etc.
+        Defaults to system/user settings if no value is supplied.
     verbose : bool, optional
         Display more verbose status, by default False
 
@@ -128,6 +133,14 @@ def init_notebook(
     print("Setting options....")
     _set_nb_options(namespace)
 
+    if friendly_exceptions is None:
+        friendly_exceptions = get_config("msticpy.FriendlyExceptions")
+    if friendly_exceptions:
+        if verbose:
+            print("Friendly exceptions enabled.")
+        InteractiveShell.showtraceback = _hook_ipython_exceptions(
+            InteractiveShell.showtraceback
+        )
     if not imp_ok or not conf_ok:
         display(HTML("<font color='red'><h3>Notebook setup failed</h3>"))
         return False
@@ -303,3 +316,20 @@ def _check_and_reload_pkg(
     if _VERBOSE():  # type: ignore
         print(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg
+
+
+def _hook_ipython_exceptions(func):
+    """Hooks the `func` and bypasses it if exception is MsticpyUserException."""
+
+    @wraps(func)
+    def showtraceback(*args, **kwargs):
+        """Replace IPython showtraceback."""
+        # extract exception type, value and traceback
+        e_type, _, _ = sys.exc_info()
+        if e_type is not None and issubclass(e_type, MsticpyUserError):
+            return None
+        # otherwise run the original hook
+        value = func(*args, **kwargs)
+        return value
+
+    return showtraceback
