@@ -67,9 +67,35 @@ def _get_verbose_setting() -> Callable[[Optional[bool]], bool]:
 
 _VERBOSE = _get_verbose_setting()
 
+_NB_IMPORTS = [
+    dict(pkg="pandas", alias="pd"),
+    dict(pkg="IPython", tgt="get_ipython"),
+    dict(pkg="IPython.display", tgt="display"),
+    dict(pkg="IPython.display", tgt="HTML"),
+    dict(pkg="IPython.display", tgt="Markdown"),
+    dict(pkg="ipywidgets", alias="widgets"),
+    dict(pkg="pathlib", tgt="Path"),
+    dict(pkg="matplotlib.pyplot", alias="plt"),
+    dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
+    dict(pkg="seaborn", alias="sns"),
+    dict(pkg="numpy", alias="np"),
+]
+_MP_IMPORTS = [
+    dict(pkg="msticpy.data", tgt="QueryProvider"),
+    dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
+    dict(pkg="msticpy.nbtools.utility", tgt="md"),
+    dict(pkg="msticpy.nbtools.utility", tgt="md_warn"),
+    dict(pkg="msticpy.nbtools.wsconfig", tgt="WorkspaceConfig"),
+]
+_MP_IMPORT_ALL = [
+    dict(module_name="msticpy.nbtools"),
+    dict(module_name="msticpy.sectools"),
+]
+
 
 def init_notebook(
     namespace: Dict[str, Any],
+    def_imports: str = "all",
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
     friendly_exceptions: Optional[bool] = None,
@@ -83,6 +109,13 @@ def init_notebook(
     namespace : Dict[str, Any]
         Namespace (usually globals()) into which imports
         are to be populated.
+    def_imports : str, optional
+        Import default packages. By default "all".
+        Possible values are:
+        - "all" - import all packages
+        - "nb" - import common notebook packages
+        - "msticpy" - import msticpy packages
+        - "none" (or any other value) don't load any default packages.
     additional_packages : List[str], optional
         Additional packages to be pip installed,
         by default None.
@@ -125,7 +158,7 @@ def init_notebook(
     _VERBOSE(verbose)
 
     print("Processing imports....")
-    imp_ok = _global_imports(namespace, additional_packages, extra_imports)
+    imp_ok = _global_imports(namespace, additional_packages, extra_imports, def_imports)
 
     print("Checking configuration....")
     conf_ok = _check_config
@@ -152,54 +185,25 @@ def _global_imports(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
+    def_imports: str = "all",
 ):
     try:
-        _imp_from_package(nm_spc=namespace, pkg="pandas", alias="pd")
-        _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
+        if def_imports.casefold() in ["all", "nb"]:
+            for imp_pkg in _NB_IMPORTS:
+                _imp_from_package(nm_spc=namespace, **imp_pkg)
 
-        _imp_from_package(nm_spc=namespace, pkg="IPython", tgt="get_ipython")
-        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="display")
-        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="HTML")
-        _imp_from_package(nm_spc=namespace, pkg="IPython.display", tgt="Markdown")
-        _imp_from_package(nm_spc=namespace, pkg="ipywidgets", alias="widgets")
-        _imp_from_package(nm_spc=namespace, pkg="pathlib", tgt="Path")
-        _imp_from_package(nm_spc=namespace, pkg="matplotlib.pyplot", alias="plt")
-        _imp_from_package(
-            nm_spc=namespace, pkg="matplotlib", tgt="MatplotlibDeprecationWarning"
-        )
-        _imp_from_package(nm_spc=namespace, pkg="seaborn", alias="sns")
-        _imp_from_package(nm_spc=namespace, pkg="numpy", alias="np")
+            _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
-        # msticpy imports
-        _imp_from_package(nm_spc=namespace, pkg="msticpy.data", tgt="QueryProvider")
-        _imp_module_all(nm_spc=namespace, module_name="msticpy.nbtools")
-        _imp_module_all(nm_spc=namespace, module_name="msticpy.sectools")
-        _imp_from_package(
-            nm_spc=namespace, pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"
-        )
-        _imp_from_package(nm_spc=namespace, pkg="msticpy.nbtools.utility", tgt="md")
-        _imp_from_package(
-            nm_spc=namespace, pkg="msticpy.nbtools.utility", tgt="md_warn"
-        )
-        _imp_from_package(
-            nm_spc=namespace, pkg="msticpy.nbtools.wsconfig", tgt="WorkspaceConfig"
-        )
+        if def_imports.casefold() in ["all", "msticpy"]:
+            for imp_pkg in _MP_IMPORTS:
+                _imp_from_package(nm_spc=namespace, **imp_pkg)
+            for imp_pkg in _MP_IMPORT_ALL:
+                _imp_module_all(nm_spc=namespace, **imp_pkg)
 
         if additional_packages:
             check_and_install_missing_packages(additional_packages)
         if extra_imports:
-            for imp_spec in extra_imports:
-                params: List[Optional[str]] = [None, None, None]
-                for idx, param in enumerate(imp_spec.split(",")):
-                    params[idx] = param.strip() or None
-
-                if params[0] is None:
-                    raise MsticpyException(
-                        f"First parameter in extra_imports is mandatory: {imp_spec}"
-                    )
-                _imp_from_package(
-                    nm_spc=namespace, pkg=params[0], tgt=params[1], alias=params[2]
-                )
+            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -212,7 +216,7 @@ def _check_config():
     if not Path(mp_path).exists():
         display(HTML(_MISSING_MPCONFIG_ERR))
     else:
-        err_warn = validate_config()
+        err_warn = validate_config(config_file=mp_path)
         if err_warn and err_warn[0]:
             print("Errors found in msticpy configuration.")
             config_ok = False
@@ -241,6 +245,19 @@ def _set_nb_options(namespace):
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
+
+
+def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
+    for imp_spec in extra_imports:
+        params: List[Optional[str]] = [None, None, None]
+        for idx, param in enumerate(imp_spec.split(",")):
+            params[idx] = param.strip() or None
+
+        if params[0] is None:
+            raise MsticpyException(
+                f"First parameter in extra_imports is mandatory: {imp_spec}"
+            )
+        _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
 
 
 def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
