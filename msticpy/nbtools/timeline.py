@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from typing import Any, Union, Set, Dict, Tuple, List
 
 import numpy as np
@@ -597,8 +597,8 @@ def _unpack_data_series_dict(data, **kwargs):
     # Process the input dictionary
     # Take each item that is passed and fill in blanks and add a y_index
     tool_tip_columns: Set[str] = set()
-    min_time = pd.Timestamp(pd.Timestamp.max, tzinfo=timezone(timedelta(0)))
-    max_time = pd.Timestamp(pd.Timestamp.min, tzinfo=timezone(timedelta(0)))
+    min_time = None
+    max_time = None
     y_index = 0
 
     # Create a color map in case colors have not been specified
@@ -622,8 +622,13 @@ def _unpack_data_series_dict(data, **kwargs):
             time_col = time_column
             series_def["time_column"] = time_col
 
-        min_time = min(min_time, series_data[time_col].min())
-        max_time = max(max_time, series_data[time_col].max())
+        if min_time is None:
+            min_time = series_data[time_col].min()
+            max_time = series_data[time_col].max()
+        else:
+            min_time = min(min_time, series_data[time_col].min())
+            max_time = max(max_time, series_data[time_col].max())
+
         data_columns.update([time_col])
         # Create the Column data source to plot
         graph_df = series_data[list(data_columns)].copy()
