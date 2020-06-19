@@ -8,8 +8,8 @@
 import unittest
 import os
 
-from ..msticpy.nbtools.observationlist import Observation, Observations
-from ..msticpy._version import VERSION
+from msticpy.nbtools.observationlist import Observation, Observations
+from msticpy._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -9,8 +9,8 @@ import os
 from os import path
 
 import pandas as pd
-from ..msticpy.sectools.vtlookup import VTLookup
-from ..msticpy.sectools.tiproviders.ti_provider_base import preprocess_observable
+from msticpy.sectools.vtlookup import VTLookup
+from msticpy.sectools.tiproviders.ti_provider_base import preprocess_observable
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

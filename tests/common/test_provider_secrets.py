@@ -18,8 +18,8 @@ import keyring
 
 from azure.core.exceptions import ResourceNotFoundError
 
-from ...msticpy.common import secret_settings
-from ...msticpy.common.keyvault_client import (
+from msticpy.common import secret_settings
+from msticpy.common.keyvault_client import (
     AuthClient,
     KeyringAuthClient,
     BHKeyVaultClient,
@@ -29,9 +29,9 @@ from ...msticpy.common.keyvault_client import (
     MsticpyKeyVaultMissingSecretError,
     _prompt_for_code,
 )
-from ...msticpy.common import pkg_config
-from ...msticpy.common.provider_settings import get_provider_settings
-from ...msticpy.common.utility import set_unit_testing
+from msticpy.common import pkg_config
+from msticpy.common.provider_settings import get_provider_settings
+from msticpy.common.utility import set_unit_testing
 
 from ..unit_test_lib import get_test_data_path, custom_mp_config
 

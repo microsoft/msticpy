@@ -3,8 +3,8 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from ..msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
-from ..msticpy.analysis.anomalous_sequence import anomalous
+from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
+from msticpy.analysis.anomalous_sequence import anomalous
 
 
 class TestAnomalous(unittest.TestCase):
