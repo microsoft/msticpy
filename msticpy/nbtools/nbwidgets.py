@@ -550,7 +550,7 @@ class SelectAlert:
         output_objs = self.alert_action(self.selected_alert)
         if not output_objs:
             return
-        if not isinstance(output_objs, tuple):
+        if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
         display_objs = bool(self._disp_elems)
         for idx, out_obj in enumerate(output_objs):
@@ -559,6 +559,8 @@ class SelectAlert:
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
+                if idx == len(self._disp_elems):
+                    break
                 self._disp_elems[idx].update(out_obj)
 
     def _ipython_display_(self):
@@ -855,7 +857,7 @@ class SelectItem:
         output_objs = self.item_action(self.value)
         if not output_objs:
             return
-        if not isinstance(output_objs, tuple):
+        if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
         display_objs = bool(self._disp_elems)
         for idx, out_obj in enumerate(output_objs):
@@ -864,6 +866,8 @@ class SelectItem:
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
+                if idx == len(self._disp_elems):
+                    break
                 self._disp_elems[idx].update(out_obj)
 
     def display(self):
