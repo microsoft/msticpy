@@ -18,7 +18,7 @@ set query time boundaries, select and display items from lists, and
 configure the notebook environment.
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Timeline-08.png"
-alt="Timeline" title="Msticpy Timeline Control" width="450" height="300" />
+alt="Timeline" title="Msticpy Timeline Control" height="300" />
 
 The **msticpy** package was initially developed to support
 [Jupyter Notebooks](https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/)
@@ -101,7 +101,7 @@ using either:
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/FoliumMap-01.png"
   alt="Folium map"
-  title="Plotting Geo IP Location" width="300" height="200" />
+  title="Plotting Geo IP Location" height="200" />
 
 [GeoIP Lookup](https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html)
 and
@@ -138,7 +138,7 @@ visualization highlights unusual traffic flows or event activity for any data
 set.
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/TimeSeriesAnomalieswithRangeTool.png"
-alt="Time Series anomalies" title="Time Series anomalies" width="450" height="300" />
+alt="Time Series anomalies" title="Time Series anomalies" height="300" />
 
 [Time Series](https://msticpy.readthedocs.io/en/latest/visualization/TimeSeriesAnomalies.html)
 
@@ -170,7 +170,7 @@ events can often make it difficult to see unique and interesting items.
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/data_analysis/_static/EventClustering_2a.png"
   alt="Clustering"
-  title="Clustering based on command-line variability" width="300" height="400" />
+  title="Clustering based on command-line variability" height="400" />
 
 This is an unsupervised learning module implemented using SciKit Learn DBScan.
 
@@ -187,7 +187,7 @@ you to visualize one or more event streams, interactively zoom into specific tim
 slots and view event details for plotted events.
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/TimeLine-01.png"
-alt="Timeline" title="Msticpy Timeline Control" width="450" height="300" />
+alt="Timeline" title="Msticpy Timeline Control" height="300" />
 
 [Timeline](https://msticpy.readthedocs.io/en/latest/visualization/EventTimeline.html)
 [Timeline Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb)
@@ -204,7 +204,7 @@ There are a set of utility functions to extract individual and partial trees fro
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/process_tree3.png"
 alt="Process Tree"
-title="Interactive Process Tree" width="300" height="400" />
+title="Interactive Process Tree" height="400" />
 
 [Process Tree](https://msticpy.readthedocs.io/en/latest/visualization/ProcessTree.html)
 [Process Tree Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb)
@@ -239,7 +239,8 @@ query time boundary settings and event display into an easy-to-use format.
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Widgets1.png"
   alt="Time span Widget"
-  title="Query time setter" width="300" height="200" />
+  title="Query time setter" height="100" />
+
 
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Widgets4.png"
   alt="Alert browser"
