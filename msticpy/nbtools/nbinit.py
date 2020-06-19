@@ -161,7 +161,7 @@ def init_notebook(
     imp_ok = _global_imports(namespace, additional_packages, extra_imports, def_imports)
 
     print("Checking configuration....")
-    conf_ok = _check_config
+    conf_ok, _ = _check_config()
 
     print("Setting options....")
     _set_nb_options(namespace)
@@ -210,8 +210,9 @@ def _global_imports(
         return False
 
 
-def _check_config():
+def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     config_ok = True
+    err_warn = None
     mp_path = os.environ.get("MSTICPYCONFIG", "./msticpyconfig.yaml")
     if not Path(mp_path).exists():
         display(HTML(_MISSING_MPCONFIG_ERR))
@@ -227,7 +228,7 @@ def _check_config():
     if not ws_config.config_loaded:
         print("No valid configuration for Azure Sentinel found.")
         config_ok = False
-    return config_ok
+    return config_ok, err_warn
 
 
 def _set_nb_options(namespace):

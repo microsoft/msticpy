@@ -7,14 +7,13 @@
 import unittest
 import os
 from pathlib import Path
-from typing import Tuple
 import warnings
 
 import yaml
 
-from ...msticpy.common import pkg_config
-from ...msticpy.common.wsconfig import WorkspaceConfig
-from ...msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
+from msticpy.common import pkg_config
+from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 
 from ..unit_test_lib import get_test_data_path, custom_mp_config
 

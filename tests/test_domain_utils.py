@@ -8,7 +8,7 @@ import os
 
 import pytest
 
-from ..msticpy.sectools import domain_utils
+from msticpy.sectools import domain_utils
 
 
 def test_validate_domain():

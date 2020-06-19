@@ -1,7 +1,7 @@
 import unittest
 
-from ..msticpy.analysis.anomalous_sequence.utils import probabilities
-from ..msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
+from msticpy.analysis.anomalous_sequence.utils import probabilities
+from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
 
 START_TOKEN = "##START##"
 END_TOKEN = "##END##"
@@ -182,7 +182,7 @@ class TestProbabilities(unittest.TestCase):
                 START_TOKEN: {UNK_TOKEN: 0.25},
                 END_TOKEN: {UNK_TOKEN: 0.25},
                 UNK_TOKEN: {UNK_TOKEN: 0.16666666666666666},
-                cmd: {"City": 0.25, "Identity": 0.375, UNK_TOKEN: 0.125,},
+                cmd: {"City": 0.25, "Identity": 0.375, UNK_TOKEN: 0.125},
             },
             UNK_TOKEN,
         )

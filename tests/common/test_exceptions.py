@@ -13,7 +13,7 @@ import pytest_check as check
 from pytest import raises
 
 # pylint: disable=relative-beyond-top-level, redefined-outer-name
-from ...msticpy.common.exceptions import (
+from msticpy.common.exceptions import (
     MsticpyException,
     MsticpyAzureConfigError,
     MsticpyConfigException,

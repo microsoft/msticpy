@@ -12,7 +12,7 @@ import subprocess  # nosec
 import pandas as pd
 import pytest_check as check
 
-from ...msticpy.nbtools.nbinit import init_notebook, _check_config, _imp_module_all
+from msticpy.nbtools.nbinit import init_notebook, _check_config, _imp_module_all
 
 from ..unit_test_lib import TEST_DATA_PATH
 
@@ -70,7 +70,18 @@ def test_check_config():
     mp_var = os.environ.get("MSTICPYCONFIG")
     mp_file = TEST_DATA_PATH + "/msticpyconfig.yaml"
     os.environ["MSTICPYCONFIG"] = mp_file
-    check.is_false(_check_config())
+    result, err_warn = _check_config()
+    if not result:
+        # If failed - err_warn should be set
+        # and item 0 should be populated with errors
+        check.is_not_none(err_warn)
+        check.is_true(err_warn[0])
+    else:
+        # otherwise we have no errors or warnings or
+        # just warnings
+        if err_warn:
+            check.is_false(err_warn[0])
+            check.is_true(err_warn[1])
     os.environ["MSTICPYCONFIG"] = mp_var
 
 

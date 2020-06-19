@@ -10,13 +10,13 @@ import os
 
 import pandas as pd
 
-from ..msticpy.sectools.eventcluster import *
-from ..msticpy.sectools.eventcluster import (
+from msticpy.sectools.eventcluster import *
+from msticpy.sectools.eventcluster import (
     token_count_df,
     delim_count_df,
     char_ord_score_df,
 )
-from ..msticpy.nbtools.security_event import SecurityEvent
+from msticpy.nbtools.security_event import SecurityEvent
 
 
 _test_data_folders = [
