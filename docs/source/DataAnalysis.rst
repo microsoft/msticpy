@@ -8,3 +8,4 @@ Analyzing Data
    data_analysis/Base64Unpack
    data_analysis/IoCExtract
    data_analysis/EventClustering
+   data_analysis/AnomalousSequence
