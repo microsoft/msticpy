@@ -236,7 +236,6 @@ class KqlDriver(DriverBase):
     _TEN_RGX = r"tenant\(['\"](?P<tenant>[^'\"]+)"
 
     def _raise_kql_error(self, ex):
-        del ex
         kql_err = json.loads(ex.args[0]).get("error")
         if kql_err.get("code") == "WorkspaceNotFoundError":
             ex_mssgs = [
