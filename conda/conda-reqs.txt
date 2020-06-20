@@ -2,7 +2,7 @@ adal
 attrs
 azure-common
 azure-mgmt-network
-azure-mgmt-resource
+azure-mgmt-resource>=2.2.0,<=9.0.0
 beautifulsoup4
 bokeh
 cryptography
@@ -22,8 +22,10 @@ pytz
 pyyaml
 requests
 scikit-learn
+scipy
 seaborn
 setuptools
+statsmodels
 tqdm
 typing
 urllib3

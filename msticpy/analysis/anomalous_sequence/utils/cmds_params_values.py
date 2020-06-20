@@ -13,6 +13,7 @@ accompanying params and values.
 
 from collections import defaultdict
 from typing import Tuple, List, Union, DefaultDict
+import copy
 
 import numpy as np
 
@@ -27,9 +28,14 @@ from ....common.utility import MsticpyException
 
 # pylint: disable=too-many-locals, too-many-branches
 def compute_counts(  # noqa MC0001  # nosec
-    sessions: List[List[Cmd]], start_token: str, end_token: str, unk_token: str
+    sessions: List[List[Cmd]], start_token: str, end_token: str
 ) -> Tuple[
-    StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix
+    DefaultDict[str, int],
+    DefaultDict[str, DefaultDict[str, int]],
+    DefaultDict[str, int],
+    DefaultDict[str, DefaultDict[str, int]],
+    DefaultDict[str, int],
+    DefaultDict[str, DefaultDict[str, int]],
 ]:
     """
     Compute the training counts for the sessions.
@@ -39,12 +45,6 @@ def compute_counts(  # noqa MC0001  # nosec
     well as counts of params conditional on the command. It also computes
     the counts of individual values as well as counts of values conditional
     on the param.
-
-    Laplace smoothing is applied to the counts. This is so we shift some of
-    the probability mass from the very probable commands/params/values to
-    the unseen and very unlikely commands/params/values. The `unk_token`
-    means we can handle unseen commands, params, values, sequences of
-    commands
 
     Parameters
     ----------
@@ -68,8 +68,6 @@ def compute_counts(  # noqa MC0001  # nosec
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
         dummy command to signify the end of a session (e.g. "##END##")
-    unk_token: str
-        dummy command to signify an unseen command (e.g. "##UNK##")
 
     Returns
     -------
@@ -115,12 +113,77 @@ def compute_counts(  # noqa MC0001  # nosec
         seq2_counts[prev][end_token] += 1
         seq1_counts[end_token] += 1
 
+    return (
+        seq1_counts,
+        seq2_counts,
+        param_counts,
+        cmd_param_counts,
+        value_counts,
+        param_value_counts,
+    )
+
+
+# pylint: disable=too-many-arguments
+def laplace_smooth_counts(
+    seq1_counts: DefaultDict[str, int],
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]],
+    param_counts: DefaultDict[str, int],
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]],
+    value_counts: DefaultDict[str, int],
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]],
+    start_token: str,
+    end_token: str,
+    unk_token: str,
+) -> Tuple[
+    StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix, StateMatrix
+]:
+    """
+    Laplace smoothing is applied to the counts.
+
+    We do this by adding 1 to each of the counts.
+    This is so we shift some of the probability mass from the very probable
+    commands/params/values to the unseen and very unlikely commands/params/values.
+    The `unk_token` means we can handle unseen commands, params, values, sequences of
+    commands.
+
+    Parameters
+    ----------
+    seq1_counts: DefaultDict[str, int]
+        individual command counts
+    seq2_counts: DefaultDict[str, DefaultDict[str, int]]
+        sequence command (length 2) counts
+    param_counts: DefaultDict[str, int]
+        individual param counts
+    cmd_param_counts: DefaultDict[str, DefaultDict[str, int]]
+        param conditional on command counts
+    value_counts: DefaultDict[str, int]
+        individual value counts
+    param_value_counts: DefaultDict[str, DefaultDict[str, int]]
+        value conditional on param counts
+    start_token: str
+        dummy command to signify the start of a session (e.g. "##START##")
+    end_token: str
+        dummy command to signify the end of a session (e.g. "##END##")
+    unk_token: str
+        dummy command to signify an unseen command (e.g. "##UNK##")
+
+    Returns
+    -------
+    tuple of StateMatrix counts:
+        individual command counts,
+        sequence command (length 2) counts,
+        individual param counts,
+        param conditional on command counts
+        individual value counts,
+        value conditional on param counts
+
+    """
     cmds: List[str] = list(seq1_counts.keys()) + [unk_token]
 
     # apply laplace smoothing to the cmds
-    seq1_counts, seq2_counts = laplace_smooth_cmd_counts(
-        seq1_counts=seq1_counts,
-        seq2_counts=seq2_counts,
+    seq1_counts_ls, seq2_counts_ls = laplace_smooth_cmd_counts(
+        seq1_counts=copy.deepcopy(seq1_counts),
+        seq2_counts=copy.deepcopy(seq2_counts),
         start_token=start_token,
         end_token=end_token,
         unk_token=unk_token,
@@ -129,27 +192,29 @@ def compute_counts(  # noqa MC0001  # nosec
     params: List[str] = list(param_counts.keys()) + [unk_token]
 
     # apply laplace smoothing to the params
-    param_counts, cmd_param_counts = laplace_smooth_param_counts(
+    param_counts_ls, cmd_param_counts_ls = laplace_smooth_param_counts(
         cmds=cmds,
-        param_counts=param_counts,
-        cmd_param_counts=cmd_param_counts,
+        param_counts=copy.deepcopy(param_counts),
+        cmd_param_counts=copy.deepcopy(cmd_param_counts),
         unk_token=unk_token,
     )
 
     # apply laplace smoothing for the values
-    value_counts, param_value_counts = laplace_smooth_value_counts(
+    value_counts_ls, param_value_counts_ls = laplace_smooth_value_counts(
         params=params,
-        value_counts=value_counts,
-        param_value_counts=param_value_counts,
+        value_counts=copy.deepcopy(value_counts),
+        param_value_counts=copy.deepcopy(param_value_counts),
         unk_token=unk_token,
     )
 
-    seq1_counts_sm = StateMatrix(states=seq1_counts, unk_token=unk_token)
-    seq2_counts_sm = StateMatrix(states=seq2_counts, unk_token=unk_token)
-    param_counts_sm = StateMatrix(states=param_counts, unk_token=unk_token)
-    cmd_param_counts_sm = StateMatrix(states=cmd_param_counts, unk_token=unk_token)
-    value_counts_sm = StateMatrix(states=value_counts, unk_token=unk_token)
-    param_value_counts_sm = StateMatrix(states=param_value_counts, unk_token=unk_token)
+    seq1_counts_sm = StateMatrix(states=seq1_counts_ls, unk_token=unk_token)
+    seq2_counts_sm = StateMatrix(states=seq2_counts_ls, unk_token=unk_token)
+    param_counts_sm = StateMatrix(states=param_counts_ls, unk_token=unk_token)
+    cmd_param_counts_sm = StateMatrix(states=cmd_param_counts_ls, unk_token=unk_token)
+    value_counts_sm = StateMatrix(states=value_counts_ls, unk_token=unk_token)
+    param_value_counts_sm = StateMatrix(
+        states=param_value_counts_ls, unk_token=unk_token
+    )
 
     return (
         seq1_counts_sm,
