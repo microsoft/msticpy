@@ -49,7 +49,7 @@ def check_version():
     installed_version = LooseVersion(__version__)
 
     # fetch package metadata from PyPI
-    pypi_url = f"https://pypi.org/pypi/{name}/json"
+    pypi_url = f"https://pypi.org/pypi/msticpy/json"
     pkg_data = requests.get(pypi_url).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:

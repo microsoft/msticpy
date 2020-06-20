@@ -20,6 +20,7 @@ import requests
 __author__ = "Ian Hellen, hoefling"
 
 
+# pylint: disable=invalid-name
 if __name__ == "__main__":
     name = "msticpy"
     installed_version = LooseVersion(version(name))

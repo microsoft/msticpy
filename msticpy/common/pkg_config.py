@@ -157,7 +157,7 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
             except YAMLError as yml_err:
                 raise MsticpyUserConfigError(
                     f"Check that your {config_file} is valid YAML.",
-                    f"The following error was encountered",
+                    "The following error was encountered",
                     str(yml_err),
                     title="config file could not be read",
                 )

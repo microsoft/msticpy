@@ -6,13 +6,12 @@
 """Python file import analyzer."""
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, Set, Tuple, Optional, List, Iterable
+from typing import Dict, Set, Tuple, Optional, Iterable
 from urllib import parse
 import warnings
 
 import asyncio
 import markdown
-import requests
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession, ClientResponseError, ClientConnectionError
 
@@ -74,6 +73,7 @@ def check_docs(
     return page_results
 
 
+# pyline: disable=broad-except
 def _get_links_from_files(
     doc_path: str, recurse: bool = True
 ) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
@@ -265,5 +265,5 @@ def _print_url_results(results: Dict[str, Dict[str, UrlResult]]):
                 print(err)
 
 
-if __name__ == "__main__":
-    t_results = check_docs("..//..")
+# if __name__ == "__main__":
+#     t_results = check_docs("..//..")

@@ -57,6 +57,7 @@ class KqlDriver(DriverBase):
             self.current_connection = connection_str
             self.connect(connection_str)
 
+    # pylint: disable=too-many-branches
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
@@ -94,6 +95,8 @@ class KqlDriver(DriverBase):
             return self._connected
         finally:
             self._set_kql_option("Kqlmagic.short_errors", kql_err_setting)
+
+    # pylint: disable=too-many-branches
 
     @property
     def schema(self) -> Dict[str, Dict]:
@@ -233,6 +236,7 @@ class KqlDriver(DriverBase):
     _TEN_RGX = r"tenant\(['\"](?P<tenant>[^'\"]+)"
 
     def _raise_kql_error(self, ex):
+        del ex
         kql_err = json.loads(ex.args[0]).get("error")
         if kql_err.get("code") == "WorkspaceNotFoundError":
             ex_mssgs = [
@@ -260,6 +264,7 @@ class KqlDriver(DriverBase):
             + " one notebook.",
             "Other causes of this error could be an invalid format of your"
             + " connection string",
+            *(ex.args),
         ]
         raise MsticpyKqlConnectionError(*ex_mssgs, title="kql connection error")
 
@@ -283,6 +288,7 @@ class KqlDriver(DriverBase):
         ex_mssgs = [
             "The authentication failed.",
             "Please check the credentials you are using and permissions on the workspace",
+            *(ex.args),
         ]
         raise MsticpyKqlConnectionError(*ex_mssgs, title="authentication failed")
 
