@@ -100,4 +100,6 @@ def test_install_pkgs():
         def_imports="nb",
     )
 
+    for name, obj in ns_dict.items():
+        print(name, type(obj))
     check.is_in("pip_test", ns_dict)

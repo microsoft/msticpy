@@ -53,7 +53,7 @@ def check_docs(
     page_results: Dict[str, Dict[str, UrlResult]] = defaultdict(dict)
     link_results: Dict[str, UrlResult] = {}
 
-    links_to_check, file_errors = _get_links_from_files(doc_path, recurse)
+    links_to_check = _get_links_from_files(doc_path, recurse)
     print(f"Checking links {len(links_to_check)}...")
     checked_links = check_uris(links_to_check, max_threads, delay)
     print("\ndone")
@@ -64,19 +64,11 @@ def check_docs(
             page_results[src_page][result.url] = result
 
     _print_url_results(page_results)
-    if file_errors:
-        warnings.warn(
-            f"Errors encountered reading files: {', '.join(file_errors.keys())}"
-        )
-        for file, err in file_errors.items():
-            print(file, err)
     return page_results
 
 
 # pyline: disable=broad-except
-def _get_links_from_files(
-    doc_path: str, recurse: bool = True
-) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
+def _get_links_from_files(doc_path: str, recurse: bool = True) -> Dict[str, Set[str]]:
     links_to_check: Dict[str, Set[str]] = defaultdict(set)
 
     html_glob_pattern = "**/*.html" if recurse else "*.html"
@@ -85,17 +77,13 @@ def _get_links_from_files(
     md_files = list(Path(doc_path).glob(md_glob_pattern))
     all_files.extend(md_files)
     print(f"reading {len(all_files)} files...")
-    errors = {}
     for file_name in all_files:
-        try:
-            pg_links = _get_doc_links(file_name)
-            page = str(file_name.relative_to(Path(doc_path)))
-            for link in pg_links:
-                links_to_check[link].add(page)
-        except Exception as err:
-            errors[str(file_name)] = str(err)
+        pg_links = _get_doc_links(file_name)
+        page = str(file_name.relative_to(Path(doc_path)))
+        for link in pg_links:
+            links_to_check[link].add(page)
 
-    return links_to_check, errors
+    return links_to_check
 
 
 def _get_doc_links(doc_path: Path) -> Set[str]:
