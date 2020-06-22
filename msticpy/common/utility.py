@@ -270,20 +270,26 @@ def check_and_install_missing_packages(
             pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
         else:
             pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
-        try:
-            pkg_command = ["pip", "install"]
-            if user:
-                pkg_command.append("--user")
-            if upgrade:
-                pkg_command.append("--upgrade")
-            for package in pkgbar:
-                retcode = subprocess.call(pkg_command + [package])  # nosec
-                if retcode > 0:
-                    print(f"An Error has occured while installing {package}")
-                else:
-                    print(f"{package} installed succesfully")
-        except OSError as err:
-            print("Execution of pip installation failed:", err)
+
+        pkg_command = ["pip", "install"]
+        if user:
+            pkg_command.append("--user")
+        if upgrade:
+            pkg_command.append("--upgrade")
+        for package in pkgbar:
+            try:
+                proc = subprocess.run(  # nosec
+                    pkg_command + [package],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError:
+                print(f"An Error has occured while installing {package}.")
+                print(f"Output: {str(proc.stdout)}")
+                print(f"Errs: {str(proc.stderr)}")
+            else:
+                print(f"{package} installed succesfully")
 
 
 # pylint: enable=not-an-iterable, too-many-branches

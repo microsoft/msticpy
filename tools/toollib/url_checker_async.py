@@ -6,9 +6,8 @@
 """Python file import analyzer."""
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, Set, Tuple, Optional, Iterable
+from typing import Dict, Set, Optional, Iterable
 from urllib import parse
-import warnings
 
 import asyncio
 import markdown
