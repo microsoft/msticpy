@@ -23,7 +23,7 @@ INSTALL_REQUIRES = [
     "azure-mgmt-network>=2.7.0",
     "azure-mgmt-resource>=2.2.0,<=9.0.0",
     "azure-mgmt-subscription>=0.2.0",
-    "beautifulsoup4>=4.8.0",
+    "beautifulsoup4>=4.6.3",
     "bokeh>=1.4.0",
     "cryptography>=2.8",
     "deprecated>=1.2.4",
@@ -31,11 +31,11 @@ INSTALL_REQUIRES = [
     "folium>=0.9.0",
     "geoip2>=2.9.0",
     "ipwhois>=1.1.0",
-    "ipython>=7.2.0",
+    "ipython>=7.1.1",
     "ipywidgets>=7.4.2",
-    "keyring>=18.0.0",
+    "keyring>=13.2.1",
     "Kqlmagic>=0.1.106",
-    "matplotlib>=3.0.2",
+    "matplotlib>=3.0.0",
     "msal~=1.0.0",
     "msrest>=0.6.0",
     "msrestazure>=0.6.0",
@@ -53,7 +53,7 @@ INSTALL_REQUIRES = [
     "tldextract>=2.2.2",
     "tqdm>=4.36.1",
     "typing>=3.6.6",
-    "urllib3>=1.24.1",
+    "urllib3>=1.23",
 ]
 
 
