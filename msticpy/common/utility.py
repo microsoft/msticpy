@@ -226,10 +226,10 @@ def resolve_pkg_path(part_path: str):
 @export  # noqa: MC0001
 def check_and_install_missing_packages(
     required_packages: List[str],
-    notebook: bool = True,
+    force_notebook: bool = False,
     user: bool = True,
     upgrade: bool = False,
-):
+) -> bool:
     """
     Check and install missing packages from provided list of packages.
 
@@ -239,16 +239,20 @@ def check_and_install_missing_packages(
         List of packages to check and install in a current environment
         Note you can add package version constraints by appending them to
         the package name, e.g. `pandas>=1.01`
-    notebook : bool, optional
-        Boolean value to toggle notebook view and console view to
-        display correct progress bar,
-        by default True
+    force_notebook : bool, optional
+        Boolean value to force notebook version of progress bar,
+        by default False (autodetect)
     user : bool, optional
         Boolean value to toggle user flag while installing pip packages,
         by default True
     upgrade: bool, option
         If true supply `--upgrade` flag to pip to install the latest
         version (applies to all package in `required_packages`)
+
+    Returns
+    -------
+    bool :
+        True if successful, else False
 
     """
     missing_packages = []
@@ -264,32 +268,36 @@ def check_and_install_missing_packages(
 
     if not missing_packages:
         print("All packages are already installed")
-    else:
-        print("Missing packages to be installed: ", *missing_packages, sep=" ")
-        if notebook:
-            pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
-        else:
-            pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
+        return True
 
-        pkg_command = ["pip", "install"]
-        if user:
-            pkg_command.append("--user")
-        if upgrade:
-            pkg_command.append("--upgrade")
-        for package in pkgbar:
-            try:
-                proc = subprocess.run(  # nosec
-                    pkg_command + [package],
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-            except subprocess.CalledProcessError:
-                print(f"An Error has occured while installing {package}.")
-                print(f"Output: {str(proc.stdout)}")
-                print(f"Errs: {str(proc.stderr)}")
-            else:
-                print(f"{package} installed succesfully")
+    print("Missing packages to be installed: ", *missing_packages, sep=" ")
+    if is_ipython() or force_notebook:
+        pkgbar = tqdm_notebook(missing_packages, desc="Installing...", unit="bytes")
+    else:
+        pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
+
+    pkg_command = ["pip", "install"]
+    if user:
+        pkg_command.append("--user")
+    if upgrade:
+        pkg_command.append("--upgrade")
+    pkg_success = True
+    for package in pkgbar:
+        try:
+            subprocess.run(  # nosec
+                pkg_command + [package],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except subprocess.CalledProcessError as proc_err:
+            print(f"An Error has occured while installing {package}.")
+            print(f"Output: {str(proc_err.stdout)}")
+            print(f"Errs: {str(proc_err.stderr)}")
+            pkg_success = False
+        print(f"{package} installed.")
+
+    return pkg_success
 
 
 # pylint: enable=not-an-iterable, too-many-branches
