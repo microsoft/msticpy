@@ -5,27 +5,22 @@
 # --------------------------------------------------------------------------
 """Module for timeseries analysis functions."""
 import pandas as pd
-from statsmodels.tsa.seasonal import STL
 from scipy import stats
+from statsmodels.tsa.seasonal import STL
 
 from .._version import VERSION
-from ..common.utility import export, check_kwargs, MsticpyException
-
+from ..common.utility import MsticpyException, check_kwargs, export
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 
 
 # Constants
-_DEFAULT_KWARGS = [
-    "seasonal",
-    "period",
-    "score_threshold",
-]
+_DEFAULT_KWARGS = ["seasonal", "period", "score_threshold"]
 
 
 @export
-def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs,) -> pd.DataFrame:
+def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """
     Discover anomalies in Timeseries data using STL(Seasonal-Trend Decomposition using LOESS).
 

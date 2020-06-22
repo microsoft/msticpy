@@ -80,9 +80,10 @@ class SecurityAlert(SecurityBase):
         """Return the item as HTML string."""
         if self.properties:
             title = """
-            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
-            entity=<b>{entity}</b>, id=<b>{id}</b>
-            <br/>
+            <h3>Alert: '{name}'</h3>
+            <b>Alert_time:</b> {start},
+            <b>Compr_entity:</b> {entity},
+            <b>Alert_id:</b> {id}
             """.format(
                 start=self.properties["StartTimeUtc"],
                 name=self.properties["AlertDisplayName"],

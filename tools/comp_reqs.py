@@ -14,13 +14,13 @@ def _add_script_args(description):
     parser = argparse.ArgumentParser(
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("file1", help="First requirements file to compare.")
-    parser.add_argument("file2", help="Second requirements file to compare.")
+    parser.add_argument("source", help="First requirements file to compare.")
+    parser.add_argument("target", help="Second requirements file to compare.")
     return parser
 
 
 def _parse_line(line):
-    req_regex = r"(?P<pkg>[^=<>]+)(?P<op>[=<>]*)(?P<ver>.*)"
+    req_regex = r"(?P<pkg>[^~=<>,]+)(?P<op>[~=<>,]*)(?P<ver>.*)"
 
     match = re.search(req_regex, line)
     if match:
@@ -40,22 +40,27 @@ if __name__ == "__main__":
     arg_parser = _add_script_args(description=__doc__)
     args = arg_parser.parse_args()
 
-    f1_dict = _parse_reqs(args.file1)
-    f2_dict = _parse_reqs(args.file2)
+    src_dict = _parse_reqs(args.source)
+    tgt_dict = _parse_reqs(args.target)
 
-    f1_only = {pkg for pkg in f1_dict if pkg not in f2_dict}
-    f2_only = {pkg for pkg in f2_dict if pkg not in f1_dict}
+    src_only = {pkg for pkg in src_dict if pkg not in tgt_dict}
+    both = set(src_dict) - src_only
 
-    both = set(f1_dict) - f1_only
-
+    print(f"{len(src_only)} packages missing from target.")
+    print("\n".join(sorted(src_only)))
     not_compat = []
     compat = []
-    for pkg in both:
-        v2 = parse(f2_dict[pkg][1])
-        spec1 = SpecifierSet(f1_dict[pkg][0] + f1_dict[pkg][1])
+    for pkg in sorted(both):
+        v2 = parse(tgt_dict[pkg][1])
+        spec1 = SpecifierSet(src_dict[pkg][0] + src_dict[pkg][1])
         if v2 in spec1:
-            compat.append(f"Compatible: {pkg}, {f1_dict[pkg]}, {f2_dict[pkg]}")
+            compat.append(f"Compatible: {pkg}, {src_dict[pkg]}, {tgt_dict[pkg]}")
         else:
-            not_compat.append(f"Not compatible: {pkg}, {f1_dict[pkg]}, {f2_dict[pkg]}")
+            not_compat.append(
+                f"Not compatible: {pkg}, {src_dict[pkg]}, {tgt_dict[pkg]}"
+            )
+    print(
+        f"Common packages: {len(compat)} compatible, {len(not_compat)} not compatible."
+    )
     print("\n".join(compat))
     print("\n".join(not_compat))
