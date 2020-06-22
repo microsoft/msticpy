@@ -264,40 +264,6 @@ def format_logon(
     IPython.display.HTML :
         HTML display object
 
-    Notes
-    -----
-        Currently only Windows Logon events.
-
-    """
-    display(format_logon(logon_event, alert, os_family))
-
-
-@export
-def format_logon(
-    logon_event: Union[pd.DataFrame, pd.Series],
-    alert: SecurityAlert = None,
-    os_family: str = None,
-) -> IPython.display.HTML:
-    """
-    Return logon data for one or more events as HTML table.
-
-    Parameters
-    ----------
-    logon_event : Union[pd.DataFrame, pd.Series]
-        Dataframe containing one or more logon events
-        or Series containing a single logon event.
-    alert : SecurityAlert, optional
-        obtain os_family from the security alert
-        (the default is None)
-    os_family : str, optional
-         explicitly specify os_family (Linux or Windows)
-         (the default is None)
-
-    Returns
-    -------
-    IPython.display.HTML :
-        HTML display object
-
     """
     if not os_family:
         os_family = alert.os_family if alert else "Windows"
