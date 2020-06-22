@@ -293,6 +293,8 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
             section=conf_section,
             key_provs=auth_key_providers,
         )
+        if conf_section == _DP_KEY and mp_config.get(conf_section) is None:
+            continue
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
 

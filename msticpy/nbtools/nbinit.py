@@ -101,7 +101,7 @@ def init_notebook(
     namespace: Dict[str, Any],
     def_imports: str = "all",
     additional_packages: List[str] = None,
-    add_pkg_user: bool = False,
+    user_install: bool = False,
     extra_imports: List[str] = None,
     friendly_exceptions: Optional[bool] = None,
     verbose: bool = False,
@@ -126,7 +126,7 @@ def init_notebook(
         by default None.
         Packages are specified by name only or version
         specification (e.g. "pandas>=0.25")
-    add_pkg_user : bool, optional
+    user_install : bool, optional
         Install packages in the "user" rather than system site-packages.
         Use this option if you cannot or do not want to update the system
         packages.
@@ -169,7 +169,7 @@ def init_notebook(
 
     print("Processing imports....")
     imp_ok = _global_imports(
-        namespace, additional_packages, add_pkg_user, extra_imports, def_imports
+        namespace, additional_packages, user_install, extra_imports, def_imports
     )
 
     print("Checking configuration....")
@@ -196,7 +196,7 @@ def init_notebook(
 def _global_imports(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
-    add_pkg_user: bool = False,
+    user_install: bool = False,
     extra_imports: List[str] = None,
     def_imports: str = "all",
 ):
@@ -214,7 +214,14 @@ def _global_imports(
                 _imp_module_all(nm_spc=namespace, **imp_pkg)
 
         if additional_packages:
-            check_and_install_missing_packages(additional_packages, user=add_pkg_user)
+            pkg_success = check_and_install_missing_packages(
+                additional_packages, user=user_install
+            )
+            if not pkg_success:
+                print("One or more packages failed to install.")
+                print(
+                    "Please re-run init_notebook() with the parameter user_install=True."
+                )
         if extra_imports:
             _import_extras(nm_spc=namespace, extra_imports=extra_imports)
         return True
@@ -232,10 +239,7 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     else:
         err_warn = validate_config(config_file=mp_path)
         if err_warn and err_warn[0]:
-            print("Errors found in msticpy configuration.")
             config_ok = False
-        if err_warn and err_warn[1]:
-            print("Warnings found in msticpy configuration.")
 
     ws_config = WorkspaceConfig()
     if not ws_config.config_loaded:
