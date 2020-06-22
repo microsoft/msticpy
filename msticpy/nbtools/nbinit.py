@@ -36,6 +36,10 @@ the kernel and re-run the notebook.</font>
 <i>Package error: {err}</i><br>
 """
 
+_IMPORT_MODULE_MSSG = """
+<font color='red'>Error import module {module}</font>
+"""
+
 _MISSING_PKG_WARN = """
 <h3><font color='orange'>Warning {package} is not installed or has an
 incorrect version</h3></font>
@@ -97,6 +101,7 @@ def init_notebook(
     namespace: Dict[str, Any],
     def_imports: str = "all",
     additional_packages: List[str] = None,
+    add_pkg_user: bool = False,
     extra_imports: List[str] = None,
     friendly_exceptions: Optional[bool] = None,
     verbose: bool = False,
@@ -121,6 +126,11 @@ def init_notebook(
         by default None.
         Packages are specified by name only or version
         specification (e.g. "pandas>=0.25")
+    add_pkg_user : bool, optional
+        Install packages in the "user" rather than system site-packages.
+        Use this option if you cannot or do not want to update the system
+        packages.
+        You should usually avoid using this option with standard Conda environments.
     extra_imports : List[str], optional
         Additional import definitions, by default None.
         Imports are specified as up to 3 comma-delimited values
@@ -158,7 +168,9 @@ def init_notebook(
     _VERBOSE(verbose)
 
     print("Processing imports....")
-    imp_ok = _global_imports(namespace, additional_packages, extra_imports, def_imports)
+    imp_ok = _global_imports(
+        namespace, additional_packages, add_pkg_user, extra_imports, def_imports
+    )
 
     print("Checking configuration....")
     conf_ok, _ = _check_config()
@@ -184,6 +196,7 @@ def init_notebook(
 def _global_imports(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
+    add_pkg_user: bool = False,
     extra_imports: List[str] = None,
     def_imports: str = "all",
 ):
@@ -201,7 +214,7 @@ def _global_imports(
                 _imp_module_all(nm_spc=namespace, **imp_pkg)
 
         if additional_packages:
-            check_and_install_missing_packages(additional_packages)
+            check_and_install_missing_packages(additional_packages, user=add_pkg_user)
         if extra_imports:
             _import_extras(nm_spc=namespace, extra_imports=extra_imports)
         return True
@@ -263,7 +276,11 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
 
 def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     """Import named module and assign to global alias."""
-    mod = importlib.import_module(module_name)
+    try:
+        mod = importlib.import_module(module_name)
+    except ImportError:
+        display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
+        raise
     if alias:
         nm_spc[alias] = mod
     else:
@@ -275,7 +292,11 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
 
 def _imp_module_all(nm_spc: Dict[str, Any], module_name):
     """Import all from named module add to globals."""
-    imported_mod = importlib.import_module(module_name)
+    try:
+        imported_mod = importlib.import_module(module_name)
+    except ImportError:
+        display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
+        raise
     for item in dir(imported_mod):
         if item.startswith("_"):
             continue
@@ -295,7 +316,11 @@ def _imp_from_package(
         obj = importlib.import_module(f".{tgt}", pkg)
     except (ImportError, ModuleNotFoundError):
         # if not, it must be an attribute (class, func, etc.)
-        mod = importlib.import_module(pkg)
+        try:
+            mod = importlib.import_module(pkg)
+        except ImportError:
+            display(HTML(_IMPORT_MODULE_MSSG.format(module=pkg)))
+            raise
         obj = getattr(mod, tgt)
     if alias:
         nm_spc[alias] = obj
