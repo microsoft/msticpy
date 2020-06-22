@@ -193,7 +193,7 @@ def init_notebook(
     return True
 
 
-def _global_imports(
+def _global_imports(  # noqa: MC0001
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
     user_install: bool = False,
