@@ -7,7 +7,6 @@
 from collections import defaultdict
 from os import path
 from typing import Any, Dict, Iterable, Set, Union, Optional
-import warnings
 
 from .._version import VERSION
 from .query_defns import DataEnvironment, DataFamily
@@ -169,7 +168,9 @@ class QueryStore:
                 try:
                     sources, defaults, metadata = read_query_def_file(str(file_path))
                 except ValueError:
-                    warnings.warn(f"{file_path} is not a valid query definition file.")
+                    print(
+                        f"{file_path} is not a valid query definition file - skipping."
+                    )
                     continue
 
                 for env_value in metadata["data_environments"]:

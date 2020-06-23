@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 import numpy as np
-from pandas._testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 from ..msticpy.analysis.anomalous_sequence import sessionize
 
