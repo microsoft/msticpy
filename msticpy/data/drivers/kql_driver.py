@@ -139,7 +139,8 @@ class KqlDriver(DriverBase):
             "config", line="Kqlmagic.auto_dataframe"
         )
         self._ip.run_line_magic("config", line="Kqlmagic.auto_dataframe=False")
-        # run the query
+        # run the query (append semicolon to prevent default output)
+        query = f"{query}\n;"
         result = self._ip.run_cell_magic("kql", line="", cell=query)
         self._ip.run_line_magic(
             "config", line=f"Kqlmagic.auto_dataframe={auto_dataframe}"
