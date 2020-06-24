@@ -67,20 +67,18 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
         bs_api_key = None
         if bs_conf is not None:
             bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
-        if bs_api_key is None:
-            raise MsticpyUserConfigError(
-                "No configuration found for Browshot",
-                "Please add a section to msticpyconfig.yaml:",
-                "DataProviders:",
-                "  Browshot:",
-                "    Args:",
-                "      AuthKey: {your_auth_key}",
-                title="Browshot configuration not found",
-                browshot_uri=(
-                    "Get an API key for Browshot",
-                    "https://api.browshot.com/",
-                ),
-            )
+
+    if bs_api_key is None:
+        raise MsticpyUserConfigError(
+            "No configuration found for Browshot",
+            "Please add a section to msticpyconfig.yaml:",
+            "DataProviders:",
+            "  Browshot:",
+            "    Args:",
+            "      AuthKey: {your_auth_key}",
+            title="Browshot configuration not found",
+            browshot_uri=("Get an API key for Browshot", "https://api.browshot.com/"),
+        )
 
     # Request screenshot from Browshot and get request ID
     id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
