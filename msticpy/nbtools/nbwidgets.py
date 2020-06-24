@@ -548,7 +548,7 @@ class SelectAlert:
     def _run_action(self):
         """Run any action function and display details, if any."""
         output_objs = self.alert_action(self.selected_alert)
-        if not output_objs:
+        if output_objs is None:
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
@@ -855,7 +855,7 @@ class SelectItem:
     def _run_action(self):
         """Run any action function and display details, if any."""
         output_objs = self.item_action(self.value)
-        if not output_objs:
+        if output_objs is None:
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
