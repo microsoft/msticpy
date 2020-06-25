@@ -183,8 +183,9 @@ class KqlDriver(DriverBase):
         auto_dataframe = self._get_kql_option(option="Kqlmagic.auto_dataframe")
         self._set_kql_option(option="Kqlmagic.auto_dataframe", value=False)
         # run the query (append semicolon to prevent default output)
-        query = f"{query}\n;"
-        query = f"{query}\n;"
+        if not query.strip().endswith(";"):
+            query = f"{query}\n;"
+
         result = self._ip.run_cell_magic("kql", line="", cell=query)
         self._set_kql_option(option="Kqlmagic.auto_dataframe", value=auto_dataframe)
         if result is not None:

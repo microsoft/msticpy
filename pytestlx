@@ -1,6 +1,0 @@
-#!/bin/bash
-export MSTICPYCONFIG=/mnt/e/src/microsoft/msticpy/tests/msticpconfig-test.yaml
-export MAXMIND_AUTH=fwX9fbj9srTpJpKA
-export IPSTACK_AUTH=6ab9b0edbe908a17da4f9e69adc30611
-export MSTICPY_TEST_NOSKIP=1
-pytest $*
