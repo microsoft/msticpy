@@ -9,7 +9,7 @@ import os
 from os import path
 import pandas as pd
 
-from ..msticpy.sectools import base64unpack as b64
+from msticpy.sectools import base64unpack as b64
 
 
 _test_data_folders = [

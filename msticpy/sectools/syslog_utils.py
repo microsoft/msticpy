@@ -21,7 +21,8 @@ import pandas as pd
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
-from ..common.utility import export, MsticpyException
+from ..common.exceptions import MsticpyException
+from ..common.utility import export
 from .ip_utils import convert_to_ip_entities
 
 __version__ = VERSION

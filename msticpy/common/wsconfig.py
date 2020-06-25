@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import warnings
 
+from .exceptions import MsticpyUserConfigError
 from .utility import export, is_valid_uuid
 from . import pkg_config
 from .._version import VERSION
@@ -19,22 +20,23 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_NO_CONFIG_WARN = """
-Could not find msticpyconfig.yaml or config.json in the current directory.
-Using '{config_file}'.
-We recommend using an explicit msticpyconfig.yaml specified using the
-MSTICPYCONFIG environment variable. See
-https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
-for more details.
-"""
+_NO_CONFIG_WARN = [
+    "Could not find msticpyconfig.yaml or a config.json in the current directory.",
+    "Using '{config_file}'.",
+    "We recommend using an explicit msticpyconfig.yaml specified using the",
+    "MSTICPYCONFIG environment variable. See",
+    "https://msticpy.readthedocs.io/getting_started/msticpyconfig.html",
+    "for more details.",
+]
 
-_NO_CONFIG_ERR = """
-Could not find msticpyconfig.yaml or config.json.
-We recommend using an explicit msticpyconfig.yaml specified using the
-MSTICPYCONFIG environment variable. See
-https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
-for more details.
-"""
+_NO_CONFIG_ERR = [
+    "Could not find msticpyconfig.yaml or config.json."
+    "The config.json file is created when you launch notebooks from",
+    "Azure Sentinel. If you have copied the notebook to another location",
+    "or folder you will need to copy this file."
+    "Alternatively, we recommend using an explicit msticpyconfig.yaml",
+    "and adding your Workspace and Tenant IDs to that file.",
+]
 
 
 @export
@@ -82,10 +84,14 @@ class WorkspaceConfig:
             else:
                 searched_configs = list(Path("..").glob("**/config.json"))
                 if not searched_configs:
-                    raise RuntimeError(_NO_CONFIG_ERR)
+                    raise MsticpyUserConfigError(
+                        *_NO_CONFIG_ERR, title="Workspace configuration missing."
+                    )
 
                 config_file = str(searched_configs[0])
-                warnings.warn(_NO_CONFIG_WARN.format(config_file=config_file))
+                warnings.warn(
+                    "\n".join(_NO_CONFIG_WARN).format(config_file=config_file)
+                )
         self._config_file = config_file
         config = self._read_config_values(config_file)
         if config is not None:

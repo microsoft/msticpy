@@ -10,7 +10,7 @@ from typing import List, Union, Dict
 
 from .utils.data_structures import Cmd
 from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
-from ...common.utility import MsticpyException
+from ...common.exceptions import MsticpyException
 
 
 # pylint: disable=too-many-instance-attributes
@@ -42,15 +42,14 @@ class Model:
             accompanying params and values.
 
             examples formats of a session:
-                1) ['Set-User', 'Set-Mailbox']
-                2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
-                    Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
-                3) [Cmd(
-                        name='Set-User',
-                        params={'Identity': 'blahblah', 'Force': 'true'}
-                    ),
-                    Cmd(name='Set-Mailbox',
-                    params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+            1) ['Set-User', 'Set-Mailbox']
+            2) [Cmd(name='Set-User', params={'Identity', 'Force'}),
+            Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+            3) [Cmd(name='Set-User',
+            params={'Identity': 'blahblah', 'Force': 'true'}),
+            Cmd(name='Set-Mailbox',
+            params={'Identity': 'blahblah', 'AuditEnabled': 'false'})]
+
         modellable_params: set, optional
             set of params which you deem to have categorical values which are suitable
             for modelling.
@@ -352,14 +351,15 @@ class Model:
         (and values if provided) for each distinct command.
 
         Note, this method is only available if each session is a list
-         of the Cmd datatype. It will result in an Exception if you
-         try and use it when each session is a list of strings.
+        of the Cmd datatype. It will result in an Exception if you
+        try and use it when each session is a list of strings.
 
         Parameters
         ----------
         use_geo_mean: bool
             if True, then the probabilities will be raised to
             the power of (1/K)
+
             case1: we have only params:
                 Then K is the number of distinct params which appeared
                 for the given cmd across all the sessions.

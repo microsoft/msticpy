@@ -12,11 +12,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..tools.toollib.import_analyzer import analyze_imports, PKG_TOKENS, _get_setup_reqs
+from tools.toollib.import_analyzer import analyze_imports, PKG_TOKENS, _get_setup_reqs
 
 PKG_ROOT = "."
 PKG_NAME = "msticpy"
 REQS_FILE = "requirements.txt"
+REQS_OP_RGX = r"[=<>~!]+"
 
 
 def test_missing_pkgs_req():
@@ -44,60 +45,6 @@ def test_missing_pkgs_req():
     assert not missing_reqs
 
 
-def test_missing_pkgs_setup():
-
-    mod_imports = analyze_imports(
-        package_root=PKG_ROOT, package_name=PKG_NAME, req_file=REQS_FILE
-    )
-    reqs = set([v for s in mod_imports.values() for v in s.setup_reqs])
-    assert reqs
-    install_requires = _get_setup_module()
-    setup_pkgs = {re.match(PKG_TOKENS, item).groups() for item in install_requires}
-    setup_reqs = {key[0].lower(): key for key in setup_pkgs}
-    missing_reqs = reqs - setup_reqs.keys()
-    assert not missing_reqs
-
-
-def test_reqs_match_setup():
-    install_requires = _get_setup_module()
-
-    setup_pkgs = {re.match(PKG_TOKENS, item).groups() for item in install_requires}
-    setup_reqs = {key[0].lower(): key for key in setup_pkgs}
-
-    reqtxt_reqs, reqtxt_ver = _get_setup_reqs(PKG_ROOT, req_file=REQS_FILE)
-
-    setup_missing = setup_reqs.keys() - reqtxt_ver.keys()
-    if setup_missing:
-        print(f"Packages in REQS_FILE missing from setup.py")
-    reqs_missing = reqtxt_ver.keys() - setup_reqs.keys()
-    if setup_missing:
-        print(f"Packages in setup.py missing from {REQS_FILE}")
-
-    matched_pkgs = reqtxt_ver.keys() & setup_reqs.keys()
-    if setup_reqs.values() != reqtxt_ver.values():
-        print("Version mismatch for some packages:")
-    for pkg in matched_pkgs:
-
-        if setup_reqs[pkg] != reqtxt_ver[pkg]:
-            print(
-                setup_reqs[pkg],
-                "(setup.py) does not match",
-                reqtxt_ver[pkg],
-                "(requirements)",
-            )
-            if setup_reqs[pkg][2] > reqtxt_ver[pkg][2]:
-                print(
-                    f" => Update requirements.txt with \"{''.join(setup_reqs[pkg])}\""
-                )
-            elif reqtxt_ver[pkg][2] > setup_reqs[pkg][2]:
-                print(f" => Update setup.py with \"{''.join(reqtxt_ver[pkg])}\"")
-            else:
-                print("Other mismatch")
-    assert not setup_missing
-    assert not reqs_missing
-    assert set(setup_reqs.values()) == set(reqtxt_ver.values())
-
-
 def test_conda_reqs():
     main_reqs_file = file_path = Path(PKG_ROOT) / REQS_FILE
     conda_reqs_file = file_path = Path(PKG_ROOT) / "conda/conda-reqs.txt"
@@ -106,13 +53,13 @@ def test_conda_reqs():
     main_reqs_dict = {}
     with open(str(main_reqs_file), "r") as f:
         reqs = f.readlines()
-        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+        for item in [re.split(REQS_OP_RGX, line) for line in reqs]:
             main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
 
     conda_reqs_dict = {}
     with open(str(conda_reqs_file), "r") as f:
         reqs = f.readlines()
-        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+        for item in [re.split(REQS_OP_RGX, line) for line in reqs]:
             conda_reqs_dict[item[0].strip()] = (
                 item[1].strip() if len(item) > 1 else None
             )
@@ -120,7 +67,7 @@ def test_conda_reqs():
     conda_reqs_pip_dict = {}
     with open(str(conda_reqs_pip_file), "r") as f:
         reqs = f.readlines()
-        for item in [re.split(r"[=<>]+", line) for line in reqs]:
+        for item in [re.split(REQS_OP_RGX, line) for line in reqs]:
             conda_reqs_pip_dict[item[0].strip()] = (
                 item[1].strip() if len(item) > 1 else None
             )
@@ -148,20 +95,3 @@ def test_conda_reqs():
     assert not conda_reqs_dict
     print(f"Checking version no extra items in conda-reqs.txt", conda_reqs_pip_dict)
     assert not conda_reqs_pip_dict
-
-
-def _get_setup_module():
-    file_path = Path(PKG_ROOT) / "setup.py"
-
-    module_name = "setup"
-
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    # spec.loader.exec_module(module)
-    try:
-        spec.loader.exec_module(module)
-    except:
-        pass
-
-    return module.INSTALL_REQUIRES
