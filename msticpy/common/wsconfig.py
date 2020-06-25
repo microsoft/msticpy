@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
 
+import os
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -92,7 +93,13 @@ class WorkspaceConfig:
                     "\n".join(_NO_CONFIG_WARN).format(config_file=config_file)
                 )
         self._config_file = config_file
-        self._config.update(self._read_config_values(config_file))
+        config = self._read_config_values(config_file)
+        if config is not None:
+            self._config.update(config)
+        else:
+            os.environ["MSTICPYCONFIG"] = config_file
+            pkg_config.refresh_config()
+            self._read_pkg_config_values(workspace_name=workspace)
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -156,11 +163,14 @@ class WorkspaceConfig:
     @classmethod
     def _read_config_values(cls, file_path: str) -> Dict[str, str]:
         """Read configuration file."""
-        with open(file_path) as json_file:
-            if json_file:
-                json_config = json.load(json_file)
-                return json_config
-        return {}
+        try:
+            with open(file_path) as json_file:
+                if json_file:
+                    json_config = json.load(json_file)
+                    return json_config
+            return {}
+        except json.JSONDecodeError:
+            return None
 
     @classmethod
     def list_workspaces(cls) -> Dict:
