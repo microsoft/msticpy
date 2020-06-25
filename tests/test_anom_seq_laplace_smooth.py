@@ -1,8 +1,8 @@
 import unittest
 from collections import defaultdict
 
-from ..msticpy.analysis.anomalous_sequence.utils import laplace_smooth
-from ..msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
+from msticpy.analysis.anomalous_sequence.utils import laplace_smooth
+from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
 
 START_TOKEN = "##START##"
 END_TOKEN = "##END##"

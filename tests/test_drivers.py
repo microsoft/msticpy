@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 from pytest import raises
-from ..msticpy.data.drivers import MDATPDriver, SecurityGraphDriver
-from ..msticpy.common.utility import MsticpyException
+from msticpy.data.drivers import MDATPDriver, SecurityGraphDriver
+from msticpy.common.exceptions import MsticpyException
 
 _JSON_RESP = {
     "token_type": "Bearer",

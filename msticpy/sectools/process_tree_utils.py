@@ -10,7 +10,7 @@ import attr
 import pandas as pd
 
 from ..nbtools.nbwidgets import Progress
-from ..common.utility import MsticpyException
+from ..common.exceptions import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION

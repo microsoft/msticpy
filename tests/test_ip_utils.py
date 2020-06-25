@@ -10,7 +10,7 @@ import os
 
 import pandas as pd
 
-from ..msticpy.sectools.ip_utils import get_whois_info, get_whois_df, get_ip_type
+from msticpy.sectools.ip_utils import get_whois_info, get_whois_df, get_ip_type
 
 
 _test_data_folders = [

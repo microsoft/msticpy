@@ -19,17 +19,17 @@ from unittest import mock
 
 import pandas as pd
 
-from ..msticpy.common import pkg_config
-from ..msticpy.sectools.iocextract import IoCExtract
-from ..msticpy.sectools.tilookup import TILookup
-from ..msticpy.sectools.tiproviders import (
+from msticpy.common import pkg_config
+from msticpy.sectools.iocextract import IoCExtract
+from msticpy.sectools.tilookup import TILookup
+from msticpy.sectools.tiproviders import (
     HttpProvider,
     LookupResult,
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,
 )
-from ..msticpy.sectools.tiproviders.ti_provider_base import (
+from msticpy.sectools.tiproviders.ti_provider_base import (
     TISeverity,
     _clean_url,
     generate_items,

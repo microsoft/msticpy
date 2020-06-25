@@ -1,5 +1,5 @@
+msticpy:
+  FriendlyExceptions: True
 QueryDefinitions:
   Default:
     - 'queries'
-  Custom:
-TIProviders:

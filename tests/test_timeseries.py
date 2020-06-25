@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from ..msticpy.analysis.timeseries import timeseries_anomalies_stl
+from msticpy.analysis.timeseries import timeseries_anomalies_stl
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "TimeSeriesAnomaliesVisualization.ipynb"

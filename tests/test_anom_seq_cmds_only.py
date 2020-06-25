@@ -3,8 +3,8 @@ import unittest
 
 import numpy as np
 
-from ..msticpy.analysis.anomalous_sequence.utils import cmds_only
-from ..msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
+from msticpy.analysis.anomalous_sequence.utils import cmds_only
+from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
 
 START_TOKEN = "##START##"
 END_TOKEN = "##END##"
@@ -39,9 +39,7 @@ class TestCmdsOnly(unittest.TestCase):
     def test_compute_counts(self):
         sessions = [[]]
         seq1_expected = {START_TOKEN: 1, END_TOKEN: 1}
-        seq2_expected = {
-            START_TOKEN: {END_TOKEN: 1},
-        }
+        seq2_expected = {START_TOKEN: {END_TOKEN: 1}}
         seq1_actual, seq2_actual = cmds_only.compute_counts(
             sessions=sessions,
             start_token=START_TOKEN,
@@ -54,10 +52,7 @@ class TestCmdsOnly(unittest.TestCase):
         cmd = "Set-User"
         sessions = [[cmd]]
         seq1_expected = {START_TOKEN: 1, cmd: 1, END_TOKEN: 1}
-        seq2_expected = {
-            START_TOKEN: {cmd: 1},
-            cmd: {END_TOKEN: 1},
-        }
+        seq2_expected = {START_TOKEN: {cmd: 1}, cmd: {END_TOKEN: 1}}
 
         seq1_actual, seq2_actual = cmds_only.compute_counts(
             sessions=sessions,

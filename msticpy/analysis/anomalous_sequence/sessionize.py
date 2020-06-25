@@ -32,9 +32,9 @@ def sessionize_data(
     ----------
     data: pd.DataFrame
         This dataframe should contain at least the following columns:
-            - time stamp column
-            - columns related to user name and/or computer name and/or ip address etc
-            - column containing an event
+        - time stamp column
+        - columns related to user name and/or computer name and/or ip address etc
+        - column containing an event
     user_identifier_cols: List[str]
         Name of the columns which contain username and/or computer name and/or ip address etc.
         Each time the value of one of these columns changes, a new session will be started.
@@ -119,8 +119,8 @@ def create_session_col(
     ----------
     data: pd.DataFrame
         This dataframe should contain at least the following columns:
-            - time stamp column
-            - columns related to user name and/or computer name and/or ip address etc
+        - time stamp column
+        - columns related to user name and/or computer name and/or ip address etc
     user_identifier_cols: List[str]
         Name of the columns which contain username and/or computer name and/or ip address etc.
         Each time the value of one of these columns changes, a new session will be started.
