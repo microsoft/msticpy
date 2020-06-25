@@ -142,7 +142,8 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     users = []
     starts = []
     ends = []
-    ses_close_time = dt.datetime.now()
+    tz = pytz.timezone("UTC")
+    ses_close_time = dt.datetime.now(tz=tz)
     ses_opened = 0
     ses_closed = 0
     # Extract logon session opened and logon session closed data.
@@ -172,7 +173,11 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         logons_closed.index
     ):
         ses_start = (logons_opened.iloc[ses_opened]).name
+        if ses_start.tzinfo is None:
+            ses_start = ses_start.tz_localize(tz="UTC")
         ses_end = (logons_closed.iloc[ses_closed]).name
+        if ses_end.tzinfo is None:
+            ses_end = ses_end.tz_localize(tz="UTC")
         # If we can identify a user for the session add this to the details
         if "User" in logons_opened.columns:
             user = (logons_opened.iloc[ses_opened]).User
