@@ -87,7 +87,7 @@ setuptools.setup(
         "Code": "https://github.com/microsoft/msticpy",
     },
     python_requires=">=3.6",
-    packages=setuptools.find_packages(exclude=["*.tests"]),
+    packages=setuptools.find_packages(exclude=["tests", "tests.*", "*.tests.*"]),
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
