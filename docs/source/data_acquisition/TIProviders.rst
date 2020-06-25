@@ -625,7 +625,7 @@ Use to do a passive DNS lookup
 
 
 
-Inferring IoC Type vs Specifying explicitly
+Inferring IoC type vs specifying explicitly
 --------------------------------------------
 
 If you do a lookup without specifying a type, TILookup will try to infer

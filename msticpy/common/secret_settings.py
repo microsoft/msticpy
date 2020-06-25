@@ -133,7 +133,7 @@ class SecretsClient:
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         self.kv_secret_vault: Dict[str, str] = {}

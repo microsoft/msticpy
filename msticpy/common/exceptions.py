@@ -45,7 +45,7 @@ class MsticpyResourceException(MsticpyException):
 class MsticpyUserError(MsticpyException):
     """Msticpy User exception displaying friendly message."""
 
-    DEF_HELP_URI = ("msticpy documenation", "https://msticpy.readthedocs.org")
+    DEF_HELP_URI = ("msticpy documentation", "https://msticpy.readthedocs.org")
 
     def __init__(
         self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
