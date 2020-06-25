@@ -204,7 +204,7 @@ class KeyVaultSettings:
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         if auth.endswith("/"):
@@ -243,7 +243,7 @@ class KeyVaultSettings:
         if not tenant:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         return (
@@ -301,7 +301,7 @@ class AuthClient:
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         self.authority = kwargs.pop(
@@ -665,7 +665,7 @@ class BHKeyVaultClient:
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         self.authn_type = kwargs.pop(
@@ -700,7 +700,7 @@ class BHKeyVaultClient:
                 raise MsticpyKeyVaultConfigError(
                     f"Could not determine keyvault URI for national cloud {cloud}.",
                     "Please verify that you have the correct national cloud"
-                    + "specified in the KeyVault section of msticpyconfg.yaml",
+                    + "specified in the KeyVault section of msticpyconfig.yaml",
                     title="no Key Vault URI for national cloud",
                 )
         if self.debug:
@@ -850,14 +850,14 @@ class BHKeyVaultMgmtClient:
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
             )
         self.subscription_id = subscription_id or self.settings.get("subscriptionid")
         if not self.subscription_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get SubscriptionId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfg.yaml",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing SubscriptionId value.",
             )
         self._client_uri = kwargs.pop("mgmt_uri", None) or self.settings.mgmt_uri
@@ -866,7 +866,7 @@ class BHKeyVaultMgmtClient:
             raise MsticpyKeyVaultConfigError(
                 f"Could not obtain an azure management URI for national cloud {cloud}.",
                 "Please verify that you have the correct national cloud"
-                + "specified in the KeyVault section of msticpyconfg.yaml",
+                + "specified in the KeyVault section of msticpyconfig.yaml",
                 title="no Azure Management URI for national cloud",
             )
         self.auth_client = AuthClient(
@@ -940,7 +940,7 @@ class BHKeyVaultMgmtClient:
         if not self.azure_region:
             raise MsticpyKeyVaultConfigError(
                 "Could not get Azure region in which to create the vault.",
-                "Please add AzureRegion to the KeyVault section of msticpyconfg.yaml",
+                "Please add AzureRegion to the KeyVault section of msticpyconfig.yaml",
                 title="missing AzureRegion value.",
             )
         parameters = self._get_params()
@@ -948,7 +948,7 @@ class BHKeyVaultMgmtClient:
         if not self.resource_group:
             raise MsticpyKeyVaultConfigError(
                 "Could not get Azure resource group in which to create the vault.",
-                "Please add ResourceGroup to the KeyVault section of msticpyconfg.yaml",
+                "Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml",
                 title="missing ResourceGroup value.",
             )
         mgmt = KeyVaultManagementClient(cred, self.subscription_id)

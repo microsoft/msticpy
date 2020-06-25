@@ -94,7 +94,7 @@ and
 [TILookup Usage Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb)
 
 ### GeoLocation Data
-The GeoIP lookup classes allow you to match the geo-locations of IP Addresses
+The GeoIP lookup classes allow you to match the geo-locations of IP addresses
 using either:
 - GeoLiteLookup - Maxmind Geolite (see <https://www.maxmind.com>)
 - IPStackLookup  - IPStack (see <https://ipstack.com>)

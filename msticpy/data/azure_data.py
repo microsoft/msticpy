@@ -149,7 +149,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         subscription_ids = []
@@ -184,7 +184,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
@@ -226,7 +226,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         self._check_client("resource_client", sub_id)
@@ -320,7 +320,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
         self._check_client("resource_client", sub_id)
 
@@ -399,7 +399,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         self._check_client("resource_client", sub_id)  # type: ignore
@@ -475,7 +475,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         self._check_client("network_client", sub_id)
@@ -576,7 +576,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         self._check_client("monitoring_client", sub_id)
@@ -633,7 +633,7 @@ class AzureData:
             raise MsticpyNotConnectedError(
                 "You need to connect to service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
-                title="Please connect before continuing.",
+                title="Please call connect() before continuing.",
             )
 
         self._check_client("compute_client", sub_id)
