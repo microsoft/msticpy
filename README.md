@@ -8,7 +8,7 @@ in Jupyter Notebooks. It includes functionality to:
 - enrich the data with Threat Intelligence, geolocations and Azure
   resource data
 - extract Indicators of Activity (IoA) from logs and unpack encoded data
-- perform sophisticated analysis such as Anomalous session detection and
+- perform sophisticated analysis such as anomalous session detection and
   time series decomposition
 - visualize data using interactive timelines, process trees and
   multi-dimensional Morph Charts
