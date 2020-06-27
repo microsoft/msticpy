@@ -94,7 +94,7 @@ class WorkspaceConfig:
                 )
         self._config_file = config_file
         config = self._read_config_values(config_file)
-        if config is not None:
+        if config:
             self._config.update(config)
         else:
             os.environ["MSTICPYCONFIG"] = config_file
@@ -168,9 +168,9 @@ class WorkspaceConfig:
                 if json_file:
                     json_config = json.load(json_file)
                     return json_config
-            return {}
         except json.JSONDecodeError:
-            return None
+            pass
+        return {}
 
     @classmethod
     def list_workspaces(cls) -> Dict:
