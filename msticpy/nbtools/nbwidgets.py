@@ -438,6 +438,7 @@ class SelectAlert:
 
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
+        # Make _select_items a list of tuples
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
 
         self.selected_alert = None
@@ -481,21 +482,25 @@ class SelectAlert:
             return (
                 f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
                 + f" - ({alert_row.CompromisedEntity}) "
-                + f" - [id:{alert_row.SystemAlertId}]"
                 + f" - TI Risk: {alert_row['TI Risk']}"
+                + f" - [id:{alert_row.SystemAlertId}]",
+                alert_row.SystemAlertId,
             )
 
         return (
             f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
             + f" - ({alert_row.CompromisedEntity}) "
-            + f" - [id:{alert_row.SystemAlertId}]"
+            + f" - [id:{alert_row.SystemAlertId}]",
+            alert_row.SystemAlertId,
         )
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change["new"].lower() in i.lower()
+                alert_dtl
+                for alert_dtl[0] in self._select_items
+                if change["new"].lower() in alert_dtl[0].lower()
             ]
 
     def _select_alert(self, selection=None):
@@ -507,12 +512,10 @@ class SelectAlert:
         ):
             self.selected_alert = None
         else:
-            match = re.search(self._ALERTID_REGEX, selection["new"])
-            if match is not None:
-                self.alert_id = match.groupdict()["alert_id"]
-                self.selected_alert = self._get_alert(self.alert_id)
-                if self.alert_action is not None:
-                    self._run_action()
+            self.alert_id = selection["new"]
+            self.selected_alert = self._get_alert(self.alert_id)
+            if self.alert_action is not None:
+                self._run_action()
 
     def _get_alert(self, alert_id):
         """Get the alert by alert_id."""
