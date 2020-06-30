@@ -21,6 +21,7 @@ import warnings
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.exceptions import MsticpyConfigException
 from ...common.utility import export
 from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
@@ -58,7 +59,7 @@ class KqlTIProvider(TIProvider):
             self._query_provider = self._create_query_provider(**kwargs)
 
         if not self._query_provider or not self._query_provider.connected:
-            raise RuntimeError("Query provider for KQL could not be created.")
+            raise MsticpyConfigException("Query provider for KQL could not be created.")
 
     # pylint: disable=duplicate-code
     @lru_cache(maxsize=256)
@@ -285,10 +286,8 @@ class KqlTIProvider(TIProvider):
     def _create_query_provider(self, **kwargs):
         workspace_id = None
         tenant_id = None
-        if "workspace_id" in kwargs:
-            workspace_id = kwargs.pop("workspace_id")
-        if "tenant_id" in kwargs:
-            tenant_id = kwargs.pop("tenant_id")
+        workspace_id = self._get_spelled_variants("workspaceid", **kwargs)
+        tenant_id = self._get_spelled_variants("tenantid", **kwargs)
 
         if not workspace_id or not tenant_id:
             # If there are no TI-Provider specific kwargs
@@ -308,6 +307,19 @@ class KqlTIProvider(TIProvider):
         query_provider = QueryProvider("LogAnalytics")
         query_provider.connect(connect_str)
         return query_provider
+
+    @staticmethod
+    def _get_spelled_variants(name: str, **kwargs) -> Any:
+        """Return value with matching variant spelling key."""
+        variant_dict = {
+            "workspaceid": ["workspace_id", "workspaceid"],
+            "tenantid": ["tenant_id", "tenantid"],
+        }
+        variants = variant_dict.get(name, [name.casefold()])
+        for key, val in kwargs.items():
+            if key.casefold() in variants:
+                return val
+        return None
 
     # pylint: disable=too-many-branches
     def _get_query_and_params(

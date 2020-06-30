@@ -2,9 +2,6 @@
 msticpy.common package
 ======================
 
-Submodules
-----------
-
 msticpy.common.utility module
 ------------------------------
 
@@ -41,6 +38,14 @@ msticpy.sectools.provider\_settings module
 ------------------------------------------
 
 .. automodule:: msticpy.common.provider_settings
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.sectools.exceptions module
+----------------------------------
+
+.. automodule:: msticpy.common.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

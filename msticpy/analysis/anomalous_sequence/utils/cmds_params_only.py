@@ -22,7 +22,7 @@ from ..utils.laplace_smooth import (
     laplace_smooth_cmd_counts,
     laplace_smooth_param_counts,
 )
-from ....common.utility import MsticpyException
+from ....common.exceptions import MsticpyException
 
 
 # pylint: disable=too-many-locals, too-many-branches

@@ -9,9 +9,9 @@ import pandas as pd
 
 from pytest import raises
 
-from ..msticpy.common.utility import MsticpyException
-from ..msticpy.nbtools.entityschema import Host
-from ..msticpy.sectools import cmd_line as cl
+from msticpy.common.exceptions import MsticpyException
+from msticpy.nbtools.entityschema import Host
+from msticpy.sectools import cmd_line as cl
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

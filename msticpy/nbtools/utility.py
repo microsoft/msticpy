@@ -9,7 +9,7 @@ import warnings
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import
 from ..common.utility import *
-from ..common.utility import md, md_warn, MsticpyException, MsticpyConfigException
+from ..common.utility import md, md_warn
 
 
 WARN_MSSG = (

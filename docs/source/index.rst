@@ -1,10 +1,38 @@
 MSTIC Jupyter and Python Security Tools
 =======================================
 
-The **msticpy** package was developed to support Jupyter
-Notebook authoring for `Azure Sentinel <https://azure.microsoft.com/en-us/services/azure-sentinel/>`__.
-Many of the components can also be used independently of Azure Sentinel
-when using Jupyter for threat hunting and security investigation.
+
+**msticpy** is a library for InfoSec investigation and hunting
+in Jupyter Notebooks. It includes functionality to:
+
+* query log data from multiple sources
+* enrich the data with Threat Intelligence, geolocations and Azure
+  resource data
+* extract Indicators of Activity (IoA) from logs and unpack encoded data
+* perform sophisticated analysis such as Anomalous session detection and
+  time series decomposition
+* visualize data using interactive timelines, process trees and
+  multi-dimensional Morph Charts
+
+It also includes some time-saving notebook tools such as widgets to
+set query time boundaries, select and display items from lists, and
+configure the notebook environment.
+
+.. figure:: visualization/_static/Timeline-08.png
+   :alt: Timeline with reference marker
+
+Background - Why we created *msticpy*
+-------------------------------------
+
+The package was originally built for authoring notebooks in
+`Azure Sentinel <https://azure.microsoft.com/en-us/services/azure-sentinel/>`__.
+While Azure Sentinel is still a big focus of our work, we are
+extending the data query/acquisition components to pull log data from
+other sources (currently Microsoft Defender and Microsoft Graph but we
+are actively working on support for data from other SIEM platforms).
+Most of the components can also be used with data from any source. Pandas
+dataframes are used as the ubiquitous input and output format of almost
+all components.
 
 Most of the content of the package began life as inline code in a
 notebook. However, having a lot of code in your notebooks creates
@@ -23,8 +51,8 @@ notebooks, and make resultant notebooks easier to read.
 What is/who are MSTIC?
 ^^^^^^^^^^^^^^^^^^^^^^
 
-MSTIC stands for the Microsoft Threat Intelligence Center - mainly
-staffed by security engineers and analysts working on:
+MSTIC == Microsoft Threat Intelligence Center. We are mostly security
+analysts and  engineers working on:
 
 * authoring security detections for several Microsoft platforms
 * threat identification and investigation

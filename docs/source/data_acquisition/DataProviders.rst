@@ -206,6 +206,169 @@ Example
     Tenant ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
+Connecting to an Azure Sentinel Workspace
+-----------------------------------------
+
+
+The previous example showed making a connection to an Azure Sentinel workspace
+by manually creating a connection string. *msticpy* has functions to build
+this connection string for you and some flexible configuration options
+allowing you to store and manage the settings for multiple workspaces.
+
+Configuration in *config.json*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you load a notebook from the Azure Sentinel UI (either in Azure Notebooks
+or in an Azure Machine Learing Workspace) a configuration file *config.json*
+is provisioned for you with the details of the source workspace populated in
+the file. An example is shown here.
+
+.. code:: json
+
+    {
+        "tenant_id": "335b56ab-67a2-4118-ac14-6eb454f350af"
+        "subscription_id": "b8f250f8-1ba5-4b2c-8e74-f7ea4a1df8a6"
+        "resource_group": "ExampleWorkspaceRG"
+        "workspace_id": "271f17d3-5457-4237-9131-ae98a6f55c37"
+        "workspace_name": "ExampleWorkspace"
+    }
+
+*msticpy* will automatically look for a *config.json* file in the current
+directory. If not found here, it will search the parent directory and in all
+its subdirectories. It will use the first *config.json* file found.
+
+The class that searches for and loads your config.json is ``WorkspaceConfig``.
+See :py:mod:`WorkspaceConfig API documentation<msticpy.common.wsconfig>`
+
+``WorkspaceConfig`` also works with workspace configuration stored in *msticpyconfig.yaml*
+(see next section).
+
+To use ``WorkspaceConfig``, simple create an instance of it. It will automatically build
+your connection string for use with the query provider library.
+
+.. code:: IPython
+
+    >>> ws_config = WorkspaceConfig()
+    >>> ws_config.code_connect_str
+
+    "loganalytics://code().tenant('335b56ab-67a2-4118-ac14-6eb454f350af').workspace('271f17d3-5457-4237-9131-ae98a6f55c37')"
+
+You can use this connection string in the call to ``QueryProvider.connect()``
+
+.. code:: IPython
+
+    qry_prov.connect(connection_str=ws_config.code_connect_str)
+
+If you need use a specific instance of a config.json you can specify a full
+path to the file you want to use when you create your ``WorkspaceConfig``
+instance.
+
+.. code:: IPython
+
+    ws_config = WorkspaceConfig(config_file="~/myworkspaces/ws123-config.json")
+    ws_config.code_connect_str
+
+
+Configuration in *msticpyconfig.yaml*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also store workspace details in your *msticpyconfig.yaml* file. This
+has some advantages over using a *config.json*:
+
+- you can store multiple workspace definitions
+- you can use an environment variable to specify its location
+
+You likely need to use a *msticpyconfig.yaml* anyway. If you are using other
+*msticpy* features such as Threat Intelligence Providers, GeoIP Lookup, Azure Data,
+etc., these all have their own configuration settings, so using a single
+configuration file makes managing your settings easier. The one downside to using
+msticpyconfig.yaml is that you have to populate the workspace settings manually.
+
+For more information on using and configuring *msticpyconfig.yaml* see
+:doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
+
+The Azure Sentinel connection settings are stored in the
+`AzureSentinel\\Workspaces` section of the file.
+
+.. code:: yaml
+
+    AzureSentinel:
+      Workspaces:
+        # Workspace used if you don't explicitly name a workspace when creating WorkspaceConfig
+        # Specifying values here overrides config.json settings unless you explictly load
+        # WorkspaceConfig with config_file parameter (WorkspaceConfig(config_file="../config.json")
+        Default:
+          WorkspaceId: "271f17d3-5457-4237-9131-ae98a6f55c37"
+          TenantId: "335b56ab-67a2-4118-ac14-6eb454f350af"
+        # To use these launch with an explicit name - WorkspaceConfig(workspace_name="Workspace2")
+        Workspace2:
+          WorkspaceId: "c88dd3c2-d657-4eb3-b913-58d58d811a41"
+          TenantId: "335b56ab-67a2-4118-ac14-6eb454f350af"
+        Workspace3:
+          WorkspaceId: "17e64332-19c9-472e-afd7-3629f299300c"
+          TenantId: "4ea41beb-4546-4fba-890b-55553ce6003a"
+
+If you only use a single workspace, you only need to create a ``Default`` entry and
+add the values for your *WorkspaceID* and *TenantID*. You can add other entries here,
+for example, SubscriptionID, ResourceGroup but these are not currently used by
+*msticpy*.
+
+.. note:: The property names are spelled differently to the values in the
+   *config.json* so be sure to enter these as shown in the example. These
+   names are case-sensitive, so they should be entered as shown.
+
+If you use multiple workspaces, you can add further entries here. Each
+workspace entry is normally the name of the Azure Sentinel workspace but
+you can use any name you prefer.
+
+To see which workspaces are configured in your *msticpyconfig.yaml* use
+the ``list_workspaces()`` function.
+
+.. tip:: ``list_workspaces`` is a class function, so you do not need to
+   instantiate a WorkspaceConfig to call this function.
+
+.. code:: IPython
+
+    >>> WorkspaceConfig.list_workspaces()
+
+    {'Default': {'WorkspaceId': '271f17d3-5457-4237-9131-ae98a6f55c37',
+      'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
+     'Workspace2': {'WorkspaceId': 'c88dd3c2-d657-4eb3-b913-58d58d811a41',
+       'TenantId': '335b56ab-67a2-4118-ac14-6eb454f350af'},
+     'Workspace3': {'WorkspaceId': '17e64332-19c9-472e-afd7-3629f299300c',
+       'TenantId': '4ea41beb-4546-4fba-890b-55553ce6003a'}}
+
+If you run ``WorkspaceConfig`` with no parameters it will
+try to load values from the "Default" entry in *msticpyconfig.yaml*.
+If this fails it will fall back to searching for a *config.json* as
+described in the previous section.
+
+.. tip:: You can duplicate the settings as the ``Default`` entry in another
+   named entry so that you can load it by name.
+
+To load settings for a specific workspace use the ``workspace_name``
+parameter to specify the workspace that you want to connect to.
+``workspace_name`` is the name of the workspace entry that you created in
+the msticpyconfig section added under ``AzureSentinel\\Workspaces``
+- not necessarily that actual name of the workspace.
+
+.. code:: IPython
+
+    ws_config = WorkspaceConfig(workspace_name="Workspace2")
+
+Entries in msticpyconfig always take precedence over settings in your
+config.json. If you want to force use of the config.json, specify the path
+to the config.json file in the ``config_file`` parameter to ``WorkspaceConfig``.
+
+.. warning:: Although msticpy allows you to configure multiple entries for
+   workspaces in different tenants, you cannot currently authenticate to workspaces
+   that span multiple tenants in the same notebook. If you need to do this, you
+   should investigate
+   `Azure Lighthouse <https://azure.microsoft.com/services/azure-lighthouse/>`__.
+   This allows delegated access to workspaces in multiple tenants from a single
+   tenant.
+
+
 Connecting to an OData Source
 -----------------------------
 :py:mod:`OData driver API documentation<msticpy.data.drivers.odata_driver>`

@@ -10,7 +10,7 @@ import attr
 import pandas as pd
 
 from ..nbtools.nbwidgets import Progress
-from ..common.utility import MsticpyException
+from ..common.exceptions import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION
@@ -299,6 +299,9 @@ def _extract_inferred_parents(
     merged_procs: pd.DataFrame, schema: ProcSchema
 ) -> pd.DataFrame:
     """Find any inferred parents and creates rows for them."""
+    tz_aware = merged_procs.iloc[0][schema.time_stamp].tz
+    time_zero = pd.Timestamp(0) if tz_aware is None else pd.Timestamp(0, tz=0)
+
     # Fill in missing values for root processes
     root_procs_crit = merged_procs["source_index_par"].isna()
     merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
@@ -318,7 +321,7 @@ def _extract_inferred_parents(
     merged_procs.loc[root_procs_crit, "EffectiveLogonId_par"] = merged_procs[
         schema.logon_id
     ]
-    merged_procs.loc[root_procs_crit, "TimeGenerated_orig_par"] = pd.Timestamp(0)
+    merged_procs.loc[root_procs_crit, "TimeGenerated_orig_par"] = time_zero
 
     # Extract synthentic rows for the parents of root processes
     inferred_parents = (
@@ -341,10 +344,7 @@ def _extract_inferred_parents(
                 "EffectiveLogonId_par": schema.logon_id,
             }
         )
-        .assign(
-            TimeGenerated=pd.Timestamp(0),
-            EffectiveLogonId=merged_procs[schema.logon_id],
-        )
+        .assign(TimeGenerated=time_zero, EffectiveLogonId=merged_procs[schema.logon_id])
         .drop_duplicates()
     )
 

@@ -180,6 +180,9 @@ def _merge_clustered_items(
         Merged dataframe
 
     """
+    tz_aware = data.iloc[0][time_column].tz
+    ts_type = "datetime64[ns, UTC]" if tz_aware is not None else "datetime64[ns]"
+
     cluster_list = []
     # Iterate through clusters, adding exemplar to output frame
     # pylint: disable=consider-using-enumerate
@@ -210,9 +213,9 @@ def _merge_clustered_items(
                 )
                 .astype(
                     dtype={
-                        "TimeGenerated": "datetime64[ns]",
-                        "FirstEventTime": "datetime64[ns]",
-                        "LastEventTime": "datetime64[ns]",
+                        "TimeGenerated": ts_type,
+                        "FirstEventTime": ts_type,
+                        "LastEventTime": ts_type,
                     }
                 )
             )
@@ -230,9 +233,9 @@ def _merge_clustered_items(
                 )[0:1]
                 .astype(
                     dtype={
-                        "TimeGenerated": "datetime64[ns]",
-                        "FirstEventTime": "datetime64[ns]",
-                        "LastEventTime": "datetime64[ns]",
+                        "TimeGenerated": ts_type,
+                        "FirstEventTime": ts_type,
+                        "LastEventTime": ts_type,
                     }
                 )
             )
