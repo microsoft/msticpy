@@ -147,7 +147,7 @@ class AzureData:
         """Get details of all subscriptions within the tenant."""
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -182,7 +182,7 @@ class AzureData:
         """
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -224,7 +224,7 @@ class AzureData:
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -318,7 +318,7 @@ class AzureData:
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -397,7 +397,7 @@ class AzureData:
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -473,7 +473,7 @@ class AzureData:
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -574,7 +574,7 @@ class AzureData:
         # Check if connection and client required are already present
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
@@ -631,7 +631,7 @@ class AzureData:
         """
         if self.connected is False:
             raise MsticpyNotConnectedError(
-                "You need to connect to service before using this function.",
+                "You need to connect to the service before using this function.",
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
