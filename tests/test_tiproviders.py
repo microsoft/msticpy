@@ -19,17 +19,17 @@ from unittest import mock
 
 import pandas as pd
 
-from ..msticpy.common import pkg_config
-from ..msticpy.sectools.iocextract import IoCExtract
-from ..msticpy.sectools.tilookup import TILookup
-from ..msticpy.sectools.tiproviders import (
+from msticpy.common import pkg_config
+from msticpy.sectools.iocextract import IoCExtract
+from msticpy.sectools.tilookup import TILookup
+from msticpy.sectools.tiproviders import (
     HttpProvider,
     LookupResult,
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,
 )
-from ..msticpy.sectools.tiproviders.ti_provider_base import (
+from msticpy.sectools.tiproviders.ti_provider_base import (
     TISeverity,
     _clean_url,
     generate_items,
@@ -236,11 +236,15 @@ class TestTIProviders(unittest.TestCase):
                 return TILookup()
 
     def test_ti_config_and_load(self):
-        self.load_ti_lookup()
-        ti_settings = get_provider_settings()
+        config_path = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")
+        with custom_mp_config(self.config_path):
+            with warnings.catch_warnings():
+                # We want to ignore warnings from missing config
+                warnings.simplefilter("ignore", category=UserWarning)
+                ti_settings = get_provider_settings()
 
-        self.assertIsInstance(ti_settings, dict)
-        self.assertGreaterEqual(len(ti_settings), 4)
+                self.assertIsInstance(ti_settings, dict)
+                self.assertGreaterEqual(len(ti_settings), 4)
 
         # Try to load TIProviders - should throw a warning on
         # missing provider class

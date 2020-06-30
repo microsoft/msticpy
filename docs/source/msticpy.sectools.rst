@@ -1,8 +1,6 @@
 msticpy.sectools package
 ========================
 
-Submodules
-----------
 
 msticpy.sectools.auditdextract module
 -------------------------------------

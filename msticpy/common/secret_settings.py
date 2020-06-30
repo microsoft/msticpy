@@ -14,7 +14,7 @@ from keyring.errors import KeyringError, KeyringLocked
 from .keyvault_client import (
     BHKeyVaultClient,
     KeyVaultSettings,
-    MPKeyVaultConfigException,
+    MsticpyKeyVaultConfigError,
 )
 
 from .utility import export
@@ -119,7 +119,7 @@ class SecretsClient:
 
         Raises
         ------
-        MsticpyConfigException
+        MsticpyKeyVaultConfigError
             Missing or invalid configuration settings.
 
         Notes
@@ -131,9 +131,10 @@ class SecretsClient:
 
         self.tenant_id = tenant_id or self._kv_settings.get("tenantid")
         if not self.tenant_id:
-            raise MPKeyVaultConfigException(
-                "TenantID must be specified in KeyVault settings section",
-                "in msticpyconfig.yaml",
+            raise MsticpyKeyVaultConfigError(
+                "Could not get TenantId from function parameters or configuration.",
+                "Please add this to the KeyVault section of msticpyconfig.yaml",
+                title="missing tenant ID value.",
             )
         self.kv_secret_vault: Dict[str, str] = {}
         self.kv_vaults: Dict[str, BHKeyVaultClient] = {}
@@ -178,7 +179,7 @@ class SecretsClient:
         self, setting_path: str
     ) -> Tuple[Optional[str], Optional[str]]:
         """Return the vault and secret name for a config path."""
-        setting_item = config.get_config_path(setting_path)
+        setting_item = config.get_config(setting_path)
 
         if not isinstance(setting_item, dict):
             return None, str(setting_item)
@@ -197,8 +198,11 @@ class SecretsClient:
                 vault_name, secret_name = kv_val.split("/")
                 return vault_name, self.format_kv_name(secret_name)
             if not def_vault_name:
-                raise MPKeyVaultConfigException(
-                    f"No VaultName defined in KeyVault settings for {setting_path}."
+                raise MsticpyKeyVaultConfigError(
+                    "Check that you have specified the right value for VaultName"
+                    + " in your configuration",
+                    f"No VaultName defined in KeyVault settings for {setting_path}.",
+                    title="Key Vault vault name not found.",
                 )
             # If there is a single string - take that as the secret name
             return def_vault_name, self.format_kv_name(kv_val)

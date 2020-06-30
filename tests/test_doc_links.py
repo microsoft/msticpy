@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ..tools.toollib.url_checker import check_md_document, check_html_docs
+from tools.toollib.url_checker import check_md_document, check_html_docs
+from tools.toollib.url_checker_async import check_docs
 
 DOC_ROOT = "docs."
 HTML_PATH = "build/html"
@@ -43,17 +44,15 @@ def test_readme_md():
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
-def test_html_doc_links():
-
-    html_doc_root = Path(DOC_ROOT) / Path(HTML_PATH)
-
-    results = check_html_docs(str(html_doc_root), recurse=True)
-    all_errs = []
-    for doc, result in results.items():
-        page_errs = [p for p in result.values() if p.status == 404]
-        if page_errs:
-            print(f"Document {doc} has 404 errors:")
-            for page_err in page_errs:
-                print(page_err)
-            all_errs = all_errs + page_errs
-    assert not all_errs
+def test_doc_pages_doc_links():
+    results = check_docs("./docs", recurse=False)
+    page_errors = []
+    for page, result_dict in results.items():
+        for result in result_dict.values():
+            if result.status == 404:
+                page_errors.append(f"{result.status} - {result.url}")
+    if page_errors:
+        print("Please fix the following 404 Errors:")
+        for page in page_errors:
+            print(page)
+    assert not page_errors

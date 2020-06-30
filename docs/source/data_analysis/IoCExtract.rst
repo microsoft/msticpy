@@ -526,7 +526,7 @@ The ioc magic supports the following options:
     %%ioc --out ioc_capture
     netsh  start capture=yes IPv4.Address=1.2.3.4 tracefile=C:\Users\user\AppData\Local\Temp\bzzzzzz.txt
     hostname	customers-service.ddns.net		Feb 5, 2020, 2:20:35 PM		7
-    URL	https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
+    URL	\https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
     hostname	mobile.phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		8
     hostname	youtube.service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		8
     hostname	www.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
@@ -601,7 +601,7 @@ The ioc magic supports the following options:
        'skynevvs.com',
        'inztaqram.ga']),
      ('url',
-      ['https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password']),
+      ['\https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password']),
      ('windows_path', ['C:\\Users\\user\\AppData\\Local\\Temp\\bzzzzzz.txt']),
      ('linux_path',
       ['//two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password\t\tFeb']),
@@ -615,7 +615,7 @@ The ioc magic supports the following options:
     netsh  start capture=yes IPv4.Address=1.2.3.4 tracefile=C:\Users\user\AppData\Local\Temp\bzzzzzz.txt
     tracefile2=/usr/localbzzzzzz.sh
     hostname	customers-service.ddns.net		Feb 5, 2020, 2:20:35 PM		7
-    URL	https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
+    URL	\https://two-step-checkup.site/securemail/secureLogin/challenge/url?ucode=d50a3eb1-9a6b-45a8-8389-d5203bbddaa1&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;service=mailservice&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;type=password		Feb 5, 2020, 2:20:35 PM		1
     hostname	mobile.phonechallenges-submit.site		Feb 5, 2020, 2:20:35 PM		8
     hostname	youtube.service-activity-checkup.site		Feb 5, 2020, 2:20:35 PM		8
     hostname	www.drive-accounts.com		Feb 5, 2020, 2:20:35 PM		7
@@ -678,189 +678,62 @@ This supports the same syntax as ``extract`` (described earlier).
     process_tree.mp_ioc.extract(columns=['CommandLine'])
 
 
-.. raw:: html
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+|     | IoCType         | Observable                                                                                           | SourceIndex  |
++=====+=================+======================================================================================================+==============+
+| 0   | dns             | microsoft.com                                                                                        | 24           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 1   | url             | \http://server/file.sct                                                                              | 31           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 2   | dns             | server                                                                                               | 31           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 3   | dns             | evil.ps                                                                                              | 35           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 4   | url             | \http://somedomain/best-kitten-names-1.jpg'                                                          | 37           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 5   | dns             | somedomain                                                                                           | 37           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 6   | dns             | blah.ps                                                                                              | 40           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 7   | md5_hash        | aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa                                                                     | 40           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 8   | dns             | blah.ps                                                                                              | 41           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 9   | md5_hash        | aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa                                                                     | 41           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 10  | md5_hash        | 81ed03caf6901e444c72ac67d192fb9c                                                                     | 44           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 11  | url             | \http://badguyserver/pwnme                                                                           | 46           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 12  | dns             | badguyserver                                                                                         | 46           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 13  | url             | \http://badguyserver/pwnme                                                                           | 47           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 14  | dns             | badguyserver                                                                                         | 47           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 15  | dns             | Invoke-Shellcode.ps                                                                                  | 48           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 16  | dns             | Invoke-ReverseDnsLookup.ps                                                                           | 49           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 17  | dns             | Wscript.Shell                                                                                        | 67           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 18  | url             | \http://system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').s...  | 77           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 19  | dns             | system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').setvalue(...  | 77           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 20  | ipv4            | 1.2.3.4                                                                                              | 78           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 21  | dns             | wscript.shell                                                                                        | 81           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 22  | dns             | abc.com                                                                                              | 90           |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 23  | ipv4            | 127.0.0.1                                                                                            | 102          |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 24  | url             | \http://127.0.0.1/                                                                                   | 102          |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
+| 25  | win_named_pipe  | \\.\pipe\blahtest"                                                                                   | 107          |
++-----+-----------------+------------------------------------------------------------------------------------------------------+--------------+
 
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoCType</th>
-          <th>Observable</th>
-          <th>SourceIndex</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>dns</td>
-          <td>microsoft.com</td>
-          <td>24</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>url</td>
-          <td>http://server/file.sct</td>
-          <td>31</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>dns</td>
-          <td>server</td>
-          <td>31</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>dns</td>
-          <td>evil.ps</td>
-          <td>35</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>url</td>
-          <td>http://somedomain/best-kitten-names-1.jpg'</td>
-          <td>37</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>dns</td>
-          <td>somedomain</td>
-          <td>37</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>dns</td>
-          <td>blah.ps</td>
-          <td>40</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>md5_hash</td>
-          <td>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td>
-          <td>40</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>dns</td>
-          <td>blah.ps</td>
-          <td>41</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>md5_hash</td>
-          <td>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td>
-          <td>41</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>md5_hash</td>
-          <td>81ed03caf6901e444c72ac67d192fb9c</td>
-          <td>44</td>
-        </tr>
-        <tr>
-          <th>11</th>
-          <td>url</td>
-          <td>http://badguyserver/pwnme</td>
-          <td>46</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>dns</td>
-          <td>badguyserver</td>
-          <td>46</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>url</td>
-          <td>http://badguyserver/pwnme</td>
-          <td>47</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>dns</td>
-          <td>badguyserver</td>
-          <td>47</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>dns</td>
-          <td>Invoke-Shellcode.ps</td>
-          <td>48</td>
-        </tr>
-        <tr>
-          <th>16</th>
-          <td>dns</td>
-          <td>Invoke-ReverseDnsLookup.ps</td>
-          <td>49</td>
-        </tr>
-        <tr>
-          <th>17</th>
-          <td>dns</td>
-          <td>Wscript.Shell</td>
-          <td>67</td>
-        </tr>
-        <tr>
-          <th>18</th>
-          <td>url</td>
-          <td>http://system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').se...</td>
-          <td>77</td>
-        </tr>
-        <tr>
-          <th>19</th>
-          <td>dns</td>
-          <td>system.management.automation.amsiutils').getfield('amsiinitfailed','nonpublic,static').setvalue(...</td>
-          <td>77</td>
-        </tr>
-        <tr>
-          <th>20</th>
-          <td>ipv4</td>
-          <td>1.2.3.4</td>
-          <td>78</td>
-        </tr>
-        <tr>
-          <th>21</th>
-          <td>dns</td>
-          <td>wscript.shell</td>
-          <td>81</td>
-        </tr>
-        <tr>
-          <th>22</th>
-          <td>dns</td>
-          <td>abc.com</td>
-          <td>90</td>
-        </tr>
-        <tr>
-          <th>23</th>
-          <td>ipv4</td>
-          <td>127.0.0.1</td>
-          <td>102</td>
-        </tr>
-        <tr>
-          <th>24</th>
-          <td>url</td>
-          <td>http://127.0.0.1/</td>
-          <td>102</td>
-        </tr>
-        <tr>
-          <th>25</th>
-          <td>win_named_pipe</td>
-          <td>\\.\pipe\blahtest"</td>
-          <td>107</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+.. note:: the URLs in the previous table have been altered to prevent
+   inadvertent navigation to them.
 

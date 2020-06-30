@@ -230,6 +230,10 @@ def display_logon_data(
          explicitly specify os_family (Linux or Windows)
          (the default is None)
 
+    Notes
+    -----
+    Currently only Windows Logon events.
+
     """
     display(format_logon(logon_event, alert, os_family))
 
@@ -290,7 +294,7 @@ def format_logon(
 
 
 def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
-    """Format a pandas series logon record for Windows or Linux."""
+    """Format a pandas series logon record."""
     logon_record = []
     logon_record.append(f"<b>Account: </b>{logon_row['TargetUserName']}")
     logon_record.append(f"<b>Account Domain: </b>{logon_row['TargetDomainName']}")

@@ -12,8 +12,8 @@ import pytest
 import IPython
 import pandas as pd
 
-from ..msticpy.nbtools.utility import MsticpyException
-from ..msticpy.nbtools.morph_charts import MorphCharts
+from msticpy.common.exceptions import MsticpyException
+from msticpy.nbtools.morph_charts import MorphCharts
 
 
 _test_data_folders = [

@@ -23,7 +23,7 @@ from ..utils.laplace_smooth import (
     laplace_smooth_param_counts,
     laplace_smooth_value_counts,
 )
-from ....common.utility import MsticpyException
+from ....common.exceptions import MsticpyException
 
 
 # pylint: disable=too-many-locals, too-many-branches
@@ -295,11 +295,10 @@ def compute_prob_setofparams_given_cmd(
         where K is the number of distinct params which appeared for the
         given `cmd` across our training set + the number of
         values which we included in the modelling for this cmd.
-        Note:
-            Some commands may have more params set in general compared
-            with other commands. It can be useful to use the geo mean
-            so that you can compare this probability across different
-            commands with differing number of params.
+        Note: some commands may have more params set in general compared
+        with other commands. It can be useful to use the geo mean
+        so that you can compare this probability across different
+        commands with differing number of params.
 
     Returns
     -------

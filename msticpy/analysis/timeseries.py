@@ -9,7 +9,8 @@ from scipy import stats
 from statsmodels.tsa.seasonal import STL
 
 from .._version import VERSION
-from ..common.utility import MsticpyException, check_kwargs, export
+from ..common.exceptions import MsticpyException
+from ..common.utility import check_kwargs, export
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"

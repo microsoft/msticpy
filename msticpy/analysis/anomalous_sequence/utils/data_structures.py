@@ -8,7 +8,7 @@
 from collections import defaultdict
 from typing import Union
 
-from ....common.utility import MsticpyException
+from ....common.exceptions import MsticpyException
 
 
 class StateMatrix(dict):

@@ -21,7 +21,8 @@ import pandas as pd
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, Host, IpAddress
-from ..common.utility import export, MsticpyException
+from ..common.exceptions import MsticpyException
+from ..common.utility import export
 from .ip_utils import convert_to_ip_entities
 
 __version__ = VERSION
@@ -142,7 +143,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
     users = []
     starts = []
     ends = []
-    ses_close_time = dt.datetime.now()
+    ses_close_time = logon_events["TimeGenerated"].max()
     ses_opened = 0
     ses_closed = 0
     # Extract logon session opened and logon session closed data.

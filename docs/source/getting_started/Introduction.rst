@@ -6,7 +6,8 @@ investigations and hunting.
 Many of the tools originated as code Jupyter notebooks written to
 solve a problem as part of a security investigation. Some
 of tools them are only useful in notebooks (e.g. much of the nbtools
-sub-package) but many others can be used from any Python program.
+sub-package) but many others can be used from the Python commandline
+or imported into your code.
 
 The package addresses three central needs for security investigators
 and hunters:
@@ -15,14 +16,6 @@ and hunters:
 -  Analyzing data
 -  Visualizing data
 
-It is organized into three main sub-packages:
-
--  **sectools** - Python security tools to help with data enrichment,
-   analysis or investigation.
--  **nbtools** - Jupyter-specific UI tools such as widgets, plotting and
-   other data display.
--  **data** - data layer and pre-defined queries for Azure Sentinel, MDATP and
-   other data sources.
 
 Use Cases and Environments
 --------------------------
