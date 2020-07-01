@@ -4,10 +4,18 @@ if "%2" equ "" goto usage
 if "%1" equ "/?" goto usage
 if /I "%1" equ "--help" goto usage
 if /I "%1" equ "-h" goto usage
+if "%3" equ "" goto no_ver
+set mp_pkg=msticpy==%3
+goto ver_spec
+:no_ver
+set mp_pkg=msticpy
+:ver_spec
+
 set h_rule=------------------------------------------------------------
 echo %h_rule%
 echo MSTICPY Package release test
 echo %h_rule%
+if "%3" neq "" echo testing with version %3
 
 REM test folder
 pushd %2 > nul 2>&1
@@ -37,7 +45,7 @@ call conda install --yes pip
 echo.
 echo %h_rule%
 echo Installing msticpy...
-pip install --user --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple msticpy
+pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple %mp_pkg%
 
 echo %h_rule%
 echo Preparing to run notebooks. Crtl-C to abort.
