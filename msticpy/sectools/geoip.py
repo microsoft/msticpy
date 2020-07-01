@@ -196,7 +196,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             raise MsticpyUserConfigError(
                 self._NO_API_KEY_MSSG,
                 help_uri=(
-                    "https://msticpy.readthedocs.io/data_acquisition/"
+                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
                     + "GeoIPLookups.html#ipstack-geo-lookup-class"
                 ),
                 service_uri="https://ipstack.com/product",
@@ -381,7 +381,7 @@ If you do not have an account, go here to create one and obtain and API key.
 https://www.maxmind.com/en/geolite2/signup
 
 Add this API key to your msticpyconfig.yaml
-https://msticpy.readthedocs.io/data_acquisition/GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class.
+https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class.
 Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 >>> iplookup = GeoLiteLookup(api_key="your_api_key")
 """
@@ -445,7 +445,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     + "check that this is a valid path."
                 ),
                 help_uri=(
-                    "https://msticpy.readthedocs.io/data_acquisition/"
+                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
                     + "GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class"
                 ),
                 service_uri="https://www.maxmind.com/en/geolite2/signup",

@@ -269,7 +269,7 @@ class TILookup:
                     "To avoid loading this provider please use the 'providers' parameter"
                     + " to TILookup() to specify which providers to load.",
                     title="TIProvider configuration error",
-                    help_uri="https://msticpy.readthedocs.io/data_acquisition/"
+                    help_uri="https://msticpy.readthedocs.io/en/latest/data_acquisition/"
                     + "TIProviders.html#configuration-file",
                 )
 
