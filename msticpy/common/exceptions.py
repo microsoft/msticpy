@@ -220,7 +220,7 @@ class MsticpyKeyVaultConfigError(MsticpyUserConfigError):
 
     DEF_HELP_URI = (
         "Using keyvault to store msticpy secrets",
-        "https://msticpy.readthedocs.io/getting_started/msticpyconfig.html"
+        "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
         + "#specifying-secrets-as-key-vault-secrets",
     )
 
@@ -274,7 +274,7 @@ class MsticpyAzureConfigError(MsticpyUserConfigError):
 
     DEF_HELP_URI = (
         "Using the Azure API connector",
-        "https://msticpy.readthedocs.io/data_acquisition/AzureData.html"
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html"
         + "#instantiating-and-connecting-with-an-azure-data-connector",
     )
 
@@ -299,7 +299,7 @@ class MsticpyNotConnectedError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Querying and importing data",
-        "https://msticpy.readthedocs.io/DataAcquisition.html#querying-and-importing-data",
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html#querying-and-importing-data",
     )
 
     def __init__(
@@ -323,7 +323,7 @@ class MsticpyNoDataSourceError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Querying and importing data",
-        "https://msticpy.readthedocs.io/DataAcquisition.html#querying-and-importing-data",
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html#querying-and-importing-data",
     )
 
     def __init__(
@@ -347,7 +347,7 @@ class MsticpyKqlConnectionError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Connecting to Azure Sentinel",
-        "https://msticpy.readthedocs.io/DataProviders.html"
+        "https://msticpy.readthedocs.io/en/latest/DataProviders.html"
         + "#connecting-to-an-azure-sentinel-workspace",
     )
 
