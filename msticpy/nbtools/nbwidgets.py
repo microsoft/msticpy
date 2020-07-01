@@ -438,7 +438,6 @@ class SelectAlert:
 
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
-        # Make _select_items a list of tuples
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
 
         self.selected_alert = None
