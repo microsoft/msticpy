@@ -82,17 +82,9 @@ class WorkspaceConfig:
             if Path("./config.json").exists():
                 config_file = "./config.json"
             else:
-                searched_configs = list(Path("..").glob("**/config.json"))
-                if not searched_configs:
-                    raise MsticpyUserConfigError(
-                        *_NO_CONFIG_ERR, title="Workspace configuration missing."
-                    )
-
-                config_file = str(searched_configs[0])
-                warnings.warn(
-                    "\n".join(_NO_CONFIG_WARN).format(config_file=config_file)
-                )
+                config_file = self._search_for_file("**/config.json")
         self._config_file = config_file
+        #
         config = self._read_config_values(config_file)
         if config:
             self._config.update(config)
@@ -219,3 +211,23 @@ class WorkspaceConfig:
                 self.PKG_CONF_TENANT_KEY
             )
         return {}
+
+    def _search_for_file(self, pattern: str) -> str:
+        config_file = None
+        searched_configs = list(Path("..").glob(pattern))
+        if not searched_configs:
+            raise MsticpyUserConfigError(
+                *_NO_CONFIG_ERR, title="Workspace configuration missing."
+            )
+        for found_file in searched_configs:
+            test_content = self._read_config_values(str(found_file))
+            if "workspace_id" in test_content:
+                config_file = found_file
+                break
+        if config_file is None:
+            raise MsticpyUserConfigError(
+                *_NO_CONFIG_ERR, title="Workspace configuration missing."
+            )
+        # Warn that we're using a "found" file
+        warnings.warn("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
+        return str(config_file)
