@@ -181,7 +181,7 @@ class MsticpyUserConfigError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Configuring msticpy",
-        "https://msticpy.readthedocs.io/getting_started/msticpyconfig.html",
+        "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     )
 
     def __init__(
