@@ -25,7 +25,7 @@ _NO_CONFIG_WARN = [
     "Using '{config_file}'.",
     "We recommend using an explicit msticpyconfig.yaml specified using the",
     "MSTICPYCONFIG environment variable. See",
-    "https://msticpy.readthedocs.io/getting_started/msticpyconfig.html",
+    "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     "for more details.",
 ]
 
