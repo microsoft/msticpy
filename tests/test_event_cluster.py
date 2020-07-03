@@ -10,8 +10,8 @@ import os
 
 import pandas as pd
 
-from ..msticpy.sectools.eventcluster import *
-from ..msticpy.sectools.eventcluster import (
+from msticpy.sectools.eventcluster import *
+from msticpy.sectools.eventcluster import (
     token_count_df,
     delim_count_df,
     char_ord_score_df,
@@ -33,7 +33,7 @@ class TestEventCluster(unittest.TestCase):
 
     def setUp(self):
         input_file = os.path.join(_TEST_DATA, "processes_on_host.csv")
-        self.input_df = pd.read_csv(input_file)
+        self.input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
 
     def test_cluster_features(self):
         out_df = add_process_features(input_frame=self.input_df, path_separator="\\")

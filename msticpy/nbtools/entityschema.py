@@ -8,16 +8,14 @@ entityschema module.
 
 Module for V3 Entities class
 """
-from ipaddress import ip_address, IPv4Address, IPv6Address
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
+from ipaddress import IPv4Address, IPv6Address, ip_address
+from typing import Any, Dict, Mapping, Type, Union
 
-# pylint: disable=locally-disabled, unused-import
-from typing import Mapping, Any, Union, Dict, Type
-
-from ..common.utility import export
 from .._version import VERSION
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -170,6 +168,33 @@ class Entity(ABC):
                 else:
                     ent_dict[prop] = val
         return ent_dict
+
+    def _repr_html_(self) -> str:
+        """
+        Display entity in IPython/Notebook.
+
+        Returns
+        -------
+        HTML
+            IPython HTML object
+
+        """
+        return self.to_html()
+
+    def to_html(self) -> str:
+        """
+        Return HTML representation of entity.
+
+        Returns
+        -------
+        str
+            HTML representation of entity
+
+        """
+        e_text = str(self)
+        e_type = self.Type
+        e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
+        return f"<h3>{e_type}</h3>{e_text}"
 
     @property
     def properties(self) -> dict:

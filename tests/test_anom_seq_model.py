@@ -1,8 +1,8 @@
 import unittest
 
-from ..msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
-from ..msticpy.analysis.anomalous_sequence.model import Model
-from ..msticpy.common.utility import MsticpyException
+from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
+from msticpy.analysis.anomalous_sequence.model import Model
+from msticpy.common.exceptions import MsticpyException
 
 
 class TestModel(unittest.TestCase):

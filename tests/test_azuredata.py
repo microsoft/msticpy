@@ -9,10 +9,10 @@ from unittest.mock import patch
 
 from pytest import raises
 
-from ..msticpy.data.azure_data import AzureData
-from ..msticpy.common.utility import MsticpyException
-from ..msticpy.common import pkg_config
-from ..msticpy.common.provider_settings import get_provider_settings
+from msticpy.data.azure_data import AzureData
+from msticpy.common.exceptions import MsticpyException
+from msticpy.common import pkg_config
+from msticpy.common.provider_settings import get_provider_settings
 
 from .unit_test_lib import get_test_data_path, custom_mp_config
 

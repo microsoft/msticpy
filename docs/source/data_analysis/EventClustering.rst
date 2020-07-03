@@ -200,118 +200,24 @@ different locations.
                                                     'pathScore', 'isSystemSession']])
 
 
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+|     | TimeGenerated            | LastEventTime            | NewProcessName                                                                                   | CommandLine                                                                                          | ClusterSize  | commandlineTokensFull  | pathScore  | isSystemSession  |
++=====+==========================+==========================+==================================================================================================+======================================================================================================+==============+========================+============+==================+
+| 46  | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Diagnostics\UserTmp\reg.exe                                                                   | .\reg  not /domain:everything that /sid:shines is /krbtgt:golden !                                   | 1            | 16                     | 2951       | False            |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 356 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service State\Resources\222\pmfexe.exe  | "C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service State\Resources\222\pmfexe.exe...  | 1            | 27                     | 9108       | True             |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 301 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Windows\System32\cmd.exe                                                                      | "cmd"                                                                                                | 1            | 2                      | 2570       | True             |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 256 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\WindowsAzure\GuestAgent_2.7.41491.901_2019-01-14_202614\CollectGuestLogs.exe                  | "CollectGuestLogs.exe" -Mode:ga -FileName:C:\WindowsAzure\CollectGuestLogsTemp\710dc858-9c96-4df...  | 1            | 18                     | 6421       | True             |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 219 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Windows\System32\wermgr.exe                                                                   | C:\Windows\system32\wermgr.exe -upload                                                               | 1            | 7                      | 2922       | True             |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 198 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Diagnostics\UserTmp\cmd.exe                                                                   | cmd  /c echo " SYSTEMINFO && SYSTEMINFO && DEL "                                                     | 1            | 17                     | 2941       | False            |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
+| 195 | 2019-01-15 04:23:43.103  | 2019-01-15 05:15:20.623  | C:\Diagnostics\UserTmp\cmd.exe                                                                   | cmd  /c "cd /d "C:\inetpub\wwwroot"&c:\windows\system32\inetsrv\appcmd set config "Default Web S...  | 1            | 39                     | 2941       | False            |
++-----+--------------------------+--------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+--------------+------------------------+------------+------------------+
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeGenerated</th>
-          <th>LastEventTime</th>
-          <th>NewProcessName</th>
-          <th>CommandLine</th>
-          <th>ClusterSize</th>
-          <th>commandlineTokensFull</th>
-          <th>pathScore</th>
-          <th>isSystemSession</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>46</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Diagnostics\UserTmp\reg.exe</td>
-          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
-          <td>1</td>
-          <td>16</td>
-          <td>2951</td>
-          <td>False</td>
-        </tr>
-        <tr>
-          <th>356</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service State\Resources\222\pmfexe.exe</td>
-          <td>"C:\Program Files\Microsoft Monitoring Agent\Agent\Health Service State\Resources\222\pmfexe.exe...</td>
-          <td>1</td>
-          <td>27</td>
-          <td>9108</td>
-          <td>True</td>
-        </tr>
-        <tr>
-          <th>301</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Windows\System32\cmd.exe</td>
-          <td>"cmd"</td>
-          <td>1</td>
-          <td>2</td>
-          <td>2570</td>
-          <td>True</td>
-        </tr>
-        <tr>
-          <th>256</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\WindowsAzure\GuestAgent_2.7.41491.901_2019-01-14_202614\CollectGuestLogs.exe</td>
-          <td>"CollectGuestLogs.exe" -Mode:ga -FileName:C:\WindowsAzure\CollectGuestLogsTemp\710dc858-9c96-4df...</td>
-          <td>1</td>
-          <td>18</td>
-          <td>6421</td>
-          <td>True</td>
-        </tr>
-        <tr>
-          <th>219</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Windows\System32\wermgr.exe</td>
-          <td>C:\Windows\system32\wermgr.exe -upload</td>
-          <td>1</td>
-          <td>7</td>
-          <td>2922</td>
-          <td>True</td>
-        </tr>
-        <tr>
-          <th>198</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Diagnostics\UserTmp\cmd.exe</td>
-          <td>cmd  /c echo " SYSTEMINFO &amp;&amp; SYSTEMINFO &amp;&amp; DEL "</td>
-          <td>1</td>
-          <td>17</td>
-          <td>2941</td>
-          <td>False</td>
-        </tr>
-        <tr>
-          <th>195</th>
-          <td>2019-01-15 04:23:43.103</td>
-          <td>2019-01-15 05:15:20.623</td>
-          <td>C:\Diagnostics\UserTmp\cmd.exe</td>
-          <td>cmd  /c "cd /d "C:\inetpub\wwwroot"&amp;c:\windows\system32\inetsrv\appcmd set config "Default Web S...</td>
-          <td>1</td>
-          <td>39</td>
-          <td>2941</td>
-          <td>False</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
 
 
 .. code:: ipython3
@@ -322,51 +228,14 @@ different locations.
     view_cluster('reg.exe')
 
 
++-----+--------------+--------------+---------------------------------------------------------------------+------------+
+|     | ClusterSize  | processName  | CommandLine                                                         | ClusterId  |
++=====+==============+==============+=====================================================================+============+
+| 46  | 1            | reg.exe      | .\reg  not /domain:everything that /sid:shines is /krbtgt:golden !  | -1         |
++-----+--------------+--------------+---------------------------------------------------------------------+------------+
+| 56  | 3            | reg.exe      | .\reg.exe  add \hkcu\software\microsoft\some\key\Run /v abadvalue   | 7          |
++-----+--------------+--------------+---------------------------------------------------------------------+------------+
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>ClusterSize</th>
-          <th>processName</th>
-          <th>CommandLine</th>
-          <th>ClusterId</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>46</th>
-          <td>1</td>
-          <td>reg.exe</td>
-          <td>.\reg  not /domain:everything that /sid:shines is /krbtgt:golden !</td>
-          <td>-1</td>
-        </tr>
-        <tr>
-          <th>56</th>
-          <td>3</td>
-          <td>reg.exe</td>
-          <td>.\reg.exe  add \hkcu\software\microsoft\some\key\Run /v abadvalue</td>
-          <td>7</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
 
 
 .. code:: ipython3
@@ -449,150 +318,15 @@ whether this is a Windows or Linux host.
     Distinct host logon patterns:
 
 
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>Unnamed: 0</th>
-          <th>TenantId</th>
-          <th>Account</th>
-          <th>EventID</th>
-          <th>TimeGenerated</th>
-          <th>SourceComputerId</th>
-          <th>Computer</th>
-          <th>SubjectUserName</th>
-          <th>SubjectDomainName</th>
-          <th>SubjectUserSid</th>
-          <th>TargetUserName</th>
-          <th>TargetDomainName</th>
-          <th>TargetUserSid</th>
-          <th>TargetLogonId</th>
-          <th>LogonProcessName</th>
-          <th>LogonType</th>
-          <th>AuthenticationPackageName</th>
-          <th>Status</th>
-          <th>IpAddress</th>
-          <th>WorkstationName</th>
-          <th>AccountNum</th>
-          <th>LogonHour</th>
-          <th>Clustered</th>
-          <th>ClusterId</th>
-          <th>ClusterSize</th>
-          <th>FirstEventTime</th>
-          <th>LastEventTime</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>1</th>
-          <td>1</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>4624</td>
-          <td>2019-01-15 01:42:28.340</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>MSTICAlertsWin1$</td>
-          <td>WORKGROUP</td>
-          <td>S-1-5-18</td>
-          <td>SYSTEM</td>
-          <td>NT AUTHORITY</td>
-          <td>S-1-5-18</td>
-          <td>0x3e7</td>
-          <td>Advapi</td>
-          <td>5</td>
-          <td>Negotiate</td>
-          <td>NaN</td>
-          <td>-</td>
-          <td>-</td>
-          <td>1484</td>
-          <td>5</td>
-          <td>True</td>
-          <td>1</td>
-          <td>11</td>
-          <td>2019-01-15 01:42:28.340</td>
-          <td>2019-01-15 05:15:14.453</td>
-        </tr>
-        <tr>
-          <th>0</th>
-          <td>0</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4624</td>
-          <td>2019-01-15 04:28:33.090</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>MSTICAlertsWin1$</td>
-          <td>WORKGROUP</td>
-          <td>S-1-5-18</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>0xfaac27</td>
-          <td>Advapi</td>
-          <td>4</td>
-          <td>Negotiate</td>
-          <td>NaN</td>
-          <td>-</td>
-          <td>MSTICAlertsWin1</td>
-          <td>2319</td>
-          <td>5</td>
-          <td>True</td>
-          <td>0</td>
-          <td>2</td>
-          <td>2019-01-15 04:28:33.090</td>
-          <td>2019-01-15 05:15:02.980</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\adm1nistrator</td>
-          <td>4624</td>
-          <td>2019-01-15 05:15:06.363</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>-</td>
-          <td>-</td>
-          <td>S-1-0-0</td>
-          <td>adm1nistrator</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-1066</td>
-          <td>0xfb5ee6</td>
-          <td>NtLmSsp</td>
-          <td>3</td>
-          <td>NTLM</td>
-          <td>NaN</td>
-          <td>fe80::38dc:e4a9:61bd:b458</td>
-          <td>MSTICAlertsWin1</td>
-          <td>2799</td>
-          <td>5</td>
-          <td>False</td>
-          <td>-1</td>
-          <td>1</td>
-          <td>2019-01-15 05:15:06.363</td>
-          <td>2019-01-15 05:15:06.363</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
++---+--------------------------------+----------+--------------------------+------------------+------------------+------------+------------+------------+--------------+--------------------------+--------------------------+
+|   | Account                        | EventID  | TimeGenerated            | Computer         | SubjectUserName  | LogonHour  | Clustered  | ClusterId  | ClusterSize  | FirstEventTime           | LastEventTime            |
++===+================================+==========+==========================+==================+==================+============+============+============+==============+==========================+==========================+
+| 1 | NT AUTHORITY\SYSTEM            | 4624     | 2019-01-15 01:42:28.340  | MSTICAlertsWin1  | MSTICAlertsWin1$ | 5          | True       | 1          | 11           | 2019-01-15 01:42:28.340  | 2019-01-15 05:15:14.453  |
++---+--------------------------------+----------+--------------------------+------------------+------------------+------------+------------+------------+--------------+--------------------------+--------------------------+
+| 0 | MSTICAlertsWin1\MSTICAdmin     | 4624     | 2019-01-15 04:28:33.090  | MSTICAlertsWin1  | MSTICAlertsWin1$ | 5          | True       | 0          | 2            | 2019-01-15 04:28:33.090  | 2019-01-15 05:15:02.980  |
++---+--------------------------------+----------+--------------------------+------------------+------------------+------------+------------+------------+--------------+--------------------------+--------------------------+
+| 2 | MSTICAlertsWin1\adm1nistrator  | 4624     | 2019-01-15 05:15:06.363  | MSTICAlertsWin1  | -                | 5          | False      | -1         | 1            | 2019-01-15 05:15:06.363  | 2019-01-15 05:15:06.363  |
++---+--------------------------------+----------+--------------------------+------------------+------------------+------------+------------+------------+--------------+--------------------------+--------------------------+
 
 
 .. code:: ipython3
@@ -654,159 +388,6 @@ whether this is a Windows or Linux host.
 
 Comparing All Logons with Clustered results relative to Alert time line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code:: ipython3
-
-    clus_logons
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>Unnamed: 0</th>
-          <th>TenantId</th>
-          <th>Account</th>
-          <th>EventID</th>
-          <th>TimeGenerated</th>
-          <th>SourceComputerId</th>
-          <th>Computer</th>
-          <th>SubjectUserName</th>
-          <th>SubjectDomainName</th>
-          <th>SubjectUserSid</th>
-          <th>TargetUserName</th>
-          <th>TargetDomainName</th>
-          <th>TargetUserSid</th>
-          <th>TargetLogonId</th>
-          <th>LogonProcessName</th>
-          <th>LogonType</th>
-          <th>AuthenticationPackageName</th>
-          <th>Status</th>
-          <th>IpAddress</th>
-          <th>WorkstationName</th>
-          <th>AccountNum</th>
-          <th>LogonHour</th>
-          <th>Clustered</th>
-          <th>ClusterId</th>
-          <th>ClusterSize</th>
-          <th>FirstEventTime</th>
-          <th>LastEventTime</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>2</th>
-          <td>2</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\adm1nistrator</td>
-          <td>4624</td>
-          <td>2019-01-15 05:15:06.363</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>-</td>
-          <td>-</td>
-          <td>S-1-0-0</td>
-          <td>adm1nistrator</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-1066</td>
-          <td>0xfb5ee6</td>
-          <td>NtLmSsp</td>
-          <td>3</td>
-          <td>NTLM</td>
-          <td>NaN</td>
-          <td>fe80::38dc:e4a9:61bd:b458</td>
-          <td>MSTICAlertsWin1</td>
-          <td>2799</td>
-          <td>5</td>
-          <td>False</td>
-          <td>-1</td>
-          <td>1</td>
-          <td>2019-01-15 05:15:06.363</td>
-          <td>2019-01-15 05:15:06.363</td>
-        </tr>
-        <tr>
-          <th>0</th>
-          <td>0</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>MSTICAlertsWin1\MSTICAdmin</td>
-          <td>4624</td>
-          <td>2019-01-15 04:28:33.090</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>MSTICAlertsWin1$</td>
-          <td>WORKGROUP</td>
-          <td>S-1-5-18</td>
-          <td>MSTICAdmin</td>
-          <td>MSTICAlertsWin1</td>
-          <td>S-1-5-21-996632719-2361334927-4038480536-500</td>
-          <td>0xfaac27</td>
-          <td>Advapi</td>
-          <td>4</td>
-          <td>Negotiate</td>
-          <td>NaN</td>
-          <td>-</td>
-          <td>MSTICAlertsWin1</td>
-          <td>2319</td>
-          <td>5</td>
-          <td>True</td>
-          <td>0</td>
-          <td>2</td>
-          <td>2019-01-15 04:28:33.090</td>
-          <td>2019-01-15 05:15:02.980</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>1</td>
-          <td>802d39e1-9d70-404d-832c-2de5e2478eda</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>4624</td>
-          <td>2019-01-15 01:42:28.340</td>
-          <td>46fe7078-61bb-4bed-9430-7ac01d91c273</td>
-          <td>MSTICAlertsWin1</td>
-          <td>MSTICAlertsWin1$</td>
-          <td>WORKGROUP</td>
-          <td>S-1-5-18</td>
-          <td>SYSTEM</td>
-          <td>NT AUTHORITY</td>
-          <td>S-1-5-18</td>
-          <td>0x3e7</td>
-          <td>Advapi</td>
-          <td>5</td>
-          <td>Negotiate</td>
-          <td>NaN</td>
-          <td>-</td>
-          <td>-</td>
-          <td>1484</td>
-          <td>5</td>
-          <td>True</td>
-          <td>1</td>
-          <td>11</td>
-          <td>2019-01-15 01:42:28.340</td>
-          <td>2019-01-15 05:15:14.453</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
 
 .. code:: ipython3
 
@@ -874,54 +455,12 @@ alert timeline.
     host_logons[['Account', 'LogonType', 'TimeGenerated']].groupby(['Account','LogonType']).count()
 
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th></th>
-          <th>TimeGenerated</th>
-        </tr>
-        <tr>
-          <th>Account</th>
-          <th>LogonType</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>MSTICAlertsWin1\MSTICAdmin</th>
-          <th>4</th>
-          <td>2</td>
-        </tr>
-        <tr>
-          <th>MSTICAlertsWin1\adm1nistrator</th>
-          <th>3</th>
-          <td>1</td>
-        </tr>
-        <tr>
-          <th>NT AUTHORITY\SYSTEM</th>
-          <th>5</th>
-          <td>11</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
++--------------------------------+------------+----------------+
+| Account                        | LogonType  | TimeGenerated  |
++================================+============+================+
+| MSTICAlertsWin1\MSTICAdmin     | 4          | 2              |
++--------------------------------+------------+----------------+
+| MSTICAlertsWin1\adm1nistrator  | 3          | 1              |
++--------------------------------+------------+----------------+
+| NT AUTHORITY\SYSTEM            | 5          | 11             |
++--------------------------------+------------+----------------+

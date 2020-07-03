@@ -8,10 +8,10 @@ import sys
 import unittest
 import pandas as pd
 
-from ..msticpy.nbtools.security_alert import SecurityAlert
-from ..msticpy.nbtools.security_alert_graph import create_alert_graph
-from ..msticpy.nbtools.nbdisplay import display_alert
-from ..msticpy.data.query_defns import DataFamily, DataEnvironment
+from msticpy.nbtools.security_alert import SecurityAlert
+from msticpy.nbtools.security_alert_graph import create_alert_graph
+from msticpy.nbtools.nbdisplay import format_alert
+from msticpy.data.query_defns import DataFamily, DataEnvironment
 
 
 sample_alert = {
@@ -216,13 +216,17 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertEqual(alert.data_environment, DataEnvironment.LogAnalytics)
 
     def test_alert_display(self):
-
         alert = SecurityAlert(self.raw_alert)
         entity_str = ", ".join([str(e) for e in alert.entities])
         self.assertIsNotNone(entity_str)
         alert_html = alert.to_html(show_entities=True)
         self.assertIsNotNone(alert_html)
         alert_html = alert.to_html(show_entities=False)
+        self.assertIsNotNone(alert_html)
+
+        alert_html = format_alert(alert)
+        self.assertIsNotNone(alert_html)
+        alert_html = format_alert(self.raw_alert)
         self.assertIsNotNone(alert_html)
 
     def test_alert_graph(self):

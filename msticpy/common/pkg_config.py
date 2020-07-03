@@ -25,7 +25,9 @@ import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
-from .utility import MsticpyConfigException, is_valid_uuid
+from . import exceptions
+from .exceptions import MsticpyUserConfigError
+from .utility import is_valid_uuid
 from .._version import VERSION
 
 __version__ = VERSION
@@ -82,13 +84,13 @@ def refresh_config():
     settings = _consolidate_configs(default_settings, custom_settings)
 
 
-def get_config_path(elem_path: str) -> Any:
+def get_config(setting_path: str) -> Any:
     """
     Return setting item for path.
 
     Parameters
     ----------
-    elem_path : str
+    setting_path : str
         Path to setting item expressed as dot-separated
         string
 
@@ -98,12 +100,37 @@ def get_config_path(elem_path: str) -> Any:
         The item at the path location.
 
     """
-    path_elems = elem_path.split(".")
+    path_elems = setting_path.split(".")
     cur_node = settings
     for elem in path_elems:
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
-            raise KeyError(f"{elem} value of {elem_path} is not a valid path")
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+    return cur_node
+
+
+def set_config(setting_path: str, value: Any):
+    """
+    Set setting value for path.
+
+    Parameters
+    ----------
+    setting_path : str
+        Path to setting item expressed as dot-separated
+        string
+    value : Any
+        The value to set.
+
+    """
+    path_elems = setting_path.split(".")
+    cur_node = settings
+    for elem in path_elems:
+        if elem in cur_node:
+            cur_node[elem] = value
+            break
+        cur_node = cur_node.get(elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
     return cur_node
 
 
@@ -128,8 +155,11 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
             try:
                 return yaml.safe_load(f_handle)
             except YAMLError as yml_err:
-                raise MsticpyConfigException(
-                    f"Error reading config file {config_file}", yml_err
+                raise MsticpyUserConfigError(
+                    f"Check that your {config_file} is valid YAML.",
+                    "The following error was encountered",
+                    str(yml_err),
+                    title="config file could not be read",
                 )
     return {}
 
@@ -263,6 +293,8 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
             section=conf_section,
             key_provs=auth_key_providers,
         )
+        if conf_section == _DP_KEY and mp_config.get(conf_section) is None:
+            continue
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
 
@@ -383,3 +415,9 @@ def _check_env_vars(args_key, section):
             elif not os.environ[env_name]:
                 mp_errs.append(f"{section}: Env variable {env_name} value is not set.")
     return mp_errs
+
+
+# Set get_config function in exceptions module
+# so that it can be called without having a circular import
+# pylint: disable=protected-access
+exceptions._get_config = get_config

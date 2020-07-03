@@ -10,7 +10,7 @@ import os
 
 import pandas as pd
 
-from ..msticpy.sectools.auditdextract import (
+from msticpy.sectools.auditdextract import (
     extract_events_to_df,
     get_event_subset,
     generate_process_tree,
@@ -18,7 +18,7 @@ from ..msticpy.sectools.auditdextract import (
     read_from_file,
 )
 
-from ..msticpy.sectools.process_tree_utils import get_summary_info
+from msticpy.sectools.process_tree_utils import get_summary_info
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

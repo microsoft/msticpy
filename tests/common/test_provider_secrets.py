@@ -12,33 +12,28 @@ import unittest
 from unittest.mock import patch, MagicMock
 import os
 from pathlib import Path
-from typing import Union, Any, Tuple
 import warnings
 
 import keyring
-import yaml
 
 from azure.core.exceptions import ResourceNotFoundError
 
-from ..msticpy.common import secret_settings
-from ..msticpy.common.keyvault_client import (
+from msticpy.common import secret_settings
+from msticpy.common.keyvault_client import (
     AuthClient,
     KeyringAuthClient,
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
-    MPKeyVaultMissingSecretException,
-    MPKeyVaultConfigException,
-    MPKeyVaultMissingVaultException,
+    MsticpyKeyVaultConfigError,
+    MsticpyKeyVaultMissingSecretError,
     _prompt_for_code,
 )
-from ..msticpy.common import pkg_config
-from ..msticpy.common.provider_settings import get_provider_settings, reload_settings
-from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
-from ..msticpy.sectools.tiproviders import ProviderSettings, get_provider_settings
-from ..msticpy.common.utility import set_unit_testing
+from msticpy.common import pkg_config
+from msticpy.common.provider_settings import get_provider_settings
+from msticpy.common.utility import set_unit_testing
 
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import get_test_data_path, custom_mp_config
 
 _TEST_DATA = get_test_data_path()
 
@@ -327,7 +322,7 @@ class TestSecretsConfig(unittest.TestCase):
         # Check missing tenantid
         no_tenant_id = deepcopy(kv_settings)
         no_tenant_id.tenantid = None
-        with self.assertRaises(MPKeyVaultConfigException):
+        with self.assertRaises(MsticpyKeyVaultConfigError):
             BHKeyVaultClient(settings=no_tenant_id, debug=True)
 
         # Device auth - simulating IPython
@@ -357,20 +352,19 @@ class TestSecretsConfig(unittest.TestCase):
             kv_val = keyvault_client.get_secret(sec)
             self.assertEqual(val, kv_val)
 
-        with self.assertRaises(MPKeyVaultMissingSecretException):
+        with self.assertRaises(MsticpyKeyVaultMissingSecretError):
             keyvault_client.get_secret("DoesntExist")
 
         kv_sec_client.set_secret("NoSecret", "")
-        with self.assertRaises(MPKeyVaultMissingSecretException):
+        with self.assertRaises(MsticpyKeyVaultMissingSecretError):
             keyvault_client.get_secret("NoSecret")
 
         kv_sec_client.set_secret("MyTestSecret", "TheActualValue")
         self.assertEqual(keyvault_client.get_secret("MyTestSecret"), "TheActualValue")
 
-    @patch(basic_tok_auth_patch)
     @patch(kv_mgmt_client_patch)
     @patch(auth_context_patch)
-    def test_kv_mgmt_client(self, auth_context, kv_mgmt, basic_tok_auth):
+    def test_kv_mgmt_client(self, auth_context, kv_mgmt):
 
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
@@ -396,7 +390,7 @@ class TestSecretsConfig(unittest.TestCase):
 
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
         kv_settings["azureregion"] = None
-        with self.assertRaises(MPKeyVaultConfigException):
+        with self.assertRaises(MsticpyKeyVaultConfigError):
             nr_vault_mgmt = BHKeyVaultMgmtClient(
                 tenant_id=kv_settings.tenantid,
                 subscription_id=kv_settings.subscriptionid,

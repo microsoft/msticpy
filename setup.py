@@ -23,7 +23,7 @@ INSTALL_REQUIRES = [
     "azure-mgmt-network>=2.7.0",
     "azure-mgmt-resource>=2.2.0,<=9.0.0",
     "azure-mgmt-subscription>=0.2.0",
-    "beautifulsoup4>=4.8.0",
+    "beautifulsoup4>=4.6.3",
     "bokeh>=1.4.0",
     "cryptography>=2.8",
     "deprecated>=1.2.4",
@@ -31,11 +31,11 @@ INSTALL_REQUIRES = [
     "folium>=0.9.0",
     "geoip2>=2.9.0",
     "ipwhois>=1.1.0",
-    "ipython>=7.2.0",
+    "ipython>=7.1.1",
     "ipywidgets>=7.4.2",
-    "keyring>=18.0.0",
+    "keyring>=13.2.1",
     "Kqlmagic>=0.1.106",
-    "matplotlib>=3.0.2",
+    "matplotlib>=3.0.0",
     "msal~=1.0.0",
     "msrest>=0.6.0",
     "msrestazure>=0.6.0",
@@ -46,23 +46,31 @@ INSTALL_REQUIRES = [
     "pyyaml>=3.13",
     "requests>=2.21.1",
     "scikit-learn>=0.20.2",
+    "scipy>=1.1.0",
     "seaborn>=0.9.0",
     "setuptools>=40.6.3",
+    "statsmodels>=0.11.1",
     "tldextract>=2.2.2",
     "tqdm>=4.36.1",
     "typing>=3.6.6",
-    "urllib3>=1.24.1",
+    "urllib3>=1.23",
 ]
 
 
-# pylint: disable=locally-disabled, invalid-name
 with open("README.md", "r") as fh:
-    long_description = fh.read()
+    LONG_DESC = fh.read()
 
+# pylint: disable=locally-disabled, invalid-name
 with open("msticpy/_version.py", "r") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
 # pylint: enable=locally-disabled, invalid-name
+
+with open("requirements.txt", "r") as fh:
+    INSTALL_REQUIRES = fh.readlines()
+
+with open("requirements-dev.txt", "r") as fh:
+    INSTALL_DEV_REQUIRES = fh.readlines()
 
 setuptools.setup(
     name="msticpy",
@@ -71,7 +79,7 @@ setuptools.setup(
     author_email="ianhelle@microsoft.com",
     description="MSTIC Security Tools",
     license="MIT License",
-    long_description=long_description,
+    long_description=LONG_DESC,
     long_description_content_type="text/markdown",
     url="https://github.com/microsoft/msticpy",
     project_urls={
@@ -79,7 +87,7 @@ setuptools.setup(
         "Code": "https://github.com/microsoft/msticpy",
     },
     python_requires=">=3.6",
-    packages=setuptools.find_packages(exclude=["*.tests"]),
+    packages=setuptools.find_packages(exclude=["tests", "tests.*", "*.tests.*"]),
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
@@ -87,6 +95,7 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
     ],
     install_requires=INSTALL_REQUIRES,
+    extras_require={"dev": INSTALL_DEV_REQUIRES},
     keywords=["security", "azure", "sentinel"],
     zip_safe=False,
     include_package_data=True,

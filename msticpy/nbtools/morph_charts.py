@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 from IPython.display import IFrame
 import pandas as pd
-from .utility import MsticpyException
+from ..common.exceptions import MsticpyException
 
 from .._version import VERSION
 

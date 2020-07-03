@@ -40,7 +40,8 @@ from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..common.utility import MsticpyConfigException, export
+from ..common.utility import export
+from ..common.exceptions import MsticpyUserConfigError
 from ..common.provider_settings import ProviderSettings, get_provider_settings
 
 __version__ = VERSION
@@ -162,10 +163,8 @@ This library uses services provided by ipstack (https://ipstack.com)"""
     _NO_API_KEY_MSSG = """
 No API Key was found to access the IPStack service.
 If you do not have an account, go here to create one and obtain and API key.
-https://ipstack.com/product
 
 Add this API key to your msticpyconfig.yaml
-https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#ipstack-geo-lookup-class.
 Alternatively, you can pass this to the IPStackLookup class when creating it:
 >>> iplookup = IPStackLookup(api_key="your_api_key")
 """
@@ -194,7 +193,15 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         else:
             self._api_key = self.settings.args.get("AuthKey")  # type: ignore
         if not self._api_key:
-            raise MsticpyConfigException(self._NO_API_KEY_MSSG)
+            raise MsticpyUserConfigError(
+                self._NO_API_KEY_MSSG,
+                help_uri=(
+                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+                    + "GeoIPLookups.html#ipstack-geo-lookup-class"
+                ),
+                service_uri="https://ipstack.com/product",
+                title="IPStack API key not found",
+            )
         self.bulk_lookup = bulk_lookup
 
     def lookup_ip(
@@ -430,8 +437,87 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(self._dbfolder)
         if not self._dbpath:
-            raise RuntimeError("No usable GeoIP Database could be found.")
+            raise MsticpyUserConfigError(
+                "No usable GeoIP Database could be found.",
+                "Check that you have correctly configured the Maxmind API key.",
+                (
+                    "If you are using a custom DBFolder setting in your config, "
+                    + "check that this is a valid path."
+                ),
+                help_uri=(
+                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+                    + "GeoIPLookups.html#maxmind-geo-ip-lite-lookup-class"
+                ),
+                service_uri="https://www.maxmind.com/en/geolite2/signup",
+                title="Maxmind GeoIP database not found",
+            )
         self._reader = geoip2.database.Reader(self._dbpath)
+
+    def _check_and_update_db(
+        self,
+        db_folder: str = None,
+        force_update: bool = False,
+        auto_update: bool = True,
+    ):
+        r"""
+        Check the age of geo ip database file and download if it older than 30 days.
+
+        User can set auto_update or force_update to True or False to
+        override auto-download behavior.
+
+        Parameters
+        ----------
+        db_folder: str, optional
+            Provide absolute path to the folder containing MMDB file
+            (e.g. '/usr/home' or 'C:\maxmind').
+            If no path provided, it is set to download to .msticpy\GeoLite2 dir under
+            user`s home directory.
+        force_update : bool, optional
+            Force update can be set to true or false. depending on it,
+            new download request will be initiated, overriding age criteria.
+        auto_update : bool, optional
+            Auto update can be set to true or false. depending on it,
+            new download request will be initiated if age criteria is matched.
+
+        """
+        geoip_db_path = self._get_geoip_dbpath(db_folder)
+        url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
+
+        if geoip_db_path is None:
+            print(
+                "No local Maxmind City Database found. ",
+                f"Attempting to downloading new database to {db_folder}",
+            )
+            self._download_and_extract_archive(url, db_folder)
+        else:
+            # Create a reader object to retrive db info and build date
+            # to check age from build_epoch property.
+            with geoip2.database.Reader(geoip_db_path) as reader:
+                last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
+
+            # Check for out of date DB file according to db_age
+            db_age = datetime.utcnow() - last_mod_time
+            db_updated = True
+            if db_age > timedelta(30) and auto_update:
+                print(
+                    "Latest local Maxmind City Database present is older than 30 days.",
+                    f"Attempting to download new database to {db_folder}",
+                )
+                if not self._download_and_extract_archive(url, db_folder):
+                    warnings.warn("DB download failed")
+                    db_updated = False
+            elif force_update:
+                print(
+                    "force_update is set to True.",
+                    f"Attempting to download new database to {db_folder}",
+                )
+                if not self._download_and_extract_archive(url, db_folder):
+                    warnings.warn("DB download failed")
+                    db_updated = False
+            if not db_updated:
+                warnings.warn(
+                    "Continuing with cached database. Results may inaccurate."
+                )
 
     def _download_and_extract_archive(  # noqa: MC0001
         self, url: str = None, db_folder: str = None
@@ -451,12 +537,12 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         Returns
         -------
-        bool
-            True if download successful.
+        bool :
+            True if download_success
 
         """
         if not self._api_key:
-            raise MsticpyConfigException(self._NO_API_KEY_MSSG)
+            return False
         if url is None:
             url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
 
@@ -534,78 +620,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             return None
 
         return latest_db_path
-
-    def _check_and_update_db(
-        self,
-        db_folder: str = None,
-        force_update: bool = False,
-        auto_update: bool = True,
-    ):
-        r"""
-        Check the age of geo ip database file and download if it older than 30 days.
-
-        User can set auto_update or force_update to True or False to
-        override auto-download behavior.
-
-        Parameters
-        ----------
-        db_folder: str, optional
-            Provide absolute path to the folder containing MMDB file
-            (e.g. '/usr/home' or 'C:\maxmind').
-            If no path provided, it is set to download to .msticpy\GeoLite2 dir under
-            user`s home directory.
-        force_update : bool, optional
-            Force update can be set to true or false. depending on it,
-            new download request will be initiated, overriding age criteria.
-        auto_update : bool, optional
-            Auto update can be set to true or false. depending on it,
-            new download request will be initiated if age criteria is matched.
-
-        """
-        geoip_db_path = self._get_geoip_dbpath(db_folder)
-        url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
-
-        if geoip_db_path is None:
-            print(
-                "No local Maxmind City Database found. ",
-                f"Attempting to downloading new database to {db_folder}",
-            )
-            db_is_current = self._download_and_extract_archive(url, db_folder)
-            if not db_is_current:
-                raise GeoIPDatabaseException(
-                    "No Maxmind DB available.", "Cannot continue."
-                )
-        else:
-            # Create a reader object to retrive db info and build date
-            # to check age from build_epoch property.
-            with geoip2.database.Reader(geoip_db_path) as reader:
-                last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
-
-            # Check for out of date DB file according to db_age
-            db_age = datetime.utcnow() - last_mod_time
-            db_is_current = True
-            if db_age > timedelta(30) and auto_update:
-                print(
-                    "Latest local Maxmind City Database present is older than 30 days.",
-                    f"Attempting to download new database to {db_folder}",
-                )
-                try:
-                    db_is_current = self._download_and_extract_archive(url, db_folder)
-                except MsticpyConfigException as no_key_err:
-                    warnings.warn(" ".join(no_key_err.args))
-            elif force_update and auto_update:
-                print(
-                    "force_update is set to True.",
-                    f"Attempting to download new database to {db_folder}",
-                )
-                try:
-                    db_is_current = self._download_and_extract_archive(url, db_folder)
-                except MsticpyConfigException as no_key_err:
-                    warnings.warn(" ".join(no_key_err.args))
-            if not db_is_current:
-                warnings.warn(
-                    "Continuing with cached database. Results may inaccurate."
-                )
 
     def lookup_ip(
         self,

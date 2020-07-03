@@ -10,10 +10,12 @@ from datetime import datetime, timedelta
 from enum import Enum
 import json
 from json import JSONDecodeError
-from typing import Any, Callable, Dict, List, Mapping, Union
+import random
+from typing import Any, Callable, Dict, List, Mapping, Union, Tuple, Optional
 
+from deprecated.sphinx import deprecated
 import pandas as pd
-from IPython.display import display
+from IPython.display import display, HTML
 import ipywidgets as widgets
 from ipywidgets import Layout
 
@@ -168,6 +170,10 @@ class Lookback(QueryParamProvider):
 
         """
         return {"start": self.start, "end": self.end}
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -362,12 +368,16 @@ class QueryTime(QueryParamProvider):
         """
         return {"start": self.start, "end": self.end}
 
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
 
 # pylint: disable=too-many-instance-attributes
 @export
-class AlertSelector(QueryParamProvider):
+class SelectAlert:
     """
-    AlertSelector.
+    Alert Selector.
 
     View list of alerts and select one for investigation.
     Optionally provide and action to call with the selected alert as a parameter
@@ -381,7 +391,7 @@ class AlertSelector(QueryParamProvider):
         The SystemAlertId of the selected alert
     alerts : List[SecurityAlert]
         The current alert list (DataFrame)
-    action : Callable[..., None]
+    action : Callable[..., Optional[Tuple[...]]]
         The callback action to execute on selection
         of an alert.
 
@@ -392,7 +402,7 @@ class AlertSelector(QueryParamProvider):
     def __init__(
         self,
         alerts: pd.DataFrame,
-        action: Callable[..., None] = None,
+        action: Callable[..., Optional[Tuple]] = None,
         columns: List[str] = None,
         auto_display: bool = False,
     ):
@@ -403,9 +413,10 @@ class AlertSelector(QueryParamProvider):
         ----------
         alerts : pd.DataFrame
             DataFrame of alerts.
-        action : Callable[..., None], optional
+        action : Callable[..., Optional[Tuple]], optional
             Optional function to execute for each selected alert.
-            (the default is None)
+            If the function returns one or a tuple of displayable objects
+            these will be displayed.
         columns : List[str], optional
             Override the default column names to use from `alerts`
             (the default is ['StartTimeUtc', 'AlertName',
@@ -444,7 +455,11 @@ class AlertSelector(QueryParamProvider):
             description="Filter alerts by title:",
             style={"description_width": "initial"},
         )
-        self._w_output = widgets.Output(layout={"border": "1px solid black"})
+
+        # setup to use updatable display objects
+        rand_id = random.randint(0, 999999)  # nosec
+        self._output_id = f"{self.__class__.__name__}_{rand_id}"
+        self._disp_elems: List[Any] = []
 
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
@@ -455,10 +470,9 @@ class AlertSelector(QueryParamProvider):
 
     def display(self):
         """Display the interactive widgets."""
+        display(widgets.VBox([self._w_filter_alerts, self._w_select_alert]))
+        display(HTML("<hr>"))
         self._select_top_alert()
-        display(
-            widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
-        )
 
     @staticmethod
     def _alert_summary(alert_row):
@@ -467,21 +481,25 @@ class AlertSelector(QueryParamProvider):
             return (
                 f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
                 + f" - ({alert_row.CompromisedEntity}) "
-                + f" - [id:{alert_row.SystemAlertId}]"
                 + f" - TI Risk: {alert_row['TI Risk']}"
+                + f" - [id:{alert_row.SystemAlertId}]",
+                alert_row.SystemAlertId,
             )
 
         return (
             f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
             + f" - ({alert_row.CompromisedEntity}) "
-            + f" - [id:{alert_row.SystemAlertId}]"
+            + f" - [id:{alert_row.SystemAlertId}]",
+            alert_row.SystemAlertId,
         )
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change["new"].lower() in i.lower()
+                alert_dtl
+                for alert_dtl[0] in self._select_items
+                if change["new"].lower() in alert_dtl[0].lower()
             ]
 
     def _select_alert(self, selection=None):
@@ -493,14 +511,10 @@ class AlertSelector(QueryParamProvider):
         ):
             self.selected_alert = None
         else:
-            match = re.search(self._ALERTID_REGEX, selection["new"])
-            if match is not None:
-                self.alert_id = match.groupdict()["alert_id"]
-                self.selected_alert = self._get_alert(self.alert_id)
-                if self.alert_action is not None:
-                    self._w_output.clear_output()
-                    with self._w_output:
-                        self.alert_action(self.selected_alert)
+            self.alert_id = selection["new"]
+            self.selected_alert = self._get_alert(self.alert_id)
+            if self.alert_action is not None:
+                self._run_action()
 
     def _get_alert(self, alert_id):
         """Get the alert by alert_id."""
@@ -531,9 +545,97 @@ class AlertSelector(QueryParamProvider):
             self.alert_id = top_alert.SystemAlertId
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
-                self._w_output.clear_output()
-                with self._w_output:
-                    self.alert_action(self.selected_alert)
+                self._run_action()
+
+    def _run_action(self):
+        """Run any action function and display details, if any."""
+        output_objs = self.alert_action(self.selected_alert)
+        if output_objs is None:
+            return
+        if not isinstance(output_objs, (tuple, list)):
+            output_objs = [output_objs]
+        display_objs = bool(self._disp_elems)
+        for idx, out_obj in enumerate(output_objs):
+            if not display_objs:
+                self._disp_elems.append(
+                    display(out_obj, display_id=f"{self._output_id}_{idx}")
+                )
+            else:
+                if idx == len(self._disp_elems):
+                    break
+                self._disp_elems[idx].update(out_obj)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+# pylint: disable=too-many-instance-attributes
+@deprecated(
+    reason="Superceded by SelectAlert. Please use that version", version="0.5.2"
+)
+@export
+class AlertSelector(SelectAlert):
+    """
+    AlertSelector.
+
+    View list of alerts and select one for investigation.
+    Optionally provide and action to call with the selected alert as a parameter
+    (typically used to display the alert.)
+
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame)
+    action : Callable[..., None]
+        The callback action to execute on selection
+        of an alert.
+
+    """
+
+    def __init__(
+        self,
+        alerts: pd.DataFrame,
+        action: Callable[..., None] = None,
+        columns: List[str] = None,
+        auto_display: bool = False,
+    ):
+        """
+        Create a new instance of AlertSelector.
+
+        Parameters
+        ----------
+        alerts : pd.DataFrame
+            DataFrame of alerts.
+        action : Callable[..., None], optional
+            Optional function to execute for each selected alert.
+            (the default is None)
+        columns : List[str], optional
+            Override the default column names to use from `alerts`
+            (the default is ['StartTimeUtc', 'AlertName',
+            'CompromisedEntity', 'SystemAlertId'])
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
+        """
+        self._w_output = widgets.Output(layout={"border": "1px solid black"})
+        super().__init__(alerts, action, columns, auto_display)
+
+    def display(self):
+        """Display the interactive widgets."""
+        self._select_top_alert()
+        display(
+            widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
+        )
+
+    def _run_action(self):
+        self._w_output.clear_output()
+        with self._w_output:
+            self.alert_action(self.selected_alert)
 
     @property
     def query_params(self):
@@ -629,9 +731,170 @@ class GetEnvironmentKey:
         if self._w_check_save.value:
             os.environ[self._name] = self._w_text.value.strip()
 
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
 
 @export
-class SelectString:
+class SelectItem:
+    """
+    Selection list from list or dict.
+
+    Attributes
+    ----------
+    value : Any
+        The selected value.
+    item_action : Callable[..., Optional[Tuple]]
+        Action to call for each selection.
+
+    """
+
+    # pylint: disable=too-many-arguments, too-few-public-methods
+    def __init__(
+        self,
+        description: str = "Select an item",
+        item_list: List[str] = None,
+        action: Callable[..., Optional[Tuple]] = None,
+        item_dict: Mapping[str, str] = None,
+        auto_display: bool = False,
+        height: str = "100px",
+        width: str = "50%",
+        display_filter: bool = True,
+    ):
+        """
+        Select an item from a list or dict.
+
+        Parameters
+        ----------
+        description : str, optional
+            The widget label to display.
+            (the default is 'Select an item')
+        item_list : List[str], optional
+            A `list` of items to select from (the default is None)
+        item_dict : Mapping[str, str], optional
+            A `dict` of items to select from. When using `item_dict`
+            the keys are displayed as the selectable items and value
+            corresponding to the selected key is set as the `value`
+            property.
+            (the default is None)
+        action : Callable[..., Optional[Tuple[...]]], optional
+            function to call when item selected (passed a single
+            parameter - the value of the currently selected item)
+            (the default is None).
+            If the function returns one or a tuple of displayable objects
+            these will be displayed.
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+        height : str, optional
+            Selection list height (the default is '100px')
+        width : str, optional
+            Selection list width (the default is '50%')
+        display_filter : bool, optional
+            Whether to display item filter (the default is True)
+
+        """
+        if item_list:
+            self._item_list = item_list
+            self._item_dict = None
+            self.value = item_list[0]
+        elif item_dict:
+            self._item_list = list(item_dict.keys())
+            self._item_dict = item_dict
+            self.value = list(self._item_dict.values())[0]
+        else:
+            raise ValueError("One of item_list or item_dict must be supplied.")
+
+        self._wgt_select = widgets.Select(
+            options=self._item_list,
+            description=description,
+            layout=Layout(width=width, height=height),
+            style={"description_width": "initial"},
+        )
+        self._display_filter = display_filter
+        if display_filter:
+            self._w_filter = widgets.Text(
+                value="", description="Filter:", style={"description_width": "initial"}
+            )
+
+            # set up observer callbacks
+            self._w_filter.observe(self._update_options, names="value")
+        self._wgt_select.observe(self._select_item, names="value")
+
+        self.item_action = action
+
+        # setup to use updatable display objects
+        rand_id = random.randint(0, 999999)  # nosec
+        self._output_id = f"{self.__class__.__name__}_{rand_id}"
+        self._disp_elems: List[Any] = []
+
+        if auto_display:
+            self.display()
+
+    def _select_item(self, selection):
+        if (
+            selection is None
+            or "new" not in selection
+            or not isinstance(selection["new"], str)
+        ):
+            return
+        value = selection["new"]
+        if self._item_dict:
+            self.value = self._item_dict.get(value, None)
+        else:
+            self.value = value
+
+        if self.item_action is not None:
+            self._run_action()
+
+    def _update_options(self, change):
+        """Filter the alert list by substring."""
+        if change is not None and "new" in change:
+            self._wgt_select.options = [
+                i for i in self._item_list if change["new"].lower() in i.lower()
+            ]
+
+    def _run_action(self):
+        """Run any action function and display details, if any."""
+        output_objs = self.item_action(self.value)
+        if output_objs is None:
+            return
+        if not isinstance(output_objs, (tuple, list)):
+            output_objs = [output_objs]
+        display_objs = bool(self._disp_elems)
+        for idx, out_obj in enumerate(output_objs):
+            if not display_objs:
+                self._disp_elems.append(
+                    display(out_obj, display_id=f"{self._output_id}_{idx}")
+                )
+            else:
+                if idx == len(self._disp_elems):
+                    break
+                self._disp_elems[idx].update(out_obj)
+
+    def display(self):
+        """Display the interactive widget."""
+        wgt_list = []
+        if self._display_filter:
+            wgt_list.append(self._w_filter)
+        wgt_list.append(self._wgt_select)
+        display(widgets.VBox(wgt_list))
+        display(HTML("<hr>"))
+        self._show_top_item()
+
+    def _show_top_item(self):
+        """Run action on the first item by default."""
+        if self.item_action is not None and self.value is not None:
+            self._run_action()
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+@deprecated(reason="Superceded by SelectItem. Please use that version", version="0.5.2")
+@export
+class SelectString(SelectItem):
     """
     Selection list from list or dict.
 
@@ -686,64 +949,23 @@ class SelectString:
             Whether to display item filter (the default is True)
 
         """
-        if item_list:
-            self._item_list = item_list
-            self._item_dict = None
-            self.value = item_list[0]
-        elif item_dict:
-            self._item_list = list(item_dict.keys())
-            self._item_dict = item_dict
-            self.value = list(self._item_dict.values())[0]
-        else:
-            raise ValueError("One of item_list or item_dict must be supplied.")
+        self._w_output = widgets.Output(layout={"border": "1px solid black"})
 
-        self._wgt_select = widgets.Select(
-            options=self._item_list,
+        super().__init__(
             description=description,
-            layout=Layout(width=width, height=height),
-            style={"description_width": "initial"},
+            item_list=item_list,
+            item_dict=item_dict,
+            action=action,
+            auto_display=auto_display,
+            height=height,
+            width=width,
+            display_filter=display_filter,
         )
-        self._display_filter = display_filter
-        if display_filter:
-            self._w_filter = widgets.Text(
-                value="", description="Filter:", style={"description_width": "initial"}
-            )
 
-            # set up observer callbacks
-            self._w_filter.observe(self._update_options, names="value")
-        self._wgt_select.observe(self._select_item, names="value")
-
-        self.item_action = action
-        if self.item_action:
-            self._w_output = widgets.Output(layout={"border": "1px solid black"})
-        if auto_display:
-            self.display()
-
-    def _select_item(self, selection):
-        if (
-            selection is None
-            or "new" not in selection
-            or not isinstance(selection["new"], str)
-        ):
-            return
-        value = selection["new"]
-
-        if self._item_dict:
-            self.value = self._item_dict.get(value, None)
-        else:
-            self.value = value
-
-        if self.item_action is not None:
-            self._w_output.clear_output()
-            with self._w_output:
-                self.item_action(self.value)
-
-    def _update_options(self, change):
-        """Filter the alert list by substring."""
-        if change is not None and "new" in change:
-            self._wgt_select.options = [
-                i for i in self._item_list if change["new"].lower() in i.lower()
-            ]
+    def _run_action(self):
+        self._w_output.clear_output()
+        with self._w_output:
+            self.item_action(self.value)
 
     def display(self):
         """Display the interactive widget."""
@@ -755,13 +977,6 @@ class SelectString:
         if self.item_action:
             wgt_list.append(self._w_output)
         display(widgets.VBox(wgt_list))
-
-    def _show_top_item(self):
-        """Run action on the first item by default."""
-        if self.item_action is not None and self.value:
-            self._w_output.clear_output()
-            with self._w_output:
-                self.item_action(self.value)
 
 
 @export
@@ -850,10 +1065,10 @@ class SelectSubset:
         v_box = widgets.VBox(
             [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
         )
-        wgt_box = widgets.HBox([self._source_list, v_box, self._select_list])
+        self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
-            wgt_box = widgets.VBox([self._w_filter, wgt_box])
-        display(wgt_box)
+            self.layout = widgets.VBox([self._w_filter, self.layout])
+        display(self.layout)
 
     @property
     def selected_items(self) -> List[Any]:
@@ -949,6 +1164,14 @@ class SelectSubset:
         del button
         self._select_list.options = []
 
+    def display(self):
+        """Display the control."""
+        display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
 
 @export
 class Progress:
@@ -979,7 +1202,8 @@ class Progress:
         self._done_label = widgets.Label(value="0%")
         self._progress.visible = visible
         self._done_label.visible = visible
-        display(widgets.HBox([self._progress, self._done_label]))
+        self.layout = widgets.HBox([self._progress, self._done_label])
+        self.display()
 
     @property
     def value(self) -> int:
@@ -1036,3 +1260,11 @@ class Progress:
         """Hide the controls."""
         self._progress.visible = True
         self._done_label.visible = True
+
+    def display(self):
+        """Display the control."""
+        display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()

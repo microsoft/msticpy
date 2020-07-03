@@ -210,8 +210,6 @@ Query, data source, parameters and parameterized raw KQL query
     </div>
 
 
-
-
 Time Series Analysis and discovering Anomalies
 ----------------------------------------------
 
@@ -344,6 +342,299 @@ the similar details
       </tbody>
     </table>
     </div>
+
+Using MSTICPY - Seasonal-Trend decomposition using LOESS (STL)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this case, we will use msticpy function `timeseries_anomalies_stl` which leverages `STL` method from `statsmodels` API to decompose a time series into three components: trend, seasonal and residual. STL uses LOESS (locally estimated scatterplot smoothing) to extract smooths estimates of the three components. The key inputs into STL are:
+
+- season - The length of the seasonal smoother. Must be odd.
+- trend - The length of the trend smoother, usually around 150% of season. Must be odd and larger than season.
+- low_pass - The length of the low-pass estimation window, usually the smallest odd number larger than the periodicity of the data.
+
+More info : https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL
+
+Documentation of timeseries_anomalies_stl function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.core.frame.DataFrame
+    Discover anomalies in Timeseries data using
+    STL (Seasonal-Trend Decomposition using LOESS) method using statsmodels package.
+    
+    Parameters
+    ----------
+    data: pd.DataFrame
+        DataFrame as a time series data set retrived from data connector or external data source.
+        Dataframe must have 2 columns with time column set as index and other numeric value.
+    
+    Other Parameters
+    ----------------
+    seasonal: int, optional
+        Seasonality period of the input data required for STL. 
+        Must be an odd integer, and should normally be >= 7 (default).
+    period: int, optional
+        Periodicity of the the input data. by default 24 (Hourly).
+    score_threshold: float, optional
+        standard deviation threshold value calculated using Z-score used to flag anomalies,
+        by default 3
+    
+    Returns
+    -------
+    pd.DataFrame
+        Returns a dataframe with additional columns by decomposing time series data
+        into residual, trend, seasonal, weights, baseline, score and anomalies.
+        The anomalies column will have 0,1,-1 values based on score_threshold set.
+
+.. code:: ipython3
+
+    # Read Time series data with date as index and other column
+    stldemo = pd.read_csv(
+        "data/TimeSeriesDemo.csv", index_col=["TimeGenerated"], usecols=["TimeGenerated","TotalBytesSent"])
+    stldemo.head()
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>TotalBytesSent</th>
+        </tr>
+        <tr>
+          <th>TimeGenerated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>2019-05-01T06:00:00Z</th>
+          <td>873713587</td>
+        </tr>
+        <tr>
+          <th>2019-05-01T07:00:00Z</th>
+          <td>882187669</td>
+        </tr>
+        <tr>
+          <th>2019-05-01T08:00:00Z</th>
+          <td>852506841</td>
+        </tr>
+        <tr>
+          <th>2019-05-01T09:00:00Z</th>
+          <td>898793650</td>
+        </tr>
+        <tr>
+          <th>2019-05-01T10:00:00Z</th>
+          <td>891598085</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
+
+Discover anomalies using timeseries_anomalies_stl function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We will run msticpy function `timeseries_anomalies_stl` on the input data to discover anomalies.
+
+.. code:: ipython3
+
+    output = timeseries_anomalies_stl(stldemo)
+    output.head()
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>TimeGenerated</th>
+          <th>TotalBytesSent</th>
+          <th>residual</th>
+          <th>trend</th>
+          <th>seasonal</th>
+          <th>weights</th>
+          <th>baseline</th>
+          <th>score</th>
+          <th>anomalies</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>2019-05-01T06:00:00Z</td>
+          <td>873713587</td>
+          <td>-7258970</td>
+          <td>786685528</td>
+          <td>94287029</td>
+          <td>1</td>
+          <td>880972557</td>
+          <td>-0.097114</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>1</th>
+          <td>2019-05-01T07:00:00Z</td>
+          <td>882187669</td>
+          <td>2291183</td>
+          <td>789268398</td>
+          <td>90628087</td>
+          <td>1</td>
+          <td>879896485</td>
+          <td>0.029661</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>2019-05-01T08:00:00Z</td>
+          <td>852506841</td>
+          <td>-2875384</td>
+          <td>791851068</td>
+          <td>63531157</td>
+          <td>1</td>
+          <td>855382225</td>
+          <td>-0.038923</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>2019-05-01T09:00:00Z</td>
+          <td>898793650</td>
+          <td>17934415</td>
+          <td>794432848</td>
+          <td>86426386</td>
+          <td>1</td>
+          <td>880859234</td>
+          <td>0.237320</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <th>4</th>
+          <td>2019-05-01T10:00:00Z</td>
+          <td>891598085</td>
+          <td>8677706</td>
+          <td>797012590</td>
+          <td>85907788</td>
+          <td>1</td>
+          <td>882920378</td>
+          <td>0.114440</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
+
+Displaying Anomalies using STL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We will filter only the anomalies (with value 1 from anomalies column) of the output dataframe retrieved after running the msticpy function `timeseries_anomalies_stl`
+
+.. code:: ipython3
+
+    output[output['anomalies']==1]
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>TimeGenerated</th>
+          <th>TotalBytesSent</th>
+          <th>residual</th>
+          <th>trend</th>
+          <th>seasonal</th>
+          <th>weights</th>
+          <th>baseline</th>
+          <th>score</th>
+          <th>anomalies</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>299</th>
+          <td>2019-05-13T17:00:00Z</td>
+          <td>916767394</td>
+          <td>288355070</td>
+          <td>523626111</td>
+          <td>104786212</td>
+          <td>1</td>
+          <td>628412323</td>
+          <td>3.827062</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <th>399</th>
+          <td>2019-05-17T21:00:00Z</td>
+          <td>1555286702</td>
+          <td>296390627</td>
+          <td>1132354860</td>
+          <td>126541214</td>
+          <td>1</td>
+          <td>1258896074</td>
+          <td>3.933731</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <th>599</th>
+          <td>2019-05-26T05:00:00Z</td>
+          <td>1768911488</td>
+          <td>347810809</td>
+          <td>1300005332</td>
+          <td>121095345</td>
+          <td>1</td>
+          <td>1421100678</td>
+          <td>4.616317</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
 
 Read From External Sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -548,6 +839,7 @@ details
     </table>
     </div>
 
+
 Displaying Anomalies Separately
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -618,6 +910,7 @@ other suspicious activity from other datasources.
       </tbody>
     </table>
     </div>
+
 
 
 Time Series Anomalies Visualization
