@@ -13,7 +13,7 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
 
-from ..msticpy.sectools import process_tree_utils as ptutil
+from msticpy.sectools import process_tree_utils as ptutil
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

@@ -7,7 +7,7 @@
 from pathlib import Path
 import unittest
 
-from ..msticpy.nbtools import utils
+from msticpy.nbtools import utils
 
 
 class TestUtils(unittest.TestCase):

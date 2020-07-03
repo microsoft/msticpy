@@ -10,8 +10,8 @@ import os
 from typing import Union, Dict, Any, Generator
 
 # pylint: disable=relative-beyond-top-level
-from ..msticpy.common import pkg_config
-from ..msticpy.common.utility import export
+from msticpy.common import pkg_config
+from msticpy.common.utility import export
 
 __author__ = "Ian Hellen"
 
@@ -54,7 +54,7 @@ def custom_mp_config(
         If mp_path does not exist.
 
     """
-    current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR, "")
+    current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR)
     if not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
     try:
@@ -62,5 +62,8 @@ def custom_mp_config(
         pkg_config.refresh_config()
         yield pkg_config.settings
     finally:
-        os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
+        if not current_path:
+            del os.environ[pkg_config._CONFIG_ENV_VAR]
+        else:
+            os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
         pkg_config.refresh_config()

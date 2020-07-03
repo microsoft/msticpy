@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, Mapping, Union
+from typing import Any, Mapping, Union, Tuple, List
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
+import IPython
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
 
@@ -43,29 +44,55 @@ def display_alert(
         Whether to display entities (the default is False)
 
     """
+    output = format_alert(alert, show_entities)
+    if not isinstance(output, tuple):
+        output = [output]
+    for disp_obj in output:
+        display(disp_obj)
+
+
+@export
+def format_alert(
+    alert: Union[Mapping[str, Any], SecurityAlert], show_entities: bool = False
+) -> Union[IPython.display.HTML, Tuple[IPython.display.HTML, pd.DataFrame]]:
+    """
+    Get IPython displayable Security Alert.
+
+    Parameters
+    ----------
+    alert : Union[Mapping[str, Any], SecurityAlert]
+        The alert to display as Mapping (e.g. pd.Series)
+        or SecurityAlert
+    show_entities : bool, optional
+        Whether to display entities (the default is False)
+
+    Returns
+    -------
+    Union[IPython.display.HTML, Tuple[IPython.display.HTML, pd.DataFrame]]
+        Single or tuple of displayable IPython objects
+
+    Raises
+    ------
+    ValueError
+        If the alert object is in an unknown format
+
+    """
     if isinstance(alert, SecurityAlert):
-        display(HTML(alert.to_html(show_entities=False)))
-        if show_entities:
-            for entity in alert.entities:
-                print(entity)
-        return
+        return HTML(alert.to_html(show_entities=show_entities))
 
     # Display subset of raw properties
     if isinstance(alert, pd.Series):
         entity = alert["CompromisedEntity"] if "CompromisedEntity" in alert else ""
-        title = """
-            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
-            entity=<b>{entity}</b>, id=<b>{id}</b>
-            """.format(
-            start=alert["StartTimeUtc"],
-            name=alert["AlertDisplayName"],
-            entity=entity,
-            id=alert["SystemAlertId"],
-        )
-        display(HTML(title))
-        display(pd.DataFrame(alert))
-    else:
-        raise ValueError("Unrecognized alert object type " + str(type(alert)))
+        title = f"""
+            <h3>Series Alert: '{alert["AlertDisplayName"]}'</h3>
+            <b>Alert_time:</b> {alert["StartTimeUtc"]},&nbsp;
+            <b>Compr_entity:</b> {entity},&nbsp;
+            <b>Alert_id:</b> {alert["SystemAlertId"]}
+            <br/>
+            """
+        return HTML(title), pd.DataFrame(alert)
+
+    raise ValueError("Unrecognized alert object type " + str(type(alert)))
 
 
 @export
@@ -190,7 +217,7 @@ def display_logon_data(
     logon_event: pd.DataFrame, alert: SecurityAlert = None, os_family: str = None
 ):
     """
-    Display logon data for one or more events.
+    Display logon data for one or more events as HTML table.
 
     Parameters
     ----------
@@ -203,59 +230,127 @@ def display_logon_data(
          explicitly specify os_family (Linux or Windows)
          (the default is None)
 
+    Notes
+    -----
+    Currently only Windows Logon events.
+
+    """
+    display(format_logon(logon_event, alert, os_family))
+
+
+@export
+def format_logon(
+    logon_event: Union[pd.DataFrame, pd.Series],
+    alert: SecurityAlert = None,
+    os_family: str = None,
+) -> IPython.display.HTML:
+    """
+    Return logon data for one or more events as HTML table.
+
+    Parameters
+    ----------
+    logon_event : Union[pd.DataFrame, pd.Series]
+        Dataframe containing one or more logon events
+        or Series containing a single logon event.
+    alert : SecurityAlert, optional
+        obtain os_family from the security alert
+        (the default is None)
+    os_family : str, optional
+         explicitly specify os_family (Linux or Windows)
+         (the default is None)
+
+    Returns
+    -------
+    IPython.display.HTML :
+        HTML display object
+
     """
     if not os_family:
         os_family = alert.os_family if alert else "Windows"
 
-    for _, logon_row in logon_event.iterrows():
-        print("### Account Logon")
-        print("Account: ", logon_row["TargetUserName"])
-        print("Account Domain: ", logon_row["TargetDomainName"])
-        print("Logon Time: ", logon_row["TimeGenerated"])
-
-        if os_family == "Windows":
-            logon_type = logon_row["LogonType"]
-            logon_desc_idx = logon_type
-            if logon_type not in _WIN_LOGON_TYPE_MAP:
-                logon_desc_idx = 0
-            print(
-                f"Logon type: {logon_type} ", f"({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})"
+    logon_output = []
+    if isinstance(logon_event, pd.DataFrame):
+        for _, logon_row in logon_event.iterrows():
+            logon_record = _fmt_single_row(logon_row, os_family)
+            logon_output.append(
+                "<tr class='cell_logon'><td class='cell_logon'>"
+                + f"{'<br>'.join(logon_record)}</td></tr>"
             )
+    elif isinstance(logon_event, pd.Series):
+        logon_record = _fmt_single_row(logon_event, os_family)
+        logon_output.append(
+            "<tr class='cell_logon'><td class='cell_logon'>"
+            + f"{'<br>'.join(logon_record)}</td></tr>"
+        )
 
-        account_id = logon_row.TargetUserSid
-        print("User Id/SID: ", account_id)
-        if os_family == "Windows":
-            _print_sid_info(account_id)
-        else:
-            print("Audit user: ", logon_row["audit_user"])
-
-        session_id = logon_row["TargetLogonId"]
-        print(f"Session id '{session_id}'", end="  ")
-        if session_id in ["0x3e7", "-1"]:
-            print("System logon session")
-
-        print()
-        domain = logon_row["SubjectDomainName"]
-        if not domain:
-            subj_account = logon_row.SubjectUserName
-        else:
-            subj_account = f"{domain}/{logon_row.SubjectUserName}"
-        print("Subject (source) account: ", subj_account)
-
-        print("Logon process: ", logon_row["LogonProcessName"])
-        print("Authentication: ", logon_row["AuthenticationPackageName"])
-        print("Source IpAddress: ", logon_row["IpAddress"])
-        print("Source Host: ", logon_row["WorkstationName"])
-        print("Logon status: ", logon_row["Status"])
-        print()
+    t_style = """
+        <style>
+            .table_logon {border-collapse: collapse; width: 50%;}
+            .cell_logon {border: 1px solid #ddd !important;
+                text-align: left !important; padding: 15px !important;}
+        </style>
+        """
+    return HTML(f"{t_style}<table class='table_logon'>{''.join(logon_output)}</table>")
 
 
-def _print_sid_info(sid):
+def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
+    """Format a pandas series logon record."""
+    logon_record = []
+    logon_record.append(f"<b>Account: </b>{logon_row['TargetUserName']}")
+    logon_record.append(f"<b>Account Domain: </b>{logon_row['TargetDomainName']}")
+    logon_record.append(f"<b>Logon Time: </b>{logon_row['TimeGenerated']}")
+
+    if os_family == "Windows":
+        logon_type = logon_row["LogonType"]
+        logon_desc_idx = logon_type
+        if logon_type not in _WIN_LOGON_TYPE_MAP:
+            logon_desc_idx = 0
+        logon_record.append(
+            f"<b>Logon type: </b>{logon_type}"
+            + f"({_WIN_LOGON_TYPE_MAP[logon_desc_idx]})"
+        )
+
+    account_id = logon_row.TargetUserSid
+    logon_record.append(f"<b>User Id/SID: </b>{account_id}")
+    if os_family == "Windows":
+        logon_record.extend(_format_sid_info(account_id))
+    else:
+        logon_record.append(f"<b>Audit user: </b>{logon_row['audit_user']}")
+
+    session_id = logon_row["TargetLogonId"]
+    sess_id = f"<b>Session id: </b>'{session_id}'"
+    if session_id in ["0x3e7", "-1"]:
+        sess_id += "System logon session"
+    logon_record.append("")
+
+    domain = logon_row["SubjectDomainName"]
+    if not domain:
+        subj_account = logon_row.SubjectUserName
+    else:
+        subj_account = f"{domain}/{logon_row.SubjectUserName}"
+    logon_record.append(f"<b>Subject (source) account: </b>{subj_account}")
+
+    logon_record.append(f"<b>Logon process: </b>{logon_row['LogonProcessName']}")
+    logon_record.append(
+        f"<b>Authentication: </b>{logon_row['AuthenticationPackageName']}"
+    )
+    logon_record.append(f"<b>Source IpAddress: </b>{logon_row['IpAddress']}")
+    logon_record.append(f"<b>Source Host: </b>{logon_row['WorkstationName']}")
+    logon_record.append(f"<b>Logon status: </b>{logon_row['Status']}")
+    logon_record.append("")
+    return logon_record
+
+
+def _format_sid_info(sid):
+    sid_info = []
+    if not sid:
+        return sid_info
     if sid in _WINDOWS_SID:
-        print("    SID {} is {}".format(sid, _WINDOWS_SID[sid]))
+        sid_info.append(f"&nbsp;&nbsp;SID {sid} is {_WINDOWS_SID[sid]}")
     elif sid.endswith(_ADMINISTRATOR_SID):
-        print("    SID {} is administrator".format(sid))
+        sid_info.append(f"&nbsp;&nbsp;SID {sid} is administrator")
     elif sid.endswith(_GUEST_SID):
-        print("    SID {} is guest".format(sid))
+        sid_info.append(f"&nbsp;&nbsp;SID {sid} is guest")
     if sid.startswith(_DOM_OR_MACHINE_SID):
-        print("    SID {} is local machine or domain account".format(sid))
+        sid_info.append(f"&nbsp;&nbsp;SID {sid} is local machine or domain account")
+    return sid_info

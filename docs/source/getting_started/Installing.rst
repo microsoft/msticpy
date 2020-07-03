@@ -22,11 +22,11 @@ with packages in your existing Python environment you may want to
 create a Python virtual environment
 or a conda environment and install the package there.
 
-
-For standard python use the ``virtualenv`` command (several alternatives
-to virtualenv are available). For Conda use the conda ``env`` command.
+For standard python use the ``venv`` command to do this
+(there are several alternatives to venv available).
+For Conda use the conda ``env`` command.
 In both cases be sure to activate the environment before running jupyter
-using ``activate {my_env_name}``.
+using ``activate {my_env_name}`` (or ``conda activate {my_env_name}``).
 
 Installation
 ------------

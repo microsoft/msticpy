@@ -20,8 +20,12 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
+from ..common.exceptions import (
+    MsticpyAzureConfigError,
+    MsticpyNotConnectedError,
+    MsticpyResourceException,
+)
 from ..common.provider_settings import get_provider_settings
-from ..common.utility import MsticpyException
 from .._version import VERSION
 
 __version__ = VERSION
@@ -86,10 +90,6 @@ class InterfaceItems:
     subnet_route_table = attr.ib()
 
 
-class MsticpyAzureException(MsticpyException):
-    """Exception class for AzureData."""
-
-
 # pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
@@ -116,14 +116,22 @@ class AzureData:
             az_cli_config = data_provs.get("AzureCLI")
             # az_cli_config = config.settings.get("AzureCLI")
             if not az_cli_config:
-                raise MsticpyAzureException(
-                    "No AzureCLI configuration found in configuration settings."
+                raise MsticpyAzureConfigError(
+                    "No AzureCLI section found in configuration settings.",
+                    title="no AzureCLI settings available.",
                 )
             config_items = az_cli_config.args
-            client_id = config_items["clientId"]
-            tenant_id = config_items["tenantId"]
-            secret = config_items["clientSecret"]
-
+            try:
+                client_id = config_items["clientId"]
+                tenant_id = config_items["tenantId"]
+                secret = config_items["clientSecret"]
+            except KeyError as key_err:
+                key_name = key_err.args[0]
+                raise MsticpyAzureConfigError(
+                    f"{key_name} is missing from AzureCLI section in your",
+                    "configuration.",
+                    title="missing f{key_name} settings for AzureCLI.",
+                )
         # Create credentials and connect to the subscription client to validate
         self.credentials = ServicePrincipalCredentials(
             client_id=client_id, secret=secret, tenant=tenant_id
@@ -138,7 +146,11 @@ class AzureData:
     def get_subscriptions(self) -> pd.DataFrame:
         """Get details of all subscriptions within the tenant."""
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         subscription_ids = []
         display_names = []
@@ -169,7 +181,11 @@ class AzureData:
 
         """
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
         sub_details = {
@@ -207,7 +223,11 @@ class AzureData:
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         self._check_client("resource_client", sub_id)
 
@@ -297,8 +317,11 @@ class AzureData:
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
-
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
         self._check_client("resource_client", sub_id)
 
         # If a resource id is provided use get_by_id to get details
@@ -373,7 +396,11 @@ class AzureData:
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         self._check_client("resource_client", sub_id)  # type: ignore
 
@@ -383,7 +410,7 @@ class AzureData:
                 namespace = resource_id.split("/")[6]
                 service = resource_id.split("/")[7]
             except IndexError:
-                raise MsticpyAzureException(
+                raise MsticpyResourceException(
                     "Provided Resource ID isn't in the correct format.",
                     "It should look like:",
                     "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
@@ -395,9 +422,9 @@ class AzureData:
                 namespace = resource_provider.split("/")[0]
                 service = resource_provider.split("/")[1]
             except IndexError:
-                raise MsticpyAzureException(
-                    """Provided Resource Provider isn't in the correct format. It should look like:
-                       NAMESPACE/SERVICE_NAME"""
+                raise MsticpyResourceException(
+                    "Provided Resource Provider isn't in the correct format.",
+                    "It should look like: NAMESPACE/SERVICE_NAME",
                 )
         else:
             raise ValueError(
@@ -420,7 +447,7 @@ class AzureData:
             else:
                 api_ver = api_version[0]
         else:
-            raise MsticpyAzureException("Resource provider not found")
+            raise MsticpyResourceException("Resource provider not found")
 
         return str(api_ver)
 
@@ -445,7 +472,11 @@ class AzureData:
         """
         # Check if connection and client required are already present
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         self._check_client("network_client", sub_id)
 
@@ -536,13 +567,17 @@ class AzureData:
         elif sample_time.casefold().startswith("m"):
             interval = "PT1M"
         else:
-            raise MsticpyAzureException(
-                "Select how often you want to sample data - 'hour', or 'minute'"
+            raise ValueError(
+                "invalid value for sample_time - specify 'hour', or 'minute'"
             )
 
         # Check if connection and client required are already present
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         self._check_client("monitoring_client", sub_id)
 
@@ -595,7 +630,11 @@ class AzureData:
 
         """
         if self.connected is False:
-            raise MsticpyAzureException("Please connect before continuing")
+            raise MsticpyNotConnectedError(
+                "You need to connect to the service before using this function.",
+                help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
+                title="Please call connect() before continuing.",
+            )
 
         self._check_client("compute_client", sub_id)
 

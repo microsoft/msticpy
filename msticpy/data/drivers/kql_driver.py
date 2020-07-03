@@ -4,13 +4,24 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
+import re
 from typing import Tuple, Union, Any, Dict, Optional
 
+import json
 import pandas as pd
 from IPython import get_ipython
+from adal.adal_error import AdalError
+from Kqlmagic.kql_response import KqlError
+from Kqlmagic.kql_engine import KqlEngineError
+from Kqlmagic.my_aad_helper import AuthenticationError
 
 from .driver_base import DriverBase, QuerySource
-from ...common.utility import export, MsticpyException
+from ...common.exceptions import (
+    MsticpyNoDataSourceError,
+    MsticpyNotConnectedError,
+    MsticpyKqlConnectionError,
+)
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -40,12 +51,13 @@ class KqlDriver(DriverBase):
         if not self._loaded:
             self._load_kql_magic()
 
+        self._schema: Dict[str, Any] = {}
+
         if connection_str:
             self.current_connection = connection_str
             self.connect(connection_str)
 
-        self._schema: Dict[str, Any] = {}
-
+    # pylint: disable=too-many-branches
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
         Connect to data source.
@@ -57,16 +69,34 @@ class KqlDriver(DriverBase):
 
         """
         if not connection_str:
-            raise MsticpyException("No connection string supplied.")
+            raise MsticpyKqlConnectionError(
+                "A connection string is needed to connect to Azure Sentinel.",
+                title="no connection string",
+            )
         self.current_connection = connection_str
-        result = False
-        if self._ip is not None:
-            result = self._ip.run_cell_magic("kql", line="", cell=connection_str)
-            self._connected = True
-            self._schema = self._get_schema()
-        else:
-            print(f"Could not connect to kql query provider for {connection_str}")
-        return result
+        kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
+        try:
+            self._set_kql_option("Kqlmagic.short_errors", False)
+            if self._ip is not None:
+                try:
+                    self._ip.run_cell_magic("kql", line="", cell=connection_str)
+                except KqlError as ex:
+                    self._raise_kql_error(ex)
+                except KqlEngineError as ex:
+                    self._raise_kql_engine_error(ex)
+                except AdalError as ex:
+                    self._raise_adal_error(ex)
+                except AuthenticationError as ex:
+                    self._raise_authn_error(ex)
+                self._connected = True
+                self._schema = self._get_schema()
+            else:
+                print(f"Could not connect to kql query provider for {connection_str}")
+            return self._connected
+        finally:
+            self._set_kql_option("Kqlmagic.short_errors", kql_err_setting)
+
+    # pylint: disable=too-many-branches
 
     @property
     def schema(self) -> Dict[str, Dict]:
@@ -101,7 +131,20 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        del query_source
+        if query_source:
+            try:
+                table = query_source["args.table"]
+            except KeyError:
+                table = None
+            if table:
+                if " " in table.strip():
+                    table = table.strip().split(" ")[0]
+                if table not in self.schema:
+                    raise MsticpyNoDataSourceError(
+                        f"The table {table} for this query is not in your workspace",
+                        " schema. Please check your workspace",
+                        title=f"{table} not found.",
+                    )
         data, result = self.query_with_results(query)
         return data if data is not None else result
 
@@ -126,8 +169,10 @@ class KqlDriver(DriverBase):
         # is not the current KqlMagic connection.
         self.connect(self.current_connection)
         if not self.connected:
-            raise ConnectionError(
-                "Source is not connected. Please call connect() and retry."
+            raise MsticpyNotConnectedError(
+                "Please run the connect() method before running a query.",
+                title="not connected to a workspace.",
+                help_uri=MsticpyKqlConnectionError.DEF_HELP_URI,
             )
 
         if self._debug:
@@ -135,15 +180,14 @@ class KqlDriver(DriverBase):
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
-        auto_dataframe = self._ip.run_line_magic(
-            "config", line="Kqlmagic.auto_dataframe"
-        )
-        self._ip.run_line_magic("config", line="Kqlmagic.auto_dataframe=False")
-        # run the query
+        auto_dataframe = self._get_kql_option(option="Kqlmagic.auto_dataframe")
+        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=False)
+        # run the query (append semicolon to prevent default output)
+        if not query.strip().endswith(";"):
+            query = f"{query}\n;"
+
         result = self._ip.run_cell_magic("kql", line="", cell=query)
-        self._ip.run_line_magic(
-            "config", line=f"Kqlmagic.auto_dataframe={auto_dataframe}"
-        )
+        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
@@ -180,3 +224,81 @@ class KqlDriver(DriverBase):
 
     def _get_schema(self) -> Dict[str, Dict]:
         return self._ip.run_line_magic("kql", line="--schema")
+
+    def _get_kql_option(self, option):
+        """Retrieve a current Kqlmagic notebook option."""
+        return self._ip.run_line_magic("config", line=option)
+
+    def _set_kql_option(self, option, value):
+        """Set a Kqlmagic notebook option."""
+        set_txt = f"{option}={value}"
+        return self._ip.run_line_magic("config", line=set_txt)
+
+    _WS_RGX = r"workspace\(['\"](?P<ws>[^'\"]+)"
+    _TEN_RGX = r"tenant\(['\"](?P<tenant>[^'\"]+)"
+
+    def _raise_kql_error(self, ex):
+        kql_err = json.loads(ex.args[0]).get("error")
+        if kql_err.get("code") == "WorkspaceNotFoundError":
+            ex_mssgs = [
+                "The workspace ID used to connect to Azure Sentinel could not be found.",
+                "Please check that this is a valid workspace for your subscription",
+            ]
+            ws_match = re.search(self._WS_RGX, self.current_connection, re.IGNORECASE)
+            if ws_match:
+                ws_name = ws_match.groupdict().get("ws")
+                ex_mssgs.append(f"The workspace id used was {ws_name}.")
+            ex_mssgs.append(f"The full connection string was {self.current_connection}")
+            raise MsticpyKqlConnectionError(*ex_mssgs, title="unknown workspace")
+        raise MsticpyKqlConnectionError(
+            "The service returned the following error when connecting",
+            str(ex),
+            title="Kql response error",
+        )
+
+    @staticmethod
+    def _raise_kql_engine_error(ex):
+        ex_mssgs = [
+            "An error was returned from Kqlmagic KqlEngine.",
+            "This can occur if you tried to connect to a second workspace using a"
+            + " different tenant ID - only a single tenant ID is supported in"
+            + " one notebook.",
+            "Other causes of this error could be an invalid format of your"
+            + " connection string",
+            *(ex.args),
+        ]
+        raise MsticpyKqlConnectionError(*ex_mssgs, title="kql connection error")
+
+    @staticmethod
+    def _raise_adal_error(ex):
+        """Adal error - usually wrong tenant ID."""
+        if ex.args[0] == "Unexpected polling state code_expired":
+            raise MsticpyKqlConnectionError(
+                "Authentication request was not completed.",
+                title="authentication timed out",
+            )
+
+        ex_mssgs = ex.error_response["error_description"].split("\r\n")
+        raise MsticpyKqlConnectionError(
+            *ex_mssgs, title="could not authenticate to tenant"
+        )
+
+    @staticmethod
+    def _raise_authn_error(ex):
+        """Raise an authentication error."""
+        ex_mssgs = [
+            "The authentication failed.",
+            "Please check the credentials you are using and permissions on the workspace",
+            *(ex.args),
+        ]
+        raise MsticpyKqlConnectionError(*ex_mssgs, title="authentication failed")
+
+    @staticmethod
+    def _raise_unknown_error(ex):
+        """Raise an unknown exception."""
+        raise MsticpyKqlConnectionError(
+            "Another exception was returned by the service",
+            *ex.args,
+            f"Full exception:\n{str(ex)}",
+            title="connection failed",
+        )

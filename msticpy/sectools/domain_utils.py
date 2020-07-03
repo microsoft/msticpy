@@ -12,24 +12,27 @@ Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
+import json
 import ssl
 import sys
-import warnings
-import json
 import time
-from typing import Set, Tuple
-from urllib.error import HTTPError, URLError
+import warnings
 from pathlib import Path
-import requests
-import dns.resolver
+from typing import Set, Tuple, Optional
+from urllib.error import HTTPError, URLError
+
 import cryptography as crypto
-import pkg_resources
+import dns.resolver
 import pandas as pd
-from ipywidgets import IntProgress
-from IPython import display
+import pkg_resources
+import requests
 import tldextract
-from ..common import pkg_config as config
+from IPython import display
+from ipywidgets import IntProgress
+
 from .._version import VERSION
+from ..common import pkg_config as config
+from ..common.exceptions import MsticpyUserConfigError
 from ..common.utility import export
 
 __version__ = VERSION
@@ -54,13 +57,29 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
         The final screenshot request response data.
 
     """
-    # Get Broshot API key from kwargs or config
+    # Get Browshot API key from kwargs or config
     if api_key is not None:
-        bs_api_key = api_key
-    elif config.settings.get("Browshot") is not None:
-        bs_api_key = config.settings.get("Browshot")["Args"]["AuthKey"]  # type: ignore
+        bs_api_key: Optional[str] = api_key
     else:
-        raise AttributeError("No configuration found for Browshot")
+        bs_conf = config.settings.get("DataProviders", {}).get(
+            "Browshot"
+        ) or config.settings.get("Browshot")
+        bs_api_key = None
+        if bs_conf is not None:
+            bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
+
+    if bs_api_key is None:
+        raise MsticpyUserConfigError(
+            "No configuration found for Browshot",
+            "Please add a section to msticpyconfig.yaml:",
+            "DataProviders:",
+            "  Browshot:",
+            "    Args:",
+            "      AuthKey: {your_auth_key}",
+            title="Browshot configuration not found",
+            browshot_uri=("Get an API key for Browshot", "https://api.browshot.com/"),
+        )
+
     # Request screenshot from Browshot and get request ID
     id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
     id_data = requests.get(id_string)
@@ -100,7 +119,7 @@ class DomainValidator:
     """Assess a domain's validity."""
 
     _tld_index: Set[str] = set()
-    _ssl_bl: pd.DataFrame = pd.DataFrame()
+    _ssl_abuse_list: pd.DataFrame = pd.DataFrame()
 
     @classmethod
     def _check_and_load_tlds(cls):
@@ -109,10 +128,10 @@ class DomainValidator:
             cls._tld_index: Set[str] = cls._get_tlds()
 
     @classmethod
-    def _check_and_load_sslbl(cls):
+    def _check_and_load_abuselist(cls):
         """Pull IANA TLD list and save to internal attribute."""
-        if cls._ssl_bl is None or cls._ssl_bl.empty:
-            cls._ssl_bl: pd.DataFrame = cls._get_ssl_bl()
+        if cls._ssl_abuse_list is None or cls._ssl_abuse_list.empty:
+            cls._ssl_abuse_list: pd.DataFrame = cls._get_ssl_abuselist()
 
     @property
     def tld_index(self) -> Set[str]:
@@ -129,7 +148,7 @@ class DomainValidator:
         return self._tld_index
 
     @property
-    def ssl_bl(self) -> pd.DataFrame:
+    def ssl_abuse_list(self) -> pd.DataFrame:
         """
         Return the class SSL Blacklist.
 
@@ -139,8 +158,8 @@ class DomainValidator:
             SSL Blacklist
 
         """
-        self._check_and_load_sslbl()
-        return self._ssl_bl
+        self._check_and_load_abuselist()
+        return self._ssl_abuse_list
 
     def validate_tld(self, url_domain: str) -> bool:
         """
@@ -194,9 +213,9 @@ class DomainValidator:
 
         return result
 
-    def ssl_blacklisted(self, url_domain: str) -> Tuple:
+    def in_abuse_list(self, url_domain: str) -> Tuple:
         """
-        Validate if a domain or URL's SSL cert has been blacklisted.
+        Validate if a domain or URL's SSL cert the abuse.ch SSL Abuse List.
 
         Parameters
         ----------
@@ -206,7 +225,7 @@ class DomainValidator:
         Returns
         -------
         result:
-            True if valid blacklisted, False if not.
+            True if valid in the list, False if not.
 
         """
         try:
@@ -219,7 +238,9 @@ class DomainValidator:
                 crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
             )
             result = bool(
-                self.ssl_bl["SHA1"].str.contains(cert_sha1.hex()).any()  # type: ignore
+                self.ssl_abuse_list["SHA1"]
+                .str.contains(cert_sha1.hex())
+                .any()  # type: ignore
             )
         except Exception:  # pylint: disable=broad-except
             result = False
@@ -286,13 +307,13 @@ class DomainValidator:
                 file_handle.write("\n".join(sorted(cls.tld_index)))
 
     @classmethod
-    def _get_ssl_bl(cls) -> pd.DataFrame:
-        """Download and load abuse.ch SSL Blacklist."""
+    def _get_ssl_abuselist(cls) -> pd.DataFrame:
+        """Download and load abuse.ch SSL Abuse List."""
         try:
-            ssl_bl = pd.read_csv(
+            ssl_ab_list = pd.read_csv(
                 "https://sslbl.abuse.ch/blacklist/sslblacklist.csv", skiprows=8
             )
         except (ConnectionError, HTTPError, URLError):
-            ssl_bl = pd.DataFrame({"SHA1": []})
+            ssl_ab_list = pd.DataFrame({"SHA1": []})
 
-        return ssl_bl
+        return ssl_ab_list

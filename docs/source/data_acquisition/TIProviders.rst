@@ -45,22 +45,27 @@ See :py:class:`TILookup<msticpy.sectools.tilookup.TILookup>`
                 Primary TI Providers, by default None
             secondary_providers : Optional[List[TIProvider]], optional
                 Secondary TI Providers, by default None
-
+            providers: Optional[List[str]], optional
+                List of provider names to load, by default all available
+                providers are loaded. To see the list of available providers
+                call `TILookup.list_available_providers()`.
+                Note: if primary_provides or secondary_providers is specified
+                This will override the providers list.
 
 Methods
 ~~~~~~~
 
 * *add_provider()* - Add a TI provider to the current collection.
-* *available_providers()* - Return a list of builtin providers.
-* *list_available_providers()* - Print a list of builtin providers with
-  optional usage.
+* *available_providers()* - Return a list of built-in providers.
+* *list_available_providers()* - Print a list of built-in providers with
+  optional usage. (class method)
 * *loaded_providers()* - Return dictionary of loaded providers.
 * *lookup_ioc()* - Lookup single IoC in active providers.
 * *lookup_iocs()* - Lookup a collection of IoCs.
 * *provider_status()* - Return loaded provider status.
 * *provider_usage()* - Print usage of loaded providers.
 * *reload_provider_settings()* - Reload provider settings from config.
-* *reload_providers()* - Reload providers based on currret settings in config.
+* *reload_providers()* - Reload providers based on current settings in config.
 * *result_to_df()* - Return DataFrame representation of IoC Lookup response.
 
 
@@ -70,25 +75,67 @@ Available Providers
 The **msticpy** TI Provider library can lookup IoCs in multiple
 providers.
 
-The list below shows the current set of providers.
+The :py:meth:`list_available_providers <msticpy.sectools.tilookup.TILookup.list_available_providers>`
+class method shows the current set of providers.
 
 .. code:: ipython3
 
-    ti_lookup = TILookup()
-    # List available providers
-    ti_lookup.available_providers
+    >>> TILookup.list_available_providers()
 
+    AzSTI
+    OPR
+    OTX
+    Tor
+    VirusTotal
+    XForce
+
+You can view the list of supported query types for each provider
+with the ``show_query_types=True`` parameter.
+See
+
+.. code:: ipython3
+
+    >>> TILookup.list_available_providers(show_query_types=True)
+
+    AzSTI
+    Azure Sentinel TI provider class. Supported query types:
+      ioc_type=dns
+      ioc_type=file_hash
+      ioc_type=hostname
+      ioc_type=ipv4
+      ioc_type=ipv6
+      ioc_type=linux_path
+      ...
+
+Loading TI Providers
+--------------------
+
+Calling TILookup with no parameters will load all of the available providers
+that have a configuration entry in ``msticpyconfig.yaml`` (see next section).
+
+.. code:: ipython3
+
+    # load all configured providers
+    ti_lookup = TILookup()
+    ti_lookup.provider_status
+
+    # Restricting which providers get loaded
+    #ti_lookup = TILookup(providers=["VirusTotal", "XForce"])
 
 .. parsed-literal::
 
-    ['AzSTI', 'OTX', 'VirusTotal', 'XForce']
+    ['VirusTotal - VirusTotal Lookup. (primary)',
+     'XForce - IBM XForce Lookup. (primary)']
 
-
+.. tip:: If you are missing a required parameter for a provider, TILookup
+   will throw an exception. You can use the `TILookup(providers=["prov",...])`
+   parameter to load only specific providers.
 
 Configuration File
 ------------------
 
-You **must** have a correctly configured ``msticpyconfig.yaml`` in
+You **must** have a correctly configured
+:doc:`msticpyconfig.yaml <../getting_started/msticpyconfig>` in
 order to use the TILookup module. In this file you specify the
 providers you want to load, any API keys that the provider services
 require. You can configure primary and secondary providers.
@@ -113,18 +160,14 @@ environment variable ``MSTICPYCONFIG``.
 
 If you need to create a config file, use the content shown below.
 The ``Provider`` key must correspond to an available Python class.
-The names of the built-in provider classes are shown in the
-``ti_lookup.available_providers`` property.
+The names of the built-in provider classes can be obtained using the
+:py:meth:`list_available_providers <msticpy.sectools.tilookup.TILookup.list_available_providers>`
+function.
 
 Delete any provider entries from the example below that you do not want
 to use and add the missing parameters for your providers.
-Save the file as ``msticpyconfig.yaml``.
-
-
-.. note:: If you have your Azure Sentinel workspace and tenant IDs configured
-  either in a config.json file or in the `AzureSentinel` configuration section
-  of the `msticpyconfig.yaml` you do not need to set these values for the
-  provider here. They will be inherited from the global configuration.
+Save the file as ``msticpyconfig.yaml`` or insert the TIProviders
+section into your existing msticpyconfig.yaml
 
 
 .. code:: yaml
@@ -149,15 +192,26 @@ Save the file as ``msticpyconfig.yaml``.
         Primary: True
         Provider: "XForce"
       AzureSentinel:
+        # Note if you do not specify any settings in the Args key for the AzureSentinel
+        # provider, it will default to using your default Azure Sentinel workspace.
         Args:
           WorkspaceID: "your-azure-sentinel-workspace-id"
           TenantID: "your-azure-sentinel-tenant-id"
         Primary: True
         Provider: "AzSTI"
 
+.. note:: If you have your Azure Sentinel workspace and tenant IDs configured
+  either in a config.json file or in the `AzureSentinel` configuration section
+  of the `msticpyconfig.yaml` you do not need to set these values for the
+  provider here. They will be inherited from the global configuration.
+  If you want to use a different workspace for your TI lookups then specify
+  the workspace and tenant IDs here. The tenant ID must be the same as
+  in both cases though: the Kqlmagic data query library does not support
+  access workspaces in multiple tenants from the same notebook.
 
-.. note:: You can also specify that the Args values as environment
-  variables as follows:
+
+You can also specify that the Args values as environment
+variables as follows:
 
 
 .. code:: yaml
@@ -172,6 +226,10 @@ Save the file as ``msticpyconfig.yaml``.
           Provider: "XForce"
 
 
+.. note:: You can also use Key Vault storage with optional local
+   caching of the secrets using *keyring*. See
+   :doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
+   for more details.
 
 When you have made a configuration change you can reload the
 providers and check the status like this.
@@ -191,6 +249,21 @@ providers and check the status like this.
      'AzSTI - Azure Sentinel TI provider class. (primary)']
 
 
+.. tip:: If you are missing a required parameter for a provider, TILookup
+   will throw an exception. You can use the `providers` parameter to
+   `TILookup`
+
+   `TILookup(providers=["prov",...])`
+
+   to specify which providers to load and avoid loading any that
+   causing problems.
+
+   The `providers` parameter to TILookup affects which providers are
+   *loaded*. When you are querying TI (using `lookup_ioc` or `lookup_iocs`)
+   you can also specify a list of providers to use for the query. In the
+   second case the `providers` list selects which of the loaded providers
+   to send queries to. It does not cause additional providers to load.
+
 
 Looking up IoCs
 ---------------
@@ -198,7 +271,7 @@ Looking up IoCs
 lookup_ioc
 ~~~~~~~~~~
 
-See :py:meth:`lookup_ioc<msticpy.sectools.ti_lookup.lookup_ioc>`
+See :py:meth:`lookup_ioc<msticpy.sectools.tilookup.TILookup.lookup_ioc>`
 
 To lookup a single IoC.
 
@@ -350,16 +423,17 @@ And show the output
                     'passive_dns',
                     'malware',
                     'nids_list',
-                    'http_scans'],
+                    'httpscans'],
       'type': 'IPv4',
       'type_title': 'IPv4',
       'whois': 'http://whois.domaintools.com/38.75.137.9'}
 
+|
 
-Or convert result to a DataFrame and let pandas do the display work…
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Or convert result to a DataFrame and let pandas do the display work
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :py:meth:`result_to_df<msticpy.sectools.ti_lookup.result_to_df>`
+See :py:meth:`result_to_df<msticpy.sectools.tilookup.TILookup.result_to_df>`
 
 .. code:: ipython3
 
@@ -367,67 +441,27 @@ See :py:meth:`result_to_df<msticpy.sectools.ti_lookup.result_to_df>`
     ti_lookup.result_to_df(result).T
 
 
-.. raw:: html
++---------------+------------------------------------------------------------------------------------------------------+
+|               | OTX                                                                                                  |
++---------------+------------------------------------------------------------------------------------------------------+
+| IoC           | 38.75.137.9                                                                                          |
++---------------+------------------------------------------------------------------------------------------------------+
+| IoCType       | ipv4                                                                                                 |
++---------------+------------------------------------------------------------------------------------------------------+
+| QuerySubtype  | None                                                                                                 |
++---------------+------------------------------------------------------------------------------------------------------+
+| Result        | True                                                                                                 |
++---------------+------------------------------------------------------------------------------------------------------+
+| Details       | {'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['\https://blog.malw...  |
++---------------+------------------------------------------------------------------------------------------------------+
+| RawResult     | {'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...  |
++---------------+------------------------------------------------------------------------------------------------------+
+| Reference     | \https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general                               |
++---------------+------------------------------------------------------------------------------------------------------+
+| Status        | 200                                                                                                  |
++---------------+------------------------------------------------------------------------------------------------------+
 
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>OTX</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>IoC</th>
-          <td>38.75.137.9</td>
-        </tr>
-        <tr>
-          <th>IoCType</th>
-          <td>ipv4</td>
-        </tr>
-        <tr>
-          <th>QuerySubtype</th>
-          <td>None</td>
-        </tr>
-        <tr>
-          <th>Result</th>
-          <td>True</td>
-        </tr>
-        <tr>
-          <th>Details</th>
-          <td>{'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['https://blog.malwa...</td>
-        </tr>
-        <tr>
-          <th>RawResult</th>
-          <td>{'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...</td>
-        </tr>
-        <tr>
-          <th>Reference</th>
-          <td>https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general</td>
-        </tr>
-        <tr>
-          <th>Status</th>
-          <td>200</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
+|
 
 .. code:: ipython3
 
@@ -446,7 +480,7 @@ See :py:meth:`result_to_df<msticpy.sectools.ti_lookup.result_to_df>`
       'passive_dns',
       'malware',
       'nids_list',
-      'http_scans'],
+      'httpscans'],
      'city': 'Los Angeles',
      'area_code': 0,
      'pulse_info': {'count': 1,
@@ -469,87 +503,17 @@ Lookup using all primary providers
     result = ti_lookup.lookup_ioc(observable="38.75.137.9")
     ti_lookup.result_to_df(result)
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoC</th>
-          <th>IoCType</th>
-          <th>QuerySubtype</th>
-          <th>Result</th>
-          <th>Details</th>
-          <th>RawResult</th>
-          <th>Reference</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>OTX</th>
-          <td>38.75.137.9</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['https://blog.malwa...</td>
-          <td>{'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...</td>
-          <td>https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general</td>
-          <td>200</td>
-        </tr>
-        <tr>
-          <th>VirusTotal</th>
-          <td>38.75.137.9</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'verbose_msg': 'IP address in dataset', 'response_code': 1, 'detected_urls': ['http://38.75.137...</td>
-          <td>{'asn': 63023, 'undetected_urls': [['http://38.75.137.9:9088/', '3d5edb0e0bb726e414a9b76dac619c1...</td>
-          <td>https://www.virustotal.com/vtapi/v2/ip-address/report</td>
-          <td>200</td>
-        </tr>
-        <tr>
-          <th>XForce</th>
-          <td>38.75.137.9</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'score': 1, 'cats': {}, 'categoryDescriptions': {}, 'reason': 'Regional Internet Registry', 're...</td>
-          <td>{'ip': '38.75.137.9', 'history': [{'created': '2012-03-22T07:26:00.000Z', 'reason': 'Regional In...</td>
-          <td>https://api.xforce.ibmcloud.com/ipr/38.75.137.9</td>
-          <td>200</td>
-        </tr>
-        <tr>
-          <th>AzSTI</th>
-          <td>38.75.137.9</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>None</td>
-          <td>None</td>
-          <td>-1</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+|             | IoC          | IoCType  | QuerySubtype  | Result  | Details                                                                                              | RawResult                                                                                            | Reference                                                              | Status  |
++=============+==============+==========+===============+=========+======================================================================================================+======================================================================================================+========================================================================+=========+
+| OTX         | 38.75.137.9  | ipv4     | None          | True    | {'pulse_count': 1, 'names': ['Underminer EK'], 'tags': [[]], 'references': [['\https://blog.malw...  | {'sections': ['general', 'geo', 'reputation', 'url_list', 'passive_dns', 'malware', 'nids_list',...  | \https://otx.alienvault.com/api/v1/indicators/IPv4/38.75.137.9/general | 200     |
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+| VirusTotal  | 38.75.137.9  | ipv4     | None          | True    | {'verbose_msg': 'IP address in dataset', 'response_code': 1, 'detected_urls': ['\http://38.75.13...  | {'asn': 63023, 'undetected_urls': [['\http://38.75.137.9:9088/', '3d5edb0e0bb726e414a9b76dac619c...  | \https://www.virustotal.com/vtapi/v2/ip-address/report                 | 200     |
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+| XForce      | 38.75.137.9  | ipv4     | None          | True    | {'score': 1, 'cats': {}, 'categoryDescriptions': {}, 'reason': 'Regional Internet Registry', 're...  | {'ip': '38.75.137.9', 'history': [{'created': '2012-03-22T07:26:00.000Z', 'reason': 'Regional In...  | \https://api.xforce.ibmcloud.com/ipr/38.75.137.9                       | 200     |
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
+| AzSTI       | 38.75.137.9  | ipv4     | None          | False   | 0 rows returned.                                                                                     | None                                                                                                 | None                                                                   | -1      |
++-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
 
 
 Provider Usage
@@ -560,7 +524,7 @@ This shows the supported IoC Types.
 In some cases an IoC type will also support special types of sub-query
 such as geo-ip and passive-dns
 
-See :py:meth:`provider_usage<msticpy.sectools.ti_lookup.provider_usage>`
+See :py:meth:`provider_usage<msticpy.sectools.tilookup.TILookup.provider_usage>`
 
 .. code:: ipython3
 
@@ -657,12 +621,12 @@ Use to do a passive DNS lookup
 
     (True,
      [('XForce',
-       LookupResult(ioc='38.75.137.9', ioc_type='ipv4', query_subtype='passivedns', result=True, details={'records': 1}, raw_result={'Passive': {'query': '0x00000000000000000000ffff264b8909', 'records': []}, 'RDNS': ['9-137-75-38.clients.gthost.com'], 'total_rows': 1}, reference='https://api.xforce.ibmcloud.com/resolve/38.75.137.9', status=200))])
+       LookupResult(ioc='38.75.137.9', ioc_type='ipv4', query_subtype='passivedns', result=True, details={'records': 1}, raw_result={'Passive': {'query': '0x00000000000000000000ffff264b8909', 'records': []}, 'RDNS': ['9-137-75-38.clients.gthost.com'], 'total_rows': 1}, reference='\https://api.xforce.ibmcloud.com/resolve/38.75.137.9', status=200))])
 
 
 
-Inferring IoC Type vs. Specifying explicity
--------------------------------------------
+Inferring IoC type vs specifying explicitly
+--------------------------------------------
 
 If you do a lookup without specifying a type, TILookup will try to infer
 the type by matching regexes. There are patterns for all supported types
@@ -681,7 +645,7 @@ dictionary of the form ``{ioc_observable: ioc_type}``
 Looking up Multiple IoCs
 ------------------------
 
-See :py:meth:`lookup_iocs<msticpy.sectools.ti_lookup.lookup_iocs>`
+See :py:meth:`lookup_iocs<msticpy.sectools.tilookup.TILookup.lookup_iocs>`
 
 lookup_iocs
 ~~~~~~~~~~~
@@ -760,101 +724,19 @@ lookup_iocs
     ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI")
 
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoC</th>
-          <th>IoCType</th>
-          <th>QuerySubtype</th>
-          <th>Reference</th>
-          <th>Result</th>
-          <th>Status</th>
-          <th>Details</th>
-          <th>RawResult</th>
-          <th>Provider</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>213.159.214.86</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:32.934234Z) | w...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>40.113.200.201</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:32.934234Z) | w...</td>
-          <td>False</td>
-          <td>-1.0</td>
-          <td>0 rows returned.</td>
-          <td>NaN</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>91.219.29.81</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:32.934234Z) | w...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>89.108.83.196</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:32.934234Z) | w...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>192.42.116.41</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:32.934234Z) | w...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+|   | IoC             | IoCType  | QuerySubtype  | Reference                              | Result  | Status  | Details                                                                                              | RawResult                                                                                            | Provider  |
++===+=================+==========+===============+========================================+=========+=========+======================================================================================================+======================================================================================================+===========+
+| 0 | 213.159.214.86  | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 1 | 40.113.200.201  | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | False   | -1.0    | 0 rows returned.                                                                                     | NaN                                                                                                  | AzSTI     |
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 2 | 91.219.29.81    | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 3 | 89.108.83.196   | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 4 | 192.42.116.41   | ipv4     | None          | ThreatIntelligenceIndicator  | whe...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+----------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
 
 
 
@@ -880,104 +762,22 @@ Output sorted by IoC
     results = ti_lookup.lookup_iocs(data=ioc_urls)
     results.sort_values("IoC")
 
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
+|   | IoC                              | IoCType  | QuerySubtype  | Result  | Details                                                                                              | RawResult                                                                                            | Reference                                                                                           | Provider    | Status  |
++===+==================================+==========+===============+=========+======================================================================================================+======================================================================================================+=====================================================================================================+=============+=========+
+| 0 | \http://aiccard.co.th/dvja1te    | url      | None          | True    | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': 'FAE39C007D6554822504A1E0BDFD788E27DDC748ED63B258651DE52E4FA6D511', 'TimeGenerat...  | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-21T17:30:41.900764Z) | w...  | AzSTI       | 0.0     |
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
+| 4 | \http://aiccard.co.th/dvja1te    | url      | None          | True    | {'cats': None, 'categoryDescriptions': None}                                                         | {'result': {'url': 'aiccard.co.th', 'cats': {}, 'score': None, 'categoryDescriptions': {}}, 'ass...  | \https://api.xforce.ibmcloud.com/url/\http://aiccard.co.th/dvja1te                                  | XForce      | NaN     |
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
+| 4 | \http://aiccard.co.th/dvja1te    | url      | None          | True    | {'pulse_count': 3, 'names': ['Locky Ransomware Distribution Sites URL blocklist (LY_DS_URLBL)', ...  | {'indicator': '\http://aiccard.co.th/dvja1te', 'alexa': '\http://www.alexa.com/siteinfo/aiccard.c... | \https://otx.alienvault.com/api/v1/indicators/url/\http://aiccard.co.th/dvja1te/general             | OTX         | NaN     |
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
+| 4 | \http://aiccard.co.th/dvja1te    | url      | None          | False   | No response from provider.                                                                           | <Response [403]>                                                                                     | \https://www.virustotal.com/vtapi/v2/url/report                                                     | VirusTotal  | NaN     |
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
+| 5 | \http://ajaraheritage.ge/g7cberv | url      | None          | True    | {'cats': None, 'categoryDescriptions': None}                                                         | {'result': {'url': 'ajaraheritage.ge', 'cats': {}, 'score': None, 'categoryDescriptions': {}}, '...  | \https://api.xforce.ibmcloud.com/url/\http://ajaraheritage.ge/g7cberv                               | XForce      | NaN     |
++---+----------------------------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+-------------+---------+
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoC</th>
-          <th>IoCType</th>
-          <th>QuerySubtype</th>
-          <th>Result</th>
-          <th>Details</th>
-          <th>RawResult</th>
-          <th>Reference</th>
-          <th>Provider</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>http://aiccard.co.th/dvja1te</td>
-          <td>url</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': 'FAE39C007D6554822504A1E0BDFD788E27DDC748ED63B258651DE52E4FA6D511', 'TimeGenerat...</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-21T17:30:41.900764Z) | w...</td>
-          <td>AzSTI</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>http://aiccard.co.th/dvja1te</td>
-          <td>url</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'cats': None, 'categoryDescriptions': None}</td>
-          <td>{'result': {'url': 'aiccard.co.th', 'cats': {}, 'score': None, 'categoryDescriptions': {}}, 'ass...</td>
-          <td>https://api.xforce.ibmcloud.com/url/http://aiccard.co.th/dvja1te</td>
-          <td>XForce</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>http://aiccard.co.th/dvja1te</td>
-          <td>url</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'pulse_count': 3, 'names': ['Locky Ransomware Distribution Sites URL blocklist (LY_DS_URLBL)', ...</td>
-          <td>{'indicator': 'http://aiccard.co.th/dvja1te', 'alexa': 'http://www.alexa.com/siteinfo/aiccard.co...</td>
-          <td>https://otx.alienvault.com/api/v1/indicators/url/http://aiccard.co.th/dvja1te/general</td>
-          <td>OTX</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>http://aiccard.co.th/dvja1te</td>
-          <td>url</td>
-          <td>None</td>
-          <td>False</td>
-          <td>No response from provider.</td>
-          <td>&lt;Response [403]&gt;</td>
-          <td>https://www.virustotal.com/vtapi/v2/url/report</td>
-          <td>VirusTotal</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>http://ajaraheritage.ge/g7cberv</td>
-          <td>url</td>
-          <td>None</td>
-          <td>True</td>
-          <td>{'cats': None, 'categoryDescriptions': None}</td>
-          <td>{'result': {'url': 'ajaraheritage.ge', 'cats': {}, 'score': None, 'categoryDescriptions': {}}, '...</td>
-          <td>https://api.xforce.ibmcloud.com/url/http://ajaraheritage.ge/g7cberv</td>
-          <td>XForce</td>
-          <td>NaN</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
+.. note:: the URLs in the previous example have been altered to prevent
+   inadvertent navigation to them.
 
 Specifying Time Ranges
 ----------------------
@@ -997,97 +797,15 @@ ignored
     # Using this data range returned no results
     ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI", start=q_times.start, end=q_times.end).head()
 
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoC</th>
-          <th>IoCType</th>
-          <th>QuerySubtype</th>
-          <th>Reference</th>
-          <th>Result</th>
-          <th>Details</th>
-          <th>Status</th>
-          <th>Provider</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>213.159.214.86</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-08-04T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>-1</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>40.113.200.201</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-08-04T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>-1</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>91.219.29.81</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-08-04T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>-1</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>89.108.83.196</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-08-04T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>-1</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>192.42.116.41</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-08-04T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>0 rows returned.</td>
-          <td>-1</td>
-          <td>AzSTI</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+-------------------+---------+-----------+
+|   | IoC             | IoCType  | QuerySubtype  | Reference                                                                                           | Result  | Details           | Status  | Provider  |
++===+=================+==========+===============+=====================================================================================================+=========+===================+=========+===========+
+| 0 | 213.159.214.86  | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-08-04T00:00:00Z) | where Ti...  | False   | 0 rows returned.  | -1      | AzSTI     |
+| 1 | 40.113.200.201  | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-08-04T00:00:00Z) | where Ti...  | False   | 0 rows returned.  | -1      | AzSTI     |
+| 2 | 91.219.29.81    | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-08-04T00:00:00Z) | where Ti...  | False   | 0 rows returned.  | -1      | AzSTI     |
+| 3 | 89.108.83.196   | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-08-04T00:00:00Z) | where Ti...  | False   | 0 rows returned.  | -1      | AzSTI     |
+| 4 | 192.42.116.41   | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-08-04T00:00:00Z) | where Ti...  | False   | 0 rows returned.  | -1      | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+-------------------+---------+-----------+
 
 
 .. code:: ipython3
@@ -1100,100 +818,16 @@ ignored
     ti_lookup.lookup_iocs(data=ioc_ips, providers="AzSTI", start=q_times.start, end=q_times.end)
 
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>IoC</th>
-          <th>IoCType</th>
-          <th>QuerySubtype</th>
-          <th>Reference</th>
-          <th>Result</th>
-          <th>Status</th>
-          <th>Details</th>
-          <th>RawResult</th>
-          <th>Provider</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>213.159.214.86</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-12T00:00:00Z) | where Ti...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>40.113.200.201</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-12T00:00:00Z) | where Ti...</td>
-          <td>False</td>
-          <td>-1.0</td>
-          <td>0 rows returned.</td>
-          <td>NaN</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>91.219.29.81</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-12T00:00:00Z) | where Ti...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>89.108.83.196</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-12T00:00:00Z) | where Ti...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>192.42.116.41</td>
-          <td>ipv4</td>
-          <td>None</td>
-          <td>ThreatIntelligenceIndicator  | where TimeGenerated &gt;= datetime(2019-07-12T00:00:00Z) | where Ti...</td>
-          <td>True</td>
-          <td>0.0</td>
-          <td>{'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...</td>
-          <td>{'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...</td>
-          <td>AzSTI</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+|   | IoC             | IoCType  | QuerySubtype  | Reference                                                                                           | Result  | Status  | Details                                                                                              | RawResult                                                                                            | Provider  |
++===+=================+==========+===============+=====================================================================================================+=========+=========+======================================================================================================+======================================================================================================+===========+
+| 0 | 213.159.214.86  | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-12T00:00:00Z) | where Ti...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '0164ADB4A6CB7A79FBAE7BE90A43050B090A18364E3855048AC86B9DA5E0A92B', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 1 | 40.113.200.201  | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-12T00:00:00Z) | where Ti...  | False   | -1.0    | 0 rows returned.                                                                                     | NaN                                                                                                  | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 2 | 91.219.29.81    | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-12T00:00:00Z) | where Ti...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '3F458D91A21866C9037B99D997379A6906573766C0C2F8FB45327A6A15676A0D', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 3 | 89.108.83.196   | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-12T00:00:00Z) | where Ti...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': 'C3CA82D5B30A34F4BD6188C9DCFAD9E46D3C0CC45CC4FD969DA3A398DC34B1AE', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+
+| 4 | 192.42.116.41   | ipv4     | None          | ThreatIntelligenceIndicator  | where TimeGenerated >= datetime(2019-07-12T00:00:00Z) | where Ti...  | True    | 0.0     | {'Action': 'alert', 'ThreatType': 'Malware', 'ThreatSeverity': nan, 'Active': True, 'Description...  | {'IndicatorId': '2F321C9D2593B6EF59DEB64B6CB209F375529C429F0DF463D639784E7353AA5D', 'TimeGenerat...  | AzSTI     |
++---+-----------------+----------+---------------+-----------------------------------------------------------------------------------------------------+---------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------+

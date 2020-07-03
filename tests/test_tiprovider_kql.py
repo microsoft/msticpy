@@ -12,12 +12,12 @@ from typing import Union, Any, Tuple, Dict
 
 import pandas as pd
 
-from ..msticpy.data import QueryProvider
-from ..msticpy.data.data_providers import DriverBase
-from ..msticpy.common import pkg_config
-from ..msticpy.sectools.iocextract import IoCExtract
-from ..msticpy.sectools.tilookup import TILookup
-from ..msticpy.sectools.tiproviders import (
+from msticpy.data import QueryProvider
+from msticpy.data.data_providers import DriverBase
+from msticpy.common import pkg_config
+from msticpy.sectools.iocextract import IoCExtract
+from msticpy.sectools.tilookup import TILookup
+from msticpy.sectools.tiproviders import (
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,

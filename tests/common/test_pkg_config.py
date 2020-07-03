@@ -7,16 +7,15 @@
 import unittest
 import os
 from pathlib import Path
-from typing import Any, Tuple
 import warnings
 
 import yaml
 
-from ..msticpy.common import pkg_config
-from ..msticpy.common.wsconfig import WorkspaceConfig
-from ..msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
+from msticpy.common import pkg_config
+from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import get_test_data_path, custom_mp_config
 
 _TEST_DATA = get_test_data_path()
 
@@ -27,6 +26,7 @@ class TestPkgConfig(unittest.TestCase):
     """Unit test class."""
 
     def test_load_default(self):
+        """Test load default settings."""
         self.assertTrue(hasattr(pkg_config, "settings"))
         self.assertTrue(hasattr(pkg_config, "default_settings"))
         self.assertTrue(hasattr(pkg_config, "custom_settings"))
@@ -36,12 +36,16 @@ class TestPkgConfig(unittest.TestCase):
         self.assertEqual(1, len(settings["QueryDefinitions"]["Default"]))
         for path in settings["QueryDefinitions"]["Default"]:
             self.assertTrue(type(path), str)
-            path = "msticpy/data/" + path
+            path = "data/" + path
             self.assertTrue(
-                Path(__file__).resolve().parent.parent.joinpath(path).is_dir()
+                Path(pkg_config.__file__)
+                .resolve()
+                .parent.parent.joinpath(path)
+                .is_dir()
             )
 
     def test_custom_config(self):
+        """Test load queries from custom path."""
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         with custom_mp_config(test_config1):
 
@@ -56,7 +60,9 @@ class TestPkgConfig(unittest.TestCase):
             self.assertEqual(1, len(settings["QueryDefinitions"]["Custom"]))
             for path in settings["QueryDefinitions"]["Custom"]:
                 self.assertTrue(type(path), str)
-                self.assertTrue(Path(__file__).resolve().parent.joinpath(path).is_dir())
+                self.assertTrue(
+                    Path(__file__).resolve().parent.parent.joinpath(path).is_dir()
+                )
 
             # TI Providers
             self.assertGreaterEqual(len(settings["TIProviders"]), 4)
@@ -78,6 +84,7 @@ class TestPkgConfig(unittest.TestCase):
                         )
 
     def test_wsconfig(self):
+        """Test WorkspaceConfig."""
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         with custom_mp_config(test_config1):
             # Default workspace
@@ -141,6 +148,7 @@ class TestPkgConfig(unittest.TestCase):
             )
 
     def test_geo_ip_settings(self):
+        """Test get geo_ip_settings."""
         if "MAXMIND_AUTH" not in os.environ:
             os.environ["MAXMIND_AUTH"] = "Testkey"
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
@@ -169,6 +177,7 @@ class TestPkgConfig(unittest.TestCase):
             self.assertEqual(ipstack._api_key, "987654321-222")
 
     def test_validate_config(self):
+        """Test config validation function."""
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         with custom_mp_config(test_config1):
             results = pkg_config.validate_config()

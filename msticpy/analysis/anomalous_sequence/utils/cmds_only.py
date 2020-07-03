@@ -13,7 +13,7 @@ import numpy as np
 
 from ..utils.data_structures import StateMatrix
 from ..utils.laplace_smooth import laplace_smooth_cmd_counts
-from ....common.utility import MsticpyException
+from ....common.exceptions import MsticpyException
 
 
 def compute_counts(  # nosec

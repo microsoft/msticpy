@@ -12,7 +12,7 @@ from typing import Union, Any, Tuple
 
 import pandas as pd
 
-from ..msticpy.data.data_providers import QueryProvider, DriverBase
+from msticpy.data.data_providers import QueryProvider, DriverBase
 
 
 class UTDataDriver(DriverBase):

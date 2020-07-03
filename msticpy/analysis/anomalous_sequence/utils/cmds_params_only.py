@@ -22,7 +22,7 @@ from ..utils.laplace_smooth import (
     laplace_smooth_cmd_counts,
     laplace_smooth_param_counts,
 )
-from ....common.utility import MsticpyException
+from ....common.exceptions import MsticpyException
 
 
 # pylint: disable=too-many-locals, too-many-branches
@@ -185,17 +185,19 @@ def compute_prob_setofparams_given_cmd(
     use_geo_mean: bool
         if True, then the likelihood will be raised to the power of (1/K)
         where K is the number of distinct params which appeared for the
-        given `cmd` across our training set.
-        Note:
-        Some commands may have more params set in general compared with
-        other commands. It can be useful to use the geo mean so that
-        you can compare this probability across different
-        commands with differing number of params
+        given `cmd` across our training set. See Notes.
 
     Returns
     -------
     float
         computed likelihood
+
+    Notes
+    -----
+    `use_geo_mean` - Some commands may have more params set in general compared with
+    other commands. It can be useful to use the geo mean so that
+    you can compare this probability across different
+    commands with differing number of params
 
     """
     pars = params.copy()
