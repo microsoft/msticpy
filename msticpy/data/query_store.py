@@ -75,8 +75,6 @@ class QueryStore:
 
         """
         for family in sorted(self.data_families):
-            if "." in family:
-                family = family.split(".")[1]
 
             for q_name in [
                 f"{family}.{query}"
@@ -191,7 +189,7 @@ class QueryStore:
         return env_stores
 
     def get_query(
-        self, query_name: str, data_family: Union[str, DataFamily] = None
+        self, query_name: str, query_path: Union[str, DataFamily] = None
     ) -> "QuerySource":
         """
         Return query with name `data_family` and `query_name`.
@@ -200,7 +198,7 @@ class QueryStore:
         ----------
         query_name: str
             Name of the query
-        data_family: Union[str, DataFamily]
+        query_path: Union[str, DataFamily]
             The data family for the query
 
         Returns
@@ -209,13 +207,24 @@ class QueryStore:
             Query matching name and family.
 
         """
-        if isinstance(query_name, str) and "." in query_name:
-            data_family, query_name = query_name.split(".", maxsplit=1)
-        if not data_family:
-            raise LookupError("No data family specified.")
-        if isinstance(data_family, DataFamily):
-            data_family = data_family.name
-        return self.data_families[data_family][query_name]
+        if query_path and isinstance(query_path, DataFamily):
+            query_path = query_path.name
+        if "." in query_name:
+            query_parts = query_name.split(".")
+            query_container = ".".join(query_parts[:-1])
+            query_name = query_parts[-1]
+            if query_container in self.data_families:
+                query_path = query_container
+            elif query_path:
+                query_container = ".".join(
+                    [query_path, query_container]
+                )  # type: ignore
+                if query_container in self.data_families:
+                    query_path = query_container
+        query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore
+        if not query:
+            raise LookupError(f"Could not find {query_name} in path {query_path}.")
+        return query
 
     def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
         """

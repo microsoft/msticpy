@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
+from datetime import datetime
 import re
-from typing import Tuple, Union, Any, Dict, Optional
+from typing import Tuple, Union, Any, Dict, Optional, Iterable
 
 import json
 import pandas as pd
@@ -46,6 +47,7 @@ class KqlDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         super().__init__()
 
+        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
         self._loaded = self._is_kqlmagic_loaded()
 
         if not self._loaded:
@@ -233,6 +235,22 @@ class KqlDriver(DriverBase):
         """Set a Kqlmagic notebook option."""
         set_txt = f"{option}={value}"
         return self._ip.run_line_magic("config", line=set_txt)
+
+    @staticmethod
+    def _format_datetime(date_time: datetime) -> str:
+        """Return datetime-formatted string."""
+        return date_time.isoformat(sep="T") + "Z"
+
+    @staticmethod
+    def _format_list(param_list: Iterable[Any]):
+        """Return formatted list parameter."""
+        fmt_list = []
+        for item in param_list:
+            if isinstance(item, str):
+                fmt_list.append(f"'{item}'")
+            else:
+                fmt_list.append(f"{item}")
+        return ",".join(fmt_list)
 
     _WS_RGX = r"workspace\(['\"](?P<ws>[^'\"]+)"
     _TEN_RGX = r"tenant\(['\"](?P<tenant>[^'\"]+)"
