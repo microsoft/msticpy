@@ -6,7 +6,7 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict, Optional
+from typing import Tuple, Any, Union, Dict, Optional, Callable
 
 import pandas as pd
 
@@ -27,6 +27,8 @@ class DriverBase(ABC):
         self._loaded = False
         self._connected = False
         self.current_connection = None
+        self.public_attribs: Dict[str, Callable] = {}
+        self.formatters: Dict[str, Callable] = {}
 
     @property
     def loaded(self) -> bool:

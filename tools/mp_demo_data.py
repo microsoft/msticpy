@@ -13,7 +13,7 @@ from time import sleep
 import pandas as pd
 import yaml
 
-from msticpy.data.data_providers import AttribHolder
+from msticpy.data.data_providers import QueryContainer
 from msticpy.data import QueryProvider
 
 
@@ -70,13 +70,13 @@ class QueryProviderDemo(QueryProvider):
                 data_srcs = yaml.safe_load(src_file)
         self._query_store = {}
         self._query_provider = _DataDriver()
-        self.all_queries = AttribHolder()
+        self.all_queries = QueryContainer()
         self._add_demo_query_functions(data_srcs)
 
     def _add_demo_query_functions(self, data_defs: Dict[str, Dict[str, str]]):
         for family, queries in data_defs.items():
             if not hasattr(self, family):
-                setattr(self, family, AttribHolder())
+                setattr(self, family, QueryContainer())
             query_family = getattr(self, family)
 
             for query_name, file_name in queries.items():

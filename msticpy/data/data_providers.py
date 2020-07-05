@@ -20,6 +20,7 @@ from .drivers import (
     SplunkDriver,
 )
 from .query_store import QueryStore
+from .query_container import QueryContainer
 from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
 from ..common.utility import export
@@ -39,29 +40,6 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LocalData: LocalDataDriver,
     DataEnvironment.Splunk: SplunkDriver,
 }
-
-
-class AttribHolder:
-    """Empty class used to create hierarchical attributes."""
-
-    def __len__(self):
-        """Return number of items in the attribute collection."""
-        return len(self.__dict__)
-
-    def __iter__(self):
-        """Return iterator over the attributes."""
-        return iter(self.__dict__.items())
-
-    def __getattr__(self, name):
-        """Print usable error message if attribute not found."""
-        if name not in self.__dict__:
-            print(f"Query attribute {name} not found.")
-            print("Use QueryProvider.list_queries() to see available queries.")
-        return super().__getattribute__(name)
-
-    def __repr__(self):
-        """Return list of attributes."""
-        return "\n".join(self.__dict__.keys())
 
 
 @export
@@ -151,7 +129,7 @@ class QueryProvider:
 
         if self._environment in data_env_queries:
             self._query_store = data_env_queries[self._environment]
-            self.all_queries = AttribHolder()
+            self.all_queries = QueryContainer()
             self._add_query_functions()
         else:
             warnings.warn(f"No queries found for environment {self._environment}")
@@ -177,6 +155,10 @@ class QueryProvider:
             Connection string for the data source
 
         """
+        # If the driver has any attributes to expose via the provider
+        # add those here.
+        for attr_name, attr in self._query_provider.public_attribs.items():
+            setattr(self, attr_name, attr)
         return self._query_provider.connect(connection_str=connection_str, **kwargs)
 
     @property
@@ -300,10 +282,10 @@ class QueryProvider:
                 "Please call connect(connection_str) and retry.",
             )
         query_name = kwargs.pop("query_name")
-        family = kwargs.pop("data_family")
+        family = kwargs.pop("query_path")
 
         query_source = self._query_store.get_query(
-            data_family=family, query_name=query_name
+            query_path=family, query_name=query_name
         )
         if "help" in args or "?" in args:
             query_source.help()
@@ -314,7 +296,8 @@ class QueryProvider:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        query_str = query_source.create_query(**params)
+        param_formatters = self._query_provider.formatters
+        query_str = query_source.create_query(formatters=param_formatters, **params)
         if "print" in args or "query" in args:
             return query_str
         return self._query_provider.query(query_str, query_source)
@@ -322,21 +305,28 @@ class QueryProvider:
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
         for qual_query_name in self.list_queries():
+            query_path = qual_query_name.split(".")
+            query_name = query_path[-1]
+            current_node = self
+            for container_name in query_path[:-1]:
+                if hasattr(current_node, container_name):
+                    current_node = getattr(current_node, container_name)
+                else:
+                    new_node = QueryContainer()
+                    setattr(current_node, container_name, new_node)
+                    current_node = new_node
 
-            family, query_name = qual_query_name.split(".")
-            if not hasattr(self, family):
-                setattr(self, family, AttribHolder())
-            query_family = getattr(self, family)
+            query_cont_name = ".".join(query_path[:-1])
 
             # Create the partial function
             query_func = partial(
-                self._execute_query, data_family=family, query_name=query_name
+                self._execute_query, query_path=query_cont_name, query_name=query_name
             )
             query_func.__doc__ = self._query_store.get_query(
-                data_family=family, query_name=query_name
+                query_path=query_cont_name, query_name=query_name
             ).create_doc_string()
 
-            setattr(query_family, query_name, query_func)
+            setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
 
     @classmethod
