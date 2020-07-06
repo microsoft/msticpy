@@ -6,7 +6,7 @@
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
 from os import path
-from typing import Any, Dict, Iterable, Set, Union, Optional
+from typing import Any, Dict, Iterable, Set, Union, Optional, List
 
 from .._version import VERSION
 from .query_defns import DataEnvironment, DataFamily
@@ -76,11 +76,10 @@ class QueryStore:
         """
         for family in sorted(self.data_families):
 
-            for q_name in [
+            yield from [
                 f"{family}.{query}"
                 for query in sorted(self.data_families[family].keys())
-            ]:
-                yield q_name
+            ]
 
     def add_data_source(self, source: QuerySource):
         """
@@ -107,6 +106,50 @@ class QueryStore:
             valid, failures = source.validate()
             if not valid:
                 raise ImportError(source.name, failures)
+
+    def add_query(
+        self,
+        name: str,
+        query: str,
+        query_paths: Union[str, List[str]],
+        description: str = None,
+    ):
+        """
+        Add a query from name/query text.
+
+        Parameters
+        ----------
+        name : str
+            name of the query
+        query : str
+            The query string
+        query_paths : Union[str, List[str]]
+            The path/data_family to categorize.
+            Multiple paths can be specified. If the path is dotted,
+            this will cause the query to be displayed in the corresponding
+            hierarchy.
+        description : str, optional
+            Query description
+
+        """
+        prefix = ""
+        if "." in name:
+            name_parts = name.split(".")
+            name = name_parts[-1]
+            prefix = ".".join(name_parts[:-1])
+
+        if isinstance(query_paths, str):
+            query_paths = [query_paths]
+        if prefix:
+            query_paths = [f"{q_path}.{prefix}" for q_path in query_paths]
+
+        src_dict = {"args": {"query": query}, "description": description or name}
+        md_dict = {"data_families": query_paths}
+
+        query_source = QuerySource(
+            name=name, source=src_dict, defaults={}, metadata=md_dict
+        )
+        self.add_data_source(query_source)
 
     def import_file(self, query_file: str):
         """
@@ -217,8 +260,8 @@ class QueryStore:
                 query_path = query_container
             elif query_path:
                 query_container = ".".join(
-                    [query_path, query_container]
-                )  # type: ignore
+                    [query_path, query_container]  # type: ignore
+                )
                 if query_container in self.data_families:
                     query_path = query_container
         query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore

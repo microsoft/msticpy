@@ -159,7 +159,10 @@ class QueryProvider:
         # add those here.
         for attr_name, attr in self._query_provider.public_attribs.items():
             setattr(self, attr_name, attr)
-        return self._query_provider.connect(connection_str=connection_str, **kwargs)
+        self._query_provider.connect(connection_str=connection_str, **kwargs)
+        dyn_queries, container = self._query_provider.service_queries
+        if dyn_queries:
+            self._add_service_queries(container=container, queries=dyn_queries)
 
     @property
     def connected(self) -> bool:
@@ -328,6 +331,20 @@ class QueryProvider:
 
             setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
+
+    def _add_service_queries(
+        self, container: Union[str, List[str]], queries: Dict[str, str]
+    ):
+        """Add additional queries to the query store."""
+        for q_name, q_text in queries.items():
+            self._query_store.add_query(
+                name=q_name, query=q_text, query_paths=container
+            )
+
+        # For now, just add all of the functions again (with any connect-time acquired
+        # queries) - we could be more efficient than this but unless there are 1000s of
+        # queries it should not be noticable.
+        self._add_query_functions()
 
     @classmethod
     def _resolve_path(cls, config_path: str) -> Optional[str]:

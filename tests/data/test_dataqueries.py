@@ -7,7 +7,7 @@
 import unittest
 from functools import partial
 from pathlib import Path
-from typing import Any, Tuple, Union, Optional
+from typing import Any, Tuple, Union, Optional, Dict
 
 import pandas as pd
 
@@ -33,6 +33,7 @@ class UTDataDriver(DriverBase):
         self._loaded = True
         self._connected = False
         self.public_attribs = {"test": self._TEST_ATTRIB}
+        self.svc_queries = {}, ""
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """Test method."""
@@ -49,6 +50,11 @@ class UTDataDriver(DriverBase):
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """Test method."""
         return (pd.DataFrame(data=query, index=[0], columns=["query"]), query)
+
+    @property
+    def service_queries(self) -> Tuple[Dict[str, str], str]:
+        """Return dynamic queries available on connection to service."""
+        return self.svc_queries
 
 
 class TestDataQuery(unittest.TestCase):
@@ -256,3 +262,63 @@ class TestDataQuery(unittest.TestCase):
 
         result = list(q_store.find_query("missing_query1"))
         self.assertEqual(len(result), 0)
+
+    def test_connect_queries(self):
+        """Test queries provided at connect time."""
+        queries = {
+            "test_query1": "Select * from test",
+            "test_query2": "Select * from test2",
+            "test.query3": "Select * from test2",
+        }
+
+        ut_provider = UTDataDriver()
+        ut_provider.svc_queries = (queries, "SavedSearches")
+
+        data_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=ut_provider
+        )
+        data_provider.connect("testuri")
+
+        # Check that we have expected attributes
+        self.assertTrue(hasattr(data_provider, "SavedSearches"))
+        saved_searches = getattr(data_provider, "SavedSearches")
+        for attr in queries:
+            attr = attr.split(".")[0]
+            self.assertTrue(hasattr(saved_searches, attr))
+            self.assertTrue(
+                isinstance(getattr(saved_searches, attr), (partial, QueryContainer))
+            )
+
+        # Check that we have expected query text
+        q_store = data_provider._query_store
+        q_src = q_store.get_query("SavedSearches.test.query3")
+        self.assertEqual(q_src.query, queries["test.query3"])
+
+    def test_connect_queries_dotted(self):
+        """Test queries provided at connect time."""
+        queries = {
+            "test_query1": "Select * from test",
+            "test_query2": "Select * from test2",
+            "test.query3": "Select * from test2",
+        }
+        # Same test as above but with dotted container
+        ut_provider = UTDataDriver()
+        ut_provider.svc_queries = (queries, "Saved.Searches")
+        data_provider = QueryProvider(
+            data_environment="LogAnalytics", driver=ut_provider
+        )
+        data_provider.connect("testuri")
+
+        self.assertTrue(hasattr(data_provider, "Saved"))
+        saved_searches = getattr(data_provider, "Saved")
+        saved_searches = getattr(saved_searches, "Searches")
+        for attr in queries:
+            attr = attr.split(".")[0]
+            self.assertTrue(hasattr(saved_searches, attr))
+            self.assertTrue(
+                isinstance(getattr(saved_searches, attr), (partial, QueryContainer))
+            )
+
+        q_store = data_provider._query_store
+        q_src = q_store.get_query("Saved.Searches.test.query3")
+        self.assertEqual(q_src.query, queries["test.query3"])

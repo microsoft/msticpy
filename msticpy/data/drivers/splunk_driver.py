@@ -176,19 +176,24 @@ class SplunkDriver(DriverBase):
         """
 
     @property
-    def connection_queries(self) -> Dict[str, str]:
+    def service_queries(self) -> Tuple[Dict[str, str], str]:
         """
         Return dynamic queries available on connection to service.
 
         Returns
         -------
-        Dict[str, str]
-            Dictionary of query_name: query
+        Tuple[Dict[str, str], str]
+            Dictionary of query_name, query_text.
+            Name of container to add queries to.
 
         """
-        return {
-            search.name: search.get("search") for search in self.service.saved_searches
-        }
+        return (
+            {
+                search.name: search.get("search")
+                for search in self.service.saved_searches
+            },
+            "SavedSearches",
+        )
 
     @property
     def _saved_searches(self) -> Union[pd.DataFrame, Any]:
@@ -258,8 +263,5 @@ class SplunkDriver(DriverBase):
     @staticmethod
     def _format_list(param_list: Iterable[Any]) -> str:
         """Return formatted list parameter."""
-        fmt_list = []
-        for item in param_list:
-            fmt_list.append(f'"{item}"')
-
+        fmt_list = [f'"{item}"' for item in param_list]
         return ",".join(fmt_list)
