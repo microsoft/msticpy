@@ -131,3 +131,17 @@ class DriverBase(ABC):
             A DataFrame and native results.
 
         """
+
+    @property
+    def service_queries(self) -> Tuple[Dict[str, str], str]:
+        """
+        Return queries retrieved from the service after connecting.
+
+        Returns
+        -------
+        Tuple[Dict[str, str], str]
+            Dictionary of query_name, query_text.
+            Name of container to add queries to.
+
+        """
+        return {}, ""

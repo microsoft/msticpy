@@ -324,8 +324,8 @@ class QuerySource:
                 units = RD_UNIT_MAP.get(round_item or "d", "days")
                 # expand dict to args for relativedelta
                 result_date = result_date + relativedelta(
-                    **({units: +1})
-                )  # type: ignore
+                    **({units: +1})  # type: ignore
+                )
         return result_date
 
     @staticmethod
