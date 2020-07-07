@@ -213,10 +213,7 @@ class SplunkDriver(DriverBase):
                 help_uri="TBD",
             )
         return (
-            {
-                search.name: search.get("search")
-                for search in self.service.saved_searches
-            },
+            {search.name: search["search"] for search in self.service.saved_searches},
             "SavedSearches",
         )
 
