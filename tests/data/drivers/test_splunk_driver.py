@@ -6,7 +6,8 @@
 """datq query test class."""
 from contextlib import redirect_stdout
 import io
-from unittest.mock import patch
+
+from unittest.mock import patch, MagicMock
 import pytest
 import pytest_check as check
 
@@ -16,6 +17,7 @@ from msticpy.common.exceptions import (
     MsticpyUserConfigError,
     MsticpyConnectionError,
     MsticpyNoDataSourceError,
+    MsticpyNotConnectedError,
 )
 
 from msticpy.data.drivers.splunk_driver import SplunkDriver, sp_client
@@ -29,15 +31,21 @@ SPLUNK_RESULTS_PATCH = SplunkDriver.__module__ + ".sp_results"
 
 
 # pylint: disable=too-many-branches, too-many-return-statements
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use, too-few-public-methods, protected-access
 
 
 def cli_connect(**kwargs):
     """Return None if magic isn't == kql."""
+    cause = MagicMock()
+    cause.body = bytes("Test body stuff", encoding="utf-8")
+    cause.status = 404
+    cause.reason = "Page not found."
+    cause.headers = "One Two Three"
     if kwargs.get("host") == "AuthError":
-        raise sp_client.AuthenticationError(cause="test", message="test")
+        raise sp_client.AuthenticationError(cause=cause, message="test AuthHeader")
     if kwargs.get("host") == "HTTPError":
-        raise sp_client.HTTPError
+        cause.body = io.BytesIO(cause.body)
+        raise sp_client.HTTPError(response=cause, _message="test HTTPError")
     return _MockSplunkService()
 
 
@@ -47,31 +55,44 @@ class _MockSplunkSearch:
         self.search = search
 
     def get(self, arg):
+        """Mock method."""
         del arg
         return self.search
+
+    def __getitem__(self, key):
+        """Mock method."""
+        if key == "search":
+            return self.search
+        return "other"
 
 
 class _MockAlert:
     def __init__(self, name, count):
-        self.alert = name
+        self.name = name
         self.count = count
 
 
-class _MockSplunkService:
-    """IPython get_ipython mock."""
+class _MockSplunkService(MagicMock):
+    """Splunk service mock."""
 
     def __init__(self):
+        """Mock method."""
+        super().__init__()
         self.searches = [
             _MockSplunkSearch("query1", "get stuff from somewhere"),
             _MockSplunkSearch("query2", "get stuff from somewhere"),
         ]
+        self.jobs = MagicMock()
+        self.jobs.oneshot = self._query_response
 
     @property
     def saved_searches(self):
+        """Mock method."""
         return self.searches
 
     @property
     def fired_alerts(self):
+        """Mock method."""
         return [
             _MockAlert("alert1", 10),
             _MockAlert("alert2", 10),
@@ -79,10 +100,22 @@ class _MockSplunkService:
             _MockAlert("alert4", 10),
         ]
 
+    @staticmethod
+    def _query_response(query):
+        return query
+
+
+def _results_reader(query_result):
+    """Mock Splunk results reader."""
+    for i in range(10):
+        yield f"""{{
+            "row": {i}, "query": "{query_result}", "text": "test text"}}
+            """
+
 
 @patch(SPLUNK_CLI_PATCH)
 def test_splunk_connect_no_params(splunk_client):
-    """Check loaded true."""
+    """Check failure with no args."""
     splunk_client.connect = cli_connect
 
     sp_driver = SplunkDriver()
@@ -96,16 +129,16 @@ def test_splunk_connect_no_params(splunk_client):
 
 @patch(SPLUNK_CLI_PATCH)
 def test_splunk_connect_req_params(splunk_client):
-    """Check loaded true."""
+    """Check load/connect success with required params."""
     splunk_client.connect = cli_connect
 
     sp_driver = SplunkDriver()
     check.is_true(sp_driver.loaded)
 
-    sp_driver.connect(host="localhost", username="ian", password="12345")
+    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
     check.is_true(sp_driver.connected)
 
-    sp_cntn_str = "host='localhost'; username='ian'; password='[PLACEHOLDER]'"
+    sp_cntn_str = "host='localhost'; username='ian'; password='[PLACEHOLDER]'"  # nosec
     sp_driver = SplunkDriver()
 
     sp_driver.connect(connection_str=sp_cntn_str)
@@ -113,167 +146,98 @@ def test_splunk_connect_req_params(splunk_client):
 
 @patch(SPLUNK_CLI_PATCH)
 def test_splunk_connect_errors(splunk_client):
-    """Check loaded true."""
+    """Check connect failure errors."""
     splunk_client.connect = cli_connect
 
     sp_driver = SplunkDriver()
     check.is_true(sp_driver.loaded)
 
+    print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
         sp_driver.connect(host="AuthError", username="ian", password="12345")
+        print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
 
     sp_driver = SplunkDriver()
+    print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
         sp_driver.connect(host="HTTPError", username="ian", password="12345")
+        print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
 
 
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_connect_no_cs(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     check.is_true(kql_driver.loaded)
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect()
-#     check.is_in("no connection string", mp_ex.value.args)
+@patch(SPLUNK_CLI_PATCH)
+def test_splunk_fired_alerts(splunk_client):
+    """Check fired alerts."""
+    splunk_client.connect = cli_connect
+    sp_driver = SplunkDriver()
+
+    # trying to get these before connecting should throw
+    with pytest.raises(MsticpyNotConnectedError) as mp_ex:
+        sp_driver._get_fired_alerts()
+        check.is_false(sp_driver.connected)
+        check.is_none(sp_driver._fired_alerts)
+    check.is_in("not connected to a service.", mp_ex.value.args)
+    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    check.is_true(sp_driver.connected)
+
+    check.is_instance(sp_driver._fired_alerts, pd.DataFrame)
+    for _, alert in sp_driver._fired_alerts.iterrows():
+        check.is_true(alert["name"].startswith("alert"))
+        check.equal(alert["count"], 10)
 
 
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_connect_kql_exceptions(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
+@patch(SPLUNK_CLI_PATCH)
+def test_splunk_saved_searches(splunk_client):
+    """Check saved searches."""
+    splunk_client.connect = cli_connect
+    sp_driver = SplunkDriver()
 
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(connection_str="la://connection+KqlErrorUnk")
-#     check.is_in("Kql response error", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
+    # trying to get these before connecting should throw
+    with pytest.raises(MsticpyNotConnectedError) as mp_ex:
+        sp_driver._get_saved_searches()
+        check.is_false(sp_driver.connected)
+        check.is_none(sp_driver._saved_searches)
+    check.is_in("not connected to a service.", mp_ex.value.args)
 
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(
-#             connection_str="la://connection.workspace('1234').tenant(KqlErrorWS)"
-#         )
-#     check.is_in("unknown workspace", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
+    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    check.is_true(sp_driver.connected)
 
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(
-#             connection_str="la://connection.workspace('1234').tenant(KqlEngineError)"
-#         )
-#     check.is_in("kql connection error", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
+    check.is_instance(sp_driver._saved_searches, pd.DataFrame)
+    for _, search in sp_driver._saved_searches.iterrows():
+        check.is_true(search["name"].startswith("query"))
+        check.equal(search["query"], "get stuff from somewhere")
 
-
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_connect_adal_exceptions(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(connection_str="la://connection+AdalErrorUnk")
-#     check.is_in("could not authenticate to tenant", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
-
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(connection_str="la://connection+AdalErrorNR")
-#     check.is_in("could not authenticate to tenant", mp_ex.value.args)
-#     check.is_in("Full error", str(mp_ex.value.args))
-#     check.is_false(kql_driver.connected)
-
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(connection_str="la://connection+AdalErrorPoll")
-#     check.is_in("authentication timed out", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
+    queries, name = sp_driver.service_queries
+    check.equal(name, "SavedSearches")
+    check.is_instance(queries, dict)
+    for name, query in queries.items():
+        check.is_true(name.startswith("query"))
+        check.equal(query, "get stuff from somewhere")
 
 
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_connect_authn_exceptions(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
+@patch(SPLUNK_RESULTS_PATCH)
+@patch(SPLUNK_CLI_PATCH)
+def test_splunk_query_success(splunk_client, splunk_results):
+    """Check loaded true."""
+    splunk_client.connect = cli_connect
+    sp_driver = SplunkDriver()
+    splunk_results.ResultsReader = _results_reader
 
-#     with pytest.raises(MsticpyKqlConnectionError) as mp_ex:
-#         kql_driver.connect(connection_str="la://connection+AuthenticationError")
-#     check.is_in("authentication failed", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
+    # trying to get these before connecting should throw
+    with pytest.raises(MsticpyNotConnectedError) as mp_ex:
+        sp_driver.query("some query")
+        check.is_false(sp_driver.connected)
+    check.is_in("not connected to Splunk.", mp_ex.value.args)
 
+    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    check.is_true(sp_driver.connected)
 
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_schema(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     kql_driver.connect(connection_str="la://connection")
-
-#     check.is_in("table1", kql_driver.schema)
-#     check.is_in("table2", kql_driver.schema)
-#     check.is_in("field1", kql_driver.schema["table1"])
+    df_result = sp_driver.query("some query")
+    check.is_instance(df_result, pd.DataFrame)
+    check.equal(len(df_result), 10)
 
 
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_query_not_connected(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-
-#     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
-#         kql_driver.query("test")
-#     check.is_in("not connected to a workspace.", mp_ex.value.args)
-#     check.is_false(kql_driver.connected)
-
-
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_query_failed(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     kql_driver.connect(connection_str="la://connection")
-
-#     output = io.StringIO()
-#     with redirect_stdout(output):
-#         kql_driver.query("test query_failed")
-#     check.is_in("Warning - query did", output.getvalue())
-
-
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_query_success(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     kql_driver.connect(connection_str="la://connection")
-
-#     result_df = kql_driver.query("test query")
-#     check.is_instance(result_df, pd.DataFrame)
-
-
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_query_partial(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     kql_driver.connect(connection_str="la://connection")
-
-#     output = io.StringIO()
-#     with redirect_stdout(output):
-#         result_df = kql_driver.query("test query_partial")
-#     check.is_instance(result_df, pd.DataFrame)
-#     check.is_in("Warning - query returned partial", output.getvalue())
-
-
-# @patch(GET_IPYTHON_PATCH)
-# def test_kql_query_no_table(get_ipython):
-#     """Check loaded true."""
-#     get_ipython.return_value = _MockIPython()
-#     kql_driver = KqlDriver()
-#     kql_driver.connect(connection_str="la://connection")
-
-#     with pytest.raises(MsticpyNoDataSourceError) as mp_ex:
-#         query_source = {"args.table": "table3"}
-#         kql_driver.query("test query", query_source=query_source)
-
-#     check.is_in("table3 not found.", mp_ex.value.args)
+# TODO - read config
