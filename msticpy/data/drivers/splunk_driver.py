@@ -10,6 +10,7 @@ from typing import Any, Tuple, Union, Dict, Iterable, Optional
 import pandas as pd
 import splunklib.client as sp_client
 import splunklib.results as sp_results
+from splunklib.client import AuthenticationError, HTTPError
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -28,7 +29,7 @@ __author__ = "Ashwin Patil"
 SPLUNK_CONNECT_ARGS = {
     "host": "(string) The host name (the default is 'localhost').",
     "port": "(integer) The port number (the default is 8089).",
-    "scheme": "('https' or 'http') The scheme for accessing the service "
+    "http_scheme": "('https' or 'http') The scheme for accessing the service "
     + "(the default is 'https').",
     "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
     + "https connections. (optional, the default is True)",
@@ -53,7 +54,7 @@ class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
     _SPLUNK_REQD_ARGS = ["host", "username", "password"]
-    _CONNECT_DEFAULTS = {"port": 8089, "scheme": "https", "verify": False}
+    _CONNECT_DEFAULTS: Dict[str, Any] = {}
 
     def __init__(self, **kwargs):
         """Instantiate Splunk Driver."""
@@ -130,8 +131,9 @@ class SplunkDriver(DriverBase):
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
         try:
+            print(arg_dict)
             self.service = sp_client.connect(**arg_dict)
-        except (sp_client.AuthenticationError, sp_client.HTTPError) as err:
+        except (AuthenticationError, HTTPError) as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}", title="Splunk connection"
             )
@@ -140,7 +142,7 @@ class SplunkDriver(DriverBase):
 
     def query(
         self, query: str, query_source: QuerySource = None
-    ) -> Tuple[pd.DataFrame, Any]:
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute splunk query and retrieve results via OneShot search mode.
 
@@ -153,14 +155,17 @@ class SplunkDriver(DriverBase):
 
         Returns
         -------
-        Tuple[pd.DataFrame, Any]
+        Union[pd.DataFrame, Any]
             Query results in a dataframe.
+            or query response if an error.
 
         """
         del query_source
         if not self._connected:
-            raise ConnectionError(
-                "Source is not connected.", "Please call connect() and retry"
+            raise MsticpyNotConnectedError(
+                "Please run the connect() method before running this method.",
+                title="not connected to Splunk.",
+                help_uri="TBD",
             )
         query_results = self.service.jobs.oneshot(query)
         reader = sp_results.ResultsReader(query_results)
@@ -169,8 +174,8 @@ class SplunkDriver(DriverBase):
             json_response.append(row)
         if isinstance(json_response, int):
             print("Warning - query did not return any results.")
-            return None, json_response
-        return pd.DataFrame(pd.io.json.json_normalize(json_response))
+            return json_response
+        return pd.DataFrame(pd.json_normalize(json_response))
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
@@ -243,7 +248,7 @@ class SplunkDriver(DriverBase):
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running this method.",
-                title="not connected to a workspace.",
+                title="not connected to Splunk.",
                 help_uri="TBD",
             )
         savedsearches = self.service.saved_searches
@@ -288,7 +293,7 @@ class SplunkDriver(DriverBase):
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running this method.",
-                title="not connected to a workspace.",
+                title="not connected to Splunk.",
                 help_uri="TBD",
             )
         firedalerts = self.service.fired_alerts
