@@ -1,15 +1,15 @@
-#  -------------------------------------------------------------------------
-#  Copyright (c) Microsoft Corporation. All rights reserved.
-#  Licensed under the MIT License. See License.txt in the project root for
-#  license information.
-#  --------------------------------------------------------------------------
-"""Splunk Driver class."""
+#  -------------------------------------------------------------------------
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License. See License.txt in the project root for
+#  license information.
+#  --------------------------------------------------------------------------
+"""Splunk Driver class."""
 from datetime import datetime
-from typing import Any, Tuple, Union, Dict, Iterable
+from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
-import splunklib.client as client
-import splunklib.results as results
+import splunklib.client as sp_client
+import splunklib.results as sp_results
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -17,8 +17,9 @@ from ...common.utility import export, check_kwargs
 from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
-    MsticpyUserError,
+    MsticpyUserConfigError,
 )
+from ...common.provider_settings import get_provider_settings, ProviderSettings
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
@@ -51,7 +52,8 @@ SPLUNK_CONNECT_ARGS = {
 class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
-    _CONNECT_DEFAULTS = {"port": 8089, "http_scheme": "https", "verify": False}
+    _SPLUNK_REQD_ARGS = ["host", "username", "password"]
+    _CONNECT_DEFAULTS = {"port": 8089, "scheme": "https", "verify": False}
 
     def __init__(self, **kwargs):
         """Instantiate Splunk Driver."""
@@ -71,14 +73,26 @@ class SplunkDriver(DriverBase):
         """
         Connect to Splunk via splunk-sdk.
 
-        Returns
-        -------
-        [type]
-            Splunk service object if connected successfully
+        Parameters
+        ----------
+        connection_str : Optional[str], optional
+            Connection string with Splunk connection parameters
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Connection parameters can be supplied as keyword parameters.
+
+        Notes
+        -----
+        Default configuration is read from the DataProviders/Splunk
+        section of msticpyconfig.yaml, if available.
 
         """
-        required_args = ["host", "username", "password"]
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
+        # Fetch any config settings
+        cs_dict.update(self._get_config_settings())
+        # If a connection string - parse this and add to config
         if connection_str:
             cs_items = connection_str.split(";")
             cs_dict.update(
@@ -88,15 +102,9 @@ class SplunkDriver(DriverBase):
                 }
             )
         elif kwargs:
+            # if connection args supplied as kwargs
             cs_dict.update(kwargs)
-        else:
-            raise MsticpyUserError(
-                "No connection details provided for Splunk connector",
-                f"Required parameters are {', '.join(required_args)}",
-                "All parameters:",
-                *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
-                title="no Splunk connection parameters",
-            )
+            check_kwargs(cs_dict, list(SPLUNK_CONNECT_ARGS.keys()))
 
         cs_dict["port"] = int(cs_dict["port"])
         verify_opt = cs_dict.get("verify")
@@ -107,17 +115,23 @@ class SplunkDriver(DriverBase):
         else:
             cs_dict["verify"] = False
 
-        try:
-            check_kwargs(cs_dict, required_args)
-        except NameError as err:
-            raise MsticpyUserError(*err.args, title="Required arguments missing")
+        missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
+        if missing_args:
+            raise MsticpyUserConfigError(
+                "One or more connection parameters missing for Splunk connector",
+                ", ".join(missing_args),
+                f"Required parameters are {', '.join(self._SPLUNK_REQD_ARGS)}",
+                "All parameters:",
+                *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
+                title="no Splunk connection parameters",
+            )
 
         arg_dict = {
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
         try:
-            self.service = client.connect(**arg_dict)
-        except (client.AuthenticationError, client.HTTPError) as err:
+            self.service = sp_client.connect(**arg_dict)
+        except (sp_client.AuthenticationError, sp_client.HTTPError) as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}", title="Splunk connection"
             )
@@ -149,7 +163,7 @@ class SplunkDriver(DriverBase):
                 "Source is not connected.", "Please call connect() and retry"
             )
         query_results = self.service.jobs.oneshot(query)
-        reader = results.ResultsReader(query_results)
+        reader = sp_results.ResultsReader(query_results)
         json_response = []
         for row in reader:
             json_response.append(row)
@@ -187,6 +201,12 @@ class SplunkDriver(DriverBase):
             Name of container to add queries to.
 
         """
+        if not self.connected:
+            raise MsticpyNotConnectedError(
+                "Please run the connect() method before running this method.",
+                title="not connected to a workspace.",
+                help_uri="TBD",
+            )
         return (
             {
                 search.name: search.get("search")
@@ -206,9 +226,23 @@ class SplunkDriver(DriverBase):
             Dataframe with list of saved searches with name and query columns.
 
         """
+        if self.connected:
+            return self._get_saved_searches()
+        return None
+
+    def _get_saved_searches(self) -> Union[pd.DataFrame, Any]:
+        """
+        Return list of saved searches in dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with list of saved searches with name and query columns.
+
+        """
         if not self.connected:
             raise MsticpyNotConnectedError(
-                "Please run the connect() method before running a query.",
+                "Please run the connect() method before running this method.",
                 title="not connected to a workspace.",
                 help_uri="TBD",
             )
@@ -237,9 +271,25 @@ class SplunkDriver(DriverBase):
             Dataframe with list of fired alerts with alert name and count columns.
 
         """
+        if self.connected:
+            return self._get_fired_alerts()
+        return None
+
+    def _get_fired_alerts(self) -> Union[pd.DataFrame, Any]:
+        """
+        Return list of fired alerts in dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with list of fired alerts with alert name and count columns.
+
+        """
         if not self.connected:
-            raise ConnectionError(
-                "Source is not connected.", "Please call connect() and retry"
+            raise MsticpyNotConnectedError(
+                "Please run the connect() method before running this method.",
+                title="not connected to a workspace.",
+                help_uri="TBD",
             )
         firedalerts = self.service.fired_alerts
 
@@ -255,6 +305,7 @@ class SplunkDriver(DriverBase):
 
         return out_df
 
+    # Parameter Formatting methods
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
         """Return datetime-formatted string."""
@@ -265,3 +316,10 @@ class SplunkDriver(DriverBase):
         """Return formatted list parameter."""
         fmt_list = [f'"{item}"' for item in param_list]
         return ",".join(fmt_list)
+
+    @staticmethod
+    def _get_config_settings() -> Dict[Any, Any]:
+        """Get config from msticpyconfig."""
+        data_provs = get_provider_settings(config_section="DataProviders")
+        splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
+        return getattr(splunk_settings, "args", {})

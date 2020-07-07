@@ -77,6 +77,7 @@ class KqlDriver(DriverBase):
             )
         self.current_connection = connection_str
         kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
+        self._connected = False
         try:
             self._set_kql_option("Kqlmagic.short_errors", False)
             if self._ip is not None:
@@ -169,7 +170,8 @@ class KqlDriver(DriverBase):
         """
         # connect or switch the connection if our connection string
         # is not the current KqlMagic connection.
-        self.connect(self.current_connection)
+        if not self.connected and self.current_connection:
+            self.connect(self.current_connection)
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running a query.",
@@ -205,8 +207,8 @@ class KqlDriver(DriverBase):
         print("Warning - query did not complete successfully.")
         if hasattr(result, "completion_query_info"):
             print(
-                result.completion_query_info["StatusCode"],
-                "(code: {}".format(result.completion_query_info["StatusCode"]),
+                result.completion_query_info.get("StatusDescription"),
+                f"(code: {result.completion_query_info['StatusCode']})",
             )
         return None, result
 
@@ -296,7 +298,11 @@ class KqlDriver(DriverBase):
                 title="authentication timed out",
             )
 
-        ex_mssgs = ex.error_response["error_description"].split("\r\n")
+        err_response = getattr(ex, "error_response")
+        if err_response and "error_description" in ex.error_response:
+            ex_mssgs = ex.error_response["error_description"].split("\r\n")
+        else:
+            ex_mssgs = [f"Full error: {ex}"]
         raise MsticpyKqlConnectionError(
             *ex_mssgs, title="could not authenticate to tenant"
         )

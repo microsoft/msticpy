@@ -8,7 +8,7 @@ import re
 from collections import ChainMap
 from datetime import datetime, timedelta
 from numbers import Number
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse, ParserError  # type: ignore
@@ -54,7 +54,13 @@ class QuerySource:
 
     """
 
-    def __init__(self, name: str, source: dict, defaults: dict, metadata: dict):
+    def __init__(
+        self,
+        name: str,
+        source: Dict[str, Any],
+        defaults: Dict[Optional[str], Any],
+        metadata: Dict[Optional[str], Any],
+    ):
         """
         Initialize query source definition.
 
@@ -77,9 +83,11 @@ class QuerySource:
 
         """
         self.name = name
-        self._source = source
-        self.defaults = defaults
-        self._global_metadata = dict(metadata) if metadata else dict()
+        self._source: Dict[str, Any] = source
+        self.defaults: Dict[Optional[str], Any] = defaults
+        self._global_metadata: Dict[Optional[str], Any] = dict(
+            metadata
+        ) if metadata else {}
         self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
 
         # consolidate source metadata - source-specifc
@@ -88,6 +96,8 @@ class QuerySource:
         self.metadata = ChainMap(
             _value_or_default(self._source, "metadata", {}),
             _value_or_default(self.defaults, "metadata", {}),
+            # self._source.get("metadata", {}),
+            # self.defaults.get("metadata", {}),
             self._global_metadata,
         )
         # make ChainMap for parameters from with source
@@ -96,9 +106,11 @@ class QuerySource:
         self.params = ChainMap(
             _value_or_default(self._source, "parameters", {}),
             _value_or_default(self.defaults, "parameters", {}),
+            # self._source.get("parameters", {}),
+            # self.defaults.get("parameters", {}),
         )
 
-        self._query = self["args.query"]
+        self._query: str = self["args.query"]
         self._replace_query_macros()
 
     def __getitem__(self, key: str):
@@ -130,7 +142,10 @@ class QuerySource:
             Query description.
 
         """
-        return self["description"]
+        try:
+            return self["description"]
+        except KeyError:
+            return "no description"
 
     @property
     def query(self) -> str:
@@ -193,7 +208,7 @@ class QuerySource:
         """
         return self.metadata["data_families"]
 
-    def create_query(self, formatters=None, **kwargs) -> str:
+    def create_query(self, formatters: Dict[str, Callable] = None, **kwargs) -> str:
         """
         Return query with values from kwargs and defaults substituted.
 
