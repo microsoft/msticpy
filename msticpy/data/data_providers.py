@@ -23,7 +23,7 @@ from .query_store import QueryStore
 from .query_container import QueryContainer
 from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
-from ..common.utility import export
+from ..common.utility import export, valid_pyname
 from ..common import pkg_config as config
 from .._version import VERSION
 
@@ -312,6 +312,7 @@ class QueryProvider:
             query_name = query_path[-1]
             current_node = self
             for container_name in query_path[:-1]:
+                container_name = valid_pyname(container_name)
                 if hasattr(current_node, container_name):
                     current_node = getattr(current_node, container_name)
                 else:
@@ -329,6 +330,7 @@ class QueryProvider:
                 query_path=query_cont_name, query_name=query_name
             ).create_doc_string()
 
+            query_name = valid_pyname(query_name)
             setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
 

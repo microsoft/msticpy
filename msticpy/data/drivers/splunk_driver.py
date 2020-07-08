@@ -54,7 +54,7 @@ class SplunkDriver(DriverBase):
     """Driver to connect and query from Splunk."""
 
     _SPLUNK_REQD_ARGS = ["host", "username", "password"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {}
+    _CONNECT_DEFAULTS: Dict[str, Any] = {"port": 8089}
 
     def __init__(self, **kwargs):
         """Instantiate Splunk Driver."""
@@ -131,7 +131,6 @@ class SplunkDriver(DriverBase):
             key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
         }
         try:
-            print(arg_dict)
             self.service = sp_client.connect(**arg_dict)
         except (AuthenticationError, HTTPError) as err:
             raise MsticpyConnectionError(
@@ -209,13 +208,16 @@ class SplunkDriver(DriverBase):
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running this method.",
-                title="not connected to a workspace.",
+                title="not connected to Splunk.",
                 help_uri="TBD",
             )
-        return (
-            {search.name: search["search"] for search in self.service.saved_searches},
-            "SavedSearches",
-        )
+        if hasattr(self.service, "saved_searches") and self.service.saved_searches:
+            queries = {
+                search.name.strip(): f"search {search['search']}"
+                for search in self.service.saved_searches
+            }
+            return queries, "SavedSearches"
+        return {}, "SavedSearches"
 
     @property
     def _saved_searches(self) -> Union[pd.DataFrame, Any]:

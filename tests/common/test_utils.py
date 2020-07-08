@@ -7,6 +7,8 @@
 from pathlib import Path
 import unittest
 
+import pytest_check as check
+
 from msticpy.nbtools import utils
 
 
@@ -33,11 +35,7 @@ class TestUtils(unittest.TestCase):
         utils.check_py_version(3.6)
         utils.check_py_version("3.6")
 
-        if Path("/etc").is_absolute():
-            abs_path = "/etc"
-        else:
-            abs_path = "c:\\windows"
-
+        abs_path = "/etc" if Path("/etc").is_absolute() else "c:\\windows"
         self.assertEqual(utils.resolve_pkg_path(abs_path), abs_path)
         self.assertIsNotNone(utils.resolve_pkg_path("sectools"))
         with self.assertWarns(UserWarning):
@@ -83,3 +81,12 @@ class TestUtils(unittest.TestCase):
             self.assertIn("source_columns", err.args[0][0].args[1])
             self.assertIn("time_column", err.args[0][0].args[1])
             self.assertIn("datum", err.args[0][1].args)
+
+
+def test_format_py_identifier():
+    """Test replacing illegal chars in identifier."""
+    check.equal(utils.valid_pyname("legal"), "legal")
+    check.equal(utils.valid_pyname("open"), "open_bi")
+    check.equal(utils.valid_pyname("has space"), "has_space")
+    check.equal(utils.valid_pyname("has-dash"), "has_dash")
+    check.equal(utils.valid_pyname("10.starts,digit$"), "n_10_starts_digit_")
