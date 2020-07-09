@@ -179,7 +179,7 @@ def test_splunk_fired_alerts(splunk_client):
         sp_driver._get_fired_alerts()
         check.is_false(sp_driver.connected)
         check.is_none(sp_driver._fired_alerts)
-    check.is_in("not connected to a service.", mp_ex.value.args)
+    check.is_in("not connected to Splunk.", mp_ex.value.args)
     sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
     check.is_true(sp_driver.connected)
 
@@ -200,7 +200,7 @@ def test_splunk_saved_searches(splunk_client):
         sp_driver._get_saved_searches()
         check.is_false(sp_driver.connected)
         check.is_none(sp_driver._saved_searches)
-    check.is_in("not connected to a service.", mp_ex.value.args)
+    check.is_in("not connected to Splunk.", mp_ex.value.args)
 
     sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
     check.is_true(sp_driver.connected)
@@ -215,7 +215,7 @@ def test_splunk_saved_searches(splunk_client):
     check.is_instance(queries, dict)
     for name, query in queries.items():
         check.is_true(name.startswith("query"))
-        check.equal(query, "get stuff from somewhere")
+        check.equal(query, "search get stuff from somewhere")
 
 
 @patch(SPLUNK_RESULTS_PATCH)
