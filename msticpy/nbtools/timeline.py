@@ -9,6 +9,7 @@ from typing import Any, Union, Set, Dict, Tuple, List
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
 from bokeh.models import (
@@ -748,14 +749,21 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
     return ref_time, kwargs.get("ref_label", ref_label)
 
 
-def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
-    """Create formatting for tool tip columns."""
+def _is_datetime(pd_series: pd.Series) -> bool:
+    """Return True if a datetime dtype."""
     ts_dtypes = [np.dtype("<M8[ns]"), np.dtype(">M8[ns]")]
+    return is_datetime64_any_dtype(pd_series) or pd_series.dtype in ts_dtypes
+
+
+def _create_tool_tips(
+    data: Union[pd.DataFrame, Dict[str, pd.DataFrame]], columns: List[str]
+):
+    """Create formatting for tool tip columns."""
     if isinstance(data, dict):
         tool_tip_dict = {}
         for series_df in data.values():
             for col in columns:
-                if col in data and series_df[col].dtype in ts_dtypes:
+                if col in data and _is_datetime(series_df[col]):
                     tool_tip_dict[col] = f"@{col}{{%F %T}}"
                 elif col not in tool_tip_dict:
                     tool_tip_dict[col] = f"@{col}"
@@ -763,7 +771,7 @@ def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
 
     tool_tip_items = []
     for col in columns:
-        if col in data and data[col].dtype in ts_dtypes:
+        if col in data and _is_datetime(data[col]):
             tool_tip_items.append((f"{col}", f"@{col}{{%F %T}}"))
         else:
             tool_tip_items.append((f"{col}", f"@{col}"))
