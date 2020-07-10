@@ -146,7 +146,7 @@ class SplunkDriver(DriverBase):
                 f"Error connecting to Splunk: {err}", title="Splunk connection"
             )
         self._connected = True
-        print("Connected to Splunk successfully !!")
+        print("connected")
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs

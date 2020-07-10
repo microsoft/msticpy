@@ -62,7 +62,9 @@ def extract_query_params(
 
     # Get the names of any params that were required but we didn't
     # find a value for
-    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+    missing_params = [
+        p_name for p_name, p_value in req_params.items() if p_value is None
+    ]
     return req_params, missing_params
 
 
