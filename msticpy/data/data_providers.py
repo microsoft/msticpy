@@ -258,7 +258,7 @@ class QueryProvider:
         """Print help for query."""
         self._query_store[query_name].help()
 
-    def exec_query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
         Execute simple query string.
 
@@ -274,7 +274,8 @@ class QueryProvider:
             or a KqlResult if unsuccessful.
 
         """
-        return self._query_provider.query(query)
+        query_options = kwargs.pop("query_options") or kwargs
+        return self._query_provider.query(query, **kwargs)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -303,7 +304,15 @@ class QueryProvider:
         query_str = query_source.create_query(formatters=param_formatters, **params)
         if "print" in args or "query" in args:
             return query_str
-        return self._query_provider.query(query_str, query_source)
+
+        # Handle any query options passed
+        query_options = kwargs.pop("query_options", {})
+        if not query_options:
+            # Any kwargs left over we send to the query provider driver
+            query_options = {
+                key: val for key, val in kwargs.items() if key not in params
+            }
+        return self._query_provider.query(query_str, query_source, **query_options)
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
