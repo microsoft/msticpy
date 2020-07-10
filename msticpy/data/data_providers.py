@@ -274,7 +274,7 @@ class QueryProvider:
             or a KqlResult if unsuccessful.
 
         """
-        query_options = kwargs.pop("query_options") or kwargs
+        query_options = kwargs.pop("query_options", {}) or kwargs
         return self._query_provider.query(query, **kwargs)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
