@@ -166,7 +166,7 @@ class SplunkDriver(DriverBase):
                 title="not connected to Splunk.",
                 help_uri="TBD",
             )
-        query_results = self.service.jobs.oneshot(query)
+        query_results = self.service.jobs.oneshot(query, count=0)
         reader = sp_results.ResultsReader(query_results)
         json_response = []
         for row in reader:
