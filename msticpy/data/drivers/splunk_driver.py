@@ -19,6 +19,7 @@ from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
+    MsticpyUserError,
 )
 from ...common.provider_settings import get_provider_settings, ProviderSettings
 
@@ -113,8 +114,6 @@ class SplunkDriver(DriverBase):
             cs_dict["verify"] = "true" in verify_opt.casefold()
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
-        else:
-            cs_dict["verify"] = False
 
         missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
         if missing_args:
@@ -132,7 +131,17 @@ class SplunkDriver(DriverBase):
         }
         try:
             self.service = sp_client.connect(**arg_dict)
-        except (AuthenticationError, HTTPError) as err:
+        except AuthenticationError as err:
+            raise MsticpyConnectionError(
+                f"Authentication error connecting to Splunk: {err}",
+                title="Splunk connection",
+            )
+        except HTTPError as err:
+            raise MsticpyConnectionError(
+                f"Communication error connecting to Splunk: {err}",
+                title="Splunk connection",
+            )
+        except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}", title="Splunk connection"
             )
@@ -140,7 +149,7 @@ class SplunkDriver(DriverBase):
         print("Connected to Splunk successfully !!")
 
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute splunk query and retrieve results via OneShot search mode.
@@ -151,6 +160,12 @@ class SplunkDriver(DriverBase):
             Splunk query to execute via OneShot search mode
         query_source : QuerySource
             The query definition object
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Are passed to Splunk oneshot method
+            count=0 by default
 
         Returns
         -------
@@ -166,15 +181,18 @@ class SplunkDriver(DriverBase):
                 title="not connected to Splunk.",
                 help_uri="TBD",
             )
-        query_results = self.service.jobs.oneshot(query)
+        # If query is prefixed with "search", add that.
+        if query.split(" ", maxsplit=1)[0].casefold() != "search":
+            query = f"search {query}"
+        # default to unlimited query unless count is specified
+        count = kwargs.pop("count", 0)
+        query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
         reader = sp_results.ResultsReader(query_results)
-        json_response = []
-        for row in reader:
-            json_response.append(row)
-        if isinstance(json_response, int):
+        resp_rows = [row for row in reader if isinstance(row, dict)]
+        if not resp_rows:
             print("Warning - query did not return any results.")
-            return json_response
-        return pd.DataFrame(pd.json_normalize(json_response))
+            return [row for row in reader if isinstance(row, sp_results.Message)]
+        return pd.DataFrame(resp_rows)
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
