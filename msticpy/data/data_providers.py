@@ -275,7 +275,7 @@ class QueryProvider:
 
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
-        return self._query_provider.query(query, **kwargs)
+        return self._query_provider.query(query, **query_options)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:

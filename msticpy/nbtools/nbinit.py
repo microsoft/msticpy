@@ -87,9 +87,9 @@ _NB_IMPORTS = [
 _MP_IMPORTS = [
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
-    dict(pkg="msticpy.nbtools.utility", tgt="md"),
-    dict(pkg="msticpy.nbtools.utility", tgt="md_warn"),
-    dict(pkg="msticpy.nbtools.wsconfig", tgt="WorkspaceConfig"),
+    dict(pkg="msticpy.common.utility", tgt="md"),
+    dict(pkg="msticpy.common.utility", tgt="md_warn"),
+    dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
 ]
 _MP_IMPORT_ALL = [
     dict(module_name="msticpy.nbtools"),
