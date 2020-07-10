@@ -182,7 +182,7 @@ class SplunkDriver(DriverBase):
                 help_uri="TBD",
             )
         # If query is prefixed with "search", add that.
-        if query.split(" ", maxsplit=1)[0].casefold() != "search":
+        if query.strip().split(" ", maxsplit=1)[0].casefold() != "search":
             query = f"search {query}"
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)

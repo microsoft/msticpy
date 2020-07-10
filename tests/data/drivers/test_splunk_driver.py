@@ -253,16 +253,25 @@ def test_live_connect():
     """Use this to do live testing."""
     sp_driver = SplunkDriver()
     www = "splunk-mstic.westus2.cloudapp.azure.com"
-    sp_driver.connect(host=www, port=8089, username="admin", password="******")
+    sp_driver.connect(host=www, port=8089, username="admin", password="***")  # nosec
 
-    query = 'index="botsv2" earliest=08/25/2017:00:00:00 latest=08/26/2017:00:00:00 '
-    +'source="WinEventLog:Microsoft-Windows-Sysmon/Operational" | '
-    +"table TimeCreated, host, EventID, EventDescription, User, process | head 10"
+    query = """index="botsv2" earliest=08/25/2017:00:00:00 latest=08/26/2017:00:00:00
+    source="WinEventLog:Microsoft-Windows-Sysmon/Operational"
+    | table TimeCreated, host, EventID, EventDescription, User, process | head 10
+    """
     res_df = sp_driver.query(query)
     check.is_not_none(res_df)
 
-    query0 = 'index="botsv2" earliest=08/25/2020:00:00:00 '
-    +'source="WinEventLog:Microsoft-Windows-Sysmon/Operational" | '
-    +"table TimeCreated, host, EventID, EventDescription, User, process | head 10"
+    query0 = """index="botsv2" earliest=08/25/2020:00:00:00
+    + 'source="WinEventLog:Microsoft-Windows-Sysmon/Operational"
+    | table TimeCreated, host, EventID, EventDescription, User, process | head 10
+    """
     res_df = sp_driver.query(query0)
+    check.is_instance(res_df, list)
+    check.is_false(res_df)
+
+    query1 = """
+    index=blackhat sourcetype=network earliest=0 | table TimeGenerated, TotalBytesSent
+    """
+    res_df = sp_driver.query(query1)
     check.is_not_none(res_df)
