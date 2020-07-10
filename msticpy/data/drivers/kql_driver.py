@@ -115,7 +115,7 @@ class KqlDriver(DriverBase):
         return self._schema
 
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -134,6 +134,7 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
+        del kwargs
         if query_source:
             try:
                 table = query_source["args.table"]

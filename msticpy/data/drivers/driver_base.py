@@ -95,7 +95,7 @@ class DriverBase(ABC):
 
     @abc.abstractmethod
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -106,6 +106,12 @@ class DriverBase(ABC):
             The query to execute
         query_source : QuerySource
             The query definition object
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Are passed to the underlying provider query method,
+            if supported.
 
         Returns
         -------

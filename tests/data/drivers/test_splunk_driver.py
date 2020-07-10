@@ -16,7 +16,6 @@ import pandas as pd
 from msticpy.common.exceptions import (
     MsticpyUserConfigError,
     MsticpyConnectionError,
-    MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
 
@@ -101,16 +100,18 @@ class _MockSplunkService(MagicMock):
         ]
 
     @staticmethod
-    def _query_response(query):
+    def _query_response(query, **kwargs):
+        del kwargs
         return query
 
 
 def _results_reader(query_result):
     """Mock Splunk results reader."""
-    for i in range(10):
-        yield f"""{{
-            "row": {i}, "query": "{query_result}", "text": "test text"}}
-            """
+    if "zero query" in query_result:
+        yield None
+    else:
+        for i in range(10):
+            yield {"row": i, "query": query_result, "text": f"test text {i}"}
 
 
 @patch(SPLUNK_CLI_PATCH)
@@ -154,7 +155,7 @@ def test_splunk_connect_errors(splunk_client):
 
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
-        sp_driver.connect(host="AuthError", username="ian", password="12345")
+        sp_driver.connect(host="AuthError", username="ian", password="12345")  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
@@ -162,7 +163,7 @@ def test_splunk_connect_errors(splunk_client):
     sp_driver = SplunkDriver()
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
-        sp_driver.connect(host="HTTPError", username="ian", password="12345")
+        sp_driver.connect(host="HTTPError", username="ian", password="12345")  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
@@ -239,5 +240,29 @@ def test_splunk_query_success(splunk_client, splunk_results):
     check.is_instance(df_result, pd.DataFrame)
     check.equal(len(df_result), 10)
 
+    response = sp_driver.query("zero query")
+    check.is_not_instance(response, pd.DataFrame)
+    check.equal(len(response), 0)
+
 
 # TODO - read config
+
+
+@pytest.mark.skip
+def test_live_connect():
+    """Use this to do live testing."""
+    sp_driver = SplunkDriver()
+    www = "splunk-mstic.westus2.cloudapp.azure.com"
+    sp_driver.connect(host=www, port=8089, username="admin", password="******")
+
+    query = 'index="botsv2" earliest=08/25/2017:00:00:00 latest=08/26/2017:00:00:00 '
+    +'source="WinEventLog:Microsoft-Windows-Sysmon/Operational" | '
+    +"table TimeCreated, host, EventID, EventDescription, User, process | head 10"
+    res_df = sp_driver.query(query)
+    check.is_not_none(res_df)
+
+    query0 = 'index="botsv2" earliest=08/25/2020:00:00:00 '
+    +'source="WinEventLog:Microsoft-Windows-Sysmon/Operational" | '
+    +"table TimeCreated, host, EventID, EventDescription, User, process | head 10"
+    res_df = sp_driver.query(query0)
+    check.is_not_none(res_df)

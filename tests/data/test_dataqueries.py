@@ -41,10 +41,10 @@ class UTDataDriver(DriverBase):
         self._connected = True
 
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """Test method."""
-        del query_source
+        del query_source, kwargs
         return pd.DataFrame(data=query, index=[0], columns=["query"])
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
