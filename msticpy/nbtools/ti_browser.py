@@ -4,12 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
+import pprint
 from typing import List, Optional
 
 import pandas as pd
-
 from IPython.core.display import HTML
-import pprint
+
 
 from .nbwidgets import SelectItem
 from .._version import VERSION
@@ -46,6 +46,9 @@ def browse_results(
         SelectItem browser for TI Data.
 
     """
+    if "height" not in kwargs:
+        kwargs["height"] = "300px"
+
     opts = get_ti_select_options(ti_data=data, severities=severities)
     disp_func = ti_details_display(ti_data=data)
     return SelectItem(item_dict=opts, action=disp_func, **kwargs)

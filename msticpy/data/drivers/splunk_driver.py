@@ -19,7 +19,6 @@ from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
-    MsticpyUserError,
 )
 from ...common.provider_settings import get_provider_settings, ProviderSettings
 

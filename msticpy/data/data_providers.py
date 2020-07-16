@@ -25,6 +25,7 @@ from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
 from ..common.utility import export, valid_pyname
 from ..common import pkg_config as config
+from ..nbtools.query_browser import browse_queries
 from .._version import VERSION
 
 __version__ = VERSION
@@ -258,6 +259,10 @@ class QueryProvider:
         """Print help for query."""
         self._query_store[query_name].help()
 
+    def get_query(self, query_name) -> str:
+        """Return the raw query text."""
+        return self._query_store[query_name].query
+
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
         Execute simple query string.
@@ -276,6 +281,29 @@ class QueryProvider:
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
         return self._query_provider.query(query, **query_options)
+
+    @staticmethod
+    def browse_queries(query_provider: "QueryProvider", **kwargs):
+        """
+        Return TI Results list browser.
+
+        Parameters
+        ----------
+        query_provider : QueryProvider
+            Initialized query provider.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            passed to SelectItem constuctor.
+
+        Returns
+        -------
+        SelectItem
+            SelectItem browser for TI Data.
+
+        """
+        return browse_queries(query_provider=query_provider, **kwargs)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
