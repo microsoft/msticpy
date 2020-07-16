@@ -199,7 +199,7 @@ def _get_default_config():
             )
     except ModuleNotFoundError:
         pass
-    if not conf_file or not Path(conf_file).is_file():
+    if not (conf_file and Path(conf_file).is_file()):
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
         pkg_paths = sys.modules[top_module]
@@ -271,7 +271,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     """
     if config_file:
         mp_config = _read_config_file(config_file)
-    if not mp_config and not config_file:
+    if not (mp_config or config_file):
         mp_config = settings
 
     if not isinstance(mp_config, dict):
@@ -347,10 +347,10 @@ def _validate_azure_sentinel(mp_config):
         if ws == "Default":
             no_default = False
         ws_id = ws_settings.get("WorkspaceId")
-        if not ws_id and not is_valid_uuid(ws_id):
+        if not (ws_id and is_valid_uuid(ws_id)):
             mp_errors.append(f"Invalid GUID for WorkspaceId in {ws} section")
         ten_id = ws_settings.get("TenantId")
-        if not ten_id and not is_valid_uuid(ten_id):
+        if not (ten_id and is_valid_uuid(ten_id)):
             mp_errors.append(f"Invalid GUID for TenantId in {ws} section")
     mp_warnings = ["No default workspace set"] if no_default else []
     return mp_errors, mp_warnings
@@ -361,6 +361,7 @@ def _check_provider_settings(mp_config, section, key_provs):
     mp_warnings = []
     if not mp_config:
         mp_warnings.append(f"'{section}' section has no settings.")
+        return mp_errors, mp_warnings
     for p_name, p_setting in mp_config.items():
         sec_args = p_setting.get("Args")
         if not sec_args:
