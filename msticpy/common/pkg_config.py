@@ -336,12 +336,15 @@ def _print_validation_report(mp_errors, mp_warn):
 
 def _validate_azure_sentinel(mp_config):
     mp_errors = []
+    mp_warnings = []
     as_settings = mp_config.get(_AZ_SENTINEL, {})
     if not as_settings:
         mp_errors.append("Missing or empty 'AzureSentinel' section")
+        return mp_errors, mp_warnings
     ws_settings = as_settings.get("Workspaces", {})
     if not ws_settings:
         mp_errors.append("Missing or empty 'Workspaces' key in 'AzureSentinel' section")
+        return mp_errors, mp_warnings
     no_default = True
     for ws, ws_settings in ws_settings.items():
         if ws == "Default":
