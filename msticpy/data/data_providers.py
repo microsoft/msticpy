@@ -25,7 +25,6 @@ from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
 from ..common.utility import export, valid_pyname
 from ..common import pkg_config as config
-from ..nbtools.query_browser import browse_queries
 from .._version import VERSION
 
 __version__ = VERSION
@@ -283,9 +282,9 @@ class QueryProvider:
         return self._query_provider.query(query, **query_options)
 
     @staticmethod
-    def browse_queries(query_provider: "QueryProvider", **kwargs):
+    def browse_queries(query_provider, **kwargs):
         """
-        Return TI Results list browser.
+        Return QueryProvider query browser.
 
         Parameters
         ----------
@@ -303,7 +302,9 @@ class QueryProvider:
             SelectItem browser for TI Data.
 
         """
-        return browse_queries(query_provider=query_provider, **kwargs)
+        # Placeholder for class documentation - this function is
+        # replaced by nbtools\query_browser
+        del query_provider, kwargs
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:

@@ -19,7 +19,7 @@ __author__ = "Ian Hellen"
 
 def browse_queries(query_provider: QueryProvider, **kwargs) -> SelectItem:
     """
-    Return TI Results list browser.
+    Return QueryProvider query browser.
 
     Parameters
     ----------
@@ -42,6 +42,10 @@ def browse_queries(query_provider: QueryProvider, **kwargs) -> SelectItem:
     disp_func = _query_display_func(query_provider)
     opts = query_provider.list_queries()
     return SelectItem(item_list=opts, action=disp_func, **kwargs)
+
+
+# Add browse_queries as a method to QueryProvider
+setattr(QueryProvider, "browse_queries", browse_queries)
 
 
 def _format_query_doc(query_doc) -> Generator[str, None, None]:
