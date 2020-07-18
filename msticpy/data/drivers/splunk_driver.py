@@ -90,6 +90,34 @@ class SplunkDriver(DriverBase):
         section of msticpyconfig.yaml, if available.
 
         """
+        cs_dict = self._get_connect_args(connection_str, **kwargs)
+
+        arg_dict = {
+            key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
+        }
+        try:
+            self.service = sp_client.connect(**arg_dict)
+        except AuthenticationError as err:
+            raise MsticpyConnectionError(
+                f"Authentication error connecting to Splunk: {err}",
+                title="Splunk connection",
+            )
+        except HTTPError as err:
+            raise MsticpyConnectionError(
+                f"Communication error connecting to Splunk: {err}",
+                title="Splunk connection",
+            )
+        except Exception as err:
+            raise MsticpyConnectionError(
+                f"Error connecting to Splunk: {err}", title="Splunk connection"
+            )
+        self._connected = True
+        print("connected")
+
+    def _get_connect_args(
+        self, connection_str: Optional[str], **kwargs
+    ) -> Dict[str, Any]:
+        """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
         cs_dict.update(self._get_config_settings())
@@ -124,28 +152,7 @@ class SplunkDriver(DriverBase):
                 *[f"{arg}: {desc}" for arg, desc in SPLUNK_CONNECT_ARGS.items()],
                 title="no Splunk connection parameters",
             )
-
-        arg_dict = {
-            key: val for key, val in cs_dict.items() if key in SPLUNK_CONNECT_ARGS
-        }
-        try:
-            self.service = sp_client.connect(**arg_dict)
-        except AuthenticationError as err:
-            raise MsticpyConnectionError(
-                f"Authentication error connecting to Splunk: {err}",
-                title="Splunk connection",
-            )
-        except HTTPError as err:
-            raise MsticpyConnectionError(
-                f"Communication error connecting to Splunk: {err}",
-                title="Splunk connection",
-            )
-        except Exception as err:
-            raise MsticpyConnectionError(
-                f"Error connecting to Splunk: {err}", title="Splunk connection"
-            )
-        self._connected = True
-        print("connected")
+        return cs_dict
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs

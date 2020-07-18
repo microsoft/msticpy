@@ -104,11 +104,7 @@ def dbcluster_events(
         else:
             x_input = data[cluster_columns].values
     elif isinstance(data, np.ndarray):
-        if cluster_columns is None:
-            x_input = data
-        else:
-            x_input = data[:, cluster_columns].values
-
+        x_input = data if cluster_columns is None else data[:, cluster_columns].values
     if x_input is None:
         mssg = "Input data not in expected format.\n{} is not one of allowed types {}"
         type_list = ", ".join([str(t) for t in allowed_types])
@@ -122,11 +118,7 @@ def dbcluster_events(
 
     # Normalize the data (most clustering algorithms don't do well with
     # unnormalized data)
-    if normalize:
-        x_norm = Normalizer().fit_transform(x_input)
-    else:
-        x_norm = x_input
-
+    x_norm = Normalizer().fit_transform(x_input) if normalize else x_input
     # fit the data set
     db_cluster.fit(x_norm)
     labels = db_cluster.labels_
@@ -298,11 +290,7 @@ def add_process_features(
     if path_separator is None:
         sample_df = output_df.head(10)
         lx_path = len(sample_df[sample_df["NewProcessName"].str.contains("/")])
-        if lx_path:
-            path_separator = "/"
-        else:
-            path_separator = "\\"
-
+        path_separator = "/" if lx_path else "\\"
     # Create features from process name and command line
     if "NewProcessName" in output_df:
         _add_processname_features(output_df, force, path_separator)
@@ -310,11 +298,8 @@ def add_process_features(
     if "CommandLine" in output_df:
         _add_commandline_features(output_df, force)
 
-    if "SubjectLogonId" in output_df:
-        if "isSystemSession" not in output_df or force:
-            output_df["isSystemSession"] = output_df["SubjectLogonId"].isin(
-                ["0x3e7", "-1"]
-            )
+    if "SubjectLogonId" in output_df and ("isSystemSession" not in output_df or force):
+        output_df["isSystemSession"] = output_df["SubjectLogonId"].isin(["0x3e7", "-1"])
 
     return output_df
 
@@ -464,7 +449,7 @@ def char_ord_score(value: str, scale: int = 1) -> int:
     algorithms.
 
     """
-    return floor(sum([ord(x) for x in value]) / scale)
+    return floor(sum(ord(x) for x in value) / scale)
 
 
 @export
@@ -492,7 +477,7 @@ def token_count(value: str, delimiter: str = " ") -> int:
 
 def _string_score(input_str):
     """Sum the ord(c) for characters in a string."""
-    return sum([ord(x) for x in input_str])
+    return sum(ord(x) for x in input_str)
 
 
 @export
@@ -572,7 +557,7 @@ def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Ser
     algorithms.
 
     """
-    return data.apply(lambda x: sum([ord(char) for char in x[column]]) / scale, axis=1)
+    return data.apply(lambda x: sum(ord(char) for char in x[column]) / scale, axis=1)
 
 
 def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.Series:
@@ -717,7 +702,6 @@ def plot_cluster(
             marker_size = 10
             font_size = "large"
             alpha = 1.0
-        first_row = data[class_member_mask].iloc[0]
         xy_pos = x_predict[class_member_mask & core_samples_mask]
         plt.plot(
             xy_pos[:, plot_features[0]],
@@ -728,11 +712,12 @@ def plot_cluster(
         )
 
         if plot_label:
+            first_row = data[class_member_mask].iloc[0]
             if not first_row.empty and plot_label in first_row:
                 p_label = first_row[plot_label]
                 try:
                     plt.annotate(
-                        s=p_label,
+                        p_label,
                         xy=(xy_pos[0, plot_features[0]], xy_pos[0, plot_features[1]]),
                         fontsize=font_size,
                         alpha=alpha,
