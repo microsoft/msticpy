@@ -36,10 +36,8 @@ class LAUploader(UploaderBase):
         self._kwargs = kwargs
         self.workspace = workspace
         self.workspace_secret = workspace_secret
-        if 'opinsights_loc' in kwargs:
-            self.ops_loc = kwargs['opinsights_loc']
-        else:
-            self.ops_loc = '.ods.opinsights.azure.com'
+        self._debug = kwargs.get("debug", False)
+        self.ops_loc = kwargs.get("opsinsight_loc", ".ods.opinsights.azure.com")
 
     def _build_signature(self, date, content_length, method, content_type, resource) -> str:
         x_headers = 'x-ms-date:' + date
@@ -48,6 +46,8 @@ class LAUploader(UploaderBase):
         decoded_key = base64.b64decode(self.workspace_secret)
         encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest()).decode()
         authorization = f"SharedKey {self.workspace}:{encoded_hash}"
+        if self._debug is True:
+            print(authorization)
         return authorization
 
     def _post_data(self, body, table_name):
@@ -57,7 +57,6 @@ class LAUploader(UploaderBase):
         content_length = len(body)
         signature = self._build_signature(rfc1123date, content_length, 'POST', content_type, resource)
         uri = 'https://' + self.workspace + self.ops_loc + resource + '?api-version=2016-04-01'
-
         headers = {
             'content-type': content_type,
             'Authorization': signature,
@@ -65,7 +64,8 @@ class LAUploader(UploaderBase):
             'x-ms-date': rfc1123date
         }
         response = requests.post(uri,data=body, headers=headers)
-        print(response.status_code)
+        if self._debug is True:
+            print(response.status_code)
         if (response.status_code < 200 or response.status_code > 299):
             raise MsticpyConnectionError("LogAnalytics data upload failed, check Workspace ID and key")
 
@@ -75,6 +75,8 @@ class LAUploader(UploaderBase):
             events.append(row[1].astype(str).to_dict())
             # Due to 30MB limit if data is larger than 25Mb upload that chunk then continue
             if sys.getsizeof(json.dumps(events)) > 26214400:
+                if self._debug is True:
+                    print("Data larger than 25MB spliting data requests.")
                 body = json.dumps(events)
                 self._post_data(body, table_name)
                 events = []
@@ -83,7 +85,6 @@ class LAUploader(UploaderBase):
             body = json.dumps(events)
             self._post_data(body, table_name)
     
-
     def file_upload(self, file_path:str, table_name:str, delim:str = ',',):
         file = Path(path)
         data = pd.read_csv(path, delim=delim)
