@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+import asyncio
 import json
 import os
 import random
@@ -11,7 +12,7 @@ from abc import ABC
 from datetime import datetime, timedelta
 from enum import IntEnum
 from json import JSONDecodeError
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union, Iterable
 from weakref import WeakValueDictionary
 
 import ipywidgets as widgets
@@ -19,6 +20,7 @@ import pandas as pd
 from deprecated.sphinx import deprecated
 from IPython.display import HTML, display
 from ipywidgets import Layout
+from jupyter_ui_poll import run_ui_poll_loop
 
 from .._version import VERSION
 from ..common.utility import export
@@ -75,7 +77,7 @@ class RegisteredWidget(ABC):
         id_vals: Optional[List[Any]] = None,
         val_attrs: Optional[List[str]] = None,
         nb_params: Optional[Dict[str, str]] = None,
-        ns: Dict[str, Any] = None,
+        ns: Dict[str, Any] = globals(),
         register: bool = True,
         **kwargs,
     ):
@@ -125,7 +127,7 @@ class RegisteredWidget(ABC):
                 # if this doesn't have a value set explicitly or
                 # one that was recovered from the widget registry
                 # set it from the nb_param value
-                if nb_param in ns and getattr(self, attr, None) is not None:
+                if nb_param in ns and not getattr(self, attr, None):
                     setattr(self, attr, ns[nb_param])
 
 
@@ -261,6 +263,10 @@ class QueryTime(RegisteredWidget):
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
+    See Also
+    --------
+    RegisteredWidget
+
     """
 
     _label_style = {"description_width": "initial"}
@@ -313,8 +319,8 @@ class QueryTime(RegisteredWidget):
 
         self.before = _default_before_after(before, self._time_unit)
         self.after = _default_before_after(after, self._time_unit)
-        self.max_before = _default_max_buffer(max_before, before, self._time_unit)
-        self.max_after = _default_max_buffer(max_after, after, self._time_unit)
+        self.max_before = _default_max_buffer(max_before, self.before, self._time_unit)
+        self.max_after = _default_max_buffer(max_after, self.after, self._time_unit)
 
         # default to now
         self.origin_time = datetime.utcnow() if origin_time is None else origin_time
@@ -328,15 +334,7 @@ class QueryTime(RegisteredWidget):
 
         # Call superclass to register
         ids_params = [origin_time, before, after, max_before, max_after, label, units]
-        ids_attribs = [
-            "origin_time",
-            "before",
-            "after",
-            "max_before",
-            "max_after",
-            "_query_start",
-            "_query_end",
-        ]
+        ids_attribs = ["origin_time", "before", "after", "_query_start", "_query_end"]
         super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
 
         # Create widgets
@@ -823,6 +821,10 @@ class GetText(RegisteredWidget):
         auto_display : bool, optional
             Whether to display on instantiation (the default is False)
 
+        See Also
+        --------
+        RegisteredWidget
+
         """
         self._value = default
 
@@ -836,16 +838,22 @@ class GetText(RegisteredWidget):
             style={"description_width": "initial"},
         )
 
+        self._w_text.observe(self._update_value, names="value")
         if auto_display:
             self.display()
+
+    def _update_value(self, change):
+        self._value = change.get("new")
 
     @property
     def value(self):
         """Get the current value of the key."""
-        return self._w_text.value.strip()
+        return self._value.strip()
 
     def display(self):
         """Display the interactive widgets."""
+        if self._value:
+            self._w_text.value = self._value
         display(self._w_text)
 
     def _ipython_display_(self):
@@ -1380,3 +1388,186 @@ class Progress:
     def _ipython_display_(self):
         """Display in IPython."""
         self.display()
+
+
+class OptionButtons:
+    """
+    OptionButtons creates a sequence of buttons to choose from.
+
+    The widget can be run in synchronous mode as a simple option
+    selector or in async mode with a timeout.
+    In the latter mode, after the timeout has expired the widget
+    value is set to the default. the async mode is designed to be
+    used with the `check_widget_value` function.
+    The `check_widget_value` function *must* be run in a separate
+    cell to `widget.display_async()`
+
+    Attributes
+    ----------
+    value : str
+        The value of the option selected (case-normalized)
+    cancel : str
+        The value of an option indicating that the choice was
+        cancelled.
+
+    Example
+    -------
+    >>> opt = OptionButtons(description="Continue something?",
+    ...  buttons=["Maybe", "Yes", "Cancel"], timeout=10)
+    >>> await opt.display_async()
+
+    >>> # %% New cell
+    >>> # This will block until user selects an option from the opt widget
+    >>> w_val = check_widget_value(opt)
+
+    """
+
+    def __init__(
+        self,
+        description: Optional[str] = "Select an option to continue",
+        buttons: Optional[Iterable[str]] = None,
+        default: Optional[str] = None,
+        cancel: str = "Cancel",
+        timeout: int = 10,
+        debug: bool = False,
+    ):
+        """
+        Initialize the OptionButton widget.
+
+        Parameters
+        ----------
+        description : Optional[str], optional
+            Description label displayed above the buttons,
+            by default "Select an option to continue"
+        buttons : Optional[Iterable[str]], optional
+            A list of button values, by default None. This
+            will default to ["Yes", "No", "Cancel"]
+        default : Optional[str], optional
+            The default value to use on timeout, by default the
+            first value in the `buttons` list
+        cancel : Optional[str], optional
+            An alternative value to use to indicate cancel,
+            by default "Cancel"
+        timeout : int, optional
+            Timeout in seconds, by default 10
+        debug : bool, optional
+            Adds some debug information to an Output controle,
+            by default False
+
+        """
+        if buttons is None:
+            buttons = ["Yes", "No", "Cancel"]
+        self._buttons = []
+        for b_item in buttons:
+            self._buttons.append(widgets.Button(description=b_item))
+        self._desc_label = widgets.Label(value=description)
+        self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
+        self._out = widgets.Output()
+        self.default = default or next(iter(buttons)).casefold()
+        self.value: Optional[str] = None
+        self.timeout = timeout
+        self.completion = None
+        self._cancel = cancel.casefold()
+        self._future = None
+        self._debug = debug
+
+    @property
+    def _layout(self):
+        return widgets.VBox(
+            [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
+        )
+
+    def _wait_for_change_buttons(self, btns):
+        self._future = asyncio.Future()
+
+        def getvalue(change):
+            self.value = change.description.casefold()
+
+            for btn in btns:
+                btn.on_click(getvalue, remove=True)
+            if self.value == self._cancel:
+                self._out.append_stdout("cancelled")
+                self._future.cancel()
+            self._future.set_result(str(change.description))
+
+        for btn in btns:
+            btn.on_click(getvalue)
+        return self._future
+
+    async def _await_widget(self):
+        future = self._wait_for_change_buttons(self._buttons)
+        done, _ = await asyncio.wait(
+            [future, self._await_timer(self.timeout)],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        self.completion = done
+        return done
+
+    async def _await_timer(self, timeout: int = 5):
+        if timeout <= 0:
+            return
+        while timeout > 0:
+            self._timer_label.value = f"Waiting {timeout} sec..."
+            if self.value:
+                self._timer_label.value = f"Option selected: '{self.value}'"
+                return
+            await asyncio.sleep(1)
+            timeout -= 1
+        self.value = self.default
+        self._timer_label.value = f"Timed out. Defaulted to '{self.value}'"
+
+    async def display_async(self):
+        """Display widget with timeout."""
+        display(self._layout)
+        if self._debug:
+            display(self._out)
+        asyncio.ensure_future(self._await_widget())
+
+    def display(self):
+        """Display widget in simple sync mode."""
+        display(self._layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+def check_widget_value(
+    widget,
+    attrib: str = "value",
+    cancel_value: str = "cancel",
+    stop_on_cancel: bool = True,
+) -> Any:
+    """
+    Blocks the execution of the notebook until a widget value is set.
+
+    Parameters
+    ----------
+    widget : [type]
+        The widget to check - the function will continue to check
+        as long as the widget value is None.
+    attrib : str, optional
+        The attribute name of the widget to check, by default "value"
+    cancel_value : str, optional
+        Alternative string to signify cancellation, by default "cancel"
+    stop_on_cancel : bool, optional
+        If true, the function will throw an exception when the widget
+        value indicates that "cancel" was chosen, by default True
+
+    Returns
+    -------
+    Any
+        The widget value attribute
+
+    Raises
+    ------
+    ValueError
+        If the widget value matches the cancel value.
+
+    """
+    if not cancel_value:
+        cancel_value = getattr(widget, "cancel")
+    w_val = run_ui_poll_loop(lambda: getattr(widget, attrib), 1 / 15)
+    if w_val == cancel_value and stop_on_cancel:
+        raise ValueError("Stopping execution - user cancelled.")
+    return w_val
