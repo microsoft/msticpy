@@ -745,10 +745,20 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
     return ref_time, kwargs.get("ref_label", ref_label)
 
 
-def _is_datetime(pd_series: pd.Series) -> bool:
-    """Return True if a datetime dtype."""
-    ts_dtypes = [np.dtype("<M8[ns]"), np.dtype(">M8[ns]")]
-    return is_datetime64_any_dtype(pd_series) or pd_series.dtype in ts_dtypes
+def _get_datetime_tooltip(col: str, dataset: pd.DataFrame):
+    """Return tooltip and formatter entries for column."""
+    if " " in col:
+        disp_col = col.replace(" ", "_")
+        tt_col = f"{{{col}}}"
+    else:
+        disp_col = tt_col = col
+    if col in dataset and is_datetime64_any_dtype(dataset[col]):
+        col_tooltip = f"@{tt_col}{{%F %T.%3N}}"
+        col_fmt: Dict[Any, Any] = {f"@{tt_col}": "datetime"}
+    else:
+        col_tooltip = f"@{tt_col}"
+        col_fmt = {}
+    return disp_col, col_tooltip, col_fmt
 
 
 def _create_tool_tips(
@@ -756,25 +766,25 @@ def _create_tool_tips(
 ) -> Tuple[List[Tuple[str, str]], Dict[str, str]]:
     """Create formatting for tool tip columns."""
     formatters: Dict[str, str] = {}
+    # if this is a dict we need to unpack each dataframe and process
+    # the tooltip columns for all of the data sets.
     if isinstance(data, dict):
         tool_tip_dict = {}
         for data_set in data.values():
-            dateset_df = data_set.get("data", {})
+            data_df = data_set.get("data", {})
             for col in columns:
-                if col in dateset_df and _is_datetime(dateset_df[col]):
-                    tool_tip_dict[col] = f"@{{{col}}}{{%F %T.%3N}}"
-                    formatters[f"@{{{col}}}"] = "datetime"
-                elif col not in tool_tip_dict:
-                    tool_tip_dict[col] = f"@{{{col}}}"
+                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)
+                tool_tip_dict[disp_col] = col_tooltip
+                formatters.update(col_fmt)
         return list(tool_tip_dict.items()), formatters
 
+    # If just a dataframe we just process the columns against this
     tool_tip_items = []
     for col in columns:
-        if col in data and _is_datetime(data[col]):
-            tool_tip_items.append((f"{col}", f"@{col}{{%F %T.%3N}}"))
-            formatters[f"@{{{col}}}"] = "datetime"
-        else:
-            tool_tip_items.append((f"{col}", f"@{{{col}}}"))
+        disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data)
+        tool_tip_items.append((disp_col, col_tooltip))
+        formatters.update(col_fmt)
+
     return tool_tip_items, formatters
 
 
