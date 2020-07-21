@@ -280,10 +280,8 @@ def display_timeline_values(
         data, source_columns, time_column, group_by, color
     )
 
-    hover = HoverTool(
-        tooltips=_create_tool_tips(data, tool_tip_columns),
-        formatters={"Tooltip": "printf"},
-    )
+    tooltips, formatters = _create_tool_tips(data, tool_tip_columns)
+    hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     # Create the Plot figure
     title = title if title else "Timeline"
@@ -466,10 +464,8 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
     series_count = len(data)
 
-    hover = HoverTool(
-        tooltips=_create_tool_tips(data, tool_tip_columns),
-        formatters={"Tooltip": "printf"},
-    )
+    tooltips, formatters = _create_tool_tips(data, tool_tip_columns)
+    hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     title = f"Timeline: {title}" if title else "Event Timeline"
     try:
@@ -615,22 +611,14 @@ def _unpack_data_series_dict(data, **kwargs):
         src_cols = series_def.get("source_columns", def_source_columns)
         data_columns.update(src_cols if src_cols else def_source_columns)
 
-        # add these columns to the tool tip column set
-        tool_tip_columns.update(data_columns)
-
         time_col = series_def.get("time_column", None)
         if not time_col:
             time_col = time_column
             series_def["time_column"] = time_col
-
-        if min_time is None:
-            min_time = series_data[time_col].min()
-            max_time = series_data[time_col].max()
-        else:
-            min_time = min(min_time, series_data[time_col].min())
-            max_time = max(max_time, series_data[time_col].max())
-
         data_columns.update([time_col])
+        # add the data columns to the tool tip column set
+        tool_tip_columns.update(data_columns)
+
         # Create the Column data source to plot
         graph_df = series_data[list(data_columns)].copy()
         graph_df["y_index"] = y_index
@@ -644,6 +632,14 @@ def _unpack_data_series_dict(data, **kwargs):
         series_def["source"] = ColumnDataSource(graph_df)
         y_index += 1
 
+        # calculate min/max time from this set
+        if min_time is None:
+            min_time = series_data[time_col].min()
+            max_time = series_data[time_col].max()
+        else:
+            min_time = min(min_time, series_data[time_col].min())
+            max_time = max(max_time, series_data[time_col].max())
+
     return tool_tip_columns, min_time, max_time
 
 
@@ -655,9 +651,9 @@ def _create_data_grouping(data, source_columns, time_column, group_by, color):
         data_columns = set(["NewProcessName", "EventID", "CommandLine"])
     else:
         data_columns = set(source_columns)
-    tool_tip_columns = data_columns.copy()
     # If the time column not explicity specified in source_columns, add it
     data_columns.add(time_column)
+    tool_tip_columns = data_columns.copy()
     # create group frame so that we can color each group separately
     if group_by:
         group_count_df = (
@@ -757,25 +753,29 @@ def _is_datetime(pd_series: pd.Series) -> bool:
 
 def _create_tool_tips(
     data: Union[pd.DataFrame, Dict[str, pd.DataFrame]], columns: List[str]
-):
+) -> Tuple[List[Tuple[str, str]], Dict[str, str]]:
     """Create formatting for tool tip columns."""
+    formatters: Dict[str, str] = {}
     if isinstance(data, dict):
         tool_tip_dict = {}
-        for series_df in data.values():
+        for data_set in data.values():
+            dateset_df = data_set.get("data", {})
             for col in columns:
-                if col in data and _is_datetime(series_df[col]):
-                    tool_tip_dict[col] = f"@{col}{{%F %T}}"
+                if col in dateset_df and _is_datetime(dateset_df[col]):
+                    tool_tip_dict[col] = f"@{{{col}}}{{%F %T.%3N}}"
+                    formatters[f"@{{{col}}}"] = "datetime"
                 elif col not in tool_tip_dict:
-                    tool_tip_dict[col] = f"@{col}"
-        return list(tool_tip_dict.items())
+                    tool_tip_dict[col] = f"@{{{col}}}"
+        return list(tool_tip_dict.items()), formatters
 
     tool_tip_items = []
     for col in columns:
         if col in data and _is_datetime(data[col]):
-            tool_tip_items.append((f"{col}", f"@{col}{{%F %T}}"))
+            tool_tip_items.append((f"{col}", f"@{col}{{%F %T.%3N}}"))
+            formatters[f"@{{{col}}}"] = "datetime"
         else:
-            tool_tip_items.append((f"{col}", f"@{col}"))
-    return tool_tip_items
+            tool_tip_items.append((f"{col}", f"@{{{col}}}"))
+    return tool_tip_items, formatters
 
 
 def _get_color_palette(series_count):

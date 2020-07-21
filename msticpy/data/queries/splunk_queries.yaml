@@ -2,7 +2,7 @@ metadata:
   version: 1
   description: Splunk Queries
   data_environments: [Splunk]
-  data_families: [Splunk]
+  data_families: [SplunkGeneral]
   tags: ['alert', 'securityalert', 'process', 'account', 'network']
 defaults:
   metadata:
@@ -18,11 +18,11 @@ defaults:
       default: '*'
     start:
       description: Query start time
-      type: str
+      type: datetime
       default: 08/25/2017:00:00:00
     end:
       description: Query end time
-      type: str
+      type: datetime
       default: 08/26/2017:00:00:00
     project_fields:
       description: Project Field names
@@ -36,29 +36,29 @@ sources:
   list_all_datatypes:
     description: Summary of all events by index and sourcetype
     metadata:
-      data_families: [Splunk]
+      data_families: [SplunkGeneral]
     args:
       query: '
-      |  tstats count as totalCount earliest(_time) as firstTime latest(_time) as lastTime where index= "*" earliest={start} latest={end} by index sourcetype
-      |  fieldformat firstTime=strftime(firstTime,"%Y/%m/%d %H:%M:%S")
-      |  fieldformat lastTime=strftime(lastTime,"%Y/%m/%d %H:%M:%S") 
+      | tstats count as totalCount earliest(_time) as firstTime latest(_time) as lastTime where index= "*" earliest={start} latest={end} by index sourcetype
+      | fieldformat firstTime=strftime(firstTime,"%Y/%m/%d %H:%M:%S")
+      | fieldformat lastTime=strftime(lastTime,"%Y/%m/%d %H:%M:%S")
       | sort by totalCount desc
       '
     parameters:
   list_all_alerts:
     description: Retrieves all configured alerts
     metadata:
-      data_families: [Splunk]
+      data_families: [Alerts]
     args:
       query: '
-      |rest/servicesNS/-/search/saved/searches 
-      | search alert.track=1 
+      | rest/servicesNS/-/search/saved/searches
+      | search alert.track=1
       | fields title description search disabled triggered_alert_count actions action.script.filename alert.severity cron_schedule'
     parameters:
   list_all_savedsearches:
     description: Retrieves all saved searches
     metadata:
-      data_families: [Splunk]
+      data_families: [SplunkGeneral]
     args:
       query: '
       | rest /servicesNS/-/-/saved/searches splunk_server=local
@@ -66,22 +66,22 @@ sources:
       '
     parameters:
   list_all_audittrail:
-    description: Retrieves all audit trail logs 
+    description: Retrieves all audit trail logs
     metadata:
-      data_families: [Splunk]
+      data_families: [audittrail]
     args:
       query: '
-      search index={index} source=audittrail 
+      search index={index} source=audittrail
       | table timestamp, user, roles, action, info, search_type,  is_realtime, savedsearch_name, search, total_run_time, event_count, result_count
       '
     parameters:
   get_events_parameterized:
-    description: Retrieves sample 100 Events based on parameter values
+    description: Generic parameterized query from index/source
     metadata:
-      data_families: [Splunk]
+      data_families: [SplunkGeneral]
     args:
       query: '
-      search index={index} source={source} earliest={start} latest={end} 
+      search index={index} source={source} earliest={start} latest={end}
       {project_fields}
       {add_query_items}'
     parameters:
