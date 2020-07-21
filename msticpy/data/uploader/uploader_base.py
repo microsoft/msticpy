@@ -22,6 +22,7 @@ class UploaderBase(ABC):
         self.workspace = None
         self.workspace_secret = None
         self._connected = False
+        self._debug = False
 
     @abc.abstractmethod
     def file_upload(self, file_path:str, table_name:str, delim:str = ',', **kwargs):
