@@ -779,6 +779,34 @@ Output sorted by IoC
 .. note:: the URLs in the previous example have been altered to prevent
    inadvertent navigation to them.
 
+
+Browsing and Selecting TI Results
+---------------------------------
+To make it easier to walk through the returned results msticpy has a browser.
+This shows you the TI results aggregated by the IoC value (e.g. an individual IP
+Address or URL) for all providers.
+
+For each provider that returns a result for an IoC, the summarized details
+will be shown in a table below the browse list.
+
+Click on ``Raw results from provider...`` to see all returned data.
+
+.. note:: the reference URL may not work if you have not authenticated
+   to the TI service.
+
+.. figure:: _static/TIBrowser.png
+   :alt: Threat Intel results browser
+   :width: 5.23000in
+
+The value of the selected IoC entry is available as `ti_selector.value`.
+You can match this back to the original results DataFrame as follows:
+
+.. code:: IPython
+
+    results[results["Ioc"] == ti_selector.value[0]]
+
+
+
 Specifying Time Ranges
 ----------------------
 
