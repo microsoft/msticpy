@@ -1,4 +1,4 @@
-  # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
@@ -6,12 +6,13 @@
 """Data uploader base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict, Optional, Callable
+import pandas as pd
 
 from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
 
 class UploaderBase(ABC):
     """Base class for data providers."""
@@ -25,7 +26,7 @@ class UploaderBase(ABC):
         self._debug = False
 
     @abc.abstractmethod
-    def file_upload(self, file_path:str, table_name:str, delim:str = ',', **kwargs):
+    def upload_file(self, file_path: str, table_name: str, delim: str = ",", **kwargs):
         """
         Upload a file to the data store.
 
@@ -40,9 +41,10 @@ class UploaderBase(ABC):
 
         """
 
-
     @abc.abstractmethod
-    def folder_upload(self, folder_path:str, table_name:str = None, delim:str = ',', **kwargs):
+    def upload_folder(
+        self, folder_path: str, table_name: str = None, delim: str = ",", **kwargs
+    ):
         """
         Upload a folder of files to the data store.
 
@@ -51,14 +53,14 @@ class UploaderBase(ABC):
         folder_path : str
             Path to the folder of files to upload
         table_name : Optional[str]
-            The name of the table to upload the file to, if set as None the file name is used as table name
+            The name of the table to upload the file to, if not set file name is used as table name
         delim : Optional[str]
             Column deliminator in data file, default is ,
 
         """
 
     @abc.abstractmethod
-    def upload_df(self, data:str, table_name:str, **kwargs):
+    def upload_df(self, data: pd.DataFrame, table_name: str, **kwargs):
         """
         Upload a Pandas DataFrame to the data store.
 
@@ -68,4 +70,5 @@ class UploaderBase(ABC):
             The DataFrame to upload
         table_name : str
             The name of the table to upload the DataFrame to
+
         """
