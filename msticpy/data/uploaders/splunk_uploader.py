@@ -13,7 +13,7 @@ from pandas.io.parsers import ParserError
 from .uploader_base import UploaderBase
 from ..._version import VERSION
 from ..drivers.splunk_driver import SplunkDriver
-from ...common.exceptions import MsticpyConnectionError
+from ...common.exceptions import MsticpyConnectionError, MsticpyUserError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -32,16 +32,13 @@ class SplunkUploader(UploaderBase):
         self.driver = SplunkDriver()
         self.port = kwargs.get("port", 8089)
         self._debug = kwargs.get("debug", False)
-
-    def connect(self):
-        """Connect to Splunk Driver used for upload."""
+        self.connected = False
         self.driver.connect(
             host=self.workspace,
             username=self.user,
             password=self.workspace_secret,
             port=self.port,
         )
-        self.connected = True
 
     def _post_data(
         self,
@@ -66,8 +63,6 @@ class SplunkUploader(UploaderBase):
             The hostname associated with the uploaded data, by default "Upload".
 
         """
-        if not self.connected:
-            raise MsticpyConnectionError("Not connected to data source, please run .connect()")
         if not host:
             host = "Upload"
         create_idx = kwargs.get("create_index", "False")
@@ -75,14 +70,17 @@ class SplunkUploader(UploaderBase):
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
         for row in data.iterrows():
             data = row[1].to_csv()
+            try:
+                data.encode(encoding="latin-1")
+            except UnicodeEncodeError:
+                data = data.encode(encoding="utf-8")
             index.submit(data, sourcetype=table_name, host=host)
             progress.update(1)
         progress.close()
         if self._debug is True:
             print("Upload complete")
 
-    # Allow passing through host value
-    def upload_df(
+    def upload_df(  # pylint: disable=arguments-differ
         self, data: pd.DataFrame, table_name: str, index_name: str, **kwargs,
     ):
         """
@@ -102,6 +100,11 @@ class SplunkUploader(UploaderBase):
         """
         host = kwargs.get("host", None)
         create_idx = kwargs.get("create_index", "False")
+        if not isinstance(data, pd.DataFrame):
+            raise MsticpyUserError(
+                "Data must be in Pandas DataFrame format.",
+                title="incorrect data format",
+            )
         self._post_data(
             data=data,
             table_name=table_name,
@@ -110,8 +113,7 @@ class SplunkUploader(UploaderBase):
             host=host,
         )
 
-    # Allow passing through host value
-    def upload_file(
+    def upload_file(  # pylint: disable=arguments-differ
         self,
         file_path: str,
         index_name: str,
@@ -137,19 +139,27 @@ class SplunkUploader(UploaderBase):
 
         """
         host = kwargs.get("host", None)
+        create_idx = kwargs.get("create_index", "False")
         path = Path(file_path)
         try:
             data = pd.read_csv(path, delimiter=delim)
         except (ParserError, UnicodeDecodeError):
-            raise TypeError("The file specified is not a seperated value file.")
+            raise MsticpyUserError(
+                "The file specified is not a seperated value file.",
+                "Incorrect file type.",
+            )
 
         if not table_name:
             table_name = str(path).split("\\")[-1].split(".")[0]
         self._post_data(
-            data=data, table_name=table_name, index_name=index_name, host=host
+            data=data,
+            table_name=table_name,
+            index_name=index_name,
+            host=host,
+            create_index=create_idx,
         )
 
-    def upload_folder(
+    def upload_folder(  # pylint: disable=arguments-differ
         self,
         folder_path: str,
         index_name: str,
@@ -175,24 +185,33 @@ class SplunkUploader(UploaderBase):
 
         """
         host = kwargs.get("host", None)
+        create_idx = kwargs.get("create_index", "False")
         if delim != ",":
             ext = "*"
         else:
             ext = "*.csv"
-        if table_name:
-            t_name = True
+        t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
-        input_files = [path for path in input_files]  # pylint disable:unnecessary-comprehension
+        input_files = [
+            path for path in input_files  # pylint: disable=unnecessary-comprehension
+        ]
         f_progress = tqdm(total=len(input_files), desc="Files", position=0)
         for path in input_files:
             try:
                 data = pd.read_csv(path, delimiter=delim)
             except (ParserError, UnicodeDecodeError):
-                raise TypeError("The file specified is not a seperated value file.")
+                raise MsticpyUserError(
+                    "The file specified is not a seperated value file.",
+                    title="Incorrect file type.",
+                )
             if t_name is False:
                 table_name = str(path).split("\\")[-1].split(".")[0]
             self._post_data(
-                data=data, table_name=table_name, index_name=index_name, host=host
+                data=data,
+                table_name=table_name,
+                index_name=index_name,
+                host=host,
+                create_index=create_idx,
             )
             f_progress.update(1)
             if self._debug is True:
