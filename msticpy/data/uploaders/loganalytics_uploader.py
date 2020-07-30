@@ -10,6 +10,7 @@ import sys
 import hashlib
 import hmac
 import base64
+import re
 from pathlib import Path
 
 import requests
@@ -90,8 +91,6 @@ class LAUploader(UploaderBase):
             hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest()
         ).decode()
         authorization = f"SharedKey {self.workspace}:{encoded_hash}"
-        if self._debug is True:
-            print(authorization)
         return authorization
 
     def _post_data(self, body: str, table_name: str):
@@ -111,6 +110,8 @@ class LAUploader(UploaderBase):
             Raised when response code indicates failure.
 
         """
+        table_name = re.sub("[^A-Za-z0-9_]+", "", table_name)
+
         resource = "/api/logs"
         content_type = "application/json"
         rfc1123date = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
@@ -131,13 +132,20 @@ class LAUploader(UploaderBase):
             "Log-Type": table_name,
             "x-ms-date": rfc1123date,
         }
-        response = requests.post(uri, data=body, headers=headers)
+        try:
+            response = requests.post(uri, data=body, headers=headers)
+        except requests.ConnectionError:
+            raise MsticpyConnectionError(
+                "Unable to connect to workspace, ensure your Workspace ID is correct.",
+                title="Unable to connect to Workspace",
+            )
         if self._debug is True:
             print(f"Upload response code: {response.status_code}")
         if response.status_code < 200 or response.status_code > 299:
             raise MsticpyConnectionError(
-                f"""LogAnalytics data upload failed with code {response.status_code},
-                check Workspace ID and key"""
+                f"""LogAnalytics data upload failed with code {response.status_code}.
+                Check Workspace ID and key""",
+                title="Data Upload Failed",
             )
 
     def upload_df(self, data: pd.DataFrame, table_name: str, **kwargs):
@@ -167,8 +175,11 @@ class LAUploader(UploaderBase):
             body = json.dumps(events)
             self._post_data(body, table_name)
 
+        if self._debug:
+            print(f"Upload to {table_name} complete")
+
     def upload_file(
-        self, file_path: str, table_name: str, delim: str = ",", **kwargs,
+        self, file_path: str, table_name: str = None, delim: str = ",", **kwargs,
     ):
         """
         Upload a seperated value file to Log Analytics.
@@ -185,6 +196,8 @@ class LAUploader(UploaderBase):
         """
         path = Path(file_path)
         data = pd.read_csv(path, delimiter=delim)
+        if not table_name:
+            table_name = str(path).split("\\")[-1].split(".")[0]
         self.upload_df(data, table_name)
 
     def upload_folder(
@@ -207,11 +220,10 @@ class LAUploader(UploaderBase):
             ext = "*"
         else:
             ext = "*.csv"
-        if table_name:
-            t_name = True
+        t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
         input_files = [
-            path for path in input_files  # pylint disable:unnecessary-comprehension
+            path for path in input_files  # pylint: disable=unnecessary-comprehension
         ]
         progress = tqdm(total=len(input_files), desc="Files", position=0)
         for path in input_files:
