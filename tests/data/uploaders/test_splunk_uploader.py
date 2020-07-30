@@ -37,7 +37,9 @@ def sp_upload():
     """Generate SplunkUploader for testing."""
     SplunkUploader._load_index = load_index
     SplunkUploader._check_index.return_value = True
-    sp_upload = SplunkUploader(host="test", username="test", password="123", debug=True)
+    sp_upload = SplunkUploader(
+        host="test", username="test", password="123", debug=True, connect=False
+    )
     sp_upload.connected = True
     return sp_upload
 

@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""LogAnayltics Uploader class."""
+"""Splunk Uploader class."""
 from pathlib import Path
 
 from tqdm.notebook import tqdm
@@ -20,10 +20,10 @@ __author__ = "Pete Bryan"
 
 
 class SplunkUploader(UploaderBase):
-    """Uploader class for LogAnalytics."""
+    """Uploader class for Splunk."""
 
     def __init__(self, username: str, host: str, password: str, **kwargs):
-        """Initialize a LogAnalytics Uploader instance."""
+        """Initialize a Splunk Uploader instance."""
         super().__init__()
         self._kwargs = kwargs
         self.workspace = host
@@ -32,13 +32,20 @@ class SplunkUploader(UploaderBase):
         self.driver = SplunkDriver()
         self.port = kwargs.get("port", 8089)
         self._debug = kwargs.get("debug", False)
+        self._connect = kwargs.get("connect", True)
         self.connected = False
+        if self._connect:
+            self.connect()
+
+    def connect(self):
+        """Connect to Splunk host."""
         self.driver.connect(
             host=self.workspace,
             username=self.user,
             password=self.workspace_secret,
             port=self.port,
         )
+        self.connected = True
 
     def _post_data(
         self,
@@ -63,6 +70,11 @@ class SplunkUploader(UploaderBase):
             The hostname associated with the uploaded data, by default "Upload".
 
         """
+        if not self.connected:
+            raise MsticpyConnectionError(
+                "Splunk host not connected, please call .connect before proceding.",
+                title="Splunk host not connected",
+            )
         if not host:
             host = "Upload"
         create_idx = kwargs.get("create_index", "False")
