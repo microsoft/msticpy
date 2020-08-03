@@ -106,7 +106,7 @@ class QueryProvider:
         )  # type: ignore
         all_query_paths = []
         for default_path in settings.get("Default"):  # type: ignore
-            qry_path = self._resolve_path(default_path)
+            qry_path = self._resolve_package_path(default_path)
             if qry_path:
                 all_query_paths.append(qry_path)
 
@@ -116,7 +116,10 @@ class QueryProvider:
                 if qry_path:
                     all_query_paths.append(qry_path)
         if query_paths:
-            all_query_paths.extend(query_paths)
+            for custom_path in query_paths:
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    all_query_paths.append(qry_path)
 
         if not all_query_paths:
             raise RuntimeError(
@@ -387,9 +390,20 @@ class QueryProvider:
         self._add_query_functions()
 
     @classmethod
-    def _resolve_path(cls, config_path: str) -> Optional[str]:
+    def _resolve_package_path(cls, config_path: str) -> Optional[str]:
+        """Resolve path relative to current package."""
         if not Path(config_path).is_absolute():
             config_path = str(Path(__file__).resolve().parent.joinpath(config_path))
+        if not Path(config_path).is_dir():
+            warnings.warn(f"Custom query definitions path {config_path} not found")
+            return None
+        return config_path
+
+    @classmethod
+    def _resolve_path(cls, config_path: str) -> Optional[str]:
+        """Resolve path."""
+        if not Path(config_path).is_absolute():
+            config_path = str(Path(config_path).resolve())
         if not Path(config_path).is_dir():
             warnings.warn(f"Custom query definitions path {config_path} not found")
             return None

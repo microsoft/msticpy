@@ -232,10 +232,14 @@ class KqlDriver(DriverBase):
 
     def _get_kql_option(self, option):
         """Retrieve a current Kqlmagic notebook option."""
+        if self._ip is None:
+            return None
         return self._ip.run_line_magic("config", line=option)
 
     def _set_kql_option(self, option, value):
         """Set a Kqlmagic notebook option."""
+        if self._ip is None:
+            return None
         set_txt = f"{option}={value}"
         return self._ip.run_line_magic("config", line=set_txt)
 
