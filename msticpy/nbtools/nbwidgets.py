@@ -20,7 +20,6 @@ import pandas as pd
 from deprecated.sphinx import deprecated
 from IPython.display import HTML, display
 from ipywidgets import Layout
-from jupyter_ui_poll import run_ui_poll_loop
 
 from .._version import VERSION
 from ..common.utility import export
@@ -1397,28 +1396,20 @@ class OptionButtons:
     The widget can be run in synchronous mode as a simple option
     selector or in async mode with a timeout.
     In the latter mode, after the timeout has expired the widget
-    value is set to the default. the async mode is designed to be
-    used with the `check_widget_value` function.
-    The `check_widget_value` function *must* be run in a separate
-    cell to `widget.display_async()`
+    value is set to the default option button value.
+    To use the async mode you must call `widget.display_async()` with
+    the async keyword.
 
     Attributes
     ----------
     value : str
         The value of the option selected (case-normalized)
-    cancel : str
-        The value of an option indicating that the choice was
-        cancelled.
 
     Example
     -------
     >>> opt = OptionButtons(description="Continue something?",
     ...  buttons=["Maybe", "Yes", "Cancel"], timeout=10)
     >>> await opt.display_async()
-
-    >>> # %% New cell
-    >>> # This will block until user selects an option from the opt widget
-    >>> w_val = check_widget_value(opt)
 
     """
 
@@ -1427,8 +1418,7 @@ class OptionButtons:
         description: Optional[str] = "Select an option to continue",
         buttons: Optional[Iterable[str]] = None,
         default: Optional[str] = None,
-        cancel: str = "Cancel",
-        timeout: int = 10,
+        timeout: int = 0,
         debug: bool = False,
     ):
         """
@@ -1445,11 +1435,8 @@ class OptionButtons:
         default : Optional[str], optional
             The default value to use on timeout, by default the
             first value in the `buttons` list
-        cancel : Optional[str], optional
-            An alternative value to use to indicate cancel,
-            by default "Cancel"
         timeout : int, optional
-            Timeout in seconds, by default 10
+            Timeout in seconds, by default 0
         debug : bool, optional
             Adds some debug information to an Output controle,
             by default False
@@ -1460,52 +1447,68 @@ class OptionButtons:
         self._buttons = []
         for b_item in buttons:
             self._buttons.append(widgets.Button(description=b_item))
+        self._create_buttons(self._buttons)
         self._desc_label = widgets.Label(value=description)
         self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
-        self._out = widgets.Output()
         self.default = default or next(iter(buttons)).casefold()
         self.value: Optional[str] = None
         self.timeout = timeout
-        self.completion = None
-        self._cancel = cancel.casefold()
-        self._future = None
+        self._completion = None
         self._debug = debug
+        if self._debug:
+            self._out = widgets.Output()
 
     @property
     def _layout(self):
+        """Create layout for buttons."""
         return widgets.VBox(
             [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
         )
 
-    def _wait_for_change_buttons(self, btns):
-        self._future = asyncio.Future()
+    def _debug_out(self, mssg: str):
+        if self._debug:
+            self._out.append_stdout(mssg)
+
+    def _create_buttons(self, btns):
+        """Set up buttons."""
 
         def getvalue(change):
+            """Button on_click handler."""
             self.value = change.description.casefold()
-
             for btn in btns:
                 btn.on_click(getvalue, remove=True)
-            if self.value == self._cancel:
-                self._out.append_stdout("cancelled")
-                self._future.cancel()
-            self._future.set_result(str(change.description))
 
         for btn in btns:
             btn.on_click(getvalue)
-        return self._future
 
     async def _await_widget(self):
-        future = self._wait_for_change_buttons(self._buttons)
+        """Awaitable coroutine for widget."""
+        self._debug_out("await_widget entered\n")
+        self._debug_out("buttons set\n")
+
         done, _ = await asyncio.wait(
-            [future, self._await_timer(self.timeout)],
+            [self._wait_for_button_change(), self._await_timer(self.timeout)],
             return_when=asyncio.FIRST_COMPLETED,
+            timeout=15,
         )
-        self.completion = done
+        self._debug_out("wait returned\n")
+        self._completion = done
+        self._debug_out(str(done))
         return done
+
+    async def _wait_for_button_change(self):
+        """Awaitable for button selection state."""
+        self._debug_out("wait_for_button_change entered\n")
+        while True:
+            if self.value is not None:
+                break
+            await asyncio.sleep(0.1)
+            if self._debug:
+                self._debug_out("*")
 
     async def _await_timer(self, timeout: int = 5):
         if timeout <= 0:
-            return
+            timeout = 0
         while timeout > 0:
             self._timer_label.value = f"Waiting {timeout} sec..."
             if self.value:
@@ -1516,8 +1519,19 @@ class OptionButtons:
         self.value = self.default
         self._timer_label.value = f"Timed out. Defaulted to '{self.value}'"
 
-    async def display_async(self):
-        """Display widget with timeout."""
+    async def display_async(self, reset: bool = False):
+        """
+        Display widget with timeout.
+
+        Parameters
+        ----------
+        reset : bool, optional
+            Resets any current value to None,
+            by default False
+
+        """
+        if reset:
+            self.value = None
         display(self._layout)
         if self._debug:
             display(self._out)
@@ -1530,44 +1544,3 @@ class OptionButtons:
     def _ipython_display_(self):
         """Display in IPython."""
         self.display()
-
-
-def check_widget_value(
-    widget,
-    attrib: str = "value",
-    cancel_value: str = "cancel",
-    stop_on_cancel: bool = True,
-) -> Any:
-    """
-    Blocks the execution of the notebook until a widget value is set.
-
-    Parameters
-    ----------
-    widget : [type]
-        The widget to check - the function will continue to check
-        as long as the widget value is None.
-    attrib : str, optional
-        The attribute name of the widget to check, by default "value"
-    cancel_value : str, optional
-        Alternative string to signify cancellation, by default "cancel"
-    stop_on_cancel : bool, optional
-        If true, the function will throw an exception when the widget
-        value indicates that "cancel" was chosen, by default True
-
-    Returns
-    -------
-    Any
-        The widget value attribute
-
-    Raises
-    ------
-    ValueError
-        If the widget value matches the cancel value.
-
-    """
-    if not cancel_value:
-        cancel_value = getattr(widget, "cancel")
-    w_val = run_ui_poll_loop(lambda: getattr(widget, attrib), 1 / 15)
-    if w_val == cancel_value and stop_on_cancel:
-        raise ValueError("Stopping execution - user cancelled.")
-    return w_val
