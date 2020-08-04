@@ -732,7 +732,7 @@ def plot_cluster(
                 p_label = first_row[plot_label]
                 try:
                     plt.annotate(
-                        s=p_label,
+                        text=p_label,
                         xy=(xy_pos[0, plot_features[0]], xy_pos[0, plot_features[1]]),
                         fontsize=font_size,
                         alpha=alpha,
