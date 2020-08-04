@@ -5,11 +5,11 @@
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
 from typing import List, Optional
-
+import pprint
 import pandas as pd
 
 from IPython.core.display import HTML
-import pprint
+
 
 from .nbwidgets import SelectItem
 from .._version import VERSION
