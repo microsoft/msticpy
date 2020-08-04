@@ -237,7 +237,7 @@ class SplunkDriver(DriverBase):
             )
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             queries = {
-                search.name.strip(): f"search {search['search']}"
+                search.name.strip().replace(" ", "_"): f"search {search['search']}"
                 for search in self.service.saved_searches
             }
             return queries, "SavedSearches"
@@ -281,7 +281,7 @@ class SplunkDriver(DriverBase):
         namelist = []
         querylist = []
         for savedsearch in savedsearches:
-            namelist.append(savedsearch.name)
+            namelist.append(savedsearch.name.replace(" ", "_"))
             querylist.append(savedsearch["search"])
         out_df["name"] = namelist
         out_df["query"] = querylist
@@ -337,7 +337,7 @@ class SplunkDriver(DriverBase):
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
         """Return datetime-formatted string."""
-        return date_time.isoformat()
+        return date_time.isoformat(sep=" ")
 
     @staticmethod
     def _format_list(param_list: Iterable[Any]) -> str:
@@ -345,6 +345,7 @@ class SplunkDriver(DriverBase):
         fmt_list = [f'"{item}"' for item in param_list]
         return ",".join(fmt_list)
 
+    # Read values from configuration
     @staticmethod
     def _get_config_settings() -> Dict[Any, Any]:
         """Get config from msticpyconfig."""

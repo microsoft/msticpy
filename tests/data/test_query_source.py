@@ -198,7 +198,7 @@ class TestQuerySource(unittest.TestCase):
         test_dt = datetime.utcnow()
         ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
-        check_dt_str = test_dt.isoformat()
+        check_dt_str = test_dt.isoformat(sep=" ")
         q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
         query = q_src.create_query(
             formatters=splunk_fmt, start=test_dt, ip_address_list=ip_address_list
