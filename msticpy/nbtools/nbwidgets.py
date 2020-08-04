@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 import os
-import re
 from datetime import datetime, timedelta
 from enum import Enum
 import json
@@ -497,8 +496,8 @@ class SelectAlert:
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._w_select_alert.options = [
-                alert_dtl
-                for alert_dtl[0] in self._select_items
+                alert_dtl[0]
+                for alert_dtl in self._select_items
                 if change["new"].lower() in alert_dtl[0].lower()
             ]
 
