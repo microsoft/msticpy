@@ -55,6 +55,7 @@ class SplunkDriver(DriverBase):
 
     _SPLUNK_REQD_ARGS = ["host", "username", "password"]
     _CONNECT_DEFAULTS: Dict[str, Any] = {"port": 8089}
+    _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
 
     def __init__(self, **kwargs):
         """Instantiate Splunk Driver."""
@@ -101,15 +102,19 @@ class SplunkDriver(DriverBase):
             raise MsticpyConnectionError(
                 f"Authentication error connecting to Splunk: {err}",
                 title="Splunk connection",
+                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             )
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Splunk: {err}",
                 title="Splunk connection",
+                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             )
         except Exception as err:
             raise MsticpyConnectionError(
-                f"Error connecting to Splunk: {err}", title="Splunk connection"
+                f"Error connecting to Splunk: {err}",
+                title="Splunk connection",
+                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             )
         self._connected = True
         print("connected")
@@ -182,14 +187,7 @@ class SplunkDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise MsticpyNotConnectedError(
-                "Please run the connect() method before running this method.",
-                title="not connected to Splunk.",
-                help_uri="TBD",
-            )
-        # If query is prefixed with "search", add that.
-        if query.strip().split(" ", maxsplit=1)[0].casefold() != "search":
-            query = f"search {query}"
+            raise self._create_not_connected_err()
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)
         query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
@@ -230,11 +228,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise MsticpyNotConnectedError(
-                "Please run the connect() method before running this method.",
-                title="not connected to Splunk.",
-                help_uri="TBD",
-            )
+            raise self._create_not_connected_err()
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             queries = {
                 search.name.strip().replace(" ", "_"): f"search {search['search']}"
@@ -269,11 +263,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise MsticpyNotConnectedError(
-                "Please run the connect() method before running this method.",
-                title="not connected to Splunk.",
-                help_uri="TBD",
-            )
+            raise self._create_not_connected_err()
         savedsearches = self.service.saved_searches
 
         out_df = pd.DataFrame(columns=["name", "query"])
@@ -314,11 +304,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise MsticpyNotConnectedError(
-                "Please run the connect() method before running this method.",
-                title="not connected to Splunk.",
-                help_uri="TBD",
-            )
+            raise self._create_not_connected_err()
         firedalerts = self.service.fired_alerts
 
         out_df = pd.DataFrame(columns=["name", "count"])
@@ -337,7 +323,7 @@ class SplunkDriver(DriverBase):
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
         """Return datetime-formatted string."""
-        return date_time.isoformat(sep=" ")
+        return f'"{date_time.isoformat(sep=" ")}"'
 
     @staticmethod
     def _format_list(param_list: Iterable[Any]) -> str:
@@ -352,3 +338,11 @@ class SplunkDriver(DriverBase):
         data_provs = get_provider_settings(config_section="DataProviders")
         splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
         return getattr(splunk_settings, "args", {})
+
+    @staticmethod
+    def _create_not_connected_err():
+        return MsticpyNotConnectedError(
+            "Please run the connect() method before running this method.",
+            title="not connected to Splunk.",
+            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+        )
