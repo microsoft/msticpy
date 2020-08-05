@@ -75,16 +75,8 @@ class LAUploader(UploaderBase):
 
         """
         x_headers = "x-ms-date:" + date
-        string_to_hash = (
-            method
-            + "\n"
-            + str(content_length)
-            + "\n"
-            + content_type
-            + "\n"
-            + x_headers
-            + "\n"
-            + resource
+        string_to_hash = "\n".join(
+            [method, str(content_length), content_type, x_headers, resource]
         )
         bytes_to_hash = bytes(string_to_hash, encoding="utf-8")
         decoded_key = base64.b64decode(self.workspace_secret)
@@ -198,7 +190,7 @@ class LAUploader(UploaderBase):
         path = Path(file_path)
         data = pd.read_csv(path, delimiter=delim)
         if not table_name:
-            table_name = str(path).split("\\")[-1].split(".")[0]
+            table_name = path.stem
         self.upload_df(data, table_name)
 
     def upload_folder(
@@ -217,10 +209,8 @@ class LAUploader(UploaderBase):
             Sperator used in files in target folder, by default ",".
 
         """
-        if delim != ",":
-            ext = "*"
-        else:
-            ext = "*.csv"
+        glob_pat = kwargs.get("glob", "*")
+        ext = glob_pat
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
         # pylint: disable=unnecessary-comprehension
@@ -232,7 +222,7 @@ class LAUploader(UploaderBase):
         for path in input_files:
             data = pd.read_csv(path, delimiter=delim)
             if t_name is False:
-                table_name = str(path).split("\\")[-1].split(".")[0]
+                table_name = path.stem
             self.upload_df(data, table_name)
             progress.update(1)
         progress.close()
