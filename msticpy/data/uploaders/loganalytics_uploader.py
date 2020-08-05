@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """LogAnayltics Uploader class."""
+from typing import Any
 import json
 import datetime
 import sys
@@ -148,7 +149,7 @@ class LAUploader(UploaderBase):
                 title="Data Upload Failed",
             )
 
-    def upload_df(self, data: pd.DataFrame, table_name: str, **kwargs):
+    def upload_df(self, data: pd.DataFrame, table_name: Any, **kwargs):
         """
         Upload a pandas DataFrame to Log Analytics.
 
@@ -222,10 +223,12 @@ class LAUploader(UploaderBase):
             ext = "*.csv"
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
+        # pylint: disable=unnecessary-comprehension
         input_files = [
-            path for path in input_files  # pylint: disable=unnecessary-comprehension
+            path for path in input_files  # type: ignore
         ]
-        progress = tqdm(total=len(input_files), desc="Files", position=0)
+        # pylint: enable=unnecessary-comprehension
+        progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:
             data = pd.read_csv(path, delimiter=delim)
             if t_name is False:
