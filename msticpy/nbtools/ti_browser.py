@@ -6,7 +6,6 @@
 """Threat Intel Results Browser."""
 import pprint
 from typing import List, Optional
-import pprint
 import pandas as pd
 from IPython.core.display import HTML
 
