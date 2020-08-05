@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
-from contextlib import redirect_stdout
 import io
 
 from unittest.mock import patch, MagicMock

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Query hierarchy attribute class."""
 from functools import partial
+from typing import Any
 
 from .._version import VERSION
 
@@ -25,10 +26,17 @@ class QueryContainer:
 
     def __getattr__(self, name):
         """Print usable error message if attribute not found."""
-        if name not in self.__dict__:
-            print(f"Query attribute {name} not found.")
-            print("Use QueryProvider.list_queries() to see available queries.")
-        return super().__getattribute__(name)
+        if "." in name:
+            try:
+                attr = _get_dot_attrib(self, name)
+            except KeyError:
+                pass
+            else:
+                return attr
+        raise AttributeError(
+            f"Query attribute {name} not found.",
+            "Use QueryProvider.list_queries() to see available queries.",
+        )
 
     def __repr__(self):
         """Return list of attributes."""
@@ -46,3 +54,14 @@ class QueryContainer:
             print(f"{self.__name__} is a container, not a query.")
             print("Items in this container:")
         print(repr(self))
+
+
+def _get_dot_attrib(obj, elem_path: str) -> Any:
+    """Return attribute at dotted path."""
+    path_elems = elem_path.split(".")
+    cur_node = obj
+    for elem in path_elems:
+        cur_node = getattr(cur_node, elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {elem_path} is not a valid path")
+    return cur_node

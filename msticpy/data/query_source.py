@@ -58,8 +58,8 @@ class QuerySource:
         self,
         name: str,
         source: Dict[str, Any],
-        defaults: Dict[Optional[str], Any],
-        metadata: Dict[Optional[str], Any],
+        defaults: Dict[str, Any],
+        metadata: Dict[str, Any],
     ):
         """
         Initialize query source definition.
@@ -84,10 +84,8 @@ class QuerySource:
         """
         self.name = name
         self._source: Dict[str, Any] = source
-        self.defaults: Dict[Optional[str], Any] = defaults
-        self._global_metadata: Dict[Optional[str], Any] = dict(
-            metadata
-        ) if metadata else {}
+        self.defaults: Dict[str, Any] = defaults
+        self._global_metadata: Dict[str, Any] = dict(metadata) if metadata else {}
         self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
 
         # consolidate source metadata - source-specifc
