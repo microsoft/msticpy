@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Splunk Uploader class."""
 from pathlib import Path
-
+from typing import Any
 from tqdm.notebook import tqdm
 import pandas as pd
 from pandas.io.parsers import ParserError
@@ -51,7 +51,7 @@ class SplunkUploader(UploaderBase):
         self,
         data: pd.DataFrame,
         index_name: str,
-        table_name: str,
+        table_name: Any,
         host: str = None,
         **kwargs,
     ):
@@ -92,7 +92,8 @@ class SplunkUploader(UploaderBase):
         if self._debug is True:
             print("Upload complete")
 
-    def upload_df(  # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ
+    def upload_df(  # type: ignore
         self, data: pd.DataFrame, table_name: str, index_name: str, **kwargs,
     ):
         """
@@ -125,7 +126,7 @@ class SplunkUploader(UploaderBase):
             host=host,
         )
 
-    def upload_file(  # pylint: disable=arguments-differ
+    def upload_file(  # type: ignore
         self,
         file_path: str,
         index_name: str,
@@ -171,7 +172,7 @@ class SplunkUploader(UploaderBase):
             create_index=create_idx,
         )
 
-    def upload_folder(  # pylint: disable=arguments-differ
+    def upload_folder(  # type: ignore
         self,
         folder_path: str,
         index_name: str,
@@ -204,10 +205,12 @@ class SplunkUploader(UploaderBase):
             ext = "*.csv"
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
+        # pylint: disable=unnecessary-comprehension
         input_files = [
-            path for path in input_files  # pylint: disable=unnecessary-comprehension
+            path for path in input_files  # type: ignore
         ]
-        f_progress = tqdm(total=len(input_files), desc="Files", position=0)
+        # pylint: enable=unnecessary-comprehension
+        f_progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:
             try:
                 data = pd.read_csv(path, delimiter=delim)
@@ -229,6 +232,8 @@ class SplunkUploader(UploaderBase):
             if self._debug is True:
                 print(f"{str(path)} uploaded to {table_name}")
         f_progress.close()
+
+    # pylint: enable=arguments-differ
 
     def _check_index(self, index_name: str):
         """Check if index exists in Splunk host."""
