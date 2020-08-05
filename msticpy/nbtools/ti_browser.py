@@ -4,12 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
-import pprint
 from typing import List, Optional
 
 import pandas as pd
-from IPython.core.display import HTML
 
+from IPython.core.display import HTML
+import pprint
 
 from .nbwidgets import SelectItem
 from .._version import VERSION
