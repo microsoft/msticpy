@@ -25,6 +25,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
 from ..common.utility import export
+from ..nbtools.ti_browser import browse_results
 from . import tiproviders
 
 # used in dynamic instantiation of providers
@@ -81,7 +82,7 @@ class TILookup:
         if secondary_providers:
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
-        if not primary_providers and not secondary_providers:
+        if not (primary_providers or secondary_providers):
             self._load_providers()
 
         self._all_providers = ChainMap(self._secondary_providers, self._providers)
@@ -154,7 +155,7 @@ class TILookup:
         providers = []
         for provider_name in dir(tiproviders):
             provider_class = getattr(tiproviders, provider_name, None)
-            if not provider_class or not isclass(provider_class):
+            if not (provider_class and isclass(provider_class)):
                 continue
             # if it is a class - we only want to show concrete classes
             # that are sub-classes of TIProvider
@@ -189,12 +190,12 @@ class TILookup:
         providers = []
         for provider_name in cls._get_available_providers():
             provider_class = getattr(tiproviders, provider_name, None)
-            if as_list is False:
+            if not as_list:
                 print(provider_name)
             providers.append(provider_name)
             if show_query_types:
                 provider_class.usage()
-        if as_list is True:
+        if as_list:
             return providers
         return None
 
@@ -499,3 +500,33 @@ class TILookup:
             else:
                 selected_providers = self._secondary_providers
         return selected_providers
+
+    @staticmethod
+    def browse_results(
+        data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+    ):
+        """
+        Return TI Results list browser.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            TI Results data from TIProviders
+        severities : Optional[List[str]], optional
+            A list of the severity classes to show.
+            By default these are ['warning', 'high'].
+            Pass ['information', 'warning', 'high'] to see all
+            results.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            passed to SelectItem constuctor.
+
+        Returns
+        -------
+        SelectItem
+            SelectItem browser for TI Data.
+
+        """
+        return browse_results(data=data, severities=severities, **kwargs)

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
+import builtins
 import difflib
 import os
 import re
@@ -507,3 +508,27 @@ def is_valid_uuid(uuid_str: Any) -> bool:
     except (ValueError, TypeError):
         return False
     return True
+
+
+def valid_pyname(identifier: str) -> str:
+    """
+    Return legal Python identifier, which doesn't collide with builtins.
+
+    Parameters
+    ----------
+    identifier : str
+        The input identifier
+
+    Returns
+    -------
+    str
+        The cleaned identifier
+
+    """
+    builtin_names = set(dir(builtins))
+    if identifier in builtin_names:
+        identifier = f"{identifier}_bi"
+    identifier = re.sub("[^a-zA-Z0-9_]", "_", identifier)
+    if identifier[0].isdigit():
+        identifier = f"n_{identifier}"
+    return identifier

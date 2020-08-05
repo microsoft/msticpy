@@ -13,6 +13,8 @@ from msticpy.nbtools.ti_browser import get_ti_select_options, ti_details_display
 
 from ..unit_test_lib import TEST_DATA_PATH
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture(scope="module")
 def ti_results():

@@ -4,11 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Intake kql driver."""
+import re
+from collections import ChainMap
 from datetime import datetime, timedelta
 from numbers import Number
-import re
-from typing import Dict, List, Tuple, Optional, Union, Any
-from collections import ChainMap
+from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse, ParserError  # type: ignore
 
 from .._version import VERSION
 
@@ -20,6 +23,17 @@ def _value_or_default(src_dict: Dict, prop_name: str, default: Dict):
     """Return value from dict or emtpy dict."""
     src_value = src_dict.get(prop_name)
     return src_value if src_value is not None else default
+
+
+RD_UNIT_MAP = {
+    "y": "years",
+    "mon": "months",
+    "w": "weeks",
+    "d": "days",
+    "h": "hours",
+    "m": "minutes",
+    "s": "seconds",
+}
 
 
 # pylint: disable=too-many-instance-attributes
@@ -40,7 +54,13 @@ class QuerySource:
 
     """
 
-    def __init__(self, name: str, source: dict, defaults: dict, metadata: dict):
+    def __init__(
+        self,
+        name: str,
+        source: Dict[str, Any],
+        defaults: Dict[str, Any],
+        metadata: Dict[str, Any],
+    ):
         """
         Initialize query source definition.
 
@@ -63,9 +83,9 @@ class QuerySource:
 
         """
         self.name = name
-        self._source = source
-        self.defaults = defaults
-        self._global_metadata = dict(metadata) if metadata else dict()
+        self._source: Dict[str, Any] = source
+        self.defaults: Dict[str, Any] = defaults
+        self._global_metadata: Dict[str, Any] = dict(metadata) if metadata else {}
         self.query_store: Optional["QueryStore"] = None  # type: ignore  # noqa: F821
 
         # consolidate source metadata - source-specifc
@@ -84,7 +104,7 @@ class QuerySource:
             _value_or_default(self.defaults, "parameters", {}),
         )
 
-        self._query = self["args.query"]
+        self._query: str = self["args.query"]
         self._replace_query_macros()
 
     def __getitem__(self, key: str):
@@ -116,7 +136,10 @@ class QuerySource:
             Query description.
 
         """
-        return self["description"]
+        try:
+            return self["description"]
+        except KeyError:
+            return "no description"
 
     @property
     def query(self) -> str:
@@ -179,12 +202,15 @@ class QuerySource:
         """
         return self.metadata["data_families"]
 
-    def create_query(self, **kwargs) -> str:
+    def create_query(self, formatters: Dict[str, Callable] = None, **kwargs) -> str:
         """
         Return query with values from kwargs and defaults substituted.
 
         Parameters
         ----------
+        formatters : Dict[str, Callable]
+            Dictionary of custom parameter formatters indexed
+            by data type
         kwargs: Mapping[str, Any]
             Set of parameter name, value pairs used to
             populate the template query.
@@ -221,22 +247,31 @@ class QuerySource:
         # Handle formatting for datetimes and cases where a format
         # template has been supplied
         for p_name, settings in self.params.items():
-            param_value = param_dict[p_name]
+            # These types may require custom extraction
             if settings["type"] == "datetime":
-                param_dict[p_name] = self._convert_datetime(param_value)
+                param_dict[p_name] = self._convert_datetime(param_dict[p_name])
             if settings["type"] == "list":
-                param_dict[p_name] = self._parse_param_list(param_value)
-            # if the parameter requires custom formatting
+                param_dict[p_name] = self._parse_param_list(param_dict[p_name])
+
+            # The parameter may need custom formatting
             fmt_template = settings.get("format", None)
             if fmt_template:
+                # custom formatting template in the query definition
                 param_dict[p_name] = fmt_template.format(param_dict[p_name])
             elif settings["type"] == "datetime" and isinstance(
                 param_dict[p_name], datetime
             ):
-                # If this is a datetime and no specific formatting requested,
-                # format as a isoformat (Odata requires strings with no
-                # spaces and TZ suffix)
-                param_dict[p_name] = param_dict[p_name].isoformat(sep="T") + "Z"
+                if formatters and "datetime" in formatters:
+                    param_dict[p_name] = formatters["datetime"](param_dict[p_name])
+                else:
+                    param_dict[p_name] = self._format_datetime_default(
+                        param_dict[p_name]
+                    )
+            elif settings["type"] == "list":
+                if formatters and "list" in formatters:
+                    param_dict[p_name] = formatters["list"](param_dict[p_name])
+                else:
+                    param_dict[p_name] = self._format_list_default(param_dict[p_name])
 
         return self._query.format(**param_dict)
 
@@ -250,44 +285,99 @@ class QuerySource:
                 param_value  # type: ignore
             )
         try:
-            # Try to parse ISO datetime string format transform to datetime object
-            return datetime.strptime(param_value, "%Y-%m-%d %H:%M:%S.%f")
-        except (ValueError, TypeError):
+            # If this is a simple integer we want to catch it before sending
+            # it to dateutil parser since this does the wrong thing with it.
+            int(param_value)
+            return self._calc_timeoffset(str(param_value))
+        except ValueError:
+            pass
+        try:
+            # Try to parse datetime with dateutil parser
+            return parse(param_value)
+        except ParserError:
             # If none of these, assume a time delta
-            tm_delta = self._parse_timedelta(str(param_value))
-            return datetime.utcnow() + tm_delta
+            return self._calc_timeoffset(str(param_value))
+
+    @classmethod
+    def _calc_timeoffset(cls, time_offset: str) -> datetime:
+        """Calculate date from offset specification."""
+        delta = time_offset.split("@")[0]
+        rounding = None
+        if "@" in time_offset:
+            rounding = time_offset.split("@")[1].casefold()
+
+        # Calculate the raw offset
+        t_delta = cls._parse_timedelta(delta)
+        result_date = datetime.utcnow() + t_delta
+
+        # If rounding to a specified unit (e.g. -3d@d)
+        if rounding:
+            # extract the date components into a list
+            rounded_dt = list(result_date.timetuple())[:6]
+            # round up if timedelta is positive or down if negative
+            round_down = time_offset.strip().startswith("-")
+            round_item = None
+            datetime_units = list(RD_UNIT_MAP.keys())
+            datetime_units.remove("w")
+            for dt_part, period in enumerate(datetime_units):
+                if round_item:
+                    rounded_dt[dt_part] = 0
+                if rounding.startswith(period):
+                    # once we match the period, set all subsequent values
+                    # to zero
+                    round_item = period
+            result_date = datetime(*rounded_dt)  # type: ignore
+            if not round_down:
+                # Use dateutil relativedelta to add one to whatever rounding
+                # unit was specified
+                units = RD_UNIT_MAP.get(round_item or "d", "days")
+                # expand dict to args for relativedelta
+                result_date = result_date + relativedelta(
+                    **({units: +1})  # type: ignore
+                )
+        return result_date
 
     @staticmethod
     def _parse_timedelta(time_range: str = "0") -> timedelta:
         """Parse time period string and return equivalent timedelta."""
-        tr_regex = r"(?P<sign>[+\-]?)\s*(?P<value>[\d]+)\s*(?P<unit>[wdhm]?)"
-        m_time = re.match(tr_regex, time_range)
+        tr_regex = r"(?P<sign>[+\-]?)\s*(?P<value>[\d]+)\s*(?P<unit>([ywdhms]?|mon))"
+        m_time = re.match(tr_regex, time_range, re.IGNORECASE)
 
         if not m_time or "value" not in m_time.groupdict():
             return timedelta(0)
-        days = weeks = secs = 0
         tm_val = int(m_time.groupdict()["sign"] + m_time.groupdict()["value"])
         tm_unit = (
             m_time.groupdict()["unit"].lower() if m_time.groupdict()["unit"] else "d"
         )
-        if tm_unit == "d" or tm_unit not in "wdhm":
-            days = tm_val
-        elif tm_unit == "w":
-            weeks = tm_val
-        elif tm_unit == "h":
-            secs = tm_val * 60 * 60
-        elif tm_unit == "m":
-            secs = tm_val * 60
-        return timedelta(days=days, weeks=weeks, seconds=secs)
+        # Use relative delta to build the timedelta based on the units
+        # in the time range expression
+        unit_param = RD_UNIT_MAP.get(tm_unit, "days")
+        # expand dict to args for relativedelta
+        return relativedelta(**({unit_param: tm_val}))  # type: ignore
 
     @staticmethod
-    def _parse_param_list(param_value: Union[str, List]) -> str:
+    def _parse_param_list(param_value: Union[str, List]) -> List[Any]:
         """Parse list, comma-delim str or str."""
         if isinstance(param_value, list):
-            return ",".join([f"'{item}'" for item in param_value])
+            return param_value
         if isinstance(param_value, str) and "," in param_value:
-            return ",".join([f"'{item.strip()}'" for item in param_value.split(",")])
-        return f"'{param_value}'"
+            return [item.strip() for item in param_value.split(",")]
+        return [param_value]
+
+    @staticmethod
+    def _format_datetime_default(date_time: datetime) -> str:
+        return date_time.isoformat(sep="T") + "Z"
+
+    @staticmethod
+    def _format_list_default(item_list: List[Any]) -> str:
+        """Return formatted list parameter."""
+        fmt_list = []
+        for item in item_list:
+            if isinstance(item, str):
+                fmt_list.append(f"'{item}'")
+            else:
+                fmt_list.append(f"{item}")
+        return ",".join(fmt_list)
 
     def help(self):
         """Print help for query."""

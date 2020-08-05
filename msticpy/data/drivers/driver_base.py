@@ -6,7 +6,7 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict, Optional
+from typing import Tuple, Any, Union, Dict, Optional, Callable
 
 import pandas as pd
 
@@ -27,6 +27,8 @@ class DriverBase(ABC):
         self._loaded = False
         self._connected = False
         self.current_connection = None
+        self.public_attribs: Dict[str, Callable] = {}
+        self.formatters: Dict[str, Callable] = {}
 
     @property
     def loaded(self) -> bool:
@@ -93,7 +95,7 @@ class DriverBase(ABC):
 
     @abc.abstractmethod
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -104,6 +106,12 @@ class DriverBase(ABC):
             The query to execute
         query_source : QuerySource
             The query definition object
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Are passed to the underlying provider query method,
+            if supported.
 
         Returns
         -------
@@ -129,3 +137,17 @@ class DriverBase(ABC):
             A DataFrame and native results.
 
         """
+
+    @property
+    def service_queries(self) -> Tuple[Dict[str, str], str]:
+        """
+        Return queries retrieved from the service after connecting.
+
+        Returns
+        -------
+        Tuple[Dict[str, str], str]
+            Dictionary of query_name, query_text.
+            Name of container to add queries to.
+
+        """
+        return {}, ""

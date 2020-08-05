@@ -44,6 +44,8 @@ _PKG_RENAME_NAME = {
     "sklearn": "scikit-learn",
     "yaml": "pyyaml",
     "bs4": "beautifulsoup4",
+    "dateutil": "python-dateutil",
+    "splunklib": "splunk-sdk",
 }
 
 
@@ -87,10 +89,7 @@ def _get_pkg_from_path(pkg_file: str, pkg_root: str):
     for p_elem in reversed(rel_path.parts):
         if p_elem.endswith(".py"):
             p_elem = p_elem.replace(".py", "")
-        if module:
-            module = p_elem + "." + module
-        else:
-            module = p_elem
+        module = p_elem + "." + module if module else p_elem
         yield module
 
 
@@ -267,8 +266,8 @@ def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs
         import type, by default "setup_reqs"
 
     """
-    for py_mod in modules:
-        print(py_mod, getattr(modules[py_mod], imp_type))
+    for py_mod_name, py_mod in modules.items():
+        print(py_mod_name, getattr(py_mod, imp_type))
 
 
 def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
