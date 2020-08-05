@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from msticpy.data.data_providers import QueryProvider
-from .unit_test_lib import get_test_data_path
+from ..unit_test_lib import get_test_data_path
 
 
 class TestLocalDataQuery(unittest.TestCase):

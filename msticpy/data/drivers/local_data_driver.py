@@ -101,7 +101,7 @@ class LocalDataDriver(DriverBase):
         return self._schema
 
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
@@ -120,6 +120,7 @@ class LocalDataDriver(DriverBase):
             the underlying provider result if an error.
 
         """
+        del kwargs
         query_name = query_source.name if query_source else query
         file_path = self.data_files.get(query.casefold())
         if not file_path:

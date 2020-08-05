@@ -17,11 +17,13 @@ from .drivers import (
     SecurityGraphDriver,
     MDATPDriver,
     LocalDataDriver,
+    SplunkDriver,
 )
 from .query_store import QueryStore
+from .query_container import QueryContainer
 from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
-from ..common.utility import export
+from ..common.utility import export, valid_pyname
 from ..common import pkg_config as config
 from .._version import VERSION
 
@@ -36,30 +38,8 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
     DataEnvironment.MDATP: MDATPDriver,
     DataEnvironment.LocalData: LocalDataDriver,
+    DataEnvironment.Splunk: SplunkDriver,
 }
-
-
-class AttribHolder:
-    """Empty class used to create hierarchical attributes."""
-
-    def __len__(self):
-        """Return number of items in the attribute collection."""
-        return len(self.__dict__)
-
-    def __iter__(self):
-        """Return iterator over the attributes."""
-        return iter(self.__dict__.items())
-
-    def __getattr__(self, name):
-        """Print usable error message if attribute not found."""
-        if name not in self.__dict__:
-            print(f"Query attribute {name} not found.")
-            print("Use QueryProvider.list_queries() to see available queries.")
-        return super().__getattribute__(name)
-
-    def __repr__(self):
-        """Return list of attributes."""
-        return "\n".join(self.__dict__.keys())
 
 
 @export
@@ -149,7 +129,7 @@ class QueryProvider:
 
         if self._environment in data_env_queries:
             self._query_store = data_env_queries[self._environment]
-            self.all_queries = AttribHolder()
+            self.all_queries = QueryContainer()
             self._add_query_functions()
         else:
             warnings.warn(f"No queries found for environment {self._environment}")
@@ -175,7 +155,14 @@ class QueryProvider:
             Connection string for the data source
 
         """
-        return self._query_provider.connect(connection_str=connection_str, **kwargs)
+        # If the driver has any attributes to expose via the provider
+        # add those here.
+        for attr_name, attr in self._query_provider.public_attribs.items():
+            setattr(self, attr_name, attr)
+        self._query_provider.connect(connection_str=connection_str, **kwargs)
+        dyn_queries, container = self._query_provider.service_queries
+        if dyn_queries:
+            self._add_service_queries(container=container, queries=dyn_queries)
 
     @property
     def connected(self) -> bool:
@@ -271,7 +258,11 @@ class QueryProvider:
         """Print help for query."""
         self._query_store[query_name].help()
 
-    def exec_query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def get_query(self, query_name) -> str:
+        """Return the raw query text."""
+        return self._query_store[query_name].query
+
+    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
         Execute simple query string.
 
@@ -287,7 +278,8 @@ class QueryProvider:
             or a KqlResult if unsuccessful.
 
         """
-        return self._query_provider.query(query)
+        query_options = kwargs.pop("query_options", {}) or kwargs
+        return self._query_provider.query(query, **query_options)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -298,10 +290,10 @@ class QueryProvider:
                 "Please call connect(connection_str) and retry.",
             )
         query_name = kwargs.pop("query_name")
-        family = kwargs.pop("data_family")
+        family = kwargs.pop("query_path")
 
         query_source = self._query_store.get_query(
-            data_family=family, query_name=query_name
+            query_path=family, query_name=query_name
         )
         if "help" in args or "?" in args:
             query_source.help()
@@ -312,30 +304,62 @@ class QueryProvider:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        query_str = query_source.create_query(**params)
+        param_formatters = self._query_provider.formatters
+        query_str = query_source.create_query(formatters=param_formatters, **params)
         if "print" in args or "query" in args:
             return query_str
-        return self._query_provider.query(query_str, query_source)
+
+        # Handle any query options passed
+        query_options = kwargs.pop("query_options", {})
+        if not query_options:
+            # Any kwargs left over we send to the query provider driver
+            query_options = {
+                key: val for key, val in kwargs.items() if key not in params
+            }
+        return self._query_provider.query(query_str, query_source, **query_options)
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
         for qual_query_name in self.list_queries():
+            query_path = qual_query_name.split(".")
+            query_name = query_path[-1]
+            current_node = self
+            for container_name in query_path[:-1]:
+                container_name = valid_pyname(container_name)
+                if hasattr(current_node, container_name):
+                    current_node = getattr(current_node, container_name)
+                else:
+                    new_node = QueryContainer()
+                    setattr(current_node, container_name, new_node)
+                    current_node = new_node
 
-            family, query_name = qual_query_name.split(".")
-            if not hasattr(self, family):
-                setattr(self, family, AttribHolder())
-            query_family = getattr(self, family)
+            query_cont_name = ".".join(query_path[:-1])
 
             # Create the partial function
             query_func = partial(
-                self._execute_query, data_family=family, query_name=query_name
+                self._execute_query, query_path=query_cont_name, query_name=query_name
             )
             query_func.__doc__ = self._query_store.get_query(
-                data_family=family, query_name=query_name
+                query_path=query_cont_name, query_name=query_name
             ).create_doc_string()
 
-            setattr(query_family, query_name, query_func)
+            query_name = valid_pyname(query_name)
+            setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
+
+    def _add_service_queries(
+        self, container: Union[str, List[str]], queries: Dict[str, str]
+    ):
+        """Add additional queries to the query store."""
+        for q_name, q_text in queries.items():
+            self._query_store.add_query(
+                name=q_name, query=q_text, query_paths=container
+            )
+
+        # For now, just add all of the functions again (with any connect-time acquired
+        # queries) - we could be more efficient than this but unless there are 1000s of
+        # queries it should not be noticable.
+        self._add_query_functions()
 
     @classmethod
     def _resolve_path(cls, config_path: str) -> Optional[str]:

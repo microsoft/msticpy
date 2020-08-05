@@ -32,6 +32,7 @@ class DataFamily(Enum):
     LinuxSyslog = 5
     AzureNetwork = 6
     MDATP = 7
+    Splunk = 8
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
@@ -82,6 +83,7 @@ class DataEnvironment(Enum):
     SecurityGraph = 4
     MDATP = 5
     LocalData = 6
+    Splunk = 7
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
