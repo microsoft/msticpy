@@ -61,12 +61,14 @@ You can also upload a whole folder of files. To do this simply pass the folder p
 By default this will upload all csv files in that folder to the Log Analytics workspace, with each file being
 uploaded to a table with a name corresponding to the file name. Alternatively you can also specify single a table
 name under which all files will be uploaded. If you have some other separated value file type you can pass ``delim``,
-and the specified delimiter value, however if you do this the uploader will attempted to upload every file in the
-specified folder so ensure it contains only the files you wish to upload.
+and the specified delimiter value, however currently there is only support for a single delim type across files.
+By default this method attempts to upload all files in the specified folders, if you want to only process certain file
+extensions you can pass the ``glob`` keyword parameter with the a pattern for files to attempt to upload. The
+pattern format required follows the ``pathlib.glob()`` pattern - more details are avaliable `here <"https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`_
 
 .. code:: ipython3
 
-	laup.upload_folder(folder_path=FOLDER_PATH)
+	laup.upload_folder(folder_path=FOLDER_PATH, glob="*.csv")
 
 During upload a progress bar will be displayed showing the upload process of the files within the folder.
 
@@ -125,8 +127,11 @@ You can also upload a whole folder of files. To do this simply pass the folder p
 name of the index you want the data uploaded to. By default this will upload all csv files in that folder to Splunk,
 with each file being uploaded to a sourcetype with a name corresponding to the file name. Alternatively you can also
 specify single a table sourcetype which all files will be uploaded with the ``table_name`` parameter. If you have some
-other separated value file type you can pass ``delim``, and the specified delimiter value, however if you do this the
-uploader will attempted to upload every file in the specified folder so ensure it contains only the files you wish to upload.
+other separated value file type you can pass ``delim``, and the specified delimiter value, however currently there is
+only support for a single delim type across files. By default this method attempts to upload all files in the specified
+folders, if you want to only process certain file extensions you can pass the ``glob`` keyword parameter with the a pattern
+for files to attempt to upload. The pattern format required follows the ``pathlib.glob()`` pattern - more details are
+avaliable `here <"https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob>`_
 As with the other methods if the index provided does not exist and you want it to be created, you can pass the parameter ``create_idx = True``.
 
 .. code:: ipython3

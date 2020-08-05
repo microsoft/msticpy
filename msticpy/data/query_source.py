@@ -94,8 +94,6 @@ class QuerySource:
         self.metadata = ChainMap(
             _value_or_default(self._source, "metadata", {}),
             _value_or_default(self.defaults, "metadata", {}),
-            # self._source.get("metadata", {}),
-            # self.defaults.get("metadata", {}),
             self._global_metadata,
         )
         # make ChainMap for parameters from with source
