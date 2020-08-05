@@ -159,9 +159,7 @@ class QueryProviderDemo(QueryProvider):
         """Print help for query."""
         print(f"query_prov.{self._query_store[query_name]}(**kwargs)")
 
-    def exec_query(  # pylint: disable=arguments-differ
-        self, query: str
-    ) -> Union[pd.DataFrame, Any]:
+    def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
         Execute simple query string.
 

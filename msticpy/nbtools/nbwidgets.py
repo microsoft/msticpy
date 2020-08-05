@@ -496,7 +496,7 @@ class SelectAlert:
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._w_select_alert.options = [
-                alert_dtl[0]
+                alert_dtl
                 for alert_dtl in self._select_items
                 if change["new"].lower() in alert_dtl[0].lower()
             ]
@@ -838,11 +838,7 @@ class SelectItem:
         ):
             return
         value = selection["new"]
-        if self._item_dict:
-            self.value = self._item_dict.get(value, None)
-        else:
-            self.value = value
-
+        self.value = self._item_dict.get(value, None) if self._item_dict else value
         if self.item_action is not None:
             self._run_action()
 
@@ -1120,11 +1116,10 @@ class SelectSubset:
     def _on_btn_add(self, button):
         del button
         selected_set = set(self._select_list.options)
-        if self._src_dict:
-            for selected in self._source_list.value:
+        for selected in self._source_list.value:
+            if self._src_dict:
                 selected_set.add(self._src_dict[selected])
-        else:
-            for selected in self._source_list.value:
+            else:
                 selected_set.add(selected)
         self._select_list.options = sorted(list(selected_set))
 

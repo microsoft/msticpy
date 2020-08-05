@@ -133,10 +133,8 @@ def display_timeseries_anomolies(
     source_columns = [col for col in data.columns if col not in [anomalies_column]]
     data_anomaly = data[data[anomalies_column] == 1][source_columns].reset_index()
 
-    hover = HoverTool(
-        tooltips=_create_tool_tips(data, source_columns),
-        formatters={time_column: "datetime", "Tooltip": "printf"},
-    )
+    tooltips, formatters = _create_tool_tips(data, source_columns)
+    hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     # Create the Plot figure
     title = title if title else "Time Series Anomalies Visualization"
