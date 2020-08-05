@@ -6,7 +6,7 @@
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
 from os import path
-from typing import Any, Dict, Iterable, Set, Union, Optional
+from typing import Any, Dict, Iterable, Set, Union, Optional, List
 
 from .._version import VERSION
 from .query_defns import DataEnvironment, DataFamily
@@ -75,14 +75,11 @@ class QueryStore:
 
         """
         for family in sorted(self.data_families):
-            if "." in family:
-                family = family.split(".")[1]
 
-            for q_name in [
+            yield from [
                 f"{family}.{query}"
                 for query in sorted(self.data_families[family].keys())
-            ]:
-                yield q_name
+            ]
 
     def add_data_source(self, source: QuerySource):
         """
@@ -109,6 +106,50 @@ class QueryStore:
             valid, failures = source.validate()
             if not valid:
                 raise ImportError(source.name, failures)
+
+    def add_query(
+        self,
+        name: str,
+        query: str,
+        query_paths: Union[str, List[str]],
+        description: str = None,
+    ):
+        """
+        Add a query from name/query text.
+
+        Parameters
+        ----------
+        name : str
+            name of the query
+        query : str
+            The query string
+        query_paths : Union[str, List[str]]
+            The path/data_family to categorize.
+            Multiple paths can be specified. If the path is dotted,
+            this will cause the query to be displayed in the corresponding
+            hierarchy.
+        description : str, optional
+            Query description
+
+        """
+        prefix = ""
+        if "." in name:
+            name_parts = name.split(".")
+            name = name_parts[-1]
+            prefix = ".".join(name_parts[:-1])
+
+        if isinstance(query_paths, str):
+            query_paths = [query_paths]
+        if prefix:
+            query_paths = [f"{q_path}.{prefix}" for q_path in query_paths]
+
+        src_dict = {"args": {"query": query}, "description": description or name}
+        md_dict = {"data_families": query_paths}
+
+        query_source = QuerySource(
+            name=name, source=src_dict, defaults={}, metadata=md_dict
+        )
+        self.add_data_source(query_source)
 
     def import_file(self, query_file: str):
         """
@@ -191,7 +232,7 @@ class QueryStore:
         return env_stores
 
     def get_query(
-        self, query_name: str, data_family: Union[str, DataFamily] = None
+        self, query_name: str, query_path: Union[str, DataFamily] = None
     ) -> "QuerySource":
         """
         Return query with name `data_family` and `query_name`.
@@ -200,7 +241,7 @@ class QueryStore:
         ----------
         query_name: str
             Name of the query
-        data_family: Union[str, DataFamily]
+        query_path: Union[str, DataFamily]
             The data family for the query
 
         Returns
@@ -209,13 +250,24 @@ class QueryStore:
             Query matching name and family.
 
         """
-        if isinstance(query_name, str) and "." in query_name:
-            data_family, query_name = query_name.split(".", maxsplit=1)
-        if not data_family:
-            raise LookupError("No data family specified.")
-        if isinstance(data_family, DataFamily):
-            data_family = data_family.name
-        return self.data_families[data_family][query_name]
+        if query_path and isinstance(query_path, DataFamily):
+            query_path = query_path.name
+        if "." in query_name:
+            query_parts = query_name.split(".")
+            query_container = ".".join(query_parts[:-1])
+            query_name = query_parts[-1]
+            if query_container in self.data_families:
+                query_path = query_container
+            elif query_path:
+                query_container = ".".join(
+                    [query_path, query_container]  # type: ignore
+                )
+                if query_container in self.data_families:
+                    query_path = query_container
+        query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore
+        if not query:
+            raise LookupError(f"Could not find {query_name} in path {query_path}.")
+        return query
 
     def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
         """

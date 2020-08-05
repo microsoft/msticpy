@@ -299,23 +299,9 @@ class MsticpyNotConnectedError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Querying and importing data",
-        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html#querying-and-importing-data",
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html"
+        + "#querying-and-importing-data",
     )
-
-    def __init__(
-        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
-    ):
-        """
-        Create Not connected exception.
-
-        Parameters
-        ----------
-        help_uri : Union[Tuple[str, str], str, None], optional
-            Override the default help URI.
-
-        """
-        help_uri = help_uri or self.DEF_HELP_URI
-        super().__init__(*args, help_uri=help_uri, **kwargs)
 
 
 class MsticpyNoDataSourceError(MsticpyUserError):
@@ -323,23 +309,18 @@ class MsticpyNoDataSourceError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Querying and importing data",
-        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html#querying-and-importing-data",
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html"
+        + "#querying-and-importing-data",
     )
 
-    def __init__(
-        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
-    ):
-        """
-        Create MsticpyNoDataSourceError exception.
 
-        Parameters
-        ----------
-        help_uri : Union[Tuple[str, str], str, None], optional
-            Override the default help URI.
+class MsticpyConnectionError(MsticpyUserError):
+    """Exception class for KqlConnection errors."""
 
-        """
-        help_uri = help_uri or self.DEF_HELP_URI
-        super().__init__(*args, help_uri=help_uri, **kwargs)
+    DEF_HELP_URI = (
+        "DataProviders",
+        "https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+    )
 
 
 class MsticpyKqlConnectionError(MsticpyUserError):
@@ -350,21 +331,6 @@ class MsticpyKqlConnectionError(MsticpyUserError):
         "https://msticpy.readthedocs.io/en/latest/DataProviders.html"
         + "#connecting-to-an-azure-sentinel-workspace",
     )
-
-    def __init__(
-        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
-    ):
-        """
-        Create MsticpyKqlConnectionError exception.
-
-        Parameters
-        ----------
-        help_uri : Union[Tuple[str, str], str, None], optional
-            Override the default help URI.
-
-        """
-        help_uri = help_uri or self.DEF_HELP_URI
-        super().__init__(*args, help_uri=help_uri, **kwargs)
 
 
 def is_ipython() -> bool:
