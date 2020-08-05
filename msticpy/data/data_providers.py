@@ -258,6 +258,10 @@ class QueryProvider:
         """Print help for query."""
         self._query_store[query_name].help()
 
+    def get_query(self, query_name) -> str:
+        """Return the raw query text."""
+        return self._query_store[query_name].query
+
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
         Execute simple query string.

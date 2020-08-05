@@ -29,8 +29,8 @@ msrest>=0.6.0
 msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
-pandas>=0.25.0
-python-dateutil>=2.8.0
+pandas>=0.25.0,<=1.0.5
+python-dateutil>=2.8.0 
 pytz>=2019.2
 pyyaml>=3.13
 requests>=2.21.1
