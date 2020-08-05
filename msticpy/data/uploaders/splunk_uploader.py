@@ -63,7 +63,7 @@ class SplunkUploader(UploaderBase):
         data : pd.DataFrame
             Data to upload.
         index_name : str
-            Name of the Splunk Index to add data to, if it doesn't exist it will be created.
+            Name of the Splunk Index to add data to.
         table_name : str
             The souretype in Splunk data will be uploaded to.
         host : str, optional
@@ -77,7 +77,7 @@ class SplunkUploader(UploaderBase):
             )
         if not host:
             host = "Upload"
-        create_idx = kwargs.get("create_index", "False")
+        create_idx = kwargs.get("create_index", False)
         index = self._load_index(index_name, create_idx)
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
         for row in data.iterrows():
@@ -94,7 +94,12 @@ class SplunkUploader(UploaderBase):
 
     # pylint: disable=arguments-differ
     def upload_df(  # type: ignore
-        self, data: pd.DataFrame, table_name: str, index_name: str, **kwargs,
+        self,
+        data: pd.DataFrame,
+        table_name: str,
+        index_name: str,
+        create_index: bool = False,
+        **kwargs,
     ):
         """
         Upload a Pandas DataFrame to Splunk.
@@ -106,13 +111,14 @@ class SplunkUploader(UploaderBase):
         table_name : str
             The souretype in Splunk data will be uploaded to.
         index_name : str
-            Name of the Splunk Index to add data to, if it doesn't exist it will be created.
+            Name of the Splunk Index to add data to.
         host : str, optional
             Host name to upload data with, default will be 'Upload'
+        create_index : bool, optional
+            Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
         host = kwargs.get("host", None)
-        create_idx = kwargs.get("create_index", "False")
         if not isinstance(data, pd.DataFrame):
             raise MsticpyUserError(
                 "Data must be in Pandas DataFrame format.",
@@ -122,7 +128,7 @@ class SplunkUploader(UploaderBase):
             data=data,
             table_name=table_name,
             index_name=index_name,
-            create_index=create_idx,
+            create_index=create_index,
             host=host,
         )
 
@@ -132,6 +138,7 @@ class SplunkUploader(UploaderBase):
         index_name: str,
         table_name: str = None,
         delim: str = ",",
+        create_index=False,
         **kwargs,
     ):
         """
@@ -142,17 +149,18 @@ class SplunkUploader(UploaderBase):
         file_path : str
             Path to the file to upload.
         index_name : str
-            Name of the Splunk Index to add data to, if it doesn't exist it will be created.
+            Name of the Splunk Index to add data to.
         table_name : str, optional
             The souretype in Splunk data will be uploaded to, if not set the file name will be used.
         delim : str, optional
             Seperator value in file, by default ","
         host : str, optional
             Host name to upload data with, default will be 'Upload'
+        create_index : bool, optional
+            Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
         host = kwargs.get("host", None)
-        create_idx = kwargs.get("create_index", "False")
         path = Path(file_path)
         try:
             data = pd.read_csv(path, delimiter=delim)
@@ -163,13 +171,13 @@ class SplunkUploader(UploaderBase):
             )
 
         if not table_name:
-            table_name = str(path).split("\\")[-1].split(".")[0]
+            table_name = path.stem
         self._post_data(
             data=data,
             table_name=table_name,
             index_name=index_name,
             host=host,
-            create_index=create_idx,
+            create_index=create_index,
         )
 
     def upload_folder(  # type: ignore
@@ -178,6 +186,7 @@ class SplunkUploader(UploaderBase):
         index_name: str,
         table_name: str = None,
         delim: str = ",",
+        create_index=False,
         **kwargs,
     ):
         """
@@ -195,14 +204,13 @@ class SplunkUploader(UploaderBase):
             Seperator value in files, by default ","
         host : str, optional
             Host name to upload data with, default will be 'Upload'
+        create_index : bool, optional
+            Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
         host = kwargs.get("host", None)
-        create_idx = kwargs.get("create_index", "False")
-        if delim != ",":
-            ext = "*"
-        else:
-            ext = "*.csv"
+        glob_pat = kwargs.get("glob", "*")
+        ext = glob_pat
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
         # pylint: disable=unnecessary-comprehension
@@ -220,13 +228,13 @@ class SplunkUploader(UploaderBase):
                     title="Incorrect file type.",
                 )
             if t_name is False:
-                table_name = str(path).split("\\")[-1].split(".")[0]
+                table_name = path.stem
             self._post_data(
                 data=data,
                 table_name=table_name,
                 index_name=index_name,
                 host=host,
-                create_index=create_idx,
+                create_index=create_index,
             )
             f_progress.update(1)
             if self._debug is True:
