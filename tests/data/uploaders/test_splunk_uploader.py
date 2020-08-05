@@ -38,7 +38,7 @@ def sp_upload():
     SplunkUploader._load_index = load_index
     SplunkUploader._check_index.return_value = True
     sp_upload = SplunkUploader(
-        host="test", username="test", password="123", debug=True, connect=False
+        host="test", username="test", password="123", debug=True, connect=False  # nosec
     )
     sp_upload.connected = True
     return sp_upload

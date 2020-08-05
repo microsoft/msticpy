@@ -16,6 +16,10 @@
         {
             "file": "test_splunk_driver.py",
             "_justification": "This is a test case and does not contain a secret."
+        },
+        {
+            "file": "test_splunk_uploader.py",
+            "_justification": "This is a test case and does not contain a secret."
         }
     ]
 }
