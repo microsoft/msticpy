@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- IMPORTANT: This file must be saved under %appdata%\PoliCheck_Azure\Config folder -->
+<!--    When adding new values, please use UPPER CASE - all values will be compared only to the UPPER CASE strings -->
+<PoliCheckExclusions>
+
+  <!-- Each of these exclusions is a folder name - if \[name]\ exists in the file path, it will be skipped -->
+  <Exclusion Type="FolderPathFull">.MYPY_CACHE|TESTDATA|HTMLCOV</Exclusion>
+
+  <!-- Each of these exclusions is a folder name - if any folder or file starts with "\[name]", it will be skipped -->
+  <!--<Exclusion Type="FolderPathStart">ABC|XYZ</Exclusion>-->
+  
+  <!-- Each of these file types will be completely skipped for the entire scan -->
+  <Exclusion Type="FileType">.CSV</Exclusion>
+  
+  <!-- The specified file names will be skipped during the scan regardless which folder they are in -->
+  <Exclusion Type="FileName">TLD_SEED.TXT|QUERY_DATA.CSV|SIGNIN_CHARTS.YMAL|GEOPIP.PY</Exclusion>
+  
+  </PoliCheckExclusions>
