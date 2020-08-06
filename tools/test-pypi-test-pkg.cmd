@@ -110,7 +110,7 @@ goto end
 
 :usage
 echo Usage:
-echo    %~n0 test-env-name [path-to-notebooks]
+echo    %~n0 test-env-name [path-to-notebooks] [package-version]
 echo.
 
 :end

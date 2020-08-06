@@ -1118,6 +1118,7 @@ class SelectSubset:
         source_items: Union[Dict[str, str], List[Any]],
         default_selected: Union[Dict[str, str], List[Any]] = None,
         display_filter: bool = True,
+        auto_display: bool = True,
     ):
         """
         Create instance of SelectSubset widget.
@@ -1135,6 +1136,8 @@ class SelectSubset:
             a list of (label, value) tuples.
         display_filter : bool, optional
             Whether to display item filter (the default is True)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is True)
 
         """
         if isinstance(source_items, dict):
@@ -1188,7 +1191,8 @@ class SelectSubset:
         self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
             self.layout = widgets.VBox([self._w_filter, self.layout])
-        display(self.layout)
+        if auto_display:
+            self.display()
 
     @property
     def selected_items(self) -> List[Any]:
