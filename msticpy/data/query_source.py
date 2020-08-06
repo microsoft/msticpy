@@ -102,6 +102,8 @@ class QuerySource:
         self.params = ChainMap(
             _value_or_default(self._source, "parameters", {}),
             _value_or_default(self.defaults, "parameters", {}),
+            # self._source.get("parameters", {}),
+            # self.defaults.get("parameters", {}),
         )
 
         self._query: str = self["args.query"]
