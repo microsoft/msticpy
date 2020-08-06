@@ -13,6 +13,6 @@
   <Exclusion Type="FileType">.CSV</Exclusion>
   
   <!-- The specified file names will be skipped during the scan regardless which folder they are in -->
-  <Exclusion Type="FileName">TLD_SEED.TXT|QUERY_DATA.CSV|SIGNIN_CHARTS.YMAL|GEOPIP.PY</Exclusion>
+  <Exclusion Type="FileName">TLD_SEED.TXT|QUERY_DATA.CSV|SIGNIN_CHARTS.YAML|GEOPIP.PY</Exclusion>
   
   </PoliCheckExclusions>
