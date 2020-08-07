@@ -44,8 +44,7 @@ sources:
     args:
       query: '
       | tstats count as totalCount earliest(_time) as firstTime latest(_time)
-        as lastTime where index= "*" earliest={start} latest={end} by index sourcetype
-        timeformat={timeformat}
+        as lastTime where index= "*" timeformat={timeformat} earliest={start} latest={end} by index sourcetype
       | fieldformat firstTime=strftime(firstTime,"%Y/%m/%d %H:%M:%S")
       | fieldformat lastTime=strftime(lastTime,"%Y/%m/%d %H:%M:%S")
       | sort by totalCount desc
@@ -77,7 +76,7 @@ sources:
       data_families: [audittrail]
     args:
       query: '
-      search index={index} source=audittrail
+      search index={index} source=audittrail timeformat={timeformat} earliest={start} latest={end}
       | table timestamp, user, roles, action, info, search_type,  is_realtime, savedsearch_name, search, total_run_time, event_count, result_count
       '
     parameters:
@@ -87,7 +86,7 @@ sources:
       data_families: [SplunkGeneral]
     args:
       query: '
-      search index={index} source={source} earliest={start} latest={end} timeformat={timeformat}
+      search index={index} source={source} timeformat={timeformat} earliest={start} latest={end}
       {project_fields}
       {add_query_items}'
     parameters:
