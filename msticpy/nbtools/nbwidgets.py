@@ -705,7 +705,7 @@ class AlertSelector(SelectAlert):
 
 
 @export
-class GetEnvironmentKey:
+class GetEnvironmentKey(RegisteredWidget):
     """
     GetEnvironmentKey.
 
@@ -720,6 +720,7 @@ class GetEnvironmentKey:
         help_str: str = None,
         prompt: str = "Enter the value: ",
         auto_display: bool = False,
+        **kwargs,
     ):
         """
         Create a new instance of GetEnvironmentKey.
@@ -737,10 +738,17 @@ class GetEnvironmentKey:
             Whether to display on instantiation (the default is False)
 
         """
-        self._value = os.environ.get(env_var)
+        env_val = os.environ.get(env_var)
         self._name = env_var
 
-        if not self._value:
+        # Call superclass to register
+        super().__init__(id_vals=[env_var, prompt], val_attrs=["_value"], **kwargs)
+
+        # Use the registed widget "remembered" value but if the environment
+        # variable is set override with this value.
+        if env_val is not None:
+            self._value = env_val
+        if not self._value and help_str is not None:
             display(widgets.HTML(value=help_str))
 
         self._w_text = widgets.Text(
@@ -1101,17 +1109,7 @@ class SelectString(SelectItem):
 
 @export
 class SelectSubset:
-    """
-    Class to select a subset from an input list.
-
-    Attributes
-    ----------
-    selected_values : List[Any]
-        The selected item values.
-    selected_items : List[Any]
-        The selected items label and value
-
-    """
+    """Class to select a subset from an input list."""
 
     def __init__(
         self,
@@ -1451,13 +1449,14 @@ class OptionButtons:
         self._buttons = []
         for b_item in buttons:
             self._buttons.append(widgets.Button(description=b_item))
-        self._create_buttons(self._buttons)
         self._desc_label = widgets.Label(value=description)
         self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
         self.default = default or next(iter(buttons)).casefold()
         self.value: Optional[str] = None
         self.timeout = timeout
-        self._completion = None
+
+        self._completion: Any = None
+        self._fut_val: Any = None
         self._debug = debug
         if self._debug:
             self._out = widgets.Output()
@@ -1473,7 +1472,7 @@ class OptionButtons:
         if self._debug:
             self._out.append_stdout(mssg)
 
-    def _create_buttons(self, btns):
+    def _create_button_callbacks(self, btns):
         """Set up buttons."""
 
         def getvalue(change):
@@ -1488,12 +1487,13 @@ class OptionButtons:
     async def _await_widget(self):
         """Awaitable coroutine for widget."""
         self._debug_out("await_widget entered\n")
+        self._create_button_callbacks(self._buttons)
         self._debug_out("buttons set\n")
 
         done, _ = await asyncio.wait(
             [self._wait_for_button_change(), self._await_timer(self.timeout)],
             return_when=asyncio.FIRST_COMPLETED,
-            timeout=15,
+            timeout=self.timeout + 5,
         )
         self._debug_out("wait returned\n")
         self._completion = done
@@ -1503,9 +1503,7 @@ class OptionButtons:
     async def _wait_for_button_change(self):
         """Awaitable for button selection state."""
         self._debug_out("wait_for_button_change entered\n")
-        while True:
-            if self.value is not None:
-                break
+        while self.value is None:
             await asyncio.sleep(0.1)
             if self._debug:
                 self._debug_out("*")
@@ -1539,7 +1537,9 @@ class OptionButtons:
         display(self._layout)
         if self._debug:
             display(self._out)
-        asyncio.ensure_future(self._await_widget())
+        self._fut_val = asyncio.ensure_future(self._await_widget())
+        self._debug_out("future returned\n")
+        self._debug_out(str(self._fut_val) + "\n")
 
     def display(self):
         """Display widget in simple sync mode."""
