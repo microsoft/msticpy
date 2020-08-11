@@ -6,14 +6,11 @@
 """Threat Intel Results Browser."""
 import pprint
 from typing import List, Optional
-
 import pandas as pd
 from IPython.core.display import HTML
 
-
-from .nbwidgets import SelectItem
 from .._version import VERSION
-
+from .nbwidgets import SelectItem
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

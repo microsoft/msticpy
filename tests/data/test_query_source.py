@@ -71,6 +71,10 @@ class TestQuerySource(unittest.TestCase):
             data_environment="LogAnalytics", driver=self.provider
         )
         self.query_sources = self.la_provider._query_store.data_families
+        self.splunk_provider = QueryProvider(
+            data_environment="Splunk", driver=self.provider
+        )
+        self.splunk_query_sources = self.splunk_provider._query_store.data_families
 
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""
@@ -198,7 +202,9 @@ class TestQuerySource(unittest.TestCase):
         test_dt = datetime.utcnow()
         ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
-        check_dt_str = test_dt.isoformat()
+        check_dt_str = test_dt.isoformat(sep=" ")
+        # Using an Azure Sentinel query here since we want something
+        # that requires a list parameter
         q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
         query = q_src.create_query(
             formatters=splunk_fmt, start=test_dt, ip_address_list=ip_address_list
@@ -217,3 +223,9 @@ class TestQuerySource(unittest.TestCase):
         # Always quoted strings
         check_list = ",".join([f'"{i}"' for i in int_list])
         self.assertIn(check_list, query)
+
+        # Use a splunk query to verify timeformat parameter and datetime formatting
+        q_src = self.splunk_query_sources["SplunkGeneral"]["get_events_parameterized"]
+        query = q_src.create_query(formatters=splunk_fmt, start=test_dt, end=test_dt)
+        self.assertIn('timeformat="%Y-%m-%d %H:%M:%S.%6N"', query)
+        self.assertIn(f'earliest="{check_dt_str}"', query)
