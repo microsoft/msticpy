@@ -158,8 +158,7 @@ class WorkspaceConfig:
         try:
             with open(file_path) as json_file:
                 if json_file:
-                    json_config = json.load(json_file)
-                    return json_config
+                    return json.load(json_file)
         except json.JSONDecodeError:
             pass
         return {}
