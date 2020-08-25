@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+from collections import Counter
 import os
 import unittest
 from pathlib import Path
@@ -12,7 +13,12 @@ import pandas as pd
 import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from msticpy.analysis.timeseries import timeseries_anomalies_stl
+from msticpy.analysis.timeseries import (
+    timeseries_anomalies_stl,
+    extract_anomaly_periods,
+    create_time_period_kqlfilter,
+    set_new_anomaly_threshold,
+)
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "TimeSeriesAnomaliesVisualization.ipynb"
@@ -34,11 +40,14 @@ class TestTimeSeries(unittest.TestCase):
         self.input_df = pd.read_csv(
             input_file,
             index_col=["TimeGenerated"],
+            parse_dates=["TimeGenerated"],
+            infer_datetime_format=True,
             usecols=["TimeGenerated", "TotalBytesSent"],
         )
+        self.output_df = timeseries_anomalies_stl(data=self.input_df)
 
     def test_timeseries_anomalies_stl(self):
-        out_df = timeseries_anomalies_stl(data=self.input_df)
+        out_df = self.output_df
 
         self.assertIn("residual", out_df.columns)
         self.assertIn("trend", out_df.columns)
@@ -48,6 +57,8 @@ class TestTimeSeries(unittest.TestCase):
         self.assertIn("score", out_df.columns)
         self.assertIn("anomalies", out_df.columns)
         self.assertGreater(len(out_df[out_df["anomalies"] == 1]), 0)
+
+        self.output_df = out_df
 
     @pytest.mark.skipif(
         not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
@@ -69,3 +80,37 @@ class TestTimeSeries(unittest.TestCase):
             with open(nb_err, mode="w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
             raise
+
+    def test_extract_anomaly_periods(self):
+        """Test extracting anomaly periods."""
+        if self.output_df is None:
+            raise ValueError("No dataframe loaded")
+
+        periods = extract_anomaly_periods(self.output_df)
+        self.assertEqual(len(periods), 3)
+
+        neg_periods = extract_anomaly_periods(self.output_df, pos_only=False)
+        self.assertEqual(len(neg_periods), 5)
+
+        k_filter = create_time_period_kqlfilter(periods)
+        self.assertIsNotNone(k_filter)
+        self.assertIn("where TimeGenerated", k_filter)
+        count_words = Counter(k_filter.split(" "))
+        self.assertEqual(count_words["between"], len(periods))
+
+    def test_set_threshold(self):
+        """Test setting new thresholds on data."""
+        old_anoms = len(self.output_df[self.output_df["anomalies"] == 1])
+        self.assertEqual(old_anoms, 3)
+        new_df = set_new_anomaly_threshold(self.output_df, 2.5)
+        new_anoms = len(new_df[new_df["anomalies"] == 1])
+        self.assertEqual(new_anoms, 16)
+        new_anoms = len(new_df[new_df["anomalies"] == -1])
+        self.assertEqual(new_anoms, 16)
+
+        # Use different thresholds for pos and neg
+        new_df = set_new_anomaly_threshold(self.output_df, 2.5, 3.5)
+        new_anoms = len(new_df[new_df["anomalies"] == 1])
+        self.assertEqual(new_anoms, 16)
+        new_anoms = len(new_df[new_df["anomalies"] == -1])
+        self.assertEqual(new_anoms, 5)
