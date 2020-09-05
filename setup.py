@@ -52,7 +52,6 @@ INSTALL_REQUIRES = [
     "statsmodels>=0.11.1",
     "tldextract>=2.2.2",
     "tqdm>=4.36.1",
-    "typing>=3.6.6",
     "urllib3>=1.23",
 ]
 
