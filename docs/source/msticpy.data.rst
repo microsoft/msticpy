@@ -49,13 +49,6 @@ msticpy.data.data\_providers module
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.azure\_data module
--------------------------------
-.. automodule:: msticpy.data.azure_data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.data.data\_query\_reader module
 ---------------------------------------
 .. automodule:: msticpy.data.data_query_reader
@@ -70,9 +63,38 @@ msticpy.data.param\_extractor module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.query\_container module
+------------------------------------
+.. automodule:: msticpy.data.query_container
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.query\_defns module
+--------------------------------
+
+.. automodule:: msticpy.data.query_defns
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.query\_source module
+---------------------------------
+.. automodule:: msticpy.data.query_source
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.query\_store module
 --------------------------------
 .. automodule:: msticpy.data.query_store
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.azure\_data module
+-------------------------------
+.. automodule:: msticpy.data.azure_data
     :members:
     :undoc-members:
     :show-inheritance:
@@ -98,9 +120,9 @@ msticpy.data.drivers.local\_data\_driver module
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.drivers.security\_graph\_driver module
----------------------------------------------------
-.. automodule:: msticpy.data.drivers.security_graph_driver
+msticpy.data.drivers.mdatp\_driver module
+-----------------------------------------
+.. automodule:: msticpy.data.drivers.mdatp_driver
     :members:
     :undoc-members:
     :show-inheritance:
@@ -112,32 +134,16 @@ msticpy.data.drivers.odata\_driver module
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.drivers.mdatp\_driver module
------------------------------------------
-.. automodule:: msticpy.data.drivers.mdatp_driver
+msticpy.data.drivers.security\_graph\_driver module
+---------------------------------------------------
+.. automodule:: msticpy.data.drivers.security_graph_driver
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-msticpy.data.query\_defns module
------------------------------------
-
-.. automodule:: msticpy.data.query_defns
+msticpy.data.drivers.splunk\_driver module
+---------------------------------------------------
+.. automodule:: msticpy.data.drivers.splunk_driver
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-msticpy.nbtools.query\_mgr module
----------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-msticpy.nbtools.query\_schema module
-------------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
