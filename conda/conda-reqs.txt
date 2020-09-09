@@ -2,7 +2,7 @@ adal>=1.2.2
 attrs>=18.2.0
 azure-common>=1.1.18
 azure-mgmt-network>=2.7.0
-azure-mgmt-resource>=2.2.0
+azure-mgmt-resource>=2.2.0,<=10.1.0
 beautifulsoup4>=4.6.3
 bokeh>=1.4.0
 cryptography>=2.8
@@ -28,5 +28,4 @@ seaborn>=0.9.0
 setuptools>=40.6.3
 statsmodels
 tqdm>=4.36.1
-typing>=3.6.6
 urllib3>=1.23
