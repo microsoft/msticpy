@@ -237,10 +237,15 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     if not Path(mp_path).exists():
         display(HTML(_MISSING_MPCONFIG_ERR))
     else:
-        err_warn = validate_config(config_file=mp_path)
-        if err_warn and err_warn[0]:
+        try:
+            err_warn = validate_config(config_file=mp_path)
+            if err_warn and err_warn[0]:
+                config_ok = False
+        # pylint: disable=broad-except
+        except Exception as err:
             config_ok = False
-
+            print(f"Exception while checking configuration:\n{err}")
+        # pylint: enable=broad-except
     ws_config = WorkspaceConfig()
     if not ws_config.config_loaded:
         print("No valid configuration for Azure Sentinel found.")
