@@ -21,7 +21,7 @@ INSTALL_REQUIRES = [
     "azure-mgmt-keyvault>=2.0.0",
     "azure-mgmt-monitor>=0.5.2",
     "azure-mgmt-network>=2.7.0",
-    "azure-mgmt-resource>=2.2.0,<=9.0.0",
+    "azure-mgmt-resource>=2.2.0,<=10.1.0",
     "azure-mgmt-subscription>=0.2.0",
     "beautifulsoup4>=4.6.3",
     "bokeh>=1.4.0",
