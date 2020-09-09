@@ -337,7 +337,7 @@ class SplunkDriver(DriverBase):
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
-        return getattr(splunk_settings, "args", {})
+        return getattr(splunk_settings, "Args", {})
 
     @staticmethod
     def _create_not_connected_err():

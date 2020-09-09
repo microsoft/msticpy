@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""test nb_init links."""
+"""test TI Browser."""
 from pathlib import Path
 import pandas as pd
 import pytest_check as check
