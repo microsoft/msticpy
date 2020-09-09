@@ -1,0 +1,31 @@
+# PynSource Version 1.2
+{'type':'meta', 'info1':'Lorem ipsum dolor sit amet, consectetur adipiscing elit is latin. Comments are saved.'}
+{'type':'umlshape', 'id':'QueryProvider', 'x':633, 'y':10, 'width':170, 'height':362, 'attrs': 'connected|connection_string|schema_tables|_query_provider|_environment|all_queries|schema|_query_store', 'meths': 'list_queries|get_query|exec_query|__getattr__|connect|import_query_file|_add_service_queries|_execute_query|query_help|__init__|_add_query_functions'}
+{'type':'umlshape', 'id':'QueryContainer', 'x':329, 'y':140, 'width':150, 'height':128, 'attrs': '', 'meths': '__repr__|__getattr__|__iter__|__call__|__len__'}
+{'type':'umlshape', 'id':'DataFamily', 'x':567, 'y':946, 'width':154, 'height':192, 'attrs': 'Unknown|MDATP|AzureNetwork|SecurityAlert|LinuxSyslog|SecurityGraphAlert|LinuxSecurity|Splunk|WindowsSecurity', 'meths': ''}
+{'type':'umlshape', 'id':'DataEnvironment', 'x':323, 'y':943, 'width':162, 'height':192, 'attrs': 'Unknown|LogAnalytics|Kusto|LocalData|MDATP|SecurityGraph|AzureSecurityCenter|Splunk|AzureSentinel', 'meths': ''}
+{'type':'umlshape', 'id':'QueryParamProvider', 'x':810, 'y':1069, 'width':190, 'height':64, 'attrs': 'query_params', 'meths': ''}
+{'type':'umlshape', 'id':'QuerySource', 'x':811, 'y':560, 'width':178, 'height':330, 'attrs': 'required_params|metadata|data_families|params|default_params|name|query|description|_query', 'meths': '_replace_query_macros|_convert_datetime|validate|__getitem__|help|create_query|create_doc_string|__init__'}
+{'type':'umlshape', 'id':'QueryStore', 'x':581, 'y':561, 'width':130, 'height':218, 'attrs': 'query_names|data_families', 'meths': '__init__|__getattr__|__getitem__|add_data_source|add_query|import_file|get_query|find_query'}
+{'type':'umlshape', 'id':'DriverBase', 'x':1276, 'y':105, 'width':154, 'height':202, 'attrs': 'schema|current_connection|connected|service_queries|_kwargs|_connected|_loaded|loaded', 'meths': '__init__'}
+{'type':'umlshape', 'id':'KqlDriver', 'x':1800, 'y':579, 'width':162, 'height':378, 'attrs': 'schema|_TEN_RGX|_ip|formatters|current_connection|_debug|_connected|_WS_RGX|_schema|_loaded', 'meths': 'query_with_results|_get_schema|_set_kql_option|connect|_is_kqlmagic_loaded|_raise_kql_error|_get_kql_option|_load_kql_magic|query|__init__'}
+{'type':'umlshape', 'id':'LocalDataDriver', 'x':1186, 'y':585, 'width':160, 'height':234, 'attrs': 'schema|_paths|_connected|_debug|_schema|_loaded', 'meths': 'query_with_results|_get_data_paths|connect|query|__init__'}
+{'type':'umlshape', 'id':'MDATPDriver', 'x':1511, 'y':957, 'width':154, 'height':170, 'attrs': 'api_root|oauth_url|current_connection|req_body|api_ver', 'meths': 'query|__init__'}
+{'type':'umlshape', 'id':'OData', 'x':1382, 'y':587, 'width':154, 'height':218, 'attrs': 'api_root|current_connection|aad_token|_debug|_connected|req_headers|_loaded', 'meths': 'query_with_results|connect|__init__'}
+{'type':'umlshape', 'id':'SecurityGraphDriver', 'x':1280, 'y':959, 'width':200, 'height':170, 'attrs': 'api_root|oauth_url|current_connection|req_body|api_ver', 'meths': 'query|__init__'}
+{'type':'umlshape', 'id':'SplunkDriver', 'x':1591, 'y':585, 'width':162, 'height':346, 'attrs': '_fired_alerts|public_attribs|formatters|service_queries|_SPLUNK_REQD_ARGS|_connected|service|_debug|_saved_searches|_loaded|_TIME_FORMAT', 'meths': 'query_with_results|connect|_get_fired_alerts|_get_connect_args|_get_saved_searches|query|__init__'}
+{'type':'umlshape', 'id':'data_query_reader[MOD]', 'x':256, 'y':644, 'width':230, 'height':96, 'attrs': '', 'meths': 'find_yaml_files|read_query_def_file|validate_query_defs'}
+{'type':'umlshape', 'id':'param_extractor[MOD]', 'x':270, 'y':456, 'width':210, 'height':80, 'attrs': '', 'meths': 'extract_query_params|_get_object_params'}
+{'type':'edge', 'id':'QueryContainer_to_QueryProvider', 'source':'QueryContainer', 'target':'QueryProvider', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'QuerySource_to_QueryStore', 'source':'QuerySource', 'target':'QueryStore', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'DataFamily_to_QueryStore', 'source':'DataFamily', 'target':'QueryStore', 'uml_edge_type': 'association'}
+{'type':'edge', 'id':'QueryStore_to_QueryProvider', 'source':'QueryStore', 'target':'QueryProvider', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'KqlDriver_to_DriverBase', 'source':'KqlDriver', 'target':'DriverBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'LocalDataDriver_to_DriverBase', 'source':'LocalDataDriver', 'target':'DriverBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MDATPDriver_to_OData', 'source':'MDATPDriver', 'target':'OData', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'OData_to_DriverBase', 'source':'OData', 'target':'DriverBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'SecurityGraphDriver_to_OData', 'source':'SecurityGraphDriver', 'target':'OData', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'SplunkDriver_to_DriverBase', 'source':'SplunkDriver', 'target':'DriverBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'DriverBase_to_QueryProvider', 'source':'DriverBase', 'target':'QueryProvider', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'param_extractor[MOD]_to_QueryProvider', 'source':'param_extractor[MOD]', 'target':'QueryProvider', 'uml_edge_type': 'association'}
+{'type':'edge', 'id':'data_query_reader[MOD]_to_QueryStore', 'source':'data_query_reader[MOD]', 'target':'QueryStore', 'uml_edge_type': 'association'}
