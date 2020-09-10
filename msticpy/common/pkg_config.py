@@ -160,7 +160,7 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
                     "The following error was encountered",
                     str(yml_err),
                     title="config file could not be read",
-                )
+                ) from yml_err
     return {}
 
 

@@ -100,11 +100,11 @@ class KeyVaultSettings:
         """Initialize new instance of KeyVault Settings."""
         try:
             kv_config = config.get_config("KeyVault")
-        except KeyError:
+        except KeyError as err:
             raise MsticpyKeyVaultConfigError(
                 "No KeyVault section found in msticpyconfig.yaml",
                 title="missing Key Vault configuration",
-            )
+            ) from err
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
         if "authority_uri" in self:
@@ -767,7 +767,7 @@ class BHKeyVaultClient:
                 f"Secret name {secret_name} could not be found in {self.vault_uri}",
                 f"Provider returned: {err}",
                 title=f"secret {secret_name} not found.",
-            )
+            ) from err
         if secret_bundle.value is None or not secret_bundle.value:
             if self.debug:
                 print(
@@ -919,7 +919,7 @@ class BHKeyVaultMgmtClient:
                 + " in your configuration",
                 f"Error returned from provider was {cloud_err}",
                 title="Key Vault vault '{vault_name}' not found.",
-            )
+            ) from cloud_err
         return vault.properties.vault_uri
 
     def create_vault(self, vault_name: str) -> Vault:

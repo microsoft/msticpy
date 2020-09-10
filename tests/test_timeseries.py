@@ -90,7 +90,7 @@ class TestTimeSeries(unittest.TestCase):
         self.assertEqual(len(periods), 3)
 
         neg_periods = extract_anomaly_periods(self.output_df, pos_only=False)
-        self.assertEqual(len(neg_periods), 5)
+        self.assertEqual(len(neg_periods), 3)
 
         k_filter = create_time_period_kqlfilter(periods)
         self.assertIsNotNone(k_filter)
@@ -104,13 +104,13 @@ class TestTimeSeries(unittest.TestCase):
         self.assertEqual(old_anoms, 3)
         new_df = set_new_anomaly_threshold(self.output_df, 2.5)
         new_anoms = len(new_df[new_df["anomalies"] == 1])
-        self.assertEqual(new_anoms, 16)
+        self.assertEqual(new_anoms, 10)
         new_anoms = len(new_df[new_df["anomalies"] == -1])
-        self.assertEqual(new_anoms, 16)
+        self.assertEqual(new_anoms, 13)
 
         # Use different thresholds for pos and neg
         new_df = set_new_anomaly_threshold(self.output_df, 2.5, 3.5)
         new_anoms = len(new_df[new_df["anomalies"] == 1])
-        self.assertEqual(new_anoms, 16)
+        self.assertEqual(new_anoms, 10)
         new_anoms = len(new_df[new_df["anomalies"] == -1])
-        self.assertEqual(new_anoms, 5)
+        self.assertEqual(new_anoms, 3)

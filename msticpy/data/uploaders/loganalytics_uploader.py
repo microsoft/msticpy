@@ -127,11 +127,11 @@ class LAUploader(UploaderBase):
         }
         try:
             response = requests.post(uri, data=body, headers=headers)
-        except requests.ConnectionError:
+        except requests.ConnectionError as req_err:
             raise MsticpyConnectionError(
                 "Unable to connect to workspace, ensure your Workspace ID is correct.",
                 title="Unable to connect to Workspace",
-            )
+            ) from req_err
         if self._debug is True:
             print(f"Upload response code: {response.status_code}")
         if response.status_code < 200 or response.status_code > 299:
@@ -172,7 +172,7 @@ class LAUploader(UploaderBase):
             print(f"Upload to {table_name} complete")
 
     def upload_file(
-        self, file_path: str, table_name: str = None, delim: str = ",", **kwargs,
+        self, file_path: str, table_name: str = None, delim: str = ",", **kwargs
     ):
         """
         Upload a seperated value file to Log Analytics.
