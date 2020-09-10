@@ -332,14 +332,14 @@ def obfuscate_df(
         try:
             if map_func == "null":
                 data[col] = None
-            # pylint: disable=cell-var-from-loop
+# pylint: disable=cell-var-from-loop
             elif map_func is not None and callable(map_func):
                 out_df[col] = out_df.apply(lambda x: map_func(x[col]), axis=1)
             else:
                 out_df[col] = out_df.apply(
                     lambda x: hash_item(x[col], col_type), axis=1
                 )
-        # pylint: enable=cell-var-from-loop
+# pylint: enable=cell-var-from-loop
         except Exception as err:
             print(col, str(err))
             raise
@@ -393,8 +393,8 @@ def check_obfuscation(
         print("\n".join(obfuscated))
         print("====== End Check =====")
         return None
-    else:
-        return unchanged, obfuscated
+
+    return unchanged, obfuscated
 
 
 @pd.api.extensions.register_dataframe_accessor("mp_obf")
