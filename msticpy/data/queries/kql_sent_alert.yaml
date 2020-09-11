@@ -97,7 +97,7 @@ sources:
         type: datetime
         default: 0  # fake default to prevent this being viewed as required
   list_related_alerts:
-    description: Retrieves list of alerts with a common host, acount or process
+    description: Retrieves list of alerts with a common host, account or process
     metadata:
     args:
       query: '

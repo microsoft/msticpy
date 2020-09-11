@@ -61,7 +61,7 @@ _GET_IP_LOOKUP = _get_geolite_lookup()
 
 def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
     """
-    Take in an IP Address string and converts it to an IP Entitity.
+    Take in an IP Address string and converts it to an IP Entity.
 
     Parameters
     ----------

@@ -103,19 +103,19 @@ class SplunkDriver(DriverBase):
                 f"Authentication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         self._connected = True
         print("connected")
 

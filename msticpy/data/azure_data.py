@@ -131,7 +131,7 @@ class AzureData:
                     f"{key_name} is missing from AzureCLI section in your",
                     "configuration.",
                     title="missing f{key_name} settings for AzureCLI.",
-                )
+                ) from key_err
         # Create credentials and connect to the subscription client to validate
         self.credentials = ServicePrincipalCredentials(
             client_id=client_id, secret=secret, tenant=tenant_id
@@ -409,23 +409,23 @@ class AzureData:
             try:
                 namespace = resource_id.split("/")[6]
                 service = resource_id.split("/")[7]
-            except IndexError:
+            except IndexError as idx_err:
                 raise MsticpyResourceException(
                     "Provided Resource ID isn't in the correct format.",
                     "It should look like:",
                     "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/"
                     + "providers/NAMESPACE/SERVICE_NAME/RESOURCE_NAME ",
-                )
+                ) from idx_err
 
         elif resource_provider is not None:
             try:
                 namespace = resource_provider.split("/")[0]
                 service = resource_provider.split("/")[1]
-            except IndexError:
+            except IndexError as idx_err:
                 raise MsticpyResourceException(
                     "Provided Resource Provider isn't in the correct format.",
                     "It should look like: NAMESPACE/SERVICE_NAME",
-                )
+                ) from idx_err
         else:
             raise ValueError(
                 "Please provide an resource ID or resource provider namespace"
