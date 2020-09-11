@@ -214,9 +214,7 @@ class LAUploader(UploaderBase):
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
         # pylint: disable=unnecessary-comprehension
-        input_files = [
-            path for path in input_files  # type: ignore
-        ]
+        input_files = [path for path in input_files]  # type: ignore
         # pylint: enable=unnecessary-comprehension
         progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:

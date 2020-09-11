@@ -294,9 +294,9 @@ class AuthClient:
         """
         self.name = name
         self.debug = kwargs.pop("debug", False)
-        self.settings: KeyVaultSettings = kwargs.pop(
-            "settings", None
-        ) or KeyVaultSettings()
+        self.settings: KeyVaultSettings = (
+            kwargs.pop("settings", None) or KeyVaultSettings()
+        )
         self.tenant_id = tenant_id or self.settings.get("tenantid")
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
