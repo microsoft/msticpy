@@ -323,25 +323,26 @@ def obfuscate_df(
 
     out_df = data.copy()
     print("obfuscating columns:")
-    for col in data.columns:
-        if col not in col_map:
+    for col_name in data.columns:
+        if col_name not in col_map:
             continue
-        col_type = col_map.get(col, "str")
-        print(col, end=", ")
+        col_type = col_map.get(col_name, "str")
+        print(col_name, end=", ")
         map_func = MAP_FUNCS.get(col_type)
         try:
             if map_func == "null":
-                data[col] = None
-# pylint: disable=cell-var-from-loop
+                data[col_name] = None
             elif map_func is not None and callable(map_func):
-                out_df[col] = out_df.apply(lambda x: map_func(x[col]), axis=1)
-            else:
-                out_df[col] = out_df.apply(
-                    lambda x: hash_item(x[col], col_type), axis=1
+                out_df[col_name] = out_df.apply(
+                    lambda x, col=col_name, func=map_func: func(x[col]), axis=1
                 )
-# pylint: enable=cell-var-from-loop
+            else:
+                out_df[col_name] = out_df.apply(
+                    lambda x, col=col_name, c_type=col_type: hash_item(x[col], c_type),
+                    axis=1,
+                )
         except Exception as err:
-            print(col, str(err))
+            print(col_name, str(err))
             raise
 
     print("\ndone")

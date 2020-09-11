@@ -242,7 +242,9 @@ def test_kql_query_failed(get_ipython):
     check.is_in("Query:", arg_str)
     check.is_in("test query_failed", arg_str)
     check.is_in("Query failed", arg_str)
-    check.is_in("https://msticpy.readthedocs.io/en/latest/DataAcquisition.html", arg_str)
+    check.is_in(
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html", arg_str
+    )
 
 
 @patch(GET_IPYTHON_PATCH)
