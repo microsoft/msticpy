@@ -27,6 +27,7 @@ matplotlib>=3.0.0
 msal~=1.0.0
 msrest>=0.6.0
 msrestazure>=0.6.0
+nest_asyncio>=1.4.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=0.25.0,<=1.0.5

@@ -1,38 +1,51 @@
-from typing import List, Mapping, Any, Dict, Optional, Tuple
-
-import vt
-import pandas as pd
+"""VirusTotal v3 API."""
 from enum import Enum
-from vt_graph_api import VTGraph
+from typing import Dict, List, Set
+
+import pandas as pd
 from IPython.display import HTML, display
 
-from typing import Dict, Set, List
+import vt
+from vt_graph_api import VTGraph
+
+
+class MsticpyVTNoDataError(Exception):
+    """No data returned from VT API."""
+
 
 class VTEntityType(Enum):
     """
     VTEntityType: Enum class for VirusTotal entity types
     """
-    FILE = 'file'
-    DOMAIN = 'domain'
-    IP_ADDRESS = 'ip_address'
-    URL = 'url'
+
+    FILE = "file"
+    DOMAIN = "domain"
+    IP_ADDRESS = "ip_address"
+    URL = "url"
+
 
 class ColumnNames(Enum):
-    ID = 'id'
-    TYPE = 'type'
-    DETECTIONS = 'detections'
-    SCANS = 'scans'
-    SOURCE = 'source'
-    TARGET = 'target'
-    RELATIONSHIP_TYPE = 'relationship_type'
-    SOURCE_TYPE = 'source_type'
-    TARGET_TYPE = 'target_type'
+    """Column name enum for DataFrame output."""
 
-class VTObjectPorperties(Enum):
-    ATTRIBUTES = 'attributes'
-    RELATIONSHIPS = 'relationship'
-    LAST_ANALYSIS_STATS = 'last_analysis_stats'
-    MALICIOUS = 'malicious'
+    ID = "id"
+    TYPE = "type"
+    DETECTIONS = "detections"
+    SCANS = "scans"
+    SOURCE = "source"
+    TARGET = "target"
+    RELATIONSHIP_TYPE = "relationship_type"
+    SOURCE_TYPE = "source_type"
+    TARGET_TYPE = "target_type"
+
+
+class VTObjectProperties(Enum):
+    """Enum for VT Object properties."""
+
+    ATTRIBUTES = "attributes"
+    RELATIONSHIPS = "relationship"
+    LAST_ANALYSIS_STATS = "last_analysis_stats"
+    MALICIOUS = "malicious"
+
 
 class VTLookupV3:
     """
@@ -43,27 +56,32 @@ class VTLookupV3:
         VTEntityType.FILE,
         VTEntityType.URL,
         VTEntityType.IP_ADDRESS,
-        VTEntityType.DOMAIN
+        VTEntityType.DOMAIN,
     }
 
-    _MAPPING_TYPES_ENDPOINT: Dict[str, str] = {
+    _MAPPING_TYPES_ENDPOINT: Dict[VTEntityType, str] = {
         VTEntityType.FILE: "files",
         VTEntityType.URL: "urls",
         VTEntityType.IP_ADDRESS: "ip_addresses",
-        VTEntityType.DOMAIN: "domains"
+        VTEntityType.DOMAIN: "domains",
     }
 
-    _BASIC_PROPERTIES_PER_TYPE: Dict[str, Set[str]] = {
+    _BASIC_PROPERTIES_PER_TYPE: Dict[VTEntityType, Set[str]] = {
         VTEntityType.FILE: {
-            'type_description',
-             'size',
-             'first_submission_date',
-             'last_submission_date',
-             'times_submitted',
-             'meaningful_name'},
-        VTEntityType.URL: {'first_submission_date', 'last_submission_date', 'times_submitted'},
-        VTEntityType.IP_ADDRESS: {'date', 'country', 'asn', 'as_owner'},
-        VTEntityType.DOMAIN: {'id', 'creation_date', 'last_update_date', 'country'}
+            "type_description",
+            "size",
+            "first_submission_date",
+            "last_submission_date",
+            "times_submitted",
+            "meaningful_name",
+        },
+        VTEntityType.URL: {
+            "first_submission_date",
+            "last_submission_date",
+            "times_submitted",
+        },
+        VTEntityType.IP_ADDRESS: {"date", "country", "asn", "as_owner"},
+        VTEntityType.DOMAIN: {"id", "creation_date", "last_update_date", "country"},
     }
 
     @property
@@ -76,7 +94,7 @@ class VTLookupV3:
         List[str]:
             List of VirusTotal supported IoC type names.
         """
-        return self._SUPPORTED_VT_TYPES
+        return [str(i_type) for i_type in self._SUPPORTED_VT_TYPES]
 
     @classmethod
     def _get_endpoint_name(cls, vt_type: str) -> str:
@@ -88,23 +106,31 @@ class VTLookupV3:
     @classmethod
     def _parse_vt_object(cls, vt_object: vt.object.Object) -> pd.DataFrame:
         obj_dict = vt_object.to_dict()
-        if VTObjectPorperties.ATTRIBUTES.value in obj_dict:
-            attributes = obj_dict[VTObjectPorperties.ATTRIBUTES.value]
+        if VTObjectProperties.ATTRIBUTES.value in obj_dict:
+            attributes = obj_dict[VTObjectProperties.ATTRIBUTES.value]
             vt_type = VTEntityType(vt_object.type)
             if vt_type not in cls._SUPPORTED_VT_TYPES:
                 raise KeyError(f"Property type {vt_type} not supported")
-            obj = {key: attributes[key] for key in cls._BASIC_PROPERTIES_PER_TYPE[vt_type] if key in attributes}
-            df = pd.json_normalize(data=[obj])
-            last_analysis_stats = attributes[VTObjectPorperties.LAST_ANALYSIS_STATS.value]
-            df[ColumnNames.DETECTIONS.value] = last_analysis_stats[VTObjectPorperties.MALICIOUS.value]
-            df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
+            obj = {
+                key: attributes[key]
+                for key in cls._BASIC_PROPERTIES_PER_TYPE[vt_type]
+                if key in attributes
+            }
+            vt_df = pd.json_normalize(data=[obj])
+            last_analysis_stats = attributes[
+                VTObjectProperties.LAST_ANALYSIS_STATS.value
+            ]
+            vt_df[ColumnNames.DETECTIONS.value] = last_analysis_stats[
+                VTObjectProperties.MALICIOUS.value
+            ]
+            vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
         else:
-            df = pd.DataFrame()
+            vt_df = pd.DataFrame()
 
         # Inject ID and Type columns
-        df[ColumnNames.ID.value] = [vt_object.id]
-        df[ColumnNames.TYPE.value] = [vt_object.type]
-        return df.set_index([ColumnNames.ID.value])
+        vt_df[ColumnNames.ID.value] = [vt_object.id]
+        vt_df[ColumnNames.TYPE.value] = [vt_object.type]
+        return vt_df.set_index([ColumnNames.ID.value])
 
     def __init__(self, vt_key: str):
         """
@@ -128,7 +154,7 @@ class VTLookupV3:
             The observable value
         vt_type: str
             The VT entity type
-        
+
         Returns
         -------
             Attributes Pandas DataFrame with the properties of the entity
@@ -139,23 +165,28 @@ class VTLookupV3:
             Unknown vt_type
         """
 
-        if VTEntityType(vt_type) not in self.supported_vt_types:
+        if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             raise KeyError(f"Property type {vt_type} not supported")
 
-        endpoint_name = self._get_endpoint_name(VTEntityType(vt_type))
+        endpoint_name = self._get_endpoint_name(vt_type)
         try:
-            response: vt.object.Object = self._vt_client.get_object(f"/{endpoint_name}/{observable}")
+            response: vt.object.Object = self._vt_client.get_object(
+                f"/{endpoint_name}/{observable}"
+            )
             return self._parse_vt_object(response)
-        except:
-            raise Exception("It was not possible to get the data")
+        except Exception as err:
+            raise MsticpyVTNoDataError(
+                "An error occurred requesting data from VirusTotal"
+            ) from err
         finally:
             self._vt_client.close()
 
-    def lookup_iocs(self,
-                    observables_df: pd.DataFrame,
-                    observable_column: str = ColumnNames.TARGET.value,
-                    observable_type_column: str = ColumnNames.TARGET_TYPE.value
-                    ):
+    def lookup_iocs(
+        self,
+        observables_df: pd.DataFrame,
+        observable_column: str = ColumnNames.TARGET.value,
+        observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+    ):
         """
         Look up and multiple IoC observable
 
@@ -189,23 +220,24 @@ class VTLookupV3:
         dfs = []
         for observable, observable_type in zip(observables_list, types_list):
             try:
-                df = self.lookup_ioc(observable, observable_type)
-                dfs.append(df)
+                ioc_df = self.lookup_ioc(observable, observable_type)
+                dfs.append(ioc_df)
             except:
-                print(f"ERROR\t It was not possible to obtain results for {observable_type} {observable}")
+                print(
+                    "ERROR\t It was not possible to obtain results for",
+                    f"{observable_type} {observable}",
+                )
                 dfs.append(
                     pd.DataFrame(
                         data=[[observable, observable_type]],
-                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value])
-                    .set_index(ColumnNames.ID.value)
+                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
+                    ).set_index(ColumnNames.ID.value)
                 )
         return pd.concat(dfs) if (len(dfs) > 0) else pd.DataFrame()
 
-    def lookup_ioc_relationships(self,
-                                 observable: str,
-                                 vt_type: str,
-                                 relationship: str,
-                                 limit: int = None) -> pd.DataFrame:
+    def lookup_ioc_relationships(
+        self, observable: str, vt_type: str, relationship: str, limit: int = None
+    ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships
 
@@ -219,7 +251,7 @@ class VTLookupV3:
             Desired relationship
         limit: int
             Relations limit
-        
+
         Returns
         -------
             Relationship Pandas DataFrame with the relationships of the entity
@@ -229,20 +261,27 @@ class VTLookupV3:
         KeyError
             Unknown vt_type
         """
-        if VTEntityType(vt_type) not in self.supported_vt_types:
+        if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             raise KeyError(f"Property type {vt_type} not supported")
 
         endpoint_name = self._get_endpoint_name(vt_type)
+        response: vt.object.Object
 
         if limit is None:
-            endpoint_name = self._get_endpoint_name(VTEntityType(vt_type))
             try:
-                response: vt.object.Object = self._vt_client.get_object(
-                    f"/{endpoint_name}/{observable}?relationship_counters=true")
+                response = self._vt_client.get_object(
+                    f"/{endpoint_name}/{observable}?relationship_counters=true"
+                )
                 relationships = response.relationships
-                limit: int = relationships[relationship]['meta']["count"] if relationship in relationships else 0
+                limit = (
+                    relationships[relationship]["meta"]["count"]
+                    if relationship in relationships
+                    else 0
+                )
             except:
-                print(f"ERROR: Could not obtain relationship limit for {vt_type} {observable}")
+                print(
+                    f"ERROR: Could not obtain relationship limit for {vt_type} {observable}"
+                )
                 return pd.DataFrame()
 
         if limit == 0 or limit is None:
@@ -250,38 +289,47 @@ class VTLookupV3:
 
         try:
             # print(f"Obtaining {limit} relationships for {vt_type} {observable}")
-            response: vt.Iterator = self._vt_client.iterator(
+            response = self._vt_client.iterator(
                 f"/{endpoint_name}/{observable}/relationships/{relationship}",
                 batch_size=40,
-                limit=limit)
-            objects = [self._parse_vt_object(r) for r in response]
-            df = pd.concat(objects) if len(objects) > 0 else pd.DataFrame()
+                limit=limit,
+            )
+            vt_objects = [self._parse_vt_object(r) for r in response]
+            result_df = pd.concat(vt_objects) if len(vt_objects) > 0 else pd.DataFrame()
 
-            if(len(objects) > 0):
+            if len(vt_objects) > 0:
                 # Inject source and target columns
-                df[ColumnNames.SOURCE.value] = observable
-                df[ColumnNames.SOURCE_TYPE.value] = VTEntityType(vt_type).value
-                df[ColumnNames.RELATIONSHIP_TYPE.value] = relationship
-                df.reset_index(inplace=True)
-                df.rename(columns={
-                    ColumnNames.ID.value: ColumnNames.TARGET.value,
-                    ColumnNames.TYPE.value: ColumnNames.TARGET_TYPE.value
-                }, inplace=True)
-                df.set_index([ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True)
-        except:
-            raise Exception("It was not possible to get the data")
+                result_df[ColumnNames.SOURCE.value] = observable
+                result_df[ColumnNames.SOURCE_TYPE.value] = VTEntityType(vt_type).value
+                result_df[ColumnNames.RELATIONSHIP_TYPE.value] = relationship
+                result_df.reset_index(inplace=True)
+                result_df.rename(
+                    columns={
+                        ColumnNames.ID.value: ColumnNames.TARGET.value,
+                        ColumnNames.TYPE.value: ColumnNames.TARGET_TYPE.value,
+                    },
+                    inplace=True,
+                )
+                result_df.set_index(
+                    [ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True
+                )
+        except Exception as err:
+            raise MsticpyVTNoDataError(
+                "An error occurred requesting data from VirusTotal"
+            ) from err
         finally:
             self._vt_client.close()
 
-        return df
+        return result_df
 
-    def lookup_iocs_relationships(self,
-                                 observables_df: pd.DataFrame,
-                                 relationship: str,
-                                 observable_column: str = ColumnNames.TARGET.value,
-                                 observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-                                 limit: int = None
-                                 ) -> pd.DataFrame:
+    def lookup_iocs_relationships(
+        self,
+        observables_df: pd.DataFrame,
+        relationship: str,
+        observable_column: str = ColumnNames.TARGET.value,
+        observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        limit: int = None,
+    ) -> pd.DataFrame:
         """
          Look up and single IoC observable relationships
 
@@ -306,7 +354,7 @@ class VTLookupV3:
          ------
          KeyError
              Column not found in observables_df
-         """
+        """
 
         _observables_df = observables_df.reset_index()
 
@@ -320,23 +368,27 @@ class VTLookupV3:
 
         for observable, observable_type in zip(observables_list, types_list):
             try:
-                df = self.lookup_ioc_relationships(observable, observable_type, relationship, limit)
-                dfs.append(df)
+                result_df = self.lookup_ioc_relationships(
+                    observable, observable_type, relationship, limit
+                )
+                dfs.append(result_df)
             except:
-                print(f"ERROR:\t It was not possible to get the data for {observable_type} {observable}")
+                print(
+                    "ERROR:\t It was not possible to get the data for",
+                    f"{observable_type} {observable}",
+                )
                 dfs.append(
                     pd.DataFrame(
                         data=[[observable, observable_type]],
-                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value])
-                    .set_index(ColumnNames.ID.value)
+                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
+                    ).set_index(ColumnNames.ID.value)
                 )
 
         return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
 
-    def create_vt_graph(self,
-                        relationship_dfs: List[pd.DataFrame],
-                        name: str,
-                        private: bool = True) -> str:
+    def create_vt_graph(
+        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool = True
+    ) -> str:
         """
         Creates a VirusTotal Graph with a set of Relationship DataFrames.
 
@@ -362,42 +414,55 @@ class VTLookupV3:
         concatenated_df = pd.concat(relationship_dfs).reset_index()
 
         # Create nodes DF, with source and target
-        sources_df = concatenated_df \
-            .groupby(ColumnNames.SOURCE.value)[ColumnNames.SOURCE_TYPE.value] \
-            .first() \
-            .reset_index() \
-            .rename(columns={
-                ColumnNames.SOURCE.value: ColumnNames.ID.value,
-                ColumnNames.SOURCE_TYPE.value: ColumnNames.TYPE.value
-            })
+        sources_df = (
+            concatenated_df.groupby(ColumnNames.SOURCE.value)[
+                ColumnNames.SOURCE_TYPE.value
+            ]
+            .first()
+            .reset_index()
+            .rename(
+                columns={
+                    ColumnNames.SOURCE.value: ColumnNames.ID.value,
+                    ColumnNames.SOURCE_TYPE.value: ColumnNames.TYPE.value,
+                }
+            )
+        )
 
-        target_df = concatenated_df \
-            .groupby(ColumnNames.TARGET.value)[ColumnNames.TARGET_TYPE.value] \
-            .first() \
-            .reset_index() \
-            .rename(columns={
-                ColumnNames.TARGET.value: ColumnNames.ID.value,
-                ColumnNames.TARGET_TYPE.value: ColumnNames.TYPE.value
-            })
+        target_df = (
+            concatenated_df.groupby(ColumnNames.TARGET.value)[
+                ColumnNames.TARGET_TYPE.value
+            ]
+            .first()
+            .reset_index()
+            .rename(
+                columns={
+                    ColumnNames.TARGET.value: ColumnNames.ID.value,
+                    ColumnNames.TARGET_TYPE.value: ColumnNames.TYPE.value,
+                }
+            )
+        )
 
         nodes_df = pd.concat([sources_df, target_df])
 
         graph = VTGraph(self._vt_key, name=name, private=private)
 
         for _, row in nodes_df.iterrows():
-            graph.add_node(node_id=row[ColumnNames.ID.value], node_type=row[ColumnNames.TYPE.value])
+            graph.add_node(
+                node_id=row[ColumnNames.ID.value], node_type=row[ColumnNames.TYPE.value]
+            )
 
         for _, row in concatenated_df.iterrows():
             graph.add_link(
                 source_node=row[ColumnNames.SOURCE.value],
                 target_node=row[ColumnNames.TARGET.value],
-                connection_type=row[ColumnNames.RELATIONSHIP_TYPE.value]
+                connection_type=row[ColumnNames.RELATIONSHIP_TYPE.value],
             )
         graph.save_graph()
 
         return graph.graph_id
 
-    def render_vt_graph(self, graph_id: str, width: int = 800, height: int = 600):
+    @staticmethod
+    def render_vt_graph(graph_id: str, width: int = 800, height: int = 600):
         """
         Displays a VTGraph in a Jupyter Notebook
 
@@ -410,13 +475,15 @@ class VTLookupV3:
         height
             Graph height
         """
-        display(HTML(
-            f'''
+        display(
+            HTML(
+                f"""
               <iframe
                 src="https://www.virustotal.com/graph/embed/{graph_id}"
                 width="{width}"
                 height="{height}">
               </iframe>
-                
-            '''
-        ))
+
+            """
+            )
+        )
