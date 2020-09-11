@@ -164,11 +164,11 @@ class SplunkUploader(UploaderBase):
         path = Path(file_path)
         try:
             data = pd.read_csv(path, delimiter=delim)
-        except (ParserError, UnicodeDecodeError):
+        except (ParserError, UnicodeDecodeError) as parse_err:
             raise MsticpyUserError(
                 "The file specified is not a seperated value file.",
                 "Incorrect file type.",
-            )
+            ) from parse_err
 
         if not table_name:
             table_name = path.stem
@@ -210,24 +210,18 @@ class SplunkUploader(UploaderBase):
         """
         host = kwargs.get("host", None)
         glob_pat = kwargs.get("glob", "*")
-        ext = glob_pat
         t_name = bool(table_name)
-        input_files = Path(folder_path).glob(ext)
-        # pylint: disable=unnecessary-comprehension
-        input_files = [
-            path for path in input_files  # type: ignore
-        ]
-        # pylint: enable=unnecessary-comprehension
+        input_files = Path(folder_path).glob(glob_pat)
         f_progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:
             try:
                 data = pd.read_csv(path, delimiter=delim)
-            except (ParserError, UnicodeDecodeError):
+            except (ParserError, UnicodeDecodeError) as parse_err:
                 raise MsticpyUserError(
                     "The file specified is not a seperated value file.",
                     title="Incorrect file type.",
-                )
-            if t_name is False:
+                ) from parse_err
+            if not t_name:
                 table_name = path.stem
             self._post_data(
                 data=data,

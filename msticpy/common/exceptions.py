@@ -16,7 +16,7 @@ __author__ = "Ian Hellen"
 
 
 # placeholder for pkg_config.get_config - this function is
-# overwritten by msticp.common.pkg_config
+# overwritten by msticpy.common.pkg_config
 def _get_config(setting_path: str):
     del setting_path
     return True
@@ -237,7 +237,7 @@ class MsticpyKeyVaultConfigError(MsticpyUserConfigError):
 
         """
         mssg = (
-            "Please verfiy that a valid KeyVault section has been configured"
+            "Please verify that a valid KeyVault section has been configured"
             + "in your msticpyconfig.yaml."
         )
         add_args = [*args, mssg]
@@ -261,7 +261,7 @@ class MsticpyKeyVaultMissingSecretError(MsticpyKeyVaultConfigError):
 
         """
         mssg = (
-            "Please verfiy that the item using this secret is properly"
+            "Please verify that the item using this secret is properly"
             + " configured in in your msticpyconfig.yaml."
         )
         add_args = [*args, mssg]
@@ -309,6 +309,16 @@ class MsticpyNoDataSourceError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Querying and importing data",
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html"
+        + "#querying-and-importing-data",
+    )
+
+
+class MsticpyDataQueryError(MsticpyUserError):
+    """Exception class for data query errors."""
+
+    DEF_HELP_URI = (
+        "Query failed",
         "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html"
         + "#querying-and-importing-data",
     )

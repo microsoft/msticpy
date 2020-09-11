@@ -20,7 +20,7 @@ import pandas as pd
 import seaborn as sns
 
 from ..common.exceptions import MsticpyUserError, MsticpyException
-from ..common.utility import check_and_install_missing_packages, unit_testing
+from ..common.utility import check_and_install_missing_packages, unit_testing, md
 from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .._version import VERSION
@@ -96,6 +96,15 @@ _MP_IMPORT_ALL = [
     dict(module_name="msticpy.sectools"),
 ]
 
+_CONF_URI = (
+    "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
+)
+
+_AZNB_GUIDE = (
+    "Please see the <i>Getting Started Guide for Azure Sentinel "
+    + "ML Notebooks</i> notebook"
+)
+
 
 def init_notebook(
     namespace: Dict[str, Any],
@@ -140,7 +149,7 @@ def init_notebook(
         statement.
         `{import_tgt}` specifies an object to import from the package
         equivalent to "from source_pkg import import_tgt"
-        `alias` allows renaming of the imported object - equivent to
+        `alias` allows renaming of the imported object - equivalent to
         the "as alias" part of the import statement.
         If you want to provide just `source_pkg` and `alias` include
         an additional placeholder comma: e.g. "pandas, , pd"
@@ -175,7 +184,7 @@ def init_notebook(
     print("Checking configuration....")
     conf_ok, _ = _check_config()
 
-    print("Setting options....")
+    print("Setting notebook options....")
     _set_nb_options(namespace)
 
     if friendly_exceptions is None:
@@ -187,10 +196,35 @@ def init_notebook(
             InteractiveShell.showtraceback
         )
     if not imp_ok or not conf_ok:
-        display(HTML("<font color='red'><h3>Notebook setup failed</h3>"))
+        md("<font color='red'><h3>Notebook setup did not complete successfully.</h3>")
+        if not imp_ok:
+            md("One or more libraries did not import successfully.")
+            md(_AZNB_GUIDE)
+        if not conf_ok:
+            md("One or more configuration items were missing or set incorrectly.")
+            md(
+                _AZNB_GUIDE
+                + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>."
+            )
+        md("This notebook may still run but with reduced functionality.")
         return False
     display(HTML("<h3>Notebook setup complete</h3>"))
     return True
+
+
+def list_default_imports():
+    """List the default imports for `init_notebook`."""
+    for imp_group in (_NB_IMPORTS, _MP_IMPORTS):
+        for imp_item in imp_group:
+            if "tgt" in imp_item:
+                import_line = f"from {imp_item['pkg']} import {imp_item['tgt']}"
+            else:
+                import_line = f"import {imp_item['pkg']}"
+            if "alias" in imp_item:
+                import_line += f" as {imp_item['alias']}"
+            print(import_line)
+    for imp_item in _MP_IMPORT_ALL:
+        print(f"from {imp_item['module_name']} import *")
 
 
 def _global_imports(  # noqa: MC0001
@@ -237,10 +271,15 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     if not Path(mp_path).exists():
         display(HTML(_MISSING_MPCONFIG_ERR))
     else:
-        err_warn = validate_config(config_file=mp_path)
-        if err_warn and err_warn[0]:
+        try:
+            err_warn = validate_config(config_file=mp_path)
+            if err_warn and err_warn[0]:
+                config_ok = False
+        # pylint: disable=broad-except
+        except Exception as err:
             config_ok = False
-
+            print(f"Exception while checking configuration:\n{err}")
+        # pylint: enable=broad-except
     ws_config = WorkspaceConfig()
     if not ws_config.config_loaded:
         print("No valid configuration for Azure Sentinel found.")

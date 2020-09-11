@@ -103,19 +103,19 @@ class SplunkDriver(DriverBase):
                 f"Authentication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         self._connected = True
         print("connected")
 
@@ -337,7 +337,7 @@ class SplunkDriver(DriverBase):
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
-        return getattr(splunk_settings, "args", {})
+        return getattr(splunk_settings, "Args", {})
 
     @staticmethod
     def _create_not_connected_err():

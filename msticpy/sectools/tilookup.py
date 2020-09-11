@@ -272,7 +272,7 @@ class TILookup:
                     title="TIProvider configuration error",
                     help_uri="https://msticpy.readthedocs.io/en/latest/data_acquisition/"
                     + "TIProviders.html#configuration-file",
-                )
+                ) from mp_ex
 
             # set the description from settings, if one is provided, otherwise
             # use class docstring.

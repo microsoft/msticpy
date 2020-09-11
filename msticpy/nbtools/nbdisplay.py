@@ -176,7 +176,7 @@ def draw_alert_entity_graph(
         node_color="green",
         alpha=0.5,
         node_shape="s",
-        s=200,
+        node_size=200,
     )
     nlabels = nx.get_node_attributes(nx_graph, "description")
     nx.relabel_nodes(nx_graph, nlabels)

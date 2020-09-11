@@ -4,6 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for timeseries analysis functions."""
+from datetime import datetime
+from typing import Dict, Optional
+
 import pandas as pd
 from scipy import stats
 from statsmodels.tsa.seasonal import STL
@@ -23,13 +26,14 @@ _DEFAULT_KWARGS = ["seasonal", "period", "score_threshold"]
 @export
 def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """
-    Discover anomalies in Timeseries data using STL(Seasonal-Trend Decomposition using LOESS).
+    Return anomalies in Timeseries using STL.
 
     Parameters
     ----------
     data : pd.DataFrame
-        DataFrame as a time series data set retrived from data connector or external data source.
-        Dataframe must have 2 columns with time column set as index and other numeric value.
+        DataFrame as a time series data set retrived from data connector or
+        external data source. Dataframe must have 2 columns with time column
+        set as index and other numeric value.
 
     Other Parameters
     ----------------
@@ -39,8 +43,8 @@ def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     period: int, optional
         Periodicity of the the input data. by default 24 (Hourly).
     score_threshold : float, optional
-        standard deviation threshold value calculated using Z-score used to flag anomalies,
-        by default 3
+        standard deviation threshold value calculated using Z-score used to
+        flag anomalies, by default 3
 
     Returns
     -------
@@ -48,6 +52,10 @@ def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
         Returns a dataframe with additional columns by decomposing time series data
         into residual, trend, seasonal, weights, baseline, score and anomalies.
         The anomalies column will have 0, 1,-1 values based on score_threshold set.
+
+    Notes
+    -----
+    The decomposition method is STL - Seasonal-Trend Decomposition using LOESS
 
     """
     check_kwargs(kwargs, _DEFAULT_KWARGS)
@@ -58,7 +66,8 @@ def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     if not isinstance(data, pd.DataFrame):
         raise MsticpyException("input data should be a pandas dataframe")
 
-    # STL method does Season-Trend decomposition using LOESS. Accepts timeseries dataframe
+    # STL method does Season-Trend decomposition using LOESS.
+    # Accepts timeseries dataframe
     stl = STL(data, seasonal=seasonal, period=period)
     # Fitting the data - Estimate season, trend and residuals components.
     res = stl.fit()
@@ -87,3 +96,127 @@ def timeseries_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     result["anomalies"] = result["anomalies"].astype("int64")
     result = result.reset_index()
     return result
+
+
+def extract_anomaly_periods(
+    data: pd.DataFrame,
+    time_column: str = "TimeGenerated",
+    period: str = "1H",
+    pos_only: bool = True,
+) -> Dict[datetime, datetime]:
+    """
+    Merge adjacent anomaly periods.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The data to process
+    time_column : str, optional
+        The name of the time column
+    period : str, optional
+        pandas-compatible time period designator,
+        by default "1H"
+    pos_only : bool, optional
+        If True only extract positive anomaly periods,
+        else extract both positive and negative.
+        By default, True
+
+    Returns
+    -------
+    Dict[datetime, datetime] :
+        start_period, end_period
+
+    """
+    # Resample data based on period - period is the granularity that
+    # we want to merge 2 adject samples on.
+    anom_filter = [1] if pos_only else [1, -1]
+    resampled = (
+        data[(data["anomalies"].isin(anom_filter))]
+        .sort_values(time_column)
+        .set_index(time_column)
+        .resample(period)
+    )
+
+    end_period = None
+    start_period = None
+    periods = {}
+
+    # iterate through the resampled data
+    for time, group in resampled:
+        if group.empty:
+            continue
+        if not end_period:
+            # If we're not already in an anomaly period
+            # create start/end for a new one
+            start_period = time - pd.Timedelta(period)
+            end_period = time + pd.Timedelta(period)
+            periods[start_period] = end_period
+        elif (time - end_period) <= pd.Timedelta(
+            period
+        ) * 2 and start_period is not None:
+            # if the current time is less than 2x the period away
+            # from our current end_period time, update the end_time
+            periods[start_period] = time + pd.Timedelta(period)
+        else:
+            # otherwise start a new period
+            start_period = time - pd.Timedelta(period)
+            periods[start_period] = time + pd.Timedelta(period)
+        end_period = time
+    return periods
+
+
+def create_time_period_kqlfilter(periods: Dict[datetime, datetime]) -> str:
+    """
+    Create KQL time filter expression from time periods dict.
+
+    Parameters
+    ----------
+    periods : Dict[datetime, datetime]
+        Dict of start, end periods
+
+    Returns
+    -------
+    str
+        KQL filter clause
+
+    """
+    time_column = "TimeGenerated"
+    time_brackets = [
+        f"{time_column} between (datetime({start}) .. datetime({end}))"
+        for start, end in periods.items()
+    ]
+
+    return f"| where {' or '.join(time_brackets)}"
+
+
+def set_new_anomaly_threshold(
+    data: pd.DataFrame, threshold: int, threshold_low: Optional[int] = None
+) -> pd.DataFrame:
+    """
+    Return DataFrame with anomalies calculated based on new threshold.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input DataFrame
+    threshold : int
+        Threshold above (beyond) which values will be marked as
+        anomalies. Used as positive and negative threshold
+        unless `threshold_low` is specified.
+    threshold_low : Optional[int], optional
+        The threshhold below which values will be reported
+        as anomalies, by default None.
+
+    Returns
+    -------
+    pd.DataFrame
+        Output DataFrame with recalculated anomalies.
+
+    """
+    threshold_low = threshold_low or threshold
+    new_df = data.assign(newanomalies=0)
+    new_df.loc[new_df["score"] >= threshold, "newanomalies"] = 1
+    new_df.loc[new_df["score"] <= -threshold_low, "newanomalies"] = -1
+    return new_df.drop(columns=["anomalies"]).rename(
+        columns={"newanomalies": "anomalies"}
+    )
