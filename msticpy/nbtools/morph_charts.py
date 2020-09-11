@@ -94,8 +94,8 @@ class MorphCharts:
                 "Query: ",
                 self.charts[chart_name]["Query"],
             )
-        except KeyError:
-            raise KeyError(f"Unknown chart {chart_name}")
+        except KeyError as key_err:
+            raise KeyError(f"Unknown chart {chart_name}") from key_err
 
     def search_charts(self, keyword):
         """
@@ -151,9 +151,9 @@ def _get_charts(path: str = "morph_charts") -> dict:
                     }
                 }
             )
-        except KeyError:
+        except KeyError as key_err:
             raise Exception(
                 f"{chart} description does not appear to be in the correct format."
-            )
+            ) from key_err
 
     return chart_details

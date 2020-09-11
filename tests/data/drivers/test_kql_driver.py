@@ -21,6 +21,7 @@ from msticpy.common.exceptions import (
     MsticpyKqlConnectionError,
     MsticpyNotConnectedError,
     MsticpyNoDataSourceError,
+    MsticpyDataQueryError,
 )
 from msticpy.data.data_providers import KqlDriver
 
@@ -235,10 +236,15 @@ def test_kql_query_failed(get_ipython):
     kql_driver = KqlDriver()
     kql_driver.connect(connection_str="la://connection")
 
-    output = io.StringIO()
-    with redirect_stdout(output):
+    with pytest.raises(MsticpyDataQueryError) as mp_ex:
         kql_driver.query("test query_failed")
-    check.is_in("Warning - query did", output.getvalue())
+    arg_str = "\n".join([str(arg) for arg in mp_ex.value.args])
+    check.is_in("Query:", arg_str)
+    check.is_in("test query_failed", arg_str)
+    check.is_in("Query failed", arg_str)
+    check.is_in(
+        "https://msticpy.readthedocs.io/en/latest/DataAcquisition.html", arg_str
+    )
 
 
 @patch(GET_IPYTHON_PATCH)

@@ -382,7 +382,7 @@ sources:
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Lateral%20Movement/ServiceAccountsPerformingRemotePS.txt"
     parameters:
   accessibility_persistence:
-    description: This query looks for persistence or priviledge escalation done using Windows Accessibility features.
+    description: This query looks for persistence or privilege escalation done using Windows Accessibility features.
     metadata:
     args:
       query: '

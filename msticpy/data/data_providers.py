@@ -297,7 +297,7 @@ class QueryProvider:
         Other Parameters
         ----------------
         kwargs :
-            passed to SelectItem constuctor.
+            passed to SelectItem constructor.
 
         Returns
         -------
@@ -386,7 +386,7 @@ class QueryProvider:
 
         # For now, just add all of the functions again (with any connect-time acquired
         # queries) - we could be more efficient than this but unless there are 1000s of
-        # queries it should not be noticable.
+        # queries it should not be noticeable.
         self._add_query_functions()
 
     @classmethod

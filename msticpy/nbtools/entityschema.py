@@ -226,7 +226,7 @@ class Entity(ABC):
         """
         return self.Type
 
-    # pylint: disable=bad-continuation, too-many-branches
+    # pylint: disable=too-many-branches
     @classmethod
     def instantiate_entity(  # noqa: C901
         cls, raw_entity: Mapping[str, Any]
