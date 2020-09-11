@@ -2,7 +2,7 @@ adal>=1.2.2
 attrs>=18.2.0
 azure-common>=1.1.18
 azure-mgmt-network>=2.7.0
-azure-mgmt-resource>=2.2.0,<=10.1.0
+azure-mgmt-resource>=2.2.0
 beautifulsoup4>=4.6.3
 bokeh>=1.4.0
 cryptography>=2.8
@@ -17,7 +17,7 @@ msrest>=0.6.0
 msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
-pandas>=0.25.0,<=1.0.5
+pandas>=0.25.0
 python-dateutil>=2.8.1
 pytz>=2019.2
 pyyaml>=3.13
