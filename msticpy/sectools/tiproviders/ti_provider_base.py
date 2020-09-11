@@ -700,6 +700,8 @@ def generate_items(
 
     """
     del obs_col, ioc_type_col
+
+    # pylint: disable=isinstance-second-argument-not-valid-type
     if isinstance(data, Iterable):
         for item in data:
             yield item, TIProvider.resolve_ioc_type(item)

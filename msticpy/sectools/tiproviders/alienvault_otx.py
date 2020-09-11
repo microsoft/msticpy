@@ -70,7 +70,7 @@ class OTX(HttpProvider):
 
     def __init__(self, **kwargs):
         """Set OTX specific settings."""
-        super(OTX, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.require_url_encoding = True
 
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
