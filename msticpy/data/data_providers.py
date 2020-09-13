@@ -18,6 +18,7 @@ from .drivers import (
     MDATPDriver,
     LocalDataDriver,
     SplunkDriver,
+    SumologicDriver,
 )
 from .query_store import QueryStore
 from .query_container import QueryContainer
@@ -39,6 +40,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MDATP: MDATPDriver,
     DataEnvironment.LocalData: LocalDataDriver,
     DataEnvironment.Splunk: SplunkDriver,
+    DataEnvironment.Sumologic: SumologicDriver,
 }
 
 
