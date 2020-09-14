@@ -14,9 +14,7 @@ class MsticpyVTNoDataError(Exception):
 
 
 class VTEntityType(Enum):
-    """
-    VTEntityType: Enum class for VirusTotal entity types
-    """
+    """VTEntityType: Enum class for VirusTotal entity types."""
 
     FILE = "file"
     DOMAIN = "domain"
@@ -48,9 +46,7 @@ class VTObjectProperties(Enum):
 
 
 class VTLookupV3:
-    """
-    VTLookupV3: VirusTotal lookup of IoC reports.
-    """
+    """VTLookupV3: VirusTotal lookup of IoC reports."""
 
     _SUPPORTED_VT_TYPES: Set[VTEntityType] = {
         VTEntityType.FILE,
@@ -93,6 +89,7 @@ class VTLookupV3:
         -------
         List[str]:
             List of VirusTotal supported IoC type names.
+
         """
         return [str(i_type) for i_type in self._SUPPORTED_VT_TYPES]
 
@@ -140,13 +137,14 @@ class VTLookupV3:
         ----------
         vt_key: str
             VirusTotal API key
+
         """
         self._vt_key = vt_key
         self._vt_client = vt.Client(apikey=vt_key)
 
     def lookup_ioc(self, observable: str, vt_type: str) -> pd.DataFrame:
         """
-        Look up and single IoC observable
+        Look up and single IoC observable.
 
         Parameters
         ----------
@@ -163,8 +161,8 @@ class VTLookupV3:
         ------
         KeyError
             Unknown vt_type
-        """
 
+        """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             raise KeyError(f"Property type {vt_type} not supported")
 
@@ -188,7 +186,7 @@ class VTLookupV3:
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
     ):
         """
-        Look up and multiple IoC observable
+        Look up and multiple IoC observables.
 
         Parameters
         ----------
@@ -197,7 +195,7 @@ class VTLookupV3:
         observable_column:
             ID column of each observable
         observable_type_column:
-            Type column of each observable.
+            Type column of each observable
 
         Returns
         -------
@@ -207,8 +205,8 @@ class VTLookupV3:
         ------
         KeyError
             Column not found in observables_df
-        """
 
+        """
         _observables_df = observables_df.reset_index()
 
         for column in [observable_column, observable_type_column]:
@@ -239,7 +237,7 @@ class VTLookupV3:
         self, observable: str, vt_type: str, relationship: str, limit: int = None
     ) -> pd.DataFrame:
         """
-        Look up and single IoC observable relationships
+        Look up and single IoC observable relationships.
 
         Parameters
         ----------
@@ -260,6 +258,7 @@ class VTLookupV3:
         ------
         KeyError
             Unknown vt_type
+
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             raise KeyError(f"Property type {vt_type} not supported")
@@ -331,11 +330,11 @@ class VTLookupV3:
         limit: int = None,
     ) -> pd.DataFrame:
         """
-         Look up and single IoC observable relationships
+        Look up and single IoC observable relationships.
 
-         Parameters
-         ----------
-         observables_df: pd.DataFrame
+        Parameters
+        ----------
+        observables_df: pd.DataFrame
             A Pandas DataFrame, where each row is an observable
         relationship: str
             Desired relationship
@@ -346,16 +345,16 @@ class VTLookupV3:
         limit: int
             Relations limit
 
-         Returns
-         -------
-             Relationship Pandas DataFrame with the relationships of each observable.
+        Returns
+        -------
+            Relationship Pandas DataFrame with the relationships of each observable.
 
-         Raises
-         ------
-         KeyError
-             Column not found in observables_df
+        Raises
+        ------
+        KeyError
+            Column not found in observables_df
+
         """
-
         _observables_df = observables_df.reset_index()
 
         for column in [observable_column, observable_type_column]:
@@ -390,7 +389,7 @@ class VTLookupV3:
         self, relationship_dfs: List[pd.DataFrame], name: str, private: bool = True
     ) -> str:
         """
-        Creates a VirusTotal Graph with a set of Relationship DataFrames.
+        Create a VirusTotal Graph with a set of Relationship DataFrames.
 
         Parameters
         ----------
@@ -406,7 +405,9 @@ class VTLookupV3:
             Graph ID
 
         Raises
+        ------
             ValueError when there are no relationship DataFrames
+
         """
         if len(relationship_dfs) == 0:
             raise ValueError("There are no relationship DataFrames")
@@ -464,7 +465,7 @@ class VTLookupV3:
     @staticmethod
     def render_vt_graph(graph_id: str, width: int = 800, height: int = 600):
         """
-        Displays a VTGraph in a Jupyter Notebook
+        Display a VTGraph in a Jupyter Notebook.
 
         Parameters
         ----------
@@ -474,6 +475,7 @@ class VTLookupV3:
             Graph width.
         height
             Graph height
+
         """
         display(
             HTML(
