@@ -174,7 +174,7 @@ class VTLookupV3:
                 f"/{endpoint_name}/{observable}"
             )
             return self._parse_vt_object(response)
-        except Exception as err:
+        except vt.APIError as err:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
@@ -222,7 +222,7 @@ class VTLookupV3:
             try:
                 ioc_df = self.lookup_ioc(observable, observable_type)
                 dfs.append(ioc_df)
-            except:
+            except KeyError:
                 print(
                     "ERROR\t It was not possible to obtain results for",
                     f"{observable_type} {observable}",
@@ -278,7 +278,7 @@ class VTLookupV3:
                     if relationship in relationships
                     else 0
                 )
-            except:
+            except KeyError:
                 print(
                     f"ERROR: Could not obtain relationship limit for {vt_type} {observable}"
                 )
@@ -313,7 +313,7 @@ class VTLookupV3:
                 result_df.set_index(
                     [ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True
                 )
-        except Exception as err:
+        except vt.APIError as err:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
@@ -372,7 +372,7 @@ class VTLookupV3:
                     observable, observable_type, relationship, limit
                 )
                 dfs.append(result_df)
-            except:
+            except KeyError:
                 print(
                     "ERROR:\t It was not possible to get the data for",
                     f"{observable_type} {observable}",
