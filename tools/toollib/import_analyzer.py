@@ -46,6 +46,8 @@ _PKG_RENAME_NAME = {
     "bs4": "beautifulsoup4",
     "dateutil": "python-dateutil",
     "splunklib": "splunk-sdk",
+    "vt": "vt-py",
+    "vt_graph_api": "vt-graph-api",
 }
 
 
