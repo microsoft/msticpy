@@ -9,3 +9,4 @@ Querying and Importing Data
    data_acquisition/DataQueries
    data_acquisition/CollectingLinuxAuditLogs
    data_acquisition/UploadData
+   data_acquisition/DataObfuscation
