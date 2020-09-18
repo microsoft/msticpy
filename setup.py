@@ -18,7 +18,7 @@ INSTALL_REQUIRES = [
     "azure-identity>=1.3.0",
     "azure-keyvault-secrets>=4.0.0",
     "azure-mgmt-compute>=4.6.2",
-    "azure-mgmt-keyvault>=2.0.0",
+    "azure-mgmt-keyvault>=2.0.0,<=2.2.0",
     "azure-mgmt-monitor>=0.5.2,<=0.11.0",
     "azure-mgmt-network>=2.7.0",
     "azure-mgmt-resource>=2.2.0,<=10.1.0",
