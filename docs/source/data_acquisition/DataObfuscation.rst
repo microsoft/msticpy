@@ -497,3 +497,82 @@ something like an email address in the output.
 You use *hash_item* in your Custom Mapping dictionary by specifying a
 delimiters string as the *operation*.
 
+Checking Your Obfuscation
+-------------------------
+
+Use the :py:func:`check_obfuscation<msticpy.data.data_obfus.check_obfuscation>`
+function to ensure that you have obfuscated all of the data columns that
+you need.
+
+Use `silent=False` to print out the results.
+If you use `silent=True` (the default) it will return 2 lists of `unchanged` and
+`obfuscated` columns.
+
+.. note:: by default this will check only the first row of the data.
+   You can check other rows using the index parameter.
+
+.. warning:: The two DataFrames should have a matching index and ordering because
+   the check works by comparing the values in each column, judging that
+   column values that do not match have been obfuscated.
+
+
+We create partially and fully obfuscated DataFrames to test and run the
+check against the first of these. We can see that several important columns
+are listed as unchanged.
+
+.. code:: ipython3
+
+    partly_obfus_df = netflow_df.head(3).mp_obf.obfuscate()
+    fully_obfus_df = netflow_df.head(3).mp_obf.obfuscate(column_map=col_map)
+
+    data_obfus.check_obfuscation(partly_obfus_df, netflow_df.head(3), silent=False)
+
+.. parsed-literal::
+
+    ===== Start Check ====
+    Unchanged columns:
+    ------------------
+    AllExtIPs: 65.55.44.109
+    FlowStartTime: 2019-02-12 13:00:07.000
+    L4Protocol: T
+    PublicIPs: ['65.55.44.109']
+    TimeGenerated: 2019-02-12 14:22:40.697
+    VMIPAddress: 10.0.3.5
+    VMName: msticalertswin1
+
+    Obfuscated columns:
+    --------------------
+    DestIP:   nan ----> nan
+    ResourceGroup:   asihuntomsworkspacerg ----> ibmkajbmepnmiaeilfofa
+    SrcIP:   nan ----> nan
+    TenantId:   52b1ab41-869e-4138-9e40-2a4457f09bf0 ----> 56260b2e-9d3f-4ad9-8e65-e4a9230fd5aa
+    ====== End Check =====
+
+
+Test the fully obfuscated data, we can see that all desired columns have
+been transformed.
+
+.. code:: ipython3
+
+    data_obfus.check_obfuscation(fully_obfus_df, netflow_df.head(3), silent=False)
+
+.. parsed-literal::
+
+    ===== Start Check ====
+    Unchanged columns:
+    ------------------
+    FlowStartTime: 2019-02-12 13:00:07.000
+    L4Protocol: T
+    TimeGenerated: 2019-02-12 14:22:40.697
+
+    Obfuscated columns:
+    --------------------
+    AllExtIPs:   65.55.44.109 ----> 239.3.143.131
+    DestIP:   nan ----> nan
+    PublicIPs:   ['65.55.44.109'] ----> ['239.3.143.131']
+    ResourceGroup:   asihuntomsworkspacerg ----> ibmkajbmepnmiaeilfofa
+    SrcIP:   nan ----> nan
+    TenantId:   52b1ab41-869e-4138-9e40-2a4457f09bf0 ----> 56260b2e-9d3f-4ad9-8e65-e4a9230fd5aa
+    VMIPAddress:   10.0.3.5 ----> 224.21.98.125
+    VMName:   msticalertswin1 ----> fmlmbnlpdcbnbnn
+    ====== End Check =====
