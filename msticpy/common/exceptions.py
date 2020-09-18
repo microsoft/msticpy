@@ -329,7 +329,7 @@ class MsticpyConnectionError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "DataProviders",
-        "https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html",
     )
 
 
@@ -338,7 +338,7 @@ class MsticpyKqlConnectionError(MsticpyUserError):
 
     DEF_HELP_URI = (
         "Connecting to Azure Sentinel",
-        "https://msticpy.readthedocs.io/en/latest/DataProviders.html"
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
         + "#connecting-to-an-azure-sentinel-workspace",
     )
 

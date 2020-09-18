@@ -147,3 +147,10 @@ msticpy.data.drivers.splunk\_driver module
     :members:
     :undoc-members:
     :show-inheritance:
+
+msticpy.data.data\_obfus
+------------------------
+.. automodule:: msticpy.data.data_obfus
+    :members:
+    :undoc-members:
+    :show-inheritance:
