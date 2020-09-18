@@ -317,7 +317,7 @@ def obfuscate_df(
         Obfuscated dataframe.
 
     """
-    col_map = OBFUS_COL_MAP if use_default else {}
+    col_map = OBFUS_COL_MAP.copy() if use_default else {}
     if column_map is not None:
         col_map.update(column_map)
 

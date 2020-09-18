@@ -168,7 +168,7 @@ Connecting to a Data Environment
 --------------------------------
 
 Once we have instantiated the query
-provider and loaded the relevent driver we can connect to the Data
+provider and loaded the relevant driver we can connect to the Data
 Environment. This is done by calling the connect() function of the Query
 Provider we just initialized and passing it a connection string to use.
 
@@ -219,7 +219,7 @@ Configuration in *config.json*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you load a notebook from the Azure Sentinel UI (either in Azure Notebooks
-or in an Azure Machine Learing Workspace) a configuration file *config.json*
+or in an Azure Machine Learning Workspace) a configuration file *config.json*
 is provisioned for you with the details of the source workspace populated in
 the file. An example is shown here.
 
