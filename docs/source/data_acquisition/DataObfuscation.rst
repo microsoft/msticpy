@@ -5,7 +5,7 @@ Sharing data, creating documents and doing public demonstrations often
 require that data containing PII or other sensitive material be
 obfuscated.
 
-MSTICPy contains a simple library to obfuscation data using hashing and
+MSTICPy contains a simple library to obfuscate data using hashing and
 random mapping of values. You can use these functions on a single data
 items or entire DataFrames.
 
