@@ -6,19 +6,28 @@
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from typing import Optional, Dict, Tuple
 import datetime
+import os
 
 import attr
 import pandas as pd
 import numpy as np
 
-from azure.common.credentials import ServicePrincipalCredentials
+
+from msrest.authentication import BasicTokenAuthentication
+from azure.core.pipeline.policies import BearerTokenCredentialPolicy
+from azure.core.pipeline import PipelineRequest, PipelineContext
+from azure.core.pipeline.transport import HttpRequest
+from azure.identity import DefaultAzureCredential
+
+# from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.monitor import MonitorManagementClient
+from azure.mgmt.monitor import MonitorClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
+
 
 from ..common.exceptions import (
     MsticpyAzureConfigError,
@@ -35,7 +44,7 @@ _CLIENT_MAPPING = {
     "sub_client": SubscriptionClient,
     "resource_client": ResourceManagementClient,
     "network_client": NetworkManagementClient,
-    "monitoring_client": MonitorManagementClient,
+    "monitoring_client": MonitorClient,
     "compute_client": ComputeManagementClient,
 }
 
@@ -99,11 +108,11 @@ class AzureData:
     def __init__(self, connect: bool = False):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
-        self.credentials: Optional[ServicePrincipalCredentials] = None
+        self.credentials: Optional[DefaultAzureCredential] = None
         self.sub_client: Optional[SubscriptionClient] = None
         self.resource_client: Optional[ResourceManagementClient] = None
         self.network_client: Optional[NetworkManagementClient] = None
-        self.monitoring_client: Optional[MonitorManagementClient] = None
+        self.monitoring_client: Optional[MonitorClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
         if connect is True:
             self.connect()
@@ -122,9 +131,9 @@ class AzureData:
                 )
             config_items = az_cli_config.args
             try:
-                client_id = config_items["clientId"]
-                tenant_id = config_items["tenantId"]
-                secret = config_items["clientSecret"]
+                os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
+                os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
+                os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
             except KeyError as key_err:
                 key_name = key_err.args[0]
                 raise MsticpyAzureConfigError(
@@ -133,12 +142,11 @@ class AzureData:
                     title="missing f{key_name} settings for AzureCLI.",
                 ) from key_err
         # Create credentials and connect to the subscription client to validate
-        self.credentials = ServicePrincipalCredentials(
-            client_id=client_id, secret=secret, tenant=tenant_id
-        )
+        self.credentials = DefaultAzureCredential()
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
-        self.sub_client = SubscriptionClient(self.credentials)
+        self._check_client("sub_client")
+        # self.sub_client = SubscriptionClient(CredentialWrapper(self.credentials))
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
         self.connected = True
@@ -155,7 +163,18 @@ class AzureData:
         subscription_ids = []
         display_names = []
         states = []
-        for item in self.sub_client.subscriptions.list():  # type: ignore
+        # pylint: disable=unnecessary-comprehension
+        try:
+            sub_list = [
+                sub for sub in self.sub_client.subscriptions.list()  # type: ignore
+            ]
+        except AttributeError:
+            self._legacy_auth("sub_client")
+            sub_list = [
+                sub for sub in self.sub_client.subscriptions.list()  # type: ignore
+            ]
+
+        for item in sub_list:  # type: ignore
             subscription_ids.append(item.subscription_id)
             display_names.append(item.display_name)
             states.append(str(item.state))
@@ -186,8 +205,12 @@ class AzureData:
                 help_uri=MsticpyAzureConfigError.DEF_HELP_URI,
                 title="Please call connect() before continuing.",
             )
+        try:
+            sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
+        except AttributeError:
+            self._legacy_auth("sub_client")
+            sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
 
-        sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
         sub_details = {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
@@ -199,7 +222,7 @@ class AzureData:
 
         return sub_details
 
-    def get_resources(
+    def get_resources(  # noqa: MC0001
         self, sub_id: str, rgroup: str = None, get_props: bool = False
     ) -> pd.DataFrame:
         """
@@ -231,12 +254,22 @@ class AzureData:
 
         self._check_client("resource_client", sub_id)
 
+        # pylint: disable=unnecessary-comprehension
+        try:
+            [r for r in self.resource_client.resources.list()]  # type: ignore
+        except AttributeError:
+            self._legacy_auth("resource_client", sub_id)
+
         if rgroup is None:
-            resources = self.resource_client.resources.list()  # type: ignore
+            # pylint: disable=line-too-long
+            resources = [resource for resource in self.resource_client.resources.list()]  # type: ignore
         else:
-            resources = self.resource_client.resources.list_by_resource_group(  # type: ignore
-                rgroup
-            )
+            resources = [
+                resource
+                for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
+                    rgroup
+                )
+            ]
 
         # Warn users about getting full properties for each resource
         if get_props is True:
@@ -289,7 +322,7 @@ class AzureData:
 
         return resource_df
 
-    def get_resource_details(
+    def get_resource_details(  # noqa: MC0001
         self, sub_id: str, resource_id: str = None, resource_details: dict = None
     ) -> dict:
         """
@@ -326,29 +359,52 @@ class AzureData:
 
         # If a resource id is provided use get_by_id to get details
         if resource_id is not None:
-            resource = self.resource_client.resources.get_by_id(  # type: ignore
-                resource_id, api_version=self._get_api(resource_id)
-            )
+            try:
+                resource = self.resource_client.resources.get_by_id(  # type: ignore
+                    resource_id, api_version=self._get_api(resource_id)
+                )
+            except AttributeError:
+                self._legacy_auth("resource_client", sub_id)
+                resource = self.resource_client.resources.get_by_id(  # type: ignore
+                    resource_id, api_version=self._get_api(resource_id)
+                )
             if resource.type == "Microsoft.Compute/virtualMachines":
                 state = self._get_compute_state(resource_id=resource_id, sub_id=sub_id)
             else:
                 state = None
         # If resource details are provided use get to get details
         elif resource_details is not None:
-            resource = self.resource_client.resources.get(  # type: ignore
-                resource_details["resource_group_name"],
-                resource_details["resource_provider_namespace"],
-                resource_details["parent_resource_path"],
-                resource_details["resource_type"],
-                resource_details["resource_name"],
-                api_version=self._get_api(
-                    resource_provider=(
-                        resource_details["resource_provider_namespace"]
-                        + "/"
-                        + resource_details["resource_type"]
-                    )
-                ),
-            )
+            try:
+                resource = self.resource_client.resources.get(  # type: ignore
+                    resource_details["resource_group_name"],
+                    resource_details["resource_provider_namespace"],
+                    resource_details["parent_resource_path"],
+                    resource_details["resource_type"],
+                    resource_details["resource_name"],
+                    api_version=self._get_api(
+                        resource_provider=(
+                            resource_details["resource_provider_namespace"]
+                            + "/"
+                            + resource_details["resource_type"]
+                        )
+                    ),
+                )
+            except AttributeError:
+                self._legacy_auth("resource_client", sub_id)
+                resource = self.resource_client.resources.get(  # type: ignore
+                    resource_details["resource_group_name"],
+                    resource_details["resource_provider_namespace"],
+                    resource_details["parent_resource_path"],
+                    resource_details["resource_type"],
+                    resource_details["resource_name"],
+                    api_version=self._get_api(
+                        resource_provider=(
+                            resource_details["resource_provider_namespace"]
+                            + "/"
+                            + resource_details["resource_type"]
+                        )
+                    ),
+                )
             state = None
         else:
             raise ValueError("Please provide either a resource ID or resource details")
@@ -373,7 +429,7 @@ class AzureData:
 
         return resource_details
 
-    def _get_api(
+    def _get_api(  # noqa: MC0001
         self, resource_id: str = None, sub_id: str = None, resource_provider: str = None
     ) -> str:
         """
@@ -432,7 +488,12 @@ class AzureData:
             )
 
         # Get list of API versions for the service
-        provider = self.resource_client.providers.get(namespace)  # type: ignore
+        try:
+            provider = self.resource_client.providers.get(namespace)  # type: ignore
+        except AttributeError:
+            self._legacy_auth("resource_client", sub_id)
+            provider = self.resource_client.providers.get(namespace)  # type: ignore
+
         resource_types = next(
             (t for t in provider.resource_types if t.resource_type == service), None
         )
@@ -481,9 +542,16 @@ class AzureData:
         self._check_client("network_client", sub_id)
 
         # Get interface details and parse relevent elements into a dataframe
-        details = self.network_client.network_interfaces.get(  # type: ignore
-            network_id.split("/")[4], network_id.split("/")[8]
-        )
+        try:
+            details = self.network_client.network_interfaces.get(  # type: ignore
+                network_id.split("/")[4], network_id.split("/")[8]
+            )
+        except AttributeError:
+            self._legacy_auth("network_client", sub_id)
+            details = self.network_client.network_interfaces.get(  # type: ignore
+                network_id.split("/")[4], network_id.split("/")[8]
+            )
+
         ips = []
         for ip in details.ip_configurations:  # pylint: disable=invalid-name
             ip_details = attr.asdict(
@@ -503,29 +571,31 @@ class AzureData:
 
         ip_df = pd.DataFrame(ips)
 
-        # Get NSG details and parse relevent elements into a dataframe
-        nsg_details = self.network_client.network_security_groups.get(  # type: ignore
-            details.network_security_group.id.split("/")[4],
-            details.network_security_group.id.split("/")[8],
-        )
-        nsg_rules = []
-        for nsg in nsg_details.default_security_rules:
-            rules = attr.asdict(
-                NsgItems(
-                    nsg.name,
-                    nsg.description,
-                    nsg.protocol,
-                    nsg.direction,
-                    nsg.source_port_range,
-                    nsg.destination_port_range,
-                    nsg.source_address_prefix,
-                    nsg.destination_address_prefix,
-                    nsg.access,
-                )
+        nsg_df = pd.DataFrame()
+        if details.network_security_group is not None:
+            # Get NSG details and parse relevent elements into a dataframe
+            nsg_details = self.network_client.network_security_groups.get(  # type: ignore
+                details.network_security_group.id.split("/")[4],
+                details.network_security_group.id.split("/")[8],
             )
-            nsg_rules.append(rules)
+            nsg_rules = []
+            for nsg in nsg_details.default_security_rules:
+                rules = attr.asdict(
+                    NsgItems(
+                        nsg.name,
+                        nsg.description,
+                        nsg.protocol,
+                        nsg.direction,
+                        nsg.source_port_range,
+                        nsg.destination_port_range,
+                        nsg.source_address_prefix,
+                        nsg.destination_address_prefix,
+                        nsg.access,
+                    )
+                )
+                nsg_rules.append(rules)
 
-        nsg_df = pd.DataFrame(nsg_rules)
+            nsg_df = pd.DataFrame(nsg_rules)
 
         return ip_df, nsg_df
 
@@ -592,7 +662,6 @@ class AzureData:
             metricnames=f"{metrics}",
             aggregation="Total",
         )
-
         results = {}
         # Create a dict of all the results returned
         for metric in mon_details.value:
@@ -644,26 +713,112 @@ class AzureData:
         name = r_details[r_details.index("virtualMachines") + 1]
 
         # Get VM instance details and return them
-        instance_details = self.compute_client.virtual_machines.instance_view(  # type: ignore
-            r_group, name
-        )
+        try:
+            instance_details = self.compute_client.virtual_machines.instance_view(  # type: ignore
+                r_group, name
+            )
+        except AttributeError:
+            self._legacy_auth("compute_client", sub_id)
+            instance_details = self.compute_client.virtual_machines.instance_view(  # type: ignore
+                r_group, name
+            )
+
         return instance_details
 
-    def _check_client(self, client_name: str, sub_id: str):
+    def _check_client(self, client_name: str, sub_id: str = None):
         """
         Check required client is present, if not create it.
 
         Parameters
         ----------
-        self:
-        client_name:
+        client_name : str
             The name of the client to be checked.
-        sub_id:
-            The subscription ID for the client to connect to.
+        sub_id : str, optional
+            The subscription ID for the client to connect to, by default None
 
         """
         client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
-            setattr(self, client_name, client(self.credentials, sub_id))
+            if sub_id is None:
+                setattr(self, client_name, client(self.credentials))
+            else:
+                setattr(self, client_name, client(self.credentials, sub_id))
+
             if getattr(self, client_name) is None:
                 raise CloudError("Could not create client")
+
+    def _legacy_auth(self, client_name: str, sub_id: str = None):
+        """
+        Create client with v1 authentication token.
+
+        Parameters
+        ----------
+        client_name : str
+            The name of the client to be checked.
+        sub_id : str, optional
+            The subscription ID for the client to connect to, by default None
+
+        """
+        client = _CLIENT_MAPPING[client_name]
+        if sub_id is None:
+            setattr(self, client_name, client(CredentialWrapper(self.credentials)))
+        else:
+            setattr(
+                self, client_name, client(CredentialWrapper(self.credentials), sub_id)
+            )
+
+
+# Class to extract v1 authentication token from DefaultAzureCredential object.
+# Credit - https://gist.github.com/lmazuel/cc683d82ea1d7b40208de7c9fc8de59d
+class CredentialWrapper(BasicTokenAuthentication):
+    """Class for handling legacy auth conversion."""
+
+    def __init__(
+        self,
+        credential=None,
+        resource_id="https://management.azure.com/.default",
+        **kwargs,
+    ):
+        """
+        Wrap any azure-identity credential to work with SDK that needs azure.common.credentials.
+
+        Parameters
+        ----------
+        credential : [type], optional
+            Any azure-identity credential, by default DefaultAzureCredential
+        resource_id : str, optional
+            The scope to use to get the token, by default "https://management.azure.com/.default"
+
+        """
+        super(CredentialWrapper, self).__init__(None)
+        if credential is None:
+            credential = DefaultAzureCredential()
+        self._policy = BearerTokenCredentialPolicy(credential, resource_id, **kwargs)
+
+    def set_token(self):
+        """
+        Ask the azure-core BearerTokenCredentialPolicy policy to get a token.
+
+        Using the policy gives us for free the caching system of azure-core.
+        We could make this code simpler by using private method, but by definition
+        I can't assure they will be there forever, so mocking a fake call to the policy
+        to extract the token, using 100% public API.
+
+        """
+        request = _make_request()
+        self._policy.on_request(request)
+        # Read Authorization, and get the second part after Bearer
+        token = request.http_request.headers["Authorization"].split(" ", 1)[1]
+        self.token = {"access_token": token}
+
+    def signed_session(self, session=None):
+        """Wrap signed session object."""
+        self.set_token()
+        return super(CredentialWrapper, self).signed_session(session)
+
+
+def _make_request():
+    """Make mocked request to get token."""
+    return PipelineRequest(
+        HttpRequest("CredentialWrapper", "https://fakeurl"), PipelineContext(None)
+    )

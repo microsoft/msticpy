@@ -31,7 +31,7 @@ def test_azure_connect_exp():
 
 
 @patch(AzureData.__module__ + ".SubscriptionClient")
-@patch(AzureData.__module__ + ".ServicePrincipalCredentials")
+@patch(AzureData.__module__ + ".DefaultAzureCredential")
 def test_azure_connect(mock_sub_client, mock_creds):
     mock_sub_client.return_value = "Client"
     mock_creds.return_value = "Creds"
