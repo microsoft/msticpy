@@ -46,6 +46,13 @@ _TEST_DATA = {
             True,
         ),
         ("not_an_ip_192.168.1.2", True),
+        ("127.000.000.001", False),
+        ("0.0.0.0", False),  # nosec
+        ("10.1.23.456", True),
+        ("17.16.23.456", True),
+        ("17.1.23.456", True),
+        ("192.168.1.20", True),
+        ("1.1.1.1", True),
     ],
     "hash_list": [
         (["a", "b", "c"], True),
@@ -70,6 +77,16 @@ _TEST_DATA = {
         ("f93786b9-870f-4681-a4e7-2f81b10964a2", True),
         ("352f9e97-7d04-4f2b-b27f-2d9625c78dd1", True),
         ("be3d40b1-f317-4843-9010-a6cbe10dff00", True),
+    ],
+    "hash_account": [
+        ("NT AUTHORITY/SYSTEM", False),
+        ("someone@domain.com", True),
+        ("root", False),
+        ("CONTOSO\\my_admin", True),
+        ("NT AUTHORITY", False),
+        ("LOCAL SERVICE", False),
+        ("network service", False),
+        ("network disservice", True),
     ],
 }
 
@@ -105,6 +122,19 @@ def test_hash_ip(test_input, expected):
     else:
         check.equal((test_input != result), expected)
 
+    if not isinstance(test_input, str):
+        return
+    if test_input.startswith("10."):
+        check.is_true(result.startswith("10."))
+    if test_input.startswith("17.16."):
+        check.is_true(result.startswith("17.16."))
+    if test_input.startswith("17.1."):
+        check.is_false(result.startswith("17.1."))
+    if test_input.startswith("192.168"):
+        check.is_true(result.startswith("192.168"))
+    if test_input == "1.1.1.1":
+        check.is_true(len(set(result.split("."))) > 1)
+
 
 @pytest.mark.parametrize("test_input, expected", _TEST_DATA["hash_list"])
 def test_hash_list(test_input, expected):
@@ -130,6 +160,16 @@ def test_hash_sid(test_input, expected):
 
     if test_input != result:
         check.equal(test_input.split("-")[-1], result.split("-")[-1])
+
+
+@pytest.mark.parametrize("test_input, expected", _TEST_DATA["hash_account"])
+def test_hash_acct(test_input, expected):
+    """Test hash Account function."""
+    result = data_obfus.hash_account(test_input)
+    check.equal(test_input != result, expected)
+
+    if test_input != result:
+        check.is_in("account-#", result)
 
 
 @pytest.mark.parametrize("test_input, expected", _TEST_DATA["repl_uuid"])

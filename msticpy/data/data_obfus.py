@@ -26,16 +26,6 @@ else:
     for data_col_map in _obfus_dicts.values():
         OBFUS_COL_MAP.update(data_col_map)
 
-# SHA256 instance for hashing
-sha_func = hashlib.sha256()
-
-# Create a random map for shuffling IP address components
-rng = np.random.default_rng()
-ip_list = [str(n) for n in np.arange(256)]
-rand_list = ip_list.copy()
-rng.shuffle(rand_list)
-ip_map = dict(zip(ip_list, rand_list))
-
 
 def hash_string(input_str: str) -> str:
     """
@@ -99,6 +89,16 @@ def hash_item(input_item: str, delim: str = None) -> str:
     return out_str
 
 
+# Create a random map for shuffling IP address components
+ip_map: List[Dict[str, str]] = []
+for _ in range(4):
+    rng = np.random.default_rng()
+    ip_list = [str(n) for n in np.arange(256)]
+    rand_list = ip_list.copy()
+    rng.shuffle(rand_list)
+    ip_map.append(dict(zip(ip_list, rand_list)))
+
+
 @lru_cache(maxsize=1024)
 def _hash_ip_item(ip_addr: str) -> str:
     """
@@ -118,14 +118,61 @@ def _hash_ip_item(ip_addr: str) -> str:
     if not ip_addr or not isinstance(ip_addr, str):
         return ip_addr
     if "." in ip_addr:
-        return ".".join([ip_map.get(byte, "1") for byte in ip_addr.split(".")])
+        return _map_ip4_address(ip_addr)
     if ":" in ip_addr:
+        if ip_addr.strip() == "::1":
+            # Localhost
+            return ip_addr
         ip_out = []
         for part in ip_addr.split(":"):
             enc = hashlib.sha256(bytes(part, "utf-8")).hexdigest()[: len(part)]
             ip_out.append(enc)
         return ":".join(ip_out)
     return hashlib.sha256(bytes(ip_addr, "utf-8")).hexdigest()[: len(ip_addr)]
+
+
+_WK_IPV4 = set(["0.0.0.0", "127.0.0.1", "255.255.255.255"])  # nosec
+
+
+def _map_ip4_address(ip_addr: str) -> str:
+    try:
+        ip_bytes = [int(byte) for byte in ip_addr.split(".")]
+    except ValueError:
+        return hash_string(ip_addr)
+    if ".".join(str(byte) for byte in ip_bytes) in _WK_IPV4:
+        # Well-known address
+        return ip_addr
+    if ip_bytes[0] == 10:
+        # class A res private
+        ls_bytes = ".".join(
+            [
+                ip_map[idx].get(byte, "1")
+                for idx, byte in enumerate(ip_addr.split(".")[1:])
+            ]
+        )
+        return f"10.{ls_bytes}"
+    if ip_bytes[0] == 17 and (16 <= ip_bytes[1] <= 31):
+        # class B res private
+        ls_bytes = ".".join(
+            [
+                ip_map[idx].get(byte, "1")
+                for idx, byte in enumerate(ip_addr.split(".")[2:])
+            ]
+        )
+        return f"{ip_bytes[0]}.{ip_bytes[1]}.{ls_bytes}"
+    if ip_bytes[0] == 192 and ip_bytes[1] == 168:
+        # class C res private
+        ls_bytes = ".".join(
+            [
+                ip_map[idx].get(byte, "1")
+                for idx, byte in enumerate(ip_addr.split(".")[2:])
+            ]
+        )
+        return f"192.168.{ls_bytes}"
+    # by default, remap all
+    return ".".join(
+        [ip_map[idx].get(byte, "1") for idx, byte in enumerate(ip_addr.split("."))]
+    )
 
 
 def hash_ip(input_item: Union[List[str], str]) -> Union[List[str], str]:
@@ -239,6 +286,60 @@ def hash_sid(sid: str) -> str:
     return sid
 
 
+_WK_ACCOUNTS = set(
+    [
+        "administrator",
+        "guest",
+        "system",
+        "local service",
+        "network service",
+        "root",
+        "crontab",
+        "nt authority",
+    ]
+)
+
+
+@lru_cache(maxsize=1024)
+def hash_account(account: str) -> str:
+    """
+    Hash an Account to something recognizable.
+
+    Parameters
+    ----------
+    account : str
+        Account name (UPN, NT or simple name)
+
+    Returns
+    -------
+    str
+        Hashed Account
+
+    """
+    if "@" in account:
+        acct_type = "UPN"
+        user, domain = account.split("@")
+    elif "/" in account:
+        acct_type = "NT"
+        domain, user = account.split("/")
+    else:
+        acct_type = "NO DOM"
+        user, domain = account, ""
+
+    if user.lower() not in _WK_ACCOUNTS:
+        user_hash = hashlib.sha256(bytes(user, "utf-8")).digest()
+        user_num = sum(user_hash[:16]) * sum(user_hash[16:]) // 199
+        user = f"account-#{user_num}"
+    if domain.lower() not in _WK_ACCOUNTS:
+        domain = hash_item(domain, ".")
+
+    if acct_type == "UPN":
+        return f"{user}@{domain}"
+    if acct_type == "NT":
+        return f"{domain}/{user}"
+    return user
+
+
 def _guid_replacer() -> Callable[[str], str]:
     """
     Closure for replace_guid.
@@ -291,6 +392,7 @@ MAP_FUNCS: Dict[str, Union[str, Callable]] = {
     "dict": hash_dict,
     "list": hash_list,
     "sid": hash_sid,
+    "acct": hash_account,
     "null": "null",
 }
 
