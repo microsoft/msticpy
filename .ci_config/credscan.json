@@ -10,6 +10,10 @@
             "_justification": "This is a code usage example and does not contain a secret."
         },
         {
+            "file": "UploadData.rst.txt",
+            "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
             "file": "msticpyconfig.rst.txt",
             "_justification": "This is acode usage example and does not contain a secret."
         },
@@ -20,6 +24,11 @@
         {
             "file": "test_splunk_uploader.py",
             "_justification": "This is a test case and does not contain a secret."
+        },
+        {
+            "file": "msticpyconfig.yaml",
+            "_justification": "This is a test case and does not contain a secret."
         }
+
     ]
 }
