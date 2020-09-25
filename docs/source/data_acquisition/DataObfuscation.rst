@@ -166,6 +166,16 @@ reserved private addresses are preserved.
     > hash_ip('['192.168.3.1', '192.168.5.2', '192.168.10.2']')
     ['160.21.239.194', '160.21.103.84', '160.21.149.84']
 
+    > hash_ip("127.0.0.1")
+    '127.0.0.1'
+
+    # private network prefixes preserved
+    > hash_ip("10.1.23.456")
+    '10.19.74.1'
+
+    > hash_ip("192.168.23.456")
+    '192.168.80.1'
+
 
 hash_sid
 ~~~~~~~~
@@ -213,27 +223,36 @@ It preserves built-in accounts such as "root", "SYSTEM", etc.
 .. parsed-literal::
 
 
-    Hash a SID preserving well-known SIDs and the RID.
+    Hash an Account to something recognizable.
 
     Parameters
     ----------
-    sid : str
-        SID string
+    account : str
+        Account name (UPN, NT or simple name)
 
     Returns
     -------
     str
-        Hashed SID
+        Hashed Account
 
 **Examples**
 
 .. code:: ipython3
 
-    > hash_sid('S-1-5-21-1180699209-877415012-3182924384-1004')
-    S-1-5-21-3321821741-636458740-4143214142-1004
+    > hash_account("ian@mydomain.com")
+    'account-#21786@blbbrfbk.pjb'
 
-    > hash_sid('S-1-5-18')
-    S-1-5-18
+    > hash_account("NT AUTHORITY/SYSTEM")
+    'NT AUTHORITY/SYSTEM'
+
+    > hash_account("sams_linux_user")
+    'account-#26953'
+
+    > hash_account("local service")
+    'local service'
+
+    hash_account("root")
+    'root'
 
 
 hash_list
