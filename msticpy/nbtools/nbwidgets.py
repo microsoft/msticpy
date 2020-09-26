@@ -740,6 +740,7 @@ class GetEnvironmentKey(RegisteredWidget):
         """
         env_val = os.environ.get(env_var)
         self._name = env_var
+        self._value = ""
 
         # Call superclass to register
         super().__init__(id_vals=[env_var, prompt], val_attrs=["_value"], **kwargs)
@@ -748,6 +749,7 @@ class GetEnvironmentKey(RegisteredWidget):
         # variable is set override with this value.
         if env_val is not None:
             self._value = env_val
+
         if not self._value and help_str is not None:
             display(widgets.HTML(value=help_str))
 
@@ -790,8 +792,9 @@ class GetEnvironmentKey(RegisteredWidget):
 
     def _on_save_button_clicked(self, button):
         del button
+        self._value = self._w_text.value.strip()
         if self._w_check_save.value:
-            os.environ[self._name] = self._w_text.value.strip()
+            os.environ[self._name] = self._value
 
     def _ipython_display_(self):
         """Display in IPython."""
