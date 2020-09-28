@@ -7,10 +7,14 @@ from IPython.display import HTML, display
 
 import vt
 from vt_graph_api import VTGraph
+from vt_graph_api import errors as VTGraphErrors
 
 
 class MsticpyVTNoDataError(Exception):
     """No data returned from VT API."""
+
+class MsticpyVTGraphSaveGraphError(Exception):
+    """Could not save VT Garph."""
 
 
 class VTEntityType(Enum):
@@ -458,7 +462,14 @@ class VTLookupV3:
                 target_node=row[ColumnNames.TARGET.value],
                 connection_type=row[ColumnNames.RELATIONSHIP_TYPE.value],
             )
-        graph.save_graph()
+        try:
+            graph.save_graph()
+        except VTGraphErrors.SaveGraphError:
+            raise MsticpyVTGraphSaveGraphError(
+                "Could not save Graph. %s" % "" if not private else
+                "Please check you have Private Graph premium feature enabled i "
+                "your subscription. It is possible to create public Graphs"
+                "with 'private=False' input argument")
 
         return graph.graph_id
 
