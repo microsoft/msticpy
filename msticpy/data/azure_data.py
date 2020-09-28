@@ -18,8 +18,6 @@ from azure.core.pipeline.policies import BearerTokenCredentialPolicy
 from azure.core.pipeline import PipelineRequest, PipelineContext
 from azure.core.pipeline.transport import HttpRequest
 from azure.identity import DefaultAzureCredential
-
-# from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
@@ -28,6 +26,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
+from ..common.azure_auth import az_connect
 
 from ..common.exceptions import (
     MsticpyAzureConfigError,
@@ -98,7 +97,7 @@ class InterfaceItems:
     subnet_nsg = attr.ib()
     subnet_route_table = attr.ib()
 
-
+# uncomment once circular dependencies fixed
 # pylint: enable=too-few-public-methods, too-many-instance-attributes
 
 
@@ -120,29 +119,32 @@ class AzureData:
     def connect(self, client_id: str = None, tenant_id: str = None, secret: str = None):
         """Authenticate with the SDK."""
         # Use details of msticpyyaml if not provided
-        if client_id is None and tenant_id is None and secret is None:
-            data_provs = get_provider_settings(config_section="DataProviders")
-            az_cli_config = data_provs.get("AzureCLI")
+        #if client_id is None and tenant_id is None and secret is None:
+            #data_provs = get_provider_settings(config_section="DataProviders")
+            #az_cli_config = data_provs.get("AzureCLI")
             # az_cli_config = config.settings.get("AzureCLI")
-            if not az_cli_config:
-                raise MsticpyAzureConfigError(
-                    "No AzureCLI section found in configuration settings.",
-                    title="no AzureCLI settings available.",
-                )
-            config_items = az_cli_config.args
-            try:
-                os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
-                os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
-                os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
-            except KeyError as key_err:
-                key_name = key_err.args[0]
-                raise MsticpyAzureConfigError(
-                    f"{key_name} is missing from AzureCLI section in your",
-                    "configuration.",
-                    title="missing f{key_name} settings for AzureCLI.",
-                ) from key_err
+            # if not az_cli_config:
+            #  raise MsticpyAzureConfigError(
+            #     "No AzureCLI section found in configuration settings.",
+            #     title="no AzureCLI settings available.",
+            # )
+
+            #try:
+            #    config_items = az_cli_config.args
+            #    os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
+            #    os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
+            #    os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
+            #except:
+            #    pass
+                # KeyError as key_err:
+                # key_name = key_err.args[0]
+                # raise MsticpyAzureConfigError(
+                #    f"{key_name} is missing from AzureCLI section in your",
+                #    "configuration.",
+                #    title="missing f{key_name} settings for AzureCLI.",
+                # ) from key_err
         # Create credentials and connect to the subscription client to validate
-        self.credentials = DefaultAzureCredential()
+        self.credentials = az_connect()
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
@@ -740,9 +742,9 @@ class AzureData:
         client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
             if sub_id is None:
-                setattr(self, client_name, client(self.credentials))
+                setattr(self, client_name, client(self.credentials.modern))
             else:
-                setattr(self, client_name, client(self.credentials, sub_id))
+                setattr(self, client_name, client(self.credentials.modern, sub_id))
 
             if getattr(self, client_name) is None:
                 raise CloudError("Could not create client")
@@ -761,11 +763,9 @@ class AzureData:
         """
         client = _CLIENT_MAPPING[client_name]
         if sub_id is None:
-            setattr(self, client_name, client(CredentialWrapper(self.credentials)))
+            setattr(self, client_name, client(self.credentials.legacy))
         else:
-            setattr(
-                self, client_name, client(CredentialWrapper(self.credentials), sub_id)
-            )
+            setattr(self, client_name, client(self.credentials.legacy, sub_id))
 
 
 # Class to extract v1 authentication token from DefaultAzureCredential object.

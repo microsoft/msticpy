@@ -33,6 +33,7 @@ from msrest.authentication import BasicTokenAuthentication
 from msrestazure.azure_exceptions import CloudError
 import pandas.io.clipboard as pyperclip
 
+from .azure_auth import az_connect
 from .exceptions import MsticpyKeyVaultConfigError, MsticpyKeyVaultMissingSecretError
 from . import pkg_config as config
 from .utility import export, is_ipython
@@ -716,18 +717,19 @@ class BHKeyVaultClient:
         self.kv_client = self._get_secret_client()
 
     def _get_secret_client(self):
-        if self.authn_type == "device":
-            authority = self.authority_uri.replace("https://", "")
-            credentials = DeviceCodeCredential(
-                client_id=self.settings.CLIENT_ID,
-                authority=authority,
-                prompt_callback=_device_code_callback,
-            )
-        else:
-            credentials = InteractiveBrowserCredential()
+        #if self.authn_type == "device":
+        #    authority = self.authority_uri.replace("https://", "")
+        #    credentials = DeviceCodeCredential(
+        #        client_id=self.settings.CLIENT_ID,
+        #        authority=authority,
+        #        prompt_callback=_device_code_callback,
+        #    )
+        #else:
+        #    credentials = InteractiveBrowserCredential()
+        credentials = az_connect()
 
         # Create a secret client
-        secret_client = SecretClient(self.vault_uri, credentials)
+        secret_client = SecretClient(self.vault_uri, credentials.modern)
         return secret_client
 
     @property
@@ -869,12 +871,13 @@ class BHKeyVaultMgmtClient:
                 + "specified in the KeyVault section of msticpyconfig.yaml",
                 title="no Azure Management URI for national cloud",
             )
-        self.auth_client = AuthClient(
-            tenant_id=self.tenant_id,
-            client_id=self.settings.CLIENT_ID,
-            client_uri=self._client_uri,
-            name="mgmt",
-        )
+        # self.auth_client = AuthClient(
+        #    tenant_id=self.tenant_id,
+        #    client_id=self.settings.CLIENT_ID,
+        #    client_uri=self._client_uri,
+        #    name="mgmt",
+        # )
+        self.auth_client = az_connect()
         self.resource_group = resource_group or self.settings.get("resourcegroup")
         self.azure_region = azure_region or self.settings.get("azureregion")
 
@@ -890,8 +893,8 @@ class BHKeyVaultMgmtClient:
             Vault names
 
         """
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
+        cred = BasicTokenAuthentication({"access_token": self.auth_client.legacy.token})
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
         return [v.name for v in mgmt.vaults.list()]
 
     def get_vault_uri(self, vault_name: str) -> str:
@@ -909,8 +912,8 @@ class BHKeyVaultMgmtClient:
             Vault URI.
 
         """
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
+        cred = BasicTokenAuthentication({"access_token": self.auth_client.legacy.token})
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
         try:
             vault = mgmt.vaults.get(self.resource_group, vault_name)
         except (CloudError, ResourceNotFoundError) as cloud_err:
@@ -918,7 +921,7 @@ class BHKeyVaultMgmtClient:
                 "Check that you have specified the right value for VaultName"
                 + " in your configuration",
                 f"Error returned from provider was {cloud_err}",
-                title="Key Vault vault '{vault_name}' not found.",
+                title=f"Key Vault vault '{vault_name}' not found.",
             ) from cloud_err
         return vault.properties.vault_uri
 
@@ -944,14 +947,14 @@ class BHKeyVaultMgmtClient:
                 title="missing AzureRegion value.",
             )
         parameters = self._get_params()
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
+        cred = BasicTokenAuthentication({"access_token": self.auth_client.legacy.token})
         if not self.resource_group:
             raise MsticpyKeyVaultConfigError(
                 "Could not get Azure resource group in which to create the vault.",
                 "Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml",
                 title="missing ResourceGroup value.",
             )
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
         vault = mgmt.vaults.create_or_update(
             self.resource_group, vault_name, parameters
         ).result()
@@ -959,7 +962,8 @@ class BHKeyVaultMgmtClient:
 
     def _get_params(self):
         """Build the vault parameters block."""
-        oid = self.auth_client.user_oid
+        # oid = self.auth_client.user_oid
+        oid = _user_oid(self.auth_client.legacy.token)
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]
         cert_perms_all = [perm.value for perm in CertificatePermissions]
@@ -1022,3 +1026,27 @@ def _prompt_for_code(device_code):
         display(HTML(logon_mssg))
     else:
         print(logon_mssg)
+
+
+# New stuff - pebryan
+
+
+def _user_oid(token) -> str:
+    """
+    Return the user Object ID.
+
+    Returns
+    -------
+    str
+        User OID.
+
+    """
+    data = _get_parsed_token_data(token)
+    return data.get("oid")
+
+
+def _get_parsed_token_data(token) -> Any:
+    tok_data = token
+    tok_data = tok_data.split(".")[1]
+    tok_data += "=" * ((4 - len(tok_data) % 4) % 4)
+    return json.loads(base64.b64decode(tok_data))
