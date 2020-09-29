@@ -129,7 +129,7 @@ def az_connect(client_id: str = None, tenant_id: str = None, secret: str = None)
     handler = logging.StreamHandler(sys.stdout)
     handler.addFilter(filter_credential_warning)
     logging.basicConfig(level=logging.WARNING, handlers=[handler])
-    creds = ChainedTokenCredential(env, cli, interactive)
+    creds = ChainedTokenCredential(env, cli, mi, interactive)
     legacy_creds = CredentialWrapper(creds)
     if not creds:
         raise CloudError("Could not obtain credentials.")
