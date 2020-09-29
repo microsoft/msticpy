@@ -411,6 +411,7 @@ class VTLookupV3:
         Raises
         ------
             ValueError when there are no relationship DataFrames
+            MsticpyVTGraphSaveGraphError when Graph can not be saved
 
         """
         if len(relationship_dfs) == 0:
@@ -467,7 +468,7 @@ class VTLookupV3:
         except VTGraphErrors.SaveGraphError:
             raise MsticpyVTGraphSaveGraphError(
                 "Could not save Graph. %s" % "" if not private else
-                "Please check you have Private Graph premium feature enabled i "
+                "Please check you have Private Graph premium feature enabled in"
                 "your subscription. It is possible to create public Graphs"
                 "with 'private=False' input argument")
 
