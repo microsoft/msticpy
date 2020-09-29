@@ -80,6 +80,7 @@ class CredentialWrapper(BasicTokenAuthentication):
         self._policy.on_request(request)
         # Read Authorization, and get the second part after Bearer
         token = request.http_request.headers["Authorization"].split(" ", 1)[1]
+        print(token)
         self.token = {"access_token": token}
 
     def signed_session(self, session=None):
@@ -150,6 +151,7 @@ def filter_credential_warning(record):
                 print("Attempting to sign-in with environment variable credentials...")
             if message.startswith("AzureCliCredential"):
                 print("Attempting to sign-in with Azure CLI credentials...")
-                print("Using interactive logon...")
+                #print("Using interactive logon...")
+                print("Attempting MSI...")
         return not message
     return True
