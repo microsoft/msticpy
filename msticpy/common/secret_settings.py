@@ -11,12 +11,9 @@ from typing import Any, Callable, Dict, Tuple, Optional, Set
 import keyring
 from keyring.errors import KeyringError, KeyringLocked
 
-from .keyvault_client import (
-    BHKeyVaultClient,
-    KeyVaultSettings,
-    MsticpyKeyVaultConfigError,
-)
-
+from .exceptions import MsticpyKeyVaultConfigError
+from .keyvault_client import BHKeyVaultClient
+from .keyvault_settings import KeyVaultSettings
 from .utility import export
 from . import pkg_config as config
 from .._version import VERSION

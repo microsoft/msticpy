@@ -7,14 +7,9 @@
 import os
 from collections import namedtuple
 
-from msrest.authentication import BasicTokenAuthentication
-from azure.core.pipeline.policies import BearerTokenCredentialPolicy
-from azure.core.pipeline import PipelineRequest, PipelineContext
-from azure.core.pipeline.transport import HttpRequest
 from azure.mgmt.subscription import SubscriptionClient
 from azure.common.exceptions import CloudError
 from azure.identity import (
-    DefaultAzureCredential,
     InteractiveBrowserCredential,
     ChainedTokenCredential,
     EnvironmentCredential,
@@ -24,6 +19,10 @@ from azure.identity import (
 
 # uncomment once circular dependencies fixed
 # from .provider_settings import get_provider_settings
+from .cred_wrapper import CredentialWrapper
+from .keyvault_pre_auth import az_connect as pre_auth
+from .keyvault_pre_auth import AzCredentials
+from .pkg_config import get_config
 
 from .exceptions import MsticpyAzureConfigError
 
@@ -34,101 +33,110 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-# Class to extract v1 authentication token from DefaultAzureCredential object.
-# Credit - https://gist.github.com/lmazuel/cc683d82ea1d7b40208de7c9fc8de59d
-class CredentialWrapper(BasicTokenAuthentication):
-    """Class for handling legacy auth conversion."""
+def az_connect(
+    client_id: str = None, tenant_id: str = None, secret: str = None
+) -> AzCredentials:
+    """
+    Authenticate with Azure using multiple auth sources.
 
-    def __init__(
-        self,
-        credential=None,
-        resource_id="https://management.azure.com/.default",
-        **kwargs,
-    ):
-        """
-        Wrap any azure-identity credential to work with SDK that needs azure.common.credentials.
+    Parameters
+    ----------
+    client_id : str, optional
+        Client ID for Azure authentication, by default None
+    tenant_id : str, optional
+        TenantID to authenticate with, by default None
+    secret : str, optional
+        Client secret, by default None
 
-        Parameters
-        ----------
-        credential : [type], optional
-            Any azure-identity credential, by default DefaultAzureCredential
-        resource_id : str, optional
-            The scope to use to get the token, by default "https://management.azure.com/.default"
+    Returns
+    -------
+    AzCredentials
+        Named tuple of:
+        - legacy (ADAL) credentials
+        - modern (MSAL) credentials
 
-        """
-        super(CredentialWrapper, self).__init__(None)
-        if credential is None:
-            credential = DefaultAzureCredential()
-        self._policy = BearerTokenCredentialPolicy(credential, resource_id, **kwargs)
+    Raises
+    ------
+    CloudError
+        If chained token credential creation fails.
+    MsticpyAzureConfigError
+        If AzureCli configuration not found in
+        msticpyconfig.yaml
 
-    def set_token(self):
-        """
-        Ask the azure-core BearerTokenCredentialPolicy policy to get a token.
+    Notes
+    -----
+    The function tries to obtain credentials from the following
+    sources:
+    - Azure Auth Environment variables
+    - Azure CLI (if an active session is logged on)
+    - Managed Service Identity
+    - Interactive browser logon
 
-        Using the policy gives us for free the caching system of azure-core.
-        We could make this code simpler by using private method, but by definition
-        I can't assure they will be there forever, so mocking a fake call to the policy
-        to extract the token, using 100% public API.
+    If the authentication is successful both ADAL (legacy) and
+    MSAL (modern) credential types are returned.
 
-        """
-        request = _make_request()
-        self._policy.on_request(request)
-        # Read Authorization, and get the second part after Bearer
-        token = request.http_request.headers["Authorization"].split(" ", 1)[1]
-        self.token = {"access_token": token}
-
-    def signed_session(self, session=None):
-        """Wrap signed session object."""
-        self.set_token()
-        return super(CredentialWrapper, self).signed_session(session)
-
-
-def _make_request():
-    """Make mocked request to get token."""
-    return PipelineRequest(
-        HttpRequest("CredentialWrapper", "https://fakeurl"), PipelineContext(None)
-    )
-
-
-def az_connect(client_id: str = None, tenant_id: str = None, secret: str = None):
-    """Authenticate with the SDK."""
+    """
     # Use details of msticpyyaml if not provided
-    #if client_id is None and tenant_id is None and secret is None:
-        #data_provs = get_provider_settings(config_section="DataProviders")
-        #az_cli_config = data_provs.get("AzureCLI")
-        # az_cli_config = config.settings.get("AzureCLI")
-        # if not az_cli_config:
-        #    raise MsticpyAzureConfigError(
-        #        "No AzureCLI section found in configuration settings.",
-        #        title="no AzureCLI settings available.",
-        #    )
-        #try:
-        #    config_items = az_cli_config.args
-        #    os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
-        #    os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
-        #    os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
-        #except:
+    if client_id is None and tenant_id is None and secret is None:
+        try:
+            az_cli_config = get_config("DataProviders.AzureCLI")
+        except AttributeError:
+            az_cli_config = None
+
+        # @Pete - do we want to raise an exception here?
+        # What if I want to do an interactive auth
+        if not az_cli_config:
+            raise MsticpyAzureConfigError(
+                "No AzureCLI section found in configuration settings.",
+                title="no AzureCLI settings available.",
+            )
+        try:
+            config_items = get_config("DataProviders.AzureCLI.args")
+            # TODO - can get rid of this check if the 2-stage auth works
+            for azcli_setting in ("clientId", "tenantId", "clientSecret"):
+                if "KeyVault" in azcli_setting:
+                    raise MsticpyAzureConfigError(
+                        "Cannot use a KeyVault-protected value to do",
+                        "initial authentication",
+                        title="",
+                    )
+            os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
+            os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
+            os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
+        # TODO delete
+        # except:
         #    pass
-        # except KeyError as key_err:
-        #    key_name = key_err.args[0]
-        #    raise MsticpyAzureConfigError(
-        #        f"{key_name} is missing from AzureCLI section in your",
-        #        "configuration.",
-        #        title="missing f{key_name} settings for AzureCLI.",
-        #   ) from key_err
+        except KeyError as key_err:
+            key_name = key_err.args[0]
+            raise MsticpyAzureConfigError(
+                f"{key_name} is missing from AzureCLI section in your",
+                "configuration.",
+                title="missing f{key_name} settings for AzureCLI.",
+            ) from key_err
+
+    # @Pete - might some of these thow exceptions?
     # Create credentials and connect to the subscription client to validate
-    env = EnvironmentCredential()
-    cli = AzureCliCredential()
-    interactive = InteractiveBrowserCredential()
-    mi = ManagedIdentityCredential
-    creds = ChainedTokenCredential(env, cli, interactive)
-    legacy_creds = CredentialWrapper(creds)
-    if not creds:
-        raise CloudError("Could not obtain credentials.")
-    sub_client = SubscriptionClient(creds)
+
+    # @Pete - when we call this (taken from code below), we might
+    # already have run this code if it was called from the kv_pre_auth
+    # module. When this happens does each piece silently succeed (if
+    # they succeeded previously). In particular, we want to avoid a
+    # a second browser auth flow.
+    credentials = pre_auth()
+
+    # env = EnvironmentCredential()
+    # cli = AzureCliCredential()
+    # interactive = InteractiveBrowserCredential()
+    #
+    # # mi = ManagedIdentityCredential  # nothing done with this
+    # creds = ChainedTokenCredential(env, cli, interactive)
+    # legacy_creds = CredentialWrapper(creds)
+    # if not creds:
+    #     raise CloudError("Could not obtain credentials.")
+    # Is this a test to see if it's working?
+    sub_client = SubscriptionClient(credentials.modern)
     if not sub_client:
         raise CloudError("Could not create a Subscription client.")
 
-    credentials = namedtuple("credentials", ["legacy", "modern"])
-
-    return credentials(legacy_creds, creds)
+    # credentials = namedtuple("credentials", ["legacy", "modern"])
+    return credentials
