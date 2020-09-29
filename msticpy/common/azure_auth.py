@@ -6,6 +6,8 @@
 """Azure authentication handling."""
 import os
 from collections import namedtuple
+import logging
+import sys
 
 from msrest.authentication import BasicTokenAuthentication
 from azure.core.pipeline.policies import BearerTokenCredentialPolicy
@@ -21,6 +23,9 @@ from azure.identity import (
     AzureCliCredential,
     ManagedIdentityCredential,
 )
+
+from azure.identity import CredentialUnavailableError
+
 
 # uncomment once circular dependencies fixed
 # from .provider_settings import get_provider_settings
@@ -121,6 +126,9 @@ def az_connect(client_id: str = None, tenant_id: str = None, secret: str = None)
     cli = AzureCliCredential()
     interactive = InteractiveBrowserCredential()
     mi = ManagedIdentityCredential
+    handler = logging.StreamHandler(sys.stdout)
+    handler.addFilter(filter_credential_warning)
+    logging.basicConfig(level=logging.WARNING, handlers=[handler])
     creds = ChainedTokenCredential(env, cli, interactive)
     legacy_creds = CredentialWrapper(creds)
     if not creds:
@@ -132,3 +140,16 @@ def az_connect(client_id: str = None, tenant_id: str = None, secret: str = None)
     credentials = namedtuple("credentials", ["legacy", "modern"])
 
     return credentials(legacy_creds, creds)
+
+
+def filter_credential_warning(record):
+    if record.name.startswith("azure.identity") and record.levelno == logging.WARNING: 
+        message = record.getMessage()
+        if ".get_token" in message:
+            if message.startswith("EnvironmentCredential"):
+                print("Attempting to sign-in with environment variable credentials...")
+            if message.startswith("AzureCliCredential"):
+                print("Attempting to sign-in with Azure CLI credentials...")
+                print("Using interactive logon...")
+        return not message
+    return True
