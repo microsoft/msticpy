@@ -126,7 +126,7 @@ def az_connect(client_id: str = None, tenant_id: str = None, secret: str = None)
     env = EnvironmentCredential()
     cli = AzureCliCredential()
     interactive = InteractiveBrowserCredential()
-    mi = ManagedIdentityCredential
+    mi = ManagedIdentityCredential()
     handler = logging.StreamHandler(sys.stdout)
     handler.addFilter(filter_credential_warning)
     logging.basicConfig(level=logging.WARNING, handlers=[handler])
