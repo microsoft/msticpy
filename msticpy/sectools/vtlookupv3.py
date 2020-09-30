@@ -390,7 +390,7 @@ class VTLookupV3:
         return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
 
     def create_vt_graph(
-        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool = True
+        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
     ) -> str:
         """
         Create a VirusTotal Graph with a set of Relationship DataFrames.
@@ -410,12 +410,16 @@ class VTLookupV3:
 
         Raises
         ------
+            ValueError when private is not indicated.
             ValueError when there are no relationship DataFrames
             MsticpyVTGraphSaveGraphError when Graph can not be saved
 
         """
         if len(relationship_dfs) == 0:
             raise ValueError("There are no relationship DataFrames")
+
+        if not isinstance(private, bool):
+            raise ValueError("Please indicate if Graph is private or not")
 
         concatenated_df = pd.concat(relationship_dfs).reset_index()
 
