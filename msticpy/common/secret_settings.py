@@ -4,22 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
-from functools import partial
 import re
-from typing import Any, Callable, Dict, Tuple, Optional, Set
+from functools import partial
+from typing import Any, Callable, Dict, Optional, Set, Tuple
 
 import keyring
 from keyring.errors import KeyringError, KeyringLocked
 
-from .keyvault_client import (
-    BHKeyVaultClient,
-    KeyVaultSettings,
-    MsticpyKeyVaultConfigError,
-)
-
-from .utility import export
-from . import pkg_config as config
 from .._version import VERSION
+from . import pkg_config as config
+from .exceptions import MsticpyKeyVaultConfigError
+from .keyvault_client import BHKeyVaultClient
+from .keyvault_settings import KeyVaultSettings
+from .utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
