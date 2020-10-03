@@ -6,6 +6,7 @@
 import os
 from pathlib import Path
 from unittest.mock import patch
+from collections import namedtuple
 
 from pytest import raises
 
@@ -25,16 +26,17 @@ def test_azure_init():
 
 
 def test_azure_connect_exp():
-    with raises(MsticpyException):
+    with raises(AttributeError):
         az = AzureData()
         az.connect()
 
 
 @patch(AzureData.__module__ + ".SubscriptionClient")
-@patch(AzureData.__module__ + ".DefaultAzureCredential")
-def test_azure_connect(mock_sub_client, mock_creds):
+@patch(AzureData.__module__ + ".az_connect")
+def test_azure_connect(mock_creds, mock_sub_client):
+    AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
     mock_sub_client.return_value = "Client"
-    mock_creds.return_value = "Creds"
+    mock_creds.return_value = AzCredentials('cred','cred')
     az = AzureData()
     az.connect(client_id="XXX", tenant_id="XXX", secret="XXX")
     assert az.connected == True
