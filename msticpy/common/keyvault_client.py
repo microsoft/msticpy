@@ -15,9 +15,7 @@ from adal import AdalError, AuthenticationContext
 from azure.core.exceptions import ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 
-# TODO delete
-# from azure.identity import DeviceCodeCredential, InteractiveBrowserCredential
-from azure.mgmt.keyvault import KeyVaultManagementClient
+BHKeyVaultMgmtClientfrom azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
     CertificatePermissions,
@@ -812,9 +810,6 @@ def _prompt_for_code(device_code):
         display(HTML(logon_mssg))
     else:
         print(logon_mssg)
-
-
-# New stuff - pebryan
 
 
 def _user_oid(token) -> str:
