@@ -176,7 +176,9 @@ def _build_paths(resid) -> str:
         "workspace_name": resid.split("/")[-1],
     }
 
-    url_part1 = f"https://management.azure.com/subscriptions/{res_info['subscription_id']}"
+    url_part1 = (
+        f"https://management.azure.com/subscriptions/{res_info['subscription_id']}"
+    )
     url_part2 = f"/resourceGroups/{res_info['resource_group']}"
     url_part3 = f"/providers/Microsoft.OperationalInsights/workspaces/{res_info['workspace_name']}"
 

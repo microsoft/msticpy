@@ -15,7 +15,7 @@ from adal import AdalError, AuthenticationContext
 from azure.core.exceptions import ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 
-BHKeyVaultMgmtClientfrom azure.mgmt.keyvault import KeyVaultManagementClient
+from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
     CertificatePermissions,

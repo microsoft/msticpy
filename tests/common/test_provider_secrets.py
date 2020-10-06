@@ -286,12 +286,7 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_keyvault_client(
-        self,
-        sec_client,
-        az_connect_core_patch,
-        html_ip,
-        display_ip,
-        is_ipython_ip,
+        self, sec_client, az_connect_core_patch, html_ip, display_ip, is_ipython_ip,
     ):
         kv_sec_client = SecretClientTest()
         sec_client_obj = MagicMock()
@@ -301,10 +296,10 @@ class TestSecretsConfig(unittest.TestCase):
         sec_client_obj.get_secret = kv_sec_client.get_secret
         sec_client_obj.set_secret = kv_sec_client.set_secret
         sec_client.return_value = sec_client_obj
-        #call_prompt = lambda client_id, authority, prompt_callback: _prompt_for_code(
+        # call_prompt = lambda client_id, authority, prompt_callback: _prompt_for_code(
         #    DEV_CODE
-        #)
-        #az_connect_core_patch.side_effect = call_prompt
+        # )
+        # az_connect_core_patch.side_effect = call_prompt
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
 
         # Check both vault params
@@ -322,7 +317,7 @@ class TestSecretsConfig(unittest.TestCase):
         no_tenant_id.tenantid = None
         with self.assertRaises(MsticpyKeyVaultConfigError):
             BHKeyVaultClient(settings=no_tenant_id, debug=True)
-  
+
         keyvault_client = BHKeyVaultClient(debug=True)
 
         # Check secret methods
@@ -349,8 +344,8 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(az_connect_core_patch)
     def test_kv_mgmt_client(self, az_core, auth_context, kv_mgmt):
         AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
-        LegacyCreds = namedtuple("legacycreds", ['token'])
-        az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN),'cred')
+        LegacyCreds = namedtuple("legacycreds", ["token"])
+        az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN), "cred")
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
         kv_mgmt.return_value = KeyVaultMgmtMock()
@@ -390,12 +385,7 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_secret_settings(
-        self,
-        sec_client,
-        az_connect_core,
-        html_ip,
-        display_ip,
-        is_ipython_ip,
+        self, sec_client, az_connect_core, html_ip, display_ip, is_ipython_ip,
     ):
         kv_sec_client = SecretClientTest()
         sec_client_obj = MagicMock()
