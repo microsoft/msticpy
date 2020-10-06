@@ -25,9 +25,9 @@ def test_azuresent_init():
     azs = AzureSentinel()
     assert type(azs) == AzureSentinel
 
+
 def test_azuresent_connect_exp():
     """Test connect failure."""
     with raises(AttributeError):
         azs = AzureSentinel()
         azs.connect()
-

@@ -60,50 +60,13 @@ See :py:class:`Azure Data <msticpy.data.azure_data.AzureData>`
 
 In order to connect to the Azure API and retrieve the required data
 we need to instantiate an Azure Data Connector and connect to the API.
-Authentication to the Azure API is handled via an Azure Service
-Principal and token credentials. Before using this package you will
-need to register a Service Principal and collect the required details.
-Details on registering the Service Principal with the correct
-permissions can be found `here <https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?toc=%2Fazure%2Fazure-resource-manager%2Ftoc.json&view=azure-cli-latest>`__.
-
-Once the Service Principal has been registered the following details
-are required (they can be found in the Azure Portal under
-Azure Active Directory > App Registrations):
-
-* tenant_id -- The tenant ID of the Azure tenant the Service Principal is in.
-* client_id -- The ID of the application associated with the Service
-  Principal.
-* secret -- The password of the Service Principal.
-
-When connecting the required elements for connection can be passed in
-a number of ways. The simplest is to pass the required elements as
-kwargs.
-
-.. code:: ipython3
-
-        ten_id = input('Tenant ID')
-        client_id = input('Client ID')
-        secret = input('Client Secret')
-        az = AzureData()
-        az.connect(tenant_id=ten_id, client_id=client_id, secret=secret)
-
-Alternatively you can store these details in the ``msticpyconfig.yaml``
-file. Details should be included in the following format:
-
-.. code:: yaml
-
-      AzureCLI:
-        Args:
-        clientId: "CLIENT ID"
-        clientSecret: "CLIENT SECRET"
-        tenantId: "TENANT ID"
-
-To use the stored variables when connecting simply provide no arguments.
+Authentication to the Azure API is handled via an the azure_auth package.
 
 .. code:: ipython3
 
         az = AzureData()
         az.connect()
+
 
 Get Azure Subscription Details
 ------------------------------
