@@ -10,7 +10,8 @@ import pytest_check as check
 import pytest
 
 from msticpy.data.query_container import QueryContainer
-from msticpy.nbtools.query_browser import _query_display_func, QueryProvider
+from msticpy.data import QueryProvider
+from msticpy.data.browsers.query_browser import _query_display_func
 
 # pylint: disable=redefined-outer-name
 

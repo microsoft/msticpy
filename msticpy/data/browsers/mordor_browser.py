@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable
 
 import ipywidgets as widgets
 import pandas as pd
-from IPython.display import display
+from IPython.display import display, HTML
 
 from ..._version import VERSION
 from ..drivers.mordor_driver import (
@@ -26,10 +26,24 @@ __author__ = "Ian Hellen"
 class MordorBrowser:
     """Mordor browser widget."""
 
-    def __init__(self):
-        """Initialize MordorBrowser."""
+    def __init__(self, save_folder: str = ".", use_cached: bool = True):
+        """
+        Initialize MordorBrowser control.
+
+        Parameters
+        ----------
+        save_folder : str, optional
+            Folder to save downloaded files, by default "."
+        use_cached : bool, optional
+            If true, downloaded files are not deleted after
+            download and are used as a local cache, by default True
+        """
+        self._save_folder = save_folder
+        self._use_cached = use_cached
         self.mordor_driver = MordorDriver()
+        self.mordor_driver.connect()
         self.mdr_metadata = self.mordor_driver.mordor_data
+        self._df_disp = None
 
         self.layouts = self._create_layouts()
         self.w_style = {
@@ -55,7 +69,9 @@ class MordorBrowser:
         )
 
         self.datasets: Dict[str, pd.DataFrame] = {}
+        self.current_dataset: pd.DataFrame = None
         display(widgets.VBox([browse_ctrls, fields_ctrls]))
+        self._df_disp = display(HTML("<p>"), display_id=True)
 
     @property
     def fields(self):
@@ -66,6 +82,10 @@ class MordorBrowser:
     def selected_dset(self):
         """Return the ID of the selected data set."""
         return self.widgets["ds_select"].value
+
+    def _clear_df_display(self):
+        if self._df_disp:
+            self._df_disp.update(HTML("<p>"))
 
     @staticmethod
     def _create_layouts():
@@ -86,7 +106,9 @@ class MordorBrowser:
             description="Filter", layout=self.layouts["layout_norm"], style=self.w_style
         )
         self.widgets["filter_text"].on_submit(self._update_select_list)
-        self.widgets["filter_help"] = widgets.Label(value=" comma-separated ORs values")
+        self.widgets["filter_help"] = widgets.Label(
+            value=" comma ORs values, '+' ANDs values"
+        )
 
         # Mitre filters
         self.widgets["sel_techniques"] = widgets.SelectMultiple(
@@ -184,8 +206,9 @@ class MordorBrowser:
                 self.fields[field].children[0].options = []
             else:
                 self.fields[field].value = ""
+        self._clear_df_display()
 
-    def _select_ds_item(self, change):
+    def _select_ds_item(self, change):  # noqa: MC0001
         """Handle change of dataset selection."""
         item_id = change.get("new")
         mdr_item = self.mdr_metadata.get(item_id)
@@ -213,6 +236,10 @@ class MordorBrowser:
                 self.fields[field].children[0].options = _format_files(file_paths)
             elif field == "notebooks":
                 self.fields[field].value = _format_notebooks(mdr_item.notebooks)
+            elif field == "query name":
+                self.fields[field].value = _format_queries(mdr_item)
+
+        self._clear_df_display()
 
     def _update_select_list(self, event=None):
         """Update the dataset selection list based on filters."""
@@ -226,7 +253,9 @@ class MordorBrowser:
             filtered_tact.update(self.mordor_driver.mdr_idx_tact[t_id])
 
         md_items_filtered = filtered_tech & filtered_tact
-        md_ids = search_mdr_data(self.widgets["filter_text"].value, md_items_filtered)
+        md_ids = search_mdr_data(
+            self.mdr_metadata, self.widgets["filter_text"].value, md_items_filtered
+        )
         self.widgets["ds_select"].options = self._get_md_select_options(md_ids)
 
     def _reset_filters(self, event=None):
@@ -252,10 +281,16 @@ class MordorBrowser:
     def _download_file(self, event):
         """Handle download file event."""
         del event
-        if self.selected_dset not in self.datasets:
-            selection = self.fields["file_paths"].children[0].value
-            result_df = download_mdr_file(selection)
-            self.datasets[self.selected_dset] = result_df
+        selection = self.fields["file_paths"].children[0].value
+        if selection not in self.datasets:
+            result_df = download_mdr_file(
+                selection, use_cached=self._use_cached, save_folder=self._save_folder
+            )
+            if not isinstance(result_df, pd.DataFrame) or result_df.empty:
+                result_df = HTML("Could not extract data from this file")
+            self.datasets[selection] = result_df
+        self.current_dataset = self.datasets[selection]
+        self._df_disp.update(self.datasets[selection])
 
     @staticmethod
     def _get_mitre_filter_options(mordor_index: Dict[str, MordorEntry], mitre_data):
@@ -281,7 +316,8 @@ def _format_attacks(attacks):
         ]
 
         html_tactics = [
-            f"<b>{tactic[0]}</b>: <a href='{tactic[3]}' target='_blank'><u>{tactic[1]}</u></a>"
+            f"<b>{tactic[0]}</b>: <a href='{tactic[3]}' "
+            + f"target='_blank'><u>{tactic[1]}</u></a>"
             for tactic in attack.tactics_full
         ]
 
@@ -313,6 +349,15 @@ def _format_notebooks(notebooks):
     return f"<div style='{_FMT_STYLE}'>{content}</span>"
 
 
+def _format_queries(mdr_entry):
+    return "\n".join(
+        [
+            f"{file_path['qry_path']} ({mdr_entry.title}, {mdr_entry.id})"
+            for file_path in mdr_entry.get_file_paths()
+        ]
+    )
+
+
 MORDOR_FIELDS = {
     "title": {"type": "text", "widget": widgets.Text},
     "id": {"type": "text", "widget": widgets.Text},
@@ -337,4 +382,5 @@ MORDOR_FIELDS = {
     "notebooks": {"type": "cust", "widget": widgets.HTML},
     "simulation": {"type": "raw", "widget": widgets.Textarea},
     "references": {"type": "raw", "widget": widgets.Textarea},
+    "query name": {"type": "cust", "widget": widgets.Textarea},
 }

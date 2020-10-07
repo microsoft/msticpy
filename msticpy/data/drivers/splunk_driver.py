@@ -238,6 +238,37 @@ class SplunkDriver(DriverBase):
         return {}, "SavedSearches"
 
     @property
+    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+        """
+        Return dynamic queries available on connection to service.
+
+        Returns
+        -------
+        Iterable[Dict[str, Any]]
+            List of queries with properties: "name", "query", "container"
+            and (optionally) "description"
+
+        Raises
+        ------
+        MsticpyNotConnectedError
+            If called before driver is connected.
+
+        """
+        if not self.connected:
+            raise self._create_not_connected_err()
+        if hasattr(self.service, "saved_searches") and self.service.saved_searches:
+            return [
+                {
+                    "name": search.name.strip().replace(" ", "_"),
+                    "query": f"search {search['search']}",
+                    "query_paths": "SavedSearches",
+                    "description": "",
+                }
+                for search in self.service.saved_searches
+            ]
+        return []
+
+    @property
     def _saved_searches(self) -> Union[pd.DataFrame, Any]:
         """
         Return list of saved searches in dataframe.

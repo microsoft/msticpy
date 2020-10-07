@@ -4,9 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """."""
-import io
 import json
-import re
 import zipfile
 from collections import defaultdict
 from datetime import datetime
@@ -21,6 +19,7 @@ import requests
 import yaml
 from tqdm.auto import tqdm
 
+from ...common.exceptions import MsticpyNotConnectedError
 from ..._version import VERSION
 from ..query_source import QuerySource
 from .driver_base import DriverBase
@@ -43,32 +42,20 @@ MITRE_TACTICS: pd.DataFrame = None
 class MordorDriver(DriverBase):
     """Mordor data driver."""
 
-    # pylint: disable=global-statement
     def __init__(self, **kwargs):
         """Initialize the Morder driver."""
-        global MITRE_TECHNIQUES, MITRE_TACTICS
         super().__init__(**kwargs)
-
-        self.mitre_techniques = get_mitre_categories(_MTR_TECH_CAT_URI)
-        self.mitre_tactics = get_mitre_categories(_MTR_TAC_CAT_URI)
-        if MITRE_TECHNIQUES is None:
-            MITRE_TECHNIQUES = self.mitre_techniques
-        if MITRE_TACTICS is None:
-            MITRE_TACTICS = self.mitre_tactics
-
-        self.public_attribs = {
-            "mitre_techniques": self.mitre_techniques,
-            "mitre_tactics": self.mitre_tactics,
-            "driver_queries": self.driver_queries,
-        }
-
-        self.mordor_data = get_mdr_metadata()
-        self.mdr_idx_tech, self.mdr_idx_tact = build_mdr_indexes(self.mordor_data)
-
+        self.use_query_paths = False
+        self.has_driver_queries = True
+        self.mitre_techniques: pd.DataFrame
+        self.mitre_tactics: pd.DataFrame
+        self.mordor_data: Dict[str, MordorEntry]
+        self.mdr_idx_tech: Dict[str, Set[str]]
+        self.mdr_idx_tact: Dict[str, Set[str]]
+        self._driver_queries: List[Dict[str, Any]] = []
         self._loaded = True
-        self._connected = True
 
-    # pylint: enable=global-statement
+    # pylint: disable=global-statement
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
@@ -80,6 +67,29 @@ class MordorDriver(DriverBase):
             Connect to a data source
 
         """
+        global MITRE_TECHNIQUES, MITRE_TACTICS
+        print("Retrieving Mitre data...")
+
+        if MITRE_TECHNIQUES is None:
+            MITRE_TECHNIQUES = _get_mitre_categories(_MTR_TECH_CAT_URI)
+        self.mitre_techniques = MITRE_TECHNIQUES
+        if MITRE_TACTICS is None:
+            MITRE_TACTICS = _get_mitre_categories(_MTR_TAC_CAT_URI)
+        self.mitre_tactics = MITRE_TACTICS
+
+        print("Retrieving Mordor data...")
+        self.mordor_data = _GET_MORDOR_METADATA()
+        self.mdr_idx_tech, self.mdr_idx_tact = _build_mdr_indexes(self.mordor_data)
+
+        self._connected = True
+        self.public_attribs = {
+            "mitre_techniques": self.mitre_techniques,
+            "mitre_tactics": self.mitre_tactics,
+            "driver_queries": self.driver_queries,
+            "search_queries": self.search_queries,
+        }
+
+    # pylint: enable=global-statement
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -107,8 +117,21 @@ class MordorDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        result_dfs = download_mdr_file(file_uri=query, use_cached=True)
-        return pd.concat(result_dfs.values())
+        del query_source
+        if not self._connected:
+            raise self._create_not_connected_err()
+        use_cached = kwargs.pop("used_cached", True)
+        save_folder = kwargs.pop("save_folder", ".")
+        silent = kwargs.pop("silent", False)
+        result_df = download_mdr_file(
+            file_uri=query,
+            use_cached=use_cached,
+            save_folder=save_folder,
+            silent=silent,
+        )
+        if not isinstance(result_df, pd.DataFrame) or result_df.empty:
+            return "Could not convert result to a DataFrame."
+        return result_df
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
@@ -125,55 +148,101 @@ class MordorDriver(DriverBase):
             A DataFrame and native results.
 
         """
+        result = self.query(query, **kwargs)
+        if isinstance(result, pd.DataFrame):
+            return result, "OK"
+        return pd.DataFrame, result
 
     @property
-    def driver_queries(self) -> List[Dict[str, str]]:
-        """
-        Return list of Mordor query definitions.
-
-        Returns
-        -------
-        List[Dict[str, str]]
-            List of query definitions
-
-        """
-        return list(self._get_driver_queries())
-
-    def _get_driver_queries(self) -> Generator[Dict[str, Union[str, Dict]], None, None]:
+    def driver_queries(self) -> Iterable[Dict[str, Any]]:
         """
         Return generator of Mordor query definitions.
 
         Yields
         ------
-        Generator[Dict[str, str], None, None]
-            Iterable of Dictionaries containing query definition
+        Iterable[Dict[str, Any]]
+            Iterable of Dictionaries containing query definitions.
 
         """
+        if not self._connected:
+            raise self._create_not_connected_err()
+        if not self._driver_queries:
+            self._driver_queries = list(self._get_driver_queries())
+        return self._driver_queries
+
+    def _get_driver_queries(self):
+        """Generate iterable of Mordor queries."""
         for mdr_item in self.mordor_data.values():
             for file_path in mdr_item.get_file_paths():
                 mitre_data = mdr_item.get_attacks()
-                techniques = ", ".join([att.technique for att in mitre_data])
-                tactics = ", ".join({tac for tactics in mitre_data for tac in tactics})
-                doc_string = [
+                techniques = ", ".join(
+                    [f"{att.technique}: {att.technique_name}" for att in mitre_data]
+                )
+                tactics = ", ".join(
+                    [
+                        f"{tac[0]}: {tac[1]}"
+                        for att in mitre_data
+                        for tac in att.tactics_full
+                    ]
+                )
+                doc_string: List[str] = [
                     f"{mdr_item.title}",
                     "",
                     "Notes",
                     "-----",
                     f"Mordor ID: {mdr_item.id}",
-                    mdr_item.description,
+                    mdr_item.description or "",
                     "",
                     f"Mitre Techniques: {techniques}",
                     f"Mitre Tactics: {tactics}",
                 ]
-                q_container = file_path["qry_path"].split(".")[:-1]
-                q_name = file_path["qry_path"].split(".")[-1]
+                q_container, _, full_name = file_path["qry_path"].partition(".")
+                short_name = file_path["qry_path"].split(".")[-1]
                 yield {
-                    "query_name": q_name,
-                    "query_text": file_path["file_path"],
+                    "name": full_name,
+                    "description": "\n".join(doc_string),
+                    "query_name": short_name,
+                    "query": file_path["file_path"],
                     "query_container": q_container,
-                    "doc_string": "\n".join(doc_string),
                     "metadata": {},
                 }
+
+    def search_queries(self, search: str) -> Iterable[str]:
+        """
+        Search queries for matching attributes.
+
+        Parameters
+        ----------
+        search : str
+            Search string. Substrings separated by commas will
+            be treated as OR terms - e.g. "a, b" == "a" or "b".
+            Substrings separated by "+" will be treated as AND
+            terms - e.g. "a + b" == "a" and "b"
+
+        Returns
+        -------
+        Iterable[str]
+            Iterable of matching query names.
+
+
+        """
+        if not self._connected:
+            raise self._create_not_connected_err()
+        matches = []
+        for mdr_id in search_mdr_data(self.mordor_data, terms=search):
+            for file_path in self.mordor_data[mdr_id].get_file_paths():
+                matches.append(
+                    f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
+                )
+        return matches
+
+    @staticmethod
+    def _create_not_connected_err():
+        return MsticpyNotConnectedError(
+            "Please run the connect() method before running this method.",
+            title="not connected to Mordor.",
+            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+        )
 
 
 class MitreAttack:
@@ -204,15 +273,13 @@ class MitreAttack:
             List of associated tactics, by default None
 
         """
-        if attack is None or (technique is None and tactics is None):
+        if attack is None and (technique is None and tactics is None):
             raise TypeError(
                 "Either 'attack' or 'technique' and 'tactics' must be specified."
             )
         self.technique = attack.get("technique") if attack else technique
         self.sub_technique = attack.get("sub-technique") if attack else sub_technique
-        self.tactics: List[str] = attack.get(
-            "tactics"
-        ) if attack else tactics  # type: ignore
+        self.tactics = attack.get("tactics") if attack else tactics  # type: ignore
 
         self._technique_name = None
         self._technique_desc = None
@@ -292,7 +359,7 @@ class MitreAttack:
             (ID, Name, Description, URI)
 
         """
-        if not self._tactics_full:
+        if not self._tactics_full and self.tactics:
             for tactic in self.tactics:
                 tactic_name = tactic_desc = "unknown"
                 if tactic in MITRE_TACTICS.index:
@@ -397,17 +464,20 @@ class MordorEntry:
 
         """
         if not self._rel_file_paths:
-            for file in [*self.files, *self.datasets]:
+            for file in self.files:
                 f_path = file.get("link")
                 if not f_path:
                     continue
                 f_rel_path = f_path.replace(DS_PREFIX, "")
+                query_path = ".".join(Path(f_rel_path).parts).replace(
+                    Path(f_rel_path).suffix, ""
+                )
                 self._rel_file_paths.append(
                     {
                         "file_type": file.get("type"),
                         "file_path": f_path,
                         "relative_path": f_rel_path,
-                        "qry_path": ".".join(Path(f_rel_path).parts),
+                        "qry_path": query_path,
                     }
                 )
         return self._rel_file_paths
@@ -416,7 +486,7 @@ class MordorEntry:
 # pylint: disable=not-an-iterable, no-member
 
 
-def get_mdr_data_paths(item_type="metadata"):
+def get_mdr_data_paths(item_type="metadata") -> Generator[str, None, None]:
     """
     Generate Mordor data sets from GitHub repo.
 
@@ -428,8 +498,9 @@ def get_mdr_data_paths(item_type="metadata"):
 
     Yields
     ------
-    [type]
-        [description]
+    str
+        Iterable of paths
+
     """
     md_tree = _GET_MORDOR_TREE(_MORDOR_TREE_URI)
     prefix = f"datasets/{item_type}"
@@ -440,7 +511,7 @@ def get_mdr_data_paths(item_type="metadata"):
     )
 
 
-def get_mdr_github_tree():
+def _get_mdr_github_tree():
     """Closure to wrap fetching Mordor tree from GitHub."""
     mordor_tree = None
 
@@ -455,18 +526,34 @@ def get_mdr_github_tree():
 
 
 # Create closure
-_GET_MORDOR_TREE = get_mdr_github_tree()
+_GET_MORDOR_TREE = _get_mdr_github_tree()
 
 
-def get_mdr_file(gh_file):
+def _get_mdr_file(gh_file):
     """Fetch a file from Mordor repo."""
     file_blob_uri = f"https://raw.githubusercontent.com/OTRF/mordor/master/{gh_file}"
     file_resp = requests.get(file_blob_uri)
     return file_resp.content
 
 
+def _create_mdr_metadata_cache():
+    md_metadata: Dict[str, MordorEntry] = {}
+
+    def _get_mdr_metadata():
+        nonlocal md_metadata
+        if not md_metadata:
+            md_metadata = _fetch_mdr_metadata()
+        return md_metadata
+
+    return _get_mdr_metadata
+
+
+# Create closure
+_GET_MORDOR_METADATA = _create_mdr_metadata_cache()
+
+
 # pylint: disable=global-statement
-def get_mdr_metadata() -> Dict[str, MordorEntry]:
+def _fetch_mdr_metadata() -> Dict[str, MordorEntry]:
     """
     Return full metadata for Mordor datasets.
 
@@ -479,15 +566,14 @@ def get_mdr_metadata() -> Dict[str, MordorEntry]:
     global MITRE_TECHNIQUES, MITRE_TACTICS
 
     if MITRE_TECHNIQUES is None:
-        MITRE_TECHNIQUES = get_mitre_categories(_MTR_TECH_CAT_URI)
+        MITRE_TECHNIQUES = _get_mitre_categories(_MTR_TECH_CAT_URI)
     if MITRE_TACTICS is None:
-        MITRE_TACTICS = get_mitre_categories(_MTR_TAC_CAT_URI)
+        MITRE_TACTICS = _get_mitre_categories(_MTR_TAC_CAT_URI)
 
     md_metadata: Dict[str, MordorEntry] = {}
-    for y_file in tqdm(
-        get_mdr_data_paths("metadata"), unit=" files", desc="Downloading Mordor files"
-    ):
-        gh_file_content = get_mdr_file(y_file)
+    mdr_md_paths = list(get_mdr_data_paths("metadata"))
+    for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor files"):
+        gh_file_content = _get_mdr_file(y_file)
         yaml_doc = yaml.safe_load(gh_file_content)
         doc_id = yaml_doc.get("id")
         md_metadata[doc_id] = MordorEntry(**yaml_doc)
@@ -497,7 +583,7 @@ def get_mdr_metadata() -> Dict[str, MordorEntry]:
 # pylint: enable=global-statement
 
 
-def build_mdr_indexes(
+def _build_mdr_indexes(
     mdr_metadata: Dict[str, MordorEntry]
 ) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
     """
@@ -520,6 +606,8 @@ def build_mdr_indexes(
     for md_id, md_file in mdr_metadata.items():
         for attack in md_file.get_attacks():
             md_idx_techniques[attack.technique].add(md_id)
+            if not attack.tactics:
+                continue
             for tactic in attack.tactics:
                 md_idx_tactics[tactic].add(md_id)
 
@@ -527,8 +615,8 @@ def build_mdr_indexes(
 
 
 def download_mdr_file(
-    file_uri: str, use_cached: bool = True, save_folder: str = "."
-) -> Dict[str, pd.DataFrame]:
+    file_uri: str, use_cached: bool = True, save_folder: str = ".", silent: bool = False
+) -> pd.DataFrame:
     """
     Download data file from Mordor.
 
@@ -540,17 +628,20 @@ def download_mdr_file(
         Try to use locally saved file first, by default True
     save_folder : str, optional
         Path to output folder, by default "."
+    silent : bool
+        If True, suppress feedback. By default, False.
 
     Returns
     -------
-    Dict[str, pd.DataFrame]
-        Dictionary of DataFrames
+    pd.DataFrame
+        DataFrame of Dataset
 
     """
-    print(file_uri)
-    if file_uri.lower().endswith("zip"):
+    if not silent:
+        print(file_uri)
+    if not file_uri.lower().endswith("zip"):
         raise TypeError(f"File type not supported {file_uri}")
-    save_path = file_uri.split("/")[-1]
+    save_path = "-".join(file_uri.split("/")[-2:-1])
     save_file = Path(save_folder).joinpath(save_path)
     if not use_cached or not save_file.is_file():
         # streamed download
@@ -563,17 +654,19 @@ def download_mdr_file(
     file_names = zip_file.namelist()
     d_frames = {}
     for file_name in file_names:
-        d_frames[file_name] = extract_zip_file_to_df(
-            zip_file, file_name, use_cached, save_folder
+        d_frames[file_name] = _extract_zip_file_to_df(
+            zip_file, file_name, use_cached, save_folder, silent
         )
 
-    if len(d_frames) == 1:
-        return {name: df for name, df in next(iter(d_frames.items()))}
-    return d_frames
+    return pd.concat(d_frames.values())
 
 
-def extract_zip_file_to_df(
-    zip_file: ZipFile, file_name: str, use_cached: bool = True, save_folder: str = "."
+def _extract_zip_file_to_df(  # noqa: MC0001
+    zip_file: ZipFile,
+    file_name: str,
+    use_cached: bool = True,
+    save_folder: str = ".",
+    silent: bool = False,
 ) -> pd.DataFrame:
     """
     Extract from zip and parse json file to DataFrame.
@@ -588,6 +681,8 @@ def extract_zip_file_to_df(
         Try to use locally saved file first, by default True
     save_folder : str, optional
         Path to output folder, by default "."
+    silent : bool
+        If False, suppress feedback. By default, True.
 
     Returns
     -------
@@ -595,19 +690,24 @@ def extract_zip_file_to_df(
         Extracted DataFrame
 
     """
-    print("Extracting", file_name)
+    if not silent:
+        print("Extracting", file_name)
 
     file_path = Path(save_folder).joinpath(file_name)
     if not use_cached or not file_path.is_file():
         zip_file.extract(file_name, path=save_folder)
 
     out_df = pd.DataFrame()
-    if file_path.suffix == ".json":
+    if file_path.suffix.lower() == ".json":
         errs = []
         with open(str(file_path), "r") as j_file:
             j_text = j_file.read()
             df_list = []
-            for line_num, line in tqdm(enumerate(j_text.split("\n")), "lines"):
+            if silent:
+                line_gen = enumerate(j_text.split("\n"))
+            else:
+                line_gen = tqdm(enumerate(j_text.split("\n")), "lines")
+            for line_num, line in line_gen:
                 if not line:
                     continue
                 try:
@@ -615,11 +715,14 @@ def extract_zip_file_to_df(
                 except JSONDecodeError:
                     errs.append(f"Could not parse #{line_num}: '{line}'")
             out_df = pd.DataFrame(df_list)
-        print(f"{len(errs)} errors detected", errs)
-    if Path(file_name).suffix == ".csv":
+        if errs:
+            print(f"{len(errs)} errors detected", errs)
+    if file_path.suffix.lower() == ".csv":
         out_df = pd.read_csv(file_name)
-
-    Path(file_name).unlink()
+    if file_path.suffix.lower() not in (".json", ".csv"):
+        print(f"Cannot process files of type {file_path.suffix.lower()}")
+    if not use_cached:
+        Path(file_name).unlink()
     return out_df
 
 
@@ -647,17 +750,17 @@ def search_mdr_data(
 
     """
     if terms is None:
-        return subset or mdr_data.keys()
+        return set(subset or mdr_data.keys())
     logic = "OR"
     if "," in terms:
-        terms = terms.split(",")
+        search_terms = terms.split(",")
     elif "+" in terms:
-        terms = terms.split("+")
+        search_terms = terms.split("+")
         logic = "AND"
-    if not isinstance(terms, list):
-        terms = [terms]
-    results = set()
-    for search_idx, term in enumerate(terms):
+    else:
+        search_terms = [terms]
+    results: Set[str] = set()
+    for search_idx, term in enumerate(search_terms):
         item_results = set()
         for md_id, item in mdr_data.items():
             if subset is not None and md_id not in subset:
@@ -672,7 +775,7 @@ def search_mdr_data(
     return results
 
 
-def get_mitre_categories(uri_template: str) -> pd.DataFrame:
+def _get_mitre_categories(uri_template: str) -> pd.DataFrame:
     """
     Download and return Mitre techniques and tactics.
 
