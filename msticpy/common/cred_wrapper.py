@@ -39,7 +39,9 @@ class CredentialWrapper(BasicTokenAuthentication):
             "https://management.azure.com/.default"
 
         """
-        super(CredentialWrapper, self).__init__(None)
+        super(CredentialWrapper, self).__init__(
+            None
+        )  # pylint disable:super-with-arguments
         if credential is None:
             credential = DefaultAzureCredential()
         self._policy = BearerTokenCredentialPolicy(credential, resource_id, **kwargs)
@@ -63,7 +65,9 @@ class CredentialWrapper(BasicTokenAuthentication):
     def signed_session(self, session=None):
         """Wrap signed session object."""
         self.set_token()
-        return super(CredentialWrapper, self).signed_session(session)
+        return super(CredentialWrapper, self).signed_session(
+            session
+        )  # pylint disable:super-with-arguments
 
 
 def _make_request():

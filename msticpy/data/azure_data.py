@@ -269,7 +269,7 @@ class AzureData:
 
                 except CloudError:
                     props = self.resource_client.resources.get_by_id(  # type: ignore
-                        resource.id, self._get_api(resource.id)
+                        resource.id, self._get_api(resource.id, sub_id=sub_id)
                     ).properties
             else:
                 props = resource.properties
@@ -337,12 +337,12 @@ class AzureData:
         if resource_id is not None:
             try:
                 resource = self.resource_client.resources.get_by_id(  # type: ignore
-                    resource_id, api_version=self._get_api(resource_id)
+                    resource_id, api_version=self._get_api(resource_id, sub_id=sub_id)
                 )
             except AttributeError:
                 self._legacy_auth("resource_client", sub_id)
                 resource = self.resource_client.resources.get_by_id(  # type: ignore
-                    resource_id, api_version=self._get_api(resource_id)
+                    resource_id, api_version=self._get_api(resource_id, sub_id=sub_id)
                 )
             if resource.type == "Microsoft.Compute/virtualMachines":
                 state = self._get_compute_state(resource_id=resource_id, sub_id=sub_id)
@@ -362,7 +362,8 @@ class AzureData:
                             resource_details["resource_provider_namespace"]
                             + "/"
                             + resource_details["resource_type"]
-                        )
+                        ),
+                        sub_id=sub_id,
                     ),
                 )
             except AttributeError:
@@ -378,7 +379,8 @@ class AzureData:
                             resource_details["resource_provider_namespace"]
                             + "/"
                             + resource_details["resource_type"]
-                        )
+                        ),
+                        sub_id=sub_id,
                     ),
                 )
             state = None
