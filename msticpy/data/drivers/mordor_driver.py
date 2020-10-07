@@ -39,6 +39,7 @@ MITRE_TECHNIQUES: pd.DataFrame = None
 MITRE_TACTICS: pd.DataFrame = None
 
 
+# pylint: disable=too-many-instance-attributes
 class MordorDriver(DriverBase):
     """Mordor data driver."""
 
@@ -243,6 +244,9 @@ class MordorDriver(DriverBase):
             title="not connected to Mordor.",
             help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
         )
+
+
+# pylint: enable=too-many-instance-attributes
 
 
 class MitreAttack:

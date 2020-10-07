@@ -37,6 +37,7 @@ class MordorBrowser:
         use_cached : bool, optional
             If true, downloaded files are not deleted after
             download and are used as a local cache, by default True
+
         """
         self._save_folder = save_folder
         self._use_cached = use_cached

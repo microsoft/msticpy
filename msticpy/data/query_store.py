@@ -19,7 +19,7 @@ __author__ = "Ian Hellen"
 
 def _get_dot_path(elem_path: str, data_map: dict) -> Any:
     """
-    Return For dotted attribute, tries to search
+    Return For dotted attribute, tries to search.
 
     Parameters
     ----------
@@ -37,6 +37,7 @@ def _get_dot_path(elem_path: str, data_map: dict) -> Any:
     ------
     KeyError
         If the key/subkey is not found
+
     """
     # if this is directly in the map return it
     if elem_path in data_map:
@@ -46,6 +47,7 @@ def _get_dot_path(elem_path: str, data_map: dict) -> Any:
     attrib = data_map.get(prefix)
     if isinstance(attrib, dict) and name in attrib:
         return attrib[name]
+    raise KeyError(f"'{elem_path}' not found")
 
 
 class QueryStore:
