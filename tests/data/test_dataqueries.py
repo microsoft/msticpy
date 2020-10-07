@@ -7,7 +7,7 @@
 import unittest
 from functools import partial
 from pathlib import Path
-from typing import Any, Tuple, Union, Optional, Dict
+from typing import Any, Tuple, Union, Optional, Dict, Iterable
 
 import pandas as pd
 
@@ -33,7 +33,8 @@ class UTDataDriver(DriverBase):
         self._loaded = True
         self._connected = False
         self.public_attribs = {"test": self._TEST_ATTRIB}
-        self.svc_queries = {}, ""
+        self.svc_queries = {}
+        self.has_driver_queries = True
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """Test method."""
@@ -52,9 +53,31 @@ class UTDataDriver(DriverBase):
         return (pd.DataFrame(data=query, index=[0], columns=["query"]), query)
 
     @property
-    def service_queries(self) -> Tuple[Dict[str, str], str]:
+    def driver_queries(self) -> Iterable[Dict[str, str]]:
         """Return dynamic queries available on connection to service."""
         return self.svc_queries
+
+
+_TEST_QUERIES = [
+    {
+        "name": "test_query1",
+        "query": "Select * from test",
+        "query_container": "SavedSearches",
+        "description": "Test 1",
+    },
+    {
+        "name": "test_query2",
+        "query": "Select * from test2",
+        "query_container": "SavedSearches",
+        "description": "Test 2",
+    },
+    {
+        "name": "test.query3",
+        "query": "Select * from test3",
+        "query_container": "SavedSearches",
+        "description": "Test 3",
+    },
+]
 
 
 class TestDataQuery(unittest.TestCase):
@@ -265,14 +288,8 @@ class TestDataQuery(unittest.TestCase):
 
     def test_connect_queries(self):
         """Test queries provided at connect time."""
-        queries = {
-            "test_query1": "Select * from test",
-            "test_query2": "Select * from test2",
-            "test.query3": "Select * from test2",
-        }
-
         ut_provider = UTDataDriver()
-        ut_provider.svc_queries = (queries, "SavedSearches")
+        ut_provider.svc_queries = _TEST_QUERIES
 
         data_provider = QueryProvider(
             data_environment="LogAnalytics", driver=ut_provider
@@ -282,8 +299,8 @@ class TestDataQuery(unittest.TestCase):
         # Check that we have expected attributes
         self.assertTrue(hasattr(data_provider, "SavedSearches"))
         saved_searches = getattr(data_provider, "SavedSearches")
-        for attr in queries:
-            attr = attr.split(".")[0]
+        for attr in _TEST_QUERIES:
+            attr = attr["name"].split(".")[0]
             self.assertTrue(hasattr(saved_searches, attr))
             self.assertTrue(
                 isinstance(getattr(saved_searches, attr), (partial, QueryContainer))
@@ -292,18 +309,16 @@ class TestDataQuery(unittest.TestCase):
         # Check that we have expected query text
         q_store = data_provider._query_store
         q_src = q_store.get_query("SavedSearches.test.query3")
-        self.assertEqual(q_src.query, queries["test.query3"])
+        self.assertEqual(q_src.query, _TEST_QUERIES[2]["query"])
 
     def test_connect_queries_dotted(self):
         """Test queries provided at connect time."""
-        queries = {
-            "test_query1": "Select * from test",
-            "test_query2": "Select * from test2",
-            "test.query3": "Select * from test2",
-        }
         # Same test as above but with dotted container
         ut_provider = UTDataDriver()
-        ut_provider.svc_queries = (queries, "Saved.Searches")
+        dotted_container_qs = _TEST_QUERIES.copy()
+        for query in dotted_container_qs:
+            query["query_container"] = "Saved.Searches"
+        ut_provider.svc_queries = dotted_container_qs
         data_provider = QueryProvider(
             data_environment="LogAnalytics", driver=ut_provider
         )
@@ -312,8 +327,8 @@ class TestDataQuery(unittest.TestCase):
         self.assertTrue(hasattr(data_provider, "Saved"))
         saved_searches = getattr(data_provider, "Saved")
         saved_searches = getattr(saved_searches, "Searches")
-        for attr in queries:
-            attr = attr.split(".")[0]
+        for attr in dotted_container_qs:
+            attr = attr["name"].split(".")[0]
             self.assertTrue(hasattr(saved_searches, attr))
             self.assertTrue(
                 isinstance(getattr(saved_searches, attr), (partial, QueryContainer))
@@ -321,4 +336,4 @@ class TestDataQuery(unittest.TestCase):
 
         q_store = data_provider._query_store
         q_src = q_store.get_query("Saved.Searches.test.query3")
-        self.assertEqual(q_src.query, queries["test.query3"])
+        self.assertEqual(q_src.query, dotted_container_qs[2]["query"])
