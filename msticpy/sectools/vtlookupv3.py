@@ -7,10 +7,14 @@ from IPython.display import HTML, display
 
 import vt
 from vt_graph_api import VTGraph
+from vt_graph_api import errors as VTGraphErrors
 
 
 class MsticpyVTNoDataError(Exception):
     """No data returned from VT API."""
+
+class MsticpyVTGraphSaveGraphError(Exception):
+    """Could not save VT Garph."""
 
 
 class VTEntityType(Enum):
@@ -386,7 +390,7 @@ class VTLookupV3:
         return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
 
     def create_vt_graph(
-        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool = True
+        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
     ) -> str:
         """
         Create a VirusTotal Graph with a set of Relationship DataFrames.
@@ -406,11 +410,16 @@ class VTLookupV3:
 
         Raises
         ------
+            ValueError when private is not indicated.
             ValueError when there are no relationship DataFrames
+            MsticpyVTGraphSaveGraphError when Graph can not be saved
 
         """
         if len(relationship_dfs) == 0:
             raise ValueError("There are no relationship DataFrames")
+
+        if not isinstance(private, bool):
+            raise ValueError("Please indicate if Graph is private or not")
 
         concatenated_df = pd.concat(relationship_dfs).reset_index()
 
@@ -458,7 +467,14 @@ class VTLookupV3:
                 target_node=row[ColumnNames.TARGET.value],
                 connection_type=row[ColumnNames.RELATIONSHIP_TYPE.value],
             )
-        graph.save_graph()
+        try:
+            graph.save_graph()
+        except VTGraphErrors.SaveGraphError:
+            raise MsticpyVTGraphSaveGraphError(
+                "Could not save Graph. %s" % "" if not private else
+                "Please check you have Private Graph premium feature enabled in"
+                "your subscription. It is possible to create public Graphs"
+                "with 'private=False' input argument")
 
         return graph.graph_id
 

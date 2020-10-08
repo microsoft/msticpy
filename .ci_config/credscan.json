@@ -10,6 +10,10 @@
             "_justification": "This is a code usage example and does not contain a secret."
         },
         {
+            "file": "UploadData.rst.txt",
+            "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
             "file": "msticpyconfig.rst.txt",
             "_justification": "This is a code usage example and does not contain a secret."
         },
@@ -29,5 +33,6 @@
             "file": "UploadData.rst.txt",
             "_justification": "This is a code usage example and does not contain a secret."
         }
+
     ]
 }
