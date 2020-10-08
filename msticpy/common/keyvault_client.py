@@ -746,7 +746,6 @@ class BHKeyVaultMgmtClient:
 
     def _get_params(self):
         """Build the vault parameters block."""
-        # oid = self.auth_client.user_oid
         oid = _user_oid(self.auth_client.legacy.token)
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]
@@ -761,7 +760,9 @@ class BHKeyVaultMgmtClient:
         )
 
         properties = VaultProperties(
-            tenant_id=self.tenant_id, sku=Sku(name="standard"), access_policies=[policy]
+            tenant_id=self.tenant_id,
+            sku=Sku(name="standard", family="A"),
+            access_policies=[policy],
         )
         parameters = VaultCreateOrUpdateParameters(
             location=self.azure_region, properties=properties

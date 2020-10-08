@@ -343,6 +343,16 @@ class MsticpyKqlConnectionError(MsticpyUserError):
     )
 
 
+class MsticpyAzureConnectionError(MsticpyUserError):
+    """Exception class for KqlConnection errors."""
+
+    DEF_HELP_URI = (
+        "Connecting to Azure Sentinel",
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html"
+        + "#instantiating-and-connecting-with-an-azure-data-connector",
+    )
+
+
 def is_ipython() -> bool:
     """
     Return True if running in IPython environment.

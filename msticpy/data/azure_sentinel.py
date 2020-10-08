@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 import requests
@@ -28,14 +28,10 @@ class AzureSentinel(AzureData):
         super().__init__()
 
     def connect(
-        self,
-        client_id: str = None,
-        tenant_id: str = None,
-        secret: str = None,
-        silent: bool = False,
+        self, auth_methods: List = None, silent: bool = False,
     ):
         """Authenticate with the SDK & API."""
-        super().connect()
+        super().connect(auth_methods=auth_methods, silent=silent)
         self.token = _get_token(self.credentials)
         self.res_group_url = None
         self.prov_path = None
