@@ -28,7 +28,7 @@ class CredentialWrapper(BasicTokenAuthentication):
         **kwargs,
     ):
         """
-        Wrap any azure-identity credential to work with SDK that needs azure.common.credentials.
+        Wrap azure-identity credential to work with SDK that needs ADAL.
 
         Parameters
         ----------

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Azure authentication handling."""
 import os
+from typing import List
 
 from azure.common.exceptions import CloudError
 from azure.mgmt.subscription import SubscriptionClient
@@ -17,15 +18,39 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-def az_connect(
-    client_id: str = None,
-    tenant_id: str = None,
-    secret: str = None,
-    silent: bool = False,
-) -> AzCredentials:
-    """Authenticate with the SDK."""
-    # Use details of msticpyyaml if not provided
-    if client_id is None and tenant_id is None and secret is None:
+def az_connect(auth_methods: List = None, silent: bool = False,) -> AzCredentials:
+    """
+    Connect to Azure SDK/API.
+
+    Parameters
+    ----------
+    auth_methods : List, optional
+        List of authentication methods to try
+        Possible options are:
+        - "env" - to get authentication details from environment varibales
+        - "cli" - to use Azure CLI authentication details
+        - "msi" - to user Managed Service Indenity details
+        - "interactive" - to prompt for interactive login
+        Default is ["env", "cli", "msi", "interactive"]
+    silent : bool, optional
+        Set True to hide all output during connection, by default False
+
+    Returns
+    -------
+    AzCredentials
+        Named tuple of:
+        - legacy (ADAL) credentials
+        - modern (MSAL) credentials
+
+
+    Raises
+    ------
+    CloudError
+        If chained token credential creation fails.
+
+    """
+    # If using env options try to load from msticpy
+    if auth_methods is None or "env" in auth_methods:
         try:
             data_provs = get_provider_settings(config_section="DataProviders")
             az_cli_config = data_provs.get("AzureCLI")
@@ -35,8 +60,7 @@ def az_connect(
             os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
         except KeyError:
             pass
-
-    credentials = az_connect_core(silent=silent)
+    credentials = az_connect_core(auth_methods=auth_methods, silent=silent)
     sub_client = SubscriptionClient(credentials.modern)
     if not sub_client:
         raise CloudError("Could not create a Subscription client.")

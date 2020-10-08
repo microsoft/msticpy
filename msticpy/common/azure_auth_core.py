@@ -20,6 +20,7 @@ from azure.identity import (
 
 from .._version import VERSION
 from .cred_wrapper import CredentialWrapper
+from .exceptions import MsticpyAzureConnectionError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -27,7 +28,7 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
-auth_options = {
+_AUTH_OPTIONS = {
     "env": EnvironmentCredential(),
     "cli": AzureCliCredential(),
     "interactive": InteractiveBrowserCredential(),
@@ -66,6 +67,8 @@ def az_connect_core(
     ------
     CloudError
         If chained token credential creation fails.
+    MsticpyAzureConnectionError
+        If invalid auth options are presented.
 
     Notes
     -----
@@ -81,8 +84,12 @@ def az_connect_core(
     """
     if not auth_methods:
         auth_methods = ["env", "cli", "msi", "interactive"]
-
-    auths = [auth_options[meth] for meth in auth_methods]
+    try:
+        auths = [_AUTH_OPTIONS[meth] for meth in auth_methods]
+    except KeyError:
+        raise MsticpyAzureConnectionError(
+            "Unknown authentication option, valid options are; env, cli, msi, interactive"
+        )
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)

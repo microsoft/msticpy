@@ -56,11 +56,19 @@ See :py:class:`Azure Sentinel <msticpy.data.azure_data.AzureSentinel>`
 In order to connect to the Azure API and retrieve the required data
 we need to instantiate an Azure Data Connector and connect to the API.
 Authentication to the Azure API is handled via an the azure_auth package.
+By default this package will attempt to use a prioirtised list of authenticaiton 
+options. Avaliable options are:
+    * 'env' - This checks for credentials stored as environment variables. If this option is selected valid credentials in msticpyconfig.yaml will be written as enviornment variable values and used.
+    * 'cli' - This attempts to use Azure CLI crendentials on the host running in notebook.
+    * 'msi' - This attempts to use an `Azure Managed Identity. <https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview>`__
+    * 'interactive' - This prompts the browser to interactively login using the device's browser.
+By default `['env', 'cli', 'msi', 'interactive']` is used but you can provide an alternative 
+list to `.connect` via the auth_methods parameter.
 
 .. code:: ipython3
 
         azs = AzureSentinel()
-        azs.connect()
+        azs.connect(auth_methods=['cli','interactive'])
 
 Get Azure Subscription Details
 ------------------------------

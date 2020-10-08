@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 import datetime
 
 import attr
@@ -109,16 +109,10 @@ class AzureData:
             self.connect()
 
     def connect(
-        self,
-        client_id: str = None,
-        tenant_id: str = None,
-        secret: str = None,
-        silent: bool = False,
+        self, auth_methods: List = None, silent: bool = False,
     ):
         """Authenticate with the SDK."""
-        self.credentials = az_connect(
-            client_id=client_id, tenant_id=tenant_id, secret=secret, silent=silent
-        )
+        self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
