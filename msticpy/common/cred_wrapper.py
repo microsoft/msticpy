@@ -67,9 +67,7 @@ class CredentialWrapper(BasicTokenAuthentication):
         self.set_token()
         return super(  # pylint: disable=super-with-arguments
             CredentialWrapper, self
-        ).signed_session(
-            session
-        )
+        ).signed_session(session)
 
 
 def _make_request():
