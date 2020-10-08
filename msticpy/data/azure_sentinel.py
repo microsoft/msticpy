@@ -28,7 +28,9 @@ class AzureSentinel(AzureData):
         super().__init__()
 
     def connect(
-        self, auth_methods: List = None, silent: bool = False,
+        self,
+        auth_methods: List = None,
+        silent: bool = False,
     ):
         """Authenticate with the SDK & API."""
         super().connect(auth_methods=auth_methods, silent=silent)

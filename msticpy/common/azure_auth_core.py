@@ -89,7 +89,7 @@ def az_connect_core(
     except KeyError:
         raise MsticpyAzureConnectionError(
             "Unknown authentication option, valid options are; env, cli, msi, interactive"
-        )
+        ) from KeyError
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)

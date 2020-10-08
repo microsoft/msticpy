@@ -286,7 +286,12 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_keyvault_client(
-        self, sec_client, az_connect_core_patch, html_ip, display_ip, is_ipython_ip,
+        self,
+        sec_client,
+        az_connect_core_patch,
+        html_ip,
+        display_ip,
+        is_ipython_ip,
     ):
         kv_sec_client = SecretClientTest()
         sec_client_obj = MagicMock()
@@ -385,7 +390,12 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_secret_settings(
-        self, sec_client, az_connect_core, html_ip, display_ip, is_ipython_ip,
+        self,
+        sec_client,
+        az_connect_core,
+        html_ip,
+        display_ip,
+        is_ipython_ip,
     ):
         kv_sec_client = SecretClientTest()
         sec_client_obj = MagicMock()
