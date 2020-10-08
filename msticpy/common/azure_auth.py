@@ -57,7 +57,7 @@ def az_connect(
         try:
             data_provs = get_provider_settings(config_section="DataProviders")
             az_cli_config = data_provs.get("AzureCLI")
-            config_items = az_cli_config.args
+            config_items = az_cli_config.args  # type: ignore
             os.environ["AZURE_CLIENT_ID"] = config_items["clientId"]
             os.environ["AZURE_TENANT_ID"] = config_items["tenantId"]
             os.environ["AZURE_CLIENT_SECRET"] = config_items["clientSecret"]
