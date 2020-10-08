@@ -320,8 +320,10 @@ class VTLookup:
             vt_types = {
                 k for k, val in self.ioc_vt_type_mapping.items() if val is not None
             }
-            err = "IoC Type {} is recognized by VirusTotal. Valid types are [{}]".format(
-                ioc_type, ", ".join(vt_types)
+            err = (
+                "IoC Type {} is recognized by VirusTotal. Valid types are [{}]".format(
+                    ioc_type, ", ".join(vt_types)
+                )
             )
             raise LookupError(err)
 

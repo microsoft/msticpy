@@ -18,7 +18,10 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-def az_connect(auth_methods: List = None, silent: bool = False,) -> AzCredentials:
+def az_connect(
+    auth_methods: List = None,
+    silent: bool = False,
+) -> AzCredentials:
     """
     Connect to Azure SDK/API.
 
@@ -61,7 +64,7 @@ def az_connect(auth_methods: List = None, silent: bool = False,) -> AzCredential
         except KeyError:
             pass
     credentials = az_connect_core(auth_methods=auth_methods, silent=silent)
-    sub_client = SubscriptionClient(credentials.modern)
+    sub_client = SubscriptionClient(credentials.modern)  # type: ignore
     if not sub_client:
         raise CloudError("Could not create a Subscription client.")
 

@@ -109,7 +109,9 @@ class AzureData:
             self.connect()
 
     def connect(
-        self, auth_methods: List = None, silent: bool = False,
+        self,
+        auth_methods: List = None,
+        silent: bool = False,
     ):
         """Authenticate with the SDK."""
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
@@ -722,9 +724,9 @@ class AzureData:
         client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
             if sub_id is None:
-                setattr(self, client_name, client(self.credentials.modern))
+                setattr(self, client_name, client(self.credentials.modern))  # type: ignore
             else:
-                setattr(self, client_name, client(self.credentials.modern, sub_id))
+                setattr(self, client_name, client(self.credentials.modern, sub_id))  # type: ignore
 
             if getattr(self, client_name) is None:
                 raise CloudError("Could not create client")
@@ -743,6 +745,6 @@ class AzureData:
         """
         client = _CLIENT_MAPPING[client_name]
         if sub_id is None:
-            setattr(self, client_name, client(self.credentials.legacy))
+            setattr(self, client_name, client(self.credentials.legacy))  # type: ignore
         else:
-            setattr(self, client_name, client(self.credentials.legacy, sub_id))
+            setattr(self, client_name, client(self.credentials.legacy, sub_id))  # type: ignore
