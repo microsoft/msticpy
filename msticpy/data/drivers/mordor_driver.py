@@ -19,8 +19,8 @@ import requests
 import yaml
 from tqdm.auto import tqdm
 
-from ...common.exceptions import MsticpyNotConnectedError
 from ..._version import VERSION
+from ...common.exceptions import MsticpyNotConnectedError
 from ..query_source import QuerySource
 from .driver_base import DriverBase
 
@@ -54,6 +54,11 @@ class MordorDriver(DriverBase):
         self.mdr_idx_tech: Dict[str, Set[str]]
         self.mdr_idx_tact: Dict[str, Set[str]]
         self._driver_queries: List[Dict[str, Any]] = []
+
+        self.use_cached = kwargs.pop("used_cached", True)
+        self.save_folder = kwargs.pop("save_folder", ".")
+        self.silent = kwargs.pop("silent", False)
+
         self._loaded = True
 
     # pylint: disable=global-statement
@@ -121,9 +126,9 @@ class MordorDriver(DriverBase):
         del query_source
         if not self._connected:
             raise self._create_not_connected_err()
-        use_cached = kwargs.pop("used_cached", True)
-        save_folder = kwargs.pop("save_folder", ".")
-        silent = kwargs.pop("silent", False)
+        use_cached = kwargs.pop("used_cached", self.use_cached)
+        save_folder = kwargs.pop("save_folder", self.save_folder)
+        silent = kwargs.pop("silent", self.silent)
         result_df = download_mdr_file(
             file_uri=query,
             use_cached=use_cached,
@@ -576,7 +581,7 @@ def _fetch_mdr_metadata() -> Dict[str, MordorEntry]:
 
     md_metadata: Dict[str, MordorEntry] = {}
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
-    for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor files"):
+    for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"):
         gh_file_content = _get_mdr_file(y_file)
         yaml_doc = yaml.safe_load(gh_file_content)
         doc_id = yaml_doc.get("id")
@@ -645,7 +650,9 @@ def download_mdr_file(
         print(file_uri)
     if not file_uri.lower().endswith("zip"):
         raise TypeError(f"File type not supported {file_uri}")
-    save_path = "-".join(file_uri.split("/")[-2:-1])
+    if not Path(save_folder).is_dir():
+        Path(save_folder).mkdir(parents=True, exist_ok=True)
+    save_path = "-".join(Path(file_uri.replace(DS_PREFIX, "")).parts)
     save_file = Path(save_folder).joinpath(save_path)
     if not use_cached or not save_file.is_file():
         # streamed download
@@ -703,30 +710,35 @@ def _extract_zip_file_to_df(  # noqa: MC0001
 
     out_df = pd.DataFrame()
     if file_path.suffix.lower() == ".json":
-        errs = []
-        with open(str(file_path), "r") as j_file:
-            j_text = j_file.read()
-            df_list = []
-            if silent:
-                line_gen = enumerate(j_text.split("\n"))
-            else:
-                line_gen = tqdm(enumerate(j_text.split("\n")), "lines")
-            for line_num, line in line_gen:
-                if not line:
-                    continue
-                try:
-                    df_list.append(json.loads(line))
-                except JSONDecodeError:
-                    errs.append(f"Could not parse #{line_num}: '{line}'")
-            out_df = pd.DataFrame(df_list)
-        if errs:
-            print(f"{len(errs)} errors detected", errs)
+        out_df = pd.read_json(file_path, lines=True)
     if file_path.suffix.lower() == ".csv":
-        out_df = pd.read_csv(file_name)
+        out_df = pd.read_csv(file_path)
     if file_path.suffix.lower() not in (".json", ".csv"):
         print(f"Cannot process files of type {file_path.suffix.lower()}")
     if not use_cached:
         Path(file_name).unlink()
+    return out_df
+
+
+def _json_to_df(file_path, silent):
+    errs = []
+    with open(str(file_path), "r") as j_file:
+        j_text = j_file.read()
+    df_list = []
+    if silent:
+        line_gen = enumerate(j_text.split("\n"))
+    else:
+        line_gen = tqdm(enumerate(j_text.split("\n")), "lines")
+    for line_num, line in line_gen:
+        if not line:
+            continue
+        try:
+            df_list.append(json.loads(line))
+        except JSONDecodeError:
+            errs.append(f"Could not parse #{line_num}: '{line}'")
+    out_df = pd.DataFrame(df_list)
+    if errs:
+        print(f"{len(errs)} errors detected", errs)
     return out_df
 
 

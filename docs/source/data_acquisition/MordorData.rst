@@ -5,8 +5,10 @@ This notebook provides a guided example of using the Mordor data
 provider and browser included with MSTICpy.
 
 For more information on the Mordor data sets see the `Open Threat
-Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__
+Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__.
 
+For more information on Mitre ATT&CK Techniques and Tactics see
+`Mitre ATT&CK <https://attack.mitre.org/>`__.
 
 Using the Data Provider to download datasets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -115,10 +117,11 @@ as attributes of the Mordor provider.
 
 
 
-Optional parameters to query functions
---------------------------------------
+Optional parameters
+-------------------
 
-The query functions support some parameters to control aspects of the query operation.
+The data provider and the query functions support some parameters to control
+aspects of the query operation.
 
 -  **use_cached** : bool, optional Try to use locally saved file first,
    by default True. If you’ve previously downloaded a file, it will use
@@ -127,6 +130,27 @@ The query functions support some parameters to control aspects of the query oper
    “.”. The path that downloaded and extracted files are saved to.
 -  **silent** : bool If True, suppress feedback. By default, False.
 
+If you specify these when you initialize the data provider, the settings
+will apply to all queries.
+
+.. code:: ipython3
+
+    >>> mdr_data = QueryProvider("Mordor", save_folder="./mordor")
+    >>> mdr_data.connect()
+
+.. note:: since the first line is creating a new instance of the Mordor
+   provider, you will need to call "connect" again. The Mordor and Mitre
+   metadata will be cached so you will not have to download this again
+   in this session.
+
+Using these parameters in the query will override the provider settings
+and defaults for that query.
+
+.. code:: ipython3
+
+    >>> mdr_data.small.windows.credential_access.host.covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges(
+          save_folder="./investigation002"
+        )
 
 Getting summary data about a query
 ----------------------------------
@@ -167,13 +191,19 @@ function to search for queries for matching required attributes.
 
 This function takes a single string parameter - ``search``.
 
-The search text treated as a single text string to search for. It also
-supports some simple search term logic:
+Unless you include delimiters (see next), the search parameter treated as a literal
+text string to search for. It tries to match this string against any text in the
+metadata of the Mordor data sets. The search is case-sensitive.
+
+Search also supports some simple search term logic and AND and OR expressions:
 
 -  Substrings separated by commas will be treated as OR terms,
    e.g. “a, b” == “a” or “b”.
 -  Substrings separated by “+” will be treated as AND terms,
    e.g. “a + b” == “a” and “b”
+
+.. note:: You cannot combine "+" and "," in the same search.
+   For this reason, grouping of expressions is not supported.
 
 The search returns a Python list of the names and descriptions of
 any matching queries.
@@ -261,7 +291,7 @@ Filter Drop-down
 ----------------
 
 To narrow your search you can filter using a text search or filter by
-Mitre Attack Techniques or Tactics. Click on the arrow to open the
+Mitre ATT&CK Techniques or Tactics. Click on the arrow to open the
 filter pane.
 
 The Filter text box
@@ -277,9 +307,9 @@ This uses the same syntax as the provider ``search_queries()`` function.
 
 Filtering by Mitre Categories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--  The Mitre Techniques and Tactics lists are multi-select lists. Only
+-  The Mitre ATT&CK Techniques and Tactics lists are multi-select lists. Only
    items that have techniques and tactics matching the selected items will
-   be show.
+   be show. By default, all are selected.
 
 Clearing the Filter
 ~~~~~~~~~~~~~~~~~~~
