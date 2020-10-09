@@ -7,7 +7,7 @@ from IPython.display import HTML, display
 
 import vt
 from vt_graph_api import VTGraph
-from vt_graph_api import errors as VTGraphErrors
+from vt_graph_api import errors as vtgrapherrors
 
 
 class MsticpyVTNoDataError(Exception):
@@ -15,7 +15,7 @@ class MsticpyVTNoDataError(Exception):
 
 
 class MsticpyVTGraphSaveGraphError(Exception):
-    """Could not save VT Garph."""
+    """Could not save VT Graph."""
 
 
 class VTEntityType(Enum):
@@ -470,14 +470,14 @@ class VTLookupV3:
             )
         try:
             graph.save_graph()
-        except VTGraphErrors.SaveGraphError:
+        except vtgrapherrors.SaveGraphError:
             raise MsticpyVTGraphSaveGraphError(
                 "Could not save Graph. %s" % ""
                 if not private
                 else "Please check you have Private Graph premium feature enabled in"
                 "your subscription. It is possible to create public Graphs"
                 "with 'private=False' input argument"
-            )
+            ) from vtgrapherrors.SaveGraphError
 
         return graph.graph_id
 
