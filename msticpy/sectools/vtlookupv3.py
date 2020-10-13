@@ -7,11 +7,12 @@ from IPython.display import HTML, display
 
 import vt
 from vt_graph_api import VTGraph
-from vt_graph_api import errors as VTGraphErrors
+from vt_graph_api import errors as vt_graph_errs
 
 
 class MsticpyVTNoDataError(Exception):
     """No data returned from VT API."""
+
 
 class MsticpyVTGraphSaveGraphError(Exception):
     """Could not save VT Garph."""
@@ -235,7 +236,7 @@ class VTLookupV3:
                         columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
                     ).set_index(ColumnNames.ID.value)
                 )
-        return pd.concat(dfs) if (len(dfs) > 0) else pd.DataFrame()
+        return pd.concat(dfs) if dfs else pd.DataFrame()
 
     def lookup_ioc_relationships(
         self, observable: str, vt_type: str, relationship: str, limit: int = None
@@ -298,9 +299,9 @@ class VTLookupV3:
                 limit=limit,
             )
             vt_objects = [self._parse_vt_object(r) for r in response]
-            result_df = pd.concat(vt_objects) if len(vt_objects) > 0 else pd.DataFrame()
+            result_df = pd.concat(vt_objects) if vt_objects else pd.DataFrame()
 
-            if len(vt_objects) > 0:
+            if vt_objects:
                 # Inject source and target columns
                 result_df[ColumnNames.SOURCE.value] = observable
                 result_df[ColumnNames.SOURCE_TYPE.value] = VTEntityType(vt_type).value
@@ -320,6 +321,7 @@ class VTLookupV3:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
+
         finally:
             self._vt_client.close()
 
@@ -469,12 +471,14 @@ class VTLookupV3:
             )
         try:
             graph.save_graph()
-        except VTGraphErrors.SaveGraphError:
+        except vt_graph_errs.SaveGraphError as graph_err:
             raise MsticpyVTGraphSaveGraphError(
-                "Could not save Graph. %s" % "" if not private else
-                "Please check you have Private Graph premium feature enabled in"
+                "Could not save Graph. %s" % ""
+                if not private
+                else "Please check you have Private Graph premium feature enabled in"
                 "your subscription. It is possible to create public Graphs"
-                "with 'private=False' input argument")
+                "with 'private=False' input argument"
+            ) from graph_err
 
         return graph.graph_id
 

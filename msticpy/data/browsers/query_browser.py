@@ -5,19 +5,18 @@
 # --------------------------------------------------------------------------
 """QueryProvider Query Browser."""
 import textwrap
-from typing import Generator
+from typing import Generator, Any
 
 from IPython.core.display import HTML
 
-from .._version import VERSION
-from ..data import QueryProvider
-from .nbwidgets import SelectItem
+from ..._version import VERSION
+from ...nbtools.nbwidgets import SelectItem
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def browse_queries(query_provider: QueryProvider, **kwargs) -> SelectItem:
+def browse_queries(query_provider: Any, **kwargs) -> SelectItem:
     """
     Return QueryProvider query browser.
 
@@ -42,10 +41,6 @@ def browse_queries(query_provider: QueryProvider, **kwargs) -> SelectItem:
     disp_func = _query_display_func(query_provider)
     opts = query_provider.list_queries()
     return SelectItem(item_list=opts, action=disp_func, **kwargs)
-
-
-# Add browse_queries as a method to QueryProvider
-setattr(QueryProvider, "browse_queries", browse_queries)
 
 
 def _format_query_doc(query_doc) -> Generator[str, None, None]:
