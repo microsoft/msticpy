@@ -1,14 +1,36 @@
 Mordor data provider and browser
 ================================
 
-This notebook provides a guided example of using the Mordor data
-provider and browser included with MSTICpy.
+Mordor is a project to capture host and network log data
+that illustrates adversarial attack patterns. Mordor is part of the
+Open Threat Research Forge created by Roberto Rodriquez and Jose
+Rodriguez.
+
+The Mordor project provides one of the most comprehensive
+libraries of attack logs - the captured logs contain not just the
+events directly related to the attack but also the set of benign events
+happening at the time of the attack. Each data set is mapped to
+Mitre ATT&CK techniques and tactics and includes simulation scripts
+to allow you to produce the same data in your environment. This makes
+Mordor very useful for testing detection logic - whether simple rules
+or in more complex machine learning scenarios requiring labelled data.
+
+This library allows you to browse through and query Mordor data sets
+and query individual data sets in a similar way to other MSTICPy
+data providers. Like the other providers, the Mordor provider
+returns results as a pandas DataFrame, allowing it to be used
+easily in Jupyter notebooks and other Python code.
 
 For more information on the Mordor data sets see the `Open Threat
 Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__.
 
 For more information on Mitre ATT&CK Techniques and Tactics see
 `Mitre ATT&CK <https://attack.mitre.org/>`__.
+
+You can view a notebook that illustrates the use of the Mordor
+provider here
+`MordorData <<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MordorData.ipynb>`__
+
 
 Using the Data Provider to download datasets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,7 +52,7 @@ To use the Mordor provider, first create a Mordor query provider. Then
 call the connect() function: this will download metadata from Mordor and
 Mitre to populate the query set.
 
-Download progress is shown with a progress bar.
+Download progress is shown with a progress bar (not shown below).
 
 .. code:: ipython3
 
