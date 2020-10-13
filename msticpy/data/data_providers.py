@@ -6,7 +6,7 @@
 """Data provider loader."""
 from functools import partial
 from pathlib import Path
-from typing import Union, Any, List, Dict, Optional
+from typing import Union, Any, List, Dict, Optional, Iterable
 import warnings
 
 import pandas as pd
@@ -18,11 +18,14 @@ from .drivers import (
     MDATPDriver,
     LocalDataDriver,
     SplunkDriver,
+    MordorDriver,
 )
+from .browsers.query_browser import browse_queries
 from .query_store import QueryStore
 from .query_container import QueryContainer
 from .param_extractor import extract_query_params
 from .query_defns import DataEnvironment
+
 from ..common.utility import export, valid_pyname
 from ..common import pkg_config as config
 from .._version import VERSION
@@ -39,6 +42,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MDATP: MDATPDriver,
     DataEnvironment.LocalData: LocalDataDriver,
     DataEnvironment.Splunk: SplunkDriver,
+    DataEnvironment.Mordor: MordorDriver,
 }
 
 
@@ -52,7 +56,6 @@ class QueryProvider:
 
     """
 
-    # pylint: disable=too-many-branches
     def __init__(  # noqa: MC0001
         self,
         data_environment: Union[str, DataEnvironment],
@@ -100,44 +103,18 @@ class QueryProvider:
                 )
 
         self._query_provider = driver
+        self.all_queries = QueryContainer()
 
-        settings: Dict[str, Any] = config.settings.get(  # type: ignore
-            "QueryDefinitions"
-        )  # type: ignore
-        all_query_paths = []
-        for default_path in settings.get("Default"):  # type: ignore
-            qry_path = self._resolve_package_path(default_path)
-            if qry_path:
-                all_query_paths.append(qry_path)
-
-        if settings.get("Custom") is not None:
-            for custom_path in settings.get("Custom"):  # type: ignore
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
-        if query_paths:
-            for custom_path in query_paths:
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
-
-        if not all_query_paths:
-            raise RuntimeError(
-                "No valid query definition files found. ",
-                "Please check your msticpyconfig.yaml settings.",
+        # Add any query files
+        data_env_queries: Dict[str, QueryStore] = {}
+        if driver.use_query_paths:
+            data_env_queries.update(
+                self._read_queries_from_paths(query_paths=query_paths)
             )
-        data_env_queries = QueryStore.import_files(
-            source_path=all_query_paths, recursive=True
+        self._query_store = data_env_queries.get(
+            self._environment, QueryStore(self._environment)
         )
-
-        if self._environment in data_env_queries:
-            self._query_store = data_env_queries[self._environment]
-            self.all_queries = QueryContainer()
-            self._add_query_functions()
-        else:
-            warnings.warn(f"No queries found for environment {self._environment}")
-
-    # pylint: disable=too-many-branches
+        self._add_query_functions()
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -158,14 +135,17 @@ class QueryProvider:
             Connection string for the data source
 
         """
+        self._query_provider.connect(connection_str=connection_str, **kwargs)
+
         # If the driver has any attributes to expose via the provider
         # add those here.
         for attr_name, attr in self._query_provider.public_attribs.items():
             setattr(self, attr_name, attr)
-        self._query_provider.connect(connection_str=connection_str, **kwargs)
-        dyn_queries, container = self._query_provider.service_queries
-        if dyn_queries:
-            self._add_service_queries(container=container, queries=dyn_queries)
+
+        # Add any built-in or dynamically retrieved queries from driver
+        if self._query_provider.has_driver_queries:
+            driver_queries = self._query_provider.driver_queries
+            self._add_driver_queries(queries=driver_queries)
 
     @property
     def connected(self) -> bool:
@@ -284,8 +264,7 @@ class QueryProvider:
         query_options = kwargs.pop("query_options", {}) or kwargs
         return self._query_provider.query(query, **query_options)
 
-    @staticmethod
-    def browse_queries(query_provider, **kwargs):
+    def browse_queries(self, **kwargs):
         """
         Return QueryProvider query browser.
 
@@ -305,9 +284,7 @@ class QueryProvider:
             SelectItem browser for TI Data.
 
         """
-        # Placeholder for class documentation - this function is
-        # replaced by nbtools\query_browser
-        del query_provider, kwargs
+        return browse_queries(self, **kwargs)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -346,6 +323,35 @@ class QueryProvider:
             }
         return self._query_provider.query(query_str, query_source, **query_options)
 
+    def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
+        """Fetch queries from YAML files in specified paths."""
+        settings: Dict[str, Any] = config.settings.get(  # type: ignore
+            "QueryDefinitions"
+        )  # type: ignore
+        all_query_paths = []
+        for default_path in settings.get("Default"):  # type: ignore
+            qry_path = self._resolve_package_path(default_path)
+            if qry_path:
+                all_query_paths.append(qry_path)
+
+        if settings.get("Custom") is not None:
+            for custom_path in settings.get("Custom"):  # type: ignore
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    all_query_paths.append(qry_path)
+        if query_paths:
+            for custom_path in query_paths:
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    all_query_paths.append(qry_path)
+
+        if not all_query_paths:
+            raise RuntimeError(
+                "No valid query definition files found. ",
+                "Please check your msticpyconfig.yaml settings.",
+            )
+        return QueryStore.import_files(source_path=all_query_paths, recursive=True)
+
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
         for qual_query_name in self.list_queries():
@@ -375,15 +381,15 @@ class QueryProvider:
             setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
 
-    def _add_service_queries(
-        self, container: Union[str, List[str]], queries: Dict[str, str]
-    ):
-        """Add additional queries to the query store."""
-        for q_name, q_text in queries.items():
+    def _add_driver_queries(self, queries: Iterable[Dict[str, str]]):
+        """Add driver queries to the query store."""
+        for query in queries:
             self._query_store.add_query(
-                name=q_name, query=q_text, query_paths=container
+                name=query["name"],
+                query=query["query"],
+                query_paths=query["query_container"],
+                description=query["description"],
             )
-
         # For now, just add all of the functions again (with any connect-time acquired
         # queries) - we could be more efficient than this but unless there are 1000s of
         # queries it should not be noticeable.
