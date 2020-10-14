@@ -10,3 +10,4 @@ Querying and Importing Data
    data_acquisition/CollectingLinuxAuditLogs
    data_acquisition/UploadData
    data_acquisition/DataObfuscation
+   data_acquisition/MordorData
