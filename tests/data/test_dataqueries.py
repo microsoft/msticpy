@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
+from datetime import datetime
 import unittest
 from functools import partial
 from pathlib import Path
@@ -337,3 +338,45 @@ class TestDataQuery(unittest.TestCase):
         q_store = data_provider._query_store
         q_src = q_store.get_query("Saved.Searches.test.query3")
         self.assertEqual(q_src.query, dotted_container_qs[2]["query"])
+
+    def test_split_ranges(self):
+        """Test time range split logic."""
+        start = datetime.utcnow() - pd.Timedelta("5H")
+        end = datetime.utcnow() + pd.Timedelta("5min")
+        delta = pd.Timedelta("1H")
+
+        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        self.assertEqual(len(ranges), 5)
+        self.assertEqual(ranges[0][0], start)
+        self.assertEqual(ranges[-1][1], end)
+
+        st_times = [start_tm[0] for start_tm in ranges]
+        for end_time in (end_tm[1] for end_tm in ranges):
+            self.assertNotIn(end_time, st_times)
+
+        end = end + pd.Timedelta("20min")
+        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        self.assertEqual(len(ranges), 5)
+        self.assertEqual(ranges[0][0], start)
+        self.assertEqual(ranges[-1][1], end)
+
+    def test_split_queries(self):
+        """Test queries split into time segments."""
+        la_provider = self.la_provider
+
+        start = datetime.utcnow() - pd.Timedelta("5H")
+        end = datetime.utcnow() + pd.Timedelta("5min")
+        delta = pd.Timedelta("1H")
+
+        ranges = QueryProvider._calc_split_ranges(start, end, delta)
+        result_queries = la_provider.all_queries.list_alerts(
+            "print", start=start, end=end, split_query_by="1H"
+        )
+        queries = result_queries.split("\n\n")
+        self.assertEqual(len(queries), 5)
+
+        for idx, (st_time, e_time) in enumerate(ranges):
+            self.assertIn(st_time.isoformat(sep="T") + "Z", queries[idx])
+            self.assertIn(e_time.isoformat(sep="T") + "Z", queries[idx])
+        self.assertIn(start.isoformat(sep="T") + "Z", queries[0])
+        self.assertIn(end.isoformat(sep="T") + "Z", queries[-1])
