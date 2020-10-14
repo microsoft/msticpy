@@ -39,7 +39,7 @@ def test_azure_connect(mock_creds, mock_sub_client):
     mock_creds.return_value = AzCredentials("cred", "cred")
     az = AzureData()
     az.connect()
-    assert az.connected == True
+    assert az.connected is True
 
 
 def test_get_config():

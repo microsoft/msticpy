@@ -42,7 +42,7 @@ def az_connect_core(
     """
     Authenticate using multiple authentication sources.
 
-    Paramters
+    Parameters
     ---------
     auth_methods
         List of authentication methods to try

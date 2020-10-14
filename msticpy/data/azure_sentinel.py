@@ -11,6 +11,8 @@ import requests
 from azure.common.exceptions import CloudError
 
 from .azure_data import AzureData
+from ..common.exceptions import MsticpyAzureConfigError
+from ..common.wsconfig import WorkspaceConfig
 
 _PATH_MAPPING = {
     "ops_path": "/providers/Microsoft.SecurityInsights/operations",
@@ -26,6 +28,7 @@ class AzureSentinel(AzureData):
     def __init__(self, connect: bool = False):
         """Initialize connector for Azure APIs."""
         super().__init__()
+        self.config = None
 
     def connect(
         self,
@@ -38,14 +41,15 @@ class AzureSentinel(AzureData):
         self.res_group_url = None
         self.prov_path = None
 
-    def get_sentinel_workspaces(self, sub_id: str) -> Dict:
+    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict:
         """
         Return a list of Azure Sentinel workspaces in a Subscription.
 
         Parameters
         ----------
         sub_id : str
-            The subscription ID to get a list of workspaces from
+            The subscription ID to get a list of workspaces from.
+            If not provided it will attempt to get sub_id from config files.
 
         Returns
         -------
@@ -53,6 +57,11 @@ class AzureSentinel(AzureData):
             A dictionary of workspace names and ids
 
         """
+        # If a subscription ID isn't provided try and get one from config files.
+        if not sub_id:
+            config = self._check_config(["subscription_id"])
+            sub_id = config["subscription_id"]
+
         print("Finding Azure Sentinel Workspaces...")
         res = self.get_resources(sub_id=sub_id)
         # handle no results
@@ -78,7 +87,13 @@ class AzureSentinel(AzureData):
         print(f"No Azure Sentinel workspaces in {sub_id}")
         return {}
 
-    def get_hunting_queries(self, res_id) -> pd.DataFrame:
+    def get_hunting_queries(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
         """
         Return all hunting queries in an Azure Sentinel workspace.
 
@@ -93,6 +108,17 @@ class AzureSentinel(AzureData):
             A table of the hunting queries.
 
         """
+        # If res_id isn't provided try and get them from config
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+
         url = _build_paths(res_id)
         saved_searches_url = url + _PATH_MAPPING["ss_path"]
         params = {"api-version": "2017-04-26-preview"}
@@ -107,7 +133,13 @@ class AzureSentinel(AzureData):
 
         return queries_df[queries_df["Category"] == "Hunting Queries"]
 
-    def get_alert_rules(self, res_id) -> pd.DataFrame:
+    def get_alert_rules(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
         """
         Return all Azure Sentinel alert rules for a workspace.
 
@@ -122,6 +154,16 @@ class AzureSentinel(AzureData):
             A table of the workspace's alert rules.
 
         """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+
         url = _build_paths(res_id)
         alert_rules_url = url + _PATH_MAPPING["alert_rules"]
         params = {"api-version": "2020-01-01"}
@@ -136,7 +178,13 @@ class AzureSentinel(AzureData):
 
         return alerts_df
 
-    def get_bookmarks(self, res_id) -> pd.DataFrame:
+    def get_bookmarks(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
         """
         Return all bookmarks from an Azure Sentinel workspace.
 
@@ -151,6 +199,16 @@ class AzureSentinel(AzureData):
             A table of all bookmarks in a workspace
 
         """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+
         url = _build_paths(res_id)
         bookmarks_url = url + _PATH_MAPPING["bookmarks"]
         params = {"api-version": "2020-01-01"}
@@ -164,6 +222,30 @@ class AzureSentinel(AzureData):
             raise CloudError("Could not get bookmarks.")
 
         return bookmarks_df
+
+    def _check_config(self, items: List) -> Dict:
+        """Get parameters from default config files.
+
+        Parameters
+        ----------
+        item : List
+            The item(s) to get from the config.
+
+        Returns
+        -------
+        Dict
+            The config items.
+        """
+        config_items = {}
+        if not self.config:
+            self.config = WorkspaceConfig()
+        for item in items:
+            if item in self.config:
+                config_items.update({item: self.config[item]})
+            else:
+                raise MsticpyAzureConfigError("No subscription ID avaliable in config.")
+
+        return config_items
 
 
 def _build_paths(resid) -> str:
