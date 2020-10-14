@@ -134,6 +134,13 @@ msticpy.data.drivers.mdatp\_driver module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.drivers.mordor\_driver module
+------------------------------------------
+.. automodule:: msticpy.data.drivers.mordor_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.drivers.odata\_driver module
 -----------------------------------------
 .. automodule:: msticpy.data.drivers.odata_driver
@@ -149,7 +156,7 @@ msticpy.data.drivers.security\_graph\_driver module
     :show-inheritance:
 
 msticpy.data.drivers.splunk\_driver module
----------------------------------------------------
+------------------------------------------
 .. automodule:: msticpy.data.drivers.splunk_driver
     :members:
     :undoc-members:
@@ -158,6 +165,20 @@ msticpy.data.drivers.splunk\_driver module
 msticpy.data.data\_obfus
 ------------------------
 .. automodule:: msticpy.data.data_obfus
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.browsers.query\_browser module
+-------------------------------------------
+.. automodule:: msticpy.data.browsers.query_browser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.browsers.mordor\_browser module
+--------------------------------------------
+.. automodule:: msticpy.data.browsers.mordor_browser
     :members:
     :undoc-members:
     :show-inheritance:
