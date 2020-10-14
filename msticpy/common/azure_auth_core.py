@@ -43,7 +43,7 @@ def az_connect_core(
     Authenticate using multiple authentication sources.
 
     Parameters
-    ---------
+    ----------
     auth_methods
         List of authentication methods to try
         Possible options are:
