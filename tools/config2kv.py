@@ -63,7 +63,7 @@ def _read_config_settings(conf_file):
     try:
         sys_config = os.environ["MSTICPYCONFIG"]
     except KeyError:
-        sysconfig = Path.cwd().joinpath("msticpyconfig.yaml")
+        sys_config = Path.cwd().joinpath("msticpyconfig.yaml")
     if not conf_file:
         conf_file = sys_config
     if not conf_file:

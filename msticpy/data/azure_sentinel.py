@@ -99,8 +99,14 @@ class AzureSentinel(AzureData):
 
         Parameters
         ----------
-        res_id : str
-            The resource ID of the Azure Sentinel workspace to get hunting queries from.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
 
         Returns
         -------
@@ -117,7 +123,8 @@ class AzureSentinel(AzureData):
                 sub_id = config["subscription_id"]
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
 
         url = _build_paths(res_id)
         saved_searches_url = url + _PATH_MAPPING["ss_path"]
@@ -145,8 +152,14 @@ class AzureSentinel(AzureData):
 
         Parameters
         ----------
-        res_id : str
-            The resource ID of the Azure Sentinel workspace to get details from.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
 
         Returns
         -------
@@ -162,7 +175,8 @@ class AzureSentinel(AzureData):
                 sub_id = config["subscription_id"]
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
 
         url = _build_paths(res_id)
         alert_rules_url = url + _PATH_MAPPING["alert_rules"]
@@ -186,17 +200,28 @@ class AzureSentinel(AzureData):
         ws_name: str = None,
     ) -> pd.DataFrame:
         """
-        Return all bookmarks from an Azure Sentinel workspace.
+        Return a list of Bookmarks from a Sentinel workspace.
 
         Parameters
         ----------
-        res_id : str
-            The Azure Sentinel workspace to get bookmarks from.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
 
         Returns
         -------
         pd.DataFrame
-            A table of all bookmarks in a workspace
+            A set of bookmarks.
+
+        Raises
+        ------
+        CloudError
+            If bookmark collection fails.
 
         """
         if not res_id:
@@ -207,7 +232,8 @@ class AzureSentinel(AzureData):
                 sub_id = config["subscription_id"]
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
 
         url = _build_paths(res_id)
         bookmarks_url = url + _PATH_MAPPING["bookmarks"]
@@ -224,17 +250,19 @@ class AzureSentinel(AzureData):
         return bookmarks_df
 
     def _check_config(self, items: List) -> Dict:
-        """Get parameters from default config files.
+        """
+        Get parameters from default config files.
 
         Parameters
         ----------
-        item : List
-            The item(s) to get from the config.
+        items : List
+            The items to get from the config.
 
         Returns
         -------
         Dict
             The config items.
+
         """
         config_items = {}
         if not self.config:
@@ -243,7 +271,7 @@ class AzureSentinel(AzureData):
             if item in self.config:
                 config_items.update({item: self.config[item]})
             else:
-                raise MsticpyAzureConfigError("No subscription ID avaliable in config.")
+                raise MsticpyAzureConfigError(f"No {item} avaliable in config.")
 
         return config_items
 
