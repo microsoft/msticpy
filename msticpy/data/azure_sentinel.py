@@ -63,7 +63,7 @@ class AzureSentinel(AzureData):
             sub_id = config["subscription_id"]
 
         print("Finding Azure Sentinel Workspaces...")
-        res = self.get_resources(sub_id=sub_id)
+        res = self.get_resources(sub_id=sub_id)  # type: ignore
         # handle no results
         if isinstance(res, pd.DataFrame) and not res.empty:
             sentinel = res[
@@ -73,7 +73,7 @@ class AzureSentinel(AzureData):
             workspaces = []
             for wrkspace in sentinel["resource_id"]:
                 res_details = self.get_resource_details(
-                    sub_id=sub_id, resource_id=wrkspace
+                    sub_id=sub_id, resource_id=wrkspace  # type: ignore
                 )
                 workspaces.append(res_details["properties"]["workspaceResourceId"])
 
@@ -124,7 +124,9 @@ class AzureSentinel(AzureData):
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
 
         url = _build_paths(res_id)
         saved_searches_url = url + _PATH_MAPPING["ss_path"]
@@ -176,7 +178,9 @@ class AzureSentinel(AzureData):
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
 
         url = _build_paths(res_id)
         alert_rules_url = url + _PATH_MAPPING["alert_rules"]
@@ -233,7 +237,9 @@ class AzureSentinel(AzureData):
                 res_grp = config["resource_group"]
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
 
         url = _build_paths(res_id)
         bookmarks_url = url + _PATH_MAPPING["bookmarks"]
@@ -266,10 +272,10 @@ class AzureSentinel(AzureData):
         """
         config_items = {}
         if not self.config:
-            self.config = WorkspaceConfig()
+            self.config = WorkspaceConfig()  # type: ignore
         for item in items:
-            if item in self.config:
-                config_items.update({item: self.config[item]})
+            if item in self.config:  # type: ignore
+                config_items.update({item: self.config[item]})  # type: ignore
             else:
                 raise MsticpyAzureConfigError(f"No {item} avaliable in config.")
 
