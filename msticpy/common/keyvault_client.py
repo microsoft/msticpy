@@ -5,252 +5,40 @@
 # --------------------------------------------------------------------------
 """Keyvault client - adapted from Bluehound code."""
 import base64
-from datetime import datetime
 import json
-from typing import List, Any, Optional
-import warnings
+from datetime import datetime
+from typing import Any, List
 
-from adal import AuthenticationContext, AdalError
+import keyring
+import pandas.io.clipboard as pyperclip
+from adal import AdalError, AuthenticationContext
 from azure.core.exceptions import ResourceNotFoundError
-from azure.keyvault.secrets import SecretClient, KeyVaultSecret
-from azure.identity import DeviceCodeCredential, InteractiveBrowserCredential
+from azure.keyvault.secrets import KeyVaultSecret, SecretClient
+
 from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
-    VaultProperties,
-    Sku,
-    KeyPermissions,
-    SecretPermissions,
     CertificatePermissions,
+    KeyPermissions,
     Permissions,
-    VaultCreateOrUpdateParameters,
+    SecretPermissions,
+    Sku,
     Vault,
+    VaultCreateOrUpdateParameters,
+    VaultProperties,
 )
-from IPython.display import display, HTML
-import keyring
+from IPython.display import HTML, display
 from keyring.errors import KeyringError
-from msrest.authentication import BasicTokenAuthentication
 from msrestazure.azure_exceptions import CloudError
-import pandas.io.clipboard as pyperclip
 
-from .exceptions import MsticpyKeyVaultConfigError, MsticpyKeyVaultMissingSecretError
-from . import pkg_config as config
-from .utility import export, is_ipython
 from .._version import VERSION
+from .azure_auth_core import az_connect_core
+from .exceptions import MsticpyKeyVaultConfigError, MsticpyKeyVaultMissingSecretError
+from .keyvault_settings import KeyVaultSettings
+from .utility import export, is_ipython
 
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
-
-
-# pylint: disable=too-many-lines
-@export
-class KeyVaultSettings:
-    """
-    KeyVaultSettings class - reads settings from msticpyconfig.
-
-    Notes
-    -----
-    The KeyVault section in msticpyconfig.yaml can contain
-    the following::
-
-        KeyVault:
-            TenantId: {tenantid-to-use-for-authentication}
-            SubscriptionId: {subscriptionid-containing-vault}
-            ResourceGroup: {resource-group-containing-vault}
-            AzureRegion: {region-for-vault}
-            VaultName: {vault-name}
-            UseKeyring: True
-            Authority: global
-
-    `SubscriptionId`, `ResourceGroup` and `AzureRegion` are only
-    used when creating new vaults.
-    `UseKeyring` instructs the `SecretsClient` to cache Keyvault
-    secrets locally using Python keyring.
-    `Authority` is one of 'global', 'usgov', 'de', 'chi'
-    Alternatively, you can specify `AuthorityURI` with the value
-    pointing to the URI for logon requests.
-
-    """
-
-    AAD_AUTHORITIES = {
-        "global": "https://login.microsoftonline.com/",
-        "usgov": "https://login.microsoftonline.us",
-        "de": "https://login.microsoftonline.de",
-        "chi": "https://login.chinacloudapi.cn",
-    }
-
-    KV_URIS = {
-        "global": "https://{vault}.vault.azure.net/",
-        "usgov": "https://{vault}.vault.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
-    }
-
-    MGMT_URIS = {
-        "global": "https://management.azure.com/",
-        "usgov": "https://management.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
-    }
-
-    # Azure CLI Client ID
-    CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"  # xplat
-
-    def __init__(self):
-        """Initialize new instance of KeyVault Settings."""
-        try:
-            kv_config = config.get_config("KeyVault")
-        except KeyError as err:
-            raise MsticpyKeyVaultConfigError(
-                "No KeyVault section found in msticpyconfig.yaml",
-                title="missing Key Vault configuration",
-            ) from err
-        norm_settings = {key.casefold(): val for key, val in kv_config.items()}
-        self.__dict__.update(norm_settings)
-        if "authority_uri" in self:
-            rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
-            self.__dict__["authority"] = rev_lookup.get(
-                self["authorityuri"].casefold(), "global"
-            ).casefold()
-
-    def __getitem__(self, key: str):
-        """Allow property get using dictionary key syntax."""
-        if key.casefold() in self.__dict__:
-            return self.__dict__[key.casefold()]
-        raise KeyError
-
-    def __setitem__(self, key: str, value: Any):
-        """Allow property set using dictionary key syntax."""
-        self.__dict__[key.casefold()] = value
-
-    def __contains__(self, key: str):
-        """Return true if key is a valid attribute."""
-        return key.casefold() in self.__dict__
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Return dict value or default."""
-        return self.__dict__.get(key.casefold(), default)
-
-    @property
-    def cloud(self) -> str:
-        """Return the cloud for the settings."""
-        return self.get("authority", "global").casefold()
-
-    @property
-    def authority_uri(self) -> str:
-        """
-        Return authority URI for cloud.
-
-        Returns
-        -------
-        str
-            Authority URI
-
-        """
-        if "authorityuri" in self:
-            return self["authorityuri"]
-        if self.cloud in self.AAD_AUTHORITIES:
-            return self.AAD_AUTHORITIES[self.cloud]
-        return self.AAD_AUTHORITIES["global"]
-
-    @property
-    def keyvault_uri(self) -> Optional[str]:
-        """Return KeyVault URI template for current cloud."""
-        kv_uri = self.KV_URIS.get(self.cloud)
-        if not kv_uri:
-            mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
-            warnings.warn(mssg)
-        return kv_uri
-
-    @property
-    def mgmt_uri(self) -> Optional[str]:
-        """Return Azure management URI template for current cloud."""
-        mgmt_uri = self.MGMT_URIS.get(self.cloud)
-        if not mgmt_uri:
-            mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
-            warnings.warn(mssg)
-        return mgmt_uri
-
-    def get_tenant_authority_uri(
-        self, authority_uri: str = None, tenant: str = None
-    ) -> str:
-        """
-        Return authority URI for tenant.
-
-        Parameters
-        ----------
-        authority_uri : str, optional
-            The authority URI - otherwise try to retrieve
-            from settings
-        tenant : str, optional
-            TenantID or name, by default None.
-            If not passed as a parameter try to get tenant from
-            KeyVault configuration in msticpyconfig.yaml
-
-        Returns
-        -------
-        str
-            Tenant Authority
-
-        Raises
-        ------
-        KeyVaultConfigException
-            If tenant is not defined.
-
-        """
-        auth = authority_uri or self.authority_uri.strip()
-        if not tenant:
-            tenant = self.get("tenantid")
-        if not tenant:
-            raise MsticpyKeyVaultConfigError(
-                "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfig.yaml",
-                title="missing tenant ID value.",
-            )
-        if auth.endswith("/"):
-            return auth + tenant.strip()
-        return auth + "/" + tenant.strip()
-
-    def get_tenant_authority_host(
-        self, authority_uri: str = None, tenant: str = None
-    ) -> str:
-        """
-        Return tenant authority URI with no leading scheme.
-
-        Parameters
-        ----------
-        authority_uri : str, optional
-            The authority URI - otherwise try to retrieve
-            from settings
-        tenant : str, optional
-            TenantID or name, by default None.
-            If not passed as a parameter try to get tenant from
-            KeyVault configuration in msticpyconfig.yaml
-
-        Returns
-        -------
-        str
-            Tenant Authority
-
-        Raises
-        ------
-        KeyVaultConfigException
-            If tenant is not defined.
-
-        """
-        if not tenant:
-            tenant = self.get("tenantid")
-        if not tenant:
-            raise MsticpyKeyVaultConfigError(
-                "Could not get TenantId from function parameters or configuration.",
-                "Please add this to the KeyVault section of msticpyconfig.yaml",
-                title="missing tenant ID value.",
-            )
-        return (
-            self.get_tenant_authority_uri(authority_uri, tenant)
-            .lower()
-            .replace("https://", "")
-        )
 
 
 # pylint: disable=too-many-instance-attributes
@@ -344,11 +132,11 @@ class AuthClient:
 
     def _is_valid_config_data(self):
         keys = ["accessToken", "refreshToken", "expiresOn"]
-        if all([key in self.config_data for key in keys]):
-            if all([self.config_data.get(key) for key in keys]):
-                if all([len(self.config_data.get(key)) > 0 for key in keys]):
-                    return True
-        return False
+        return (
+            all(key in self.config_data for key in keys)
+            and all(self.config_data.get(key) for key in keys)
+            and all(len(self.config_data.get(key)) > 0 for key in keys)
+        )
 
     @property
     def auth_id(self) -> str:
@@ -706,28 +494,13 @@ class BHKeyVaultClient:
         if self.debug:
             print(f"Using Vault URI {self.vault_uri}")
 
-        # self.auth_client = KeyringAuthClient(
-        #     tenant_id,
-        #     self._CLIENT_ID,
-        #     self._CLIENT_URI,
-        #     self._KEYRING_NAME,
-        #     debug=self.debug,
-        # )
         self.kv_client = self._get_secret_client()
 
     def _get_secret_client(self):
-        if self.authn_type == "device":
-            authority = self.authority_uri.replace("https://", "")
-            credentials = DeviceCodeCredential(
-                client_id=self.settings.CLIENT_ID,
-                authority=authority,
-                prompt_callback=_device_code_callback,
-            )
-        else:
-            credentials = InteractiveBrowserCredential()
+        credentials = az_connect_core()
 
         # Create a secret client
-        secret_client = SecretClient(self.vault_uri, credentials)
+        secret_client = SecretClient(self.vault_uri, credentials.modern)
         return secret_client
 
     @property
@@ -799,9 +572,7 @@ class BHKeyVaultClient:
         """
         if self.debug:
             print("Storing %s in %s" % (secret_name, self.vault_uri))
-        secret_bundle = self.kv_client.set_secret(name=secret_name, value=value)
-
-        return secret_bundle
+        return self.kv_client.set_secret(name=secret_name, value=value)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -869,12 +640,8 @@ class BHKeyVaultMgmtClient:
                 + "specified in the KeyVault section of msticpyconfig.yaml",
                 title="no Azure Management URI for national cloud",
             )
-        self.auth_client = AuthClient(
-            tenant_id=self.tenant_id,
-            client_id=self.settings.CLIENT_ID,
-            client_uri=self._client_uri,
-            name="mgmt",
-        )
+
+        self.auth_client = az_connect_core()
         self.resource_group = resource_group or self.settings.get("resourcegroup")
         self.azure_region = azure_region or self.settings.get("azureregion")
 
@@ -890,8 +657,7 @@ class BHKeyVaultMgmtClient:
             Vault names
 
         """
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
         return [v.name for v in mgmt.vaults.list()]
 
     def get_vault_uri(self, vault_name: str) -> str:
@@ -909,8 +675,7 @@ class BHKeyVaultMgmtClient:
             Vault URI.
 
         """
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
         try:
             vault = mgmt.vaults.get(self.resource_group, vault_name)
         except (CloudError, ResourceNotFoundError) as cloud_err:
@@ -918,7 +683,7 @@ class BHKeyVaultMgmtClient:
                 "Check that you have specified the right value for VaultName"
                 + " in your configuration",
                 f"Error returned from provider was {cloud_err}",
-                title="Key Vault vault '{vault_name}' not found.",
+                title=f"Key Vault vault '{vault_name}' not found.",
             ) from cloud_err
         return vault.properties.vault_uri
 
@@ -944,22 +709,20 @@ class BHKeyVaultMgmtClient:
                 title="missing AzureRegion value.",
             )
         parameters = self._get_params()
-        cred = BasicTokenAuthentication({"access_token": self.auth_client.token})
         if not self.resource_group:
             raise MsticpyKeyVaultConfigError(
                 "Could not get Azure resource group in which to create the vault.",
                 "Please add ResourceGroup to the KeyVault section of msticpyconfig.yaml",
                 title="missing ResourceGroup value.",
             )
-        mgmt = KeyVaultManagementClient(cred, self.subscription_id)
-        vault = mgmt.vaults.create_or_update(
+        mgmt = KeyVaultManagementClient(self.auth_client.legacy, self.subscription_id)
+        return mgmt.vaults.create_or_update(
             self.resource_group, vault_name, parameters
         ).result()
-        return vault
 
     def _get_params(self):
         """Build the vault parameters block."""
-        oid = self.auth_client.user_oid
+        oid = _user_oid(self.auth_client.legacy.token)
         sec_perms_all = [perm.value for perm in SecretPermissions]
         key_perms_all = [perm.value for perm in KeyPermissions]
         cert_perms_all = [perm.value for perm in CertificatePermissions]
@@ -973,7 +736,9 @@ class BHKeyVaultMgmtClient:
         )
 
         properties = VaultProperties(
-            tenant_id=self.tenant_id, sku=Sku(name="standard"), access_policies=[policy]
+            tenant_id=self.tenant_id,
+            sku=Sku(name="standard", family="A"),
+            access_policies=[policy],
         )
         parameters = VaultCreateOrUpdateParameters(
             location=self.azure_region, properties=properties
@@ -1022,3 +787,24 @@ def _prompt_for_code(device_code):
         display(HTML(logon_mssg))
     else:
         print(logon_mssg)
+
+
+def _user_oid(token) -> str:
+    """
+    Return the user Object ID.
+
+    Returns
+    -------
+    str
+        User OID.
+
+    """
+    data = _get_parsed_token_data(token)
+    return data.get("oid")
+
+
+def _get_parsed_token_data(token) -> Any:
+    tok_data = token
+    tok_data = tok_data.split(".")[1]
+    tok_data += "=" * ((4 - len(tok_data) % 4) % 4)
+    return json.loads(base64.b64decode(tok_data))

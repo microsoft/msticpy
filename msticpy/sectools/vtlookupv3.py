@@ -15,7 +15,7 @@ class MsticpyVTNoDataError(Exception):
 
 
 class MsticpyVTGraphSaveGraphError(Exception):
-    """Could not save VT Garph."""
+    """Could not save VT Graph."""
 
 
 class VTEntityType(Enum):

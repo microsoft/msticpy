@@ -20,6 +20,7 @@ pyroma>=2.5
 pytest-check>=0.3.9
 pytest-cov>=2.7.1
 pytest>=5.0.1
+responses>=0.10.8
 sphinx>=2.1.2
 sphinx_rtd_theme
 virtualenv
