@@ -18,6 +18,22 @@ msticpy.common.wsconfig module
     :undoc-members:
     :show-inheritance:
 
+msticpy.common.azure\_auth module
+---------------------------------------
+
+.. automodule:: msticpy.common.azure_auth
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.common.azure\_auth\_core module
+---------------------------------------
+
+.. automodule:: msticpy.common.azure_auth_core
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.common.keyvault\_client module
 --------------------------------------
 
@@ -49,3 +65,4 @@ msticpy.sectools.exceptions module
     :members:
     :undoc-members:
     :show-inheritance:
+

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """datq query test class."""
 from copy import deepcopy
+from collections import namedtuple
 from contextlib import redirect_stdout
 from datetime import datetime, timedelta
 from io import StringIO
@@ -42,9 +43,8 @@ set_unit_testing(True)
 
 
 # Unit test mock patches
+az_connect_core_patch = BHKeyVaultMgmtClient.__module__ + ".az_connect_core"
 auth_context_patch = AuthClient.__module__ + ".AuthenticationContext"
-devcode_cred_patch = BHKeyVaultMgmtClient.__module__ + ".DeviceCodeCredential"
-interact_cred_patch = BHKeyVaultMgmtClient.__module__ + ".InteractiveBrowserCredential"
 sec_client_patch = BHKeyVaultMgmtClient.__module__ + ".SecretClient"
 is_ipython_patch = BHKeyVaultMgmtClient.__module__ + ".is_ipython"
 display_patch = BHKeyVaultMgmtClient.__module__ + ".display"
@@ -283,14 +283,12 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(is_ipython_patch)
     @patch(display_patch)
     @patch(HTML_patch)
-    @patch(devcode_cred_patch)
-    @patch(interact_cred_patch)
+    @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_keyvault_client(
         self,
         sec_client,
-        interact_cred,
-        devcode_cred,
+        az_connect_core_patch,
         html_ip,
         display_ip,
         is_ipython_ip,
@@ -303,10 +301,10 @@ class TestSecretsConfig(unittest.TestCase):
         sec_client_obj.get_secret = kv_sec_client.get_secret
         sec_client_obj.set_secret = kv_sec_client.set_secret
         sec_client.return_value = sec_client_obj
-        call_prompt = lambda client_id, authority, prompt_callback: _prompt_for_code(
-            DEV_CODE
-        )
-        devcode_cred.side_effect = call_prompt
+        # call_prompt = lambda client_id, authority, prompt_callback: _prompt_for_code(
+        #    DEV_CODE
+        # )
+        # az_connect_core_patch.side_effect = call_prompt
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
 
         # Check both vault params
@@ -325,23 +323,7 @@ class TestSecretsConfig(unittest.TestCase):
         with self.assertRaises(MsticpyKeyVaultConfigError):
             BHKeyVaultClient(settings=no_tenant_id, debug=True)
 
-        # Device auth - simulating IPython
-        # Get most things from settings
-        is_ipython_ip.return_value = True
-        keyvault_client = BHKeyVaultClient(debug=True, authn_type="device")
-        # Check values in logon message
-        logon_message_call = html_ip.call_args_list[-1][0][0]
-        self.assertIn(DEV_CODE["user_code"], logon_message_call)
-        self.assertIn(DEV_CODE["verification_url"], logon_message_call)
-
-        # Device auth - not IPython (capture std out)
-        is_ipython_ip.return_value = False
-        txt_stream = StringIO()
-        with redirect_stdout(txt_stream):
-            keyvault_client = BHKeyVaultClient(debug=True, authn_type="device")
-        txt_out = txt_stream.getvalue()
-        self.assertIn(DEV_CODE["user_code"], txt_out)
-        self.assertIn(DEV_CODE["verification_url"], txt_out)
+        keyvault_client = BHKeyVaultClient(debug=True)
 
         # Check secret methods
         for sec_id in keyvault_client.secrets:
@@ -364,8 +346,11 @@ class TestSecretsConfig(unittest.TestCase):
 
     @patch(kv_mgmt_client_patch)
     @patch(auth_context_patch)
-    def test_kv_mgmt_client(self, auth_context, kv_mgmt):
-
+    @patch(az_connect_core_patch)
+    def test_kv_mgmt_client(self, az_core, auth_context, kv_mgmt):
+        AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
+        LegacyCreds = namedtuple("legacycreds", ["token"])
+        az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN), "cred")
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
         kv_mgmt.return_value = KeyVaultMgmtMock()
@@ -402,14 +387,12 @@ class TestSecretsConfig(unittest.TestCase):
     @patch(is_ipython_patch)
     @patch(display_patch)
     @patch(HTML_patch)
-    @patch(devcode_cred_patch)
-    @patch(interact_cred_patch)
+    @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_secret_settings(
         self,
         sec_client,
-        interact_cred,
-        devcode_cred,
+        az_connect_core,
         html_ip,
         display_ip,
         is_ipython_ip,

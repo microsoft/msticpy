@@ -8,9 +8,6 @@ from datetime import datetime
 from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
-import splunklib.client as sp_client
-import splunklib.results as sp_results
-from splunklib.client import AuthenticationError, HTTPError
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -19,8 +16,20 @@ from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
+    MsticpyImportExtraError,
 )
 from ...common.provider_settings import get_provider_settings, ProviderSettings
+
+try:
+    import splunklib.client as sp_client
+    import splunklib.results as sp_results
+    from splunklib.client import AuthenticationError, HTTPError
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without splunk-sdk installed",
+        title="Error importing splunk-sdk",
+        extra="splunk",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"

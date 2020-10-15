@@ -99,6 +99,13 @@ msticpy.data.azure\_data module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.azure\_sentinel module
+-------------------------------
+.. automodule:: msticpy.data.azure_sentinel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.drivers.driver\_base module
 ----------------------------------------
 .. automodule:: msticpy.data.drivers.driver_base

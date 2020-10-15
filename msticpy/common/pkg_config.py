@@ -17,7 +17,6 @@ Consolidated settings are accessible as an attribute `settings`.
 
 """
 import os
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Callable
 

@@ -1087,7 +1087,7 @@ can use that when running a query to automatically supply the ``start`` and
     <p>5 rows × 30 columns</p>
     </div>
 
-
+.. _ad-hoc-queries:
 
 Running an ad-hoc query
 -----------------------
@@ -1127,20 +1127,6 @@ execute.
 
     query_test = qry_prov.exec_query(query=test_query)
     query_test.head()
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
 
 
 .. raw:: html
@@ -1312,6 +1298,62 @@ execute.
     <p>5 rows × 29 columns</p>
     </div>
 
+
+Splitting Query Execution into Chunks
+-------------------------------------
+
+Some queries return too much data or take too long to execute in a
+single request. The MSTICPy data providers have an option to
+split a query into time ranges. Each sub-range is run as an independent
+query and the results are combined before being returned as a
+DataFrame.
+
+To use this feature you must specify the keyword parameter ``split_queries_by``
+when executing the query function. The value to this parameter is a
+string that specifies a time period. The time range specified by the
+``start`` and ``end`` parameters to the query is split into sub-ranges
+each of which are the length of the split time period. For example, if you
+specify ``split_queries_by="1H"`` the query will be split into one hour
+chunks.
+
+.. note:: The final chunk may cover a time period larger or smaller
+   than the split period that you specified in the *split_queries_by*
+   parameter. This can happen if *start* and *end* are not aligned
+   exactly on time boundaries (e.g. if you used a one hour split period
+   and *end* is 10 hours 15 min after *start*. The query split logic
+   will create a larger final slice if *end* is close to the final time
+   range or it will insert an extra time range to ensure that the full
+   *start** to *end* time range is covered.
+
+The subranges are used to generate a query for each time range. The
+queries are then executed in sequence and the results concatenated into
+a single DataFrame before being returned.
+
+The values acceptable for the *split_queries_by* parameter have the format:
+
+::
+
+    {N}{TimeUnit}
+
+where N is the number of units and TimeUnit is a mnemonic of the unit, e.g.
+H = hour, D = day, etc. For the full list of these see the documentation
+for Timedelta in the
+`pandas documentation<https://pandas.pydata.org/pandas-docs>`__
+
+.. warning:: There are some important caveats to this feature.
+
+   1. It currently only works with pre-defined queries (including ones
+      that you may create and add yourself, see :ref:`creating-new-queries`
+      below). It does not work with :ref:`ad hoc queries <ad-hoc-queries>`
+   2. If the query contains joins, the joins will only happen within
+      the time ranges of each subquery.
+   3. It only supports queries that have *start* and *end* parameters.
+   4. Very large queries may return results that can exhaust the memory
+      on the Python client machine.
+   5. Duplicate records are possible at the time boundaries. The code
+      tries to avoid returning duplicate records occuring
+      exactly on the time boundaries but some data sources may not use
+      granular enough time stamps to avoid this.
 
 .. _creating-new-queries:
 

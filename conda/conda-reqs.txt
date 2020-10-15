@@ -15,7 +15,6 @@ keyring>=13.2.1
 matplotlib>=3.0.0
 msrest>=0.6.0
 msrestazure>=0.6.0
-nest_asyncio>=1.4.0
 networkx>=2.2
 numpy>=1.15.4
 pandas>=0.25.0
@@ -30,5 +29,3 @@ setuptools>=40.6.3
 statsmodels
 tqdm>=4.36.1
 urllib3>=1.23
-vt-py>=0.5.4
-vt-graph-api>=1.0.1
