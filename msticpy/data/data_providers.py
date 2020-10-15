@@ -4,31 +4,34 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-from functools import partial
-from pathlib import Path
-from typing import Union, Any, List, Dict, Optional, Iterable
 import warnings
+from datetime import datetime
+from functools import partial
+from itertools import tee
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
+from tqdm.auto import tqdm
 
+from .._version import VERSION
+from ..common import pkg_config as config
+from ..common.utility import export, valid_pyname
+from .browsers.query_browser import browse_queries
 from .drivers import (
     DriverBase,
     KqlDriver,
-    SecurityGraphDriver,
-    MDATPDriver,
     LocalDataDriver,
-    SplunkDriver,
+    MDATPDriver,
     MordorDriver,
+    SecurityGraphDriver,
+    SplunkDriver,
 )
-from .browsers.query_browser import browse_queries
-from .query_store import QueryStore
-from .query_container import QueryContainer
 from .param_extractor import extract_query_params
+from .query_container import QueryContainer
 from .query_defns import DataEnvironment
-
-from ..common.utility import export, valid_pyname
-from ..common import pkg_config as config
-from .._version import VERSION
+from .query_source import QuerySource
+from .query_store import QueryStore
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -309,19 +312,40 @@ class QueryProvider:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        param_formatters = self._query_provider.formatters
-        query_str = query_source.create_query(formatters=param_formatters, **params)
+        split_by = kwargs.pop("split_query_by", None)
+        if split_by:
+            split_result = self._exec_split_query(
+                split_by=split_by,
+                query_source=query_source,
+                query_params=params,
+                args=args,
+                **kwargs,
+            )
+            if split_result is not None:
+                return split_result
+            # if split queries could not be created, fall back to default
+        query_str = query_source.create_query(
+            formatters=self._query_provider.formatters, **params
+        )
         if "print" in args or "query" in args:
             return query_str
 
         # Handle any query options passed
+        query_options = self._get_query_options(params, kwargs)
+        return self._query_provider.query(query_str, query_source, **query_options)
+
+    @staticmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return any kwargs not already in params."""
         query_options = kwargs.pop("query_options", {})
         if not query_options:
             # Any kwargs left over we send to the query provider driver
             query_options = {
                 key: val for key, val in kwargs.items() if key not in params
             }
-        return self._query_provider.query(query_str, query_source, **query_options)
+        return query_options
 
     def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
         """Fetch queries from YAML files in specified paths."""
@@ -394,6 +418,80 @@ class QueryProvider:
         # queries) - we could be more efficient than this but unless there are 1000s of
         # queries it should not be noticeable.
         self._add_query_functions()
+
+    def _exec_split_query(
+        self,
+        split_by: str,
+        query_source: QuerySource,
+        query_params: Dict[str, Any],
+        args,
+        **kwargs,
+    ) -> Union[pd.DataFrame, str, None]:
+        start = query_params.pop("start", None)
+        end = query_params.pop("end", None)
+        if not (start or end):
+            print(
+                "Cannot split a query that does not have 'start' and 'end' parameters"
+            )
+            return None
+        try:
+            split_delta = pd.Timedelta(split_by)
+        except ValueError:
+            split_delta = pd.Timedelta("1D")
+
+        ranges = self._calc_split_ranges(start, end, split_delta)
+
+        split_queries = [
+            query_source.create_query(
+                formatters=self._query_provider.formatters,
+                start=q_start,
+                end=q_end,
+                **query_params,
+            )
+            for q_start, q_end in ranges
+        ]
+        if "print" in args or "query" in args:
+            return "\n\n".join(split_queries)
+
+        # Retrive any query options passed (other than query params)
+        # and send to query function.
+        query_options = self._get_query_options(query_params, kwargs)
+        query_dfs = [
+            self._query_provider.query(query_str, query_source, **query_options)
+            for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
+        ]
+
+        return pd.concat(query_dfs)
+
+    @staticmethod
+    def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
+        """Return a list of time ranges split by `split_delta`."""
+        # Use pandas date_range and split the result into 2 iterables
+        s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
+        next(e_ranges, None)  # skip to the next item in the 2nd iterable
+        # Zip them together to get a list of (start, end) tuples of ranges
+        # Note: we subtract 1 nanosecond from the 'end' value of each range so
+        # to avoid getting duplicated records at the boundaries of the ranges.
+        # Some providers don't have nanosecond granularity so we might
+        # get duplicates in these cases
+        ranges = [
+            (s_time, e_time - pd.Timedelta("1ns"))
+            for s_time, e_time in zip(s_ranges, e_ranges)
+        ]
+
+        # Since the generated time ranges are based on deltas from 'start'
+        # we need to adjust the end time on the final range.
+        # If the difference between the calculated last range end and
+        # the query 'end' that the user requested is small (< 10% of a delta),
+        # we just replace the last "end" time with our query end time.
+        if (ranges[-1][1] - end) < (split_delta / 10):
+            ranges[-1] = ranges[-1][0], end
+        else:
+            # otherwise append a new range starting after the last range
+            # in ranges and ending in 'end"
+            # note - we need to add back our subtracted 1 nanosecond
+            ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
+        return ranges
 
     @classmethod
     def _resolve_package_path(cls, config_path: str) -> Optional[str]:
