@@ -117,7 +117,7 @@ class IoCExtract:
     """
 
     IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
-    IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}(?![:.\w])"
+    IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{0,4}:){2,7}[A-F0-9]{0,4}(?![:.\w])"
     DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){1,126}[a-z]{2,63}"
     # dns_regex =
     #   '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
@@ -149,7 +149,7 @@ class IoCExtract:
     _content_regex: Dict[str, IoCPattern] = {}
 
     def __init__(self):
-        """Intialize new instance of IoCExtract."""
+        """Initialize new instance of IoCExtract."""
         # IP Addresses
         self.add_ioc_type(IoCType.ipv4.name, self.IPV4_REGEX, 0, "ipaddress")
         self.add_ioc_type(IoCType.ipv6.name, self.IPV6_REGEX, 0)
@@ -322,8 +322,7 @@ class IoCExtract:
                     datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
-        result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
-        return result_frame
+        return pd.DataFrame(data=result_rows, columns=result_columns)
 
     # pylint: disable=too-many-arguments
     def _search_in_row(
@@ -415,8 +414,7 @@ class IoCExtract:
                     datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
-        result_frame = pd.DataFrame(data=result_rows, columns=result_columns)
-        return result_frame
+        return pd.DataFrame(data=result_rows, columns=result_columns)
 
     def _get_ioc_types_to_use(
         self, ioc_types: List[str], include_paths: bool
@@ -513,8 +511,8 @@ class IoCExtract:
             results = self._scan_for_iocs(
                 src=observable, ioc_types=[IoCType.linux_path.name]
             )
-            if not results:
-                return IoCType.unknown.name
+        if not results:
+            return IoCType.unknown.name
 
         # we need to select the type that is an exact match for the whole
         # observable string (_scan_for_iocs will return matching substrings)
