@@ -5,9 +5,18 @@ from typing import Dict, List, Set
 import pandas as pd
 from IPython.display import HTML, display
 
-import vt
-from vt_graph_api import VTGraph
-from vt_graph_api import errors as vt_graph_errs
+from ..common.exceptions import MsticpyImportExtraError
+
+try:
+    import vt
+    from vt_graph_api import VTGraph
+    from vt_graph_api import errors as vt_graph_errs
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without vt-py and vt-graph-api packages installed.",
+        title="Error importing VirusTotal modules.",
+        extra="vt3",
+    ) from imp_err
 
 
 class MsticpyVTNoDataError(Exception):
