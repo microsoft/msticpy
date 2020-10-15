@@ -346,9 +346,8 @@ class MsticpyImportExtraError(MsticpyUserError):
     """Exception class for Imports that need an extra."""
 
     DEF_HELP_URI = (
-        "Connecting to Azure Sentinel",
-        "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
-        + "#connecting-to-an-azure-sentinel-workspace",
+        "Installing msticpy",
+        "https://msticpy.readthedocs.io/en/latest/getting_started/Installing.html",
     )
 
     def __init__(
