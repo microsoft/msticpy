@@ -143,7 +143,7 @@ class MsticpyUserError(MsticpyException):
                 l_content, l_type = line
                 if l_type == "title":
                     content += f"<h3><p class='title'>{l_content}</p></h3>"
-                if l_type == "uri":
+                elif l_type == "uri":
                     if isinstance(l_content, tuple):
                         name, uri = l_content
                     else:
@@ -155,8 +155,7 @@ class MsticpyUserError(MsticpyException):
                 text_line = line.replace("\n", "<br>")
                 content += f"{text_line}<br>"
 
-        ex_html = "".join((ex_style, div_tmplt.format(content=content)))
-        return ex_html
+        return "".join((ex_style, div_tmplt.format(content=content)))
 
     def _display_txt_exception(self):
         """Display text-only version of the exception text."""
@@ -167,7 +166,7 @@ class MsticpyUserError(MsticpyException):
                     print("-" * len(l_content))
                     print(l_content)
                     print("-" * len(l_content))
-                if l_type == "uri":
+                elif l_type == "uri":
                     if isinstance(l_content, tuple):
                         print(f" - {': '.join(l_content)}")
                     else:
@@ -341,6 +340,45 @@ class MsticpyKqlConnectionError(MsticpyUserError):
         "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
         + "#connecting-to-an-azure-sentinel-workspace",
     )
+
+
+class MsticpyImportExtraError(MsticpyUserError):
+    """Exception class for Imports that need an extra."""
+
+    DEF_HELP_URI = (
+        "Connecting to Azure Sentinel",
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html"
+        + "#connecting-to-an-azure-sentinel-workspace",
+    )
+
+    def __init__(
+        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
+    ):
+        """
+        Create import missing extra exception.
+
+        Parameters
+        ----------
+        help_uri : Union[Tuple[str, str], str, None], optional
+            Override the default help URI.
+        extra : str
+            The name of the setup extra that needs to be installed.
+
+        """
+        extra = kwargs.pop("extra", None)
+        if not extra:
+            raise AttributeError("Keyword argument 'extra' must be supplied")
+        mssg = "".join(
+            [
+                "This feature requires one or more additional packages",
+                "to be installed.\n",
+                "To do this run the command:\n",
+                f"pip install msticpy[{extra}]",
+            ]
+        )
+        add_args = [*args, mssg]
+        uri = help_uri or self.DEF_HELP_URI
+        super().__init__(*add_args, help_uri=uri, **kwargs)
 
 
 class MsticpyAzureConnectionError(MsticpyUserError):
