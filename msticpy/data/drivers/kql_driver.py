@@ -76,6 +76,8 @@ class KqlDriver(DriverBase):
                 "A connection string is needed to connect to Azure Sentinel.",
                 title="no connection string",
             )
+        if "kqlmagic_args" in kwargs:
+            connection_str = connection_str + " " + kwargs["kqlmagic_args"]
         self.current_connection = connection_str
         kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
         self._connected = False
