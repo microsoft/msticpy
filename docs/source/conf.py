@@ -6,6 +6,14 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+# type: ignore
+
+# pylint: disable=invalid-name, missing-module-docstring, import-error
+
+# noqa D100
+
+# flake8: noqa
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -194,3 +202,16 @@ autodoc_default_options = {
 }
 
 autoclass_content = "both"
+
+autoapi_dirs = ["../../msticpy"]
+
+autodoc_mock_imports = [
+    "Kqlmagic",
+    "azure-cli-core",
+    "matplotlib",
+    "statsmodels",
+    "scipy",
+    "sklearn",
+    "splunk-sdk",
+    "seaborn",
+]

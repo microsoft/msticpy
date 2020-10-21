@@ -1,7 +1,6 @@
 adal>=1.2.2
 attrs>=18.2.0
 azure-common>=1.1.18
-azure-cli-core>=2.5.0
 azure-core>=1.2.2
 azure-identity==1.4.0
 azure-keyvault-secrets>=4.0.0
@@ -24,7 +23,6 @@ ipywidgets>=7.4.2
 keyring>=13.2.1
 Kqlmagic>=0.1.106
 matplotlib>=3.0.0
-msal~=1.0.0
 msrest>=0.6.0
 msrestazure>=0.6.0
 networkx>=2.2
@@ -43,4 +41,3 @@ statsmodels>=0.11.1
 tldextract>=2.2.2
 tqdm>=4.36.1
 urllib3>=1.23
-vt-py>=0.6.1

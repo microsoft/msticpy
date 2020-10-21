@@ -7,6 +7,7 @@
 import contextlib
 from datetime import datetime
 import io
+import os
 from pathlib import Path
 
 import pytest
@@ -24,17 +25,22 @@ from msticpy.data.drivers.mordor_driver import (
 __author__ = "Ian Hellen"
 
 _SAVE_PATH = ""
+_SAVE_FOLDER = "mordor_test"
 
 
 @pytest.fixture(scope="module")
 def qry_provider():
     """Query Provider fixture."""
+    Path(_SAVE_FOLDER).mkdir(exist_ok=True)
     qry_prov = QueryProvider("Mordor")
     qry_prov.connect()
     yield qry_prov
     # remove downloaded file on cleanup
     if _SAVE_PATH and Path(_SAVE_PATH).is_file():
         Path(_SAVE_PATH).unlink()
+    for file in Path(_SAVE_FOLDER).glob("*"):
+        Path(file).unlink()
+    Path(_SAVE_FOLDER).rmdir()
 
 
 # pylint: disable=redefined-outer-name, protected-access, global-statement
@@ -95,6 +101,9 @@ def test_mordor_search(mdr_driver: MordorDriver):
     check.is_true(any(hit for hit in result_set if "small.aws.collection" in hit))
 
 
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
     global _SAVE_PATH
@@ -103,13 +112,16 @@ def test_mordor_download(mdr_driver: MordorDriver):
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]
-    d_frame = download_mdr_file(file_path)
+    d_frame = download_mdr_file(file_path, save_folder="mordor_test")
     _SAVE_PATH = file_path.split("/")[-1]
 
     check.is_instance(d_frame, pd.DataFrame)
     check.greater_equal(len(d_frame), 10)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_mordor_query_provider(qry_provider):
     """Test query functions from query provider."""
     queries = qry_provider.list_queries()
