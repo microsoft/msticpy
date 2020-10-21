@@ -4,21 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """File Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, List, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .entity_enums import Algorithm, OSFamily
+from .file_hash import FileHash
+from .host import Host
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -80,32 +79,44 @@ class File(Entity):
             kw arguments.
 
         """
+        self.FullPath: Optional[str] = None
+        self.Directory: Optional[str] = None
+        self.Name: Optional[str] = None
+        self.Md5: Optional[str] = None
+        self.Host: Optional[Host] = None
+        self.Sha1: Optional[str] = None
+        self.Sha256: Optional[str] = None
+        self.Sha256Ac: Optional[str] = None
+        self.FileHashes: List[FileHash] = []
+        self.PathSeparator: Optional[str] = "\\"
+        self.OSFamily = OSFamily.Windows
         super().__init__(src_entity=src_entity, **kwargs)
-
         if src_event is not None:
-            if role == "new" and "NewProcessName" in src_event:
-                self._add_paths(src_event["NewProcessName"])
-            elif role == "parent" and "ParentProcessName" in src_event:
-                self._add_paths(src_event["ParentProcessName"])
+            self._create_from_event(src_event, role)
 
-        if "FullPath" not in self:
-            file = self["Name"]
-            directory = self["Directory"]
+        if not self.FullPath:
+            file_name = self.Name
+            directory = self.Directory
             sep = self.path_separator if directory else None
-            self["FullPath"] = f"{directory}{sep}{file}"
+            self.FullPath = f"{directory}{sep}{file_name}"
 
     @property
     def path_separator(self):
         """Return the path separator used by the file."""
-        directory = self["Directory"]
-        if directory and "/" in directory:
+        if self.Directory and "/" in self.Directory:
             return "/"
         return "\\"
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.FullPath
+        return self.FullPath or self.__name__
+
+    def _create_from_event(self, src_event, role):
+        if role == "new" and "NewProcessName" in src_event:
+            self._add_paths(src_event["NewProcessName"])
+        elif role == "parent" and "ParentProcessName" in src_event:
+            self._add_paths(src_event["ParentProcessName"])
 
     _entity_schema = {
         # FullPath (type System.String)
@@ -118,7 +129,7 @@ class File(Entity):
         "Md5": None,
         # Host (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.Host)
-        "Host": None,
+        "Host": "Host",
         # Sha1 (type System.String)
         "Sha1": None,
         # Sha256 (type System.String)
@@ -141,32 +152,31 @@ class File(Entity):
         self.Directory = full_path.split(self.PathSeparator)[:-1]
 
     @property
-    def file_hash(self) -> str:
+    def file_hash(self) -> Optional[str]:
         """
         Return the first defined file hash.
 
         Returns
         -------
-        str
+        Optional[str]
             Returns first-defined file hash in order of
             SHA256, SHA1, MD5, SHA256AC (authenticode)
         """
+        if self.FileHashes:
+            alg_order = {
+                Algorithm.SHA256: 0,
+                Algorithm.SHA1: 1,
+                Algorithm.MD5: 2,
+                Algorithm.SHA256AC: 3,
+            }
 
-        def _get_hash_of_type(file_hashes, alg):
-            return any(hash for hash in file_hashes if hash.Algorithm == alg)
-
-        alg_order = (
-            Algorithm.Sha256,
-            Algorithm.Sha1,
-            Algorithm.Md5,
-            Algorithm.Sha256Ac,
-        )
-        file_hashes = getattr(self, "FileHashes")
-
-        if file_hashes:
-            for alg in alg_order:
-                hash = _get_hash_of_type(file_hashes, alg)
-                if hash:
-                    return hash
+            return next(
+                iter(
+                    sorted(
+                        self.FileHashes,
+                        key=lambda f_hash: alg_order.get(f_hash.Algorithm, 10),
+                    )
+                )
+            ).Value
 
         return self.Sha256 or self.Sha1 or self.Md5 or self.Sha256Ac

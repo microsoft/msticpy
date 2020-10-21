@@ -3,10 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Url Entity class."""
-from typing import Any, Dict, Mapping, Optional
-from urllib3.exceptions import LocationParseError
-from urllib3.util import parse_url, Url as Urllib3_Url
+"""Threatintelligence Entity class."""
+from typing import Any, Dict, Mapping
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -20,8 +18,8 @@ __author__ = "Ian Hellen"
 
 
 @export
-class Url(Entity):
-    """URL Entity."""
+class UnknownEntity(Entity):
+    """Generic Entity class."""
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -30,22 +28,13 @@ class Url(Entity):
             :param src_entity: instantiate entity using properties of src entity
             :param kwargs: key-value pair representation of entity
         """
-        self.Url: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_entity:
+            self.__dict__.update(src_entity)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Url}"
-
-    @property
-    def parsed(self) -> Optional[Urllib3_Url]:
-        """Return Urllib3-parsed URL."""
-        if self.Url:
-            try:
-                return parse_url(self.Url)
-            except LocationParseError:
-                pass
-        return None
+        return "OtherEntity"
 
     _entity_schema: Dict[str, Any] = {}

@@ -124,11 +124,34 @@ class SecurityAlert(SecurityBase):
         for _, entity in self._src_entities.items():
             if not isinstance(entity, Entity):
                 continue
-            for prop_name, prop_val in entity.properties.items():
-                if isinstance(prop_val, dict) and "$ref" in prop_val:
-                    entity_id = prop_val["$ref"]
+            # Resolve all the simple references
+            ref_props = {
+                name: prop
+                for name, prop in entity.properties.items()
+                if isinstance(prop, dict) and "$ref" in prop
+            }
+            for prop_name, prop_val in ref_props.items():
+                entity_id = prop_val["$ref"]
+                if entity_id in self._src_entities:
+                    entity[prop_name] = self._src_entities[entity_id]
+                    entity.add_edge(entity[prop_name], attrs={"name": prop_name})
+            # Resolve all the lists of references
+            ref_props_multi = {
+                name: prop
+                for name, prop in entity.properties.items()
+                if isinstance(prop, list)
+                and any(elem for elem in prop if "$ref" in elem)
+            }
+            for prop_name, prop_val in ref_props_multi.items():
+                for idx, elem in enumerate(prop_val):
+                    if not isinstance(elem, dict):
+                        continue
+                    entity_id = elem["$ref"]
                     if entity_id in self._src_entities:
-                        entity[prop_name] = self._src_entities[entity_id]
+                        entity[prop_name][idx] = self._src_entities[entity_id]
+                        entity.add_edge(
+                            self._src_entities[entity_id], attrs={"name": prop_name}
+                        )
 
     def _extract_entities(self, src_row):  # noqa: MC0001
         input_entities = []

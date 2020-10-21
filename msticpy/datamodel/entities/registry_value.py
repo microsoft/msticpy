@@ -4,71 +4,22 @@
 # license information.
 # --------------------------------------------------------------------------
 """RegistryValue Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .registry_key import RegistryKey
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class RegistryKey(Entity):
-    """
-    RegistryKey Entity class.
-
-    Attributes
-    ----------
-    Hive : RegistryHive
-        RegistryKey Hive
-    Key : str
-        RegistryKey Key
-
-    """
-
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
-        """
-        Create a new instance of the entity type.
-
-        Parameters
-        ----------
-        src_entity : Mapping[str, Any], optional
-            Create entity from existing entity or
-            other mapping object that implements entity properties.
-            (the default is None)
-
-        Other Parameters
-        ----------------
-        kwargs : Dict[str, Any]
-            Supply the entity properties as a set of
-            kw arguments.
-
-        """
-        super().__init__(src_entity=src_entity, **kwargs)
-
-    @property
-    def description_str(self) -> str:
-        """Return Entity Description."""
-        return f"{self.Hive}\\{self.Key}"
-
-    _entity_schema = {
-        # Hive (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryHive])
-        "Hive": "RegistryHive",
-        # Key (type System.String)
-        "Key": None,
-    }
-
-
 class RegistryValue(Entity):
     """
     RegistryValue Entity class.
@@ -104,6 +55,10 @@ class RegistryValue(Entity):
             kw arguments.
 
         """
+        self.Key: Optional[RegistryKey] = None
+        self.Name: Optional[str] = None
+        self.Value: Optional[str] = None
+        self.ValueType: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
@@ -114,7 +69,7 @@ class RegistryValue(Entity):
     _entity_schema = {
         # Key (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.RegistryKey)
-        "Key": None,
+        "Key": "RegistryKey",
         # Name (type System.String)
         "Name": None,
         # Value (type System.String)

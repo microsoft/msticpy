@@ -4,21 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """Account Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .host import Host
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -84,53 +81,22 @@ class Account(Entity):
             kw arguments.
 
         """
+        self.Name: Optional[str] = None
+        self.NTDomain: Optional[str] = None
+        self.UPNSuffix: Optional[str] = None
+        self.Host: Optional[Host] = None
+        self.LogonId: Optional[str] = None
+        self.Sid: Optional[str] = None
+        self.AadTenantId: Optional[str] = None
+        self.AadUserId: Optional[str] = None
+        self.PUID: Optional[str] = None
+        self.IsDomainJoined: bool = False
+        self.DisplayName: Optional[str] = None
+
         # pylint: disable=locally-disabled, line-too-long
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:
-            if role == "subject" and "SubjectUserName" in src_event:
-                self.Name = src_event["SubjectUserName"]
-                self.NTDomain = (
-                    src_event["SubjectUserDomain"]
-                    if "SubjectUserDomain" in src_event
-                    else None
-                )
-                self.Sid = (
-                    src_event["SubjectUserSid"]
-                    if "SubjectUserSid" in src_event
-                    else None
-                )
-                self.LogonId = (
-                    src_event["SubjectLogonId"]
-                    if "SubjectLogonId" in src_event
-                    else None
-                )
-            if role == "target" and "TargetUserName" in src_event:
-                self.Name = src_event["TargetUserName"]
-                self.NTDomain = (
-                    src_event["TargetUserDomain"]
-                    if "TargetUserDomain" in src_event
-                    else None
-                )
-                self.Sid = (
-                    src_event["TargetUserSid"] if "TargetUserSid" in src_event else None
-                )
-                self.LogonId = (
-                    src_event["TargetLogonId"] if "TargetLogonId" in src_event else None
-                )
-
-            self.AadTenantId = (
-                src_event["AadTenantId"] if "AadTenantId" in src_event else None
-            )
-            self.AadUserId = (
-                src_event["AadUserId"] if "AadUserId" in src_event else None
-            )
-            self.PUID = src_event["PUID"] if "PUID" in src_event else None
-            self.DisplayName = (
-                src_event["DisplayName"] if "DisplayName" in src_event else None
-            )
-            self.UPNSuffix = (
-                src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
-            )
+            self._create_from_event(src_event, role)
 
     # pylint: enable=locally-disabled, line-too-long
 
@@ -152,6 +118,44 @@ class Account(Entity):
         if "Host" in self and self.Host:
             return "{}\\{}".format(self.Host.HostName, name)
         return name
+
+    def _create_from_event(self, src_event, role):
+        if role == "subject" and "SubjectUserName" in src_event:
+            self.Name = src_event["SubjectUserName"]
+            self.NTDomain = (
+                src_event["SubjectUserDomain"]
+                if "SubjectUserDomain" in src_event
+                else None
+            )
+            self.Sid = (
+                src_event["SubjectUserSid"] if "SubjectUserSid" in src_event else None
+            )
+            self.LogonId = (
+                src_event["SubjectLogonId"] if "SubjectLogonId" in src_event else None
+            )
+        if role == "target" and "TargetUserName" in src_event:
+            self.Name = src_event["TargetUserName"]
+            self.NTDomain = (
+                src_event["TargetUserDomain"]
+                if "TargetUserDomain" in src_event
+                else None
+            )
+            self.Sid = (
+                src_event["TargetUserSid"] if "TargetUserSid" in src_event else None
+            )
+            self.LogonId = (
+                src_event["TargetLogonId"] if "TargetLogonId" in src_event else None
+            )
+
+        self.AadTenantId = (
+            src_event["AadTenantId"] if "AadTenantId" in src_event else None
+        )
+        self.AadUserId = src_event["AadUserId"] if "AadUserId" in src_event else None
+        self.PUID = src_event["PUID"] if "PUID" in src_event else None
+        self.DisplayName = (
+            src_event["DisplayName"] if "DisplayName" in src_event else None
+        )
+        self.UPNSuffix = src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
 
     _entity_schema = {
         # Name (type System.String)

@@ -4,21 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """HostLogonSession Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from datetime import datetime
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .account import Account
+from .host import Host
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -68,6 +67,11 @@ class HostLogonSession(Entity):
 
 
         """
+        self.Account: Optional[Account] = None
+        self.StartTimeUtc: datetime = datetime.min
+        self.EndTimeUtc: datetime = datetime.min
+        self.Host: Optional[Host] = None
+        self.SessionId: str = ""
         super().__init__(src_entity=src_entity, **kwargs)
 
         if src_event is not None:
@@ -83,7 +87,9 @@ class HostLogonSession(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Host.HostName}: session: {self.SessionId}"
+        if self.Host:
+            return f"{self.Host.HostName}: session: {self.SessionId}"
+        return self.__name__
 
     _entity_schema = {
         # Account

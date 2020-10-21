@@ -3,45 +3,33 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""GeoLocation Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+"""FileHash Entity class."""
+from typing import Any, Mapping
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .entity_enums import Algorithm
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class GeoLocation(Entity):
+class FileHash(Entity):
     """
-    GeoLocation class.
+    File Hash class.
 
     Attributes
     ----------
-    CountryCode : str
-        GeoLocation CountryCode
-    CountryName : str
-        GeoLocation CountryName
-    State : str
-        GeoLocation State
-    City : str
-        GeoLocation City
-    Longitude : float
-        GeoLocation Longitude
-    Latitude : float
-        GeoLocation Latitude
-    Asn : str
-        GeoLocation Asn
+    Algorithm : Algorithm
+        FileHash Algorithm
+    Value : str
+        FileHash Value
+
 
     """
 
@@ -63,26 +51,18 @@ class GeoLocation(Entity):
             kw arguments.
 
         """
+        self.Algorithm: Algorithm = Algorithm.Unknown
+        self.Value: str = ""
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.CountryCode}; {self.State}; {self.City}"
+        return f"{self.Algorithm}: {self.Value}"
 
     _entity_schema = {
-        # str
-        "CountryCode": None,
-        # str
-        "CountryName": None,
-        # str
-        "State": None,
-        # str
-        "City": None,
-        # double?
-        "Longitude": None,
-        # double?
-        "Latitude": None,
-        # int
-        "Asn": None,
+        # The hash algorithm (type System.String)
+        "Algorithm": "Algorithm",
+        # Value (type System.String)
+        "Value": None,
     }

@@ -4,21 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """NetworkConnection Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .ip_address import IpAddress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -60,6 +57,11 @@ class NetworkConnection(Entity):
             kw arguments.
 
         """
+        self.SourceAddress: Optional[IpAddress] = None
+        self.SourcePort: Optional[int] = None
+        self.DestinationAddress: Optional[IpAddress] = None
+        self.DestinationPort: Optional[int] = None
+        self.Protocol: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
@@ -76,12 +78,12 @@ class NetworkConnection(Entity):
     _entity_schema = {
         # SourceAddress (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
-        "SourceAddress": "IPAddress",
+        "SourceAddress": "IpAddress",
         # SourcePort (type System.Nullable`1[System.Int32])
         "SourcePort": None,
         # DestinationAddress (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
-        "DestinationAddress": "IPAddress",
+        "DestinationAddress": "IpAddress",
         # DestinationPort (type System.Nullable`1[System.Int32])
         "DestinationPort": None,
         # Protocol (type System.Nullable`1[System.Net.Sockets.ProtocolType])

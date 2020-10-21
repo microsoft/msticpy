@@ -5,24 +5,26 @@
 # --------------------------------------------------------------------------
 """Entity Entity class."""
 import pprint
+import typing
 from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Dict, List, Mapping, Optional, Type, Union
+
+import networkx as nx
 
 from ..._version import VERSION
 from ...common.utility import export
-from .entity import Entity
+from .entity_enums import ENTITY_ENUMS
+from .entity_graph import Edge, Node
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class Entity(ABC):
+class Entity(ABC, Node):
     """
     Entity abstract base class.
 
@@ -50,7 +52,8 @@ class Entity(ABC):
             kw arguments.
 
         """
-        self.Type = type(self).__name__.lower()
+        super().__init__()
+        self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknownentity" and "Type" in kwargs:
             self.Type = kwargs["Type"]
@@ -60,13 +63,13 @@ class Entity(ABC):
         # if we didn't populate AdditionalData, add an empty dict in case it's
         # needed
         if "AdditionalData" not in self:
-            self["AdditionalData"] = {}
+            self.AdditionalData = {}
 
         if src_entity is not None:
             self._extract_src_entity(src_entity)
             # add AdditionalData dictionary if it's populated
             if "AdditionalData" in src_entity:
-                self["AdditionalData"] = src_entity["AdditionalData"]
+                self.AdditionalData = src_entity["AdditionalData"]
 
         if kwargs:
             self.__dict__.update(kwargs)
@@ -82,32 +85,50 @@ class Entity(ABC):
             extract entity properties.
 
         """
-        schema_dict = dict(**(self._entity_schema))
+        schema_dict = self._entity_schema.copy()
         schema_dict["Type"] = None
-        for k, v in schema_dict.items():
-            if k not in src_entity:
+        for attr, val in schema_dict.items():
+            if attr not in src_entity:
                 continue
-            self[k] = src_entity[k]
+            self[attr] = src_entity[attr]
 
-            if v is not None:
-                try:
-                    # If the property is an enum
-                    if v in _ENTITY_ENUMS:
-                        self[k] = _ENTITY_ENUMS[v][src_entity[k]]
-                        continue
-                except KeyError:
-                    # Catch key errors from invalid enum values
-                    self[k] = None
+            if val is None:
+                continue
+            try:
+                # If the property is an enum
+                if val in ENTITY_ENUMS.values():
+                    self[attr] = val[src_entity[attr]]
+                elif val in ENTITY_ENUMS:
+                    self[attr] = ENTITY_ENUMS[val][src_entity[attr]]
+                    continue
+            except KeyError:
+                # Catch key errors from invalid enum values
+                self[attr] = None
 
-                if isinstance(v, tuple):
-                    # if the property is a collection
-                    entity_list = []
-                    for col_entity in src_entity[k]:
-                        entity_list.append(Entity.instantiate_entity(col_entity))
-                    self[k] = entity_list
-                else:
-                    # else try to instantiate an entity
-                    self[k] = Entity.instantiate_entity(src_entity[k])
+            if isinstance(val, tuple):
+                # if the property is a collection
+                entity_type = None
+                if isinstance(val[1], (type)) and issubclass(val[1], Entity):
+                    entity_type = val[1]
+                entity_list = [
+                    Entity.instantiate_entity(col_entity, entity_type=entity_type)
+                    for col_entity in src_entity[attr]
+                ]
+
+                self[attr] = entity_list
+                for child_entity in entity_list:
+                    if isinstance(child_entity, Entity):
+                        self.add_edge(child_entity, attrs={"name": attr})
+            else:
+                # else try to instantiate an entity
+                entity_type = None
+                if isinstance(val, type) and issubclass(val, Entity):
+                    entity_type = val
+                self[attr] = Entity.instantiate_entity(
+                    src_entity[attr], entity_type=entity_type
+                )
+                if isinstance(self[attr], Entity):
+                    self.add_edge(self[attr], attrs={"name": attr})
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -221,10 +242,9 @@ class Entity(ABC):
         """
         return self.Type
 
-    # pylint: disable=too-many-branches
     @classmethod
-    def instantiate_entity(  # noqa: C901
-        cls, raw_entity: Mapping[str, Any]
+    def instantiate_entity(
+        cls, raw_entity: Mapping[str, Any], entity_type: Optional[Type] = None
     ) -> Union["Entity", Mapping[str, Any]]:
         """
         Class factory to return entity from raw dictionary representation.
@@ -241,15 +261,94 @@ class Entity(ABC):
             The instantiated entity
 
         """
-        if "Type" not in raw_entity:
+        if "Type" not in raw_entity and entity_type is None:
             return raw_entity
 
-        entity_type = raw_entity["Type"]
+        entity_type_name = raw_entity.get("Type")
+        if not entity_type_name and entity_type:
+            entity_type_name = cls._get_entity_type_name(entity_type)
 
-        # We get an undefined-variable warning here. _ENTITY_NAME_MAP
-        # is not defined/populated until end of module since it needs
-        # entity
-        if entity_type in cls.ENTITY_NAME_MAP:
-            return cls.ENTITY_NAME_MAP[entity_type](raw_entity)
+        if entity_type:
+            return entity_type(raw_entity)
+        if entity_type_name in cls.ENTITY_NAME_MAP:
+            return cls.ENTITY_NAME_MAP[entity_type_name](raw_entity)
 
         raise TypeError("Could not find a suitable type for {}".format(entity_type))
+
+    @classmethod
+    def _get_entity_type_name(cls, entity_type: Type) -> str:
+        """
+        Get V3 entity name for an entity.
+
+        Parameters
+        ----------
+        entity_type : Type
+            The Entity class
+
+        Returns
+        -------
+        str
+            The V3 serialized name.
+
+        """
+        name = next(
+            iter(
+                (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+            )
+        )
+        return name or "unknown"
+
+    @property
+    def node_properties(self) -> Dict[str, Any]:
+        """
+        Return all public properties that are not entities.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of name, value properties.
+
+        """
+        return {
+            name: value
+            for name, value in self.properties.items()
+            if not isinstance(value, (Entity, list))
+        }
+
+    def to_networkx(self, graph: nx.Graph = None) -> nx.Graph:
+        """
+        Return networkx graph of entities.
+
+        Parameters
+        ----------
+        graph : nx.Graph, optional
+            Graph to add entities to. If not supplied the function
+            creates and returns a new graph.
+            By default None
+
+        Returns
+        -------
+        nx.Graph
+            Graph with entity and any connected entities.
+
+        """
+        graph = graph or nx.Graph()
+
+        if not graph.has_node(self):
+            graph.add_node(self, **self.node_properties)
+        for edge in self.edges:
+            if graph.has_edge(edge.source, edge.target):
+                continue
+            graph.add_edge(edge.source, edge.target, **edge.attrs)
+
+            for node in (edge.source, edge.target):
+                # If this node has edges that are not in our graph
+                # call to_networkx recursively on that node.
+                if any(
+                    edge
+                    for edge in node.edges
+                    if not graph.has_edge(edge.source, edge.target)
+                ):
+                    ent_node = typing.cast(Entity, node)
+                    ent_node.to_networkx(graph)
+        return graph

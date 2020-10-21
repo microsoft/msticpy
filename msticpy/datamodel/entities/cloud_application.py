@@ -3,12 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""FileHash Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+"""CloudApplication Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -18,21 +14,18 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class FileHash(Entity):
+class CloudApplication(Entity):
     """
-    File Hash class.
+    CloudApplication Entity class.
 
     Attributes
     ----------
-    Algorithm : Algorithm
-        FileHash Algorithm
-    Value : str
-        FileHash Value
-
+    Name : str
+        CloudApplication Name
 
     """
 
@@ -54,16 +47,15 @@ class FileHash(Entity):
             kw arguments.
 
         """
+        self.Name: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Algorithm}: {self.Value}"
+        return self.Name or self.__name__
 
     _entity_schema = {
-        # The hash algorithm (type System.String)
-        "Algorithm": "Algorithm",
-        # Value (type System.String)
-        "Value": None,
+        # Name (type System.String)
+        "Name": None
     }

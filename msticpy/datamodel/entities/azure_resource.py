@@ -4,11 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """AzureResource Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -17,8 +13,7 @@ from .entity import Entity
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -56,12 +51,15 @@ class AzureResource(Entity):
             kw arguments.
 
         """
+        self.ResourceId: Optional[str] = None
+        self.SubscriptionId: Optional[str] = None
+        self.ResourceIdParts: Dict[str, str] = {}
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.ResourceId
+        return self.ResourceId or self.__name__
 
     _entity_schema = {
         # ResourceId (type System.String)

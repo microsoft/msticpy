@@ -4,21 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """Host Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .entity_enums import OSFamily
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -73,24 +70,27 @@ class Host(Entity):
             kw arguments.
 
         """
+        self.DnsDomain: Optional[str] = None
+        self.NTDomain: Optional[str] = None
+        self.HostName: Optional[str] = None
+        self.NetBiosName: Optional[str] = None
+        self.AzureID: Optional[str] = None
+        self.OMSAgentID: Optional[str] = None
+        self.OSFamily: OSFamily = OSFamily.Windows
+        self.IsDomainJoined: bool = False
+
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
-        if src_event is not None and "Computer" in src_event:
-            self._computer = src_event["Computer"]
-            if "." in src_event["Computer"]:
-                self.HostName = src_event["Computer"].split(".", 1)[0]
-                self.DnsDomain = src_event["Computer"].split(".", 1)[1]
-            else:
-                self.HostName = src_event["Computer"]
-            self.NetBiosName = self.HostName
+        if src_event is not None:
+            self._create_from_event(src_event)
 
     @property
-    def computer(self) -> str:
+    def computer(self) -> Optional[str]:
         """Return computer from source event."""
         return self._computer if self._computer is not None else self.fqdn
 
     @property
-    def fqdn(self) -> str:
+    def fqdn(self) -> Optional[str]:
         """Construct FQDN from host + dns."""
         if self.DnsDomain:
             return f"{self.HostName}.{self.DnsDomain}"
@@ -100,6 +100,15 @@ class Host(Entity):
     def description_str(self) -> str:
         """Return Entity Description."""
         return f"{self.fqdn} ({self.OSFamily})"
+
+    def _create_from_event(self, src_event):
+        self._computer = src_event["Computer"]
+        if "." in src_event["Computer"]:
+            self.HostName = src_event["Computer"].split(".", 1)[0]
+            self.DnsDomain = src_event["Computer"].split(".", 1)[1]
+        else:
+            self.HostName = src_event["Computer"]
+        self.NetBiosName = self.HostName
 
     _entity_schema = {
         # DnsDomain (type System.String)
@@ -116,7 +125,7 @@ class Host(Entity):
         "OMSAgentID": None,
         # OSFamily (type System.Nullable`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.OSFamily])
-        "OSFamily": None,
+        "OSFamily": "OSFamily",
         # IsDomainJoined (type System.Nullable`1[System.Boolean])
         "IsDomainJoined": None,
     }

@@ -4,21 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """IpAddress Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, List, Mapping, Optional, Union
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .geo_location import GeoLocation
+from .threat_intelligence import Threatintelligence
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -32,7 +31,7 @@ class IpAddress(Entity):
         IpAddress Address
     Location : GeoLocation
         IpAddress Location
-    ThreatIntelligence : List[ThreatIntelligence]
+    ThreatIntelligence : List[Threatintelligence]
         IpAddress ThreatIntelligence
 
     """
@@ -63,6 +62,9 @@ class IpAddress(Entity):
             kw arguments.
 
         """
+        self.Address: str = ""
+        self.Location: Optional[GeoLocation] = None
+        self.ThreatIntelligence: List[Threatintelligence] = []
         super().__init__(src_entity=src_entity, **kwargs)
 
         if src_event is not None and "IpAddress" in src_event:
@@ -70,8 +72,8 @@ class IpAddress(Entity):
 
     @property
     def ip_address(self) -> Union[IPv4Address, IPv6Address]:
-        """Return a python ipaddress object from the entity property."""
-        return ip_address(self["Address"])
+        """Return a python IP address object from the entity property."""
+        return ip_address(self.Address)
 
     @property
     def description_str(self) -> str:
@@ -89,3 +91,7 @@ class IpAddress(Entity):
         # .ContextObjects.ThreatIntelligence])
         "ThreatIntelligence": (list, "Threatintelligence"),
     }
+
+
+# Alias for IpAddress
+Ip = IpAddress

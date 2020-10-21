@@ -3,13 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Dns Entity class."""
-from typing import Any, List, Mapping, Optional
+"""SecurityGroup Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
-from .ip_address import IpAddress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -19,20 +18,18 @@ __author__ = "Ian Hellen"
 
 
 @export
-class Dns(Entity):
+class SecurityGroup(Entity):
     """
-    DNS Resolve Entity class.
+    SecurityGroup Entity class.
 
     Attributes
     ----------
-    DomainName : str
-        DnsResolve DomainName
-    IpAdresses : List[str]
-        DnsResolve IpAdresses
-    DnsServerIp : IPAddress
-        DnsResolve DnsServerIp
-    HostIpAddress : IPAddress
-        DnsResolve HostIpAddress
+    DistinguishedName : str
+        SecurityGroup DistinguishedName
+    SID : str
+        SecurityGroup SID
+    ObjectGuid : str
+        SecurityGroup ObjectGuid
 
     """
 
@@ -54,27 +51,21 @@ class Dns(Entity):
             kw arguments.
 
         """
-        self.DomainName: Optional[str] = None
-        self.IpAdresses: List[IpAddress] = []
-        self.DnsServerIp: Optional[IpAddress] = None
-        self.HostIpAddress: Optional[IpAddress] = None
+        self.DistinguishedName: Optional[str] = None
+        self.SID: Optional[str] = None
+        self.ObjectGuid: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
-    def description_str(self) -> str:
+    def description_str(self):
         """Return Entity Description."""
-        return f"{self.DomainName}: IPs: {repr(self.IpAdresses)}"
+        return self.DistinguishedName or self.__name__
 
     _entity_schema = {
-        # DomainName (type System.String)
-        "DomainName": None,
-        # IpAdresses (type System.Collections.Generic.List`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.IP])
-        "IpAdresses": (List, "IpAddress"),
-        # DnsServerIp (type Microsoft.Azure.Security.Detection
-        # .AlertContracts.V3.Entities.IP)
-        "DnsServerIp": "IpAddress",
-        # HostIpAddress (type Microsoft.Azure.Security.Detection
-        # .AlertContracts.V3.Entities.IP)
-        "HostIpAddress": "IpAddress",
+        # DistinguishedName (type System.String)
+        "DistinguishedName": None,
+        # SID (type System.String)
+        "SID": None,
+        # ObjectGuid (type System.String)
+        "ObjectGuid": None,
     }

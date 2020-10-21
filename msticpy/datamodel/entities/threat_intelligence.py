@@ -4,11 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Threatintelligence Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -18,7 +14,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -50,6 +46,12 @@ class Threatintelligence(Entity):
             :param src_entity: instantiate entity using properties of src entity
             :param kwargs: key-value pair representation of entity
         """
+        self.ProviderName: Optional[str] = None
+        self.ThreatType: Optional[str] = None
+        self.ThreatName: Optional[str] = None
+        self.Confidence: Optional[str] = None
+        self.ReportLink: Optional[str] = None
+        self.ThreatDescription: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property

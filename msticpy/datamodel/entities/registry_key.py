@@ -3,33 +3,32 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""CloudApplication Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+"""RegistryValue Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .entity_enums import RegistryHive
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class CloudApplication(Entity):
+class RegistryKey(Entity):
     """
-    CloudApplication Entity class.
+    RegistryKey Entity class.
 
     Attributes
     ----------
-    Name : str
-        CloudApplication Name
+    Hive : RegistryHive
+        RegistryKey Hive
+    Key : str
+        RegistryKey Key
 
     """
 
@@ -51,14 +50,19 @@ class CloudApplication(Entity):
             kw arguments.
 
         """
+        self.Hive: Optional[RegistryHive] = None
+        self.Key: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.Name
+        return f"{self.Hive}\\{self.Key}"
 
     _entity_schema = {
-        # Name (type System.String)
-        "Name": None
+        # Hive (type System.Nullable`1
+        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryHive])
+        "Hive": "RegistryHive",
+        # Key (type System.String)
+        "Key": None,
     }

@@ -3,22 +3,46 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""RegistryHive Entity class."""
-import pprint
-from abc import ABC, abstractmethod
+"""Entity enumerations."""
 from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from typing import Dict, Type
 
 from ..._version import VERSION
 from ...common.utility import export
-from .entity import Entity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+ENTITY_ENUMS: Dict[str, Type] = {}
+
+
+@export
+class Algorithm(Enum):
+    """FileHash Algorithm Enumeration."""
+
+    Unknown = 0
+    MD5 = 1
+    SHA1 = 2
+    SHA256 = 3
+    SHA256AC = 4
+
+
+@export
+class ElevationToken(Enum):
+    """ElevationToken enumeration."""
+
+    Default = 0
+    Full = 1
+    Limited = 2
+
+
+@export
+class OSFamily(Enum):
+    """OSFamily enumeration."""
+
+    Linux = 0
+    Windows = 1
 
 
 @export
@@ -47,4 +71,9 @@ class RegistryHive(Enum):
     HKEY_CURRENT_USER = 9
 
 
-_ENTITY_ENUMS[RegistryHive.__name__] = RegistryHive
+ENTITY_ENUMS = {
+    Algorithm.__name__: Algorithm,
+    ElevationToken.__name__: ElevationToken,
+    OSFamily.__name__: OSFamily,
+    RegistryHive.__name__: RegistryHive,
+}

@@ -4,21 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+from datetime import datetime
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
+from .account import Account
+from .entity_enums import ElevationToken
+from .file import File
+from .host import Host
+from .host_logon_session import HostLogonSession
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
@@ -80,72 +82,77 @@ class Process(Entity):
             kw arguments.
 
         """
+        self.ProcessId: Optional[str] = None
+        self.CommandLine: Optional[str] = None
+        self.ElevationToken: Optional[ElevationToken] = None
+        self.CreationTimeUtc: datetime = datetime.min
+        self.ImageFile: Optional[File] = None
+        self.Account: Optional[Account] = None
+        self.ParentProcess: Optional[Process] = None
+        self.Host: Optional[Host] = None
+        self.LogonSession: Optional[HostLogonSession] = None
         super().__init__(src_entity=src_entity, **kwargs)
+
         # pylint: disable=locally-disabled, line-too-long
         if src_event is not None:
-            if role == "new":
-                self.ProcessId = (
-                    src_event["NewProcessId"] if "NewProcessId" in src_event else None
-                )
-                self.CommandLine = (
-                    src_event["CommandLine"] if "CommandLine" in src_event else None
-                )
-                if "TimeCreatedUtc" in src_event:
-                    self.CreationTimeUtc = src_event["TimeCreatedUtc"]
-                elif "TimeGenerated" in src_event:
-                    self.CreationTimeUtc = src_event["TimeGenerated"]
-                self.ProcessId = (
-                    src_event["NewProcessId"] if "NewProcessId" in src_event else None
-                )
-                self.ImageFile = File(src_event=src_event, role="new")
-                self.Account = Account(src_event=src_event, role="subject")
+            self._create_from_event(src_event, role)
 
-                if "ParentProcessName" in src_event or "ProcessName" in src_event:
-                    parent = Process(src_event=src_event, role="parent")
-                    self.ParentProcess = parent
+    def _create_from_event(self, src_event, role):
+        if role == "new":
+            self.ProcessId = (
+                src_event["NewProcessId"] if "NewProcessId" in src_event else None
+            )
+            self.CommandLine = (
+                src_event["CommandLine"] if "CommandLine" in src_event else None
+            )
+            if "TimeCreatedUtc" in src_event:
+                self.CreationTimeUtc = src_event["TimeCreatedUtc"]
+            elif "TimeGenerated" in src_event:
+                self.CreationTimeUtc = src_event["TimeGenerated"]
+            self.ProcessId = (
+                src_event["NewProcessId"] if "NewProcessId" in src_event else None
+            )
+            self.ImageFile = File(src_event=src_event, role="new")
+            self.Account = Account(src_event=src_event, role="subject")
 
-                # Linux properties
-                self.success = src_event["success"] if "success" in src_event else None
-                self.audit_user = (
-                    src_event["audit_user"] if "audit_user" in src_event else None
-                )
-                self.auid = src_event["auid"] if "auid" in src_event else None
-                self.group = src_event["group"] if "group" in src_event else None
-                self.gid = src_event["gid"] if "gid" in src_event else None
-                self.effective_user = (
-                    src_event["effective_user"]
-                    if "effective_user" in src_event
-                    else None
-                )
-                self.euid = src_event["euid"] if "euid" in src_event else None
-                self.effective_group = (
-                    src_event["effective_group"]
-                    if "effective_group" in src_event
-                    else None
-                )
-                self.egid = (
-                    src_event["effective_group"]
-                    if "effective_group" in src_event
-                    else None
-                )
-                self.cwd = src_event["cwd"] if "cwd" in src_event else None
-                self.name = src_event["cwd"] if "cwd" in src_event else None
-            else:
-                self.ProcessId = (
-                    src_event["ProcessId"] if "ProcessId" in src_event else None
-                )
-                self.ImageFile = File(src_event=src_event, role="parent")
+            if "ParentProcessName" in src_event or "ProcessName" in src_event:
+                parent = Process(src_event=src_event, role="parent")
+                self.ParentProcess = parent
 
-    # pylint: enable=locally-disabled, line-too-long
+            # Linux properties
+            self.success = src_event["success"] if "success" in src_event else None
+            self.audit_user = (
+                src_event["audit_user"] if "audit_user" in src_event else None
+            )
+            self.auid = src_event["auid"] if "auid" in src_event else None
+            self.group = src_event["group"] if "group" in src_event else None
+            self.gid = src_event["gid"] if "gid" in src_event else None
+            self.effective_user = (
+                src_event["effective_user"] if "effective_user" in src_event else None
+            )
+            self.euid = src_event["euid"] if "euid" in src_event else None
+            self.effective_group = (
+                src_event["effective_group"] if "effective_group" in src_event else None
+            )
+            self.egid = (
+                src_event["effective_group"] if "effective_group" in src_event else None
+            )
+            self.cwd = src_event["cwd"] if "cwd" in src_event else None
+            self.name = src_event["cwd"] if "cwd" in src_event else None
+        else:
+            self.ProcessId = (
+                src_event["ProcessId"] if "ProcessId" in src_event else None
+            )
+            self.ImageFile = File(src_event=src_event, role="parent")
 
     @property
-    def ProcessName(self) -> str:  # noqa: N802
+    def ProcessName(self) -> Optional[str]:
         """Return the name of the process file."""
         file = self["ImageFile"]
         return file.Name if file else None
 
     @property
-    def ProcessFilePath(self) -> str:  # noqa: N802
+    def ProcessFilePath(self) -> Optional[str]:
         """Return the name of the process file path."""
         file = self["ImageFile"]
         return file.FullPath if file else None
@@ -153,7 +160,10 @@ class Process(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.ProcessFilePath}: {self.CommandLine}"
+        if self.ProcessFilePath:
+            return f"{self.ProcessFilePath}: {self.CommandLine}"
+        else:
+            return self.__name__
 
     _entity_schema = {
         # ProcessId (type System.String)

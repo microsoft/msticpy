@@ -3,12 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""SecurityGroup Entity class."""
-import pprint
-from abc import ABC, abstractmethod
-from enum import Enum
-from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Any, Dict, Mapping, Type, Union, Optional
+"""GeoLocation Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -18,22 +14,30 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_ENTITY_ENUMS: Dict[str, Type] = {}
+# pylint: disable=invalid-name
 
 
 @export
-class SecurityGroup(Entity):
+class GeoLocation(Entity):
     """
-    SecurityGroup Entity class.
+    GeoLocation class.
 
     Attributes
     ----------
-    DistinguishedName : str
-        SecurityGroup DistinguishedName
-    SID : str
-        SecurityGroup SID
-    ObjectGuid : str
-        SecurityGroup ObjectGuid
+    CountryCode : str
+        GeoLocation CountryCode
+    CountryName : str
+        GeoLocation CountryName
+    State : str
+        GeoLocation State
+    City : str
+        GeoLocation City
+    Longitude : float
+        GeoLocation Longitude
+    Latitude : float
+        GeoLocation Latitude
+    Asn : str
+        GeoLocation Asn
 
     """
 
@@ -55,18 +59,33 @@ class SecurityGroup(Entity):
             kw arguments.
 
         """
+        self.CountryCode: Optional[str] = None
+        self.CountryName: Optional[str] = None
+        self.State: Optional[str] = None
+        self.City: Optional[str] = None
+        self.Longitude: Optional[str] = None
+        self.Latitude: Optional[str] = None
+        self.Asn: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
-    def description_str(self):
+    def description_str(self) -> str:
         """Return Entity Description."""
-        return self.DistinguishedName
+        return f"{self.CountryCode}; {self.State}; {self.City}"
 
     _entity_schema = {
-        # DistinguishedName (type System.String)
-        "DistinguishedName": None,
-        # SID (type System.String)
-        "SID": None,
-        # ObjectGuid (type System.String)
-        "ObjectGuid": None,
+        # str
+        "CountryCode": None,
+        # str
+        "CountryName": None,
+        # str
+        "State": None,
+        # str
+        "City": None,
+        # double?
+        "Longitude": None,
+        # double?
+        "Latitude": None,
+        # int
+        "Asn": None,
     }
