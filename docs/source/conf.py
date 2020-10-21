@@ -36,9 +36,9 @@ copyright = "2019, (c) Microsoft Corporation."
 author = "Ian Hellen"
 
 # The short X.Y version
-version = ""
+version = "0.8.7"
 # The full version, including alpha/beta/rc tags
-release = "0.1.5"
+release = "0.8.7"
 
 
 # -- General configuration ---------------------------------------------------
