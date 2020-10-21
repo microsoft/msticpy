@@ -211,6 +211,7 @@ autodoc_mock_imports = [
     "matplotlib",
     "statsmodels",
     "scipy",
+    "sklearn",
     "splunk-sdk",
     "seaborn",
 ]

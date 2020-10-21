@@ -21,15 +21,15 @@ data providers. Like the other providers, the Mordor provider
 returns results as a pandas DataFrame, allowing it to be used
 easily in Jupyter notebooks and other Python code.
 
-For more information on the Mordor data sets see the `Open Threat
-Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__.
+For more information on the Mordor data sets see the
+`Open Threat Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__.
 
 For more information on Mitre ATT&CK Techniques and Tactics see
 `Mitre ATT&CK <https://attack.mitre.org/>`__.
 
 You can view a notebook that illustrates the use of the Mordor
 provider here
-`MordorData <<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MordorData.ipynb>`__
+`MordorData <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MordorData.ipynb>`__
 
 
 Using the Data Provider to download datasets
@@ -348,7 +348,7 @@ Main Details Window
    are self-explanatory.
 -  tags can be used for searching (although the search functions
    in the browser and data provider will search over all text).
--  file_paths (see :ref:`file_paths` below)
+-  file_paths (see `File paths`_ below)
 -  attacks - lists related Mitre Technique and Tactics. The item title
    is a link to the Mitre page describing the technique or tactic.
 -  notebooks - if there are one or more notebooks in the Threat Hunter Playbook
@@ -358,7 +358,6 @@ Main Details Window
    replaying the attack in a demo environment).
 -  references - links to any external documents about the attack.
 
-.. _file_paths:
 
 File paths
 ----------
