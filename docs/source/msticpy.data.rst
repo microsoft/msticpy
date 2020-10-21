@@ -100,7 +100,7 @@ msticpy.data.azure\_data module
     :show-inheritance:
 
 msticpy.data.azure\_sentinel module
--------------------------------
+-----------------------------------
 .. automodule:: msticpy.data.azure_sentinel
     :members:
     :undoc-members:

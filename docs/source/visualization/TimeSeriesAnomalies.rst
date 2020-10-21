@@ -209,6 +209,7 @@ Query, data source, parameters and parameterized raw KQL query
     </table>
     </div>
 
+|
 
 Time Series Analysis and discovering Anomalies
 ----------------------------------------------
@@ -273,11 +274,29 @@ the similar details
    where_clause: str (optional)
        Optional additional filter clauses
    Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn}) | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long) | project {timestampcolumn}, {aggregatecolumn}, baseline | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+    | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end})
+    | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn}
+      from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
+    | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn})
+    | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime),
+      baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
+    | project {timestampcolumn}, {aggregatecolumn}, baseline
+    | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
 
 .. code:: ipython3
 
-    time_series_baseline= qry_prov.MultiDataSource.plot_timeseries_datawithbaseline(start=start, end =end, table='CommonSecurityLog',timestampcolumn = 'TimeGenerated', aggregatecolumn='SentBytes',groupbycolumn='DeviceVendor',aggregatefunction='sum(SentBytes)', scorethreshold='1.5', where_clause='|where DeviceVendor=="Palo Alto Networks"')
+    time_series_baseline = qry_prov.MultiDataSource.plot_timeseries_datawithbaseline(
+        start=start,
+        end=end,
+        table='CommonSecurityLog',
+        timestampcolumn='TimeGenerated',
+        aggregatecolumn='SentBytes',
+        groupbycolumn='DeviceVendor',
+        aggregatefunction='sum(SentBytes)',
+        scorethreshold='1.5',
+        where_clause='|where DeviceVendor=="Palo Alto Networks"'
+    )
     time_series_baseline.head()
 
 
@@ -343,47 +362,59 @@ the similar details
     </table>
     </div>
 
+|
+
 Using MSTICPY - Seasonal-Trend decomposition using LOESS (STL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this case, we will use msticpy function `timeseries_anomalies_stl` which leverages `STL` method from `statsmodels` API to decompose a time series into three components: trend, seasonal and residual. STL uses LOESS (locally estimated scatterplot smoothing) to extract smooths estimates of the three components. The key inputs into STL are:
+In this case, we will use msticpy function `timeseries_anomalies_stl`
+which leverages `STL` method from `statsmodels` API to decompose a time
+series into three components: trend, seasonal and residual. STL uses
+LOESS (locally estimated scatterplot smoothing) to extract smooths
+estimates of the three components. The key inputs into STL are:
 
 - season - The length of the seasonal smoother. Must be odd.
-- trend - The length of the trend smoother, usually around 150% of season. Must be odd and larger than season.
-- low_pass - The length of the low-pass estimation window, usually the smallest odd number larger than the periodicity of the data.
+- trend - The length of the trend smoother, usually around 150%
+  of season. Must be odd and larger than season.
+- low_pass - The length of the low-pass estimation window, usually the
+  smallest odd number larger than the periodicity of the data.
 
-More info : https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL
+More info at the
+`statsmodel STL documentation
+<https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL>`__
 
 Documentation of timeseries_anomalies_stl function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.core.frame.DataFrame
-    Discover anomalies in Timeseries data using
-    STL (Seasonal-Trend Decomposition using LOESS) method using statsmodels package.
-    
-    Parameters
-    ----------
-    data: pd.DataFrame
-        DataFrame as a time series data set retrived from data connector or external data source.
-        Dataframe must have 2 columns with time column set as index and other numeric value.
-    
-    Other Parameters
-    ----------------
-    seasonal: int, optional
-        Seasonality period of the input data required for STL. 
-        Must be an odd integer, and should normally be >= 7 (default).
-    period: int, optional
-        Periodicity of the the input data. by default 24 (Hourly).
-    score_threshold: float, optional
-        standard deviation threshold value calculated using Z-score used to flag anomalies,
-        by default 3
-    
-    Returns
-    -------
-    pd.DataFrame
-        Returns a dataframe with additional columns by decomposing time series data
-        into residual, trend, seasonal, weights, baseline, score and anomalies.
-        The anomalies column will have 0,1,-1 values based on score_threshold set.
+::
+
+  timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.core.frame.DataFrame
+      Discover anomalies in Timeseries data using
+      STL (Seasonal-Trend Decomposition using LOESS) method using statsmodels package.
+
+      Parameters
+      ----------
+      data: pd.DataFrame
+          DataFrame as a time series data set retrived from data connector or external data source.
+          Dataframe must have 2 columns with time column set as index and other numeric value.
+
+      Other Parameters
+      ----------------
+      seasonal: int, optional
+          Seasonality period of the input data required for STL.
+          Must be an odd integer, and should normally be >= 7 (default).
+      period: int, optional
+          Periodicity of the the input data. by default 24 (Hourly).
+      score_threshold: float, optional
+          standard deviation threshold value calculated using Z-score used to flag anomalies,
+          by default 3
+
+      Returns
+      -------
+      pd.DataFrame
+          Returns a dataframe with additional columns by decomposing time series data
+          into residual, trend, seasonal, weights, baseline, score and anomalies.
+          The anomalies column will have 0, 1, -1 values based on score_threshold set.
 
 .. code:: ipython3
 
@@ -399,11 +430,11 @@ timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -444,7 +475,7 @@ timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.
     </table>
     </div>
 
-
+|
 
 Discover anomalies using timeseries_anomalies_stl function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -463,11 +494,11 @@ We will run msticpy function `timeseries_anomalies_stl` on the input data to dis
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -552,12 +583,14 @@ We will run msticpy function `timeseries_anomalies_stl` on the input data to dis
     </table>
     </div>
 
-
+|
 
 Displaying Anomalies using STL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We will filter only the anomalies (with value 1 from anomalies column) of the output dataframe retrieved after running the msticpy function `timeseries_anomalies_stl`
+We will filter only the anomalies (with value 1 from anomalies column) of
+the output dataframe retrieved after running the msticpy function
+`timeseries_anomalies_stl`
 
 .. code:: ipython3
 
@@ -570,11 +603,11 @@ We will filter only the anomalies (with value 1 from anomalies column) of the ou
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -635,6 +668,7 @@ We will filter only the anomalies (with value 1 from anomalies column) of the ou
     </table>
     </div>
 
+|
 
 Read From External Sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -734,6 +768,7 @@ KQL Time series functions such as ``series_decompose_anomalies()``.
     </table>
     </div>
 
+|
 
 Displaying Time Series anomaly alerts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -785,7 +820,16 @@ details
    where_clause: str (optional)
        Optional additional filter clauses
    Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit") | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long) | where anomalies > 0 | extend score = round(score,2)
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+    | where {timestampcolumn} >= datetime({start})
+    | where {timestampcolumn} <= datetime({end})
+    | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end})
+      step {timeframe} by {groupbycolumn}
+    | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
+    | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime),
+      anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
+    | where anomalies > 0
+    | extend score = round(score,2)
 
 .. code:: ipython3
 
@@ -839,14 +883,15 @@ details
     </table>
     </div>
 
+|
 
 Displaying Anomalies Separately
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We will filter only the anomalies shown in the above plot and display
-below along with associated aggreageted hourly timewindow. You can later
+below along with associated aggregated hourly time window. You can later
 query for the time windows scope for additional alerts triggered or any
-other suspicious activity from other datasources.
+other suspicious activity from other data sources.
 
 .. code:: ipython3
 
@@ -911,7 +956,7 @@ other suspicious activity from other datasources.
     </table>
     </div>
 
-
+|
 
 Time Series Anomalies Visualization
 -----------------------------------
@@ -944,17 +989,17 @@ Documentation for display_timeseries_anomalies
     Parameters
     ----------
     data : pd.DataFrame
-        DataFrame as a time series data set retreived from KQL time series functions
+        DataFrame as a time series data set retrieved from KQL time series functions
         dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
     y : str, optional
-        Name of column holding numeric values to plot against time series to determine anomolies
+        Name of column holding numeric values to plot against time series to determine anomalies
         (the default is 'Total')
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
     anomalies_column : str, optional
         Name of the column holding binary status(1/0) for anomaly/benign
-        (the default is 'anomolies')
+        (the default is 'anomalies')
     source_columns : list, optional
         List of default source columns to use in tooltips
         (the default is None)
@@ -1013,7 +1058,7 @@ Documentation for display_timeseries_anomalies
 
 .. image:: _static/TimeSeriesAnomalieswithRangeTool.png
 
-
+|
 
 
 
@@ -1069,6 +1114,7 @@ Here is our saved plot: plot.png
 
 .. image:: _static/TimeSeriesAnomaliesExport.png
 
+|
 
 Using Built-in KQL render operator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1089,7 +1135,8 @@ will display linegraph.
     | project TimeGenerated, TotalBytesSent;
     TimeSeriesData
     | extend (baseline,seasonal,trend,residual) = series_decompose(TotalBytesSent)
-    | mv-expand TotalBytesSent to typeof(double), TimeGenerated to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
+    | mv-expand TotalBytesSent to typeof(double), TimeGenerated to typeof(datetime),
+      baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
     | project TimeGenerated, TotalBytesSent, baseline
     | render timechart with (title="Palo Alto Outbound Data Transfer Time Series decomposition")
     """
