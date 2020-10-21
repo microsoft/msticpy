@@ -4,9 +4,27 @@
 # license information.
 # --------------------------------------------------------------------------
 """Setup script for msticpy."""
-
+import os
 import re
 import setuptools
+
+
+def install_requires_rtd(install_list: list) -> list:
+    """Return modified install list if installing for ReadtheDocs."""
+    rtd_exceptions = [
+        "Kqlmagic",
+        "azure-cli-core",
+        "matplotlib",
+        "statsmodels",
+        "scipy",
+        "splunk-sdk",
+        "seaborn",
+    ]
+    return [
+        pkg
+        for pkg in install_list
+        if not any(excl_pkg for excl_pkg in rtd_exceptions if excl_pkg in pkg)
+    ]
 
 
 with open("README.md", "r") as fh:
@@ -27,9 +45,14 @@ with open("requirements-dev.txt", "r") as fh:
 # Extras definitions
 EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
-    "vt3": ["vt-py>=0.5.4", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
+    "vt3": ["vt-py>=0.6.1", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
 }
+
+# If ReadTheDocs build, remove a couple of problematic packages
+# (we ask Sphinx to mock these in the import)
+if os.environ.get("MP_RTD_BUILD"):
+    INSTALL_REQUIRES = install_requires_rtd(INSTALL_REQUIRES)
 
 setuptools.setup(
     name="msticpy",
