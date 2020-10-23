@@ -155,13 +155,14 @@ class LAUploader(UploaderBase):
         """
         # If data is larger than 25Mb split into multiple ~25Mb chunks and upload
         events = data.astype(str).to_numpy().tolist()
-        if sys.getsizeof(json.dumps(events)) > 26214400:
+        if sys.getsizeof(json.dumps(events)) > 25000000:
             if self._debug is True:
                 print("Data larger than 25MB spliting data requests.")
-            chunks = (sys.getsizeof(json.dumps(events)) // 26214400) + 1
+            chunks = (sys.getsizeof(json.dumps(events)) // 25000000) + 1
             chunked_list = _split_list(events, chunks)
             for chunk in chunked_list:
                 body = json.dumps(chunk)
+                print(sys.getsizeof(body))
                 self._post_data(body, table_name)
 
         if events:
