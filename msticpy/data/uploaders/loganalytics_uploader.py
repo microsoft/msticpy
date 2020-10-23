@@ -153,16 +153,20 @@ class LAUploader(UploaderBase):
             Custom table name to upload the data to.
 
         """
-        events = []
-        for row in data.iterrows():
-            events.append(row[1].astype(str).to_dict())
-            # Due to 30MB limit if data is larger than 25Mb upload that chunk then continue
-            if sys.getsizeof(json.dumps(events)) > 26214400:
-                if self._debug is True:
-                    print("Data larger than 25MB spliting data requests.")
-                body = json.dumps(events)
-                self._post_data(body, table_name)
-                events = []
+        events = data.astype(str).to_numpy().tolist()
+        if sys.getsizeof(json.dumps(events)) > 26214400:
+            if self._debug is True:
+                print("Data larger than 25MB spliting data requests.")
+            events = []
+            for row in data.iterrows():
+                events.append(row[1].astype(str).to_dict())
+                # Due to 30MB limit if data is larger than 25Mb upload that chunk then continue
+                if sys.getsizeof(json.dumps(events)) > 26214400:
+                    if self._debug is True:
+                        print("Data larger than 25MB spliting data requests.")
+                    body = json.dumps(events)
+                    self._post_data(body, table_name)
+                    events = []
 
         if events:
             body = json.dumps(events)
