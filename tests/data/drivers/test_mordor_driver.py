@@ -40,7 +40,8 @@ def qry_provider():
         Path(_SAVE_PATH).unlink()
     for file in Path(_SAVE_FOLDER).glob("*"):
         Path(file).unlink()
-    Path(_SAVE_FOLDER).rmdir()
+    if Path(_SAVE_FOLDER).is_dir():
+        Path(_SAVE_FOLDER).rmdir()
 
 
 # pylint: disable=redefined-outer-name, protected-access, global-statement
