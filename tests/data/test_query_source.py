@@ -70,11 +70,11 @@ class TestQuerySource(unittest.TestCase):
         self.la_provider = QueryProvider(
             data_environment="LogAnalytics", driver=self.provider
         )
-        self.query_sources = self.la_provider._query_store.data_families
+        self.query_sources = self.la_provider.query_store.data_families
         self.splunk_provider = QueryProvider(
             data_environment="Splunk", driver=self.provider
         )
-        self.splunk_query_sources = self.splunk_provider._query_store.data_families
+        self.splunk_query_sources = self.splunk_provider.query_store.data_families
 
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""

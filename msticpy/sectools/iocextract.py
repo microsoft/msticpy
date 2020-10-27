@@ -32,7 +32,7 @@ from urllib.parse import unquote
 import pandas as pd
 
 from .._version import VERSION
-from ..common.utility import export
+from ..common.utility import export, check_kwargs
 from .domain_utils import DomainValidator
 
 __version__ = VERSION
@@ -174,7 +174,8 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
-        self.dom_val = DomainValidator()
+        self._dom_validator = DomainValidator()
+        self._ignore_tld = False
 
     # Public members
     def add_ioc_type(
@@ -264,6 +265,10 @@ class IoCExtract:
             (the default is false - excludes 'windows_path'
             and 'linux_path'). If `ioc_types` is specified
             this parameter is ignored.
+        ignore_tlds : bool, optional
+            If True, ignore the official Top Level Domains
+            list when determining whether a domain name is
+            a legal domain.
 
         Returns
         -------
@@ -291,8 +296,11 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
         ioc_types = kwargs.get("ioc_types", None)
         include_paths = kwargs.get("include_paths", False)
+        ignore_tld_current = self._ignore_tld
+        self._ignore_tld = kwargs.get("ignore_tlds", False)
 
         if src and src.strip():
             return self._scan_for_iocs(src=src, ioc_types=ioc_types)
@@ -322,6 +330,7 @@ class IoCExtract:
                     datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
+        self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=result_columns)
 
     # pylint: disable=too-many-arguments
@@ -369,6 +378,10 @@ class IoCExtract:
             (the default is false - excludes 'windows_path'
             and 'linux_path'). If `ioc_types` is specified
             this parameter is ignored.
+        ignore_tlds : bool, optional
+            If True, ignore the official Top Level Domains
+            list when determining whether a domain name is
+            a legal domain.
 
         Returns
         -------
@@ -393,8 +406,11 @@ class IoCExtract:
         is True or explicitly included in `ioc_paths`.
 
         """
+        check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
         ioc_types = kwargs.get("ioc_types", None)
         include_paths = kwargs.get("include_paths", False)
+        ignore_tld_current = self._ignore_tld
+        self._ignore_tld = kwargs.get("ignore_tlds", False)
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
         col_set = set(columns)
@@ -414,6 +430,7 @@ class IoCExtract:
                     datarow, idx, columns, result_columns, ioc_types_to_use
                 )
             )
+        self._ignore_tld = ignore_tld_current
         return pd.DataFrame(data=result_rows, columns=result_columns)
 
     def _get_ioc_types_to_use(
@@ -431,7 +448,9 @@ class IoCExtract:
                 ioc_types_to_use.remove(IoCType.windows_path.name)
         return ioc_types_to_use
 
-    def validate(self, input_str: str, ioc_type: str) -> bool:
+    def validate(
+        self, input_str: str, ioc_type: str, ignore_tlds: bool = False
+    ) -> bool:
         """
         Check that `input_str` matches the regex for the specificed `ioc_type`.
 
@@ -441,6 +460,10 @@ class IoCExtract:
             the string to test
         ioc_type : str
             the regex pattern to use
+        ignore_tlds : bool, optional
+            If True, ignore the official Top Level Domains
+            list when determining whether a domain name is
+            a legal domain.
 
         Returns
         -------
@@ -448,6 +471,8 @@ class IoCExtract:
             True if match.
 
         """
+        ignore_tld_current = self._ignore_tld
+        self._ignore_tld = ignore_tlds
         if ioc_type == IoCType.file_hash.name:
             val_type = self.file_hash_type(input_str).name
         elif ioc_type == IoCType.hostname.name:
@@ -462,9 +487,11 @@ class IoCExtract:
             )
         rgx = self._content_regex[val_type]
         pattern_match = rgx.comp_regex.fullmatch(input_str)
+        validated = True
         if val_type == "dns":
-            return self.dom_val.validate_tld(input_str) and pattern_match
-        return pattern_match is not None
+            validated = self._validate_tld(input_str)
+        self._ignore_tld = ignore_tld_current
+        return pattern_match and validated
 
     @staticmethod
     def file_hash_type(file_hash: str) -> IoCType:
@@ -523,6 +550,12 @@ class IoCExtract:
         return IoCType.unknown.name
 
     # Private methods
+    def _validate_tld(self, domain: str) -> bool:
+        """If validate TLDS check with TLD list."""
+        if self._ignore_tld:
+            return True
+        return self._dom_validator.validate_tld(domain)
+
     def _scan_for_iocs(
         self, src: str, ioc_types: List[str] = None
     ) -> Dict[str, Set[str]]:
@@ -546,7 +579,7 @@ class IoCExtract:
                     else rgx_match.group()
                 )
 
-                if ioc_type == "dns" and not self.dom_val.validate_tld(match_str):
+                if ioc_type == "dns" and not self._validate_tld(match_str):
                     continue
 
                 self._add_highest_pri_match(iocs_found, match_str, rgx_def)
