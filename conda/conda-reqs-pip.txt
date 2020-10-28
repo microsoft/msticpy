@@ -7,6 +7,7 @@ azure-mgmt-keyvault>=2.0.0
 azure-mgmt-monitor>=1.0.1
 azure-mgmt-subscription>=0.2.0
 geoip2>=2.9.0
+html5lib
 ipwhois>=1.1.0
 Kqlmagic>=0.1.106
 splunk-sdk>=1.6.0
