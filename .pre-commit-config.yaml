@@ -25,7 +25,7 @@ repos:
         args:
           - --extend-ignore=E0401,E501
           - --max-line-length=90
-          - --exclude tests
+          - --exclude=tests
   - repo: local
     hooks:
       - id: download_tlds
