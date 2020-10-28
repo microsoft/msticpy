@@ -118,3 +118,4 @@ morphchart_package/
 
 #kql magic temp files
 /docs/notebooks/kqlmagic/*
+/kqlmagic/**

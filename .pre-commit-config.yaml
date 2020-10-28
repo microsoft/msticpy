@@ -17,6 +17,7 @@ repos:
       - id: pylint
         args:
           - --disable=E0401
+          - --ignore-patterns=test_
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.4
     hooks:
@@ -24,6 +25,7 @@ repos:
         args:
           - --extend-ignore=E0401,E501
           - --max-line-length=90
+          - --exclude=tests
   - repo: local
     hooks:
       - id: download_tlds

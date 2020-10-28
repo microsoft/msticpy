@@ -130,6 +130,7 @@ def test_azuresent_init():
     assert isinstance(azs, AzureSentinel)
 
 
+@pytest.mark.skip
 def test_azuresent_connect_exp():
     """Test connect failure."""
     with pytest.raises(AttributeError):
