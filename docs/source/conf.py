@@ -24,6 +24,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -35,11 +36,15 @@ project = "msticpy"
 copyright = "2019, (c) Microsoft Corporation."
 author = "Ian Hellen"
 
-# The short X.Y version
-version = "0.8.7"
-# The full version, including alpha/beta/rc tags
-release = "0.8.7"
 
+with open("../../msticpy/_version.py", "r") as fd:
+    v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
+    _ver = v_match.group(1) if v_match else "no version"
+
+# The full version, including alpha/beta/rc tags
+release = _ver
+# The short X.Y version
+version = _ver
 
 # -- General configuration ---------------------------------------------------
 
