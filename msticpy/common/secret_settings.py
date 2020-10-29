@@ -64,6 +64,7 @@ class KeyringClient:
             Secret value.
 
         """
+        secret = None
         if self.debug:
             print(f"Fetching {secret_name} from keyring")
         try:
@@ -74,11 +75,8 @@ class KeyringClient:
                     "Keyring error retrieving credentials",
                     f"for {secret_name} from keyring {self.keyring}",
                 )
-        if not secret:
-            if self.debug:
-                print(
-                    "No credentials", f"for {secret_name} from keyring {self.keyring}"
-                )
+        if not secret and self.debug:
+            print("No credentials", f"for {secret_name} from keyring {self.keyring}")
         return secret
 
     def set_secret(self, secret_name: str, secret_value: Any):
@@ -207,9 +205,8 @@ class SecretsClient:
 
     def _get_secret_func(self, secret_name: str, vault_name: str) -> Callable[[], Any]:
         """Return a func to access a secret."""
-        if self._use_keyring:
-            if self._keyring_client.get_secret(secret_name):
-                return self._create_secret_func(self._keyring_client, secret_name)
+        if self._use_keyring and self._keyring_client.get_secret(secret_name):
+            return self._create_secret_func(self._keyring_client, secret_name)
 
         # If the secret is not in keyring, get the vault holding this secret
         if not self.kv_secret_vault.get(secret_name):

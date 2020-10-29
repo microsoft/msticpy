@@ -70,7 +70,7 @@ QueryProvider.list_data_environments() which will return a list of all
 the available options.
 
 After selecting a Data Environment we can initialize our Query Provider
-by calling QueryProvider(DATA_ENVIRONMENT). This will load the relavent
+by calling QueryProvider(DATA_ENVIRONMENT). This will load the relevant
 driver for connecting to the data environment we have selected as well
 as provisioning a query store for us and adding queries from our default
 query directory.
@@ -88,7 +88,7 @@ with:
     )
 
 \* We can choose to import queries from a custom
-query directory (see `Creating a new set of queries <#new>`__ for more
+query directory (see `Creating new queries`_ for more
 details) with:
 
 .. code:: ipython3
@@ -206,6 +206,11 @@ Example
     Tenant ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
+List of current built-in queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See this document :doc:`MSTICPy built-in queries <DataQueries>`
+
 Connecting to an Azure Sentinel Workspace
 -----------------------------------------
 
@@ -295,7 +300,7 @@ The Azure Sentinel connection settings are stored in the
     AzureSentinel:
       Workspaces:
         # Workspace used if you don't explicitly name a workspace when creating WorkspaceConfig
-        # Specifying values here overrides config.json settings unless you explictly load
+        # Specifying values here overrides config.json settings unless you explicitly load
         # WorkspaceConfig with config_file parameter (WorkspaceConfig(config_file="../config.json")
         Default:
           WorkspaceId: "271f17d3-5457-4237-9131-ae98a6f55c37"
@@ -430,7 +435,7 @@ Security Graph API
 :py:mod:`Security Graph driver API documentation<msticpy.data.drivers.security_graph_driver>`
 
 Connecting to the Security Graph API follows the same format as MDATP
-connections with connection variables passed to the funciton in the
+connections with connection variables passed to the function in the
 same way.
 
 Details for registering an application for the Security Graph API can
@@ -501,7 +506,7 @@ the name of the file containing the data.
 
 In this example the value for the "query" is just the file name.
 If the queries in your file are a mix of data from different data families,
-you can group them by specifyin one or more values for ``data_families``.
+you can group them by specifying one or more values for ``data_families``.
 If this isn't specified for an individual query, it will inherit the setting
 for ``data_families`` in the global ``metadata`` section at the top of the file.
 Specifying more than one value for ``data_families``
@@ -533,7 +538,7 @@ values, the query is added to all three families.
     WindowsSecurity.list_network_alerts
 
 For more details about the query definition file structure see
-:ref:`creating-new-queries`.
+`Creating new queries`_.
 
 
 To use the ``LocalData`` provider:
@@ -547,8 +552,8 @@ To use the ``LocalData`` provider:
    The query provider will load and merge definitions from multiple YAML files.
 
 QueryProvider defaults to searching for data files in the current directory
-and subdirectories. The default paths for query definition files are the
-built-in package queries path (``...msticpy/data/queries`` and any custom
+and subdirectories. The default paths for query definition files are a) the
+built-in package queries path (msticpy/data/queries) and b) any custom
 paths that you have added to msticpyconfig.yaml (see
 :doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`).
 
@@ -593,11 +598,14 @@ Listing available queries
 
 Upon connecting to the relevant Data
 Environment we need to look at what query options we have available to
-us. In order to do this we can call QUERY_PROVIDER.list_queries(). This
-will return a list all queries in our store.
+us. In order to do this we can call
 
-.. note:: An indivdual query may be listed multiple times if it was
-    added to multiple data familes.
+    *query_provider*.list_queries().
+
+This will return a list all queries in our store.
+
+.. note:: An individual query may be listed multiple times if it was
+    added to multiple data families.
 
 The results returned show the data family the query belongs to and the
 name of the specific query.
@@ -701,7 +709,13 @@ This will display:
         Table name
         (default value is: SecurityAlert)
     Query:
-     {table} {query_project} | where {subscription_filter} | where TimeGenerated >= datetime({start}) | where TimeGenerated <= datetime({end}) | extend extendedProps = parse_json(ExtendedProperties) | extend CompromisedEntity = tostring(extendedProps["Compromised Host"]) | project-away extendedProps {add_query_items}
+     {table} {query_project}
+     | where {subscription_filter}
+     | where TimeGenerated >= datetime({start})
+     | where TimeGenerated <= datetime({end})
+     | extend extendedProps = parse_json(ExtendedProperties)
+     | extend CompromisedEntity = tostring(extendedProps["Compromised Host"])
+     | project-away extendedProps {add_query_items}
 
 
 
@@ -895,11 +909,11 @@ reason an exception will be raised.
     <p>5 rows × 30 columns</p>
     </div>
 
-
+|
 
 It is also possible to pass queries objects as arguments before defining
-keywork arguments. For example if I wanted to define query times as an
-object rather than defining a start and end via keywork arguments I
+keyword arguments. For example if I wanted to define query times as an
+object rather than defining a start and end via keyword arguments I
 could simply pass a querytimes object to the pre-defined query.
 
 .. code:: ipython3
@@ -1087,7 +1101,7 @@ can use that when running a query to automatically supply the ``start`` and
     <p>5 rows × 30 columns</p>
     </div>
 
-.. _ad-hoc-queries:
+|
 
 Running an ad-hoc query
 -----------------------
@@ -1096,7 +1110,11 @@ Running an ad-hoc query
 It is also possible to run ad-hoc queries
 via a similar method. Rather than calling a named query from the Query
 Provider query store, we can pass a query directly to our Query Provider
-with QUERY_PROVIDER.exec_query(query=QUERY_STRING). This will execute
+with:
+
+    *query_provider*.exec\_query(query= *query_string*)
+
+This will execute
 the query string passed in the parameters with the driver contained in
 the Query Provider and return data in a Pandas DataFrame. As with
 predefined queries an exception will be raised should the query fail to
@@ -1325,7 +1343,7 @@ chunks.
    range or it will insert an extra time range to ensure that the full
    *start** to *end* time range is covered.
 
-The subranges are used to generate a query for each time range. The
+The sub-ranges are used to generate a query for each time range. The
 queries are then executed in sequence and the results concatenated into
 a single DataFrame before being returned.
 
@@ -1338,24 +1356,22 @@ The values acceptable for the *split_queries_by* parameter have the format:
 where N is the number of units and TimeUnit is a mnemonic of the unit, e.g.
 H = hour, D = day, etc. For the full list of these see the documentation
 for Timedelta in the
-`pandas documentation<https://pandas.pydata.org/pandas-docs>`__
+`pandas documentation <https://pandas.pydata.org/pandas-docs>`__
 
 .. warning:: There are some important caveats to this feature.
 
    1. It currently only works with pre-defined queries (including ones
-      that you may create and add yourself, see :ref:`creating-new-queries`
-      below). It does not work with :ref:`ad hoc queries <ad-hoc-queries>`
+      that you may create and add yourself, see `Creating new queries`_
+      below). It does not work with `Running an ad-hoc query`_
    2. If the query contains joins, the joins will only happen within
       the time ranges of each subquery.
    3. It only supports queries that have *start* and *end* parameters.
    4. Very large queries may return results that can exhaust the memory
       on the Python client machine.
    5. Duplicate records are possible at the time boundaries. The code
-      tries to avoid returning duplicate records occuring
+      tries to avoid returning duplicate records occurring
       exactly on the time boundaries but some data sources may not use
       granular enough time stamps to avoid this.
-
-.. _creating-new-queries:
 
 Creating new queries
 --------------------
@@ -1505,7 +1521,7 @@ Macros are added to the ``query_macros`` subkey of a query. They have
 two subkeys: description and value. value defines the text to be inserted.
 The key name is the name of the macro.
 
-In the query, you denote the substition point by surrounding the macro name
+In the query, you denote the substitution point by surrounding the macro name
 with "$<" and ">$". This is show in the example below.
 
 .. code:: yaml
@@ -1667,13 +1683,15 @@ Adding a new set of queries and running them
 
 Once you are happy with
 a query definition file then you import it with
-QUERY_PROVIDER.import_query_file(query_file=PATH_TO_QUERY_FILE) This
-will load the query file into the Query Provider’s Query Store from
+
+    *query_provider*.import_query_file(query_file= *path_to_query_file*)
+
+This will load the query file into the Query Provider’s Query Store from
 where it can be called.
 
 .. code:: ipython3
 
-    qry_prov.import_query_file(query_file='C:\queries\example.yaml')
+    qry_prov.import_query_file(query_file='C:\\queries\\example.yaml')
 
 Once imported the queries in the files appear in the Query Provider’s
 Query Store alongside the others and can be called in the same manner as
@@ -1684,7 +1702,7 @@ want to have the automatically imported into a Query Provider’s query
 store at initialization you can specify a directory containing these
 queries in the msticpyconfig.yaml file under QueryDefinitions: Custom:
 
-For example if I have a folder at C:\queries I will set the
+For example if I have a folder at C:\\queries I will set the
 config file to:
 
 .. code:: yaml
@@ -1763,26 +1781,19 @@ same name as default queries will overwrite default queries.
         Table name
         (default value is: Syslog)
     Query:
-     {table} | where {subscription_filter} | where TimeGenerated >= datetime({start}) | where TimeGenerated <= datetime({end}) | where Computer == "{host_name}" | take 5
+     {table} | where {subscription_filter}
+     | where TimeGenerated >= datetime({start})
+     | where TimeGenerated <= datetime({end})
+     | where Computer == "{host_name}" | take 5
 
 
 .. code:: ipython3
 
-    qry_prov.LinuxSyslog.syslog_example(start='2019-07-21 23:43:18.274492', end='2019-07-27 23:43:18.274492', host_name='UbuntuDevEnv')
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
+    qry_prov.LinuxSyslog.syslog_example(
+        start='2019-07-21 23:43:18.274492',
+        end='2019-07-27 23:43:18.274492',
+        host_name='UbuntuDevEnv'
+    )
 
 
 .. raw:: html
@@ -1917,7 +1928,7 @@ same name as default queries will overwrite default queries.
     </table>
     </div>
 
-
+|
 
 If you are having difficulties with a defined query and it is not
 producing the expected results it can be useful to see the raw query
@@ -1927,13 +1938,23 @@ and print out the query string to be run.
 
 .. code:: ipython3
 
-    qry_prov.LinuxSyslog.syslog_example('print', start='2019-07-21 23:43:18.274492', end='2019-07-27 23:43:18.274492', host_name='UbuntuDevEnv')
+    qry_prov.LinuxSyslog.syslog_example(
+        'print',
+        start='2019-07-21 23:43:18.274492',
+        end='2019-07-27 23:43:18.274492',
+        host_name='UbuntuDevEnv'
+    )
 
 
 
 
 .. parsed-literal::
 
-    ' Syslog | where true | where TimeGenerated >= datetime(2019-07-21 23:43:18.274492) | where TimeGenerated <= datetime(2019-07-27 23:43:18.274492) | where Computer == "UbuntuDevEnv" | take 5'
+    'Syslog
+        | where true
+        | where TimeGenerated >= datetime(2019-07-21 23:43:18.274492)
+        | where TimeGenerated <= datetime(2019-07-27 23:43:18.274492)
+        | where Computer == "UbuntuDevEnv"
+        | take 5'
 
 

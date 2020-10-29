@@ -807,14 +807,19 @@ def _get_mitre_categories(uri_template: str) -> pd.DataFrame:
         descriptions.
 
     """
-    categories = {"pre": "PreAttack", "enterprise": "Enterprise", "mobile": "Mobile"}
+    categories = {"enterprise": "Enterprise", "mobile": "Mobile"}
 
-    mitre_data = pd.concat(
-        [
-            pd.read_html(uri_template.format(cat=cat))[0].assign(MitreGroup=cat_title)
-            for cat, cat_title in categories.items()
-        ]
-    ).set_index("ID")
+    tables = []
+    for cat, cat_title in categories.items():
+        try:
+            tables.append(
+                pd.read_html(uri_template.format(cat=cat))[0].assign(
+                    MitreGroup=cat_title
+                )
+            )
+        except ValueError:
+            pass
+    mitre_data = pd.concat(tables).set_index("ID")
     if "ID.1" in mitre_data.columns:
         mitre_data.drop(columns=["ID.1"])
 
