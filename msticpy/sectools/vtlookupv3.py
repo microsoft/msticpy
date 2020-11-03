@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, List, Set
 
 import pandas as pd
+import asyncio
 from IPython.display import HTML, display
 
 from ..common.exceptions import MsticpyImportExtraError
@@ -57,6 +58,16 @@ class VTObjectProperties(Enum):
     RELATIONSHIPS = "relationship"
     LAST_ANALYSIS_STATS = "last_analysis_stats"
     MALICIOUS = "malicious"
+
+def _make_sync(future):
+    """Utility function that waits for an async call, making it sync."""
+    try:
+        event_loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # Generate an event loop if there isn't any.
+        event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(event_loop)
+    return event_loop.run_until_complete(future)
 
 
 class VTLookupV3:
@@ -156,7 +167,7 @@ class VTLookupV3:
         self._vt_key = vt_key
         self._vt_client = vt.Client(apikey=vt_key)
 
-    def lookup_ioc(self, observable: str, vt_type: str) -> pd.DataFrame:
+    async def _lookup_ioc_async(self, observable: str, vt_type: str) -> pd.DataFrame:
         """
         Look up and single IoC observable.
 
@@ -190,10 +201,16 @@ class VTLookupV3:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
+        # finally:
+        #     self._vt_client.close()
+
+    def lookup_ioc(self, observable: str, vt_type: str) -> pd.DataFrame:
+        try:
+            return _make_sync(self._lookup_ioc_async(observable, vt_type))
         finally:
             self._vt_client.close()
 
-    def lookup_iocs(
+    async def _lookup_iocs_async(
         self,
         observables_df: pd.DataFrame,
         observable_column: str = ColumnNames.TARGET.value,
@@ -229,25 +246,39 @@ class VTLookupV3:
 
         observables_list = _observables_df[observable_column]
         types_list = _observables_df[observable_type_column]
-        dfs = []
+        dfs_futures = []
         for observable, observable_type in zip(observables_list, types_list):
             try:
-                ioc_df = self.lookup_ioc(observable, observable_type)
-                dfs.append(ioc_df)
+                ioc_df_future = self._lookup_ioc_async(observable, observable_type)
+                dfs_futures.append(ioc_df_future)
             except KeyError:
                 print(
                     "ERROR\t It was not possible to obtain results for",
                     f"{observable_type} {observable}",
                 )
-                dfs.append(
-                    pd.DataFrame(
-                        data=[[observable, observable_type]],
-                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
-                    ).set_index(ColumnNames.ID.value)
-                )
+                # dfs_futures.append(
+                #     pd.DataFrame(
+                #         data=[[observable, observable_type]],
+                #         columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
+                #     ).set_index(ColumnNames.ID.value)
+                # )
+        dfs = await asyncio.gather(*dfs_futures)
         return pd.concat(dfs) if dfs else pd.DataFrame()
 
-    def lookup_ioc_relationships(
+    def lookup_iocs(self,
+        observables_df: pd.DataFrame,
+        observable_column: str = ColumnNames.TARGET.value,
+        observable_type_column: str = ColumnNames.TARGET_TYPE.value,):
+
+        try:
+            return _make_sync(self._lookup_iocs_async(
+                observables_df,
+                observable_column,
+                observable_type_column))
+        finally:
+            self._vt_client.close()
+
+    async def _lookup_ioc_relationships_async(
         self, observable: str, vt_type: str, relationship: str, limit: int = None
     ) -> pd.DataFrame:
         """
@@ -331,12 +362,26 @@ class VTLookupV3:
                 "An error occurred requesting data from VirusTotal"
             ) from err
 
-        finally:
-            self._vt_client.close()
+        # finally:
+        #     self._vt_client.close()
 
         return result_df
 
-    def lookup_iocs_relationships(
+    def lookup_ioc_relationships(
+        self,
+        observable: str,
+        vt_type: str,
+        relationship: str,
+        limit: int = None
+    ):
+        try:
+            return _make_sync(
+                self._lookup_ioc_relationships_async(
+                    observable, vt_type, relationship, limit))
+        finally:
+            self._vt_client.close()
+
+    async def _lookup_iocs_relationships_async(
         self,
         observables_df: pd.DataFrame,
         relationship: str,
@@ -378,28 +423,59 @@ class VTLookupV3:
 
         observables_list = _observables_df[observable_column]
         types_list = _observables_df[observable_type_column]
-        dfs = []
+        dfs_futures = []
 
         for observable, observable_type in zip(observables_list, types_list):
             try:
-                result_df = self.lookup_ioc_relationships(
+                result_df_future = self._lookup_ioc_relationships_async(
                     observable, observable_type, relationship, limit
                 )
-                dfs.append(result_df)
+                dfs_futures.append(result_df_future)
             except KeyError:
                 print(
                     "ERROR:\t It was not possible to get the data for",
                     f"{observable_type} {observable}",
                 )
-                dfs.append(
-                    pd.DataFrame(
-                        data=[[observable, observable_type]],
-                        columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
-                    ).set_index(ColumnNames.ID.value)
-                )
-
+        dfs = await asyncio.gather(*dfs_futures)
         return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
 
+    def lookup_iocs_relationships(self,
+        observables_df: pd.DataFrame,
+        relationship: str,
+        observable_column: str = ColumnNames.TARGET.value,
+        observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+        limit: int = None,):
+        """
+        Look up and single IoC observable relationships.
+
+        Parameters
+        ----------
+        observables_df: pd.DataFrame
+            A Pandas DataFrame, where each row is an observable
+        relationship: str
+            Desired relationship
+        observable_column:
+            ID column of each observable
+        observable_type_column:
+            Type column of each observable.
+        limit: int
+            Relations limit
+
+        Returns
+        -------
+            Relationship Pandas DataFrame with the relationships of each observable.
+
+        Raises
+        ------
+        KeyError
+            Column not found in observables_df
+
+        """
+        try:
+            return _make_sync(self._lookup_iocs_relationships_async(observables_df, relationship, observable_column, observable_type_column))
+
+        finally:
+            self._vt_client.close()
     def create_vt_graph(
         self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
     ) -> str:
