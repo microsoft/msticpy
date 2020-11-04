@@ -74,6 +74,7 @@ class KeyringClient:
                     "Keyring error retrieving credentials",
                     f"for {secret_name} from keyring {self.keyring}",
                 )
+                secret=None
         if not secret:
             if self.debug:
                 print(
