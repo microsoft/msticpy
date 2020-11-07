@@ -28,7 +28,7 @@ __author__ = "juju4"
 
 
 SUMOLOGIC_CONNECT_ARGS = {
-    "url": "(string) The url endpoint (the default is 'https://api.us2.sumologic.com/api/v1').",
+    "url": "(string) The url endpoint (the default is 'https://api.us2.sumologic.com/api').",
     "accessid": "(string) The Sumologic accessid, which is used to "
     + "authenticate on Sumologic instance.",
     "accesskey": "(string) The matching Sumologic accesskey.",
@@ -209,6 +209,7 @@ class SumologicDriver(DriverBase):
         if verbosity >=2:
             print("DEBUG: query {0}".format(query))
             print("DEBUG: byReceiptTime {0}".format(byReceiptTime))
+            timer_start = timer()
         try:
             sj = self.service.search_job(query, start_time, end_time, timeZone, byReceiptTime)
         except Exception as e:
@@ -223,12 +224,15 @@ class SumologicDriver(DriverBase):
         while status['state'] != 'DONE GATHERING RESULTS':
             if status['state'] == 'CANCELLED':
                 break
-            time.sleep(self.timeout)
             status = self.service.search_job_status(sj)
+            if verbosity >=4:
+                print("DEBUG: pending results, state {0}. sleeping {1}}".format(status,self.timeout))
+            time.sleep(self.timeout)
 
         print(status['state'])
 
         if verbosity >=2:
+            print("DEBUG: search performance:{0}".format(str(timer() - timer_start)))
             print("DEBUG: messages or records? {0}".format(re.search(r'\|\s*count', query, re.IGNORECASE)))
         if status['state'] == 'DONE GATHERING RESULTS' and (
                 not re.search(r'\|\s*count', query, re.IGNORECASE) or forceMessagesResults
