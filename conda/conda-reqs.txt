@@ -17,7 +17,7 @@ msrest>=0.6.0
 msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4
-pandas>=0.25.0,<=1.0.5
+pandas>=0.25.0
 python-dateutil>=2.8.1
 pytz>=2019.2
 pyyaml>=3.13
@@ -28,5 +28,4 @@ seaborn>=0.9.0
 setuptools>=40.6.3
 statsmodels
 tqdm>=4.36.1
-typing>=3.6.6
 urllib3>=1.23

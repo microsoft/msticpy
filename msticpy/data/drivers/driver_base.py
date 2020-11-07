@@ -6,13 +6,12 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict, Optional, Callable
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
-from ..query_source import QuerySource
-
 from ..._version import VERSION
+from ..query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -27,8 +26,10 @@ class DriverBase(ABC):
         self._loaded = False
         self._connected = False
         self.current_connection = None
-        self.public_attribs: Dict[str, Callable] = {}
+        self.public_attribs: Dict[str, Any] = {}
         self.formatters: Dict[str, Callable] = {}
+        self.use_query_paths = True
+        self.has_driver_queries = False
 
     @property
     def loaded(self) -> bool:
@@ -151,3 +152,17 @@ class DriverBase(ABC):
 
         """
         return {}, ""
+
+    @property
+    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+        """
+        Return queries retrieved from the service after connecting.
+
+        Returns
+        -------
+        List[Dict[str, str]]
+            List of Dictionary of query_name, query_text.
+            Name of container to add queries to.
+
+        """
+        return [{}]

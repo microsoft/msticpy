@@ -13,7 +13,7 @@ Requires Python 3.6 or later.
 To quickly import common modules into a notebook run:
 
 >>> from msticpy import init_notebook
->>> init_notebook()
+>>> init_notebook(globals())
 
 For more options:
 >>> help(init_notebook)
@@ -27,7 +27,7 @@ GitHub repo:
     https://github.com/microsoft/msticpy
 
 """
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 import requests
 
@@ -41,21 +41,21 @@ from . import data
 from ._version import VERSION
 
 __version__ = VERSION
-__author__ = "Ian Hellen, hoefling"
+__author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 
 def check_version():
     """Check the current version against latest on PyPI."""
-    installed_version = LooseVersion(__version__)
+    installed_version = parse_version(__version__)
 
     # fetch package metadata from PyPI
     pypi_url = "https://pypi.org/pypi/msticpy/json"
     pkg_data = requests.get(pypi_url).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
-        latest_version = LooseVersion(latest_version)
+        latest_version = parse_version(latest_version)
     else:
-        latest_version = max(LooseVersion(s) for s in pkg_data["releases"].keys())
+        latest_version = max(parse_version(s) for s in pkg_data["releases"].keys())
 
     print("msticpy version", "installed:", installed_version, "latest:", latest_version)
     if installed_version < latest_version:

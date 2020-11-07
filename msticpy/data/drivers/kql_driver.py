@@ -21,6 +21,7 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
     MsticpyKqlConnectionError,
+    MsticpyDataQueryError,
 )
 from ...common.utility import export
 from ..._version import VERSION
@@ -205,13 +206,15 @@ class KqlDriver(DriverBase):
                     print("Warning - query returned partial results.")
                 return data_frame, result
 
-        print("Warning - query did not complete successfully.")
+        # Query failed
+        err_args = []
         if hasattr(result, "completion_query_info"):
-            print(
-                result.completion_query_info.get("StatusDescription"),
-                f"(code: {result.completion_query_info['StatusCode']})",
-            )
-        return None, result
+            err_desc = result.completion_query_info.get("StatusDescription")
+            err_desc = f"StatusDescription {err_desc}"
+            err_code = f"(err_code: {result.completion_query_info.get('StatusCode')})"
+            err_args = [err_desc, err_code]
+        err_args.append(f"Query:\n{query}")
+        raise MsticpyDataQueryError(*err_args)
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
@@ -232,10 +235,14 @@ class KqlDriver(DriverBase):
 
     def _get_kql_option(self, option):
         """Retrieve a current Kqlmagic notebook option."""
+        if self._ip is None:
+            return None
         return self._ip.run_line_magic("config", line=option)
 
     def _set_kql_option(self, option, value):
         """Set a Kqlmagic notebook option."""
+        if self._ip is None:
+            return None
         set_txt = f"{option}={value}"
         return self._ip.run_line_magic("config", line=set_txt)
 

@@ -34,7 +34,7 @@ class Entity(ABC):
     Implements common methods for Entity classes
     """
 
-    ENTITY_NAME_MAP: Dict[str, Type] = {}
+    ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
@@ -163,10 +163,7 @@ class Entity(ABC):
         ent_dict = {}
         for prop, val in entity.properties.items():
             if val is not None:
-                if isinstance(val, Entity):
-                    ent_dict[prop] = self._to_dict(val)
-                else:
-                    ent_dict[prop] = val
+                ent_dict[prop] = self._to_dict(val) if isinstance(val, Entity) else val
         return ent_dict
 
     def _repr_html_(self) -> str:
@@ -229,7 +226,7 @@ class Entity(ABC):
         """
         return self.Type
 
-    # pylint: disable=bad-continuation, too-many-branches
+    # pylint: disable=too-many-branches
     @classmethod
     def instantiate_entity(  # noqa: C901
         cls, raw_entity: Mapping[str, Any]
@@ -384,8 +381,9 @@ class Account(Entity):
     @property
     def qualified_name(self) -> str:
         """Windows qualified account name."""
-        if "Name" in self:
-            name = self["Name"]
+        if "Name" not in self:
+            return ""
+        name = self["Name"]
         if "NTDomain" in self and self.NTDomain:
             return "{}\\{}".format(self.NTDomain, name)
         if "UPNSuffix" in self and self.UPNSuffix:
@@ -887,15 +885,14 @@ class Host(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
-        if src_event is not None:
-            if "Computer" in src_event:
-                self._computer = src_event["Computer"]
-                if "." in src_event["Computer"]:
-                    self.HostName = src_event["Computer"].split(".", 1)[0]
-                    self.DnsDomain = src_event["Computer"].split(".", 1)[1]
-                else:
-                    self.HostName = src_event["Computer"]
-                self.NetBiosName = self.HostName
+        if src_event is not None and "Computer" in src_event:
+            self._computer = src_event["Computer"]
+            if "." in src_event["Computer"]:
+                self.HostName = src_event["Computer"].split(".", 1)[0]
+                self.DnsDomain = src_event["Computer"].split(".", 1)[1]
+            else:
+                self.HostName = src_event["Computer"]
+            self.NetBiosName = self.HostName
 
     @property
     def computer(self) -> str:
@@ -979,9 +976,8 @@ class IpAddress(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
-        if src_event is not None:
-            if "IpAddress" in src_event:
-                self.Address = src_event["IpAddress"]
+        if src_event is not None and "IpAddress" in src_event:
+            self.Address = src_event["IpAddress"]
 
     @property
     def ip_address(self) -> Union[IPv4Address, IPv6Address]:
@@ -1174,14 +1170,13 @@ class NetworkConnection(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        desc = "{}:{} [{}]-> {}:{}".format(
+        return "{}:{} [{}]-> {}:{}".format(
             self.SourceAddress,
             self.SourcePort,
             self.Protocol,
             self.DestinationAddress,
             self.DestinationPort,
         )
-        return desc
 
     _entity_schema = {
         # SourceAddress (type Microsoft.Azure.Security.Detection

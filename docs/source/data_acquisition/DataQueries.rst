@@ -1,8 +1,8 @@
 Data Queries Reference
 ======================
 
-Queries for LogAnalytics
-------------------------
+Queries for AzureSentinel
+-------------------------
 
 ==================  ================================  ===========================================================================================================  ===============================================================================================================  ===========================
 QueryGroup          Query                             Description                                                                                                  ReqdParams                                                                                                       Table
@@ -19,31 +19,31 @@ AzureSentinel       get_bookmark_by_name              Retrieves one or more Book
 AzureSentinel       list_bookmarks                    Retrieves list of bookmarks                                                                                                                                                                                                   HuntingBookmark
 AzureSentinel       list_bookmarks_for_entity         Retrieves bookmarks for entity string                                                                        entity_id (str)                                                                                                  HuntingBookmark
 AzureSentinel       list_bookmarks_for_tags           Retrieves Bookmark by one or mare Tags                                                                       bookmark_tags (list)                                                                                             HuntingBookmark
-Heartbeat           get_info_by_hostname              Retrieves Information by Hostname                                                                            host_name (str), start (datetime), end (datetime)                                                                Heartbeat
+Heartbeat           get_info_by_hostname              Retrieves Information by Hostname                                                                            start (datetime), end (datetime), host_name (str)                                                                Heartbeat
 Heartbeat           get_info_by_ipaddress             Retrieves Information by IP address                                                                          start (datetime), end (datetime), ip_address (str)                                                               Heartbeat
 LinuxAudit          auditd_all                        Extract all audit messages grouped by mssg_id                                                                start (datetime), end (datetime)                                                                                 AuditLog_CL
 LinuxSyslog         all_syslog                        Returns all syslog activity for a host                                                                       start (datetime), end (datetime)                                                                                 Syslog
 LinuxSyslog         cron_activity                     All cron activity                                                                                            start (datetime), end (datetime)                                                                                 Syslog
-LinuxSyslog         list_host_logon_failures          All failed user logon events on a host                                                                       host_name (str), start (datetime), end (datetime)                                                                Syslog
+LinuxSyslog         list_host_logon_failures          All failed user logon events on a host                                                                       start (datetime), end (datetime), host_name (str)                                                                Syslog
 LinuxSyslog         list_logon_failures               All failed user logon events on any host                                                                     start (datetime), end (datetime)                                                                                 Syslog
 LinuxSyslog         list_logons_for_account           All successful user logon events for account (all hosts)                                                     start (datetime), end (datetime), account_name (str)                                                             Syslog
-LinuxSyslog         list_logons_for_host              All logon events on a host                                                                                   host_name (str), start (datetime), end (datetime)                                                                Syslog
-LinuxSyslog         list_logons_for_source_ip         All successful user logon events for source IP (all hosts)                                                   ip_address (str), start (datetime), end (datetime)                                                               Syslog
-LinuxSyslog         squid_activity                    All squid proxy activity                                                                                     host_name (str), start (datetime), end (datetime)                                                                Syslog
+LinuxSyslog         list_logons_for_host              All logon events on a host                                                                                   start (datetime), end (datetime), host_name (str)                                                                Syslog
+LinuxSyslog         list_logons_for_source_ip         All successful user logon events for source IP (all hosts)                                                   start (datetime), end (datetime), ip_address (str)                                                               Syslog
+LinuxSyslog         squid_activity                    All squid proxy activity                                                                                     start (datetime), end (datetime), host_name (str)                                                                Syslog
 LinuxSyslog         sudo_activity                     All sudo activity                                                                                            start (datetime), end (datetime)                                                                                 Syslog
 LinuxSyslog         user_group_activity               All user/group additions, deletions, and modifications                                                       start (datetime), end (datetime)                                                                                 Syslog
-LinuxSyslog         user_logon                        All user logon events on a host                                                                              host_name (str), start (datetime), end (datetime)                                                                Syslog
-MultiDataSource     get_timeseries_anomalies          Time Series filtered anomalies detected using built-in KQL time series function-series_decompose_anomalies   start (datetime), end (datetime), table (str)                                                                    na
-MultiDataSource     get_timeseries_data               Retrieves TimeSeriesData prepared to use with built-in KQL time series functions                             start (datetime), end (datetime), table (str)                                                                    na
-MultiDataSource     get_timeseries_decompose          Time Series decomposition and anomalies generated using built-in KQL time series function- series_decompose  start (datetime), end (datetime), table (str)                                                                    na
-MultiDataSource     plot_timeseries_datawithbaseline  Plot timeseries data using built-in KQL time series decomposition using built-in KQL render method           start (datetime), end (datetime), table (str)                                                                    na
-MultiDataSource     plot_timeseries_scoreanomolies    Plot timeseries anomaly score using built-in KQL render method                                               start (datetime), end (datetime), table (str)                                                                    na
+LinuxSyslog         user_logon                        All user logon events on a host                                                                              start (datetime), end (datetime), host_name (str)                                                                Syslog
+MultiDataSource     get_timeseries_anomalies          Time Series filtered anomalies detected using built-in KQL time series function-series_decompose_anomalies   table (str), start (datetime), end (datetime)                                                                    na
+MultiDataSource     get_timeseries_data               Retrieves TimeSeriesData prepared to use with built-in KQL time series functions                             table (str), start (datetime), end (datetime)                                                                    na
+MultiDataSource     get_timeseries_decompose          Time Series decomposition and anomalies generated using built-in KQL time series function- series_decompose  table (str), start (datetime), end (datetime)                                                                    na
+MultiDataSource     plot_timeseries_datawithbaseline  Plot timeseries data using built-in KQL time series decomposition using built-in KQL render method           table (str), start (datetime), end (datetime)                                                                    na
+MultiDataSource     plot_timeseries_scoreanomolies    Plot timeseries anomaly score using built-in KQL render method                                               table (str), start (datetime), end (datetime)                                                                    na
 Network             get_heartbeat_for_host            Retrieves latest OMS Heartbeat event for host.                                                               host_name (str)                                                                                                  Heartbeat
 Network             get_heartbeat_for_ip              Retrieves latest OMS Heartbeat event for ip address.                                                         ip_address (str)                                                                                                 Heartbeat
 Network             get_host_for_ip                   Gets the latest AzureNetworkAnalytics interface event for a host.                                            ip_address (str)                                                                                                 AzureNetworkAnalytics_CL
 Network             get_ips_for_host                  Gets the latest AzureNetworkAnalytics interface event for a host.                                            host_name (str)                                                                                                  AzureNetworkAnalytics_CL
-Network             list_azure_network_flows_by_host  Retrieves Azure network analytics flow events.                                                               start (datetime), end (datetime), host_name (str)                                                                AzureNetworkAnalytics_CL
-Network             list_azure_network_flows_by_ip    Retrieves Azure network analytics flow events.                                                               start (datetime), end (datetime), ip_address_list (list)                                                         AzureNetworkAnalytics_CL
+Network             list_azure_network_flows_by_host  Retrieves Azure network analytics flow events.                                                               host_name (str), start (datetime), end (datetime)                                                                AzureNetworkAnalytics_CL
+Network             list_azure_network_flows_by_ip    Retrieves Azure network analytics flow events.                                                               ip_address_list (list), start (datetime), end (datetime)                                                         AzureNetworkAnalytics_CL
 Office365           list_activity_for_account         Lists Office Activity for Account                                                                            account_name (str)                                                                                               OfficeActivity
 Office365           list_activity_for_ip              Lists Office Activity for Caller IP Address(es)                                                              ip_address_list (list)                                                                                           OfficeActivity
 Office365           list_azure_activity_for_resource  Lists Office Activity for a Resource                                                                         resource (str)                                                                                                   OfficeActivity
@@ -59,25 +59,44 @@ ThreatIntelligence  list_indicators_by_filepath       Retrieves list of indicato
 ThreatIntelligence  list_indicators_by_hash           Retrieves list of indicators by file hash                                                                    observables (list)                                                                                               ThreatIntelligenceIndicator
 ThreatIntelligence  list_indicators_by_ip             Retrieves list of indicators by IP Address                                                                   observables (list)                                                                                               ThreatIntelligenceIndicator
 ThreatIntelligence  list_indicators_by_url            Retrieves list of indicators by URL                                                                          observables (list)                                                                                               ThreatIntelligenceIndicator
-WindowsSecurity     get_host_logon                    Retrieves the logon event for the session id on the host                                                     logon_session_id (str), host_name (str), start (datetime), end (datetime)                                        SecurityEvent
-WindowsSecurity     get_parent_process                Retrieves the parent process of a supplied process                                                           logon_session_id (str), process_name (str), process_id (str), host_name (str), start (datetime), end (datetime)  SecurityEvent
-WindowsSecurity     get_process_tree                  Retrieves the process tree of a supplied process                                                             logon_session_id (str), process_id (str), process_name (str), host_name (str), start (datetime), end (datetime)  SecurityEvent
-WindowsSecurity     list_all_logons_by_host           Retrevies all failed or successful logons to a host                                                          host_name (str), start (datetime), end (datetime)                                                                SecurityEvent
+WindowsSecurity     get_host_logon                    Retrieves the logon event for the session id on the host                                                     start (datetime), end (datetime), host_name (str), logon_session_id (str)                                        SecurityEvent
+WindowsSecurity     get_parent_process                Retrieves the parent process of a supplied process                                                           start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
+WindowsSecurity     get_process_tree                  Retrieves the process tree of a supplied process                                                             start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
+WindowsSecurity     list_all_logons_by_host           Retrevies all failed or successful logons to a host                                                          start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
 WindowsSecurity     list_events                       Retrieves list of all events                                                                                 start (datetime), end (datetime)                                                                                 SecurityEvent
 WindowsSecurity     list_events_by_id                 Retrieves list of events on a host                                                                           start (datetime), end (datetime), event_list (list)                                                              SecurityEvent
 WindowsSecurity     list_host_events                  Retrieves list of all events on a host                                                                       start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
-WindowsSecurity     list_host_events_by_id            Retrieves list of events on a host                                                                           host_name (str), start (datetime), end (datetime)                                                                SecurityEvent
-WindowsSecurity     list_host_logon_failures          Retrieves the logon failure events on the host                                                               host_name (str), start (datetime), end (datetime)                                                                SecurityEvent
+WindowsSecurity     list_host_events_by_id            Retrieves list of events on a host                                                                           start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
+WindowsSecurity     list_host_logon_failures          Retrieves the logon failure events on the host                                                               start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
 WindowsSecurity     list_host_logons                  Retrieves the logon events on the host                                                                       start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
-WindowsSecurity     list_host_processes               Retrieves list of processes on a host                                                                        host_name (str), start (datetime), end (datetime)                                                                SecurityEvent
-WindowsSecurity     list_hosts_matching_commandline   Retrieves processes on hosts with matching commandline                                                       process_name (str), start (datetime), commandline (str), end (datetime)                                          SecurityEvent
+WindowsSecurity     list_host_processes               Retrieves list of processes on a host                                                                        start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
+WindowsSecurity     list_hosts_matching_commandline   Retrieves processes on hosts with matching commandline                                                       start (datetime), end (datetime), process_name (str), commandline (str)                                          SecurityEvent
 WindowsSecurity     list_logon_attempts_by_account    Retrieves the logon events for an account                                                                    start (datetime), end (datetime), account_name (str)                                                             SecurityEvent
 WindowsSecurity     list_logon_failures_by_account    Retrieves the logon failure events  for an account                                                           start (datetime), end (datetime), account_name (str)                                                             SecurityEvent
 WindowsSecurity     list_logons_by_account            Retrieves the logon events for an account                                                                    start (datetime), end (datetime), account_name (str)                                                             SecurityEvent
-WindowsSecurity     list_matching_processes           Retrieves list of processes matching process name                                                            process_name (str), start (datetime), end (datetime)                                                             SecurityEvent
+WindowsSecurity     list_matching_processes           Retrieves list of processes matching process name                                                            start (datetime), end (datetime), process_name (str)                                                             SecurityEvent
 WindowsSecurity     list_other_events                 Retrieves list of events other than logon and process on a host                                              start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
-WindowsSecurity     list_processes_in_session         Retrieves all processes on the host for a logon session                                                      logon_session_id (str), process_id (str), process_name (str), host_name (str), start (datetime), end (datetime)  SecurityEvent
+WindowsSecurity     list_processes_in_session         Retrieves all processes on the host for a logon session                                                      start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
 ==================  ================================  ===========================================================================================================  ===============================================================================================================  ===========================
+
+
+Queries for LocalData
+---------------------
+
+===============  ================================  ======================================  ============  =======
+QueryGroup       Query                             Description                             ReqdParams    Table
+===============  ================================  ======================================  ============  =======
+Azure            list_all_signins_geo              List all Azure AD logon events                        -
+Network          list_azure_network_flows_by_host  List Azure Network flows by host name                 -
+Network          list_azure_network_flows_by_ip    List Azure Network flows by IP address                -
+SecurityAlert    list_alerts                       Retrieves list of alerts                              -
+WindowsSecurity  get_process_tree                  Get process tree for a process                        -
+WindowsSecurity  list_host_events                  List events failures on host                          -
+WindowsSecurity  list_host_logon_failures          List logon failures on host                           -
+WindowsSecurity  list_host_logons                  List logons on host                                   -
+WindowsSecurity  list_host_processes               List processes on host                                -
+===============  ================================  ======================================  ============  =======
+
 
 Queries for MDATP
 -----------------
@@ -115,7 +134,7 @@ MDATPHunting  cve_2018_1111               Looks for CVE-2018-1111 exploitation  
 MDATPHunting  cve_2018_4878               This query checks for specific processes and domain TLD used in the CVE-2018-4878                                                                                    -
 MDATPHunting  doc_with_link               Looks for a Word document attachment, from which a link was clicked, and after which there was a browser download.                                                   -
 MDATPHunting  dropbox_link                Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.                                                             -
-MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                      -
+MDATPHunting  email_link                  Look for links opened from mail apps â€“ if a detection occurred right afterwards                                                                                    -
 MDATPHunting  email_smartscreen           Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning                                                            -
 MDATPHunting  malware_recycle             Finding attackers hiding malware in the recycle bin.                                                                                                                 -
 MDATPHunting  network_scans               Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process                                                                   -
@@ -124,9 +143,10 @@ MDATPHunting  service_account_powershell  Service Accounts Performing Remote Pow
 MDATPHunting  smartscreen_ignored         Query for SmartScreen URL blocks, where the user has decided to run the malware nontheless.                                                                          -
 MDATPHunting  smb_discovery               Query for processes that accessed more than 10 IP addresses over port 445 (SMB) - possibly scanning for network shares.                                              -
 MDATPHunting  tor                         Looks for Tor client, or for a common Tor plugin called Meek.                                                                                                        -
-MDATPHunting  uncommon_powershell         Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.                                      timestamp (str), hostname (str)  -
+MDATPHunting  uncommon_powershell         Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.                                      hostname (str), timestamp (str)  -
 MDATPHunting  user_enumeration            The query finds attempts to list users or groups using Net commands                                                                                                  -
 ============  ==========================  ==================================================================================================================================  ===============================  ==========================
+
 
 Queries for SecurityGraph
 -------------------------
@@ -144,18 +164,15 @@ SecurityGraphAlert  list_related_alerts   Retrieves list of alerts with a common
 ==================  ====================  ====================================================  ==================================================  =======
 
 
-Queries for LocalData
----------------------
+Queries for Splunk
+------------------
 
-===============  ================================  ======================================  ============  =======
-QueryGroup       Query                             Description                             ReqdParams    Table
-===============  ================================  ======================================  ============  =======
-Network          list_azure_network_flows_by_host  List Azure Network flows by host name                 -
-Network          list_azure_network_flows_by_ip    List Azure Network flows by IP address                -
-SecurityAlert    list_alerts                       Retrieves list of alerts                              -
-WindowsSecurity  get_process_tree                  Get process tree for a process                        -
-WindowsSecurity  list_host_events                  List events failures on host                          -
-WindowsSecurity  list_host_logon_failures          List logon failures on host                           -
-WindowsSecurity  list_host_logons                  List logons on host                                   -
-WindowsSecurity  list_host_processes               List processes on host                                -
-===============  ================================  ======================================  ============  =======
+=============  ========================  =============================================  ============  =======
+QueryGroup     Query                     Description                                    ReqdParams    Table
+=============  ========================  =============================================  ============  =======
+Alerts         list_all_alerts           Retrieves all configured alerts                              -
+SplunkGeneral  get_events_parameterized  Generic parameterized query from index/source                -
+SplunkGeneral  list_all_datatypes        Summary of all events by index and sourcetype                -
+SplunkGeneral  list_all_savedsearches    Retrieves all saved searches                                 -
+audittrail     list_all_audittrail       Retrieves all audit trail logs                               -
+=============  ========================  =============================================  ============  =======

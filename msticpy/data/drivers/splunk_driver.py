@@ -8,9 +8,6 @@ from datetime import datetime
 from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
-import splunklib.client as sp_client
-import splunklib.results as sp_results
-from splunklib.client import AuthenticationError, HTTPError
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -19,8 +16,20 @@ from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
+    MsticpyImportExtraError,
 )
 from ...common.provider_settings import get_provider_settings, ProviderSettings
+
+try:
+    import splunklib.client as sp_client
+    import splunklib.results as sp_results
+    from splunklib.client import AuthenticationError, HTTPError
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without splunk-sdk installed",
+        title="Error importing splunk-sdk",
+        extra="splunk",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
@@ -103,19 +112,19 @@ class SplunkDriver(DriverBase):
                 f"Authentication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Splunk: {err}",
                 title="Splunk connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         self._connected = True
         print("connected")
 
@@ -238,6 +247,37 @@ class SplunkDriver(DriverBase):
         return {}, "SavedSearches"
 
     @property
+    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+        """
+        Return dynamic queries available on connection to service.
+
+        Returns
+        -------
+        Iterable[Dict[str, Any]]
+            List of queries with properties: "name", "query", "container"
+            and (optionally) "description"
+
+        Raises
+        ------
+        MsticpyNotConnectedError
+            If called before driver is connected.
+
+        """
+        if not self.connected:
+            raise self._create_not_connected_err()
+        if hasattr(self.service, "saved_searches") and self.service.saved_searches:
+            return [
+                {
+                    "name": search.name.strip().replace(" ", "_"),
+                    "query": f"search {search['search']}",
+                    "query_paths": "SavedSearches",
+                    "description": "",
+                }
+                for search in self.service.saved_searches
+            ]
+        return []
+
+    @property
     def _saved_searches(self) -> Union[pd.DataFrame, Any]:
         """
         Return list of saved searches in dataframe.
@@ -337,7 +377,7 @@ class SplunkDriver(DriverBase):
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
-        return getattr(splunk_settings, "args", {})
+        return getattr(splunk_settings, "Args", {})
 
     @staticmethod
     def _create_not_connected_err():

@@ -58,7 +58,9 @@ def extract_query_params(
     # If any kwargs parameters have been supplied, add these.
     # These any parameters obtained from _get_object_params
     if kwargs:
-        req_params.update(kwargs)
+        req_params.update(
+            {key: arg for key, arg in kwargs.items() if key in all_params}
+        )
 
     # Get the names of any params that were required but we didn't
     # find a value for

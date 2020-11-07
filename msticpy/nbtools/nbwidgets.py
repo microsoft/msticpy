@@ -4,22 +4,24 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-import os
-from datetime import datetime, timedelta
-from enum import Enum
+import asyncio
 import json
-from json import JSONDecodeError
+import os
 import random
-from typing import Any, Callable, Dict, List, Mapping, Union, Tuple, Optional
+from abc import ABC
+from datetime import datetime, timedelta
+from enum import IntEnum
+from json import JSONDecodeError
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union, Iterable
+from weakref import WeakValueDictionary
 
-from deprecated.sphinx import deprecated
-import pandas as pd
-from IPython.display import display, HTML
 import ipywidgets as widgets
+import pandas as pd
+from deprecated.sphinx import deprecated
+from IPython.display import HTML, display
 from ipywidgets import Layout
 
 from .._version import VERSION
-from ..data.query_defns import QueryParamProvider
 from ..common.utility import export
 
 __version__ = VERSION
@@ -27,62 +29,122 @@ __author__ = "Ian Hellen"
 
 
 # pylint: disable=too-many-lines
-class TimeUnit(Enum):
+class TimeUnit(IntEnum):
     """Time unit enumeration and value."""
 
-    sec = 1
-    min = 60
+    second = 1
+    minute = 60
     hour = 60 * 60
     day = 60 * 60 * 24
+    week = 7 * 60 * 60 * 24
 
 
 def _parse_time_unit(unit_str: str) -> TimeUnit:
     """Return the TimeUnit enum matching the input string."""
-    if unit_str.startswith("m"):
-        return TimeUnit.min
-    if unit_str.startswith("h"):
+    if unit_str.casefold().startswith("m"):
+        return TimeUnit.minute
+    if unit_str.casefold().startswith("h"):
         return TimeUnit.hour
-    if unit_str.startswith("s"):
-        return TimeUnit.sec
-    if unit_str.startswith("d"):
+    if unit_str.casefold().startswith("s"):
+        return TimeUnit.second
+    if unit_str.casefold().startswith("d"):
         return TimeUnit.day
-    return TimeUnit.min
+    if unit_str.casefold().startswith("w"):
+        return TimeUnit.week
+    return TimeUnit.minute
+
+
+_WIDGET_REG: WeakValueDictionary = WeakValueDictionary()
+
+
+# pylint: disable=too-few-public-methods
+class RegisteredWidget(ABC):
+    """
+    Register widget in the widget registry.
+
+    Registered widgets will store their values in the register.
+    Each widget has an ID that that is derived from one or more of the
+    initializatio parameters. If an instance of the same widget class is
+    created with the same parameters, its previous value will be repopulated
+    from the registry.
+    This is especially useful in notebooks where people accidently re-run
+    the same cell after entering values.
+    """
+
+    def __init__(
+        self,
+        id_vals: Optional[List[Any]] = None,
+        val_attrs: Optional[List[str]] = None,
+        nb_params: Optional[Dict[str, str]] = None,
+        ns: Dict[str, Any] = globals(),
+        register: bool = True,
+        **kwargs,
+    ):
+        """
+        Initialize a registered widget.
+
+        Parameters
+        ----------
+        id_vals : Optional[List[Any]], optional
+            The list of parameter names to use to identify this widget instance,
+            by default None
+        val_attrs : Optional[List[str]], optional
+            The names of the attributes to persist in the registry
+            and recall, by default ["value"]
+        nb_params : Optional[Dict[str, str]], optional
+            A dictionary of attribute names and global variables. If the variable
+            exists in the global namespace it will be used to populate the
+            corresponding widget attribute. This is only done if the widget
+            attribute currently has no value (i.e. restoring a value from
+            the registry takes priority over this),
+            by default None
+        ns : Dict[str, Any], optional
+            Namespace to look for global variables, by default None
+        register : bool
+            Do not register the widget or retrieve values from previously-
+            registered instance.
+
+        """
+        del kwargs  # allow to be called with kwargs that are ignored
+        # Try to retrieve previous values based on ID of this control
+        if register and id_vals:
+            id_list = [self.__class__.__name__, *[str(val) for val in id_vals]]
+            self._id = hash("".join(id_list))
+
+            if not val_attrs:
+                val_attrs = ["value"]
+            if self._id in _WIDGET_REG:
+                for attr in val_attrs:
+                    if hasattr(_WIDGET_REG[self._id], attr):
+                        setattr(self, attr, getattr(_WIDGET_REG[self._id], attr))
+            # register the current instance as the last instance
+            _WIDGET_REG[self._id] = self
+
+        # if there are any notebook params relevant to this control
+        if nb_params and ns:
+            for attr, nb_param in nb_params.items():
+                # if this doesn't have a value set explicitly or
+                # one that was recovered from the widget registry
+                # set it from the nb_param value
+                if nb_param in ns and not getattr(self, attr, None):
+                    setattr(self, attr, ns[nb_param])
+
+
+# pylint: enable=too-few-public-methods
 
 
 @export
-class Lookback(QueryParamProvider):
-    """
-    ipwidget wrapper to display integer slider.
-
-    Attributes
-    ----------
-    before : int
-        The default number of `units` before the `origin_time`
-        (the default is 60)
-    after : int
-        The default number of `units` after the `origin_time`
-        (the default is 10)
-    max_before : int
-        The largest value for `before` (the default is 600)
-    max_after : int
-        The largest value for `after` (the default is 100)
-    origin_time : datetime
-            The origin time (the default is `datetime.utcnow()`)
-    start : datetime
-        Query start time.
-    end : datetime
-        Query end time.
-
-    """
+class Lookback:
+    """Time lookback slider."""
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        default: int = 4,
+        default: Optional[int] = None,
         label: str = "Select time ({units}) to look back",
         origin_time: datetime = None,
-        min_value: int = 1,
-        max_value: int = 240,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
         units: str = "hour",
         auto_display: bool = False,
     ):
@@ -104,7 +166,8 @@ class Lookback(QueryParamProvider):
             Maximum value (the default is 240)
         units : str, optional
             Time unit (the default is 'hour')
-            Permissable values are 'day', 'hour', 'minute', 'second'
+            Permissable values are 'day', 'hour', 'minute', 'second',
+            'week'
             These can all be abbreviated down to initial characters
             ('d', 'm', etc.)
         auto_display : bool, optional
@@ -117,6 +180,10 @@ class Lookback(QueryParamProvider):
         self._time_unit = _parse_time_unit(units)
         if "{units}" in label:
             label = label.format(units=self._time_unit.name)
+        default = _default_before_after(default, self._time_unit)
+        min_value = min_value or 1
+        max_value = _default_max_buffer(max_value, default, self._time_unit)
+
         self._lookback_wgt = widgets.IntSlider(
             value=default,
             min=min_value,
@@ -158,51 +225,46 @@ class Lookback(QueryParamProvider):
             0, self._lookback_wgt.value * self._time_unit.value
         )
 
-    @property
-    def query_params(self):
-        """
-        Query parameters derived from alert.
-
-        Returns
-        -------
-            dict(str, str) -- Dictionary of parameter names
-
-        """
-        return {"start": self.start, "end": self.end}
-
     def _ipython_display_(self):
         """Display in IPython."""
         self.display()
 
 
+def _default_max_buffer(max_default, default, unit) -> int:
+    if max_default is not None:
+        max_value = abs(max_default)
+        return max(max_value, int(default * 2))
+    if unit == TimeUnit.day:
+        return max(7, int(default * 2))
+    if unit == TimeUnit.hour:
+        return max(24, int(default * 2))
+    if unit == TimeUnit.week:
+        return max(4, int(default * 2))
+    return max(120, int(default * 2))
+
+
+def _default_before_after(default, unit) -> int:
+    if default is not None:
+        return abs(default)
+    if unit in (TimeUnit.day, TimeUnit.week):
+        return 1
+    if unit == TimeUnit.hour:
+        return 6
+    return 60
+
+
 # pylint: disable=too-many-instance-attributes
 @export
-class QueryTime(QueryParamProvider):
+class QueryTime(RegisteredWidget):
     """
     QueryTime.
 
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
-    Attributes
-    ----------
-    before : int
-        The default number of `units` before the `origin_time`
-        (the default is 60)
-    after : int
-        The default number of `units` after the `origin_time`
-        (the default is 10)
-    max_before : int
-        The largest value for `before` (the default is 600)
-    max_after : int
-        The largest value for `after` (the default is 100)
-    origin_time : datetime
-            The origin time (the default is `datetime.utcnow()`)
-    start : datetime
-        Query start time.
-    end : datetime
-        Query end time.
-    query_params
+    See Also
+    --------
+    RegisteredWidget
 
     """
 
@@ -212,13 +274,14 @@ class QueryTime(QueryParamProvider):
     def __init__(
         self,
         origin_time: datetime = None,
-        before: int = 60,
-        after: int = 10,
-        max_before: int = 600,
-        max_after: int = 100,
+        before: Optional[int] = None,
+        after: Optional[int] = None,
+        max_before: Optional[int] = None,
+        max_after: Optional[int] = None,
         label: str = None,
         units: str = "min",
         auto_display: bool = False,
+        **kwargs,
     ):
         """
         Create new instance of QueryTime.
@@ -232,17 +295,18 @@ class QueryTime(QueryParamProvider):
             (the default is 'Select time ({units}) to look back')
         before : int, optional
             The default number of `units` before the `origin_time`
-            (the default is 60)
+            (the default varies based on the unit)
         after : int, optional
             The default number of `units` after the `origin_time`
-            (the default is 10)
+            (the default varies based on the unit)
         max_before : int, optional
-            The largest value for `before` (the default is 600)
+            The largest value for `before` (the default varies based on the unit)
         max_after : int, optional
-            The largest value for `after` (the default is 100)
+            The largest value for `after` (the default varies based on the unit)
         units : str, optional
-            Time unit (the default is 'min')
-            Permissable values are 'day', 'hour', 'minute', 'second'
+            Time unit (the default is 'hour')
+            Permissable values are 'day', 'hour', 'minute', 'second',
+            'week'
             These can all be abbreviated down to initial characters
             ('d', 'm', etc.)
         auto_display : bool, optional
@@ -252,22 +316,25 @@ class QueryTime(QueryParamProvider):
         self._label = "Set query time boundaries" if label is None else label
         self._time_unit = _parse_time_unit(units)
 
-        max_before = abs(max_before)
-        max_after = abs(max_after)
-        before = abs(before)
-        after = abs(after)
-        if max_before < before:
-            before = max_before
-        if max_after < after:
-            after = max_after
+        self.before = _default_before_after(before, self._time_unit)
+        self.after = _default_before_after(after, self._time_unit)
+        self.max_before = _default_max_buffer(max_before, self.before, self._time_unit)
+        self.max_after = _default_max_buffer(max_after, self.after, self._time_unit)
 
         # default to now
         self.origin_time = datetime.utcnow() if origin_time is None else origin_time
         # Calculate time offsets from origin
         self._query_start = self.origin_time - timedelta(
-            0, before * self._time_unit.value
+            0, self.before * self._time_unit.value
         )
-        self._query_end = self.origin_time + timedelta(0, after * self._time_unit.value)
+        self._query_end = self.origin_time + timedelta(
+            0, self.after * self._time_unit.value
+        )
+
+        # Call superclass to register
+        ids_params = [origin_time, before, after, max_before, max_after, label, units]
+        ids_attribs = ["origin_time", "before", "after", "_query_start", "_query_end"]
+        super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
 
         # Create widgets
         self._w_origin_dt = widgets.DatePicker(
@@ -281,9 +348,9 @@ class QueryTime(QueryParamProvider):
 
         range_desc = "Time Range ({}):".format(self._time_unit.name)
         self._w_tm_range = widgets.IntRangeSlider(
-            value=[-before, after],
-            min=-max_before,
-            max=max_after,
+            value=[-self.before, self.after],
+            min=-self.max_before,
+            max=self.max_after,
             step=1,
             description=range_desc,
             disabled=False,
@@ -354,18 +421,6 @@ class QueryTime(QueryParamProvider):
     def end(self):
         """Query end time."""
         return self._query_end
-
-    @property
-    def query_params(self):
-        """
-        Query parameters derived from alert.
-
-        Returns
-        -------
-            dict(str, str) -- Dictionary of parameter names
-
-        """
-        return {"start": self.start, "end": self.end}
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -650,7 +705,7 @@ class AlertSelector(SelectAlert):
 
 
 @export
-class GetEnvironmentKey:
+class GetEnvironmentKey(RegisteredWidget):
     """
     GetEnvironmentKey.
 
@@ -665,6 +720,7 @@ class GetEnvironmentKey:
         help_str: str = None,
         prompt: str = "Enter the value: ",
         auto_display: bool = False,
+        **kwargs,
     ):
         """
         Create a new instance of GetEnvironmentKey.
@@ -682,10 +738,19 @@ class GetEnvironmentKey:
             Whether to display on instantiation (the default is False)
 
         """
-        self._value = os.environ.get(env_var)
+        env_val = os.environ.get(env_var)
         self._name = env_var
+        self._value = ""
 
-        if not self._value:
+        # Call superclass to register
+        super().__init__(id_vals=[env_var, prompt], val_attrs=["_value"], **kwargs)
+
+        # Use the registed widget "remembered" value but if the environment
+        # variable is set override with this value.
+        if env_val is not None:
+            self._value = env_val
+
+        if not self._value and help_str is not None:
             display(widgets.HTML(value=help_str))
 
         self._w_text = widgets.Text(
@@ -727,8 +792,79 @@ class GetEnvironmentKey:
 
     def _on_save_button_clicked(self, button):
         del button
+        self._value = self._w_text.value.strip()
         if self._w_check_save.value:
-            os.environ[self._name] = self._w_text.value.strip()
+            os.environ[self._name] = self._value
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+@export
+class GetText(RegisteredWidget):
+    """
+    GetEnvironmentKey.
+
+    Tries to retrieve an environment variable value. The value
+    can be changed/set and optionally saved back to the system
+    environment.
+    """
+
+    def __init__(
+        self,
+        default: str = None,
+        prompt: str = "Enter the value: ",
+        auto_display: bool = False,
+        **kwargs,
+    ):
+        """
+        Create a new instance of GetEnvironmentKey.
+
+        Parameters
+        ----------
+        default : str
+            Default value.
+        prompt : str, optional
+            Prompt to display with the text box.
+            (the default is "Enter the value: ")
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
+        See Also
+        --------
+        RegisteredWidget
+
+        """
+        self._value = default
+
+        # Call superclass to register
+        super().__init__(id_vals=[default, prompt], val_attrs=["_value"], **kwargs)
+
+        self._w_text = widgets.Text(
+            value=self._value,
+            description=prompt,
+            layout=Layout(width="50%"),
+            style={"description_width": "initial"},
+        )
+
+        self._w_text.observe(self._update_value, names="value")
+        if auto_display:
+            self.display()
+
+    def _update_value(self, change):
+        self._value = change.get("new")
+
+    @property
+    def value(self):
+        """Get the current value of the key."""
+        return self._value.strip()
+
+    def display(self):
+        """Display the interactive widgets."""
+        if self._value:
+            self._w_text.value = self._value
+        display(self._w_text)
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -976,23 +1112,14 @@ class SelectString(SelectItem):
 
 @export
 class SelectSubset:
-    """
-    Class to select a subset from an input list.
-
-    Attributes
-    ----------
-    selected_values : List[Any]
-        The selected item values.
-    selected_items : List[Any]
-        The selected items label and value
-
-    """
+    """Class to select a subset from an input list."""
 
     def __init__(
         self,
         source_items: Union[Dict[str, str], List[Any]],
         default_selected: Union[Dict[str, str], List[Any]] = None,
         display_filter: bool = True,
+        auto_display: bool = True,
     ):
         """
         Create instance of SelectSubset widget.
@@ -1010,6 +1137,8 @@ class SelectSubset:
             a list of (label, value) tuples.
         display_filter : bool, optional
             Whether to display item filter (the default is True)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is True)
 
         """
         if isinstance(source_items, dict):
@@ -1063,7 +1192,8 @@ class SelectSubset:
         self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
             self.layout = widgets.VBox([self._w_filter, self.layout])
-        display(self.layout)
+        if auto_display:
+            self.display()
 
     @property
     def selected_items(self) -> List[Any]:
@@ -1258,6 +1388,165 @@ class Progress:
     def display(self):
         """Display the control."""
         display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+class OptionButtons:
+    """
+    OptionButtons creates a sequence of buttons to choose from.
+
+    The widget can be run in synchronous mode as a simple option
+    selector or in async mode with a timeout.
+    In the latter mode, after the timeout has expired the widget
+    value is set to the default option button value.
+    To use the async mode you must call `widget.display_async()` with
+    the async keyword.
+
+    Attributes
+    ----------
+    value : str
+        The value of the option selected (case-normalized)
+
+    Example
+    -------
+    >>> opt = OptionButtons(description="Continue something?",
+    ...  buttons=["Maybe", "Yes", "Cancel"], timeout=10)
+    >>> await opt.display_async()
+
+    """
+
+    def __init__(
+        self,
+        description: Optional[str] = "Select an option to continue",
+        buttons: Optional[Iterable[str]] = None,
+        default: Optional[str] = None,
+        timeout: int = 0,
+        debug: bool = False,
+    ):
+        """
+        Initialize the OptionButton widget.
+
+        Parameters
+        ----------
+        description : Optional[str], optional
+            Description label displayed above the buttons,
+            by default "Select an option to continue"
+        buttons : Optional[Iterable[str]], optional
+            A list of button values, by default None. This
+            will default to ["Yes", "No", "Cancel"]
+        default : Optional[str], optional
+            The default value to use on timeout, by default the
+            first value in the `buttons` list
+        timeout : int, optional
+            Timeout in seconds, by default 0
+        debug : bool, optional
+            Adds some debug information to an Output controle,
+            by default False
+
+        """
+        if buttons is None:
+            buttons = ["Yes", "No", "Cancel"]
+        self._buttons = []
+        for b_item in buttons:
+            self._buttons.append(widgets.Button(description=b_item))
+        self._desc_label = widgets.Label(value=description)
+        self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
+        self.default = default or next(iter(buttons)).casefold()
+        self.value: Optional[str] = None
+        self.timeout = timeout
+
+        self._completion: Any = None
+        self._fut_val: Any = None
+        self._debug = debug
+        if self._debug:
+            self._out = widgets.Output()
+
+    @property
+    def _layout(self):
+        """Create layout for buttons."""
+        return widgets.VBox(
+            [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
+        )
+
+    def _debug_out(self, mssg: str):
+        if self._debug:
+            self._out.append_stdout(mssg)
+
+    def _create_button_callbacks(self, btns):
+        """Set up buttons."""
+
+        def getvalue(change):
+            """Button on_click handler."""
+            self.value = change.description.casefold()
+            for btn in btns:
+                btn.on_click(getvalue, remove=True)
+
+        for btn in btns:
+            btn.on_click(getvalue)
+
+    async def _await_widget(self):
+        """Awaitable coroutine for widget."""
+        self._debug_out("await_widget entered\n")
+        self._create_button_callbacks(self._buttons)
+        self._debug_out("buttons set\n")
+
+        done, _ = await asyncio.wait(
+            [self._wait_for_button_change(), self._await_timer(self.timeout)],
+            return_when=asyncio.FIRST_COMPLETED,
+            timeout=self.timeout + 5,
+        )
+        self._debug_out("wait returned\n")
+        self._completion = done
+        self._debug_out(str(done))
+        return done
+
+    async def _wait_for_button_change(self):
+        """Awaitable for button selection state."""
+        self._debug_out("wait_for_button_change entered\n")
+        while self.value is None:
+            await asyncio.sleep(0.1)
+            if self._debug:
+                self._debug_out("*")
+
+    async def _await_timer(self, timeout: int = 5):
+        if timeout <= 0:
+            timeout = 0
+        while timeout > 0:
+            self._timer_label.value = f"Waiting {timeout} sec..."
+            if self.value:
+                self._timer_label.value = f"Option selected: '{self.value}'"
+                return
+            await asyncio.sleep(1)
+            timeout -= 1
+        self.value = self.default
+        self._timer_label.value = f"Timed out. Defaulted to '{self.value}'"
+
+    async def display_async(self, reset: bool = False):
+        """
+        Display widget with timeout.
+
+        Parameters
+        ----------
+        reset : bool, optional
+            Resets any current value to None,
+            by default False
+
+        """
+        if reset:
+            self.value = None
+        display(self._layout)
+        if self._debug:
+            display(self._out)
+        self._fut_val = asyncio.ensure_future(self._await_widget())
+        self._debug_out("future returned\n")
+        self._debug_out(str(self._fut_val) + "\n")
+
+    def display(self):
+        """Display widget in simple sync mode."""
+        display(self._layout)
 
     def _ipython_display_(self):
         """Display in IPython."""
