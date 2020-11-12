@@ -4,7 +4,6 @@ from typing import Dict, List, Set
 
 import pandas as pd
 import asyncio
-import requests
 from IPython.display import HTML, display
 
 from ..common.exceptions import MsticpyImportExtraError
