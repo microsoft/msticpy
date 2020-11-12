@@ -4,6 +4,7 @@ from typing import Dict, List, Set
 
 import pandas as pd
 import asyncio
+import requests
 from IPython.display import HTML, display
 
 from ..common.exceptions import MsticpyImportExtraError
@@ -193,7 +194,7 @@ class VTLookupV3:
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
-            response: vt.object.Object = self._vt_client.get_object(
+            response = self._vt_client.get_object(
                 f"/{endpoint_name}/{observable}"
             )
             return self._parse_vt_object(response)
@@ -201,10 +202,29 @@ class VTLookupV3:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
-        # finally:
-        #     self._vt_client.close()
+
 
     def lookup_ioc(self, observable: str, vt_type: str) -> pd.DataFrame:
+        """
+        Look up and single IoC observable.
+
+        Parameters
+        ----------
+        observable: str
+            The observable value
+        vt_type: str
+            The VT entity type
+
+        Returns
+        -------
+            Attributes Pandas DataFrame with the properties of the entity
+
+        Raises
+        ------
+        KeyError
+            Unknown vt_type
+
+        """
         try:
             return _make_sync(self._lookup_ioc_async(observable, vt_type))
         finally:
@@ -230,7 +250,7 @@ class VTLookupV3:
 
         Returns
         -------
-            Attributes Pandas DataFrame with the properties of the entities
+            Future Attributes Pandas DataFrame with the properties of the entities
 
         Raises
         ------
@@ -256,12 +276,6 @@ class VTLookupV3:
                     "ERROR\t It was not possible to obtain results for",
                     f"{observable_type} {observable}",
                 )
-                # dfs_futures.append(
-                #     pd.DataFrame(
-                #         data=[[observable, observable_type]],
-                #         columns=[ColumnNames.ID.value, ColumnNames.TYPE.value],
-                #     ).set_index(ColumnNames.ID.value)
-                # )
         dfs = await asyncio.gather(*dfs_futures)
         return pd.concat(dfs) if dfs else pd.DataFrame()
 
@@ -269,7 +283,22 @@ class VTLookupV3:
         observables_df: pd.DataFrame,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,):
+        """
+        Look up and multiple IoC observables.
 
+        Parameters
+        ----------
+        observables_df: pd.DataFrame
+            A Pandas DataFrame, where each row is an observable
+        observable_column:
+            ID column of each observable
+        observable_type_column:
+            Type column of each observable
+
+        Returns
+        -------
+            Attributes Pandas DataFrame with the properties of the entities
+        """
         try:
             return _make_sync(self._lookup_iocs_async(
                 observables_df,
@@ -280,7 +309,7 @@ class VTLookupV3:
 
     async def _lookup_ioc_relationships_async(
         self, observable: str, vt_type: str, relationship: str, limit: int = None
-    ) -> pd.DataFrame:
+    ):
         """
         Look up and single IoC observable relationships.
 
@@ -297,7 +326,7 @@ class VTLookupV3:
 
         Returns
         -------
-            Relationship Pandas DataFrame with the relationships of the entity
+            Future Relationship Pandas DataFrame with the relationships of the entity
 
         Raises
         ------
@@ -362,9 +391,6 @@ class VTLookupV3:
                 "An error occurred requesting data from VirusTotal"
             ) from err
 
-        # finally:
-        #     self._vt_client.close()
-
         return result_df
 
     def lookup_ioc_relationships(
@@ -373,7 +399,25 @@ class VTLookupV3:
         vt_type: str,
         relationship: str,
         limit: int = None
-    ):
+    ) -> pd.DataFrame:
+        """
+        Look up and single IoC observable relationships.
+
+        Parameters
+        ----------
+        observable: str
+            The observable value
+        vt_type: str
+            The VT entity type
+        relationship: str
+            Desired relationship
+        limit: int
+            Relations limit
+
+        Returns
+        -------
+            Relationship Pandas DataFrame with the relationships of the entity
+        """
         try:
             return _make_sync(
                 self._lookup_ioc_relationships_async(
@@ -407,7 +451,7 @@ class VTLookupV3:
 
         Returns
         -------
-            Relationship Pandas DataFrame with the relationships of each observable.
+            Future Relationship Pandas DataFrame with the relationships of each observable.
 
         Raises
         ------
@@ -444,7 +488,7 @@ class VTLookupV3:
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,):
+        limit: int = None,) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
 
@@ -465,14 +509,14 @@ class VTLookupV3:
         -------
             Relationship Pandas DataFrame with the relationships of each observable.
 
-        Raises
-        ------
-        KeyError
-            Column not found in observables_df
-
         """
         try:
-            return _make_sync(self._lookup_iocs_relationships_async(observables_df, relationship, observable_column, observable_type_column))
+            return _make_sync(
+                self._lookup_iocs_relationships_async(
+                    observables_df,
+                    relationship,
+                    observable_column,
+                    observable_type_column))
 
         finally:
             self._vt_client.close()
@@ -543,10 +587,12 @@ class VTLookupV3:
 
         graph = VTGraph(self._vt_key, name=name, private=private)
 
-        for _, row in nodes_df.iterrows():
-            graph.add_node(
-                node_id=row[ColumnNames.ID.value], node_type=row[ColumnNames.TYPE.value]
-            )
+        nodes = [{
+            "node_id": row[ColumnNames.ID.value],
+            "node_type": row[ColumnNames.TYPE.value]}
+            for _,row in nodes_df.iterrows()]
+
+        graph.add_nodes(nodes)
 
         for _, row in concatenated_df.iterrows():
             graph.add_link(
