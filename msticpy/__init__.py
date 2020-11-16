@@ -13,7 +13,7 @@ Requires Python 3.6 or later.
 To quickly import common modules into a notebook run:
 
 >>> from msticpy import init_notebook
->>> init_notebook()
+>>> init_notebook(globals())
 
 For more options:
 >>> help(init_notebook)
@@ -41,7 +41,7 @@ from . import data
 from ._version import VERSION
 
 __version__ = VERSION
-__author__ = "Ian Hellen, hoefling"
+__author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
 
 
 def check_version():
