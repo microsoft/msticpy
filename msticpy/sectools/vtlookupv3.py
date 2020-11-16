@@ -1,9 +1,9 @@
 """VirusTotal v3 API."""
+import asyncio
 from enum import Enum
 from typing import Dict, List, Set
 
 import pandas as pd
-import asyncio
 from IPython.display import HTML, display
 
 from ..common.exceptions import MsticpyImportExtraError
@@ -59,8 +59,9 @@ class VTObjectProperties(Enum):
     LAST_ANALYSIS_STATS = "last_analysis_stats"
     MALICIOUS = "malicious"
 
+
 def _make_sync(future):
-    """Utility function that waits for an async call, making it sync."""
+    """Wait for an async call, making it sync."""
     try:
         event_loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -193,15 +194,12 @@ class VTLookupV3:
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
-            response = self._vt_client.get_object(
-                f"/{endpoint_name}/{observable}"
-            )
+            response = self._vt_client.get_object(f"/{endpoint_name}/{observable}")
             return self._parse_vt_object(response)
         except vt.APIError as err:
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
-
 
     def lookup_ioc(self, observable: str, vt_type: str) -> pd.DataFrame:
         """
@@ -278,10 +276,12 @@ class VTLookupV3:
         dfs = await asyncio.gather(*dfs_futures)
         return pd.concat(dfs) if dfs else pd.DataFrame()
 
-    def lookup_iocs(self,
+    def lookup_iocs(
+        self,
         observables_df: pd.DataFrame,
         observable_column: str = ColumnNames.TARGET.value,
-        observable_type_column: str = ColumnNames.TARGET_TYPE.value,):
+        observable_type_column: str = ColumnNames.TARGET_TYPE.value,
+    ):
         """
         Look up and multiple IoC observables.
 
@@ -297,12 +297,14 @@ class VTLookupV3:
         Returns
         -------
             Attributes Pandas DataFrame with the properties of the entities
+
         """
         try:
-            return _make_sync(self._lookup_iocs_async(
-                observables_df,
-                observable_column,
-                observable_type_column))
+            return _make_sync(
+                self._lookup_iocs_async(
+                    observables_df, observable_column, observable_type_column
+                )
+            )
         finally:
             self._vt_client.close()
 
@@ -393,11 +395,7 @@ class VTLookupV3:
         return result_df
 
     def lookup_ioc_relationships(
-        self,
-        observable: str,
-        vt_type: str,
-        relationship: str,
-        limit: int = None
+        self, observable: str, vt_type: str, relationship: str, limit: int = None
     ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
@@ -416,11 +414,14 @@ class VTLookupV3:
         Returns
         -------
             Relationship Pandas DataFrame with the relationships of the entity
+
         """
         try:
             return _make_sync(
                 self._lookup_ioc_relationships_async(
-                    observable, vt_type, relationship, limit))
+                    observable, vt_type, relationship, limit
+                )
+            )
         finally:
             self._vt_client.close()
 
@@ -482,12 +483,14 @@ class VTLookupV3:
         dfs = await asyncio.gather(*dfs_futures)
         return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
 
-    def lookup_iocs_relationships(self,
+    def lookup_iocs_relationships(
+        self,
         observables_df: pd.DataFrame,
         relationship: str,
         observable_column: str = ColumnNames.TARGET.value,
         observable_type_column: str = ColumnNames.TARGET_TYPE.value,
-        limit: int = None,) -> pd.DataFrame:
+        limit: int = None,
+    ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
 
@@ -515,10 +518,14 @@ class VTLookupV3:
                     observables_df,
                     relationship,
                     observable_column,
-                    observable_type_column))
+                    observable_type_column,
+                    limit,
+                )
+            )
 
         finally:
             self._vt_client.close()
+
     def create_vt_graph(
         self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
     ) -> str:
@@ -586,10 +593,13 @@ class VTLookupV3:
 
         graph = VTGraph(self._vt_key, name=name, private=private)
 
-        nodes = [{
-            "node_id": row[ColumnNames.ID.value],
-            "node_type": row[ColumnNames.TYPE.value]}
-            for _,row in nodes_df.iterrows()]
+        nodes = [
+            {
+                "node_id": row[ColumnNames.ID.value],
+                "node_type": row[ColumnNames.TYPE.value],
+            }
+            for _, row in nodes_df.iterrows()
+        ]
 
         graph.add_nodes(nodes)
 
