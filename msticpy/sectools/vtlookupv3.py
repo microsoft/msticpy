@@ -135,6 +135,12 @@ class VTLookupV3:
                 VTObjectProperties.MALICIOUS.value
             ]
             vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
+            # Format dates for pandas
+            for date_col in ("first_submission_date", "last_submission_date"):
+                if date_col in vt_df.columns:
+                    vt_df[date_col.replace("_date", "")] = pd.to_datetime(
+                        vt_df[date_col], unit="s", utc=True
+                    )
         else:
             vt_df = pd.DataFrame()
 
@@ -398,7 +404,7 @@ class VTLookupV3:
                     ).set_index(ColumnNames.ID.value)
                 )
 
-        return pd.concat(dfs) if len(dfs) > 0 else pd.DataFrame()
+        return pd.concat(dfs) if dfs else pd.DataFrame()
 
     def create_vt_graph(
         self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
@@ -426,7 +432,7 @@ class VTLookupV3:
             MsticpyVTGraphSaveGraphError when Graph can not be saved
 
         """
-        if len(relationship_dfs) == 0:
+        if not relationship_dfs:
             raise ValueError("There are no relationship DataFrames")
 
         if not isinstance(private, bool):
@@ -518,3 +524,44 @@ class VTLookupV3:
             """
             )
         )
+
+    def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
+        """
+        Return the full VT object as a DataFrame.
+
+        Parameters
+        ----------
+        vt_id : str
+            The ID of the object
+        vt_type : str
+            The type of object to query.
+
+        Returns
+        -------
+        pd.DataFrame
+            Single column DataFrame with attribute names as
+            index and values as data column.
+
+        Raises
+        ------
+        KeyError
+            Unrecognized VT Type
+        MsticpyVTNoDataError
+            Error requesting data from VT.
+
+        """
+        if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
+            raise KeyError(f"Property type {vt_type} not supported")
+
+        endpoint_name = self._get_endpoint_name(vt_type)
+        try:
+            response: vt.object.Object = self._vt_client.get_object(
+                f"/{endpoint_name}/{vt_id}"
+            )
+            return pd.DataFrame(data=response.to_dict()).drop(columns=["id", "type"])
+        except vt.APIError as err:
+            raise MsticpyVTNoDataError(
+                "An error occurred requesting data from VirusTotal"
+            ) from err
+        finally:
+            self._vt_client.close()

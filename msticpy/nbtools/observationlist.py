@@ -87,6 +87,24 @@ class Observation:
         """
         return [field.name for field in attr.fields(cls)]
 
+    def display(self):
+        """Display the observation."""
+        display(Markdown(f"### {self.caption}"))
+        if self.description:
+            display(Markdown(self.description))
+        display(Markdown(f"Score: {self.score}"))
+        if self.link:
+            display(Markdown(f"[Go to details](#{self.link})"))
+        if self.tags:
+            display(Markdown(f'tags: {", ".join(self.tags)}'))
+        display(self.data)
+        if self.additional_properties:
+            display(Markdown("### Additional Properties"))
+            # pylint: disable=no-member
+            for key, val in self.additional_properties.items():
+                display(Markdown(f"**{key}**: {val}"))
+            # pylint: enable=no-member
+
 
 class Observations:
     """Class to collect and display investigation observations."""
@@ -122,18 +140,7 @@ class Observations:
     def display_observations(self):
         """Display the current observations using IPython.display."""
         for observation in self.observation_list.values():
-            display(Markdown(f"### {observation.caption}"))
-            display(Markdown(observation.description))
-            display(Markdown(f"Score: {observation.score}"))
-            if observation.link:
-                display(Markdown(f"[Go to details](#{observation.link})"))
-            if observation.tags:
-                display(Markdown(f'tags: {", ".join(observation.tags)}'))
-            display(observation.data)
-            if observation.additional_properties:
-                display(Markdown("### Additional Properties"))
-                for key, val in observation.additional_properties.items():
-                    display(Markdown(f"**{key}**: {val}"))
+            display(observation)
 
     def add_observation(self, observation: Observation = None, **kwargs):
         """

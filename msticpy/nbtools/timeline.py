@@ -275,6 +275,10 @@ def display_timeline_values(
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
 
+    if source_columns is None:
+        source_columns = [y]
+    if y not in source_columns:
+        source_columns.append(y)
     graph_df, group_count_df, tool_tip_columns, series_count = _create_data_grouping(
         data, source_columns, time_column, group_by, color
     )

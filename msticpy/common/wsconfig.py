@@ -84,7 +84,7 @@ class WorkspaceConfig:
             else:
                 config_file = self._search_for_file("**/config.json")
         self._config_file = config_file
-        #
+
         config = self._read_config_values(config_file)
         if config:
             self._config.update(config)

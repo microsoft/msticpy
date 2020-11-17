@@ -14,21 +14,21 @@ Designed to support any data source containing IP address entity.
 """
 import ipaddress as ip
 from functools import lru_cache
-from typing import List, Tuple, Callable
+from typing import Callable, List, Optional, Tuple
 
 import pandas as pd
 from ipwhois import (
-    IPWhois,
+    HostLookupError,
     HTTPLookupError,
     HTTPRateLimitError,
-    HostLookupError,
+    IPWhois,
     WhoisLookupError,
     WhoisRateLimitError,
 )
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, IpAddress
 from ..common.utility import export
+from ..nbtools.entityschema import GeoLocation, IpAddress
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -59,19 +59,34 @@ def _get_geolite_lookup() -> Callable:
 _GET_IP_LOOKUP = _get_geolite_lookup()
 
 
-def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
+def convert_to_ip_entities(
+    ip_str: Optional[str] = None,
+    data: Optional[pd.DataFrame] = None,
+    ip_col: Optional[str] = None,
+    geo_lookup: bool = True,
+) -> List[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entity.
 
     Parameters
     ----------
     ip_str : str
-        The string of the IP Address
+        A string with a single IP Address or multiple addresses
+        delimited by comma or space
+    data : pd.DataFrame
+        Use DataFrame as input
+    ip_col : str
+        Column containing IP addresses
 
     Returns
     -------
     List
         The populated IP entities including address and geo-location
+
+    Raises
+    ------
+    ValueError
+        If neither ip_string or data/column provided as input
 
     """
     ip_entities = []
@@ -82,16 +97,21 @@ def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
             addrs = ip_str.split(" ")
         else:
             addrs = [ip_str]
+    elif data is not None and ip_col:
+        addrs = data[ip_col].values
 
         for addr in addrs:
             ip_entity = IpAddress()
             ip_entity.Address = addr.strip()
-            try:
-                ip_lookup = _GET_IP_LOOKUP()
-                ip_lookup.lookup_ip(ip_entity=ip_entity)
-            except DataError:
-                pass
+            if geo_lookup:
+                try:
+                    ip_lookup = _GET_IP_LOOKUP()
+                    ip_lookup.lookup_ip(ip_entity=ip_entity)
+                except DataError:
+                    pass
             ip_entities.append(ip_entity)
+    else:
+        raise ValueError("No useable input provided.")
     return ip_entities
 
 
@@ -214,6 +234,7 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
+    data = data.copy()
     if whois_col is not None:
         data[[asn_col, whois_col]] = data.apply(
             lambda x: get_whois_info(x[ip_column], show_progress=show_progress),

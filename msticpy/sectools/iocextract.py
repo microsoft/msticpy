@@ -356,7 +356,7 @@ class IoCExtract:
         return result_rows
 
     def extract_df(
-        self, data: pd.DataFrame, columns: List[str], **kwargs
+        self, data: pd.DataFrame, columns: Union[str, List[str]], **kwargs
     ) -> pd.DataFrame:
         """
         Extract IoCs from either a pandas DataFrame.
@@ -365,8 +365,9 @@ class IoCExtract:
         ----------
         data : pd.DataFrame
             input DataFrame from which to read source strings
-        columns : list
-            The list of columns to use as source strings,
+        columns : Union[str, list]
+            A single column name as a string or a
+            a list of columns to use as source strings,
 
         Other Parameters
         ----------------
@@ -413,6 +414,8 @@ class IoCExtract:
         self._ignore_tld = kwargs.get("ignore_tlds", False)
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
+        if isinstance(columns, str):
+            columns = [columns]
         col_set = set(columns)
         if not col_set <= set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
