@@ -11,6 +11,7 @@ import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
+from bokeh.models.annotations import LegendItem
 from bokeh.models import (
     ColumnDataSource,
     DatetimeTickFormatter,
@@ -548,7 +549,12 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
                 source=series_def["source"],
             )
         if legend_pos in ["left", "right"]:
-            legend_items.append((str(ser_name), [p_series]))
+            legend_items.append(
+                LegendItem(
+                    label=str(ser_name),
+                    renderers=[p_series],
+                )
+            )
 
     if legend_pos == "inline":
         # Position the inline legend
@@ -557,7 +563,7 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     elif legend_pos in ["left", "right"]:
         # Create the legend box outside of the plot area
         ext_legend = Legend(
-            items=legend_items,
+            items=legend_items[::-1],  # the legend is in the wrong order otherwise
             location="center",
             click_policy="hide",
             label_text_font_size="8pt",
