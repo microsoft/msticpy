@@ -130,3 +130,11 @@ msticpy.sectools.vtlookup module
     :members:
     :undoc-members:
     :show-inheritance:
+
+msticpy.sectools.vtlookup3 module
+---------------------------------
+
+.. automodule:: msticpy.sectools.vtlookup3
+    :members:
+    :undoc-members:
+    :show-inheritance:
