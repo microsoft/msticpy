@@ -207,20 +207,30 @@ class SumologicDriver(DriverBase):
             from timeit import default_timer as timer
             timer_start = timer()
         try:
-            sj = self.service.search_job(query, start_time, end_time, timeZone, byReceiptTime)
-        except Exception as e:
-            print("Exception: Failed to submit search job: {0}".format(e))
+            searchjob = self.service.search_job(query, start_time, end_time, timeZone, byReceiptTime)
+        except HTTPError as err:
+            raise MsticpyConnectionError(
+                f"Communication error connecting to Sumologic: {err}",
+                title="Sumologic submit search_job",
+                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+            )
+        except Exception as err:
+            raise MsticpyConnectionError(
+                f"Failed to submit search job: {err}",
+                title="Sumologic submit search job",
+                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+            )
             sys.exit(1)
         if verbosity >=2:
-            print("DEBUG: search job {0}".format(sj))
+            print("DEBUG: search job {0}".format(searchjob))
 
-        status = self.service.search_job_status(sj)
+        status = self.service.search_job_status(searchjob)
         if verbosity >=2:
             print("DEBUG: status {0}".format(status))
         while status['state'] != 'DONE GATHERING RESULTS':
             if status['state'] == 'CANCELLED':
                 break
-            status = self.service.search_job_status(sj)
+            status = self.service.search_job_status(searchjob)
             if verbosity >=4:
                 print("DEBUG: pending results, state {0}. sleeping {1}".format(status, self.timeout))
             time.sleep(self.timeout)
@@ -237,19 +247,39 @@ class SumologicDriver(DriverBase):
             count = status['messageCount']
             limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
             try:
-                r = self.service.search_job_messages(sj, limit=limit2)
-                return(r['messages'])
-            except Exception as e:
-                print("Exception: Failed to get search messages: {0}".format(e))
+                result = self.service.search_job_messages(searchjob, limit=limit2)
+                return(result['messages'])
+            except HTTPError as err:
+                raise MsticpyConnectionError(
+                    f"Communication error connecting to Sumologic: {err}",
+                    title="Sumologic search_job_messages",
+                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                )
+            except Exception as err:
+                raise MsticpyConnectionError(
+                    f"Failed to get search messages: {err}",
+                    title="Sumologic connection",
+                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                )
         elif status['state'] == 'DONE GATHERING RESULTS':
             # Aggregated results
             count = status['recordCount']
             limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
             try:
-                r = self.service.search_job_records(sj, limit=limit2)
-                return(r['records'])
-            except Exception as e:
-                print("Exception: Failed to get search records: {0}".format(e))
+                result = self.service.search_job_records(searchjob, limit=limit2)
+                return(result['records'])
+            except HTTPError as err:
+                raise MsticpyConnectionError(
+                    f"Communication error connecting to Sumologic: {err}",
+                    title="Sumologic search_job_records",
+                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                )
+            except Exception as err:
+                raise MsticpyConnectionError(
+                    f"Failed to get search records: {err}",
+                    title="Sumologic connection",
+                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                )
 
         return []
 
