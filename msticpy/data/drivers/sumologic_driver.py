@@ -58,16 +58,11 @@ class SumologicDriver(DriverBase):
         }
         self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
 
-    def connect(self, connection_str: str = None, **kwargs):
+    def connect(self, **kwargs):
         """
         Connect to Sumologic via sumologic-sdk.
 
         Parameters
-        ----------
-        connection_str : Optional[str], optional
-            Connection string with Sumologic connection parameters
-
-        Other Parameters
         ----------------
         kwargs :
             Connection parameters can be supplied as keyword parameters.
@@ -78,7 +73,7 @@ class SumologicDriver(DriverBase):
         section of msticpyconfig.yaml, if available.
 
         """
-        cs_dict = self._get_connect_args(connection_str, **kwargs)
+        cs_dict = self._get_connect_args(**kwargs)
 
         arg_dict = {
             key: val for key, val in cs_dict.items() if key in SUMOLOGIC_CONNECT_ARGS
@@ -112,7 +107,7 @@ class SumologicDriver(DriverBase):
         print("connected")
 
     def _get_connect_args(
-        self, connection_str: Optional[str], **kwargs
+        self, **kwargs
     ) -> Dict[str, Any]:
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
