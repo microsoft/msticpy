@@ -12,6 +12,7 @@ from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
 from sumologic.sumologic import SumoLogic
+from requests.exceptions import ConnectionError as ConnError,HTTPError
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -85,24 +86,24 @@ class SumologicDriver(DriverBase):
                 arg_dict['accesskey'],
                 arg_dict['url']
             )
-        except AuthenticationError as err:
+        except ConnError as err:
             raise MsticpyConnectionError(
                 f"Authentication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Sumologic: {err}",
                 title="Sumologic connection",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         self._connected = True
         print("connected")
 
@@ -153,11 +154,11 @@ class SumologicDriver(DriverBase):
             end_time: A datetime() object representing the end of the search window.
                   If used without start_time, the search start will be the earliest
                   time in the index.
-            timeZone: timezone used for time range search
-            byReceiptTime:  if time reference should used _receiptTime (time when Sumologic
+            timezone: timezone used for time range search
+            byreceipttime:  if time reference should used _receiptTime (time when Sumologic
                         got message) instead of _messageTime (time present in log message).
             limit: An integer describing the max number of search results to return.
-            forceMessagesResults: Force results to be raw messages even if aggregated query.
+            forcemessagesresults: Force results to be raw messages even if aggregated query.
             verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
             timeout: timeout when gathering results
 
@@ -173,9 +174,9 @@ class SumologicDriver(DriverBase):
             raise self._create_not_connected_err()
 
         verbosity = kwargs.pop("verbosity", 0)
-        timeZone = kwargs.pop("timeZone", 'UTC')
-        byReceiptTime = kwargs.pop("byReceiptTime", False)
-        forceMessagesResults = kwargs.pop("forceMessagesResults", False)
+        timezone = kwargs.pop("timezone", 'UTC')
+        byreceipttime = kwargs.pop("byreceipttime", False)
+        forcemessagesresults = kwargs.pop("forcemessagesresults", False)
         self.timeout = kwargs.pop("timeout", 300)
 
         if 'days' in kwargs:
@@ -200,27 +201,28 @@ class SumologicDriver(DriverBase):
         limit = kwargs.pop("limit", 10000)
 
         if verbosity >=1:
-            print("INFO: from {0} to {1}, timezone {2}".format(start_time, end_time, timeZone))
+            print("INFO: from {0} to {1}, timezone {2}".format(start_time, end_time, timezone))
         if verbosity >=2:
             print("DEBUG: query {0}".format(query))
-            print("DEBUG: byReceiptTime {0}".format(byReceiptTime))
+            print("DEBUG: byreceipttime {0}".format(byreceipttime))
             from timeit import default_timer as timer
             timer_start = timer()
         try:
-            searchjob = self.service.search_job(query, start_time, end_time, timeZone, byReceiptTime)
+            searchjob = self.service.search_job(query, start_time, end_time,
+                                                timezone,
+                                                byreceipttime)
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title="Sumologic submit search_job",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
+            ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Failed to submit search job: {err}",
                 title="Sumologic submit search job",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            )
-            sys.exit(1)
+            ) from err
         if verbosity >=2:
             print("DEBUG: search job {0}".format(searchjob))
 
@@ -232,54 +234,57 @@ class SumologicDriver(DriverBase):
                 break
             status = self.service.search_job_status(searchjob)
             if verbosity >=4:
-                print("DEBUG: pending results, state {0}. sleeping {1}".format(status, self.timeout))
+                print("DEBUG: pending results, state {0}. sleeping {1}".format(status,
+                                                                               self.timeout))
             time.sleep(self.timeout)
 
         print(status['state'])
 
         if verbosity >=2:
             print("DEBUG: search performance:{0}".format(str(timer() - timer_start)))
-            print("DEBUG: messages or records? {0}".format(re.search(r'\|\s*count', query, re.IGNORECASE)))
+            print("DEBUG: messages or records? {0}".format(
+                  re.search(r'\|\s*count', query, re.IGNORECASE))
+                 )
         if status['state'] == 'DONE GATHERING RESULTS' and (
-                not re.search(r'\|\s*count', query, re.IGNORECASE) or forceMessagesResults
+                not re.search(r'\|\s*count', query, re.IGNORECASE) or forcemessagesresults
                 ):
             # Non-aggregated results, Messages only
             count = status['messageCount']
             limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
             try:
                 result = self.service.search_job_messages(searchjob, limit=limit2)
-                return(result['messages'])
+                return result['messages']
             except HTTPError as err:
                 raise MsticpyConnectionError(
                     f"Communication error connecting to Sumologic: {err}",
                     title="Sumologic search_job_messages",
                     help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                )
+                ) from err
             except Exception as err:
                 raise MsticpyConnectionError(
                     f"Failed to get search messages: {err}",
                     title="Sumologic connection",
                     help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                )
+                ) from err
         elif status['state'] == 'DONE GATHERING RESULTS':
             # Aggregated results
             count = status['recordCount']
             limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
             try:
                 result = self.service.search_job_records(searchjob, limit=limit2)
-                return(result['records'])
+                return result['records']
             except HTTPError as err:
                 raise MsticpyConnectionError(
                     f"Communication error connecting to Sumologic: {err}",
                     title="Sumologic search_job_records",
                     help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                )
+                ) from err
             except Exception as err:
                 raise MsticpyConnectionError(
                     f"Failed to get search records: {err}",
                     title="Sumologic connection",
                     help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                )
+                ) from err
 
         return []
 
@@ -316,7 +321,7 @@ class SumologicDriver(DriverBase):
                    will be flattened such that each field has it's own column in
                    the dataframe. If False, there will be a single column for the
                    structure, with a JSON string encoding all the contents.
-            export: Export result to file.
+            exporting: Export result to file.
             export_path: file path for exporte results.
 
         Returns
@@ -329,7 +334,7 @@ class SumologicDriver(DriverBase):
         results = list()
         verbosity = kwargs.get("verbosity", 0)
         normalize = kwargs.pop("normalize", True)
-        export = kwargs.pop("export", False)
+        exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", '')
 
         for hit in self._query(query, **kwargs):
@@ -338,24 +343,24 @@ class SumologicDriver(DriverBase):
         if verbosity >=3:
             print("DEBUG: {0}".format(results))
         if normalize:
-            df = pd.json_normalize(results)
+            dataframe_res = pd.json_normalize(results)
         else:
-            df = pd.DataFrame(results)
+            dataframe_res = pd.DataFrame(results)
 
-        for c in df.columns:
-            if c in ("map._count", "map._timeslice"):
-                df[c] = pd.to_numeric(df[c])
+        for col in dataframe_res.columns:
+            if col in ("map._count", "map._timeslice"):
+                dataframe_res[col] = pd.to_numeric(dataframe_res[col])
 
-        if export and export_path.endswith('.xlsx'):
+        if exporting and export_path.endswith('.xlsx'):
             if verbosity >=2:
                 print("DEBUG: Exporting results to excel file {0}".format(export_path))
-            df.to_excel(export_path, index=False)
-        elif export and export_path.endswith('.csv'):
+            dataframe_res.to_excel(export_path, index=False)
+        elif exporting and export_path.endswith('.csv'):
             if verbosity >=2:
                 print("DEBUG: Exporting results to csv file {0}".format(export_path))
-            df.to_csv(export_path, index=False)
+            dataframe_res.to_csv(export_path, index=False)
 
-        return df
+        return dataframe_res
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
