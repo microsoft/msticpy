@@ -11,7 +11,7 @@ import time
 from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
-from sumologic import SumoLogic
+from sumologic.sumologic import SumoLogic
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -181,7 +181,7 @@ class SumologicDriver(DriverBase):
         timeZone = kwargs.pop("timeZone", 'UTC')
         byReceiptTime = kwargs.pop("byReceiptTime", False)
         forceMessagesResults = kwargs.pop("forceMessagesResults", False)
-        timeout = kwargs.pop("timeout", 300)
+        self.timeout = kwargs.pop("timeout", 300)
 
         if 'days' in kwargs:
             end = datetime.now()
@@ -209,6 +209,7 @@ class SumologicDriver(DriverBase):
         if verbosity >=2:
             print("DEBUG: query {0}".format(query))
             print("DEBUG: byReceiptTime {0}".format(byReceiptTime))
+            from timeit import default_timer as timer
             timer_start = timer()
         try:
             sj = self.service.search_job(query, start_time, end_time, timeZone, byReceiptTime)
@@ -226,7 +227,7 @@ class SumologicDriver(DriverBase):
                 break
             status = self.service.search_job_status(sj)
             if verbosity >=4:
-                print("DEBUG: pending results, state {0}. sleeping {1}}".format(status,self.timeout))
+                print("DEBUG: pending results, state {0}. sleeping {1}".format(status, self.timeout))
             time.sleep(self.timeout)
 
         print(status['state'])
@@ -317,7 +318,7 @@ class SumologicDriver(DriverBase):
             df = pd.DataFrame(results)
 
         for c in df.columns:
-            if c == "map._count" or c == "map._timeslice":
+            if c in ("map._count", "map._timeslice"):
                 df[c] = pd.to_numeric(df[c])
 
         if export and export_path.endswith('.xlsx'):
