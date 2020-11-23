@@ -4,39 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to interact with Azure Blob Storage."""
-from typing import Dict, List, Optional
-from uuid import uuid4
+import datetime
+from typing import Any, List, Optional
 
 import pandas as pd
 from azure.common.exceptions import CloudError
-import json
-import os
-import nbformat
-import requests
-import uuid
-from azure.storage.blob import generate_blob_sas, BlobServiceClient 
-import datetime
+from azure.core.exceptions import (
+    ResourceExistsError,
+    ResourceNotFoundError,
+    ServiceRequestError,
+)
+from azure.storage.blob import BlobServiceClient, generate_blob_sas
+
 from ..common.azure_auth import az_connect
-from .azure_data import AzureData
 from ..common.azure_auth_core import AzCredentials
 
 
-_PATH_MAPPING = {
-    "ops_path": "/providers/Microsoft.SecurityInsights/operations",
-    "alert_rules": "/providers/Microsoft.SecurityInsights/alertRules",
-    "ss_path": "/savedSearches",
-    "bookmarks": "/providers/Microsoft.SecurityInsights/bookmarks",
-    "incidents": "/providers/Microsoft.SecurityInsights/incidents",
-}
-
-
-class AzureBlobStorage():
+class AzureBlobStorage:
     """Class for interacting with Azure Blob Storage."""
 
-    def __init__(self, abs_site: str, connect: bool = False):
+    def __init__(self, abs_name: str, connect: bool = False):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
-        self.abs_site = f"{abs_site}.blob.core.windows.net"
+        self.abs_site = f"{abs_name}.blob.core.windows.net"
         self.credentials: Optional[AzCredentials] = None
         self.abs_client: Optional[BlobServiceClient] = None
         if connect is True:
@@ -51,22 +41,221 @@ class AzureBlobStorage():
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
-        self._check_client("sub_client")
         self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
         if not self.abs_client:
             raise CloudError("Could not create a Blob Storage client.")
         self.connected = True
 
+    def containers(self) -> pd.DataFrame:
+        """Return containers in the Azure Blob Storage Account."""
+        try:
+            container_list = self.abs_client.list_containers()  # type:ignore
+        except ServiceRequestError as err:
+            raise CloudError(
+                "Unable to connect check the Azure Blob Store account name"
+            ) from err
+        if container_list:
+            containers_df = _parse_returned_items(
+                container_list, remove_list=["lease", "encryption_scope"]
+            )
+        else:
+            containers_df = None
+        return containers_df
 
+    def create_container(self, container_name: str, **kwargs) -> pd.DataFrame:
+        """
+        Create a new container within the Azure Blob Storage account.
 
-        blob_service_client = BlobServiceClient(f"{abs_site}.blob.core.windows.net", creds.modern)
-        blob_client = blob_service_client.get_blob_client(container=abs_container, blob=notebook_name)
-        blob_client.upload_blob(notebook, overwrite=True)
-        incident_id = path.name.split('.')[0]
+        Parameters
+        ----------
+        container_name : str
+            The name for the new container.
+        Additional container parameters can be passed as kwargs
+
+        Returns
+        -------
+        pd.DataFrame
+            Details of the created container.
+
+        """
+        try:
+            new_container = self.abs_client.create_container(  # type: ignore
+                container_name, **kwargs
+            )  # type:ignore
+        except ResourceExistsError:
+            print("Container already exists.")
+        properties = new_container.get_container_properties()
+        container_df = _parse_returned_items(
+            [properties], ["encryption_scope", "lease"]
+        )
+        return container_df
+
+    def blobs(self, container_name: str) -> pd.DataFrame:
+        """
+        Get a list of blobs in a container.
+
+        Parameters
+        ----------
+        container_name : str
+            The name of the container to get blobs from.
+
+        Returns
+        -------
+        pd.DataFrame
+            Details of the blobs.
+
+        """
+        container_client = self.abs_client.get_container_client(container_name)  # type: ignore
+        blobs = list(container_client.list_blobs())
+        if blobs:
+            blobs_df = _parse_returned_items(blobs)
+        else:
+            blobs_df = None
+        return blobs_df
+
+    def upload_to_blob(
+        self, blob: Any, container_name: str, blob_name: str, overwrite: bool = True
+    ):
+        """
+        Upload a blob of data.
+
+        Parameters
+        ----------
+        blob : Any
+            The data to upload.
+        container_name : str
+            The name of the container to upload the blob to.
+        blob_name : str
+            The name to give the blob.
+        overwrite : bool, optional
+            Whether or not you want to overwrite the blob if it exists, by default True.
+
+        """
+        try:
+            blob_client = self.abs_client.get_blob_client(  # type:ignore
+                container=container_name, blob=blob_name
+            )
+            upload = blob_client.upload_blob(blob, overwrite=overwrite)
+        except ResourceNotFoundError as err:
+            raise CloudError(
+                "Unknown container, check container name or create it first."
+            ) from err
+        if not upload["error_code"]:
+            print("Upload complete")
+        else:
+            raise CloudError(
+                f"There was a problem uploading the blob: {upload['error_code']}"
+            )
+
+    def get_blob(self, container_name: str, blob_name: str) -> bytes:
+        """
+        Get a blob from the Azure Blob Storage account.
+
+        Parameters
+        ----------
+        container_name : str
+            The name of the container that holds the blob.
+        blob_name : str
+            The name of the blob to download.
+
+        Returns
+        -------
+        bytes
+            The content of the blob in bytes.
+
+        """
+        blob_client = self.abs_client.get_blob_client(  # type: ignore
+            container=container_name, blob=blob_name
+        )
+        if blob_client.exists():
+            data_stream = blob_client.download_blob()
+            data = data_stream.content_as_bytes()
+        else:
+            raise CloudError(f"The blob {blob_name} does not exist in {container_name}")
+        return data
+
+    def delete_blob(self, container_name: str, blob_name: str) -> bool:
+        """
+        Delete a blob from the Azure Blob Storage account.
+
+        Parameters
+        ----------
+        container_name : str
+            The container name that has the blob.
+        blob_name : str
+            The name of the blob to delete.
+        Note deleting a blob also deletes associated snapshots.
+
+        Returns
+        -------
+        bool
+            True if blob successfully deleted
+
+        """
+        blob_client = self.abs_client.get_blob_client(  # type: ignore
+            container=container_name, blob=blob_name
+        )
+        if blob_client.exists():
+            blob_client.delete_blob(delete_snapshots="include")
+        else:
+            raise CloudError(f"The blob {blob_name} does not exist in {container_name}")
+
+        return True
+
+    def get_sas_token(
+        self,
+        container: str,
+        blob_name: str,
+        end: datetime.datetime = None,
+        permission: str = "r",
+    ) -> str:
+        """
+        Generate a shared access string (SAS) token for a blob.
+
+        Parameters
+        ----------
+        container : str
+            The name of the Azure Blob Storage container that holds the blob.
+        blob_name : str
+            The name of the blob to generate the SAS token for.
+        end : datetime.datetime, optional
+            The datetime the SAS token should expire, by default this is 7 days from now.
+        permission : str, optional
+            The permissions to give the SAS token, by default 'r' for read.
+
+        Returns
+        -------
+        str
+            A URI of the blob with SAS token.
+
+        """
         start = datetime.datetime.now()
-        end = start + datetime.timedelta(days=7)
-        key = blob_service_client.get_user_delegation_key(start,end)
-        sast= generate_blob_sas(abs_site, abs_container, notebook_name, user_delegation_key=key, permission='r', expiry=end, start=start)
-        path = f"https://{abs_site}.blob.core.windows.net/{abs_container}/{notebook_name}?{sast}"
-        write_to_incident(incident_id, path)
-        update_incident(incident_id)
+        if not end:
+            end = start + datetime.timedelta(days=7)
+        key = self.abs_client.get_user_delegation_key(start, end)  # type: ignore
+        abs_name = self.abs_client.account_name  # type: ignore
+        sast = generate_blob_sas(
+            abs_name,
+            container,
+            blob_name,
+            user_delegation_key=key,
+            permission=permission,
+            expiry=end,
+            start=start,
+        )
+        full_path = (
+            f"https://{abs_name}.blob.core.windows.net/{container}/{blob_name}?{sast}"
+        )
+        return full_path
+
+
+def _parse_returned_items(items, remove_list: list = None) -> pd.DataFrame:
+    """Parse a list of containers into a DataFrame."""
+    out_items = []
+    for item in items:
+        item = dict(item)
+        if remove_list:
+            for remove_item in remove_list:
+                item.pop(remove_item)
+        out_items.append(item)
+    return pd.json_normalize(out_items)
