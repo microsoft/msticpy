@@ -42,8 +42,8 @@ def az_connect_core(
     """
     Authenticate using multiple authentication sources.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     auth_methods
         List of authentication methods to try
         Possible options are:
@@ -86,14 +86,14 @@ def az_connect_core(
         auth_methods = ["env", "cli", "msi", "interactive"]
     try:
         auths = [_AUTH_OPTIONS[meth] for meth in auth_methods]
-    except KeyError:
+    except KeyError as err:
         raise MsticpyAzureConnectionError(
             "Unknown authentication option, valid options are; env, cli, msi, interactive"
-        ) from KeyError
+        ) from err
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)
-    if silent is True:
+    if silent:
         handler.addFilter(_filter_all_warnings)
     else:
         handler.addFilter(_filter_credential_warning)
@@ -110,18 +110,21 @@ def az_connect_core(
 
 def _filter_credential_warning(record) -> bool:
     """Rewrite out credential not found message."""
-    if record.name.startswith("azure.identity") and record.levelno == logging.WARNING:
-        message = record.getMessage()
-        if ".get_token" in message:
-            if message.startswith("EnvironmentCredential"):
-                print("Attempting to sign-in with environment variable credentials...")
-            if message.startswith("AzureCliCredential"):
-                print("Attempting to sign-in with Azure CLI credentials...")
-            if message.startswith("ManagedIdentityCredential"):
-                print("Attempting to sign-in with Managed Instance credentials...")
-                print("Falling back to interactive logon.")
-        return not message
-    return True
+    if (
+        not record.name.startswith("azure.identity")
+        or record.levelno != logging.WARNING
+    ):
+        return True
+    message = record.getMessage()
+    if ".get_token" in message:
+        if message.startswith("EnvironmentCredential"):
+            print("Attempting to sign-in with environment variable credentials...")
+        if message.startswith("AzureCliCredential"):
+            print("Attempting to sign-in with Azure CLI credentials...")
+        if message.startswith("ManagedIdentityCredential"):
+            print("Attempting to sign-in with Managed Instance credentials...")
+            print("Falling back to interactive logon.")
+    return not message
 
 
 def _filter_all_warnings(record) -> bool:

@@ -60,9 +60,12 @@ _KV_PLACE_HOLDER = {"KeyVault": None}
 
 
 def _read_config_settings(conf_file):
-    # sys_config = os.environ["MSTICPYCONFIG"]
-    # if not conf_file:
-    #    conf_file = sys_config
+    try:
+        sys_config = os.environ["MSTICPYCONFIG"]
+    except KeyError:
+        sys_config = Path.cwd().joinpath("msticpyconfig.yaml")
+    if not conf_file:
+        conf_file = sys_config
     if not conf_file:
         raise ValueError("Configuration file not found.")
 
