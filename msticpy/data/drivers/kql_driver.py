@@ -62,7 +62,7 @@ class KqlDriver(DriverBase):
             self.connect(connection_str)
 
     # pylint: disable=too-many-branches
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):  # noqa: MC0001
         """
         Connect to data source.
 
@@ -346,7 +346,7 @@ class KqlDriver(DriverBase):
 
 
 def _build_auth_cnt_str(
-    namespace: dict, connection_str: str, auth_types: list = ["cli", "msi"]
+    namespace: dict, connection_str: str, auth_types: list = None
 ) -> str:
     """
     Build connection string with auth elements.
@@ -358,7 +358,7 @@ def _build_auth_cnt_str(
     connection_str : str
         current connection string to append auth elements to
     auth_types : list, optional
-        prefered authentication types, by default ['cli', 'msi']
+        preferred authentication types, by default ['cli', 'msi']
 
     Returns
     -------
@@ -366,6 +366,8 @@ def _build_auth_cnt_str(
         completed connection string
 
     """
+    if not auth_types:
+        auth_types = ["cli", "msi"]
     creds = az_connect_core(auth_methods=auth_types)
     token = creds.modern.get_token("https://api.loganalytics.io/.default")
     namespace["token_dict"] = {

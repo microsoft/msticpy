@@ -83,7 +83,7 @@ class AzureBlobStorage:
                 container_name, **kwargs
             )  # type:ignore
         except ResourceExistsError:
-            print("Container already exists.")
+            raise CloudError(f"Container {container_name} already exists.")
         properties = new_container.get_container_properties()
         container_df = _parse_returned_items(
             [properties], ["encryption_scope", "lease"]
@@ -146,6 +146,7 @@ class AzureBlobStorage:
             raise CloudError(
                 f"There was a problem uploading the blob: {upload['error_code']}"
             )
+        return True
 
     def get_blob(self, container_name: str, blob_name: str) -> bytes:
         """
@@ -204,7 +205,7 @@ class AzureBlobStorage:
 
     def get_sas_token(
         self,
-        container: str,
+        container_name: str,
         blob_name: str,
         end: datetime.datetime = None,
         permission: str = "r",
@@ -214,7 +215,7 @@ class AzureBlobStorage:
 
         Parameters
         ----------
-        container : str
+        container_name : str
             The name of the Azure Blob Storage container that holds the blob.
         blob_name : str
             The name of the blob to generate the SAS token for.
@@ -236,16 +237,14 @@ class AzureBlobStorage:
         abs_name = self.abs_client.account_name  # type: ignore
         sast = generate_blob_sas(
             abs_name,
-            container,
+            container_name,
             blob_name,
             user_delegation_key=key,
             permission=permission,
             expiry=end,
             start=start,
         )
-        full_path = (
-            f"https://{abs_name}.blob.core.windows.net/{container}/{blob_name}?{sast}"
-        )
+        full_path = f"https://{abs_name}.blob.core.windows.net/{container_name}/{blob_name}?{sast}"
         return full_path
 
 

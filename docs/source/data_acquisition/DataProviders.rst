@@ -206,6 +206,14 @@ Example
     Tenant ID xxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
+.. note::
+     
+     The KQL provider now supports authentication via the `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli>`_ and `Managed System Identities <https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview>_`.
+     To use these authentication methods, pass local() with either the `cli` or `msi` keyword arguements:
+     `la_connection_string = f'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
+     qry_prov.connect(connection_str=f'{la_connection_string}', cli=locals())`
+
+
 List of current built-in queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

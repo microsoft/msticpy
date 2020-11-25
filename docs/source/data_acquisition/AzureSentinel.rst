@@ -1,5 +1,5 @@
-Azure Sentinel
-==============
+Azure Sentinel APIs
+===================
 
 Description
 -----------
@@ -128,7 +128,7 @@ with details of all the subscriptions within the tenant.
       </tbody>
     </table>
     </div>
-|
+
 
 Get Azure Sentinel Workspaces
 -----------------------------
@@ -164,7 +164,7 @@ List Configured Alert Rules
 Return a dataframe detailing all configured alert/analytics rules configured with Azure Sentinel.
 This includes scheduled queries, as well as Fusion based detections. The returned dataframe include
 details of the rule configuration as well as the query run (where applicable). As with other functions
-the resource ID of the workspace to get alerts from is requried.
+the resource ID of the workspace to get alerts from is required.
 
 See :py:meth:`get_alert_rules <msticpy.data.azure_sentinel.AzureSentinel.get_alert_rules>`
 
@@ -178,10 +178,70 @@ List Bookmarks
 Return a list of all the bookmarks saved in the workspace. This includes details of the bookmark, who
 created it, when and with what details. It also includes query text that can be executed with a
 `QueryProvider` in order to get the details of the bookmark's logs. As with other functions the resource
-ID of the workspace to get alerts from is requried.
+ID of the workspace to get alerts from is required.
 
 See :py:meth:`get_bookmarks <msticpy.data.azure_sentinel.AzureSentinel.get_bookmarks>`
 
 .. code:: ipython3
 
     azs.get_bookmarks(res_id = "subscriptionId/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroup/SentinelRG/workspaceName/SentinelWorspace")
+
+Get Incidents
+-------------
+
+It is possible to return a list of all incidents within a workspace, as well as get the details of a specific incident.
+Whilst it is possible to access these incident details via the Incident table in the Workspace, you can also interact
+with them via the Azure Sentinel APIs which are utilized in these functions.
+As with other functions the resource ID of the workspace to get incidents from is required.
+
+See :py:meth:`get_incidents <msticpy.data.azure_sentinel.AzureSentinel.get_incidents>`
+
+.. code:: ipython3
+
+    azs.get_incidents(res_id = "subscriptionId/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroup/SentinelRG/workspaceName/SentinelWorspace")
+
+This returns a DataFrame with details of all incidents.
+
+To get details of a single incident you can call `.get_incident` and pass the ID of an incident.
+This ID can be found in the name column of the DataFrame returned by `.get_incidents` and appears in the form of a GUID.
+
+See :py:meth:`get_incident <msticpy.data.azure_sentinel.AzureSentinel.get_incident>`
+
+.. code:: ipython3
+
+    azs.get_incidents(incident_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+                res_id = "subscriptionId/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroup/SentinelRG/workspaceName/SentinelWorspace")
+
+
+Update Incidents
+----------------
+
+Via the Azure Sentinel API it is possible to update incidents, this includes updating details such as Severity and Status,
+as well as adding comments to an incident.
+
+To interact with an incident use `.post_comment` or `.update_incident`.
+
+To update the incident's features you need to pass `.update_incident` a dictionary of parameters and values to update.
+Details of what parameters can be updated can be found in the `Azure Sentinel documentation. <https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate>`_
+
+.. note:: When modifying severity, status, or title there is no need to include the 'properties.' in the key name within the update_items dictionary
+
+See :py:meth:`update_incident <msticpy.data.azure_sentinel.AzureSentinel.update_incident>`
+
+.. code:: ipython3
+
+    azs.update_incident(incident_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+                update_items = {"severity":"High"},
+                res_id = "subscriptionId/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroup/SentinelRG/workspaceName/SentinelWorspace")
+
+Posting comments to an incident uses the `.post_comment` function. Simply pass this function a comment as a string,
+along with an incident and workspace ID. If successful  a "Comment posted." message will be displayed.
+
+See :py:meth:`post_comment <msticpy.data.azure_sentinel.AzureSentinel.post_comment>`
+
+.. code:: ipython3
+
+    azs.post_comment(incident_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+                comment = "This is my comment",
+                res_id = "subscriptionId/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroup/SentinelRG/workspaceName/SentinelWorspace")
+
