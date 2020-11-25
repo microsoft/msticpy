@@ -82,8 +82,8 @@ class AzureBlobStorage:
             new_container = self.abs_client.create_container(  # type: ignore
                 container_name, **kwargs
             )  # type:ignore
-        except ResourceExistsError:
-            raise CloudError(f"Container {container_name} already exists.")
+        except ResourceExistsError as err:
+            raise CloudError(f"Container {container_name} already exists.") from err
         properties = new_container.get_container_properties()
         container_df = _parse_returned_items(
             [properties], ["encryption_scope", "lease"]
