@@ -15,8 +15,8 @@ TEST_CASES = {
     "linux_path_test": r"/bin/bash --file:./bish --file:/bin/bash --file:../../bosh",
     "md5_hash_test": "00236a2ae558018ed13b5222ef1bd987hash -something-hash=00236a2ae558018ed13b5222ef1bd988hash -something -hash=00236a2ae558018ed13b5222ef1bd989",
     "sha1_hash_test": "00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000002hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000003",
-    "sha256_hash_test": """00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901235hash -something
--hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901236""",
+    "sha256_hash_test": """00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901235hash -something
+-hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901236""",
     "url2_test": "curl 'https://www.virustotal.com/en/ip-address/90.156.201.27/information/'",
     "domain1_test": "some text with a domain.like.uk in it",
     "domain_neg_test": "some text with a bad domain.like.iandom in it",
