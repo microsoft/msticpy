@@ -1,8 +1,6 @@
 msticpy.sectools package
 ========================
 
-Submodules
-----------
 
 msticpy.sectools.auditdextract module
 -------------------------------------
@@ -68,14 +66,6 @@ msticpy.sectools.process\_tree\_utils module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.provider\_settings module
-------------------------------------------
-
-.. automodule:: msticpy.sectools.provider_settings
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.sectools.syslog_utils module
 ------------------------------------
 
@@ -137,6 +127,14 @@ msticpy.sectools.vtlookup module
 --------------------------------
 
 .. automodule:: msticpy.sectools.vtlookup
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.sectools.vtlookup3 module
+---------------------------------
+
+.. automodule:: msticpy.sectools.vtlookup3
     :members:
     :undoc-members:
     :show-inheritance:

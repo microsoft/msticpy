@@ -18,7 +18,7 @@ import attr
 
 from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -135,12 +135,16 @@ class XForce(HttpProvider):
                     }
                 )
                 severity = TISeverity.high
-        if response.ioc_type in [
-            "dns",
-            "ipv4",
-            "ipv6",
-            "hostname",
-        ] and response.query_subtype in ["info", "passivedns", "whois"]:
+        if (
+            response.ioc_type
+            in [
+                "dns",
+                "ipv4",
+                "ipv6",
+                "hostname",
+            ]
+            and response.query_subtype in ["info", "passivedns", "whois"]
+        ):
             records = response.raw_result.get("total_rows", 0)
             contact = response.raw_result.get("contact", 0)
             if records:

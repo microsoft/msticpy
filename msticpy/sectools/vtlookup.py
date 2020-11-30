@@ -30,7 +30,7 @@ import requests
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
-from ..nbtools.utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION
@@ -317,9 +317,13 @@ class VTLookup:
             )
 
         if self._VT_TYPE_MAP[ioc_type] not in self._VT_API_TYPES:
-            vt_types = {k for k, val in self.ioc_vt_type_mapping if val is not None}
-            err = "IoC Type {} is recognized by VirusTotal. Valid types are [{}]".format(
-                ioc_type, ", ".join(vt_types)
+            vt_types = {
+                k for k, val in self.ioc_vt_type_mapping.items() if val is not None
+            }
+            err = (
+                "IoC Type {} is recognized by VirusTotal. Valid types are [{}]".format(
+                    ioc_type, ", ".join(vt_types)
+                )
             )
             raise LookupError(err)
 

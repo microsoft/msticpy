@@ -18,7 +18,7 @@ import attr
 
 from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
-from ...nbtools.utility import export
+from ...common.utility import export
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -67,6 +67,11 @@ class OTX(HttpProvider):
     _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
 
     _REQUIRED_PARAMS = ["API_KEY"]
+
+    def __init__(self, **kwargs):
+        """Set OTX specific settings."""
+        super().__init__(**kwargs)
+        self.require_url_encoding = True
 
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """

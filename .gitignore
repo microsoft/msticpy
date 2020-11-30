@@ -106,3 +106,16 @@ venv.bak/
 /docs/source/_build/**
 **/.vscode*
 **/Kqlmagic_temp_files/**
+
+# pycharm project settings
+*\.idea*
+
+#MorphChart test output
+morphchart_package/
+
+# Merge conflict files
+**.orig
+
+#kql magic temp files
+/docs/notebooks/kqlmagic/*
+/kqlmagic/**

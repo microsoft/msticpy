@@ -6,17 +6,16 @@
 """Module for SecurityAlert class."""
 import html
 import re
-from datetime import datetime
 from collections import Counter
-from typing import List, Dict, Any, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from .entityschema import Entity, Process, Account, Host
-from .query_defns import QueryParamProvider, DataFamily, DataEnvironment
-from .utility import escape_windows_path
-from .utility import export
 from .._version import VERSION
+from ..common.utility import escape_windows_path, export
+from ..data.query_defns import DataEnvironment, DataFamily, QueryParamProvider
+from .entityschema import Account, Entity, Host, Process
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -104,6 +103,10 @@ class SecurityBase(QueryParamProvider):
         if len(params) > 80:
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
+
+    def _repr_html_(self) -> str:
+        """Display in IPython."""
+        return self.to_html()
 
     # def __getstate__(self):
     #     """Return dictionary of state for serialization/pickling."""
@@ -405,7 +408,44 @@ class SecurityBase(QueryParamProvider):
             The entities matching `entity_type`.
 
         """
-        return [p for p in self.entities if p["Type"] == entity_type]
+        class_type = Entity.ENTITY_NAME_MAP.get(entity_type, None)
+        return [
+            p
+            for p in self.entities
+            if p["Type"] == entity_type or class_type and isinstance(p, class_type)
+        ]
+
+    def get_all_entities(self) -> pd.DataFrame:
+        """
+        Return a DataFrame of the Alert or Event entities.
+
+        Returns
+        -------
+        DataFrame
+            Pandas DataFrame of the Alert or Event entities.
+
+        """
+        entity = []
+        ent_type = []
+        for item in self.entities:
+            if "Address" in item:
+                entity.append(item["Address"])
+                ent_type.append(item["Type"])
+            elif "Url" in item:
+                entity.append(item["Url"])
+                ent_type.append(item["Type"])
+            elif "HostName" in item:
+                entity.append(item["HostName"])
+                ent_type.append(item["Type"])
+            elif "Entity" in item:
+                entity.append(item["Entity"])
+                ent_type.append(item["Type"])
+            elif item["Type"] == "account":
+                entity.append(item["Name"])
+                ent_type.append(item["Type"])
+
+        entities = pd.DataFrame({"Entity": entity, "Type": ent_type})
+        return entities
 
     def to_html(self, show_entities: bool = False) -> str:
         """Return the item as HTML string."""

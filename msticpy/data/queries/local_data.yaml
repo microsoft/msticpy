@@ -1,0 +1,74 @@
+metadata:
+  version: 1
+  description: Local Data Alert Queries
+  data_environments: [LocalData]
+  data_families: [SecurityAlert, WindowsSecurity, Network, Azure]
+  tags: ['alert', 'securityalert', 'process', 'account', 'network', 'logon']
+defaults:
+  metadata:
+    data_source: 'security_alert'
+  parameters:
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+      data_families: [SecurityAlert]
+    args:
+      query: alerts_list.pkl
+    parameters:
+  list_host_processes:
+    description: List processes on host
+    metadata:
+      data_families: [WindowsSecurity]
+    args:
+      query: processes_on_host.pkl
+    parameters:
+  list_host_logons:
+    description: List logons on host
+    metadata:
+      data_families: [WindowsSecurity]
+    args:
+      query: host_logons.pkl
+    parameters:
+  list_host_logon_failures:
+    description: List logon failures on host
+    metadata:
+      data_families: [WindowsSecurity]
+    args:
+      query: failed_logons.pkl
+    parameters:
+  list_host_events:
+    description: List events failures on host
+    metadata:
+      data_families: [WindowsSecurity]
+    args:
+      query: all_events_df.pkl
+    parameters:
+  get_process_tree:
+    description: Get process tree for a process
+    metadata:
+      data_families: [WindowsSecurity]
+    args:
+      query: process_tree.pkl
+    parameters:
+  list_azure_network_flows_by_ip:
+    description: List Azure Network flows by IP address
+    metadata:
+      data_families: [Network]
+    args:
+      query: az_net_comms_df.pkl
+    parameters:
+  list_azure_network_flows_by_host:
+    description: List Azure Network flows by host name
+    metadata:
+      data_families: [Network]
+    args:
+      query: az_net_comms_df.pkl
+    parameters:
+  list_all_signins_geo:
+    description: List all Azure AD logon events
+    metadata:
+      data_families: [Azure]
+    args:
+      query: aad_logons.pkl
+    parameters:

@@ -4,85 +4,147 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
-import os
-import re
-from datetime import datetime, timedelta
-from enum import Enum
+import asyncio
 import json
+import os
+import random
+from abc import ABC
+from datetime import datetime, timedelta
+from enum import IntEnum
 from json import JSONDecodeError
-from typing import Any, Callable, Dict, List, Mapping, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union, Iterable
+from weakref import WeakValueDictionary
 
-import pandas as pd
-from IPython.display import display
 import ipywidgets as widgets
+import pandas as pd
+from deprecated.sphinx import deprecated
+from IPython.display import HTML, display
 from ipywidgets import Layout
 
 from .._version import VERSION
-from . import kql as qry
-from .query_defns import QueryParamProvider
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
 # pylint: disable=too-many-lines
-class TimeUnit(Enum):
+class TimeUnit(IntEnum):
     """Time unit enumeration and value."""
 
-    sec = 1
-    min = 60
+    second = 1
+    minute = 60
     hour = 60 * 60
     day = 60 * 60 * 24
+    week = 7 * 60 * 60 * 24
 
 
 def _parse_time_unit(unit_str: str) -> TimeUnit:
     """Return the TimeUnit enum matching the input string."""
-    if unit_str.startswith("m"):
-        return TimeUnit.min
-    if unit_str.startswith("h"):
+    if unit_str.casefold().startswith("m"):
+        return TimeUnit.minute
+    if unit_str.casefold().startswith("h"):
         return TimeUnit.hour
-    if unit_str.startswith("s"):
-        return TimeUnit.sec
-    if unit_str.startswith("d"):
+    if unit_str.casefold().startswith("s"):
+        return TimeUnit.second
+    if unit_str.casefold().startswith("d"):
         return TimeUnit.day
-    return TimeUnit.min
+    if unit_str.casefold().startswith("w"):
+        return TimeUnit.week
+    return TimeUnit.minute
+
+
+_WIDGET_REG: WeakValueDictionary = WeakValueDictionary()
+
+
+# pylint: disable=too-few-public-methods
+class RegisteredWidget(ABC):
+    """
+    Register widget in the widget registry.
+
+    Registered widgets will store their values in the register.
+    Each widget has an ID that that is derived from one or more of the
+    initializatio parameters. If an instance of the same widget class is
+    created with the same parameters, its previous value will be repopulated
+    from the registry.
+    This is especially useful in notebooks where people accidently re-run
+    the same cell after entering values.
+    """
+
+    def __init__(
+        self,
+        id_vals: Optional[List[Any]] = None,
+        val_attrs: Optional[List[str]] = None,
+        nb_params: Optional[Dict[str, str]] = None,
+        ns: Dict[str, Any] = globals(),
+        register: bool = True,
+        **kwargs,
+    ):
+        """
+        Initialize a registered widget.
+
+        Parameters
+        ----------
+        id_vals : Optional[List[Any]], optional
+            The list of parameter names to use to identify this widget instance,
+            by default None
+        val_attrs : Optional[List[str]], optional
+            The names of the attributes to persist in the registry
+            and recall, by default ["value"]
+        nb_params : Optional[Dict[str, str]], optional
+            A dictionary of attribute names and global variables. If the variable
+            exists in the global namespace it will be used to populate the
+            corresponding widget attribute. This is only done if the widget
+            attribute currently has no value (i.e. restoring a value from
+            the registry takes priority over this),
+            by default None
+        ns : Dict[str, Any], optional
+            Namespace to look for global variables, by default None
+        register : bool
+            Do not register the widget or retrieve values from previously-
+            registered instance.
+
+        """
+        del kwargs  # allow to be called with kwargs that are ignored
+        # Try to retrieve previous values based on ID of this control
+        if register and id_vals:
+            id_list = [self.__class__.__name__, *[str(val) for val in id_vals]]
+            self._id = hash("".join(id_list))
+
+            if not val_attrs:
+                val_attrs = ["value"]
+            if self._id in _WIDGET_REG:
+                for attr in val_attrs:
+                    if hasattr(_WIDGET_REG[self._id], attr):
+                        setattr(self, attr, getattr(_WIDGET_REG[self._id], attr))
+            # register the current instance as the last instance
+            _WIDGET_REG[self._id] = self
+
+        # if there are any notebook params relevant to this control
+        if nb_params and ns:
+            for attr, nb_param in nb_params.items():
+                # if this doesn't have a value set explicitly or
+                # one that was recovered from the widget registry
+                # set it from the nb_param value
+                if nb_param in ns and not getattr(self, attr, None):
+                    setattr(self, attr, ns[nb_param])
+
+
+# pylint: enable=too-few-public-methods
 
 
 @export
-class Lookback(QueryParamProvider):
-    """
-    ipwidget wrapper to display integer slider.
-
-    Attributes
-    ----------
-    before : int
-        The default number of `units` before the `origin_time`
-        (the default is 60)
-    after : int
-        The default number of `units` after the `origin_time`
-        (the default is 10)
-    max_before : int
-        The largest value for `before` (the default is 600)
-    max_after : int
-        The largest value for `after` (the default is 100)
-    origin_time : datetime
-            The origin time (the default is `datetime.utcnow()`)
-    start : datetime
-        Query start time.
-    end : datetime
-        Query end time.
-
-    """
+class Lookback:
+    """Time lookback slider."""
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        default: int = 4,
+        default: Optional[int] = None,
         label: str = "Select time ({units}) to look back",
         origin_time: datetime = None,
-        min_value: int = 1,
-        max_value: int = 240,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
         units: str = "hour",
         auto_display: bool = False,
     ):
@@ -104,7 +166,8 @@ class Lookback(QueryParamProvider):
             Maximum value (the default is 240)
         units : str, optional
             Time unit (the default is 'hour')
-            Permissable values are 'day', 'hour', 'minute', 'second'
+            Permissable values are 'day', 'hour', 'minute', 'second',
+            'week'
             These can all be abbreviated down to initial characters
             ('d', 'm', etc.)
         auto_display : bool, optional
@@ -117,6 +180,10 @@ class Lookback(QueryParamProvider):
         self._time_unit = _parse_time_unit(units)
         if "{units}" in label:
             label = label.format(units=self._time_unit.name)
+        default = _default_before_after(default, self._time_unit)
+        min_value = min_value or 1
+        max_value = _default_max_buffer(max_value, default, self._time_unit)
+
         self._lookback_wgt = widgets.IntSlider(
             value=default,
             min=min_value,
@@ -158,47 +225,46 @@ class Lookback(QueryParamProvider):
             0, self._lookback_wgt.value * self._time_unit.value
         )
 
-    @property
-    def query_params(self):
-        """
-        Query parameters derived from alert.
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
 
-        Returns
-        -------
-            dict(str, str) -- Dictionary of parameter names
 
-        """
-        return {"start": self.start, "end": self.end}
+def _default_max_buffer(max_default, default, unit) -> int:
+    if max_default is not None:
+        max_value = abs(max_default)
+        return max(max_value, int(default * 2))
+    if unit == TimeUnit.day:
+        return max(7, int(default * 2))
+    if unit == TimeUnit.hour:
+        return max(24, int(default * 2))
+    if unit == TimeUnit.week:
+        return max(4, int(default * 2))
+    return max(120, int(default * 2))
+
+
+def _default_before_after(default, unit) -> int:
+    if default is not None:
+        return abs(default)
+    if unit in (TimeUnit.day, TimeUnit.week):
+        return 1
+    if unit == TimeUnit.hour:
+        return 6
+    return 60
 
 
 # pylint: disable=too-many-instance-attributes
 @export
-class QueryTime(QueryParamProvider):
+class QueryTime(RegisteredWidget):
     """
     QueryTime.
 
     Composite widget to capture date and time origin
     and set start and end times for queries.
 
-    Attributes
-    ----------
-    before : int
-        The default number of `units` before the `origin_time`
-        (the default is 60)
-    after : int
-        The default number of `units` after the `origin_time`
-        (the default is 10)
-    max_before : int
-        The largest value for `before` (the default is 600)
-    max_after : int
-        The largest value for `after` (the default is 100)
-    origin_time : datetime
-            The origin time (the default is `datetime.utcnow()`)
-    start : datetime
-        Query start time.
-    end : datetime
-        Query end time.
-    query_params
+    See Also
+    --------
+    RegisteredWidget
 
     """
 
@@ -208,13 +274,14 @@ class QueryTime(QueryParamProvider):
     def __init__(
         self,
         origin_time: datetime = None,
-        before: int = 60,
-        after: int = 10,
-        max_before: int = 600,
-        max_after: int = 100,
+        before: Optional[int] = None,
+        after: Optional[int] = None,
+        max_before: Optional[int] = None,
+        max_after: Optional[int] = None,
         label: str = None,
         units: str = "min",
         auto_display: bool = False,
+        **kwargs,
     ):
         """
         Create new instance of QueryTime.
@@ -228,17 +295,18 @@ class QueryTime(QueryParamProvider):
             (the default is 'Select time ({units}) to look back')
         before : int, optional
             The default number of `units` before the `origin_time`
-            (the default is 60)
+            (the default varies based on the unit)
         after : int, optional
             The default number of `units` after the `origin_time`
-            (the default is 10)
+            (the default varies based on the unit)
         max_before : int, optional
-            The largest value for `before` (the default is 600)
+            The largest value for `before` (the default varies based on the unit)
         max_after : int, optional
-            The largest value for `after` (the default is 100)
+            The largest value for `after` (the default varies based on the unit)
         units : str, optional
-            Time unit (the default is 'min')
-            Permissable values are 'day', 'hour', 'minute', 'second'
+            Time unit (the default is 'hour')
+            Permissable values are 'day', 'hour', 'minute', 'second',
+            'week'
             These can all be abbreviated down to initial characters
             ('d', 'm', etc.)
         auto_display : bool, optional
@@ -248,22 +316,25 @@ class QueryTime(QueryParamProvider):
         self._label = "Set query time boundaries" if label is None else label
         self._time_unit = _parse_time_unit(units)
 
-        max_before = abs(max_before)
-        max_after = abs(max_after)
-        before = abs(before)
-        after = abs(after)
-        if max_before < before:
-            before = max_before
-        if max_after < after:
-            after = max_after
+        self.before = _default_before_after(before, self._time_unit)
+        self.after = _default_before_after(after, self._time_unit)
+        self.max_before = _default_max_buffer(max_before, self.before, self._time_unit)
+        self.max_after = _default_max_buffer(max_after, self.after, self._time_unit)
 
         # default to now
         self.origin_time = datetime.utcnow() if origin_time is None else origin_time
         # Calculate time offsets from origin
         self._query_start = self.origin_time - timedelta(
-            0, before * self._time_unit.value
+            0, self.before * self._time_unit.value
         )
-        self._query_end = self.origin_time + timedelta(0, after * self._time_unit.value)
+        self._query_end = self.origin_time + timedelta(
+            0, self.after * self._time_unit.value
+        )
+
+        # Call superclass to register
+        ids_params = [origin_time, before, after, max_before, max_after, label, units]
+        ids_attribs = ["origin_time", "before", "after", "_query_start", "_query_end"]
+        super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
 
         # Create widgets
         self._w_origin_dt = widgets.DatePicker(
@@ -277,9 +348,9 @@ class QueryTime(QueryParamProvider):
 
         range_desc = "Time Range ({}):".format(self._time_unit.name)
         self._w_tm_range = widgets.IntRangeSlider(
-            value=[-before, after],
-            min=-max_before,
-            max=max_after,
+            value=[-self.before, self.after],
+            min=-self.max_before,
+            max=self.max_after,
             step=1,
             description=range_desc,
             disabled=False,
@@ -351,24 +422,16 @@ class QueryTime(QueryParamProvider):
         """Query end time."""
         return self._query_end
 
-    @property
-    def query_params(self):
-        """
-        Query parameters derived from alert.
-
-        Returns
-        -------
-            dict(str, str) -- Dictionary of parameter names
-
-        """
-        return {"start": self.start, "end": self.end}
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
 
 
 # pylint: disable=too-many-instance-attributes
 @export
-class AlertSelector(QueryParamProvider):
+class SelectAlert:
     """
-    AlertSelector.
+    Alert Selector.
 
     View list of alerts and select one for investigation.
     Optionally provide and action to call with the selected alert as a parameter
@@ -382,7 +445,7 @@ class AlertSelector(QueryParamProvider):
         The SystemAlertId of the selected alert
     alerts : List[SecurityAlert]
         The current alert list (DataFrame)
-    action : Callable[..., None]
+    action : Callable[..., Optional[Tuple[...]]]
         The callback action to execute on selection
         of an alert.
 
@@ -393,7 +456,7 @@ class AlertSelector(QueryParamProvider):
     def __init__(
         self,
         alerts: pd.DataFrame,
-        action: Callable[..., None] = None,
+        action: Callable[..., Optional[Tuple]] = None,
         columns: List[str] = None,
         auto_display: bool = False,
     ):
@@ -404,9 +467,10 @@ class AlertSelector(QueryParamProvider):
         ----------
         alerts : pd.DataFrame
             DataFrame of alerts.
-        action : Callable[..., None], optional
+        action : Callable[..., Optional[Tuple]], optional
             Optional function to execute for each selected alert.
-            (the default is None)
+            If the function returns one or a tuple of displayable objects
+            these will be displayed.
         columns : List[str], optional
             Override the default column names to use from `alerts`
             (the default is ['StartTimeUtc', 'AlertName',
@@ -425,6 +489,7 @@ class AlertSelector(QueryParamProvider):
                 "CompromisedEntity",
                 "SystemAlertId",
             ]
+
         items = alerts[columns]
         items = items.sort_values("StartTimeUtc", ascending=True)
         self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
@@ -444,7 +509,11 @@ class AlertSelector(QueryParamProvider):
             description="Filter alerts by title:",
             style={"description_width": "initial"},
         )
-        self._w_output = widgets.Output(layout={"border": "1px solid black"})
+
+        # setup to use updatable display objects
+        rand_id = random.randint(0, 999999)  # nosec
+        self._output_id = f"{self.__class__.__name__}_{rand_id}"
+        self._disp_elems: List[Any] = []
 
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
@@ -455,25 +524,36 @@ class AlertSelector(QueryParamProvider):
 
     def display(self):
         """Display the interactive widgets."""
+        display(widgets.VBox([self._w_filter_alerts, self._w_select_alert]))
+        display(HTML("<hr>"))
         self._select_top_alert()
-        display(
-            widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
-        )
 
     @staticmethod
     def _alert_summary(alert_row):
         """Return summarized string of alert properties."""
+        if "TI Risk" in alert_row:
+            return (
+                f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
+                + f" - ({alert_row.CompromisedEntity}) "
+                + f" - TI Risk: {alert_row['TI Risk']}"
+                + f" - [id:{alert_row.SystemAlertId}]",
+                alert_row.SystemAlertId,
+            )
+
         return (
-            f"{alert_row.StartTimeUtc}  {alert_row.AlertName} "
-            + f"({alert_row.CompromisedEntity}) "
-            + f"[id:{alert_row.SystemAlertId}]"
+            f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
+            + f" - ({alert_row.CompromisedEntity}) "
+            + f" - [id:{alert_row.SystemAlertId}]",
+            alert_row.SystemAlertId,
         )
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
             self._w_select_alert.options = [
-                i for i in self._select_items if change["new"].lower() in i.lower()
+                alert_dtl
+                for alert_dtl in self._select_items
+                if change["new"].lower() in alert_dtl[0].lower()
             ]
 
     def _select_alert(self, selection=None):
@@ -485,14 +565,10 @@ class AlertSelector(QueryParamProvider):
         ):
             self.selected_alert = None
         else:
-            match = re.search(self._ALERTID_REGEX, selection["new"])
-            if match is not None:
-                self.alert_id = match.groupdict()["alert_id"]
-                self.selected_alert = self._get_alert(self.alert_id)
-                if self.alert_action is not None:
-                    self._w_output.clear_output()
-                    with self._w_output:
-                        self.alert_action(self.selected_alert)
+            self.alert_id = selection["new"]
+            self.selected_alert = self._get_alert(self.alert_id)
+            if self.alert_action is not None:
+                self._run_action()
 
     def _get_alert(self, alert_id):
         """Get the alert by alert_id."""
@@ -523,9 +599,97 @@ class AlertSelector(QueryParamProvider):
             self.alert_id = top_alert.SystemAlertId
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
-                self._w_output.clear_output()
-                with self._w_output:
-                    self.alert_action(self.selected_alert)
+                self._run_action()
+
+    def _run_action(self):
+        """Run any action function and display details, if any."""
+        output_objs = self.alert_action(self.selected_alert)
+        if output_objs is None:
+            return
+        if not isinstance(output_objs, (tuple, list)):
+            output_objs = [output_objs]
+        display_objs = bool(self._disp_elems)
+        for idx, out_obj in enumerate(output_objs):
+            if not display_objs:
+                self._disp_elems.append(
+                    display(out_obj, display_id=f"{self._output_id}_{idx}")
+                )
+            else:
+                if idx == len(self._disp_elems):
+                    break
+                self._disp_elems[idx].update(out_obj)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+# pylint: disable=too-many-instance-attributes
+@deprecated(
+    reason="Superceded by SelectAlert. Please use that version", version="0.5.2"
+)
+@export
+class AlertSelector(SelectAlert):
+    """
+    AlertSelector.
+
+    View list of alerts and select one for investigation.
+    Optionally provide and action to call with the selected alert as a parameter
+    (typically used to display the alert.)
+
+    Attributes
+    ----------
+    selected_alert : SecurityAlert
+        The selected alert
+    alert_id : str
+        The SystemAlertId of the selected alert
+    alerts : List[SecurityAlert]
+        The current alert list (DataFrame)
+    action : Callable[..., None]
+        The callback action to execute on selection
+        of an alert.
+
+    """
+
+    def __init__(
+        self,
+        alerts: pd.DataFrame,
+        action: Callable[..., None] = None,
+        columns: List[str] = None,
+        auto_display: bool = False,
+    ):
+        """
+        Create a new instance of AlertSelector.
+
+        Parameters
+        ----------
+        alerts : pd.DataFrame
+            DataFrame of alerts.
+        action : Callable[..., None], optional
+            Optional function to execute for each selected alert.
+            (the default is None)
+        columns : List[str], optional
+            Override the default column names to use from `alerts`
+            (the default is ['StartTimeUtc', 'AlertName',
+            'CompromisedEntity', 'SystemAlertId'])
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
+        """
+        self._w_output = widgets.Output(layout={"border": "1px solid black"})
+        super().__init__(alerts, action, columns, auto_display)
+
+    def display(self):
+        """Display the interactive widgets."""
+        self._select_top_alert()
+        display(
+            widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
+        )
+
+    def _run_action(self):
+        self._w_output.clear_output()
+        with self._w_output:
+            self.alert_action(self.selected_alert)
 
     @property
     def query_params(self):
@@ -540,148 +704,8 @@ class AlertSelector(QueryParamProvider):
         return {"provider_alert_id": self.alert_id}
 
 
-# pylint: disable=too-many-instance-attributes
 @export
-class GetSingleAlert(QueryParamProvider):
-    """
-    GetSingleAlert.
-
-    Try to fetch a single alert by SystemAlertId.
-
-    Attributes
-    ----------
-    selected_alert : SecurityAlert
-        The selected alert
-    alert_id : str
-        The SystemAlertId of the selected alert
-    alerts : List[SecurityAlert]
-        The current alert list (DataFrame).
-        Should always have one member.
-
-    """
-
-    def __init__(
-        self,
-        action: Callable[..., None] = None,
-        max_lookback: float = 28,
-        query_time_provider=None,
-        auto_display: bool = False,
-    ):
-        """
-        Create a new instance of GetSingleAlert.
-
-        Parameters
-        ----------
-        action : Callable[..., None], optional
-            Create a new instance of GetSingleAlert.
-            (the default is None)
-        max_lookback : float, optional
-            Number of days to search for an alert with the
-            supplied ID (the default is 28, fractional days allowed)
-        query_time_provider : [type], optional
-            An object with 'start' and 'end' properties
-            or a QueryParamProvider with start and end defined in its
-            query_params property (the default is None)
-        auto_display : bool, optional
-            Whether to display on instantiation (the default is False)
-
-        """
-        self.alert_action = action
-        self.selected_alert = None
-        self.alert_id = None
-        self.alerts = None
-
-        self._start = None
-        self._end = None
-        if query_time_provider is not None:
-            if (
-                "start" in query_time_provider.__dir__
-                and "end" in query_time_provider.__dir__
-            ):
-                self._start = query_time_provider.start
-                self._end = query_time_provider.end
-            elif isinstance(query_time_provider, QueryParamProvider):
-                self._start = query_time_provider.query_params.get("start", None)
-                self._end = query_time_provider.query_params.get("end", None)
-
-        if self._end is None:
-            self._end = datetime.now()
-            self._start = self._end - timedelta(max_lookback)
-
-        self._w_target_alert = widgets.Text(
-            value=self.alert_id,
-            placeholder="SystemAlertId",
-            description="SystemAlertId for alert :",
-            layout=Layout(width="50%"),
-            style={"description_width": "initial"},
-        )
-
-        self._w_fetch_button = widgets.Button(description="Get alert..")
-        self._w_fetch_button.on_click(self._click_get_alert)
-
-        self._w_output = widgets.Output(layout={"border": "1px solid black"})
-
-        if auto_display:
-            self.display()
-
-    @property
-    def query_params(self):
-        """
-        Query parameters derived from alert.
-
-        Returns
-        -------
-            dict(str, str) -- Dictionary of parameter names
-
-        """
-        return {"system_alert_id": self.alert_id}
-
-    def display(self):
-        """Display the interactive widgets."""
-        display(
-            widgets.VBox([self._w_target_alert, self._w_fetch_button, self._w_output])
-        )
-
-    def _click_get_alert(self, button):
-        del button
-        self.alert_id = self._w_target_alert.value
-        if not self.alert_id or not self.alert_id.strip():
-            print("Error: AlertID was not entered")
-
-        self.alerts = qry.exec_query(
-            query_name="get_alert",
-            start=self._start,
-            end=self._end,
-            system_alert_id=self.alert_id,
-        )
-        if self.alerts is not None:
-            self.selected_alert = self._get_alert(self.alert_id)
-            if self.alert_action is not None:
-                self._w_output.clear_output()
-                with self._w_output:
-                    self.alert_action(self.selected_alert)
-        else:
-            print("Alert not found.")
-
-    def _get_alert(self, alert_id):
-        self.alert_id = alert_id
-        selected_alerts = self.alerts[self.alerts["SystemAlertId"] == alert_id]
-
-        if selected_alerts.shape[0] > 0:
-            alert = pd.Series(selected_alerts.iloc[0])
-            if isinstance(alert["ExtendedProperties"], str):
-                alert["ExtendedProperties"] = json.loads((alert["ExtendedProperties"]))
-            if isinstance(alert["Entities"], str):
-                try:
-                    alert["Entities"] = json.loads((alert["Entities"]))
-                except JSONDecodeError:
-                    pass
-            return alert
-        return None
-
-
-@export
-class GetEnvironmentKey:
+class GetEnvironmentKey(RegisteredWidget):
     """
     GetEnvironmentKey.
 
@@ -696,6 +720,7 @@ class GetEnvironmentKey:
         help_str: str = None,
         prompt: str = "Enter the value: ",
         auto_display: bool = False,
+        **kwargs,
     ):
         """
         Create a new instance of GetEnvironmentKey.
@@ -713,10 +738,19 @@ class GetEnvironmentKey:
             Whether to display on instantiation (the default is False)
 
         """
-        self._value = os.environ.get(env_var)
+        env_val = os.environ.get(env_var)
         self._name = env_var
+        self._value = ""
 
-        if not self._value:
+        # Call superclass to register
+        super().__init__(id_vals=[env_var, prompt], val_attrs=["_value"], **kwargs)
+
+        # Use the registed widget "remembered" value but if the environment
+        # variable is set override with this value.
+        if env_val is not None:
+            self._value = env_val
+
+        if not self._value and help_str is not None:
             display(widgets.HTML(value=help_str))
 
         self._w_text = widgets.Text(
@@ -758,12 +792,240 @@ class GetEnvironmentKey:
 
     def _on_save_button_clicked(self, button):
         del button
+        self._value = self._w_text.value.strip()
         if self._w_check_save.value:
-            os.environ[self._name] = self._w_text.value.strip()
+            os.environ[self._name] = self._value
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
 
 
 @export
-class SelectString:
+class GetText(RegisteredWidget):
+    """
+    GetEnvironmentKey.
+
+    Tries to retrieve an environment variable value. The value
+    can be changed/set and optionally saved back to the system
+    environment.
+    """
+
+    def __init__(
+        self,
+        default: str = None,
+        prompt: str = "Enter the value: ",
+        auto_display: bool = False,
+        **kwargs,
+    ):
+        """
+        Create a new instance of GetEnvironmentKey.
+
+        Parameters
+        ----------
+        default : str
+            Default value.
+        prompt : str, optional
+            Prompt to display with the text box.
+            (the default is "Enter the value: ")
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+
+        See Also
+        --------
+        RegisteredWidget
+
+        """
+        self._value = default
+
+        # Call superclass to register
+        super().__init__(id_vals=[default, prompt], val_attrs=["_value"], **kwargs)
+
+        self._w_text = widgets.Text(
+            value=self._value,
+            description=prompt,
+            layout=Layout(width="50%"),
+            style={"description_width": "initial"},
+        )
+
+        self._w_text.observe(self._update_value, names="value")
+        if auto_display:
+            self.display()
+
+    def _update_value(self, change):
+        self._value = change.get("new")
+
+    @property
+    def value(self):
+        """Get the current value of the key."""
+        return self._value.strip()
+
+    def display(self):
+        """Display the interactive widgets."""
+        if self._value:
+            self._w_text.value = self._value
+        display(self._w_text)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+@export
+class SelectItem:
+    """
+    Selection list from list or dict.
+
+    Attributes
+    ----------
+    value : Any
+        The selected value.
+    item_action : Callable[..., Optional[Tuple]]
+        Action to call for each selection.
+
+    """
+
+    # pylint: disable=too-many-arguments, too-few-public-methods
+    def __init__(
+        self,
+        description: str = "Select an item",
+        item_list: List[str] = None,
+        action: Callable[..., Optional[Tuple]] = None,
+        item_dict: Mapping[str, str] = None,
+        auto_display: bool = False,
+        height: str = "100px",
+        width: str = "50%",
+        display_filter: bool = True,
+    ):
+        """
+        Select an item from a list or dict.
+
+        Parameters
+        ----------
+        description : str, optional
+            The widget label to display.
+            (the default is 'Select an item')
+        item_list : List[str], optional
+            A `list` of items to select from (the default is None)
+        item_dict : Mapping[str, str], optional
+            A `dict` of items to select from. When using `item_dict`
+            the keys are displayed as the selectable items and value
+            corresponding to the selected key is set as the `value`
+            property.
+            (the default is None)
+        action : Callable[..., Optional[Tuple[...]]], optional
+            function to call when item selected (passed a single
+            parameter - the value of the currently selected item)
+            (the default is None).
+            If the function returns one or a tuple of displayable objects
+            these will be displayed.
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is False)
+        height : str, optional
+            Selection list height (the default is '100px')
+        width : str, optional
+            Selection list width (the default is '50%')
+        display_filter : bool, optional
+            Whether to display item filter (the default is True)
+
+        """
+        if item_list:
+            self._item_list = item_list
+            self._item_dict = None
+            self.value = item_list[0]
+        elif item_dict:
+            self._item_list = list(item_dict.keys())
+            self._item_dict = item_dict
+            self.value = list(self._item_dict.values())[0]
+        else:
+            raise ValueError("One of item_list or item_dict must be supplied.")
+
+        self._wgt_select = widgets.Select(
+            options=self._item_list,
+            description=description,
+            layout=Layout(width=width, height=height),
+            style={"description_width": "initial"},
+        )
+        self._display_filter = display_filter
+        if display_filter:
+            self._w_filter = widgets.Text(
+                value="", description="Filter:", style={"description_width": "initial"}
+            )
+
+            # set up observer callbacks
+            self._w_filter.observe(self._update_options, names="value")
+        self._wgt_select.observe(self._select_item, names="value")
+
+        self.item_action = action
+
+        # setup to use updatable display objects
+        rand_id = random.randint(0, 999999)  # nosec
+        self._output_id = f"{self.__class__.__name__}_{rand_id}"
+        self._disp_elems: List[Any] = []
+
+        if auto_display:
+            self.display()
+
+    def _select_item(self, selection):
+        if (
+            selection is None
+            or "new" not in selection
+            or not isinstance(selection["new"], str)
+        ):
+            return
+        value = selection["new"]
+        self.value = self._item_dict.get(value, None) if self._item_dict else value
+        if self.item_action is not None:
+            self._run_action()
+
+    def _update_options(self, change):
+        """Filter the alert list by substring."""
+        if change is not None and "new" in change:
+            self._wgt_select.options = [
+                i for i in self._item_list if change["new"].lower() in i.lower()
+            ]
+
+    def _run_action(self):
+        """Run any action function and display details, if any."""
+        output_objs = self.item_action(self.value)
+        if output_objs is None:
+            return
+        if not isinstance(output_objs, (tuple, list)):
+            output_objs = [output_objs]
+        display_objs = bool(self._disp_elems)
+        for idx, out_obj in enumerate(output_objs):
+            if not display_objs:
+                self._disp_elems.append(
+                    display(out_obj, display_id=f"{self._output_id}_{idx}")
+                )
+            else:
+                if idx == len(self._disp_elems):
+                    break
+                self._disp_elems[idx].update(out_obj)
+
+    def display(self):
+        """Display the interactive widget."""
+        wgt_list = []
+        if self._display_filter:
+            wgt_list.append(self._w_filter)
+        wgt_list.append(self._wgt_select)
+        display(widgets.VBox(wgt_list))
+        display(HTML("<hr>"))
+        self._show_top_item()
+
+    def _show_top_item(self):
+        """Run action on the first item by default."""
+        if self.item_action is not None and self.value is not None:
+            self._run_action()
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+@deprecated(reason="Superceded by SelectItem. Please use that version", version="0.5.2")
+@export
+class SelectString(SelectItem):
     """
     Selection list from list or dict.
 
@@ -818,64 +1080,23 @@ class SelectString:
             Whether to display item filter (the default is True)
 
         """
-        if item_list:
-            self._item_list = item_list
-            self._item_dict = None
-            self.value = item_list[0]
-        elif item_dict:
-            self._item_list = list(item_dict.keys())
-            self._item_dict = item_dict
-            self.value = list(self._item_dict.values())[0]
-        else:
-            raise ValueError("One of item_list or item_dict must be supplied.")
+        self._w_output = widgets.Output(layout={"border": "1px solid black"})
 
-        self._wgt_select = widgets.Select(
-            options=self._item_list,
+        super().__init__(
             description=description,
-            layout=Layout(width=width, height=height),
-            style={"description_width": "initial"},
+            item_list=item_list,
+            item_dict=item_dict,
+            action=action,
+            auto_display=auto_display,
+            height=height,
+            width=width,
+            display_filter=display_filter,
         )
-        self._display_filter = display_filter
-        if display_filter:
-            self._w_filter = widgets.Text(
-                value="", description="Filter:", style={"description_width": "initial"}
-            )
 
-            # set up observer callbacks
-            self._w_filter.observe(self._update_options, names="value")
-        self._wgt_select.observe(self._select_item, names="value")
-
-        self.item_action = action
-        if self.item_action:
-            self._w_output = widgets.Output(layout={"border": "1px solid black"})
-        if auto_display:
-            self.display()
-
-    def _select_item(self, selection):
-        if (
-            selection is None
-            or "new" not in selection
-            or not isinstance(selection["new"], str)
-        ):
-            return
-        value = selection["new"]
-
-        if self._item_dict:
-            self.value = self._item_dict.get(value, None)
-        else:
-            self.value = value
-
-        if self.item_action is not None:
-            self._w_output.clear_output()
-            with self._w_output:
-                self.item_action(self.value)
-
-    def _update_options(self, change):
-        """Filter the alert list by substring."""
-        if change is not None and "new" in change:
-            self._wgt_select.options = [
-                i for i in self._item_list if change["new"].lower() in i.lower()
-            ]
+    def _run_action(self):
+        self._w_output.clear_output()
+        with self._w_output:
+            self.item_action(self.value)
 
     def display(self):
         """Display the interactive widget."""
@@ -888,33 +1109,17 @@ class SelectString:
             wgt_list.append(self._w_output)
         display(widgets.VBox(wgt_list))
 
-    def _show_top_item(self):
-        """Run action on the first item by default."""
-        if self.item_action is not None and self.value:
-            self._w_output.clear_output()
-            with self._w_output:
-                self.item_action(self.value)
-
 
 @export
 class SelectSubset:
-    """
-    Class to select a subset from an input list.
-
-    Attributes
-    ----------
-    selected_values : List[Any]
-        The selected item values.
-    selected_items : List[Any]
-        The selected items label and value
-
-    """
+    """Class to select a subset from an input list."""
 
     def __init__(
         self,
         source_items: Union[Dict[str, str], List[Any]],
         default_selected: Union[Dict[str, str], List[Any]] = None,
         display_filter: bool = True,
+        auto_display: bool = True,
     ):
         """
         Create instance of SelectSubset widget.
@@ -932,6 +1137,8 @@ class SelectSubset:
             a list of (label, value) tuples.
         display_filter : bool, optional
             Whether to display item filter (the default is True)
+        auto_display : bool, optional
+            Whether to display on instantiation (the default is True)
 
         """
         if isinstance(source_items, dict):
@@ -982,10 +1189,11 @@ class SelectSubset:
         v_box = widgets.VBox(
             [self._b_add_all, self._b_add, self._b_del, self._b_del_all]
         )
-        wgt_box = widgets.HBox([self._source_list, v_box, self._select_list])
+        self.layout = widgets.HBox([self._source_list, v_box, self._select_list])
         if self._display_filter:
-            wgt_box = widgets.VBox([self._w_filter, wgt_box])
-        display(wgt_box)
+            self.layout = widgets.VBox([self._w_filter, self.layout])
+        if auto_display:
+            self.display()
 
     @property
     def selected_items(self) -> List[Any]:
@@ -1038,11 +1246,10 @@ class SelectSubset:
     def _on_btn_add(self, button):
         del button
         selected_set = set(self._select_list.options)
-        if self._src_dict:
-            for selected in self._source_list.value:
+        for selected in self._source_list.value:
+            if self._src_dict:
                 selected_set.add(self._src_dict[selected])
-        else:
-            for selected in self._source_list.value:
+            else:
                 selected_set.add(selected)
         self._select_list.options = sorted(list(selected_set))
 
@@ -1081,6 +1288,14 @@ class SelectSubset:
         del button
         self._select_list.options = []
 
+    def display(self):
+        """Display the control."""
+        display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
 
 @export
 class Progress:
@@ -1111,7 +1326,8 @@ class Progress:
         self._done_label = widgets.Label(value="0%")
         self._progress.visible = visible
         self._done_label.visible = visible
-        display(widgets.HBox([self._progress, self._done_label]))
+        self.layout = widgets.HBox([self._progress, self._done_label])
+        self.display()
 
     @property
     def value(self) -> int:
@@ -1168,3 +1384,170 @@ class Progress:
         """Hide the controls."""
         self._progress.visible = True
         self._done_label.visible = True
+
+    def display(self):
+        """Display the control."""
+        display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
+class OptionButtons:
+    """
+    OptionButtons creates a sequence of buttons to choose from.
+
+    The widget can be run in synchronous mode as a simple option
+    selector or in async mode with a timeout.
+    In the latter mode, after the timeout has expired the widget
+    value is set to the default option button value.
+    To use the async mode you must call `widget.display_async()` with
+    the async keyword.
+
+    Attributes
+    ----------
+    value : str
+        The value of the option selected (case-normalized)
+
+    Example
+    -------
+    >>> opt = OptionButtons(description="Continue something?",
+    ...  buttons=["Maybe", "Yes", "Cancel"], timeout=10)
+    >>> await opt.display_async()
+
+    """
+
+    def __init__(
+        self,
+        description: Optional[str] = "Select an option to continue",
+        buttons: Optional[Iterable[str]] = None,
+        default: Optional[str] = None,
+        timeout: int = 0,
+        debug: bool = False,
+    ):
+        """
+        Initialize the OptionButton widget.
+
+        Parameters
+        ----------
+        description : Optional[str], optional
+            Description label displayed above the buttons,
+            by default "Select an option to continue"
+        buttons : Optional[Iterable[str]], optional
+            A list of button values, by default None. This
+            will default to ["Yes", "No", "Cancel"]
+        default : Optional[str], optional
+            The default value to use on timeout, by default the
+            first value in the `buttons` list
+        timeout : int, optional
+            Timeout in seconds, by default 0
+        debug : bool, optional
+            Adds some debug information to an Output controle,
+            by default False
+
+        """
+        if buttons is None:
+            buttons = ["Yes", "No", "Cancel"]
+        self._buttons = []
+        for b_item in buttons:
+            self._buttons.append(widgets.Button(description=b_item))
+        self._desc_label = widgets.Label(value=description)
+        self._timer_label = widgets.Label(layout=widgets.Layout(left="10px"))
+        self.default = default or next(iter(buttons)).casefold()
+        self.value: Optional[str] = None
+        self.timeout = timeout
+
+        self._completion: Any = None
+        self._fut_val: Any = None
+        self._debug = debug
+        if self._debug:
+            self._out = widgets.Output()
+
+    @property
+    def _layout(self):
+        """Create layout for buttons."""
+        return widgets.VBox(
+            [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
+        )
+
+    def _debug_out(self, mssg: str):
+        if self._debug:
+            self._out.append_stdout(mssg)
+
+    def _create_button_callbacks(self, btns):
+        """Set up buttons."""
+
+        def getvalue(change):
+            """Button on_click handler."""
+            self.value = change.description.casefold()
+            for btn in btns:
+                btn.on_click(getvalue, remove=True)
+
+        for btn in btns:
+            btn.on_click(getvalue)
+
+    async def _await_widget(self):
+        """Awaitable coroutine for widget."""
+        self._debug_out("await_widget entered\n")
+        self._create_button_callbacks(self._buttons)
+        self._debug_out("buttons set\n")
+
+        done, _ = await asyncio.wait(
+            [self._wait_for_button_change(), self._await_timer(self.timeout)],
+            return_when=asyncio.FIRST_COMPLETED,
+            timeout=self.timeout + 5,
+        )
+        self._debug_out("wait returned\n")
+        self._completion = done
+        self._debug_out(str(done))
+        return done
+
+    async def _wait_for_button_change(self):
+        """Awaitable for button selection state."""
+        self._debug_out("wait_for_button_change entered\n")
+        while self.value is None:
+            await asyncio.sleep(0.1)
+            if self._debug:
+                self._debug_out("*")
+
+    async def _await_timer(self, timeout: int = 5):
+        if timeout <= 0:
+            timeout = 0
+        while timeout > 0:
+            self._timer_label.value = f"Waiting {timeout} sec..."
+            if self.value:
+                self._timer_label.value = f"Option selected: '{self.value}'"
+                return
+            await asyncio.sleep(1)
+            timeout -= 1
+        self.value = self.default
+        self._timer_label.value = f"Timed out. Defaulted to '{self.value}'"
+
+    async def display_async(self, reset: bool = False):
+        """
+        Display widget with timeout.
+
+        Parameters
+        ----------
+        reset : bool, optional
+            Resets any current value to None,
+            by default False
+
+        """
+        if reset:
+            self.value = None
+        display(self._layout)
+        if self._debug:
+            display(self._out)
+        self._fut_val = asyncio.ensure_future(self._await_widget())
+        self._debug_out("future returned\n")
+        self._debug_out(str(self._fut_val) + "\n")
+
+    def display(self):
+        """Display widget in simple sync mode."""
+        display(self._layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()

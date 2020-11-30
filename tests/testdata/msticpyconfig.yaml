@@ -19,10 +19,8 @@ TIProviders:
     Provider: "OTX" # Explicitly name provider to override
   VirusTotal:
     Args:
-      ApiID:
-        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
       AuthKey:
-        KeyVaultURI: "https://constoso.vault.azure.net/secrets/kvname/kvsecretId"
+        EnvironmentVar: VTAUTHKEY
     Primary: True
     Provider: "VirusTotal"
   XForce:
@@ -58,3 +56,8 @@ OtherProviders:
     Args:
       AuthKey: "987654321-222"
     Provider: "IPStackLookup"
+AzureCLI:
+  Args:
+    clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
+    tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+    clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"

@@ -9,6 +9,9 @@ from .driver_base import DriverBase
 from .kql_driver import KqlDriver
 from .security_graph_driver import SecurityGraphDriver
 from .mdatp_driver import MDATPDriver
+from .local_data_driver import LocalDataDriver
+from .splunk_driver import SplunkDriver
+from .mordor_driver import MordorDriver
 
 from ..._version import VERSION
 

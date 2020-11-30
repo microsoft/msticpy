@@ -13,19 +13,20 @@ requests per minute for the account type that you have.
 
 """
 import abc
+import traceback
 from functools import lru_cache
 from http import client
 from json import JSONDecodeError
-import traceback
 from typing import Any, Dict, List, Tuple
 
 import attr
-from attr import Factory
 import requests
+from attr import Factory
 
 from ..._version import VERSION
-from ...nbtools.utility import export
-from .ti_provider_base import LookupResult, TIProvider, TISeverity, TILookupStatus
+from ...common.exceptions import MsticpyConfigException
+from ...common.utility import export
+from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -68,11 +69,17 @@ class HttpProvider(TIProvider):
         if "AuthKey" in kwargs:
             self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
-        for req_param in self._REQUIRED_PARAMS:
-            if req_param not in self._request_params:
-                raise ValueError(
-                    f"{req_param} value was not found for {self.__class__.__name__}"
-                )
+        missing_params = [
+            param
+            for param in self._REQUIRED_PARAMS
+            if param not in self._request_params
+        ]
+        if missing_params:
+            param_list = ", ".join([f"'{param}'" for param in missing_params])
+            raise MsticpyConfigException(
+                f"Parameter values missing for TI Provider '{self.__class__.__name__}'",
+                f"Missing parameters are: {param_list}",
+            )
 
     # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
@@ -125,7 +132,7 @@ class HttpProvider(TIProvider):
 
         try:
             verb, req_params = self._substitute_parms(
-                result.ioc, result.ioc_type, query_type
+                result.safe_ioc, result.ioc_type, query_type
             )
             if verb == "GET":
                 response = self._requests_session.get(**req_params)
@@ -134,8 +141,15 @@ class HttpProvider(TIProvider):
             result.status = response.status_code
             result.reference = req_params["url"]
             if result.status == 200:
-                result.raw_result = response.json()
-                result.result, severity, result.details = self.parse_results(result)
+                try:
+                    result.raw_result = response.json()
+                    result.result, severity, result.details = self.parse_results(result)
+                except JSONDecodeError:
+                    result.raw_result = f"""There was a problem parsing results from this lookup:
+                                        {response.text}"""
+                    result.result = False
+                    severity = TISeverity.information
+                    result.details = {}
                 result.set_severity(severity)
                 result.status = TILookupStatus.ok.value
             else:

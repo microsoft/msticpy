@@ -312,7 +312,7 @@ def extract_events_to_df(
     if event_type:
         tmp_df = tmp_df.loc[tmp_df["EventType"] == event_type]
         if verbose:
-            print(f"Event subset = ", event_type, " (events: {len(tmp_df)})")
+            print(f"Event subset = {event_type} (events: {len(tmp_df)})")
 
     if verbose:
         print("Building output dataframe...")

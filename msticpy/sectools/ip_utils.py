@@ -17,11 +17,18 @@ from functools import lru_cache
 from typing import List, Tuple, Callable
 
 import pandas as pd
-from ipwhois import IPWhois
+from ipwhois import (
+    IPWhois,
+    HTTPLookupError,
+    HTTPRateLimitError,
+    HostLookupError,
+    WhoisLookupError,
+    WhoisRateLimitError,
+)
 
 from .._version import VERSION
 from ..nbtools.entityschema import GeoLocation, IpAddress
-from ..nbtools.utility import export
+from ..common.utility import export
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -54,7 +61,7 @@ _GET_IP_LOOKUP = _get_geolite_lookup()
 
 def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
     """
-    Take in an IP Address string and converts it to an IP Entitity.
+    Take in an IP Address string and converts it to an IP Entity.
 
     Parameters
     ----------
@@ -159,11 +166,20 @@ def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]
     """
     ip_type = get_ip_type(ip_str)
     if ip_type == "Public":
-        whois = IPWhois(ip_str)
-        whois_result = whois.lookup_whois()
-        if show_progress:
-            print(".", end="")
-        return whois_result["asn_description"], whois_result
+        try:
+            whois = IPWhois(ip_str)
+            whois_result = whois.lookup_whois()
+            if show_progress:
+                print(".", end="")
+            return whois_result["asn_description"], whois_result
+        except (
+            HTTPLookupError,
+            HTTPRateLimitError,
+            HostLookupError,
+            WhoisLookupError,
+            WhoisRateLimitError,
+        ) as err:
+            return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 
 

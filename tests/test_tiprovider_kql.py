@@ -12,12 +12,12 @@ from typing import Union, Any, Tuple, Dict
 
 import pandas as pd
 
-from ..msticpy.data import QueryProvider
-from ..msticpy.data.data_providers import DriverBase
-from ..msticpy.nbtools import pkg_config
-from ..msticpy.sectools.iocextract import IoCExtract
-from ..msticpy.sectools.tilookup import TILookup
-from ..msticpy.sectools.tiproviders import (
+from msticpy.data import QueryProvider
+from msticpy.data.data_providers import DriverBase
+from msticpy.common import pkg_config
+from msticpy.sectools.iocextract import IoCExtract
+from msticpy.sectools.tilookup import TILookup
+from msticpy.sectools.tiproviders import (
     ProviderSettings,
     get_provider_settings,
     preprocess_observable,
@@ -25,13 +25,9 @@ from ..msticpy.sectools.tiproviders import (
     AzSTI,
 )
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from .unit_test_lib import get_test_data_path, custom_mp_config
+
+_TEST_DATA = get_test_data_path()
 
 
 class Kql_Result:
@@ -63,7 +59,8 @@ class KqlTestDriver(DriverBase):
     def schema(self) -> Dict[str, Dict]:
         return self._schema
 
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(self, query: str, query_source, **kwargs) -> Union[pd.DataFrame, Any]:
+        del query_source, kwargs
 
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
         if "where NetworkIP" in query:
@@ -91,14 +88,14 @@ class KqlTestDriver(DriverBase):
 
 
 class mock_ip:
-    def run_cell_magic(*args, **kwargs):
+    def run_cell_magic(self, *args, **kwargs):
         pass
 
-    def run_line_magic(*args, **kwargs):
+    def run_line_magic(self, *args, **kwargs):
         if kwargs.get("line") == "--schema":
             return {}
 
-    def find_magic(*args, **kwargs):
+    def find_magic(self, *args, **kwargs):
         return True
 
 
@@ -106,49 +103,37 @@ def get_mock_ip():
     return mock_ip()
 
 
-test_data_provider = KqlTestDriver()
-qry_prov = QueryProvider(data_environment="LogAnalytics", driver=test_data_provider)
-
-
 class TestASKqlTIProvider(unittest.TestCase):
     """Unit test class."""
 
+    def setUp(self):
+        test_data_provider = KqlTestDriver()
+        self.qry_prov = QueryProvider(
+            data_environment="LogAnalytics", driver=test_data_provider
+        )
+
     def test_ti_config_and_load(self):
         test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml")
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
+        with custom_mp_config(test_config1):
+            ti_settings = get_provider_settings()
 
-        pkg_config.refresh_config()
+            self.assertIsInstance(ti_settings, dict)
+            self.assertGreaterEqual(1, len(ti_settings))
 
-        ti_settings = get_provider_settings()
+            # Try to load TIProviders - should throw a warning on
+            # missing provider class
+            as_byoti_prov = AzSTI(query_provider=self.qry_prov)
+            ti_lookup = TILookup(primary_providers=[as_byoti_prov])
 
-        self.assertIsInstance(ti_settings, dict)
-        self.assertGreaterEqual(1, len(ti_settings))
+            # should have 2 succesfully loaded providers
+            self.assertGreaterEqual(1, len(ti_lookup.loaded_providers))
+            self.assertGreaterEqual(1, len(ti_lookup.provider_status))
 
-        # Try to load TIProviders - should throw a warning on
-        # missing provider class
-        as_byoti_prov = AzSTI(query_provider=qry_prov)
-        ti_lookup = TILookup(primary_providers=[as_byoti_prov])
-
-        # should have 2 succesfully loaded providers
-        self.assertGreaterEqual(1, len(ti_lookup.loaded_providers))
-        self.assertGreaterEqual(1, len(ti_lookup.provider_status))
-
-    @staticmethod
-    def load_ti_lookup():
+    def load_ti_lookup(self):
         test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(test_config1)
-
-        pkg_config.refresh_config()
-        as_byoti_prov = AzSTI(query_provider=qry_prov)
-        return TILookup(primary_providers=[as_byoti_prov])
-
-    # Need to work out how to mock IPython/Kqlmagic startup
-    # def test_create_query_provider(self):
-    #     # Calling init with no parameters should invoke _create_query_provider
-    #     get_ipython = get_mock_ip
-    #     as_byoti_prov = AzSTI(query_provider=qry_prov)
-    #     prov = as_byoti_prov._create_query_provider()
-    #     self.assertIsNotNone(as_byoti_prov)
+        with custom_mp_config(test_config1):
+            as_byoti_prov = AzSTI(query_provider=self.qry_prov)
+            return TILookup(primary_providers=[as_byoti_prov])
 
     def test_ASByoti_provider(self):
         ti_lookup = self.load_ti_lookup()

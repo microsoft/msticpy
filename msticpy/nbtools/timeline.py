@@ -8,7 +8,10 @@ from datetime import datetime
 from typing import Any, Union, Set, Dict, Tuple, List
 
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
+from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
+from bokeh.models.annotations import LegendItem
 from bokeh.models import (
     ColumnDataSource,
     DatetimeTickFormatter,
@@ -28,7 +31,7 @@ from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
-from .utility import export, check_kwargs
+from ..common.utility import export, check_kwargs
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -53,7 +56,15 @@ _DEFAULT_KWARGS = [
     "yaxis",
 ]
 
-_TL_KWARGS = ["alert", "overlay_color", "overlay_data", "ref_time", "ygrid", "xgrid"]
+_TL_KWARGS = [
+    "alert",
+    "overlay_color",
+    "overlay_data",
+    "ref_time",
+    "ygrid",
+    "xgrid",
+    "hide",
+]
 
 
 @export
@@ -106,7 +117,7 @@ def display_timeline(
         (where `data` is a DataFrame)
         The column to group timelines on
     legend: str, optional
-        "left", "right", "inline" or "none"
+        "left", "right", "inline" or "none"[data]
         (the default is to show a legend when plotting multiple series
         and not to show one when plotting a single series)
     yaxis : bool, optional
@@ -261,6 +272,7 @@ def display_timeline_values(
     legend_pos: str = kwargs.pop("legend", None)
     kind: Any = kwargs.pop("kind", ["vbar"])
     plot_kinds = kind if isinstance(kind, list) else [kind]
+    hide: bool = kwargs.pop("hide", False)
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
 
@@ -268,10 +280,8 @@ def display_timeline_values(
         data, source_columns, time_column, group_by, color
     )
 
-    hover = HoverTool(
-        tooltips=_create_tool_tips(data, tool_tip_columns),
-        formatters={"Tooltip": "printf"},
-    )
+    tooltips, formatters = _create_tool_tips(data, tool_tip_columns)
+    hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     # Create the Plot figure
     title = title if title else "Timeline"
@@ -373,10 +383,13 @@ def display_timeline_values(
             height=height,
             time_column=time_column,
         )
-        show(column(plot, rng_select))
+        plot_layout = column(plot, rng_select)
     else:
-        show(plot)
-    return plot
+        plot_layout = plot
+
+    if not hide:
+        show(plot_layout)
+    return plot_layout
 
 
 # pylint: enable=invalid-name,too-many-locals, too-many-statements, too-many-branches
@@ -446,18 +459,23 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     show_range: bool = kwargs.pop("range_tool", True)
     xgrid: bool = kwargs.pop("xgrid", True)
     ygrid: bool = kwargs.pop("ygrid", False)
+    hide: bool = kwargs.pop("hide", False)
 
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
     series_count = len(data)
 
-    hover = HoverTool(
-        tooltips=_create_tool_tips(data, tool_tip_columns),
-        formatters={"Tooltip": "printf"},
-    )
+    tooltips, formatters = _create_tool_tips(data, tool_tip_columns)
+    hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     title = f"Timeline: {title}" if title else "Event Timeline"
-    start_range = min_time - ((max_time - min_time) * 0.1)
-    end_range = max_time + ((max_time - min_time) * 0.1)
+    try:
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
+    except OutOfBoundsDatetime:
+        min_time = min_time.to_pydatetime()
+        max_time = max_time.to_pydatetime()
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
     height = height if height else _calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
     plot = figure(
@@ -531,7 +549,12 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
                 source=series_def["source"],
             )
         if legend_pos in ["left", "right"]:
-            legend_items.append((str(ser_name), [p_series]))
+            legend_items.append(
+                LegendItem(
+                    label=str(ser_name),
+                    renderers=[p_series],
+                )
+            )
 
     if legend_pos == "inline":
         # Position the inline legend
@@ -540,7 +563,7 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     elif legend_pos in ["left", "right"]:
         # Create the legend box outside of the plot area
         ext_legend = Legend(
-            items=legend_items,
+            items=legend_items[::-1],  # the legend is in the wrong order otherwise
             location="center",
             click_policy="hide",
             label_text_font_size="8pt",
@@ -551,10 +574,14 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
         _add_ref_line(plot, ref_time, ref_label, len(data))
 
     if show_range:
-        show(column(plot, rng_select))
+        plot_layout = column(plot, rng_select)
     else:
-        show(plot)
-    return plot
+        plot_layout = plot
+
+    if not hide:
+        show(plot_layout)
+
+    return plot_layout
 
 
 # pylint: enable=too-many-locals, too-many-statements, too-many-branches
@@ -572,8 +599,8 @@ def _unpack_data_series_dict(data, **kwargs):
     # Process the input dictionary
     # Take each item that is passed and fill in blanks and add a y_index
     tool_tip_columns: Set[str] = set()
-    min_time = pd.Timestamp(pd.Timestamp.max)
-    max_time = pd.Timestamp(pd.Timestamp.min)
+    min_time = None
+    max_time = None
     y_index = 0
 
     # Create a color map in case colors have not been specified
@@ -589,17 +616,14 @@ def _unpack_data_series_dict(data, **kwargs):
         src_cols = series_def.get("source_columns", def_source_columns)
         data_columns.update(src_cols if src_cols else def_source_columns)
 
-        # add these columns to the tool tip column set
-        tool_tip_columns.update(data_columns)
-
         time_col = series_def.get("time_column", None)
         if not time_col:
             time_col = time_column
             series_def["time_column"] = time_col
-
-        min_time = min(min_time, series_data[time_col].min())
-        max_time = max(max_time, series_data[time_col].max())
         data_columns.update([time_col])
+        # add the data columns to the tool tip column set
+        tool_tip_columns.update(data_columns)
+
         # Create the Column data source to plot
         graph_df = series_data[list(data_columns)].copy()
         graph_df["y_index"] = y_index
@@ -613,6 +637,14 @@ def _unpack_data_series_dict(data, **kwargs):
         series_def["source"] = ColumnDataSource(graph_df)
         y_index += 1
 
+        # calculate min/max time from this set
+        if min_time is None:
+            min_time = series_data[time_col].min()
+            max_time = series_data[time_col].max()
+        else:
+            min_time = min(min_time, series_data[time_col].min())
+            max_time = max(max_time, series_data[time_col].max())
+
     return tool_tip_columns, min_time, max_time
 
 
@@ -624,9 +656,9 @@ def _create_data_grouping(data, source_columns, time_column, group_by, color):
         data_columns = set(["NewProcessName", "EventID", "CommandLine"])
     else:
         data_columns = set(source_columns)
-    tool_tip_columns = data_columns.copy()
     # If the time column not explicity specified in source_columns, add it
     data_columns.add(time_column)
+    tool_tip_columns = data_columns.copy()
     # create group frame so that we can color each group separately
     if group_by:
         group_count_df = (
@@ -718,25 +750,47 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
     return ref_time, kwargs.get("ref_label", ref_label)
 
 
-def _create_tool_tips(data: pd.DataFrame, columns: List[str]):
+def _get_datetime_tooltip(col: str, dataset: pd.DataFrame):
+    """Return tooltip and formatter entries for column."""
+    if " " in col:
+        disp_col = col.replace(" ", "_")
+        tt_col = f"{{{col}}}"
+    else:
+        disp_col = tt_col = col
+    if col in dataset and is_datetime64_any_dtype(dataset[col]):
+        col_tooltip = f"@{tt_col}{{%F %T.%3N}}"
+        col_fmt: Dict[Any, Any] = {f"@{tt_col}": "datetime"}
+    else:
+        col_tooltip = f"@{tt_col}"
+        col_fmt = {}
+    return disp_col, col_tooltip, col_fmt
+
+
+def _create_tool_tips(
+    data: Union[pd.DataFrame, Dict[str, pd.DataFrame]], columns: List[str]
+) -> Tuple[List[Tuple[str, str]], Dict[str, str]]:
     """Create formatting for tool tip columns."""
+    formatters: Dict[str, str] = {}
+    # if this is a dict we need to unpack each dataframe and process
+    # the tooltip columns for all of the data sets.
     if isinstance(data, dict):
         tool_tip_dict = {}
-        for series_df in data.values():
+        for data_set in data.values():
+            data_df = data_set.get("data", {})
             for col in columns:
-                if col in data and str(series_df[col].dtype) == "datetime64[ns]":
-                    tool_tip_dict[col] = f"@{col}{{%F %T}}"
-                elif col not in tool_tip_dict:
-                    tool_tip_dict[col] = f"@{col}"
-        return list(tool_tip_dict.items())
+                disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)
+                tool_tip_dict[disp_col] = col_tooltip
+                formatters.update(col_fmt)
+        return list(tool_tip_dict.items()), formatters
 
+    # If just a dataframe we just process the columns against this
     tool_tip_items = []
     for col in columns:
-        if col in data and str(data[col].dtype) == "datetime64[ns]":
-            tool_tip_items.append((f"{col}", f"@{col}{{%F %T}}"))
-        else:
-            tool_tip_items.append((f"{col}", f"@{col}"))
-    return tool_tip_items
+        disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data)
+        tool_tip_items.append((disp_col, col_tooltip))
+        formatters.update(col_fmt)
+
+    return tool_tip_items, formatters
 
 
 def _get_color_palette(series_count):
@@ -816,9 +870,16 @@ def _calc_auto_plot_height(group_count):
     return max(ht_per_row * group_count, 300)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, invalid-name, too-many-locals
 def _create_range_tool(
-    data, min_time, max_time, plot_range, width, height, time_column: str = None
+    data,
+    min_time,
+    max_time,
+    plot_range,
+    width,
+    height,
+    time_column: str = None,
+    y: str = "y_index",
 ):
     """Create plot bar to act as as range selector."""
     ext_min = min_time - ((max_time - min_time) * 0.15)
@@ -846,13 +907,13 @@ def _create_range_tool(
         for _, series_def in data.items():
             rng_select.circle(
                 x=series_def["time_column"],
-                y="y_index",
+                y=y,
                 color=series_def["color"],
                 source=series_def["source"],
             )
     elif isinstance(data, pd.DataFrame):
         rng_select.circle(
-            x=time_column, y="y_index", color="blue", source=ColumnDataSource(data)
+            x=time_column, y=y, color="blue", source=ColumnDataSource(data)
         )
 
     range_tool = RangeTool(x_range=plot_range)

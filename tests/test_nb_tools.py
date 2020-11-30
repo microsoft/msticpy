@@ -8,16 +8,9 @@ import unittest
 import json
 import os
 
-from ..msticpy.nbtools.entityschema import (
-    Entity,
-    Account,
-    Host,
-    Process,
-    File,
-    IpAddress,
-)
-from ..msticpy.nbtools.wsconfig import WorkspaceConfig
-from ..msticpy.nbtools.query_defns import DataFamily, DataEnvironment
+from msticpy.nbtools.entityschema import Entity, Account, Host, Process, File, IpAddress
+from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.data.query_defns import DataFamily, DataEnvironment
 
 
 _test_data_folders = [
@@ -71,19 +64,6 @@ class Testnbtools(unittest.TestCase):
 
         except Exception as ex:
             self.fail(msg="Exception {}".format(str(ex)))
-
-    def test_wsconfig(self):
-        file = input_file = os.path.join(_TEST_DATA, "config.json")
-
-        ws_conf = WorkspaceConfig(file)
-        self.assertEqual(ws_conf["tenant_id"], "My Tenant Id")
-        self.assertEqual(ws_conf["subscription_id"], "My Sub Id")
-        self.assertEqual(ws_conf["resource_group"], "OMSWorkspaceRG")
-        self.assertEqual(ws_conf["workspace_id"], "My Workspace Id")
-        self.assertEqual(ws_conf["workspace_name"], "OMSWorkspace")
-
-        ws_conf["workspace_name"] = "My other workspace"
-        self.assertEqual(ws_conf["workspace_name"], "My other workspace")
 
     def test_query_defns(self):
 

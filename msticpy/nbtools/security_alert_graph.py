@@ -13,7 +13,7 @@ import pandas as pd
 
 from .security_alert import SecurityAlert
 from .entityschema import Entity
-from .utility import export, is_not_empty
+from ..common.utility import export, is_not_empty
 from .._version import VERSION
 
 __version__ = VERSION
@@ -265,9 +265,9 @@ def _get_ip_name_desc(entity):
     if "Location" in entity and entity["Location"]:
         e_description = "{}\nc={}, st={}, city={}".format(
             e_name,
-            entity["Location"].CountryCode,
-            entity["Location"].State,
-            entity["Location"].City,
+            entity["Location"]["CountryCode"],
+            entity["Location"]["State"],
+            entity["Location"]["City"],
         )
     else:
         e_description = e_name

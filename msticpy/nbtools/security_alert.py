@@ -13,7 +13,7 @@ import pandas as pd
 from .._version import VERSION
 from .entityschema import Entity, UnknownEntity
 from .security_base import SecurityBase
-from .utility import export
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -80,9 +80,10 @@ class SecurityAlert(SecurityBase):
         """Return the item as HTML string."""
         if self.properties:
             title = """
-            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
-            entity=<b>{entity}</b>, id=<b>{id}</b>
-            <br/>
+            <h3>Alert: '{name}'</h3>
+            <b>Alert_time:</b> {start},
+            <b>Compr_entity:</b> {entity},
+            <b>Alert_id:</b> {id}
             """.format(
                 start=self.properties["StartTimeUtc"],
                 name=self.properties["AlertDisplayName"],
@@ -129,15 +130,25 @@ class SecurityAlert(SecurityBase):
                     if entity_id in self._src_entities:
                         entity[prop_name] = self._src_entities[entity_id]
 
-    def _extract_entities(self, src_row):
+    def _extract_entities(self, src_row):  # noqa: MC0001
         input_entities = []
+
+        if isinstance(src_row.ExtendedProperties, str):
+            try:
+                ext_props = json.loads(src_row["ExtendedProperties"])
+                for ent, val in ext_props.items():
+                    if ent in ["IpAddress", "Username"]:
+                        input_entities.append({"Entity": val, "Type": ent})
+            except json.JSONDecodeError:
+                pass
+
         if isinstance(src_row.Entities, str):
             try:
-                input_entities = json.loads(src_row["Entities"])
+                input_entities += json.loads(src_row["Entities"])
             except json.JSONDecodeError:
                 pass
         elif isinstance(src_row.Entities, list):
-            input_entities = src_row.Entities
+            input_entities += src_row.Entities
 
         for ent in input_entities:
             try:

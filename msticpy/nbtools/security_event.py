@@ -10,7 +10,7 @@ import pandas as pd
 
 from .entityschema import Entity, Host, Process, Account, IpAddress, HostLogonSession
 from .security_base import SecurityBase
-from .utility import export
+from ..common.utility import export
 from .._version import VERSION
 
 __version__ = VERSION

@@ -1,9 +1,6 @@
 msticpy.data package
 ====================
 
-Submodules
-----------
-
 msticpy.nbtools.entityschema module
 -----------------------------------
 
@@ -52,13 +49,6 @@ msticpy.data.data\_providers module
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.azure\_data module
--------------------------------
-.. automodule:: msticpy.data.azure_data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.data.data\_query\_reader module
 ---------------------------------------
 .. automodule:: msticpy.data.data_query_reader
@@ -73,9 +63,45 @@ msticpy.data.param\_extractor module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.query\_container module
+------------------------------------
+.. automodule:: msticpy.data.query_container
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.query\_defns module
+--------------------------------
+
+.. automodule:: msticpy.data.query_defns
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.query\_source module
+---------------------------------
+.. automodule:: msticpy.data.query_source
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.query\_store module
 --------------------------------
 .. automodule:: msticpy.data.query_store
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.azure\_data module
+-------------------------------
+.. automodule:: msticpy.data.azure_data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.azure\_sentinel module
+-----------------------------------
+.. automodule:: msticpy.data.azure_sentinel
     :members:
     :undoc-members:
     :show-inheritance:
@@ -94,6 +120,34 @@ msticpy.data.drivers.kql\_driver module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.drivers.local\_data\_driver module
+-----------------------------------------------
+.. automodule:: msticpy.data.drivers.local_data_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.mdatp\_driver module
+-----------------------------------------
+.. automodule:: msticpy.data.drivers.mdatp_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.mordor\_driver module
+------------------------------------------
+.. automodule:: msticpy.data.drivers.mordor_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.data.drivers.odata\_driver module
+-----------------------------------------
+.. automodule:: msticpy.data.drivers.odata_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.drivers.security\_graph\_driver module
 ---------------------------------------------------
 .. automodule:: msticpy.data.drivers.security_graph_driver
@@ -101,58 +155,30 @@ msticpy.data.drivers.security\_graph\_driver module
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.drivers.odata\_driver module
----------------------------------------------------
-.. automodule:: msticpy.data.drivers.odata_driver
+msticpy.data.drivers.splunk\_driver module
+------------------------------------------
+.. automodule:: msticpy.data.drivers.splunk_driver
     :members:
     :undoc-members:
     :show-inheritance:
 
-msticpy.data.drivers.mdatp\_driver module
----------------------------------------------------
-.. automodule:: msticpy.data.drivers.mdatp_driver
+msticpy.data.data\_obfus
+------------------------
+.. automodule:: msticpy.data.data_obfus
     :members:
     :undoc-members:
     :show-inheritance:
 
-msticpy.nbtools.kql module
---------------------------
+msticpy.data.browsers.query\_browser module
+-------------------------------------------
+.. automodule:: msticpy.data.browsers.query_browser
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-msticpy.nbtools.query\_builtin\_queries module
-----------------------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-msticpy.nbtools.query\_defns module
------------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-msticpy.nbtools.query\_mgr module
----------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-msticpy.nbtools.query\_schema module
-------------------------------------
-
-.. deprecated:: version 0.2.0
-   Use :py:class:`msticpy.data.QueryProvider` instead.
-
-
-Module contents
----------------
-
-.. automodule:: msticpy.data
+msticpy.data.browsers.mordor\_browser module
+--------------------------------------------
+.. automodule:: msticpy.data.browsers.mordor_browser
     :members:
     :undoc-members:
     :show-inheritance:

@@ -6,11 +6,12 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Tuple, Any, Union, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
 from ..._version import VERSION
+from ..query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -25,6 +26,10 @@ class DriverBase(ABC):
         self._loaded = False
         self._connected = False
         self.current_connection = None
+        self.public_attribs: Dict[str, Any] = {}
+        self.formatters: Dict[str, Callable] = {}
+        self.use_query_paths = True
+        self.has_driver_queries = False
 
     @property
     def loaded(self) -> bool:
@@ -61,7 +66,7 @@ class DriverBase(ABC):
         authentication.
 
         """
-        return self._loaded
+        return self._connected
 
     @property
     def schema(self) -> Dict[str, Dict]:
@@ -90,7 +95,9 @@ class DriverBase(ABC):
         return None
 
     @abc.abstractmethod
-    def query(self, query: str) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: QuerySource = None, **kwargs
+    ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -98,6 +105,14 @@ class DriverBase(ABC):
         ----------
         query : str
             The query to execute
+        query_source : QuerySource
+            The query definition object
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Are passed to the underlying provider query method,
+            if supported.
 
         Returns
         -------
@@ -123,3 +138,31 @@ class DriverBase(ABC):
             A DataFrame and native results.
 
         """
+
+    @property
+    def service_queries(self) -> Tuple[Dict[str, str], str]:
+        """
+        Return queries retrieved from the service after connecting.
+
+        Returns
+        -------
+        Tuple[Dict[str, str], str]
+            Dictionary of query_name, query_text.
+            Name of container to add queries to.
+
+        """
+        return {}, ""
+
+    @property
+    def driver_queries(self) -> Iterable[Dict[str, Any]]:
+        """
+        Return queries retrieved from the service after connecting.
+
+        Returns
+        -------
+        List[Dict[str, str]]
+            List of Dictionary of query_name, query_text.
+            Name of container to add queries to.
+
+        """
+        return [{}]

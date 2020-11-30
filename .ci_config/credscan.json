@@ -3,11 +3,36 @@
     "suppressions": [
         {
             "placeholder": ", secret=secret)",
-            "_justification": "This is code usage example and does not contain a secret."
+            "_justification": "This is a code usage example and does not contain a secret."
         },
         {
             "file": "AzureData.rst.txt",
-            "_justification": "This is code usage example and does not contain a secret."
+            "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
+            "file": "UploadData.rst.txt",
+            "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
+            "file": "msticpyconfig.rst.txt",
+            "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
+            "file": "test_splunk_driver.py",
+            "_justification": "This is a test case and does not contain a secret."
+        },
+        {
+            "file": "test_splunk_uploader.py",
+            "_justification": "This is a test case and does not contain a secret."
+        },
+        {
+            "file": "msticpyconfig.yaml",
+            "_justification": "Test data that does not contain a secret"
+        },
+        {
+            "file": "UploadData.rst.txt",
+            "_justification": "This is a code usage example and does not contain a secret."
         }
+
     ]
 }

@@ -8,16 +8,14 @@ entityschema module.
 
 Module for V3 Entities class
 """
-from ipaddress import ip_address, IPv4Address, IPv6Address
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
+from ipaddress import IPv4Address, IPv6Address, ip_address
+from typing import Any, Dict, Mapping, Type, Union
 
-# pylint: disable=locally-disabled, unused-import
-from typing import Mapping, Any, Union, Dict, Type
-
-from .utility import export
 from .._version import VERSION
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -36,7 +34,7 @@ class Entity(ABC):
     Implements common methods for Entity classes
     """
 
-    ENTITY_NAME_MAP: Dict[str, Type] = {}
+    ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
@@ -57,6 +55,13 @@ class Entity(ABC):
             kw arguments.
 
         """
+        self.Type = type(self).__name__.lower()
+        # If we have an unknown entity see if we a type passed in
+        if self.Type == "unknownentity" and "Type" in kwargs:
+            self.Type = kwargs["Type"]
+        # Make sure Type is in the class schema dictionary
+        self._entity_schema["Type"] = None
+
         # if we didn't populate AdditionalData, add an empty dict in case it's
         # needed
         if "AdditionalData" not in self:
@@ -71,9 +76,6 @@ class Entity(ABC):
         if kwargs:
             self.__dict__.update(kwargs)
 
-        self.Type = type(self).__name__.lower()
-        self._entity_schema["Type"] = None
-
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.
@@ -85,7 +87,9 @@ class Entity(ABC):
             extract entity properties.
 
         """
-        for k, v in self._entity_schema.items():
+        schema_dict = dict(**(self._entity_schema))
+        schema_dict["Type"] = None
+        for k, v in schema_dict.items():
             if k not in src_entity:
                 continue
             self[k] = src_entity[k]
@@ -159,11 +163,35 @@ class Entity(ABC):
         ent_dict = {}
         for prop, val in entity.properties.items():
             if val is not None:
-                if isinstance(val, Entity):
-                    ent_dict[prop] = self._to_dict(val)
-                else:
-                    ent_dict[prop] = val
+                ent_dict[prop] = self._to_dict(val) if isinstance(val, Entity) else val
         return ent_dict
+
+    def _repr_html_(self) -> str:
+        """
+        Display entity in IPython/Notebook.
+
+        Returns
+        -------
+        HTML
+            IPython HTML object
+
+        """
+        return self.to_html()
+
+    def to_html(self) -> str:
+        """
+        Return HTML representation of entity.
+
+        Returns
+        -------
+        str
+            HTML representation of entity
+
+        """
+        e_text = str(self)
+        e_type = self.Type
+        e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
+        return f"<h3>{e_type}</h3>{e_text}"
 
     @property
     def properties(self) -> dict:
@@ -198,7 +226,7 @@ class Entity(ABC):
         """
         return self.Type
 
-    # pylint: disable=bad-continuation, too-many-branches
+    # pylint: disable=too-many-branches
     @classmethod
     def instantiate_entity(  # noqa: C901
         cls, raw_entity: Mapping[str, Any]
@@ -353,8 +381,9 @@ class Account(Entity):
     @property
     def qualified_name(self) -> str:
         """Windows qualified account name."""
-        if "Name" in self:
-            name = self["Name"]
+        if "Name" not in self:
+            return ""
+        name = self["Name"]
         if "NTDomain" in self and self.NTDomain:
             return "{}\\{}".format(self.NTDomain, name)
         if "UPNSuffix" in self and self.UPNSuffix:
@@ -856,15 +885,14 @@ class Host(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
         self._computer = None
-        if src_event is not None:
-            if "Computer" in src_event:
-                self._computer = src_event["Computer"]
-                if "." in src_event["Computer"]:
-                    self.HostName = src_event["Computer"].split(".", 1)[0]
-                    self.DnsDomain = src_event["Computer"].split(".", 1)[1]
-                else:
-                    self.HostName = src_event["Computer"]
-                self.NetBiosName = self.HostName
+        if src_event is not None and "Computer" in src_event:
+            self._computer = src_event["Computer"]
+            if "." in src_event["Computer"]:
+                self.HostName = src_event["Computer"].split(".", 1)[0]
+                self.DnsDomain = src_event["Computer"].split(".", 1)[1]
+            else:
+                self.HostName = src_event["Computer"]
+            self.NetBiosName = self.HostName
 
     @property
     def computer(self) -> str:
@@ -948,9 +976,8 @@ class IpAddress(Entity):
         """
         super().__init__(src_entity=src_entity, **kwargs)
 
-        if src_event is not None:
-            if "IpAddress" in src_event:
-                self.Address = src_event["IpAddress"]
+        if src_event is not None and "IpAddress" in src_event:
+            self.Address = src_event["IpAddress"]
 
     @property
     def ip_address(self) -> Union[IPv4Address, IPv6Address]:
@@ -1143,14 +1170,13 @@ class NetworkConnection(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        desc = "{}:{} [{}]-> {}:{}".format(
+        return "{}:{} [{}]-> {}:{}".format(
             self.SourceAddress,
             self.SourcePort,
             self.Protocol,
             self.DestinationAddress,
             self.DestinationPort,
         )
-        return desc
 
     _entity_schema = {
         # SourceAddress (type Microsoft.Azure.Security.Detection

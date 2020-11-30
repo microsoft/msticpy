@@ -1,13 +1,27 @@
 msticpy.nbtools package
 =======================
 
-Submodules
-----------
 
 msticpy.nbtools.foliummap module
 --------------------------------
 
 .. automodule:: msticpy.nbtools.foliummap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.nbtools.morph_charts module
+-----------------------------------
+
+.. automodule:: msticpy.nbtools.morph_charts
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.nbtools.nbinit module
+-----------------------------
+
+.. automodule:: msticpy.nbtools.nbinit
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,35 +58,27 @@ msticpy.nbtools.process_tree module
     :undoc-members:
     :show-inheritance:
 
+
+msticpy.nbtools.ti\_browser module
+----------------------------------
+
+.. automodule:: msticpy.nbtools.ti_browser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.nbtools.timeseries module
+---------------------------------
+
+.. automodule:: msticpy.nbtools.timeseries
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.timeline module
 -------------------------------
 
 .. automodule:: msticpy.nbtools.timeline
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-msticpy.nbtools.utility module
-------------------------------
-
-.. automodule:: msticpy.nbtools.utility
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-msticpy.nbtools.wsconfig module
--------------------------------
-
-.. automodule:: msticpy.nbtools.wsconfig
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: msticpy.nbtools
     :members:
     :undoc-members:
     :show-inheritance:
