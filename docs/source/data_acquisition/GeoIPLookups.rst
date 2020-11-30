@@ -78,7 +78,7 @@ GeoLiteLookup class.
 
 The example shown here shows part of the ``OtherProviders`` section of
 msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
-For example, ``AuthKey: abcd123456789`` or use a reference to an
+For example, ``AuthKey: abcd424246789`` or use a reference to an
 environment variable holding the key value.
 The API key you need to specify in the ``AuthKey`` setting is you MaxMind
 License Key that can be found on the MaxMind website under Account > Services.
@@ -312,7 +312,7 @@ class.
 
 The example shown here shows part of the ``OtherProviders`` section of
 msticpyconfig.yaml. You can specify an API key in the ``AuthKey`` setting.
-For example, ``AuthKey: abcd123456789`` or use a reference to an
+For example, ``AuthKey: abcd424246789`` or use a reference to an
 environment variable holding the key value, as shown in the example.
 
 .. code:: yaml
