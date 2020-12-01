@@ -32,7 +32,7 @@ from urllib.parse import unquote
 import pandas as pd
 
 from .._version import VERSION
-from ..common.utility import export, check_kwargs
+from ..common.utility import check_kwargs, export
 from .domain_utils import DomainValidator
 
 __version__ = VERSION
@@ -44,6 +44,8 @@ def _compile_regex(regex):
 
 
 IoCPattern = namedtuple("IoCPattern", ["ioc_type", "comp_regex", "priority", "group"])
+
+_RESULT_COLS = ["IoCType", "Observable", "SourceIndex", "Input"]
 
 
 @export
@@ -119,8 +121,6 @@ class IoCExtract:
     IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
     IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{0,4}:){2,7}[A-F0-9]{0,4}(?![:.\w])"
     DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){1,126}[a-z]{2,63}"
-    # dns_regex =
-    #   '\\b((?=[a-z0-9-]{1,63}\\.)[a-z0-9]+(-[a-z0-9]+)*\\.){2,}[a-z]{2,63}\\b'
 
     URL_REGEX = r"""
             (?P<protocol>(https?|ftp|telnet|ldap|file)://)
@@ -322,16 +322,13 @@ class IoCExtract:
                 )
             )
 
-        result_columns = ["IoCType", "Observable", "SourceIndex"]
         result_rows: List[pd.Series] = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(
-                    datarow, idx, columns, result_columns, ioc_types_to_use
-                )
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
             )
         self._ignore_tld = ignore_tld_current
-        return pd.DataFrame(data=result_rows, columns=result_columns)
+        return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
     # pylint: disable=too-many-arguments
     def _search_in_row(
@@ -339,7 +336,6 @@ class IoCExtract:
         datarow: pd.Series,
         idx: Any,
         columns: List[str],
-        result_columns: List[str],
         ioc_types_to_use: List[str],
     ) -> List[pd.Series]:
         """Return results for a single input row."""
@@ -350,7 +346,8 @@ class IoCExtract:
                 if result_set:
                     for observable in result_set:
                         result_row = pd.Series(
-                            data=[result_type, observable, idx], index=result_columns
+                            data=[result_type, observable, idx, datarow[col]],
+                            index=_RESULT_COLS,
                         )
                         result_rows.append(result_row)
         return result_rows
@@ -425,16 +422,13 @@ class IoCExtract:
                 )
             )
 
-        result_columns = ["IoCType", "Observable", "SourceIndex"]
         result_rows = []
         for idx, datarow in data.iterrows():
             result_rows.extend(
-                self._search_in_row(
-                    datarow, idx, columns, result_columns, ioc_types_to_use
-                )
+                self._search_in_row(datarow, idx, columns, ioc_types_to_use)
             )
         self._ignore_tld = ignore_tld_current
-        return pd.DataFrame(data=result_rows, columns=result_columns)
+        return pd.DataFrame(data=result_rows, columns=_RESULT_COLS)
 
     def _get_ioc_types_to_use(
         self, ioc_types: List[str], include_paths: bool

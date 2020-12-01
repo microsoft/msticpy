@@ -246,7 +246,7 @@ class TILookup:
 
         for provider_entry, settings in prov_settings.items():
             # Allow overriding provider name to use another class
-            provider_name = settings.provider if settings.provider else provider_entry
+            provider_name = settings.provider or provider_entry
             if self._providers_to_load and provider_name not in self._providers_to_load:
                 continue
             provider_class: TIProvider = getattr(
@@ -277,10 +277,9 @@ class TILookup:
             # set the description from settings, if one is provided, otherwise
             # use class docstring.
             provider_instance.description = (
-                settings.description
-                if settings.description
-                else provider_instance.__doc__
+                settings.description or provider_instance.__doc__
             )
+
             self.add_provider(
                 provider=provider_instance, name=provider_name, primary=settings.primary
             )
@@ -357,7 +356,7 @@ class TILookup:
         if not selected_providers:
             raise RuntimeError(_NO_PROVIDERS_MSSG)
 
-        ioc_type = ioc_type if ioc_type else TIProvider.resolve_ioc_type(observable)
+        ioc_type = ioc_type or TIProvider.resolve_ioc_type(observable)
         for prov_name, provider in selected_providers.items():
             provider_result: LookupResult = provider.lookup_ioc(
                 ioc=observable, ioc_type=ioc_type, query_type=ioc_query_type, **kwargs

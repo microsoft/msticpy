@@ -269,7 +269,7 @@ def test_alert_native_graph(alert):
     # graph = nx.compose(alert_graph, graph)
 
     # Get the sets of components
-    connected_components = nx.connected_components(graph)
+    connected_components = list(nx.connected_components(graph)).copy()
     edges_to_add = []
     for sub_graph in connected_components:
         # connect alert to most connected entities
@@ -284,5 +284,5 @@ def test_alert_native_graph(alert):
             # if node != nx_alert_node:
             graph.add_edge(alert_ent, node, name=node.__class__.__name__)
 
-    check(len(list(nx.connected_components(graph))) == 1)
+    check.equal(len(list(nx.connected_components(graph))), 1)
     # print("\n".join([str((node, len(list(nx.neighbors(graph, node))))) for node in sub_graphs[0]]))

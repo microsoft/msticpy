@@ -134,7 +134,7 @@ class SecurityAlert(SecurityBase):
                 entity_id = prop_val["$ref"]
                 if entity_id in self._src_entities:
                     entity[prop_name] = self._src_entities[entity_id]
-                    entity.add_edge(entity[prop_name], attrs={"name": prop_name})
+                    entity.add_edge(entity[prop_name], edge_attrs={"name": prop_name})
             # Resolve all the lists of references
             ref_props_multi = {
                 name: prop
@@ -150,7 +150,8 @@ class SecurityAlert(SecurityBase):
                     if entity_id in self._src_entities:
                         entity[prop_name][idx] = self._src_entities[entity_id]
                         entity.add_edge(
-                            self._src_entities[entity_id], attrs={"name": prop_name}
+                            self._src_entities[entity_id],
+                            edge_attrs={"name": prop_name},
                         )
 
     def _extract_entities(self, src_row):  # noqa: MC0001

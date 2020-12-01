@@ -18,15 +18,19 @@ import sys
 import time
 import warnings
 from pathlib import Path
-from typing import Set, Tuple, Optional
+from typing import Optional, Set, Tuple
 from urllib.error import HTTPError, URLError
 
 import cryptography as crypto
-import dns.resolver
 import pandas as pd
 import pkg_resources
 import requests
 import tldextract
+
+# pylint: disable=no-name-in-module
+from dns.resolver import resolve
+
+# pylint: enable=no-name-in-module
 from IPython import display
 from ipywidgets import IntProgress
 
@@ -93,7 +97,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     progress = IntProgress(min=0, max=40)
     display.display(progress)
     ready = False
-    while ready is False:
+    while not ready:
         progress.value += 1
         status_data = requests.get(status_string)
         status = json.loads(status_data.content)["status"]
@@ -184,10 +188,7 @@ class DomainValidator:
             )
             return True
         _, _, tld = tldextract.extract(url_domain.lower())
-        if "." in tld:
-            ttld = tld.split(".")[1].upper()
-        else:
-            ttld = tld.upper()
+        ttld = tld.split(".")[1].upper() if "." in tld else tld.upper()
         return ttld in self.tld_index
 
     def is_resolvable(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
@@ -206,12 +207,10 @@ class DomainValidator:
 
         """
         try:
-            dns.resolver.query(url_domain, "A")
-            result = True
+            resolve(url_domain)
+            return True
         except Exception:  # pylint: disable=broad-except
-            result = False
-
-        return result
+            return False
 
     def in_abuse_list(self, url_domain: str) -> Tuple:
         """

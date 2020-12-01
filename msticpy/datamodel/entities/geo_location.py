@@ -8,7 +8,7 @@ from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
-from .entity import Entity
+from .entity import ContextObject, Entity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -18,7 +18,7 @@ __author__ = "Ian Hellen"
 
 
 @export
-class GeoLocation(Entity):
+class GeoLocation(Entity, ContextObject):
     """
     GeoLocation class.
 

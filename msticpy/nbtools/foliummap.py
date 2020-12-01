@@ -96,19 +96,21 @@ class FoliumMap:
             kwargs: icon properties to use for displaying this cluster
 
         """
-        geo_entity = GeoLocation()  # type: ignore
-        geo_entity.CountryCode = "Unknown"  # type: ignore
-        geo_entity.CountryName = "Unknown"  # type: ignore
-        geo_entity.State = "Unknown"  # type: ignore
-        geo_entity.City = "Unknown"  # type: ignore
+        geo_entity = GeoLocation()
+        geo_entity.CountryCode = "Unknown"
+        geo_entity.CountryName = "Unknown"
+        geo_entity.State = "Unknown"
+        geo_entity.City = "Unknown"
         geo_entity.Longitude = 0.0  # type: ignore
         geo_entity.Latitude = 0.0  # type: ignore
 
         for ip_entity in ip_entities:
             if ip_entity.Location is None:
-                ip_entity.Location = geo_entity  # type: ignore
+                ip_entity.Location = geo_entity
 
         for ip_entity in ip_entities:
+            if ip_entity.Location is None:
+                continue
             if (
                 not (
                     isinstance(ip_entity.Location.Latitude, (int, float))
@@ -175,9 +177,7 @@ class FoliumMap:
             Iterable of GeoLocation entities.
 
         """
-        ip_entities = []
-        for geo in geo_locations:
-            ip_entities.append(IpAddress(Address="na", Location=geo))
+        ip_entities = [IpAddress(Address="na", Location=geo) for geo in geo_locations]
         self.add_ip_cluster(ip_entities=ip_entities, **kwargs)
 
     def add_locations(self, locations: Iterable[Tuple[float, float]], **kwargs):
@@ -252,14 +252,12 @@ def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
 def _extract_locs_ip_entities(ip_entities: Iterable[IpAddress]):
     """Return the list of IP entities that have a Location property."""
     if isinstance(ip_entities[0], list):  # type: ignore
-        ip_locs = [
+        return [
             ip[0]["Location"]  # type: ignore
             for ip in ip_entities
             if bool(ip[0].Location)  # type: ignore
         ]
-    else:
-        ip_locs = [ip["Location"] for ip in ip_entities if bool(ip.Location)]
-    return ip_locs
+    return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
 
 
 def get_center_ip_entities(

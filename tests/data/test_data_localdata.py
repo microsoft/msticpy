@@ -53,8 +53,16 @@ class TestLocalDataQuery(unittest.TestCase):
         )
         queries = qry_prov.list_queries()
         self.assertGreaterEqual(len(queries), 11)
+
+        qry_params = {
+            "start": -1,
+            "end": 0,
+            "ip_address_list": ["test"],
+            "host_name": "test",
+            "account_name": "test",
+        }
         for query in queries:
             qry_func = getattr(qry_prov, query)
-            d_frame = qry_func()
+            d_frame = qry_func(**qry_params)
             self.assertIsInstance(d_frame, pd.DataFrame)
             self.assertGreaterEqual(len(d_frame), 1)

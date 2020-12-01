@@ -12,7 +12,7 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
-import ipaddress as ip
+import ipaddress
 from functools import lru_cache
 from typing import Callable, List, Optional, Tuple
 
@@ -116,8 +116,8 @@ def convert_to_ip_entities(
 
 
 @export
-# pylint: disable=too-many-return-statements
-def get_ip_type(ip_str: str) -> str:
+# pylint: disable=too-many-return-statements, invalid-name
+def get_ip_type(ip: str = None, ip_str: str = None) -> str:
     """
     Validate value is an IP address and deteremine IPType category.
 
@@ -134,24 +134,27 @@ def get_ip_type(ip_str: str) -> str:
         Returns ip type string using ip address module
 
     """
+    ip_str = ip or ip_str
+    if not ip_str:
+        raise ValueError("'ip' or 'ip_str' value must be specified")
     try:
-        ip.ip_address(ip_str)
+        ipaddress.ip_address(ip_str)
     except ValueError:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
-        if ip.ip_address(ip_str).is_multicast:
+        if ipaddress.ip_address(ip_str).is_multicast:
             return "Multicast"
-        if ip.ip_address(ip_str).is_global:
+        if ipaddress.ip_address(ip_str).is_global:
             return "Public"
-        if ip.ip_address(ip_str).is_loopback:
+        if ipaddress.ip_address(ip_str).is_loopback:
             return "Loopback"
-        if ip.ip_address(ip_str).is_link_local:
+        if ipaddress.ip_address(ip_str).is_link_local:
             return "Link Local"
-        if ip.ip_address(ip_str).is_unspecified:
+        if ipaddress.ip_address(ip_str).is_unspecified:
             return "Unspecified"
-        if ip.ip_address(ip_str).is_private:
+        if ipaddress.ip_address(ip_str).is_private:
             return "Private"
-        if ip.ip_address(ip_str).is_reserved:
+        if ipaddress.ip_address(ip_str).is_reserved:
             return "Reserved"
 
     return "Unspecified"
@@ -160,15 +163,20 @@ def get_ip_type(ip_str: str) -> str:
 # pylint: enable=too-many-return-statements
 
 
+# pylint: disable=invalid-name
 @lru_cache(maxsize=1024)
-def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]:
+def get_whois_info(
+    ip: str = None, show_progress: bool = False, **kwargs
+) -> Tuple[str, dict]:
     """
     Retrieve whois ASN information for given IP address using IPWhois python package.
 
     Parameters
     ----------
-    ip_str : str
+    ip : str
         IP Address to look up.
+    ip_str : str
+        alias for `ip`.
     show_progress : bool, optional
         Show progress for each query, by default False
 
@@ -184,6 +192,9 @@ def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]
     IP addresses.
 
     """
+    ip_str = ip or kwargs.get("ip_str")
+    if not ip_str:
+        raise ValueError("'ip' or 'ip_str' value must be specified")
     ip_type = get_ip_type(ip_str)
     if ip_type == "Public":
         try:
@@ -201,6 +212,9 @@ def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]
         ) as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
+
+
+# pylint: enable=invalid-name
 
 
 def get_whois_df(

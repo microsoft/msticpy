@@ -20,7 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, too-many-instance-attributes
 
 
 @export
@@ -162,8 +162,7 @@ class Process(Entity):
         """Return Entity Description."""
         if self.ProcessFilePath:
             return f"{self.ProcessFilePath}: {self.CommandLine}"
-        else:
-            return self.__name__
+        return self.__name__
 
     _entity_schema = {
         # ProcessId (type System.String)

@@ -48,4 +48,19 @@ class Url(Entity):
                 pass
         return None
 
+    @property
+    def host(self):
+        """Return host component of Url."""
+        return self.parsed.host if self.parsed else None
+
+    @property
+    def path(self):
+        """Return path component of Url."""
+        return self.parsed.path if self.parsed else None
+
+    @property
+    def query(self):
+        """Return query component of Url."""
+        return self.parsed.query if self.parsed else None
+
     _entity_schema: Dict[str, Any] = {}

@@ -6,9 +6,7 @@
 """datq query test class."""
 from copy import deepcopy
 from collections import namedtuple
-from contextlib import redirect_stdout
 from datetime import datetime, timedelta
-from io import StringIO
 import unittest
 from unittest.mock import patch, MagicMock
 import os
@@ -28,7 +26,6 @@ from msticpy.common.keyvault_client import (
     KeyVaultSettings,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
-    _prompt_for_code,
 )
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
@@ -41,6 +38,9 @@ _TEST_DATA = get_test_data_path()
 # set a flag to indicate we're in a unit test
 set_unit_testing(True)
 
+# pylint: disable=invalid-name, no-member, attribute-defined-outside-init
+# pylint: disable=protected-access, unused-argument
+# flake8: noqa
 
 # Unit test mock patches
 az_connect_core_patch = BHKeyVaultMgmtClient.__module__ + ".az_connect_core"
@@ -54,12 +54,12 @@ kv_mgmt_client_patch = BHKeyVaultMgmtClient.__module__ + ".KeyVaultManagementCli
 
 
 # Test classes used in unit tests
-class KeyringTestBackend(keyring.backend.KeyringBackend):
+class _KeyringTestBackend(keyring.backend.KeyringBackend):
     """TestKeyring that returns mocked passwords."""
 
     priority = -1
 
-    def __init__(self):
+    def __init__(self):  # noqa
         self._secrets = {}
         self._secrets.update(KV_SECRETS)
 
@@ -74,7 +74,7 @@ class KeyringTestBackend(keyring.backend.KeyringBackend):
         self._secrets.pop(username, None)
 
 
-class SecretClientTest:
+class _SecretClientTest:
     """TestKeyring that returns mocked passwords."""
 
     priority = -1
@@ -82,20 +82,20 @@ class SecretClientTest:
     def __init__(self):
         self._secrets = {}
         self._secrets.update(KV_SECRETS)
-        self._sec_props = {name: KVTestSec(name) for name in KV_SECRETS}
+        self._sec_props = {name: _KVTestSec(name) for name in KV_SECRETS}
 
     def get_secret(self, name, *args, **kwargs):
         del args, kwargs
         if name not in self._secrets:
             raise ResourceNotFoundError(f"Missing secret {name}")
-        sec_bundle = KVTestSec(id=name)
+        sec_bundle = _KVTestSec(obj_id=name)
         sec_bundle.value = self._secrets[name]
         return sec_bundle
 
     def set_secret(self, name, value, *args, **kwargs):
         del args, kwargs
         self._secrets[name] = value
-        sec_bundle = KVTestSec(id=name)
+        sec_bundle = _KVTestSec(obj_id=name)
         sec_bundle.value = self._secrets[name]
 
         self._sec_props[name] = sec_bundle
@@ -105,20 +105,20 @@ class SecretClientTest:
         return self._sec_props.values()
 
 
-class KVTestSec:
+class _KVTestSec:
     URI = "https://myvault.vault.azure.net/secrets/{name}"
 
-    def __init__(self, id):
-        self.name = id
-        self.id = self.URI.format(name=id)
+    def __init__(self, obj_id):
+        self.name = obj_id
+        self.id = self.URI.format(name=obj_id)
 
 
-class KeyVaultMgmtMock:
+class _KeyVaultMgmtMock:
     def __init__(self):
-        self.vaults = KeyVaultVaultsMock()
+        self.vaults = _KeyVaultVaultsMock()
 
 
-class KeyVaultVaultsMock:
+class _KeyVaultVaultsMock:
     def __init__(self):
         self.vaults = {}
 
@@ -129,23 +129,23 @@ class KeyVaultVaultsMock:
         return self.vaults.get(vault_name, None)
 
     def create_or_update(self, res_group, vault_name, params):
-        vault = KeyVaultVaultMock(vault_name)
+        vault = _KeyVaultVaultMock(vault_name)
         vault.params = params
         vault.resource_group = res_group
         self.vaults[vault_name] = vault
         return vault
 
 
-class KeyVaultPropsMock:
+class _KeyVaultPropsMock:
     pass
 
 
-class KeyVaultVaultMock:
+class _KeyVaultVaultMock:
     URI_TEMPLT = "https://{vault}.vault.azure.net"
 
     def __init__(self, name):
         self.name = name
-        props = KeyVaultPropsMock()
+        props = _KeyVaultPropsMock()
         props.vault_uri = self.URI_TEMPLT.format(vault=name)
         self.properties = props
 
@@ -158,10 +158,11 @@ class TestSecretsConfig(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
-        keyring.set_keyring(KeyringTestBackend())
+        """Create keyring for tests."""
+        keyring.set_keyring(_KeyringTestBackend())
 
     def test_keyring_client(self):
-
+        """Test keyring client."""
         kr_client = secret_settings.KeyringClient()
 
         for sec_name, pwd in KV_SECRETS.items():
@@ -172,10 +173,12 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual("secret_value", kr_client.get_secret("new_secret"))
 
         self.assertEqual("secret_value", kr_client["new_secret"])
+        # pylint: disable=pointless-statement
         with self.assertRaises(KeyError):
             kr_client["DoesntExist"]
 
     def test_config_load(self):
+        """Test loading configuration from msticpyconfig."""
         expected = {
             "TenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
             "SubscriptionId": "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
@@ -230,6 +233,7 @@ class TestSecretsConfig(unittest.TestCase):
 
     @patch(auth_context_patch)
     def test_auth_client(self, auth_context):
+        """Test authentication client."""
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
 
@@ -249,11 +253,12 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual(auth_client._expires_on, expiry_time)
         self.assertFalse(auth_client._expired_creds)
         self.assertEqual(auth_client.token, ACC_TOKEN)
-        bearer, tok = auth_client._adal_callback("server", "res", "scope", "scheme")
+        _, tok = auth_client._adal_callback("server", "res", "scope", "scheme")
         self.assertEqual(tok, ACC_TOKEN)
 
     @patch(auth_context_patch)
     def test_keyring_auth_client(self, auth_context):
+        """Test keyring auth client."""
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
@@ -288,12 +293,12 @@ class TestSecretsConfig(unittest.TestCase):
     def test_keyvault_client(
         self,
         sec_client,
-        az_connect_core_patch,
+        az_connect_core,
         html_ip,
         display_ip,
         is_ipython_ip,
     ):
-        kv_sec_client = SecretClientTest()
+        kv_sec_client = _SecretClientTest()
         sec_client_obj = MagicMock()
         sec_client_obj.list_properties_of_secrets = (
             kv_sec_client.list_properties_of_secrets
@@ -353,8 +358,8 @@ class TestSecretsConfig(unittest.TestCase):
         az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN), "cred")
         expiry_time = datetime.now() + timedelta(1)
         auth_context.return_value = mock_auth_context_methods(expiry_time)
-        kv_mgmt.return_value = KeyVaultMgmtMock()
-        kv_sec_client = SecretClientTest()
+        kv_mgmt.return_value = _KeyVaultMgmtMock()
+        kv_sec_client = _SecretClientTest()
 
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
         vault_mgmt = BHKeyVaultMgmtClient(
@@ -397,7 +402,7 @@ class TestSecretsConfig(unittest.TestCase):
         display_ip,
         is_ipython_ip,
     ):
-        kv_sec_client = SecretClientTest()
+        kv_sec_client = _SecretClientTest()
         sec_client_obj = MagicMock()
         sec_client_obj.list_properties_of_secrets = (
             kv_sec_client.list_properties_of_secrets

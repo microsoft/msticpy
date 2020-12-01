@@ -95,9 +95,11 @@ class Alert(Entity):
         if isinstance(src_entity, dict):
             prop_list = src_entity.items()
         elif type(src_entity).__name__ == "SecurityAlert":
-            prop_list = src_entity.properties.items()
+            prop_list = src_entity.properties.items()  # type: ignore
+        # pylint: disable=all
         elif isinstance(src_entity, Mapping):
-            prop_list = src_entity.iteritems()
+            prop_list = src_entity.iteritems()  # type: ignore
+        # pylint: enable=all
         else:
             return
 

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Query hierarchy attribute class."""
 from functools import partial
-from typing import Any
+from typing import Any, Dict, Type
 
 from .._version import VERSION
 
@@ -15,6 +15,8 @@ __author__ = "Ian Hellen"
 
 class QueryContainer:
     """Empty class used to create hierarchical attributes."""
+
+    _subclasses: Dict[str, Type] = {}
 
     def __len__(self):
         """Return number of items in the attribute collection."""
@@ -46,6 +48,8 @@ class QueryContainer:
                 repr_list.append(f"{name} (container)")
             elif isinstance(obj, partial):
                 repr_list.append(f"{name} (query)")
+            elif not name.startswith("_"):
+                repr_list.append(f"{name} (other)")
         return "\n".join(repr_list)
 
     def __call__(self, *args, **kwargs):

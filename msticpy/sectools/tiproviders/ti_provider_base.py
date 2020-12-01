@@ -70,9 +70,10 @@ class TISeverity(Enum):
             return value
         if isinstance(value, str) and value.lower() in cls.__members__:
             return cls[value.lower()]
-        if isinstance(value, int):
-            if value in [v.value for v in cls.__members__.values()]:
-                return cls(value)
+        if isinstance(value, int) and value in [
+            v.value for v in cls.__members__.values()
+        ]:
+            return cls(value)
         return TISeverity.unknown
 
     # pylint: disable=comparison-with-callable
@@ -338,6 +339,19 @@ class TIProvider(ABC):
         """
         return [ioc.name for ioc in self._supported_types]
 
+    @property
+    def ioc_query_defs(self) -> Dict[str, Any]:
+        """
+        Return current dictionary of IoC query/request definitions.
+
+        Returns
+        -------
+        Dict[str, Any]
+            IoC query/requist definitions keyed by IoCType
+
+        """
+        return self._IOC_QUERIES
+
     @classmethod
     def is_known_type(cls, ioc_type: str) -> bool:
         """
@@ -433,7 +447,7 @@ class TIProvider(ABC):
         result = LookupResult(
             ioc=ioc,
             safe_ioc=ioc,
-            ioc_type=ioc_type if ioc_type else self.resolve_ioc_type(ioc),
+            ioc_type=ioc_type or self.resolve_ioc_type(ioc),
             query_subtype=query_subtype,
             result=False,
             details="",

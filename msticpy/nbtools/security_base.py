@@ -91,10 +91,8 @@ class SecurityBase(QueryParamProvider):
         str_props = [f"{prop}: {val}" for prop, val in self._source_data.items()]
 
         if self.entities:
-            str_entities = []
-            for ent in self.entities:
-                str_entities.append(str(ent).replace("\n", ", "))
-            str_props = str_props + str_entities
+            str_entities = [str(ent).replace("\n", ", ") for ent in self.entities]
+            str_props += str_entities
         return "\n".join(str_props)
 
     def __repr__(self) -> str:
@@ -230,7 +228,13 @@ class SecurityBase(QueryParamProvider):
             return procs[0]
 
         # find the first process that has a parent process property
-        procs_with_parent = [p for p in procs if "ParentProcess" in p]
+        procs_with_parent = [
+            proc
+            for proc in procs
+            if "ParentProcess" in proc
+            and proc["ParentProcess"]
+            and proc["ParentProcess"] in procs
+        ]
         return procs_with_parent[0] if procs_with_parent else procs[0]
 
     @property
@@ -259,10 +263,7 @@ class SecurityBase(QueryParamProvider):
 
         """
         try:
-            if self.primary_host:
-                host_name = self.primary_host.fqdn
-            else:
-                host_name = None
+            host_name = self.primary_host.fqdn if self.primary_host else None
             proc_name = (
                 self.primary_process.ImageFile.FullPath
                 if self.primary_process and self.primary_process.ImageFile
@@ -337,7 +338,7 @@ class SecurityBase(QueryParamProvider):
         for session in [
             e
             for e in self.entities
-            if e["Type"] == "host-logon-session" or e["Type"] == "hostlogonsession"
+            if e["Type"] in ["host-logon-session", "hostlogonsession"]
         ]:
             if account is None or session["Account"] == account:
                 return session["SessionId"]
@@ -444,8 +445,7 @@ class SecurityBase(QueryParamProvider):
                 entity.append(item["Name"])
                 ent_type.append(item["Type"])
 
-        entities = pd.DataFrame({"Entity": entity, "Type": ent_type})
-        return entities
+        return pd.DataFrame({"Entity": entity, "Type": ent_type})
 
     def to_html(self, show_entities: bool = False) -> str:
         """Return the item as HTML string."""

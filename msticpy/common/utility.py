@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 import pkg_resources
 from deprecated.sphinx import deprecated
 from IPython import get_ipython
-from IPython.core.display import HTML, display
+from IPython.core.display import HTML, display, DisplayHandle
 from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
@@ -42,7 +42,7 @@ def export(func: Callable):
 @export
 def string_empty(string: str) -> bool:
     """Return True if the input string is None or whitespace."""
-    return (string is None) or not (string and string.strip())
+    return not (bool(string) or isinstance(string, str) and bool(string.strip()))
 
 
 @export
@@ -306,9 +306,13 @@ def check_and_install_missing_packages(
 
 # pylint: disable=invalid-name
 @export
-def md(string: str, styles: Union[str, Iterable[str]] = None):
+def md(
+    string: str,
+    styles: Union[str, Iterable[str]] = None,
+    disp_id: Optional[DisplayHandle] = None,
+) -> DisplayHandle:
     """
-    Return string as Markdown with optional style.
+    Display a string as Markdown with optional style.
 
     Parameters
     ----------
@@ -318,7 +322,15 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
         A style mnemonic or collection of styles. If multiple styles,
         these can be supplied as an interable of strings or a comma-separated
         string, by default None
+    disp_id : Optional[DisplayHandle], optional
+        A previously-created display handle in which to update the content
+        of this call, by default None
 
+    Returns
+    -------
+    DisplayHandle
+        A handle to the display object that can be used to update the
+        contents.
     """
     style_str = ""
     if isinstance(styles, str):
@@ -328,14 +340,18 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
-    display(HTML(f"<p style='{style_str}'>{string}</p>"))
+    content = HTML(f"<p style='{style_str}'>{string}</p>")
+    if disp_id is not None:
+        disp_id.update(content)
+        return disp_id
+    return display(content, display_id=True)
 
 
 # pylint: enable=invalid-name
 
 
 @export
-def md_warn(string: str):
+def md_warn(string: str, disp_id: Optional[DisplayHandle] = None):
     """
     Return string as a warning - orange text prefixed by "Warning".
 
@@ -343,13 +359,22 @@ def md_warn(string: str):
     ----------
     string : str
         The warning message.
+    disp_id : Optional[DisplayHandle], optional
+        A previously-created display handle in which to update the content
+        of this call, by default None
+
+    Returns
+    -------
+    DisplayHandle
+        A handle to the display object that can be used to update the
+        contents.
 
     """
-    md(f"Warning: {string}", "bold, orange, large")
+    return md(f"Warning: {string}", "bold, orange, large", disp_id)
 
 
 @export
-def md_error(string: str):
+def md_error(string: str, disp_id: Optional[DisplayHandle] = None):
     """
     Return string as an error - red text prefixed by "Error".
 
@@ -359,7 +384,7 @@ def md_error(string: str):
         The error message.
 
     """
-    md(f"Error: {string}", "bold, orange, large")
+    return md(f"Error: {string}", "bold, orange, large", disp_id)
 
 
 # Styles available to use in the above Markdown tools.

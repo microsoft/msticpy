@@ -15,7 +15,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, too-many-instance-attributes
 
 
 @export

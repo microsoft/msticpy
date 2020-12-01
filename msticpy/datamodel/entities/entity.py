@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
+from functools import partial
 import pprint
 import typing
 from abc import ABC, abstractmethod
@@ -14,13 +15,21 @@ import networkx as nx
 from ..._version import VERSION
 from ...common.utility import export
 from .entity_enums import ENTITY_ENUMS
-from .entity_graph import Edge, Node
+from .entity_graph import Node
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, too-few-public-methods
+
+
+@export
+class ContextObject:
+    """Information object attached to entity but is not an Entity."""
+
+
+# pylint: enable=too-few-public-methods
 
 
 @export
@@ -33,6 +42,7 @@ class Entity(ABC, Node):
 
     ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
+    id_properties: List[str] = []
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -74,6 +84,21 @@ class Entity(ABC, Node):
         if kwargs:
             self.__dict__.update(kwargs)
 
+    #     self._assign_container_parent()
+
+    # def _assign_container_parent(self):
+    #     """
+    #     Assign reference to this instance to any QueryContainer attribs.
+
+    #     This allows functions within QueryContainers to reference
+    #     `self` of this instance and behave as if they were instance
+    #     methods of the entity.
+    #     """
+    #     for _, obj in inspect.getmembers(self):
+    #         # using simple name match to avoid importing QueryContainer
+    #         if obj.__class__.__name__ == "QueryContainer":
+    #             setattr(obj, "_parent_self", self)
+
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.
@@ -106,29 +131,35 @@ class Entity(ABC, Node):
                 self[attr] = None
 
             if isinstance(val, tuple):
-                # if the property is a collection
-                entity_type = None
-                if isinstance(val[1], (type)) and issubclass(val[1], Entity):
-                    entity_type = val[1]
-                entity_list = [
-                    Entity.instantiate_entity(col_entity, entity_type=entity_type)
-                    for col_entity in src_entity[attr]
-                ]
-
-                self[attr] = entity_list
-                for child_entity in entity_list:
-                    if isinstance(child_entity, Entity):
-                        self.add_edge(child_entity, attrs={"name": attr})
+                self._instantiate_from_value(attr, val, src_entity)
             else:
-                # else try to instantiate an entity
-                entity_type = None
-                if isinstance(val, type) and issubclass(val, Entity):
-                    entity_type = val
-                self[attr] = Entity.instantiate_entity(
-                    src_entity[attr], entity_type=entity_type
-                )
-                if isinstance(self[attr], Entity):
-                    self.add_edge(self[attr], attrs={"name": attr})
+                self._instantiate_from_entity(attr, val, src_entity)
+
+    def _instantiate_from_value(self, attr, val, src_entity):
+        # if the property is a collection
+        entity_type = None
+        if isinstance(val[1], (type)) and issubclass(val[1], Entity):
+            entity_type = val[1]
+        entity_list = [
+            Entity.instantiate_entity(col_entity, entity_type=entity_type)
+            for col_entity in src_entity[attr]
+        ]
+
+        self[attr] = entity_list
+        for child_entity in entity_list:
+            if isinstance(child_entity, Entity):
+                self.add_edge(child_entity, edge_attrs={"name": attr})
+
+    def _instantiate_from_entity(self, attr, val, src_entity):
+        # else try to instantiate an entity
+        entity_type = None
+        if isinstance(val, type) and issubclass(val, Entity):
+            entity_type = val
+        self[attr] = Entity.instantiate_entity(
+            src_entity[attr], entity_type=entity_type
+        )
+        if isinstance(self[attr], Entity):
+            self.add_edge(self[attr], edge_attrs={"name": attr})
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -208,6 +239,134 @@ class Entity(ABC, Node):
         e_type = self.Type
         e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
         return f"<h3>{e_type}</h3>{e_text}"
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Return True if the entities have the same properties/values.
+
+        Parameters
+        ----------
+        other : Any
+            The entity (object) to compare
+
+        Returns
+        -------
+        bool
+            True if the two objects have the same property values
+
+        """
+        if self.__class__ != other.__class__ or not isinstance(other, Entity):
+            return False
+        return self.properties == other.properties
+
+    def __hash__(self) -> int:
+        """Return the hash of the entity based on non-empty property values."""
+        return hash(
+            " ".join(
+                [
+                    f"{prop}:{str(val)}"
+                    for prop, val in self.properties.items()
+                    if str(val)
+                ]
+            )
+        )
+
+    def is_equivalent(self, other: Any) -> bool:
+        """
+        Return True if the entities are equivalent.
+
+        Parameters
+        ----------
+        other : Any
+            The entity to check
+
+        Returns
+        -------
+        bool
+            True if equivalent.
+
+        Notes
+        -----
+        This method checks that the compared entities do not have
+        any property values with conflicting values. E.g.
+        self.A == other.A
+        self.B == "xyz" and other.B == None
+        self.C == [] and other.C == [1, 2, 3]
+        """
+        if self == other:
+            return True
+        if not isinstance(other, Entity):
+            return False
+        for prop in self.properties:
+            if (
+                self.properties[prop] == other.properties[prop]
+                or not self.properties[prop]
+                or not other.properties[prop]
+            ):
+                continue
+            return False
+        return True
+
+    def merge(self, other: Any) -> "Entity":
+        """
+        Merge with other entity to create new entity.
+
+        Returns
+        -------
+        Entity
+            Merged entity.
+
+        Raises
+        ------
+        AttributeError
+            If the entities cannot be merged.
+
+        """
+        if self == other:
+            return self
+        if not self.can_merge(other):
+            raise AttributeError("Entities cannot be merged.")
+        merged = self.copy()
+        for prop, value in other.properties.items():
+            if not value:
+                continue
+            if not self.properties[prop]:
+                setattr(merged, prop, value)
+            # Future (ianhelle) - cannot merge ID field
+        return merged
+
+    def can_merge(self, other: Any) -> bool:
+        """
+        Return True if the entities can be merged.
+
+        Parameters
+        ----------
+        other : Any
+            The other entity (object) to check
+
+        Returns
+        -------
+        bool
+            True if other has no conflicting properties.
+        """
+        if self.__class__ != other.__class__ or not isinstance(other, Entity):
+            return False
+
+        other_id_props = {
+            prop: value
+            for prop, value in other.properties.items()
+            if prop in self.id_properties and value
+        }
+        self_id_props = {
+            prop: value
+            for prop, value in self.properties.items()
+            if prop in self.id_properties and value
+        }
+        # Return True if there is no overlap
+        overlap = self_id_props.keys() - other_id_props.keys()
+        if not overlap:
+            return True
+        return all(self.properties[prop] == other.properties[prop] for prop in overlap)
 
     @property
     def properties(self) -> dict:
@@ -312,7 +471,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.properties.items()
-            if not isinstance(value, (Entity, list))
+            if not isinstance(value, (Entity, list)) and name != "edges"
         }
 
     def to_networkx(self, graph: nx.Graph = None) -> nx.Graph:
@@ -352,3 +511,33 @@ class Entity(ABC, Node):
                     ent_node = typing.cast(Entity, node)
                     ent_node.to_networkx(graph)
         return graph
+
+    @property
+    def pivot_funcs(self) -> List[str]:
+        """
+        Return list of current pivot functions.
+
+        Returns
+        -------
+        List[str]
+            List of pivot functions assigned to entity.
+
+        """
+        pivots = []
+        for prop in dir(self):
+            attr = getattr(self, prop)
+            if attr.__class__.__name__ != "QueryContainer":
+                continue
+            for name, qt_attr in attr:
+                if (
+                    qt_attr.__class__.__name__ == "QueryContainer"
+                    or name.startwith("_")
+                    or isinstance(qt_attr, partial)
+                ):
+                    continue
+                pivots.append(f"{prop}.{name}")
+        return pivots
+
+    def list_pivot_funcs(self):
+        """Print list of pivot functions assigned to entity."""
+        print("\n".join(self.pivot_funcs))

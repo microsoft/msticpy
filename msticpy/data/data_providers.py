@@ -39,7 +39,7 @@ __author__ = "Ian Hellen"
 _PROVIDER_DIR = "providers"
 
 _ENVIRONMENT_DRIVERS = {
-    DataEnvironment.LogAnalytics: KqlDriver,
+    DataEnvironment.AzureSentinel: KqlDriver,
     DataEnvironment.AzureSecurityCenter: KqlDriver,
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
     DataEnvironment.MDATP: MDATPDriver,
@@ -327,7 +327,7 @@ class QueryProvider:
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
-        if "print" in args or "query" in args:
+        if "print" in args or "query" in args or "print_query" in kwargs:
             return query_str
 
         # Handle any query options passed

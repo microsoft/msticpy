@@ -10,7 +10,12 @@ from .azure_resource import AzureResource
 from .cloud_application import CloudApplication
 from .dns import Dns
 from .entity import Entity
-from .entity_enums import Algorithm, ElevationToken, OSFamily, RegistryHive
+from .entity_enums import (  # noqa: F401
+    Algorithm,
+    ElevationToken,
+    OSFamily,
+    RegistryHive,
+)
 from .file import File
 from .file_hash import FileHash
 from .geo_location import GeoLocation
@@ -31,6 +36,7 @@ from .url import Url
 Entity.ENTITY_NAME_MAP.update(
     {
         "account": Account,
+        "azureresource": AzureResource,
         "host": Host,
         "process": Process,
         "file": File,
@@ -54,5 +60,6 @@ Entity.ENTITY_NAME_MAP.update(
         "threatintelligence": Threatintelligence,
         "url": Url,
         "unknown": UnknownEntity,
+        "geolocation": GeoLocation,
     }
 )
