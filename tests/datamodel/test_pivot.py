@@ -207,3 +207,28 @@ def test_entity_attr_funcs(_create_pivot_ns, test_case):
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)
     query = func(entity, print_query=True)
     check.is_in(test_case.expected, query)
+
+
+def test_misc_functions(_create_pivot_ns):
+    """Test some additional methods of pivot.py."""
+    check.greater(len(_create_pivot_ns.providers), 2)
+    _create_pivot_ns.edit_query_time(units="sec")
+    _create_pivot_ns.edit_query_time(units="day")
+    t_span = TimeSpan(end=datetime.utcnow(), period="1D")
+    _create_pivot_ns.edit_query_time(timespan=t_span)
+    check.equal(_create_pivot_ns.start, t_span.start)
+    check.equal(_create_pivot_ns.end, t_span.end)
+    check.equal(_create_pivot_ns.timespan, t_span)
+
+
+_ENTITY_PIVOTS = [
+    pytest.param(entities.Host, 25, id="Host"),
+    pytest.param(entities.IpAddress, 25, id="IpAddress"),
+    pytest.param(entities.Account, 20, id="Account"),
+]
+
+
+@pytest.mark.parametrize("entity, expected_funcs", _ENTITY_PIVOTS)
+def test_entity_list_piv_functions(_create_pivot_list, entity, expected_funcs):
+    """Test the pivot_funcs property."""
+    check.greater(len(entity.get_pivot_list()), expected_funcs)

@@ -512,8 +512,8 @@ class Entity(ABC, Node):
                     ent_node.to_networkx(graph)
         return graph
 
-    @property
-    def pivot_funcs(self) -> List[str]:
+    @classmethod
+    def get_pivot_list(cls) -> List[str]:
         """
         Return list of current pivot functions.
 
@@ -524,14 +524,14 @@ class Entity(ABC, Node):
 
         """
         pivots = []
-        for prop in dir(self):
-            attr = getattr(self, prop)
+        for prop in dir(cls):
+            attr = getattr(cls, prop)
             if attr.__class__.__name__ != "QueryContainer":
                 continue
             for name, qt_attr in attr:
                 if (
                     qt_attr.__class__.__name__ == "QueryContainer"
-                    or name.startwith("_")
+                    or name.startswith("_")
                     or isinstance(qt_attr, partial)
                 ):
                     continue
@@ -540,4 +540,4 @@ class Entity(ABC, Node):
 
     def list_pivot_funcs(self):
         """Print list of pivot functions assigned to entity."""
-        print("\n".join(self.pivot_funcs))
+        print("\n".join(self.get_pivot_list()))
