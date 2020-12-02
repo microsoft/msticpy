@@ -461,7 +461,7 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(lu_result.status, 2)
         lu_result = provider._check_ioc_type(ioc="123", ioc_type="dns")
         self.assertEqual(lu_result.status, 2)
-        lu_result = provider._check_ioc_type(ioc="123456", ioc_type="file_hash")
+        lu_result = provider._check_ioc_type(ioc="424246", ioc_type="file_hash")
         self.assertEqual(lu_result.status, 2)
 
     def test_tiseverity(self):

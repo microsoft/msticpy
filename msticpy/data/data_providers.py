@@ -4,28 +4,34 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-from functools import partial
-from pathlib import Path
-from typing import Union, Any, List, Dict, Optional
 import warnings
+from datetime import datetime
+from functools import partial
+from itertools import tee
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
+from tqdm.auto import tqdm
 
+from .._version import VERSION
+from ..common import pkg_config as config
+from ..common.utility import export, valid_pyname
+from .browsers.query_browser import browse_queries
 from .drivers import (
     DriverBase,
     KqlDriver,
-    SecurityGraphDriver,
-    MDATPDriver,
     LocalDataDriver,
+    MDATPDriver,
+    MordorDriver,
+    SecurityGraphDriver,
     SplunkDriver,
 )
-from .query_store import QueryStore
-from .query_container import QueryContainer
 from .param_extractor import extract_query_params
+from .query_container import QueryContainer
 from .query_defns import DataEnvironment
-from ..common.utility import export, valid_pyname
-from ..common import pkg_config as config
-from .._version import VERSION
+from .query_source import QuerySource
+from .query_store import QueryStore
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -39,6 +45,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.MDATP: MDATPDriver,
     DataEnvironment.LocalData: LocalDataDriver,
     DataEnvironment.Splunk: SplunkDriver,
+    DataEnvironment.Mordor: MordorDriver,
 }
 
 
@@ -52,7 +59,6 @@ class QueryProvider:
 
     """
 
-    # pylint: disable=too-many-branches
     def __init__(  # noqa: MC0001
         self,
         data_environment: Union[str, DataEnvironment],
@@ -100,44 +106,18 @@ class QueryProvider:
                 )
 
         self._query_provider = driver
+        self.all_queries = QueryContainer()
 
-        settings: Dict[str, Any] = config.settings.get(  # type: ignore
-            "QueryDefinitions"
-        )  # type: ignore
-        all_query_paths = []
-        for default_path in settings.get("Default"):  # type: ignore
-            qry_path = self._resolve_package_path(default_path)
-            if qry_path:
-                all_query_paths.append(qry_path)
-
-        if settings.get("Custom") is not None:
-            for custom_path in settings.get("Custom"):  # type: ignore
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
-        if query_paths:
-            for custom_path in query_paths:
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
-
-        if not all_query_paths:
-            raise RuntimeError(
-                "No valid query definition files found. ",
-                "Please check your msticpyconfig.yaml settings.",
+        # Add any query files
+        data_env_queries: Dict[str, QueryStore] = {}
+        if driver.use_query_paths:
+            data_env_queries.update(
+                self._read_queries_from_paths(query_paths=query_paths)
             )
-        data_env_queries = QueryStore.import_files(
-            source_path=all_query_paths, recursive=True
+        self._query_store = data_env_queries.get(
+            self._environment, QueryStore(self._environment)
         )
-
-        if self._environment in data_env_queries:
-            self._query_store = data_env_queries[self._environment]
-            self.all_queries = QueryContainer()
-            self._add_query_functions()
-        else:
-            warnings.warn(f"No queries found for environment {self._environment}")
-
-    # pylint: disable=too-many-branches
+        self._add_query_functions()
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -158,14 +138,17 @@ class QueryProvider:
             Connection string for the data source
 
         """
+        self._query_provider.connect(connection_str=connection_str, **kwargs)
+
         # If the driver has any attributes to expose via the provider
         # add those here.
         for attr_name, attr in self._query_provider.public_attribs.items():
             setattr(self, attr_name, attr)
-        self._query_provider.connect(connection_str=connection_str, **kwargs)
-        dyn_queries, container = self._query_provider.service_queries
-        if dyn_queries:
-            self._add_service_queries(container=container, queries=dyn_queries)
+
+        # Add any built-in or dynamically retrieved queries from driver
+        if self._query_provider.has_driver_queries:
+            driver_queries = self._query_provider.driver_queries
+            self._add_driver_queries(queries=driver_queries)
 
     @property
     def connected(self) -> bool:
@@ -284,8 +267,7 @@ class QueryProvider:
         query_options = kwargs.pop("query_options", {}) or kwargs
         return self._query_provider.query(query, **query_options)
 
-    @staticmethod
-    def browse_queries(query_provider, **kwargs):
+    def browse_queries(self, **kwargs):
         """
         Return QueryProvider query browser.
 
@@ -305,9 +287,7 @@ class QueryProvider:
             SelectItem browser for TI Data.
 
         """
-        # Placeholder for class documentation - this function is
-        # replaced by nbtools\query_browser
-        del query_provider, kwargs
+        return browse_queries(self, **kwargs)
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -332,19 +312,69 @@ class QueryProvider:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        param_formatters = self._query_provider.formatters
-        query_str = query_source.create_query(formatters=param_formatters, **params)
+        split_by = kwargs.pop("split_query_by", None)
+        if split_by:
+            split_result = self._exec_split_query(
+                split_by=split_by,
+                query_source=query_source,
+                query_params=params,
+                args=args,
+                **kwargs,
+            )
+            if split_result is not None:
+                return split_result
+            # if split queries could not be created, fall back to default
+        query_str = query_source.create_query(
+            formatters=self._query_provider.formatters, **params
+        )
         if "print" in args or "query" in args:
             return query_str
 
         # Handle any query options passed
+        query_options = self._get_query_options(params, kwargs)
+        return self._query_provider.query(query_str, query_source, **query_options)
+
+    @staticmethod
+    def _get_query_options(
+        params: Dict[str, Any], kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return any kwargs not already in params."""
         query_options = kwargs.pop("query_options", {})
         if not query_options:
             # Any kwargs left over we send to the query provider driver
             query_options = {
                 key: val for key, val in kwargs.items() if key not in params
             }
-        return self._query_provider.query(query_str, query_source, **query_options)
+        return query_options
+
+    def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
+        """Fetch queries from YAML files in specified paths."""
+        settings: Dict[str, Any] = config.settings.get(  # type: ignore
+            "QueryDefinitions"
+        )  # type: ignore
+        all_query_paths = []
+        for default_path in settings.get("Default"):  # type: ignore
+            qry_path = self._resolve_package_path(default_path)
+            if qry_path:
+                all_query_paths.append(qry_path)
+
+        if settings.get("Custom") is not None:
+            for custom_path in settings.get("Custom"):  # type: ignore
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    all_query_paths.append(qry_path)
+        if query_paths:
+            for custom_path in query_paths:
+                qry_path = self._resolve_path(custom_path)
+                if qry_path:
+                    all_query_paths.append(qry_path)
+
+        if not all_query_paths:
+            raise RuntimeError(
+                "No valid query definition files found. ",
+                "Please check your msticpyconfig.yaml settings.",
+            )
+        return QueryStore.import_files(source_path=all_query_paths, recursive=True)
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
@@ -375,19 +405,93 @@ class QueryProvider:
             setattr(current_node, query_name, query_func)
             setattr(self.all_queries, query_name, query_func)
 
-    def _add_service_queries(
-        self, container: Union[str, List[str]], queries: Dict[str, str]
-    ):
-        """Add additional queries to the query store."""
-        for q_name, q_text in queries.items():
+    def _add_driver_queries(self, queries: Iterable[Dict[str, str]]):
+        """Add driver queries to the query store."""
+        for query in queries:
             self._query_store.add_query(
-                name=q_name, query=q_text, query_paths=container
+                name=query["name"],
+                query=query["query"],
+                query_paths=query["query_container"],
+                description=query["description"],
             )
-
         # For now, just add all of the functions again (with any connect-time acquired
         # queries) - we could be more efficient than this but unless there are 1000s of
         # queries it should not be noticeable.
         self._add_query_functions()
+
+    def _exec_split_query(
+        self,
+        split_by: str,
+        query_source: QuerySource,
+        query_params: Dict[str, Any],
+        args,
+        **kwargs,
+    ) -> Union[pd.DataFrame, str, None]:
+        start = query_params.pop("start", None)
+        end = query_params.pop("end", None)
+        if not (start or end):
+            print(
+                "Cannot split a query that does not have 'start' and 'end' parameters"
+            )
+            return None
+        try:
+            split_delta = pd.Timedelta(split_by)
+        except ValueError:
+            split_delta = pd.Timedelta("1D")
+
+        ranges = self._calc_split_ranges(start, end, split_delta)
+
+        split_queries = [
+            query_source.create_query(
+                formatters=self._query_provider.formatters,
+                start=q_start,
+                end=q_end,
+                **query_params,
+            )
+            for q_start, q_end in ranges
+        ]
+        if "print" in args or "query" in args:
+            return "\n\n".join(split_queries)
+
+        # Retrive any query options passed (other than query params)
+        # and send to query function.
+        query_options = self._get_query_options(query_params, kwargs)
+        query_dfs = [
+            self._query_provider.query(query_str, query_source, **query_options)
+            for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
+        ]
+
+        return pd.concat(query_dfs)
+
+    @staticmethod
+    def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
+        """Return a list of time ranges split by `split_delta`."""
+        # Use pandas date_range and split the result into 2 iterables
+        s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
+        next(e_ranges, None)  # skip to the next item in the 2nd iterable
+        # Zip them together to get a list of (start, end) tuples of ranges
+        # Note: we subtract 1 nanosecond from the 'end' value of each range so
+        # to avoid getting duplicated records at the boundaries of the ranges.
+        # Some providers don't have nanosecond granularity so we might
+        # get duplicates in these cases
+        ranges = [
+            (s_time, e_time - pd.Timedelta("1ns"))
+            for s_time, e_time in zip(s_ranges, e_ranges)
+        ]
+
+        # Since the generated time ranges are based on deltas from 'start'
+        # we need to adjust the end time on the final range.
+        # If the difference between the calculated last range end and
+        # the query 'end' that the user requested is small (< 10% of a delta),
+        # we just replace the last "end" time with our query end time.
+        if (ranges[-1][1] - end) < (split_delta / 10):
+            ranges[-1] = ranges[-1][0], end
+        else:
+            # otherwise append a new range starting after the last range
+            # in ranges and ending in 'end"
+            # note - we need to add back our subtracted 1 nanosecond
+            ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
+        return ranges
 
     @classmethod
     def _resolve_package_path(cls, config_path: str) -> Optional[str]:

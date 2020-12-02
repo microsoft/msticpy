@@ -18,13 +18,36 @@ __author__ = "Ian Hellen"
 
 
 def _get_dot_path(elem_path: str, data_map: dict) -> Any:
-    path_elems = elem_path.split(".")
-    cur_node = data_map
-    for elem in path_elems:
-        cur_node = cur_node.get(elem, None)
-        if cur_node is None:
-            raise KeyError(f"{elem} value of {path} is not a valid path")
-    return cur_node
+    """
+    Return For dotted attribute, tries to search.
+
+    Parameters
+    ----------
+    elem_path : str
+        The attribute name or prefix.name
+    data_map : dict
+        The dictionary/map to search through.
+
+    Returns
+    -------
+    Any
+        The attribute value
+
+    Raises
+    ------
+    KeyError
+        If the key/subkey is not found
+
+    """
+    # if this is directly in the map return it
+    if elem_path in data_map:
+        return data_map[elem_path]
+    # otherwise partition into prefix and name
+    prefix, _, name = elem_path.rpartition(".")
+    attrib = data_map.get(prefix)
+    if isinstance(attrib, dict) and name in attrib:
+        return attrib[name]
+    raise KeyError(f"'{elem_path}' not found")
 
 
 class QueryStore:
@@ -134,9 +157,7 @@ class QueryStore:
         """
         prefix = ""
         if "." in name:
-            name_parts = name.split(".")
-            name = name_parts[-1]
-            prefix = ".".join(name_parts[:-1])
+            prefix, _, name = name.rpartition(".")
 
         if isinstance(query_paths, str):
             query_paths = [query_paths]

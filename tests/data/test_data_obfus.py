@@ -6,6 +6,7 @@
 """data obfuscation tests."""
 from collections import Counter
 from pathlib import Path
+from typing import Dict, Iterable
 
 import pandas as pd
 import pytest
@@ -15,16 +16,16 @@ from msticpy.data import data_obfus
 from ..unit_test_lib import TEST_DATA_PATH
 
 
-_TEST_DATA = {
-    "hash_string": [("string", True), ("12345", True), (["12345"], True)],
+_TEST_DATA: Dict[str, Iterable] = {
+    "hash_string": [("string", True), ("42424", True), (["42424"], True)],
     "hash_item": [
         (("no-delim", None), True),
         (("one-delim", "-"), True),
         (("mul.ti.del-im", "-.@"), True),
-        ((12345, "-.@"), False),
+        ((42424, "-.@"), False),
     ],
     "hash_ip": [
-        (12345, False),
+        (42424, False),
         ("192.168.1.2", True),
         ("2a00:23c4:4780:ca00:90ab:c7fa:f451:de61", True),
         (

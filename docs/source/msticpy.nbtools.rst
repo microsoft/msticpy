@@ -58,13 +58,6 @@ msticpy.nbtools.process_tree module
     :undoc-members:
     :show-inheritance:
 
-msticpy.nbtools.query\_browser module
--------------------------------------
-
-.. automodule:: msticpy.nbtools.query_browser
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 msticpy.nbtools.ti\_browser module
 ----------------------------------
