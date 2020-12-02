@@ -62,7 +62,7 @@ does a simple hash of the input. If the input is a numeric string it will output
     > hash_string('sensitive data')
     jdiqcnrqmlidkd
 
-    > hash_string('12345')
+    > hash_string('42424')
     59944
 
 

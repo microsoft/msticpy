@@ -14,6 +14,7 @@ QueryDefinitions:
 TIProviders:
   OTX:
     Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       AuthKey: "987654321"
     Primary: True
     Provider: "OTX" # Explicitly name provider to override
@@ -39,6 +40,7 @@ TIProviders:
     Provider: "NoLoad-AzSTI"
   OpenPageRank:
     Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
     Provider: "OPR"
@@ -54,10 +56,12 @@ OtherProviders:
     Provider: "GeoLiteLookup"
   IPStack:
     Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       AuthKey: "987654321-222"
     Provider: "IPStackLookup"
 AzureCLI:
   Args:
     clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
     tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
