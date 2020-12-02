@@ -143,7 +143,9 @@ def test_splunk_connect_req_params(splunk_client):
     check.is_true(sp_driver.connected)
 
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
-    sp_cntn_str = f"host='localhost'; username='ian'; password='{_FAKE_STRING}'"  # nosec
+    sp_cntn_str = (
+        f"host='localhost'; username='ian'; password='{_FAKE_STRING}'"  # nosec
+    )
     sp_driver = SplunkDriver()
 
     sp_driver.connect(connection_str=sp_cntn_str)
@@ -160,7 +162,9 @@ def test_splunk_connect_errors(splunk_client):
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
         # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
-        sp_driver.connect(host="AuthError", username="ian", password=_FAKE_STRING)  # nosec
+        sp_driver.connect(
+            host="AuthError", username="ian", password=_FAKE_STRING
+        )  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
@@ -169,7 +173,9 @@ def test_splunk_connect_errors(splunk_client):
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
         # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
-        sp_driver.connect(host="HTTPError", username="ian", password=_FAKE_STRING)  # nosec
+        sp_driver.connect(
+            host="HTTPError", username="ian", password=_FAKE_STRING
+        )  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
