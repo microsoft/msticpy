@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Pivot query functions class."""
 import itertools
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, abc
 from functools import wraps
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
@@ -97,12 +97,6 @@ class PivotQueryFunctions:
             Iterable of tuples listing:
             query_name, param_type, query_func
 
-        Yields
-        -------
-        Iterator[Iterable[Tuple[str, str, str, Callable[[Any], Any]]]]
-            Iterable of tuples listing:
-            query_name, query_path, param_type, query_func
-
         """
         param_usage = self.param_usage.get(param)
         if param_usage is None:
@@ -133,11 +127,6 @@ class PivotQueryFunctions:
             Iterable of tuples listing:
             query_name, query_func
 
-        Yields
-        -------
-        Iterator[Iterable[Tuple[str, Callable[[Any], Any]]]]
-            Iterable of tuples listing:
-            query_name, query_path, query_func
         """
         param_usage = self.param_usage.get(param)
         if not param_usage:
@@ -378,6 +367,9 @@ def _create_data_func_exec(
     ----------
     func : Callable[[Any], pd.DataFrame]
         Query function to wrap
+    func_params : Dict[str, ParamAttrs]
+        Dictionary of function parameter definitions
+        for this function.
 
     Returns
     -------
@@ -398,6 +390,7 @@ def _create_data_func_exec(
     a single DataFrame output.
 
     If the inputs are all single values, a single call is made, as normal.
+
     """
 
     @wraps(func)
@@ -495,7 +488,6 @@ def _exec_query_for_values(func, func_kwargs, func_params, parent_kwargs):
     return pd.concat(row_results, ignore_index=True)
 
 
-# pylint: disable=isinstance-second-argument-not-valid-type
 def _check_var_params_require_iter(
     func_params: Dict[str, ParamAttrs], func_kwargs: Dict[str, Any], **kwargs
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -506,7 +498,7 @@ def _check_var_params_require_iter(
         if kw_name in _DEF_IGNORE_PARAM:
             continue
         func_kwargs.pop(kw_name)
-        if isinstance(arg, str) or not isinstance(arg, Iterable):
+        if isinstance(arg, str) or not isinstance(arg, abc.Iterable):
             # treat as scalar/simple type
             simple_params[kw_name] = arg
         else:
@@ -517,6 +509,3 @@ def _check_var_params_require_iter(
             # but also add it to the list of iterable params
             var_iter_params[kw_name] = list(arg)
     return var_iter_params, simple_params
-
-
-# pylint: enable=isinstance-second-argument-not-valid-type

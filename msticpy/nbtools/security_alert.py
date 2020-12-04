@@ -11,7 +11,7 @@ from typing import Dict, Any, List
 import pandas as pd
 
 from .._version import VERSION
-from .entityschema import Entity, UnknownEntity
+from ..datamodel.entities import Entity, UnknownEntity
 from .security_base import SecurityBase
 from ..common.utility import export
 

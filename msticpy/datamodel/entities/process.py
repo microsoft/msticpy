@@ -146,13 +146,13 @@ class Process(Entity):
             self.ImageFile = File(src_event=src_event, role="parent")
 
     @property
-    def ProcessName(self) -> Optional[str]:
+    def ProcessName(self) -> Optional[str]:  # noqa: N802
         """Return the name of the process file."""
         file = self["ImageFile"]
         return file.Name if file else None
 
     @property
-    def ProcessFilePath(self) -> Optional[str]:
+    def ProcessFilePath(self) -> Optional[str]:  # noqa: N802
         """Return the name of the process file path."""
         file = self["ImageFile"]
         return file.FullPath if file else None

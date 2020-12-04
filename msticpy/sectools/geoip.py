@@ -42,7 +42,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.provider_settings import ProviderSettings, get_provider_settings
 from ..common.utility import export
-from ..nbtools.entityschema import GeoLocation, IpAddress
+from ..datamodel.entities import GeoLocation, IpAddress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -7,6 +7,7 @@
 from functools import partial
 from typing import Any, Dict, Type
 
+from ..common.utility import check_kwarg
 from .._version import VERSION
 
 __version__ = VERSION
@@ -35,9 +36,12 @@ class QueryContainer:
                 pass
             else:
                 return attr
+        try:
+            check_kwarg(name, list(self.__dict__.keys()))
+        except NameError:
+            pass
         raise AttributeError(
-            f"Query attribute {name} not found.",
-            "Use QueryProvider.list_queries() to see available queries.",
+            f"{self.__class__.__name__} object has no attribute {name}"
         )
 
     def __repr__(self):
@@ -49,7 +53,7 @@ class QueryContainer:
             elif isinstance(obj, partial):
                 repr_list.append(f"{name} (query)")
             elif not name.startswith("_"):
-                repr_list.append(f"{name} (other)")
+                repr_list.append(f"{name} {type(obj).__name__}")
         return "\n".join(repr_list)
 
     def __call__(self, *args, **kwargs):

@@ -50,19 +50,26 @@ msticpy.common.secret\_settings module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.provider\_settings module
-------------------------------------------
+msticpy.common.provider\_settings module
+----------------------------------------
 
 .. automodule:: msticpy.common.provider_settings
     :members:
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.exceptions module
-----------------------------------
+msticpy.common.exceptions module
+--------------------------------
 
 .. automodule:: msticpy.common.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
 
+msticpy.common.timespan module
+------------------------------
+
+.. automodule:: msticpy.common.timespan
+    :members:
+    :undoc-members:
+    :show-inheritance:

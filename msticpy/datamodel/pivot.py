@@ -8,12 +8,16 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, Optional, Type
 
 import pkg_resources
+from IPython import get_ipython
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
 from ..data import QueryProvider
 from ..nbtools.nbwidgets import QueryTime
 from ..sectools import TILookup
+
+# pylint: disable=unused-import
+from . import pivot_pd_accessor  # noqa: F401
 from .pivot_data_queries import add_data_queries_to_entities
 from .pivot_register_reader import register_pivots
 from .pivot_ti_provider import add_ioc_queries_to_entities
@@ -24,8 +28,15 @@ __author__ = "Ian Hellen"
 _DEF_PIVOT_REG_FILE = "resources/mp_pivot_reg.yaml"
 
 
+# Import IPython magic if in an IPython environment
+if get_ipython():
+    from . import txt_df_magic  # noqa: F401
+
+
 class Pivot:
     """Pivot environment loader."""
+
+    current: Optional["Pivot"] = None
 
     def __init__(
         self,
@@ -47,9 +58,11 @@ class Pivot:
             from `namespace`), by default None
         timespan : Optional[TimeSpan], optional
             The default timespan used by providers that require
-            start and end times, by default the time range used is
-            24 hours prio
+            start and end times. By default the time range is initialized
+            to be 24 hours prior to the load time.
+
         """
+        self.__class__.current = self
         self._query_time: QueryTime
         if timespan is not None:
             self.timespan = timespan
@@ -73,7 +86,7 @@ class Pivot:
 
         # Add pivots from config registry
         register_pivots(
-            file_path=self._get_def_pivot_reg(), container="other", namespace=namespace
+            file_path=self._get_def_pivot_reg(), container="util", namespace=namespace
         )
 
     def _get_all_providers(
@@ -163,14 +176,24 @@ class Pivot:
         Any
             An instance of the provider or None
             if the Pivot environment does not have one.
+
         """
         return self._providers.get(name)
 
-    def edit_query_time(self, units: str = "day", timespan: Optional[TimeSpan] = None):
-        """Display a QueryTime widget to get the timespan."""
-        if self._query_time is None or self._query_time.units != units:
-            self._set_default_query_time(units, 1)
-        if timespan is not None:
+    def edit_query_time(self, timespan: Optional[TimeSpan] = None):
+        """
+        Display a QueryTime widget to get the timespan.
+
+        Parameters
+        ----------
+        timespan : Optional[TimeSpan], optional
+            Pre-populate the timespan shown by the QueryTime editor,
+            by default None
+
+        """
+        if timespan is None:
+            self._set_default_query_time(units="day", before=1)
+        else:
             self._query_time = QueryTime(
                 timespan=timespan,
                 label="Set time range for pivot functions.",
@@ -225,11 +248,11 @@ class Pivot:
 
         Parameters
         ----------
-        file_path : str
+        pivot_reg_path : str
             Path to config yaml file
         namespace : Dict[str, Any], optional
             Namespace to search for existing instances of classes, by default None
-        container : str, optional
+        def_container : str, optional
             Container name to use for entity pivot functions, by default "other"
         force_container : bool, optional
             Force `container` value to be used even if entity definitions have

@@ -12,7 +12,7 @@ from typing import Iterable, List, Tuple
 import folium
 
 from .._version import VERSION
-from .entityschema import Entity, GeoLocation, IpAddress
+from ..datamodel.entities import Entity, GeoLocation, IpAddress
 
 # pylint: enable=locally-disabled, unused-import
 from ..common.utility import export

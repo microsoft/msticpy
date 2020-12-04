@@ -28,7 +28,7 @@ from ipwhois import (
 
 from .._version import VERSION
 from ..common.utility import export
-from ..nbtools.entityschema import GeoLocation, IpAddress
+from ..datamodel.entities import GeoLocation, IpAddress
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -77,6 +77,9 @@ def convert_to_ip_entities(
         Use DataFrame as input
     ip_col : str
         Column containing IP addresses
+    geo_lookup : bool
+        If true, do geolocation lookup on IPs,
+        by default, True
 
     Returns
     -------
@@ -115,7 +118,7 @@ def convert_to_ip_entities(
     return ip_entities
 
 
-@export
+@export  # noqa: MC0001
 # pylint: disable=too-many-return-statements, invalid-name
 def get_ip_type(ip: str = None, ip_str: str = None) -> str:
     """
@@ -125,8 +128,10 @@ def get_ip_type(ip: str = None, ip_str: str = None) -> str:
 
     Parameters
     ----------
-    ip_str : str
+    ip : str
         The string of the IP Address
+    ip_str : str
+        The string of the IP Address - alias for `ip`
 
     Returns
     -------
@@ -220,8 +225,9 @@ def get_whois_info(
 def get_whois_df(
     data: pd.DataFrame,
     ip_column: str,
-    asn_col="AsnDescription",
-    whois_col=None,
+    all_columns: bool = False,
+    asn_col: str = "AsnDescription",
+    whois_col: Optional[str] = None,
     show_progress: bool = False,
 ) -> pd.DataFrame:
     """
@@ -233,12 +239,16 @@ def get_whois_df(
         Input DataFrame
     ip_column : str
         Column name of IP Address to look up.
+    all_columns:
+        Expand all whois data to columns.
     asn_col : str, optional
         Name of the output column for ASN description,
-        by default "ASNDescription"
+        by default "ASNDescription".
+        Ignored if `all_columns` is True.
     whois_col : str, optional
         Name of the output column for full whois data,
         by default "WhoIsData"
+        Ignored if `all_columns` is True.
     show_progress : bool, optional
         Show progress for each query, by default False
 
@@ -248,6 +258,12 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
+    if all_columns:
+        return data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[1],
+            axis=1,
+            result_type="expand",
+        )
     data = data.copy()
     if whois_col is not None:
         data[[asn_col, whois_col]] = data.apply(

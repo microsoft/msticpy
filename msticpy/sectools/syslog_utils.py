@@ -22,7 +22,7 @@ import pytz
 from .._version import VERSION
 from ..common.exceptions import MsticpyException
 from ..common.utility import export
-from ..nbtools.entityschema import GeoLocation, Host, IpAddress
+from ..datamodel.entities import GeoLocation, Host, IpAddress
 from .ip_utils import convert_to_ip_entities
 
 __version__ = VERSION

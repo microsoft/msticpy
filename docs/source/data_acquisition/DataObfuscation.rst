@@ -504,9 +504,9 @@ Use the :py:func:`check_obfuscation<msticpy.data.data_obfus.check_obfuscation>`
 function to ensure that you have obfuscated all of the data columns that
 you need.
 
-Use `silent=False` to print out the results.
-If you use `silent=True` (the default) it will return 2 lists of `unchanged` and
-`obfuscated` columns.
+Use ``silent=False`` to print out the results.
+If you use ``silent=True`` (the default) it will return 2 lists of ``unchanged`` and
+``obfuscated`` columns.
 
 .. note:: by default this will check only the first row of the data.
    You can check other rows using the index parameter.

@@ -65,9 +65,10 @@ pivot_providers:
       IpAddress: Address
     func_df_param_name: data
     func_df_col_param_name: ip_column
-    func_out_column_name: ip
+    func_out_column_name: query
     func_static_params:
-      whois_col: whois_result
+      all_columns: True
+      show_progress: False
     func_input_value_arg: ip_address
   ip_type:
     src_module: msticpy.sectools.ip_utils
@@ -137,11 +138,54 @@ pivot_providers:
       Url: host
       Host: fqdn
     func_input_value_arg: url_domain
+  brow_shot:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: screenshot
+    func_new_name: url_screenshot
+    input_type: value
+    can_iterate: False
+    entity_map:
+      Url: Url
+    func_input_value_arg: url
+  domain_components:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: dns_components
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: host
+      Host: fqdn
+    func_input_value_arg: domain
+  url_components:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: url_components
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: Url
+    func_input_value_arg: url
+  dns_resolve:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: dns_resolve
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: Url
+      Host: fqdn
+    func_input_value_arg: url_domain
+  ip_rev_resolve:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: ip_rev_resolve
+    input_type: value
+    can_iterate: True
+    entity_map:
+      IpAddress: Address
+    func_input_value_arg: ip_address
   geoip_maxmind:
     src_module: msticpy.sectools.geoip
     src_class: GeoLiteLookup
     src_func_name: lookup_ips
-    func_new_name: get_geo_location_mm
+    func_new_name: geoloc_mm
     input_type: dataframe
     entity_map:
       IpAddress: Address
@@ -153,7 +197,7 @@ pivot_providers:
     src_module: msticpy.sectools.geoip
     src_class: IPStackLookup
     src_func_name: lookup_ips
-    func_new_name: get_geo_location_ips
+    func_new_name: geoloc_ips
     input_type: dataframe
     entity_map:
       IpAddress: Address

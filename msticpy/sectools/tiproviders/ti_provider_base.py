@@ -14,6 +14,7 @@ requests per minute for the account type that you have.
 """
 import abc
 from abc import ABC
+import collections
 import math  # noqa
 import pprint
 import re
@@ -715,8 +716,7 @@ def generate_items(
     """
     del obs_col, ioc_type_col
 
-    # pylint: disable=isinstance-second-argument-not-valid-type
-    if isinstance(data, Iterable):
+    if isinstance(data, collections.abc.Iterable):
         for item in data:
             yield item, TIProvider.resolve_ioc_type(item)
     else:

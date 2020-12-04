@@ -93,7 +93,7 @@ _PIVOT_QUERIES = [
         PivotQuery(
             entity=entities.IpAddress,
             value=_IP_LIST,
-            provider="other",
+            provider="util",
             pivot_func="ip_type",
             func_param="ip_str",
             src_df_col="ip",
@@ -106,7 +106,7 @@ _PIVOT_QUERIES = [
         PivotQuery(
             entity=entities.Process,
             value=_B64_ENCODINGS,
-            provider="other",
+            provider="util",
             pivot_func="b64decode",
             func_param="value",
             src_df_col="cmdline",
@@ -119,7 +119,7 @@ _PIVOT_QUERIES = [
         PivotQuery(
             entity=entities.Url,
             value=_URLS,
-            provider="other",
+            provider="util",
             pivot_func="extract_iocs",
             func_param="value",
             src_df_col="cmdline",

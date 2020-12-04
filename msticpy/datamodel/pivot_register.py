@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot helper functions ."""
+from collections import abc
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import attr
 import pandas as pd
@@ -17,7 +18,13 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_DF_SRC_COL_PARAM_NAMES = ["input_column", "input_col", "src_column", "src_col"]
+_DF_SRC_COL_PARAM_NAMES = [
+    "column",
+    "input_column",
+    "input_col",
+    "src_column",
+    "src_col",
+]
 
 
 @attr.s(auto_attribs=True)
@@ -266,7 +273,8 @@ def _arg_to_dframe(arg_val, col_name: str = "param_value"):
     """
     Convert a scalar or Iterable value to a DataFrame.
 
-    Parameters:
+    Parameters
+    ----------
     arg_val: Any
         The value to be converted
     col_name: Optional[str]
@@ -284,10 +292,8 @@ def _arg_to_dframe(arg_val, col_name: str = "param_value"):
     """
     if isinstance(arg_val, pd.DataFrame):
         return arg_val
-    # pylint: disable=isinstance-second-argument-not-valid-type
-    if isinstance(arg_val, str) or not isinstance(arg_val, Iterable):
+    if isinstance(arg_val, str) or not isinstance(arg_val, abc.Iterable):
         return pd.DataFrame([arg_val], columns=[col_name])
-    # pylint: enable=isinstance-second-argument-not-valid-type
     return pd.DataFrame(arg_val, columns=[col_name])
 
 
@@ -346,9 +352,15 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg):
         result = target_func(**param_dict, **(pivot_reg.func_static_params or {}))
         if not isinstance(result, pd.DataFrame):
             col_value = next(iter(row._asdict().values()))
-            result = pd.DataFrame(
-                [[col_value, str(result)]], columns=[res_key_col_name, "result"]
-            )
+            if isinstance(result, dict):
+                # if result is a dict - make that into a row.
+                result = pd.DataFrame(pd.Series(result)).T
+                result[res_key_col_name] = col_value
+            else:
+                # just make the result into a string and use that as a single col
+                result = pd.DataFrame(
+                    [[col_value, str(result)]], columns=[res_key_col_name, "result"]
+                )
         results.append(result)
     return pd.concat(results, ignore_index=True)
 

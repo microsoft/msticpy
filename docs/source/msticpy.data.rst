@@ -4,12 +4,6 @@ msticpy.data package
 msticpy.nbtools.entityschema module
 -----------------------------------
 
-.. automodule:: msticpy.nbtools.entityschema
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :exclude-members: ENTITY_NAME_MAP
-
 msticpy.nbtools.security\_alert module
 --------------------------------------
 

@@ -15,7 +15,7 @@ import pandas as pd
 from .._version import VERSION
 from ..common.utility import escape_windows_path, export
 from ..data.query_defns import DataEnvironment, DataFamily, QueryParamProvider
-from .entityschema import Account, Entity, Host, Process
+from ..datamodel.entities import Account, Entity, Host, Process
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -161,6 +161,7 @@ class File(Entity):
         Optional[str]
             Returns first-defined file hash in order of
             SHA256, SHA1, MD5, SHA256AC (authenticode)
+
         """
         if self.FileHashes:
             alg_order = {

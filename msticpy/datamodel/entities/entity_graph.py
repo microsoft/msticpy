@@ -29,6 +29,7 @@ class Node:
             Target node.
         edge_attrs : Optional[Dict[str, Any]], optional
             Attributes to assign to new edge, by default None
+
         """
         edge = Edge(self, target, edge_attrs) if edge_attrs else Edge(self, target)
         if not self.has_edge(target):
@@ -56,6 +57,7 @@ class Edge:
             Target node.
         attrs : Dict[str, Any], optional
             Dictionary of name/value edge attributes, by default None
+
         """
         self.source: Node = source
         self.target: Node = target

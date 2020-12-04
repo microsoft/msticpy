@@ -309,7 +309,7 @@ def check_and_install_missing_packages(
 def md(
     string: str,
     styles: Union[str, Iterable[str]] = None,
-    disp_id: Optional[DisplayHandle] = None,
+    disp_id: Optional[Union[bool, DisplayHandle]] = None,
 ) -> DisplayHandle:
     """
     Display a string as Markdown with optional style.
@@ -322,15 +322,19 @@ def md(
         A style mnemonic or collection of styles. If multiple styles,
         these can be supplied as an interable of strings or a comma-separated
         string, by default None
-    disp_id : Optional[DisplayHandle], optional
-        A previously-created display handle in which to update the content
-        of this call, by default None
+    disp_id : Optional[Union[bool, DisplayHandle]], optional
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
 
     Returns
     -------
     DisplayHandle
         A handle to the display object that can be used to update the
         contents.
+
     """
     style_str = ""
     if isinstance(styles, str):
@@ -341,10 +345,13 @@ def md(
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
     content = HTML(f"<p style='{style_str}'>{string}</p>")
-    if disp_id is not None:
-        disp_id.update(content)
-        return disp_id
-    return display(content, display_id=True)
+
+    if isinstance(disp_id, bool) and disp_id:
+        return display(content, display_id=True)
+    if isinstance(disp_id, DisplayHandle):
+        return disp_id.update(content)
+    display(content)
+    return None
 
 
 # pylint: enable=invalid-name
@@ -360,8 +367,11 @@ def md_warn(string: str, disp_id: Optional[DisplayHandle] = None):
     string : str
         The warning message.
     disp_id : Optional[DisplayHandle], optional
-        A previously-created display handle in which to update the content
-        of this call, by default None
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
 
     Returns
     -------
@@ -382,6 +392,12 @@ def md_error(string: str, disp_id: Optional[DisplayHandle] = None):
     ----------
     string : str
         The error message.
+    disp_id : Optional[Union[bool, DisplayHandle]], optional
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
 
     """
     return md(f"Error: {string}", "bold, orange, large", disp_id)
@@ -435,14 +451,14 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
     """
     if arg_name not in legal_args:
         closest = difflib.get_close_matches(arg_name, legal_args)
-        mssg = f"{arg_name} is not a recognized argument. "
+        mssg = f"{arg_name} is not a recognized argument or attribute. "
         if len(closest) == 1:
             mssg += f"Closest match is '{closest[0]}'"
         elif closest:
             match_list = [f"'{mtch}'" for mtch in closest]
             mssg += f"Closest matches are {', '.join(match_list)}"
         else:
-            mssg += f"Valid arguments are {', '.join(legal_args)}"
+            mssg += f"Valid options are {', '.join(legal_args)}"
         raise NameError(arg_name, mssg)
 
 

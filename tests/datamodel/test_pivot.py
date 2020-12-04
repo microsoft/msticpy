@@ -47,13 +47,13 @@ PivotTestCase = namedtuple("PivotTestCase", "entity, container, funcs")
 _ENTITY_FUNCS = [
     pytest.param(PivotTestCase("Host", "AzureSentinel", 25), id="Host-AzureSentinel"),
     pytest.param(PivotTestCase("Host", "MDATP", 2), id="Host-MDATP"),
-    pytest.param(PivotTestCase("Host", "other", 3), id="Host-other"),
+    pytest.param(PivotTestCase("Host", "util", 3), id="Host-util"),
     pytest.param(
         PivotTestCase("IpAddress", "AzureSentinel", 16), id="IpAddress-AzureSentinel"
     ),
     pytest.param(PivotTestCase("IpAddress", "MDATP", 2), id="IpAddress-MDATP"),
     pytest.param(PivotTestCase("IpAddress", "ti", 8), id="IpAddress-ti"),
-    pytest.param(PivotTestCase("IpAddress", "other", 4), id="IpAddress-other"),
+    pytest.param(PivotTestCase("IpAddress", "util", 4), id="IpAddress-util"),
     pytest.param(
         PivotTestCase("Account", "AzureSentinel", 19), id="Account-AzureSentinel"
     ),
@@ -61,7 +61,7 @@ _ENTITY_FUNCS = [
     pytest.param(PivotTestCase("Url", "AzureSentinel", 7), id="Url-AzureSentinel"),
     pytest.param(PivotTestCase("Url", "MDATP", 2), id="Url-MDATP"),
     pytest.param(PivotTestCase("Url", "ti", 4), id="Url-ti"),
-    pytest.param(PivotTestCase("Url", "other", 5), id="Url-other"),
+    pytest.param(PivotTestCase("Url", "util", 5), id="Url-util"),
 ]
 
 
@@ -94,7 +94,7 @@ def test_pivot_providers(_create_pivot_list, test_case):
 #     """Function_docstring."""
 #     for entity_name in ("Host", "IpAddress", "Account", "Url"):
 #         entity = getattr(entities, entity_name)
-#         for container in ("AzureSentinel", "Splunk", "MDATP", "ti", "other"):
+#         for container in ("AzureSentinel", "Splunk", "MDATP", "ti", "util"):
 #             query_contr = getattr(entity, container, None)
 #             if not query_contr:
 #                 continue
@@ -212,8 +212,6 @@ def test_entity_attr_funcs(_create_pivot_ns, test_case):
 def test_misc_functions(_create_pivot_ns):
     """Test some additional methods of pivot.py."""
     check.greater(len(_create_pivot_ns.providers), 2)
-    _create_pivot_ns.edit_query_time(units="sec")
-    _create_pivot_ns.edit_query_time(units="day")
     t_span = TimeSpan(end=datetime.utcnow(), period="1D")
     _create_pivot_ns.edit_query_time(timespan=t_span)
     check.equal(_create_pivot_ns.start, t_span.start)

@@ -147,7 +147,7 @@ def test_obfuscate_df():
     """Test obfuscation on DataFrame."""
     win_procs = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 
-    out_df = data_obfus.obfuscate_df(win_procs)
+    out_df = data_obfus.mask_df(win_procs)
 
     check.equal(len(out_df), len(win_procs))
     for idx, row in win_procs.loc[:5].iterrows():
@@ -160,7 +160,7 @@ def test_obfuscate_df():
             else:
                 check.equal(row[mapped_col], out_df.loc[idx][mapped_col])
 
-        comp_uc, comp_ch = data_obfus.check_obfuscation(out_df, win_procs, index=idx)
+        comp_uc, comp_ch = data_obfus.check_masking(out_df, win_procs, index=idx)
         n_changed = len(
             [col for col in win_procs.columns if col in data_obfus.OBFUS_COL_MAP]
         )
@@ -174,7 +174,7 @@ def test_pandas_accessor():
     """Test obfuscation with pandas accessor."""
     win_procs = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 
-    out_df = win_procs.mp_obf.obfuscate()
+    out_df = win_procs.mp_mask.mask()
     check.equal(len(out_df), len(win_procs))
     for idx, row in win_procs.loc[:2].iterrows():
         for mapped_col in win_procs.columns:

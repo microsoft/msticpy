@@ -8,8 +8,7 @@ import unittest
 import json
 import os
 
-from msticpy.nbtools.entityschema import Entity, Account, Host, Process, File, IpAddress
-from msticpy.common.wsconfig import WorkspaceConfig
+from msticpy.datamodel.entities import Entity, Account, Host, Process, File, IpAddress
 from msticpy.data.query_defns import DataFamily, DataEnvironment
 
 

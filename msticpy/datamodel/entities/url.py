@@ -4,12 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Url Entity class."""
-from typing import Any, Dict, Mapping, Optional
-from urllib3.exceptions import LocationParseError
-from urllib3.util import parse_url, Url as Urllib3_Url
+from typing import Any, Dict, Mapping
 
 from ..._version import VERSION
 from ...common.utility import export
+from ...sectools.domain_utils import url_components
 from .entity import Entity
 
 __version__ = VERSION
@@ -30,37 +29,30 @@ class Url(Entity):
             :param src_entity: instantiate entity using properties of src entity
             :param kwargs: key-value pair representation of entity
         """
-        self.Url: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
+        if self.Url:
+            self.__dict__.update(url_components(self.Url))
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return f"{self.Url}"
 
-    @property
-    def parsed(self) -> Optional[Urllib3_Url]:
-        """Return Urllib3-parsed URL."""
-        if self.Url:
-            try:
-                return parse_url(self.Url)
-            except LocationParseError:
-                pass
-        return None
+    # # We need to do some trickery with the Url defined as
+    # # a property since base Entity class expects to be able to set
+    # # attributes directly in self.__dict__
+    # @property
+    # def Url(self) -> Optional[str]:
+    #     """Return Url."""
+    #     if self._url is None and "Url" in self.__dict__:
+    #         self.Url = self.__dict__["Url"]
+    #     return self._url
 
-    @property
-    def host(self):
-        """Return host component of Url."""
-        return self.parsed.host if self.parsed else None
-
-    @property
-    def path(self):
-        """Return path component of Url."""
-        return self.parsed.path if self.parsed else None
-
-    @property
-    def query(self):
-        """Return query component of Url."""
-        return self.parsed.query if self.parsed else None
+    # @Url.setter
+    # def Url(self, url):
+    #     """Return host component of Url."""
+    #     self._url = url
+    #     if url:
+    #         self.__dict__.update(url_components(url))
 
     _entity_schema: Dict[str, Any] = {}

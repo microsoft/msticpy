@@ -292,6 +292,7 @@ class Entity(ABC, Node):
         self.A == other.A
         self.B == "xyz" and other.B == None
         self.C == [] and other.C == [1, 2, 3]
+
         """
         if self == other:
             return True
@@ -348,6 +349,7 @@ class Entity(ABC, Node):
         -------
         bool
             True if other has no conflicting properties.
+
         """
         if self.__class__ != other.__class__ or not isinstance(other, Entity):
             return False
@@ -413,6 +415,8 @@ class Entity(ABC, Node):
         raw_entity : Mapping[str, Any]
             A mapping object (e.g. dictionary or pandas Series)
             that contains the properties of the entity.
+        entity_type : Optional[Type]
+            The entity type to create, by default None.
 
         Returns
         -------
