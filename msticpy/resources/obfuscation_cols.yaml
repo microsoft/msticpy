@@ -1,6 +1,6 @@
 Common:
   AADTenantId: uuid
-  Account: '@./:'
+  Account: acct
   Computer: '@./:.'
   DeviceDetail: dict
   Host: '@./:.'
@@ -10,15 +10,16 @@ Common:
   ResourceId: '@./:'
   SourceComputerId: uuid
   SubjectDomainName: .
-  SubjectUserName: str
+  SubjectUserName: acct
   SubjectUserSid: sid
   TargetDomainName: .
-  TargetUserName: str
+  TargetUserName: acct
   TargetUserSid: sid
   TenantId: uuid
   UserDisplayName: ' @.'
   UserId: uuid
-  UserPrincipalName: '@./:'
+  UserPrincipalName: acct
+  VMName: '@./:.'
 AAD:
   AlternateSignInName: '@./:'
   ConditionalAccessPolicies: list
@@ -36,7 +37,7 @@ O365:
   ClientMachineName: '@./:.'
   Client_IPAddress: ip
   DestMailboxId: str
-  DestMailboxOwnerUPN: '@.'
+  DestMailboxOwnerUPN: acct
   DestinationFileName: '@./:.'
   DestinationRelativeUrl: '@./:.'
   Event_Data: str
@@ -49,7 +50,7 @@ O365:
   MailboxGuid: uuid
   MailboxOwnerMasterAccountSid: '-'
   MailboxOwnerSid: '-'
-  MailboxOwnerUPN: '@./:.'
+  MailboxOwnerUPN: acct
   ModifiedObjectResolvedName: ip
   OfficeObjectId: '/:. '
   OfficeTenantId: uuid
@@ -67,7 +68,7 @@ O365:
   SourceRelativeUrl: '@./:.'
   SourceRelativeUrl_: '@./:.'
   UserDomain: '@./:.'
-  UserId_: '@./:.'
+  UserId_: acct
   UserKey: '@./:.'
   UserSharedWith: str
   _ResourceId: '@./:.'

@@ -957,7 +957,7 @@ def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1):
 
 
 @pd.api.extensions.register_dataframe_accessor("mp_timeline")
-class ProcessTreeAccessor:
+class TimeLineAccessor:
     """Pandas api extension for Timeline."""
 
     def __init__(self, pandas_obj):

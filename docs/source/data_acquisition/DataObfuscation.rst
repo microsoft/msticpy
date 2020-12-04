@@ -5,9 +5,15 @@ Sharing data, creating documents and doing public demonstrations often
 require that data containing PII or other sensitive material be
 obfuscated.
 
-MSTICPy contains a simple library to obfuscation data using hashing and
+MSTICPy contains a simple library to obfuscate data using hashing and
 random mapping of values. You can use these functions on a single data
 items or entire DataFrames.
+
+.. warning:: These functions are only intended to obfuscate data. No
+   real attempt is made to preserve the syntax and meaning of the output.
+   We recommend not trying to use an obfuscated data set as the input
+   to any analysis. Instead, perform your analysis and obfuscate the
+   results.
 
 Import the module
 -----------------
@@ -117,10 +123,16 @@ of the address. So multiple occurrences of the the same IP address will
 be converted to the same randomized output address.
 The mapping remains for the Python session.
 
-.. note: IPV6 addresses have their individual components hashed to a
+Some special IP addresses (localhost, 0.0.0.0) and the prefixes of
+reserved private addresses are preserved.
+
+.. warning:: No checking is done for collisions with public IPs that
+   get randomly mapped to a 10.x.x.x or other private address spaces.
+
+.. note:: IPV6 addresses have their individual components hashed to a
    hex string and do not use this mapping. This should still result in
    a given input IP address being mapped to the same obfuscated address.
-   The output IPV6 address will usually not be a value IP address though.
+   The output IPV6 address will usually not be a valid IP address though.
 
 
 .. parsed-literal::
@@ -153,6 +165,16 @@ The mapping remains for the Python session.
 
     > hash_ip('['192.168.3.1', '192.168.5.2', '192.168.10.2']')
     ['160.21.239.194', '160.21.103.84', '160.21.149.84']
+
+    > hash_ip("127.0.0.1")
+    '127.0.0.1'
+
+    # private network prefixes preserved
+    > hash_ip("10.1.23.456")
+    '10.19.74.1'
+
+    > hash_ip("192.168.23.456")
+    '192.168.80.1'
 
 
 hash_sid
@@ -188,6 +210,49 @@ NetworkService are preserved as-is.
 
     > hash_sid('S-1-5-18')
     S-1-5-18
+
+
+hash_account
+~~~~~~~~~~~~
+
+:py:func:`hash_sid<msticpy.data.data_obfus.hash_account>`
+will randomize an account name while preserving the structure
+and the one-to-one mapping between obfuscated and actual account names.
+It preserves built-in accounts such as "root", "SYSTEM", etc.
+
+.. parsed-literal::
+
+
+    Hash an Account to something recognizable.
+
+    Parameters
+    ----------
+    account : str
+        Account name (UPN, NT or simple name)
+
+    Returns
+    -------
+    str
+        Hashed Account
+
+**Examples**
+
+.. code:: ipython3
+
+    > hash_account("ian@mydomain.com")
+    'account-#21786@blbbrfbk.pjb'
+
+    > hash_account("NT AUTHORITY/SYSTEM")
+    'NT AUTHORITY/SYSTEM'
+
+    > hash_account("sams_linux_user")
+    'account-#26953'
+
+    > hash_account("local service")
+    'local service'
+
+    hash_account("root")
+    'root'
 
 
 hash_list
@@ -345,7 +410,7 @@ TenantId                              TimeGenerated            FlowStartTime    
 68a5a31d-7516-4c54-ad27-3b1360ce0b56  2019-02-12 14:22:40.681  2019-02-12 13:00:48.000  ibmkajbmepnmiaeilfofa  msticalertswin1  10.0.3.5       ['13.71.172.130', '13.71.172.128']      nan       nan  T             13.71.172.130
 ====================================  =======================  =======================  =====================  ===============  =============  ==================================  =======  ========  ============  =============
 
-.. note:: TenantId, ResourceGroup and VMName have been obfuscated.
+TenantId and ResourceGroup have been obfuscated but VMName and the IPAddress fields have not.
 
 
 
