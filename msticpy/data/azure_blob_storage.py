@@ -90,7 +90,7 @@ class AzureBlobStorage:
         )
         return container_df
 
-    def blobs(self, container_name: str) -> pd.DataFrame:
+    def blobs(self, container_name: str) -> Optional[pd.DataFrame]:
         """
         Get a list of blobs in a container.
 
@@ -107,11 +107,7 @@ class AzureBlobStorage:
         """
         container_client = self.abs_client.get_container_client(container_name)  # type: ignore
         blobs = list(container_client.list_blobs())
-        if blobs:
-            blobs_df = _parse_returned_items(blobs)
-        else:
-            blobs_df = None
-        return blobs_df
+        return _parse_returned_items(blobs) if blobs else None
 
     def upload_to_blob(
         self, blob: Any, container_name: str, blob_name: str, overwrite: bool = True

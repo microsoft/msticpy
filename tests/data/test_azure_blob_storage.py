@@ -9,9 +9,8 @@ import datetime
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
+
 from msticpy.data.azure_blob_storage import AzureBlobStorage
-from azure.core.exceptions import ClientAuthenticationError
 
 
 _CONTAINERS = [

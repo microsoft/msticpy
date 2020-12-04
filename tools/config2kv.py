@@ -76,7 +76,7 @@ def _read_config_settings(conf_file):
     os.environ["MSTICPYCONFIG"] = conf_file
     config.refresh_config()
     kvlt_settings = KeyVaultSettings()
-    # os.environ["MSTICPYCONFIG"] = sys_config
+    os.environ["MSTICPYCONFIG"] = sys_config
     return cur_settings, kvlt_settings
 
 
