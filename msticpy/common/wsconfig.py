@@ -213,20 +213,21 @@ class WorkspaceConfig:
 
     def _search_for_file(self, pattern: str) -> str:
         config_file = None
-        searched_configs = list(Path("..").glob(pattern))
-        if not searched_configs:
-            raise MsticpyUserConfigError(
-                *_NO_CONFIG_ERR, title="Workspace configuration missing."
-            )
-        for found_file in searched_configs:
-            test_content = self._read_config_values(str(found_file))
-            if "workspace_id" in test_content:
-                config_file = found_file
+        for start_path in (".", ".."):
+            searched_configs = list(Path(start_path).glob(pattern))
+            for found_file in searched_configs:
+                test_content = self._read_config_values(str(found_file))
+                if "workspace_id" in test_content:
+                    config_file = found_file
+                    break
+            if config_file:
                 break
-        if config_file is None:
+        else:
+            # If we've arrived here after searching current folder and parent
+            # then we give up.
             raise MsticpyUserConfigError(
                 *_NO_CONFIG_ERR, title="Workspace configuration missing."
             )
-        # Warn that we're using a "found" file
+        # Warn that we're using a "found" file, not one in the current directory
         warnings.warn("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
         return str(config_file)

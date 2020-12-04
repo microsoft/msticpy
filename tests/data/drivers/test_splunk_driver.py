@@ -113,6 +113,9 @@ def _results_reader(query_result):
             yield {"row": i, "query": query_result, "text": f"test text {i}"}
 
 
+_FAKE_STRING = "42424"
+
+
 @patch(SPLUNK_CLI_PATCH)
 def test_splunk_connect_no_params(splunk_client):
     """Check failure with no args."""
@@ -135,10 +138,14 @@ def test_splunk_connect_req_params(splunk_client):
     sp_driver = SplunkDriver()
     check.is_true(sp_driver.loaded)
 
-    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+    sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
     check.is_true(sp_driver.connected)
 
-    sp_cntn_str = "host='localhost'; username='ian'; password='12345'"  # nosec
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+    sp_cntn_str = (
+        f"host='localhost'; username='ian'; password='{_FAKE_STRING}'"  # nosec
+    )
     sp_driver = SplunkDriver()
 
     sp_driver.connect(connection_str=sp_cntn_str)
@@ -154,7 +161,10 @@ def test_splunk_connect_errors(splunk_client):
 
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
-        sp_driver.connect(host="AuthError", username="ian", password="12345")  # nosec
+        # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+        sp_driver.connect(
+            host="AuthError", username="ian", password=_FAKE_STRING
+        )  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
@@ -162,7 +172,10 @@ def test_splunk_connect_errors(splunk_client):
     sp_driver = SplunkDriver()
     print("connected", sp_driver.connected)
     with pytest.raises(MsticpyConnectionError) as mp_ex:
-        sp_driver.connect(host="HTTPError", username="ian", password="12345")  # nosec
+        # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+        sp_driver.connect(
+            host="HTTPError", username="ian", password=_FAKE_STRING
+        )  # nosec
         print("connected", sp_driver.connected)
         check.is_false(sp_driver.connected)
     check.is_in("Splunk connection", mp_ex.value.args)
@@ -180,7 +193,9 @@ def test_splunk_fired_alerts(splunk_client):
         check.is_false(sp_driver.connected)
         check.is_none(sp_driver._fired_alerts)
     check.is_in("not connected to Splunk.", mp_ex.value.args)
-    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+    sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
     check.is_true(sp_driver.connected)
 
     check.is_instance(sp_driver._fired_alerts, pd.DataFrame)
@@ -202,7 +217,8 @@ def test_splunk_saved_searches(splunk_client):
         check.is_none(sp_driver._saved_searches)
     check.is_in("not connected to Splunk.", mp_ex.value.args)
 
-    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+    sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
     check.is_true(sp_driver.connected)
 
     check.is_instance(sp_driver._saved_searches, pd.DataFrame)
@@ -232,7 +248,8 @@ def test_splunk_query_success(splunk_client, splunk_results):
         check.is_false(sp_driver.connected)
     check.is_in("not connected to Splunk.", mp_ex.value.args)
 
-    sp_driver.connect(host="localhost", username="ian", password="12345")  # nosec
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+    sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
     check.is_true(sp_driver.connected)
 
     df_result = sp_driver.query("some query")
@@ -252,6 +269,7 @@ def test_live_connect():
     """Use this to do live testing."""
     sp_driver = SplunkDriver()
     www = "splunk-mstic.westus2.cloudapp.azure.com"
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     sp_driver.connect(host=www, port=8089, username="admin", password="***")  # nosec
 
     query = """index="botsv2" earliest=08/25/2017:00:00:00 latest=08/26/2017:00:00:00
