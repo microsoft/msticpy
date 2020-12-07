@@ -161,9 +161,10 @@ class DomainValidator:
         self._check_and_load_abuselist()
         return self._ssl_abuse_list
 
-    def validate_tld(self, url_domain: str) -> bool:
+    # Leaving as class method for backward compatability
+    def validate_tld(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
         """
-        Validate if a domain's TLD appears in the IANA tld list.
+        Validate if a domain's TLD is valid.
 
         Parameters
         ----------
@@ -176,19 +177,8 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
-        if not self.tld_index:
-            warnings.warn(
-                f"No top-level domain list available - {url_domain}"
-                + " could not be verified. ",
-                RuntimeWarning,
-            )
-            return True
         _, _, tld = tldextract.extract(url_domain.lower())
-        if "." in tld:
-            ttld = tld.split(".")[1].upper()
-        else:
-            ttld = tld.upper()
-        return ttld in self.tld_index
+        return bool(tld)
 
     def is_resolvable(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
         """
@@ -206,9 +196,9 @@ class DomainValidator:
 
         """
         try:
-            dns.resolver.query(url_domain, "A")
+            dns.resolver.resolve(url_domain, "A")
             result = True
-        except Exception:  # pylint: disable=broad-except
+        except dns.resolver.NXDOMAIN:  # pylint: disable=broad-except
             result = False
 
         return result
@@ -230,9 +220,8 @@ class DomainValidator:
         """
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
-            backend = crypto.hazmat.backends.default_backend()  # type: ignore
             x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
-                cert.encode("ascii"), backend
+                cert.encode("ascii")
             )
             cert_sha1 = x509.fingerprint(
                 crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec

@@ -226,22 +226,15 @@ class AzureData:
 
         self._check_client("resource_client", sub_id)
 
-        # pylint: disable=unnecessary-comprehension
-        try:
-            [r for r in self.resource_client.resources.list()]  # type: ignore
-        except AttributeError:
-            self._legacy_auth("resource_client", sub_id)
-
+        resources = []  # type: List
         if rgroup is None:
-            # pylint: disable=line-too-long
-            resources = [resource for resource in self.resource_client.resources.list()]  # type: ignore
+            for resource in self.resource_client.resources.list():  # type: ignore
+                resources.append(resource)
         else:
-            resources = [
-                resource
-                for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
-                    rgroup
-                )
-            ]
+            for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
+                rgroup
+            ):
+                resources.append(resource)
 
         # Warn users about getting full properties for each resource
         if get_props is True:

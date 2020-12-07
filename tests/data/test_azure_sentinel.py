@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import responses
+from azure.core.exceptions import ClientAuthenticationError
 from msticpy.data.azure_data import AzureData
 from msticpy.data.azure_sentinel import AzureSentinel
 
@@ -122,6 +123,47 @@ _BOOKMARK = {
         }
     ]
 }
+_INCIDENT = {
+    "value": [
+        {
+            "id": "/subscriptions/123/resourceGroups/RG/providers/Microsoft.OperationalInsights/workspaces/WSName/providers/Microsoft.SecurityInsights/Incidents/13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+            "name": "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+            "etag": '"0b0013eb-0000-0a00-0000-5fab48a40000"',
+            "type": "Microsoft.SecurityInsights/Incidents",
+            "properties": {
+                "title": "Test Incident",
+                "description": "Test",
+                "severity": "Medium",
+                "status": "New",
+                "owner": {
+                    "objectId": "null",
+                    "email": "null",
+                    "assignedTo": "null",
+                    "userPrincipalName": "null",
+                },
+                "labels": [],
+                "firstActivityTimeUtc": "2020-11-10T21:07:48.2446898Z",
+                "lastActivityTimeUtc": "2020-11-11T02:07:48.2446898Z",
+                "lastModifiedTimeUtc": "2020-11-11T02:12:52.389123Z",
+                "createdTimeUtc": "2020-11-11T02:12:52.389123Z",
+                "incidentNumber": 44271,
+                "additionalData": {
+                    "alertsCount": 1,
+                    "bookmarksCount": 0,
+                    "commentsCount": 0,
+                    "alertProductNames": ["Azure Sentinel"],
+                    "tactics": [],
+                },
+                "firstActivityTimeGenerated": "2020-11-11T02:12:52.1908593Z",
+                "lastActivityTimeGenerated": "2020-11-11T02:12:52.1908593Z",
+                "relatedAnalyticRuleIds": [
+                    "/subscriptions/123/resourceGroups/RG/providers/Microsoft.OperationalInsights/workspaces/WSName/providers/Microsoft.SecurityInsights/alertRules/494bfb7c-e436-483d-800d-8385068c2e49"
+                ],
+                "incidentUrl": "https://portal.azure.com/#asset/Microsoft_Azure_Security_Insights/Incident/subscriptions/123/resourceGroups/RG/providers/Microsoft.OperationalInsights/workspaces/WSName/providers/Microsoft.SecurityInsights/Incidents/13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+            },
+        },
+    ]
+}
 
 
 def test_azuresent_init():
@@ -130,12 +172,11 @@ def test_azuresent_init():
     assert isinstance(azs, AzureSentinel)
 
 
-@pytest.mark.skip
 def test_azuresent_connect_exp():
     """Test connect failure."""
-    with pytest.raises(AttributeError):
+    with pytest.raises(ClientAuthenticationError):
         azs = AzureSentinel()
-        azs.connect()
+        azs.connect(auth_methods=["env"])
 
 
 @pytest.fixture(scope="module")
@@ -171,7 +212,7 @@ def test_azuresent_hunting_queries(azs_loader):
     )
     hqs = azs_loader.get_hunting_queries(sub_id="123", res_grp="RG", ws_name="WSName")
     assert isinstance(hqs, pd.DataFrame)
-    assert hqs["Query"].iloc[0] == "QueryText"
+    assert hqs["properties.Query"].iloc[0] == "QueryText"
 
 
 @responses.activate
@@ -185,7 +226,7 @@ def test_azuresent_alert_rules(azs_loader):
     )
     alerts = azs_loader.get_alert_rules(sub_id="123", res_grp="RG", ws_name="WSName")
     assert isinstance(alerts, pd.DataFrame)
-    assert alerts["query"].iloc[0] == "AlertText"
+    assert alerts["properties.query"].iloc[0] == "AlertText"
 
 
 @responses.activate
@@ -201,3 +242,73 @@ def test_azuresent_bookmarks(azs_loader):
     assert isinstance(bkmarks, pd.DataFrame)
     print(bkmarks.columns)
     assert bkmarks["name"].iloc[0] == "Bookmark Test"
+
+
+@responses.activate
+def test_azuresent_incidents(azs_loader):
+    """Test Sentinel incidents feature."""
+    responses.add(
+        responses.GET,
+        re.compile("https://management.azure.com/.*"),
+        json=_INCIDENT,
+        status=200,
+    )
+    incidents = azs_loader.get_incidents(sub_id="123", res_grp="RG", ws_name="WSName")
+    assert isinstance(incidents, pd.DataFrame)
+    assert incidents["name"].iloc[0] == "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84"
+    incident = azs_loader.get_incident(
+        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+        sub_id="123",
+        res_grp="RG",
+        ws_name="WSName",
+    )
+    assert isinstance(incident, pd.DataFrame)
+    assert incident["name"].iloc[0] == "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84"
+
+
+@responses.activate
+def test_azuresent_updates(azs_loader):
+    """Test Sentinel incident update feature."""
+    responses.add(
+        responses.PUT,
+        re.compile("https://management.azure.com/.*"),
+        json="",
+        status=201,
+    )
+    responses.add(
+        responses.GET,
+        re.compile("https://management.azure.com/.*"),
+        json=_INCIDENT,
+        status=200,
+    )
+    azs_loader.post_comment(
+        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+        comment="test",
+        sub_id="123",
+        res_grp="RG",
+        ws_name="WSName",
+    )
+
+
+@responses.activate
+def test_azuresent_comments(azs_loader):
+    """Test Sentinel comments feature."""
+    responses.add(
+        responses.PUT,
+        re.compile("https://management.azure.com/.*"),
+        json="",
+        status=200,
+    )
+    responses.add(
+        responses.GET,
+        re.compile("https://management.azure.com/.*"),
+        json=_INCIDENT,
+        status=200,
+    )
+    azs_loader.update_incident(
+        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
+        update_items={"severity": "High"},
+        sub_id="123",
+        res_grp="RG",
+        ws_name="WSName",
+    )
