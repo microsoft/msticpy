@@ -6,6 +6,7 @@
 from collections import namedtuple
 from pathlib import Path
 from unittest.mock import patch
+from collections import namedtuple
 
 import pytest
 from msticpy.common import pkg_config
