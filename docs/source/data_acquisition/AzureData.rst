@@ -126,7 +126,7 @@ with details of all the subscriptions within the tenant.
       <tbody>
         <tr>
           <td>0</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
+          <td>c690adc4-ec82-41fa-ad36-80f3c8899bd0</td>
           <td>Visual Studio Enterprise</td>
           <td>SubscriptionState.enabled</td>
         </tr>
@@ -144,12 +144,12 @@ specific subscription ID.
 
 .. code:: ipython3
 
-    az.get_subscription_info("3b701f84-d04b-4479-89b1-fa8827eb537e")
+    az.get_subscription_info("c690adc4-ec82-41fa-ad36-80f3c8899bd0")
 
 
 .. parsed-literal::
 
-    {'Subscription ID': '3b701f84-d04b-4479-89b1-fa8827eb537e',
+    {'Subscription ID': 'c690adc4-ec82-41fa-ad36-80f3c8899bd0',
      'Display Name': 'Visual Studio Enterprise',
      'State': 'SubscriptionState.enabled',
      'Subscription Location Limits': 'Public_2014-09-01',
@@ -171,7 +171,7 @@ results.
 
 .. code:: ipython3
 
-    resources = az.get_resources(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
+    resources = az.get_resources(sub_id="bca22c36-a158-44ff-8cbb-23fa92236a55")
     resources.head()
 
 
@@ -197,14 +197,14 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
 
 .. code:: ipython3
 
-    az.get_resource_details(resource_id="/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv")
+    az.get_resource_details(resource_id="/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv")
 
 
 
 
 .. parsed-literal::
 
-    {'resource_id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv',
+    {'resource_id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv',
      'name': 'UbuntuDevEnv',
      'resource_type': 'Microsoft.Compute/virtualMachines',
      'location': 'northeurope',
@@ -221,23 +221,23 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
         'name': 'UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5',
         'createOption': 'FromImage',
         'caching': 'ReadWrite',
-        'managedDisk': {'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/CONTOSO/providers/Microsoft.Compute/disks/UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5'}},
+        'managedDisk': {'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/CONTOSO/providers/Microsoft.Compute/disks/UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5'}},
        'dataDisks': [{'lun': 0,
          'name': 'UbuntuDevEnv_DataDisk_0',
          'createOption': 'Attach',
          'caching': 'None',
          'writeAcceleratorEnabled': False,
-         'managedDisk': {'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Compute/disks/UbuntuDevEnv_DataDisk_0'},
+         'managedDisk': {'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Compute/disks/UbuntuDevEnv_DataDisk_0'},
          'toBeDetached': False}]},
       'osProfile': {'computerName': 'UbuntuDevEnv',
-       'adminUsername': 'peteb',
+       'adminUsername': 'user',
        'linuxConfiguration': {'disablePasswordAuthentication': True,
-        'ssh': {'publicKeys': [{'path': '/home/peteb/.ssh/authorized_keys',
+        'ssh': {'publicKeys': [{'path': '/home/user/.ssh/authorized_keys',
            'keyData': ''}]},
         'provisionVMAgent': True},
        'secrets': [],
        'allowExtensionOperations': True},
-      'networkProfile': {'networkInterfaces': [{'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Network/networkInterfaces/ubuntudevenv3'}]},
+      'networkProfile': {'networkInterfaces': [{'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Network/networkInterfaces/ubuntudevenv3'}]},
       'provisioningState': 'Succeeded'},
      'kind': None,
      'managed_by': None,
@@ -268,7 +268,7 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
 
 .. parsed-literal::
 
-    {'resource_id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv',
+    {'resource_id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Compute/virtualMachines/UbuntuDevEnv',
      'name': 'UbuntuDevEnv',
      'resource_type': 'Microsoft.Compute/virtualMachines',
      'location': 'northeurope',
@@ -285,23 +285,23 @@ You can return full details on a single resource with AZURE_DATA_CONNECTOR.get_r
         'name': 'UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5',
         'createOption': 'FromImage',
         'caching': 'ReadWrite',
-        'managedDisk': {'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/CONTOSO/providers/Microsoft.Compute/disks/UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5'}},
+        'managedDisk': {'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/CONTOSO/providers/Microsoft.Compute/disks/UbuntuDevEnv_OsDisk_1_fc3690fe9f2248a1b441c0a1616833c5'}},
        'dataDisks': [{'lun': 0,
          'name': 'UbuntuDevEnv_DataDisk_0',
          'createOption': 'Attach',
          'caching': 'None',
          'writeAcceleratorEnabled': False,
-         'managedDisk': {'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Compute/disks/UbuntuDevEnv_DataDisk_0'},
+         'managedDisk': {'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Compute/disks/UbuntuDevEnv_DataDisk_0'},
          'toBeDetached': False}]},
       'osProfile': {'computerName': 'UbuntuDevEnv',
-       'adminUsername': 'peteb',
+       'adminUsername': 'user',
        'linuxConfiguration': {'disablePasswordAuthentication': True,
-        'ssh': {'publicKeys': [{'path': '/home/peteb/.ssh/authorized_keys',
+        'ssh': {'publicKeys': [{'path': '/home/user/.ssh/authorized_keys',
            'keyData': ''}]},
         'provisionVMAgent': True},
        'secrets': [],
        'allowExtensionOperations': True},
-      'networkProfile': {'networkInterfaces': [{'id': '/subscriptions/3b701f84-d04b-4479-89b1-fa8827eb537e/resourceGroups/Contoso/providers/Microsoft.Network/networkInterfaces/ubuntudevenv3'}]},
+      'networkProfile': {'networkInterfaces': [{'id': '/subscriptions/bca22c36-a158-44ff-8cbb-23fa92236a55/resourceGroups/Contoso/providers/Microsoft.Network/networkInterfaces/ubuntudevenv3'}]},
       'provisioningState': 'Succeeded'},
      'kind': None,
      'managed_by': None,
@@ -334,15 +334,15 @@ Get Azure Metrics
 
 See :py:meth:`get_metrics <msticpy.data.azure_data.AzureData.get_metrics>`
 
-Azure provides a range of metrics for resources. The types of metrics avaliable depends on the Azure resource in question,
+Azure provides a range of metrics for resources. The types of metrics available depends on the Azure resource in question,
 a full list of metrics can be found `here <https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported>`__.
 
 You can return all of these metrics with get_metrics.
 
-In order to call this function you need to provide the metrics you want to retrieve in a comma seperated string
-e.g. ""Percentage CPU,Disk Read Bytes,Disk Write Bytes", along with the resource ID of the item you wish to retreive
+In order to call this function you need to provide the metrics you want to retrieve in a comma separated string
+e.g. ""Percentage CPU,Disk Read Bytes,Disk Write Bytes", along with the resource ID of the item you wish to retrieve
 the metrics for, and the subscription ID that resource is part of. You can also choose to get the metrics sampled
-at either the minute or the hour interval, and for how many days preceeding you want metrics for. By default the
+at either the minute or the hour interval, and for how many days preceding you want metrics for. By default the
 function returns hourly metrics for the last 30 days.
 
 .. code:: ipython3
@@ -352,4 +352,4 @@ function returns hourly metrics for the last 30 days.
 This returns a dictionary of items with the metric name as they key and a DataFrame of the metrics as the value.
 
 .. note:: get_metrics is resource specific, so if you want to get metrics from more than one resource you will need
-    seperate function calls.
+    separate function calls.

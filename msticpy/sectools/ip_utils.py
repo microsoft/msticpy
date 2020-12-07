@@ -24,6 +24,7 @@ from ipwhois import (
     IPWhois,
     WhoisLookupError,
     WhoisRateLimitError,
+    ASNRegistryError,
 )
 
 from .._version import VERSION
@@ -214,6 +215,7 @@ def get_whois_info(
             HostLookupError,
             WhoisLookupError,
             WhoisRateLimitError,
+            ASNRegistryError,
         ) as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}

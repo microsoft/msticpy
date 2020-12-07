@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from typing import Dict, List
+from uuid import uuid4
 
 import pandas as pd
 import requests
@@ -19,11 +20,12 @@ _PATH_MAPPING = {
     "alert_rules": "/providers/Microsoft.SecurityInsights/alertRules",
     "ss_path": "/savedSearches",
     "bookmarks": "/providers/Microsoft.SecurityInsights/bookmarks",
+    "incidents": "/providers/Microsoft.SecurityInsights/incidents",
 }
 
 
 class AzureSentinel(AzureData):
-    """Class for reutrning key Azure Sentinel elements."""
+    """Class for returning key Azure Sentinel elements."""
 
     def __init__(self, connect: bool = False):
         """Initialize connector for Azure APIs."""
@@ -140,7 +142,7 @@ class AzureSentinel(AzureData):
         else:
             raise CloudError("Could not get alert rules.")
 
-        return queries_df[queries_df["Category"] == "Hunting Queries"]
+        return queries_df[queries_df["properties.Category"] == "Hunting Queries"]
 
     def get_alert_rules(
         self,
@@ -255,6 +257,254 @@ class AzureSentinel(AzureData):
 
         return bookmarks_df
 
+    def get_incidents(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """
+        Get a list of incident for a Sentinel workspace.
+
+        Parameters
+        ----------
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table of incidents.
+
+        Raises
+        ------
+        CloudError
+            If incidents could not be retreived.
+
+        """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
+        url = _build_paths(res_id)
+        incidents_url = url + _PATH_MAPPING["incidents"]
+        params = {"api-version": "2020-01-01"}
+        response = requests.get(
+            incidents_url, headers=_get_api_headers(self.token), params=params
+        )
+        if response.status_code == 200:
+            incidents_df = _azs_api_result_to_df(response)
+        else:
+            raise CloudError("Could not get incidents.")
+
+        return incidents_df
+
+    def get_incident(
+        self,
+        incident_id: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """
+        Get details on a specific incident.
+
+        Parameters
+        ----------
+        incident_id : str
+            Incident ID GUID.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+
+        Returns
+        -------
+        pd.DataFrame
+            Table containing incident details.
+
+        Raises
+        ------
+        CloudError
+            If incident could not be retrieved.
+
+        """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
+        url = _build_paths(res_id)
+        incidents_url = url + _PATH_MAPPING["incidents"]
+        incident_url = incidents_url + f"/{incident_id}"
+        params = {"api-version": "2020-01-01"}
+        response = requests.get(
+            incident_url, headers=_get_api_headers(self.token), params=params
+        )
+        if response.status_code == 200:
+            incident_df = _azs_api_result_to_df(response)
+        else:
+            raise CloudError(f"Could not get incident status: {response.status_code}")
+
+        return incident_df
+
+    def update_incident(
+        self,
+        incident_id: str,
+        update_items: dict,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """
+        Update properties of an incident.
+
+        Parameters
+        ----------
+        incident_id : str
+            Incident ID GUID.
+        update_items : dict
+            Dictionary of properties to update and their values.
+            Ref: https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            If incident could not be updated.
+
+        """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
+
+        incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
+        url = _build_paths(res_id)
+        incidents_url = url + _PATH_MAPPING["incidents"]
+        incident_url = incidents_url + f"/{incident_id}"
+        params = {"api-version": "2020-01-01"}
+        if "title" not in update_items.keys():
+            update_items.update({"title": incident_dets.iloc[0]["properties.title"]})
+        if "status" not in update_items.keys():
+            update_items.update({"status": incident_dets.iloc[0]["properties.status"]})
+        data = _build_data(update_items, etag=incident_dets.iloc[0]["etag"])
+        response = requests.put(
+            incident_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code == 200:
+            print("Incident updated.")
+        else:
+            raise CloudError(f"Could not get incident status: {response.status_code}")
+
+    def post_comment(
+        self,
+        incident_id: str,
+        comment: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """
+        Write a comment for an incident.
+
+        Parameters
+        ----------
+        incident_id : str
+            Incident ID GUID.
+        comment : str
+            Comment message to post.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            If message could not be posted.
+
+        """
+        if not res_id:
+            if not sub_id or not res_grp or not ws_name:
+                config = self._check_config(
+                    ["subscription_id", "resource_group", "workspace_name"]
+                )
+                sub_id = config["subscription_id"]
+                res_grp = config["resource_group"]
+                ws_name = config["workspace_name"]
+            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+            res_id = (
+                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+            )
+        url = _build_paths(res_id)
+        incident_url = url + _PATH_MAPPING["incidents"]
+        comment_url = incident_url + f"/{incident_id}/comments/{str(uuid4())}"
+        params = {"api-version": "2020-01-01"}
+        data = _build_data({"message": comment})
+        response = requests.put(
+            comment_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code == 201:
+            print("Comment posted.")
+        else:
+            raise CloudError(f"Could not post comment: status {response.status_code}")
+
     def _check_config(self, items: List) -> Dict:
         """
         Get parameters from default config files.
@@ -316,10 +566,23 @@ def _get_api_headers(token):
 def _azs_api_result_to_df(response) -> pd.DataFrame:
     """Convert API reponse to a Pandas dataframe."""
     j_resp = response.json()
-    if response.status_code != 200 or not j_resp or "value" not in j_resp:
+    if response.status_code != 200 or not j_resp:
         raise ValueError("No valid JSON result in response")
-    queries_raw_df = pd.DataFrame(j_resp["value"])
-    query_props_df = pd.json_normalize(queries_raw_df["properties"])
-    return pd.concat([queries_raw_df, query_props_df], axis=1).drop(
-        columns="properties"
-    )
+    if "value" in j_resp:
+        j_resp = j_resp["value"]
+    return pd.json_normalize(j_resp)
+
+
+def _build_data(items: dict, **kwargs) -> dict:
+    """Build request data body from items."""
+    data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
+    for key in items.keys():
+        if key in ["severity", "status", "title", "message"]:
+            data_body["properties"].update({key: items[key]})  # type:ignore
+        else:
+            data_body.update({key: items[key]})
+
+    if "etag" in kwargs:
+        data_body.update({"etag": kwargs.get("etag")})  # type:ignore
+
+    return data_body

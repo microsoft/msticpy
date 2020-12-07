@@ -23,7 +23,7 @@ import requests
 import tldextract
 
 # pylint: disable=no-name-in-module
-from dns.resolver import resolve, Resolver
+from dns.resolver import Resolver
 from dns.exception import DNSException
 
 # pylint: enable=no-name-in-module
@@ -116,6 +116,9 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     return image_data
 
 
+_dns_resolver = Resolver()
+
+
 @export
 class DomainValidator:
     """Assess a domain's validity."""
@@ -145,7 +148,7 @@ class DomainValidator:
     @staticmethod
     def validate_tld(url_domain: str) -> bool:
         """
-        Validate if a domain's TLD appears in the IANA tld list.
+        Validate if a domain's TLD is valid.
 
         Parameters
         ----------
@@ -158,8 +161,8 @@ class DomainValidator:
             True if valid public TLD, False if not.
 
         """
-        result = tldextract.extract(url_domain.lower())
-        return bool(result.suffix)
+        _, _, tld = tldextract.extract(url_domain.lower())
+        return bool(tld)
 
     @staticmethod
     def is_resolvable(url_domain: str) -> bool:  # pylint: disable=no-self-use
@@ -178,9 +181,9 @@ class DomainValidator:
 
         """
         try:
-            resolve(url_domain)
+            _dns_resolver.resolve(url_domain, "A")
             return True
-        except Exception:  # pylint: disable=broad-except
+        except DNSException:
             return False
 
     def in_abuse_list(self, url_domain: str) -> Tuple:
@@ -200,9 +203,8 @@ class DomainValidator:
         """
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
-            backend = crypto.hazmat.backends.default_backend()  # type: ignore
             x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
-                cert.encode("ascii"), backend
+                cert.encode("ascii")
             )
             cert_sha1 = x509.fingerprint(
                 crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
@@ -255,9 +257,6 @@ def url_components(url: str) -> Dict[str, str]:
         return parse_url(url)._asdict()
     except LocationParseError:
         return {}
-
-
-_dns_resolver = Resolver()
 
 
 def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:

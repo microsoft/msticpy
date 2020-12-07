@@ -25,6 +25,7 @@ from ...common.exceptions import (
 )
 from ...common.utility import export
 from ..._version import VERSION
+from ...common.azure_auth_core import az_connect_core
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -61,7 +62,7 @@ class KqlDriver(DriverBase):
             self.connect(connection_str)
 
     # pylint: disable=too-many-branches
-    def connect(self, connection_str: Optional[str] = None, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):  # noqa: MC0001
         """
         Connect to data source.
 
@@ -76,6 +77,14 @@ class KqlDriver(DriverBase):
                 "A connection string is needed to connect to Azure Sentinel.",
                 title="no connection string",
             )
+        if "kqlmagic_args" in kwargs:
+            connection_str = connection_str + " " + kwargs["kqlmagic_args"]
+        elif "cli" in kwargs:
+            namespace = kwargs["cli"]
+            connection_str = _build_auth_cnt_str(namespace, connection_str, ["cli"])
+        elif "msi" in kwargs:
+            namespace = kwargs["msi"]
+            connection_str = _build_auth_cnt_str(namespace, connection_str, ["msi"])
         self.current_connection = connection_str
         kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
         self._connected = False
@@ -334,3 +343,36 @@ class KqlDriver(DriverBase):
             f"Full exception:\n{str(ex)}",
             title="connection failed",
         )
+
+
+def _build_auth_cnt_str(
+    namespace: dict, connection_str: str, auth_types: list = None
+) -> str:
+    """
+    Build connection string with auth elements.
+
+    Parameters
+    ----------
+    namespace : dict
+        locals namespace from notebook environment
+    connection_str : str
+        current connection string to append auth elements to
+    auth_types : list, optional
+        preferred authentication types, by default ['cli', 'msi']
+
+    Returns
+    -------
+    str
+        completed connection string
+
+    """
+    if not auth_types:
+        auth_types = ["cli", "msi"]
+    creds = az_connect_core(auth_methods=auth_types)
+    token = creds.modern.get_token("https://api.loganalytics.io/.default")
+    namespace["token_dict"] = {
+        "access_token": token.token,
+        "token_type": "Bearer",
+        "resource": "https://api.loganalytics.io/",
+    }
+    return connection_str + " " + "-try_token=locals()['token_dict']"
