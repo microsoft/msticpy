@@ -11,10 +11,6 @@ from typing import Tuple, Union, Any, Dict, Optional, Iterable
 import json
 import pandas as pd
 from IPython import get_ipython
-from adal.adal_error import AdalError
-from Kqlmagic.kql_response import KqlError
-from Kqlmagic.kql_engine import KqlEngineError
-from Kqlmagic.my_aad_helper import AuthenticationError
 
 from .driver_base import DriverBase, QuerySource
 from ...common.exceptions import (
@@ -22,7 +18,21 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
     MsticpyKqlConnectionError,
     MsticpyDataQueryError,
+    MsticpyImportExtraError,
 )
+
+try:
+    from adal.adal_error import AdalError
+    from Kqlmagic.kql_response import KqlError
+    from Kqlmagic.kql_engine import KqlEngineError
+    from Kqlmagic.my_aad_helper import AuthenticationError
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without Kqlmagic installed",
+        title="Error importing Kqlmagic",
+        extra="kql",
+    ) from imp_err
+
 from ...common.utility import export
 from ..._version import VERSION
 from ...common.azure_auth_core import az_connect_core

@@ -36,13 +36,22 @@ from typing import List, Any, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import Normalizer
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
+from ..common.exceptions import MsticpyImportExtraError
 from ..common.utility import export
 from .._version import VERSION
+
+try:
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import Normalizer
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without Sklearn and matplotlib installed",
+        title="Error importing Scikit Learn and matplotlib",
+        extra="scikit",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -500,6 +509,7 @@ def crc32_hash(value: str) -> int:
     return crc32(bytes(value.encode("utf-8")))
 
 
+@export
 def delim_count_df(
     data: pd.DataFrame, column: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]'
 ) -> pd.Series:
@@ -524,6 +534,7 @@ def delim_count_df(
     return data[column].str.count(delim_list)
 
 
+@export
 def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Series:
     """
     Return sum of ord values of characters in string.
@@ -560,6 +571,7 @@ def char_ord_score_df(data: pd.DataFrame, column: str, scale: int = 1) -> pd.Ser
     return data.apply(lambda x: sum(ord(char) for char in x[column]) / scale, axis=1)
 
 
+@export
 def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.Series:
     """
     Return count of delimiter-separated tokens pd.Series column.
@@ -583,6 +595,7 @@ def token_count_df(data: pd.DataFrame, column: str, delimiter: str = " ") -> pd.
     return data.apply(lambda x: len(x[column].split(delimiter)), axis=1)
 
 
+@export
 def crc32_hash_df(data: pd.DataFrame, column: str) -> pd.Series:
     """
     Return the CRC32 hash of the input column.
@@ -679,11 +692,12 @@ def plot_cluster(
         # print("Silhouette Coefficient: %0.3f"
         #       % metrics.silhouette_score(x_predict, labels))
 
-    if not isinstance(data, pd.DataFrame):
+    if (
+        not isinstance(data, pd.DataFrame)
+        or plot_label is not None
+        and plot_label not in data
+    ):
         plot_label = None
-    elif plot_label is not None and plot_label not in data:
-        plot_label = None
-
     p_label = None
     for cluster_id, color in zip(unique_labels, colors):
         if cluster_id == -1:

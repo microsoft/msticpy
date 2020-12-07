@@ -42,12 +42,39 @@ with open("requirements.txt", "r") as fh:
 with open("requirements-dev.txt", "r") as fh:
     INSTALL_DEV_REQUIRES = fh.readlines()
 
+
 # Extras definitions
 EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
     "vt3": ["vt-py>=0.6.1", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
+    "kql": ["Kqlmagic>=0.1.106"],
+    "azure": [
+        "azure-identity==1.4.0"
+        "azure-keyvault-secrets>=4.0.0",
+        "azure-mgmt-compute>=4.6.2",
+        "azure-mgmt-core>=1.2.1",
+        "azure-mgmt-keyvault>=2.0.0",
+        "azure-mgmt-monitor>=1.0.1",
+        "azure-mgmt-network>=2.7.0",
+        "azure-mgmt-resource>=2.2.0",
+        "azure-storage-blob>=12.5.0",
+        "keyring>=13.2.1",  # needed by Key Vault package
+        "msrestazure>=0.6.0",
+    ],
+    "scikit": ["scikit-learn>=0.20.2"],
+    "timeseries": ["scipy>=1.1.0", "statsmodels>=0.11.1"]
 }
+extras_all = [pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name != "dev"]
+EXTRAS["all"] = extras_all
+
+
+def combine_extras(extras: list) -> list:
+    return [pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras]
+
+
+EXTRAS["test"] = combine_extras(["all", "dev"])
+EXTRAS["azsentinel"] = combine_extras(["azure", "kql"])
 
 # If ReadTheDocs build, remove a couple of problematic packages
 # (we ask Sphinx to mock these in the import)

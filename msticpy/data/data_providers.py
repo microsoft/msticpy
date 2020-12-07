@@ -18,15 +18,7 @@ from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.utility import export, valid_pyname
 from .browsers.query_browser import browse_queries
-from .drivers import (
-    DriverBase,
-    KqlDriver,
-    LocalDataDriver,
-    MDATPDriver,
-    MordorDriver,
-    SecurityGraphDriver,
-    SplunkDriver,
-)
+from .drivers import import_driver, DriverBase
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -35,18 +27,6 @@ from .query_store import QueryStore
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-
-_PROVIDER_DIR = "providers"
-
-_ENVIRONMENT_DRIVERS = {
-    DataEnvironment.LogAnalytics: KqlDriver,
-    DataEnvironment.AzureSecurityCenter: KqlDriver,
-    DataEnvironment.SecurityGraph: SecurityGraphDriver,
-    DataEnvironment.MDATP: MDATPDriver,
-    DataEnvironment.LocalData: LocalDataDriver,
-    DataEnvironment.Splunk: SplunkDriver,
-    DataEnvironment.Mordor: MordorDriver,
-}
 
 
 @export
@@ -97,7 +77,7 @@ class QueryProvider:
         self._environment = data_environment.name
 
         if driver is None:
-            driver_class = _ENVIRONMENT_DRIVERS[data_environment]
+            driver_class = import_driver(data_environment)
             if issubclass(driver_class, DriverBase):
                 driver = driver_class(**kwargs)  # type: ignore
             else:

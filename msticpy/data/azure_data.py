@@ -11,13 +11,7 @@ import attr
 import pandas as pd
 import numpy as np
 
-
 from azure.mgmt.subscription import SubscriptionClient
-from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.monitor import MonitorClient
-from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
 from ..common.azure_auth import az_connect
@@ -27,7 +21,20 @@ from ..common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyNotConnectedError,
     MsticpyResourceException,
+    MsticpyImportExtraError,
 )
+try:
+    from azure.mgmt.resource import ResourceManagementClient
+    from azure.mgmt.network import NetworkManagementClient
+    from azure.mgmt.monitor import MonitorClient
+    from azure.mgmt.compute import ComputeManagementClient
+    from azure.mgmt.compute.models import VirtualMachineInstanceView
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without azure packages installed",
+        title="Error importing azure module",
+        extra="azure",
+    ) from imp_err
 
 from .._version import VERSION
 

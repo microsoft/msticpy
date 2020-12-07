@@ -7,9 +7,9 @@
 from contextlib import redirect_stdout
 import io
 from unittest.mock import patch
+
 import pytest
 import pytest_check as check
-
 import pandas as pd
 
 from adal.adal_error import AdalError
@@ -23,13 +23,11 @@ from msticpy.common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyDataQueryError,
 )
-from msticpy.data.data_providers import KqlDriver
+from msticpy.data.drivers import import_driver
+from msticpy.data.query_defns import DataEnvironment
 
-from ...unit_test_lib import get_test_data_path
-
-
-_TEST_DATA = get_test_data_path()
-
+KqlDriver = import_driver(DataEnvironment.AzureSentinel)
+# from msticpy.data.drivers.kql_driver import KqlDriver
 GET_IPYTHON_PATCH = KqlDriver.__module__ + ".get_ipython"
 
 
