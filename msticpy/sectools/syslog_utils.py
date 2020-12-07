@@ -13,16 +13,16 @@ auditd is not available.
 
 """
 import datetime as dt
-from typing import Dict, Any
-import pytz
+from typing import Any, Dict
 
 import ipywidgets as widgets
 import pandas as pd
+import pytz
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, Host, IpAddress
 from ..common.exceptions import MsticpyException
 from ..common.utility import export
+from ..datamodel.entities import GeoLocation, Host, IpAddress
 from .ip_utils import convert_to_ip_entities
 
 __version__ = VERSION

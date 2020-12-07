@@ -3,32 +3,34 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 """
-
 Functions to support investigation of a domain or url.
 
 Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
+from datetime import datetime
 import json
 import ssl
-import sys
 import time
-import warnings
-from pathlib import Path
-from typing import Set, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 from urllib.error import HTTPError, URLError
 
 import cryptography as crypto
-import dns.resolver
 import pandas as pd
-import pkg_resources
 import requests
 import tldextract
+
+# pylint: disable=no-name-in-module
+from dns.resolver import Resolver
+from dns.exception import DNSException
+
+# pylint: enable=no-name-in-module
 from IPython import display
 from ipywidgets import IntProgress
+from urllib3.exceptions import LocationParseError
+from urllib3.util import parse_url
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -93,7 +95,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     progress = IntProgress(min=0, max=40)
     display.display(progress)
     ready = False
-    while ready is False:
+    while not ready:
         progress.value += 1
         status_data = requests.get(status_string)
         status = json.loads(status_data.content)["status"]
@@ -114,38 +116,20 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     return image_data
 
 
+_dns_resolver = Resolver()
+
+
 @export
 class DomainValidator:
     """Assess a domain's validity."""
 
-    _tld_index: Set[str] = set()
     _ssl_abuse_list: pd.DataFrame = pd.DataFrame()
-
-    @classmethod
-    def _check_and_load_tlds(cls):
-        """Pull IANA TLD list and save to internal attribute."""
-        if not cls._tld_index:
-            cls._tld_index: Set[str] = cls._get_tlds()
 
     @classmethod
     def _check_and_load_abuselist(cls):
         """Pull IANA TLD list and save to internal attribute."""
         if cls._ssl_abuse_list is None or cls._ssl_abuse_list.empty:
             cls._ssl_abuse_list: pd.DataFrame = cls._get_ssl_abuselist()
-
-    @property
-    def tld_index(self) -> Set[str]:
-        """
-        Return the class TLD index.
-
-        Returns
-        -------
-        Set[str]
-            The current TLD index
-
-        """
-        self._check_and_load_tlds()
-        return self._tld_index
 
     @property
     def ssl_abuse_list(self) -> pd.DataFrame:
@@ -161,8 +145,8 @@ class DomainValidator:
         self._check_and_load_abuselist()
         return self._ssl_abuse_list
 
-    # Leaving as class method for backward compatability
-    def validate_tld(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
+    @staticmethod
+    def validate_tld(url_domain: str) -> bool:
         """
         Validate if a domain's TLD is valid.
 
@@ -180,7 +164,8 @@ class DomainValidator:
         _, _, tld = tldextract.extract(url_domain.lower())
         return bool(tld)
 
-    def is_resolvable(self, url_domain: str) -> bool:  # pylint: disable=no-self-use
+    @staticmethod
+    def is_resolvable(url_domain: str) -> bool:  # pylint: disable=no-self-use
         """
         Validate if a domain or URL be be resolved to an IP address.
 
@@ -196,12 +181,10 @@ class DomainValidator:
 
         """
         try:
-            dns.resolver.resolve(url_domain, "A")
-            result = True
-        except dns.resolver.NXDOMAIN:  # pylint: disable=broad-except
-            result = False
-
-        return result
+            _dns_resolver.resolve(url_domain, "A")
+            return True
+        except DNSException:
+            return False
 
     def in_abuse_list(self, url_domain: str) -> Tuple:
         """
@@ -238,64 +221,6 @@ class DomainValidator:
         return result, x509
 
     @classmethod
-    def _get_tlds(cls) -> Set[str]:
-        """
-        Return IANA Top Level Domains.
-
-        Returns
-        -------
-        Set[str]
-            Set of top level domains.
-
-        """
-        try:
-            tld_list = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt"
-            temp_df = pd.read_csv(tld_list, skiprows=1, names=["TLD"])
-            return set(temp_df["TLD"].dropna())
-        except (HTTPError, URLError):
-            pass
-        except Exception as err:  # pylint: disable=broad-except
-            warnings.warn(
-                "Exception detected trying to retrieve IANA top-level domain list."
-                + "Falling back to builtin seed list. "
-                + f"{err.args}",
-                RuntimeWarning,
-            )
-        # pylint: enable=broad-except
-        # if we failed to get the list try to read from a seed file
-        return cls._read_tld_seed_file()
-
-    @classmethod
-    def _read_tld_seed_file(cls) -> Set[str]:
-        """Read TLD seed list from seed file."""
-        seed_file = "tld_seed.txt"
-        conf_file = pkg_resources.resource_filename(__name__, seed_file)
-
-        if not Path(conf_file).is_file():
-            # if all else fails we try to find the package default config somewhere
-            # in the package tree - we use the first one we find
-            pkg_paths = sys.modules["msticpy"]
-            if pkg_paths:
-                conf_file = str(
-                    next(Path(pkg_paths.__path__[0]).glob(seed_file))  # type: ignore
-                )
-
-        if conf_file:
-            with open(conf_file, "r") as file_handle:
-                tld_txt = file_handle.read()
-                tld_set = set(tld_txt.split("\n"))
-            return tld_set
-        return set()
-
-    @classmethod
-    def _write_tld_seed_file(cls):
-        """Write existing TLD list to a text file."""
-        if cls._tld_index:
-            seed_file = "tld_seed.txt"
-            with open(seed_file, "w") as file_handle:
-                file_handle.write("\n".join(sorted(cls.tld_index)))
-
-    @classmethod
     def _get_ssl_abuselist(cls) -> pd.DataFrame:
         """Download and load abuse.ch SSL Abuse List."""
         try:
@@ -306,3 +231,99 @@ class DomainValidator:
             ssl_ab_list = pd.DataFrame({"SHA1": []})
 
         return ssl_ab_list
+
+
+def dns_components(domain: str) -> dict:
+    """
+    Return components of domain as dict.
+
+    Parameters
+    ----------
+    domain : str
+        The domain to extract.
+
+    Returns
+    -------
+    dict:
+        Returns subdomain and TLD components from a domain.
+
+    """
+    return tldextract.extract(domain.lower())._asdict()
+
+
+def url_components(url: str) -> Dict[str, str]:
+    """Return parsed Url components as dict."""
+    try:
+        return parse_url(url)._asdict()
+    except LocationParseError:
+        return {}
+
+
+def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
+    """
+    Validate if a domain or URL be be resolved to an IP address.
+
+    Parameters
+    ----------
+    url_domain : str
+        The url or domain to validate.
+    rec_type : str
+        The DNS record type to query, by default "A"
+
+    Returns
+    -------
+    Dict[str, Any]:
+        Resolver result as dictionary.
+
+    """
+    domain = parse_url(url_domain).host
+    try:
+        return _resolve_resp_to_dict(_dns_resolver.resolve(domain, rdtype=rec_type))
+    except DNSException as err:
+        return {
+            "qname": domain,
+            "rdtype": rec_type,
+            "response": str(err),
+        }
+
+
+def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
+    """
+    Reverse lookup for IP Address.
+
+    Parameters
+    ----------
+    ip_address : str
+        The IP address to query.
+
+    Returns
+    -------
+    Dict[str, Any]:
+        Resolver result as dictionary.
+
+    """
+    try:
+        return _resolve_resp_to_dict(
+            _dns_resolver.resolve_address(ip_address, raise_on_no_answer=True)
+        )
+    except DNSException as err:
+        return {
+            "qname": ip_address,
+            "rdtype": "PTR",
+            "response": str(err),
+        }
+
+
+def _resolve_resp_to_dict(resolver_resp):
+    """Return Dns Python resolver response to dict."""
+    return {
+        "qname": str(resolver_resp.qname),
+        "rdtype": resolver_resp.rdtype.name,
+        "rdclass": resolver_resp.rdclass.name,
+        "response": str(resolver_resp.response),
+        "nameserver": resolver_resp.nameserver,
+        "port": resolver_resp.port,
+        "canonical_name": str(resolver_resp.canonical_name),
+        "rrset": [str(res) for res in resolver_resp.rrset],
+        "expiration": datetime.utcfromtimestamp(resolver_resp.expiration),
+    }

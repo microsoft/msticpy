@@ -213,21 +213,7 @@ def unpack_items(
     if data is not None:
         if not column:
             raise ValueError("column must be supplied if the input is a DataFrame")
-
-        output_df = None
-        rows_with_b64_match = data[data[column].str.contains(_BASE64_REGEX_NG)]
-        for input_row in rows_with_b64_match[[column]].itertuples():
-            input_string = _b64_string_pad(input_row[1])
-            (decoded_string, output_frame) = _decode_b64_string_recursive(input_string)
-            output_frame["src_index"] = input_row.Index
-            output_frame["full_decoded_string"] = decoded_string
-            if output_df is None:
-                output_df = output_frame
-            else:
-                output_df = output_df.append(
-                    output_frame, ignore_index=True, sort=False
-                )
-        return output_df
+        return unpack_df(data=data, column=column, trace=trace, utf16=utf16)
     return None
 
 
@@ -310,8 +296,8 @@ def unpack_df(
       replaced by the results of the decoding
     - reference : this is an index that matches an index number in the
       decoded string (e.g. <<encoded binary type=pdf index=1.2').
-    - original_string : the string prior to decoding - file_type : the type
-      of file if this could be determined
+    - original_string : the string prior to decoding
+    - file_type : the type of file if this could be determined
     - file_hashes : a dictionary of hashes (the md5, sha1 and sha256 hashes
       are broken out into separate columns)
     - input_bytes : the binary image as a byte array
@@ -334,6 +320,7 @@ def unpack_df(
     for input_row in rows_with_b64_match[[column]].itertuples():
         (decoded_string, output_frame) = _decode_b64_string_recursive(input_row[1])
         output_frame["src_index"] = input_row.Index
+        output_frame[column] = input_row._asdict()[column]
         output_frame["full_decoded_string"] = decoded_string
         row_results.append(output_frame)
 
@@ -511,20 +498,19 @@ def _decode_and_format_b64_string(
         f"depth='{current_depth}'>"
     )
     child_display_strings = []
-    child_index = 1
     child_depth = current_depth + 1
     _debug_print_trace("_decode_b64_binary returned multiple records")
 
     # Build child display strings
-    for child_name, child_rec in output_files.items():
+    for child_index, (child_name, child_rec) in enumerate(
+        output_files.items(), start=1
+    ):
         _debug_print_trace("Child_decode: ", child_rec)
         child_index_string = f"{item_prefix}{current_index}.{child_index}"
         disp_string = _format_single_record(
             child_name, child_rec, item_prefix, child_depth, child_index_string
         )
         child_display_strings.append(disp_string)
-        child_index += 1
-
     display_string = display_header + "".join(child_display_strings) + "</decoded>"
     return display_string, list(output_files.values())
 
@@ -671,7 +657,7 @@ def _unpack_and_hash_b64_binary(
     if not input_bytes:
         return None
 
-    output_files = dict()
+    output_files = {}
     if file_type in ["zip", "gz", "tar"]:
         # if this is a known archive type - try to extract the contents
         (unpacked_type, file_items) = _get_items_from_archive(input_bytes, file_type)
@@ -774,7 +760,7 @@ def get_items_from_zip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
     """
     file_obj = io.BytesIO(binary)
     zip_archive = zipfile.ZipFile(file_obj, mode="r")
-    archive_dict = dict()
+    archive_dict = {}
     for item in zip_archive.namelist():
         archive_file = zip_archive.read(item)
         archive_dict[item] = archive_file
@@ -827,14 +813,14 @@ def get_hashes(binary: bytes) -> Dict[str, str]:
         dictionary of hash algorithm + hash value
 
     """
-    hash_dict = dict()
+    hash_dict = {}
     for hash_type in ["md5", "sha1", "sha256"]:
         if hash_type == "md5":
             hash_alg = hashlib.md5()  # nosec
-        elif hash_type == "sha256":
-            hash_alg = hashlib.sha256()
         elif hash_type == "sha1":
             hash_alg = hashlib.sha1()  # nosec
+        else:
+            hash_alg = hashlib.sha256()
         hash_alg.update(binary)
         hash_dict[hash_type] = hash_alg.hexdigest()
     return hash_dict

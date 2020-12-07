@@ -4,14 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-from typing import Optional, Dict, Iterable, Union, Any
+from typing import Any, Dict, Iterable, Optional, Union
 
 import attr
 import pandas as pd
 
-from ..nbtools.nbwidgets import Progress
-from ..common.exceptions import MsticpyException
 from .._version import VERSION
+from ..common.exceptions import MsticpyException
+from ..nbtools.nbwidgets import Progress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -208,10 +208,7 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
         The schema most closely matching the data set.
 
     """
-    if isinstance(data, pd.DataFrame):
-        src_cols = data.columns
-    else:
-        src_cols = data.index
+    src_cols = data.columns if isinstance(data, pd.DataFrame) else data.index
     lx_match = set(src_cols) & set(LX_EVENT_SCH.columns)
     win_match = set(src_cols) & set(WIN_EVENT_SCH.columns)
     return LX_EVENT_SCH if len(lx_match) > len(win_match) else WIN_EVENT_SCH
@@ -348,10 +345,9 @@ def _extract_inferred_parents(
         .drop_duplicates()
     )
 
-    plus_parents = pd.concat(
+    return pd.concat(
         [merged_procs, inferred_parents], ignore_index=True, axis=0, sort=False
     )
-    return plus_parents
 
 
 def _assign_proc_keys(
@@ -825,6 +821,7 @@ def _check_proc_keys(merged_procs_par, schema):
         merged_procs_par[schema.time_stamp]
     )
     crit2 = merged_procs_par["EffectiveLogonId"].isin(merged_procs_par[schema.logon_id])
+    c2a = None
     if schema.target_logon_id:
         c2a = merged_procs_par["EffectiveLogonId"].isin(
             merged_procs_par[schema.target_logon_id]
@@ -835,7 +832,7 @@ def _check_proc_keys(merged_procs_par, schema):
     crit6 = merged_procs_par["parent_key"].isna()
     print("has parent time", len(merged_procs_par[crit1]))
     print("effectivelogonId in subjectlogonId", len(merged_procs_par[crit2]))
-    if schema.target_logon_id:
+    if schema.target_logon_id and c2a:
         print("effectivelogonId in targetlogonId", len(merged_procs_par[c2a]))
     print("parent_proc_lc in procs", len(merged_procs_par[crit3]))
     print("ProcessId in ParentProcessId", len(merged_procs_par[crit4]))

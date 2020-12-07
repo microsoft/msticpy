@@ -397,8 +397,11 @@ MAP_FUNCS: Dict[str, Union[str, Callable]] = {
 }
 
 
-def obfuscate_df(
-    data: pd.DataFrame, column_map: Mapping[str, Any] = None, use_default: bool = True
+def mask_df(  # noqa: MC0001
+    data: pd.DataFrame,
+    column_map: Mapping[str, Any] = None,
+    use_default: bool = True,
+    silent: bool = True,
 ) -> pd.DataFrame:
     """
     Obfuscate columns of a DataFrame.
@@ -412,6 +415,9 @@ def obfuscate_df(
     use_default: bool
         If True use the built-in map (adding any custom
         mappings to this dictionary)
+    silent: bool
+        If False the function returns progress output,
+        by default True.
 
     Returns
     -------
@@ -424,12 +430,14 @@ def obfuscate_df(
         col_map.update(column_map)
 
     out_df = data.copy()
-    print("obfuscating columns:")
+    if not silent:
+        print("obfuscating columns:")
     for col_name in data.columns:
         if col_name not in col_map:
             continue
         col_type = col_map.get(col_name, "str")
-        print(col_name, end=", ")
+        if not silent:
+            print(col_name, end=", ")
         map_func = MAP_FUNCS.get(col_type)
         try:
             if map_func == "null":
@@ -447,11 +455,12 @@ def obfuscate_df(
             print(col_name, str(err))
             raise
 
-    print("\ndone")
+    if not silent:
+        print("\ndone")
     return out_df
 
 
-def check_obfuscation(
+def check_masking(
     data: pd.DataFrame, orig_data: pd.DataFrame, index: int = 0, silent=True
 ) -> Optional[Tuple[List[str], List[str]]]:
     """
@@ -500,7 +509,12 @@ def check_obfuscation(
     return unchanged, obfuscated
 
 
-@pd.api.extensions.register_dataframe_accessor("mp_obf")
+# alertnative names for backward compat
+obfuscate_df = mask_df
+check_obfuscation = check_masking
+
+
+@pd.api.extensions.register_dataframe_accessor("mp_mask")
 class ObfuscationAccessor:
     """Base64 Unpack pandas extension."""
 
@@ -508,7 +522,7 @@ class ObfuscationAccessor:
         """Initialize the extension."""
         self._df = pandas_obj
 
-    def obfuscate(
+    def mask(
         self, column_map: Mapping[str, Any] = None, use_default: bool = True
     ) -> pd.DataFrame:
         """
@@ -530,6 +544,4 @@ class ObfuscationAccessor:
             Obfuscated dataframe
 
         """
-        return obfuscate_df(
-            data=self._df, column_map=column_map, use_default=use_default
-        )
+        return mask_df(data=self._df, column_map=column_map, use_default=use_default)

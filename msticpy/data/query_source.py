@@ -237,7 +237,8 @@ class QuerySource:
         param_dict = {
             name: value.get("default", None) for name, value in self.params.items()
         }
-        param_dict.update(kwargs)
+
+        param_dict.update(self.resolve_param_aliases(kwargs))
         missing_params = {
             name: value for name, value in param_dict.items() if value is None
         }
@@ -299,6 +300,32 @@ class QuerySource:
         except ParserError:
             # If none of these, assume a time delta
             return self._calc_timeoffset(str(param_value))
+
+    def resolve_param_aliases(self, param_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Try to resolve any parameters in `param_dict` that are aliases."""
+        out_dict = {}
+        for param, value in param_dict.items():
+            if param in self.params:
+                out_dict[param] = value
+            else:
+                aliased_param = self._get_aliased_param(param)
+                if aliased_param:
+                    out_dict[aliased_param] = value
+                else:
+                    out_dict[param] = value
+        return out_dict
+
+    def _get_aliased_param(self, alias: str) -> Optional[str]:
+        """Return first parameter with a matching alias."""
+        aliased_params = {
+            p_name: p_prop
+            for p_name, p_prop in self.params.items()
+            if "aliases" in p_prop
+        }
+        for param, props in aliased_params.items():
+            if alias in props["aliases"]:
+                return param
+        return None
 
     @classmethod
     def _calc_timeoffset(cls, time_offset: str) -> datetime:
@@ -415,6 +442,9 @@ class QuerySource:
             param_block.append(f'    {p_props.get("description", "no description")}')
             if def_value:
                 param_block.append(f"    (default value is: {def_value})")
+            if "aliases" in p_props:
+                alias_list = ", ".join([f"'{alias}'" for alias in p_props["aliases"]])
+                param_block.append(f"    Aliases: {alias_list}")
         doc_string = [f"{self.description}", ""]
         return "\n".join(doc_string + param_block)
 

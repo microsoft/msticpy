@@ -17,6 +17,7 @@ echo MSTICPY Package release test
 echo %h_rule%
 if "%3" neq "" echo testing with version %3
 
+
 REM test folder
 pushd %2 > nul 2>&1
 if %ERRORLEVEL% equ 0 goto check_env
@@ -53,6 +54,7 @@ echo.
 echo Installing nbconvert and jupyter extensions...
 call conda install --yes nbconvert
 call conda install --yes jupyter_contrib_nbextensions
+pip install --upgrade ipython
 set nb_path=docs/notebooks
 if "%2" neq "" set nb_path=%2
 pushd %nb_path%

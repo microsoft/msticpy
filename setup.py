@@ -50,7 +50,7 @@ EXTRAS = {
     "splunk": ["splunk-sdk>=1.6.0"],
     "kql": ["Kqlmagic>=0.1.106"],
     "azure": [
-        "azure-identity==1.4.0"
+        "azure-identity==1.4.0",
         "azure-keyvault-secrets>=4.0.0",
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
@@ -63,18 +63,18 @@ EXTRAS = {
         "msrestazure>=0.6.0",
     ],
     "scikit": ["scikit-learn>=0.20.2"],
-    "timeseries": ["scipy>=1.1.0", "statsmodels>=0.11.1"]
+    "timeseries": ["scipy>=1.1.0", "statsmodels>=0.11.1"],
 }
 extras_all = [pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name != "dev"]
 EXTRAS["all"] = extras_all
 
 
-def combine_extras(extras: list) -> list:
+def _combine_extras(extras: list) -> list:
     return [pkg for name, pkgs in EXTRAS.items() for pkg in pkgs if name in extras]
 
 
-EXTRAS["test"] = combine_extras(["all", "dev"])
-EXTRAS["azsentinel"] = combine_extras(["azure", "kql"])
+EXTRAS["test"] = _combine_extras(["all", "dev"])
+EXTRAS["azsentinel"] = _combine_extras(["azure", "kql"])
 
 # If ReadTheDocs build, remove a couple of problematic packages
 # (we ask Sphinx to mock these in the import)
