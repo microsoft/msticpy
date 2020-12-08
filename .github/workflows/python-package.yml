@@ -35,15 +35,47 @@ jobs:
           ${{ runner.os }}-
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip==20.2.4
-        python -m pip install flake8 pytest
+        python -m pip install --upgrade pip==20.2.4 wheel setuptools
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+        python -m pip install -e .
+    - name: Install test dependencies
+      run: |
+        python -m pip install flake8 black bandit mypy lxml pylint 
+        python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions Pygments responses
+    - name: Pytest
+      run: |
+        pytest tests -n auto --junitxml=junit/test-results.xml --cov=msticpy --cov-report=xml
+    - name: black
+      run: |
+        black -t py36 --check --exclude venv . "
+    - name: flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 msticpy --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+        flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
+    - name: pylint
       run: |
-        pytest
+        pylint msticpy -j 0 --disable=bad-continuation
+    - name: propspector
+      run: |
+        # install this separately since it uses older versions of pylint/isort
+        pip install --upgrade prosector 
+        prospector --ignore-paths tests --without-tool pylint
+    - name: mypy
+      run: |
+        mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-results.xml msticpy
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/test-results-${{ matrix.python-version }}.xml
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
+    - name: Upload mypy test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/mypy-test-results-${{ matrix.python-version }}.xml
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
