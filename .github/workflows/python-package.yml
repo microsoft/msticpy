@@ -53,7 +53,7 @@ jobs:
     #  if: ${{ success() || failure() }} 
     - name: black
       run: |
-        black -t py36 --check --exclude venv . "
+        black -t py36 --check --exclude venv .
     - name: flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
