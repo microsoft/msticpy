@@ -53,7 +53,7 @@ jobs:
     #  if: ${{ success() || failure() }} 
     - name: black
       run: |
-        black -t py36 --check --exclude venv .
+        black -t py36 --check --exclude venv . "
     - name: flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -62,7 +62,7 @@ jobs:
         flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
     - name: pylint
       run: |
-        pylint msticpy -j 0 --disable=bad-continuation
+        pylint msticpy --disable=bad-continuation
     - name: propspector
       run: |
         # install this separately since it uses older versions of pylint/isort
