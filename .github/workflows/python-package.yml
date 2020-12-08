@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
+        python-version: ['3.8']
 
     steps:
     - uses: actions/checkout@v2
@@ -43,6 +43,11 @@ jobs:
         python -m pip install flake8 black bandit mypy lxml pylint 
         python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions Pygments responses
     - name: Pytest
+      env:
+        MAXMIND_AUTH: ${{ secrets.MAXMIND_AUTH }} 
+        IPSTACK_AUTH: ${{ secrets.IPSTACK_AUTH }}
+        MSTICPYCONFIG: ./tests/msticpyconfig-test.yaml 
+        MSTICPY_TEST_NOSKIP: 1 
       run: |
         pytest tests -n auto --junitxml=junit/test-results.xml --cov=msticpy --cov-report=xml
     - name: black
