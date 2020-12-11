@@ -23,6 +23,7 @@ from ..common.exceptions import (
     MsticpyResourceException,
     MsticpyImportExtraError,
 )
+
 try:
     from azure.mgmt.resource import ResourceManagementClient
     from azure.mgmt.network import NetworkManagementClient
@@ -112,7 +113,7 @@ class AzureData:
         self.network_client: Optional[NetworkManagementClient] = None
         self.monitoring_client: Optional[MonitorClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
-        if connect is True:
+        if connect:
             self.connect()
 
     def connect(
@@ -158,15 +159,13 @@ class AzureData:
             display_names.append(item.display_name)
             states.append(str(item.state))
 
-        sub_details = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "Subscription ID": subscription_ids,
                 "Display Name": display_names,
                 "State": states,
             }
         )
-
-        return sub_details
 
     def get_subscription_info(self, sub_id: str) -> dict:
         """
@@ -190,7 +189,7 @@ class AzureData:
             self._legacy_auth("sub_client")
             sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
 
-        sub_details = {
+        return {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
@@ -198,8 +197,6 @@ class AzureData:
             "Subscription Quota": sub.subscription_policies.quota_id,
             "Spending Limit": sub.subscription_policies.spending_limit,
         }
-
-        return sub_details
 
     def get_resources(  # noqa: MC0001
         self, sub_id: str, rgroup: str = None, get_props: bool = False
@@ -244,14 +241,14 @@ class AzureData:
                 resources.append(resource)
 
         # Warn users about getting full properties for each resource
-        if get_props is True:
+        if get_props:
             print("Collecting properties for every resource may take some time...")
 
         resource_items = []
 
         # Get properites for each resource
         for resource in resources:
-            if get_props is True:
+            if get_props:
                 if resource.type == "Microsoft.Compute/virtualMachines":
                     state = self._get_compute_state(
                         resource_id=resource.id, sub_id=sub_id
@@ -290,9 +287,7 @@ class AzureData:
             )
             resource_items.append(resource_details)
 
-        resource_df = pd.DataFrame(resource_items)
-
-        return resource_df
+        return pd.DataFrame(resource_items)
 
     def get_resource_details(  # noqa: MC0001
         self, sub_id: str, resource_id: str = None, resource_details: dict = None

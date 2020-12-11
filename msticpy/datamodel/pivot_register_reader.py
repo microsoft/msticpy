@@ -6,6 +6,7 @@
 """Reads pivot registration config files."""
 import importlib
 from typing import Any, Dict, Type
+import warnings
 
 import yaml
 
@@ -64,6 +65,8 @@ def register_pivots(
             # if we need to get this from a class/object we need
             # to find or create one.
             func = _get_func_from_class(src_module, namespace, piv_reg)
+            if not func:
+                continue
         else:
             # not a class, just get the function from the module
             func = getattr(src_module, piv_reg.src_func_name, None)
@@ -134,7 +137,14 @@ def _get_func_from_class(src_module, namespace, piv_reg):
     if namespace:
         src_obj = _last_instance_of_type(src_class, namespace)
     if not src_obj:
-        src_obj = src_class()
+        try:
+            src_obj = src_class()
+        except Exception as err:  # pylint: disable=broad-except
+            warnings.warn(
+                f"Could not create instance of class {src_class.__name__}. "
+                + f"Exception was {err}"
+            )
+            return None
     # get the function from the object
     return getattr(src_obj, piv_reg.src_func_name, None)
 

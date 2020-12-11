@@ -6,8 +6,12 @@
 """Data uploader sub-package."""
 # flake8: noqa: F403
 from .uploader_base import UploaderBase
-from .loganalytics_uploader import LAUploader
-from .splunk_uploader import SplunkUploader
+
+try:
+    from .loganalytics_uploader import LAUploader
+    from .splunk_uploader import SplunkUploader
+except ImportError:
+    pass
 
 from ..._version import VERSION
 

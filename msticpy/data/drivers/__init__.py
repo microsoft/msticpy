@@ -36,7 +36,10 @@ def import_driver(data_environment: DataEnvironment) -> type:
         raise ValueError(
             f"No driver available for environment {data_environment.name}.",
             "Possible values are:",
-            ", ".join([env.name for env in _ENVIRONMENT_DRIVERS])
+            ", ".join(env.name for env in _ENVIRONMENT_DRIVERS),
         )
-    imp_module = importlib.import_module(f"msticpy.data.drivers.{mod_name}", package="msticpy")
+
+    imp_module = importlib.import_module(
+        f"msticpy.data.drivers.{mod_name}", package="msticpy"
+    )
     return getattr(imp_module, cls_name)

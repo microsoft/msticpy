@@ -203,9 +203,11 @@ class DomainValidator:
         """
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
+            # pylint: disable=no-value-for-parameter
             x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
                 cert.encode("ascii")
             )
+            # pylint: enable=no-value-for-parameter
             cert_sha1 = x509.fingerprint(
                 crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
             )

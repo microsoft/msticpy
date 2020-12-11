@@ -22,7 +22,6 @@ from ...common.exceptions import (
 )
 
 try:
-    from adal.adal_error import AdalError
     from Kqlmagic.kql_response import KqlError
     from Kqlmagic.kql_engine import KqlEngineError
     from Kqlmagic.my_aad_helper import AuthenticationError
@@ -107,10 +106,10 @@ class KqlDriver(DriverBase):
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
                     self._raise_kql_engine_error(ex)
-                except AdalError as ex:
-                    self._raise_adal_error(ex)
                 except AuthenticationError as ex:
                     self._raise_authn_error(ex)
+                except Exception as ex:  # pylint: disable=broad-except
+                    self._raise_adal_error(ex)
                 self._connected = True
                 self._schema = self._get_schema()
             else:

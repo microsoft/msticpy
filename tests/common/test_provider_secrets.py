@@ -6,7 +6,6 @@
 """datq query test class."""
 from copy import deepcopy
 from collections import namedtuple
-from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch, MagicMock
 import os
@@ -19,8 +18,8 @@ from azure.core.exceptions import ResourceNotFoundError
 
 from msticpy.common import secret_settings
 from msticpy.common.keyvault_client import (
-    AuthClient,
-    KeyringAuthClient,
+    # AuthClient,
+    # KeyringAuthClient,
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
@@ -44,7 +43,6 @@ set_unit_testing(True)
 
 # Unit test mock patches
 az_connect_core_patch = BHKeyVaultMgmtClient.__module__ + ".az_connect_core"
-auth_context_patch = AuthClient.__module__ + ".AuthenticationContext"
 sec_client_patch = BHKeyVaultMgmtClient.__module__ + ".SecretClient"
 is_ipython_patch = BHKeyVaultMgmtClient.__module__ + ".is_ipython"
 display_patch = BHKeyVaultMgmtClient.__module__ + ".display"
@@ -231,72 +229,10 @@ class TestSecretsConfig(unittest.TestCase):
         kv_settings.authority = "chi"
         self.assertEqual(kv_settings.authority_uri, "https://login.chinacloudapi.cn")
 
-    @patch(auth_context_patch)
-    def test_auth_client(self, auth_context):
-        """Test authentication client."""
-        expiry_time = datetime.now() + timedelta(1)
-        auth_context.return_value = mock_auth_context_methods(expiry_time)
-
-        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
-        auth_client = AuthClient(
-            tenant_id=kv_settings.tenantid,
-            client_id=TEST_TOKEN["_clientId"],
-            client_uri=TEST_TOKEN["resource"],
-            name="auth_test",
-            debug=True,
-        )
-
-        self.assertEqual(auth_client.name, "auth_test")
-        self.assertEqual(auth_client.auth_id, "auth_test")
-        self.assertEqual(auth_client.user_oid, j_acc_token["oid"])
-        self.assertIsNotNone(auth_client._get_parsed_token_data)
-        self.assertEqual(auth_client._expires_on, expiry_time)
-        self.assertFalse(auth_client._expired_creds)
-        self.assertEqual(auth_client.token, ACC_TOKEN)
-        _, tok = auth_client._adal_callback("server", "res", "scope", "scheme")
-        self.assertEqual(tok, ACC_TOKEN)
-
-    @patch(auth_context_patch)
-    def test_keyring_auth_client(self, auth_context):
-        """Test keyring auth client."""
-        expiry_time = datetime.now() + timedelta(1)
-        auth_context.return_value = mock_auth_context_methods(expiry_time)
-        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
-
-        key_ring_auth_client = KeyringAuthClient(
-            tenant_id=kv_settings.tenantid,
-            client_id=TEST_TOKEN["_clientId"],
-            client_url=TEST_TOKEN["resource"],
-            name="auth_test",
-            debug=True,
-        )
-        # Token should already be in keyring
-        self.assertIsNotNone(keyring.get_password("auth_test", "adal_context_1"))
-
-        current_token_data = key_ring_auth_client.config_data.copy()
-        key_ring_auth_client._get_creds()
-        for elem in ["accessToken", "refreshToken", "expiresOn"]:
-            self.assertEqual(
-                current_token_data[elem], key_ring_auth_client.config_data[elem]
-            )
-            if elem == "expiresOn":
-                continue
-            self.assertFalse(
-                current_token_data[elem] is key_ring_auth_client.config_data[elem]
-            )
-
-    @patch(is_ipython_patch)
-    @patch(display_patch)
-    @patch(HTML_patch)
-    @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_keyvault_client(
         self,
         sec_client,
-        az_connect_core,
-        html_ip,
-        display_ip,
-        is_ipython_ip,
     ):
         kv_sec_client = _SecretClientTest()
         sec_client_obj = MagicMock()
@@ -350,16 +286,15 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual(keyvault_client.get_secret("MyTestSecret"), "TheActualValue")
 
     @patch(kv_mgmt_client_patch)
-    @patch(auth_context_patch)
     @patch(az_connect_core_patch)
-    def test_kv_mgmt_client(self, az_core, auth_context, kv_mgmt):
+    def test_kv_mgmt_client(self, az_core, kv_mgmt):
         AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
         LegacyCreds = namedtuple("legacycreds", ["token"])
         az_core.return_value = AzCredentials(LegacyCreds(ACC_TOKEN), "cred")
-        expiry_time = datetime.now() + timedelta(1)
-        auth_context.return_value = mock_auth_context_methods(expiry_time)
+        # expiry_time = datetime.now() + timedelta(1)
+        # auth_context.return_value = mock_auth_context_methods(expiry_time)
         kv_mgmt.return_value = _KeyVaultMgmtMock()
-        kv_sec_client = _SecretClientTest()
+        # kv_sec_client = _SecretClientTest()
 
         kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
         vault_mgmt = BHKeyVaultMgmtClient(
@@ -389,18 +324,10 @@ class TestSecretsConfig(unittest.TestCase):
             )
             nr_vault_mgmt.create_vault("mynewvault")
 
-    @patch(is_ipython_patch)
-    @patch(display_patch)
-    @patch(HTML_patch)
-    @patch(az_connect_core_patch)
     @patch(sec_client_patch)
     def test_secret_settings(
         self,
         sec_client,
-        az_connect_core,
-        html_ip,
-        display_ip,
-        is_ipython_ip,
     ):
         kv_sec_client = _SecretClientTest()
         sec_client_obj = MagicMock()
@@ -412,7 +339,7 @@ class TestSecretsConfig(unittest.TestCase):
         sec_client.return_value = sec_client_obj
 
         # Check single value
-        kv_settings = get_kv_settings("msticpyconfig-kv.yaml")
+        get_kv_settings("msticpyconfig-kv.yaml")
         sec_settings = secret_settings.SecretsClient()
         kv_entry_name = "TIProviders-VirusTotal-Args-AuthKey"
         conf_path = kv_entry_name.replace("-", ".")

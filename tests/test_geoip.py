@@ -10,6 +10,8 @@ from pathlib import Path
 import nbformat
 import notebook
 import pytest
+import pytest_check as check
+
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 _NB_FOLDER = "docs/notebooks"
@@ -42,3 +44,26 @@ class TestGeoIP(unittest.TestCase):
             with open(nb_err, mode="w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
             raise
+
+
+from msticpy.sectools.geoip import GeoLiteLookup, IPStackLookup
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
+def test_geoiplite_download():
+    """Test forced download of GeoIPLite DB."""
+    test_folder = "test_geolite_data"
+    tgt_folder = Path(test_folder).resolve()
+    try:
+        tgt_folder.mkdir(exist_ok=True)
+        with pytest.warns(None) as warning_record:
+            iplocation = GeoLiteLookup(db_folder=str(tgt_folder), force_update=True)
+            iplocation.close()
+        check.equal(len(warning_record), 0)
+    finally:
+        if tgt_folder.exists():
+            for file in tgt_folder.glob("*"):
+                file.unlink()
+            tgt_folder.rmdir()

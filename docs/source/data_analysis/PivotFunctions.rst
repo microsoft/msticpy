@@ -9,15 +9,73 @@ modules. However, there is no simple way to discover where these
 functions are and what types of data the function is relevant to.
 
 Pivot functions bring this functionality together grouped around
-*Entities*.
+*Entities*. Entities are representations real-world objects found
+commonly in CyberSec investigations.
+Some examples are: IpAddress, Host, Account, URL.
 
-Entities are representations of real-world objects commonly encountered in
-CyberSec investigations. Some examples are:
+The pivot functions are attached to the entities most relevant
+to that operation. E.g. IP geolocation lookup is a method of the
+IpAddress entity. The functions are also grouped into logical
+containers. You can see some examples here of functions being
+run on the IpAddress entity in the "util" group.
 
--  IP Address
--  Host
--  Account
--  URL
+.. parsed-literal::
+
+    >>> IpAddress.util.ip_type(ip_str="157.53.1.1"))
+    ip          result
+    157.53.1.1  Public
+
+
+    >>> IpAddress.util.whois("157.53.1.1"))
+    asn  asn_cidr  asn_country_code  asn_date    asn_description  asn_registry  nets .....
+    NA   NA        US                2015-04-01  NA               arin          [{'cidr': '157.53.0.0/16'...
+
+    >>> IpAddress.util.geoloc_mm(value="157.53.1.1"))
+    CountryCode  CountryName    State   City   Longitude   Latitude   Asn...
+    US           United States  None    None   -97.822     37.751     None...
+
+This second example shows a pivot function that does a data query for host
+entities. The "list_host_logons" function is an AzureSentinel query.
+If you have queries for other environments such as Splunk or MDE, these
+appear in their own containers.
+
+.. parsed-literal::
+    >>> Host.AzureSentinel.list_host_logons(host_name="VictimPc")
+    Account               EventID   TimeGenerated                      Computer                 SubjectUserName   SubjectDomainName
+    NT AUTHORITY\SYSTEM   4624      2020-10-01 22:39:36.987000+00:00   VictimPc.Contoso.Azure   VictimPc$         CONTOSO
+    NT AUTHORITY\SYSTEM   4624      2020-10-01 22:39:37.220000+00:00   VictimPc.Contoso.Azure   VictimPc$         CONTOSO
+    NT AUTHORITY\SYSTEM   4624      2020-10-01 22:39:42.603000+00:00   VictimPc.Contoso.Azure   VictimPc$         CONTOSO
+
+
+
+You can also chain pivot functions together using pandas to create a processing
+pipeline that does multiple operations on data:
+
+.. code:: ipython3
+
+    >>> (
+            # take a list of IP Addresses
+            suspicious_ips_df
+            # Lookup IPs at VirusTotal
+            .mp_pivot.run(IpAddress.ti.lookup_ipv4_VirusTotal, column="IPAddress")
+            # Filter on high severity TI hits
+            .query("Severity == 'high'")
+            # Find who owns these IPs
+            .mp_pivot.run(IpAddress.util.whois, column="Ioc", join="left")
+            # Query IPs that have login attempts in our AAD
+            .mp_pivot.run(IpAddress.AzureSentinel.list_aad_signins_for_ip, ip_address_list="Ioc")
+            # Send the output of this to a plot
+            .mp_timeline.plot(
+                title="High Severity IPs with Logon attempts",
+                source_columns=["UserPrincipalName", "IPAddress", "ResultType", "ClientAppUsed", "UserAgent", "Location"],
+                group_by="UserPrincipalName"
+            )
+        )
+
+
+
+.. note:: We'll see many more examples of how to do these pivoting
+   operations later in the document.
 
 *MSTICPy* has had entity classes from the very early days but, until now,
 these have only been used sporadically in the rest of the package.
@@ -43,10 +101,10 @@ more standardized form. This gives us several benefits:
    you want to use.
 
 
-What is Pivoting?
------------------
+What is "Pivoting"?
+-------------------
 
-The name comes from the common practice of Cyber investigators
+The term comes from the common practice of Cyber investigators
 navigating between related entities. For example an entity/investigation
 chain might look like the following:
 
@@ -918,8 +976,8 @@ TimeGenerated                      OperationName       ResultType  Identity     
 ================================   ================  ============  ==========  =======  ==========  ================================  ===========================  ===============  ==============================  =========================  ===============  ===================================  ==========
 
 
-Using iterable values for parameters that only accept single values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using iterable values for queries that only accept single values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In this case the pivot function will iterate through the values of the
 iterable, making a separate query for each and then joining the results.
@@ -1189,7 +1247,7 @@ you can use either “column” or “obs_column”.
 A pandas processing pipeline with pivot functions
 -------------------------------------------------
 
-In an earlier section `What is Pivoting?`_, we gave an example of
+In an earlier section `What is "Pivoting"?`_, we gave an example of
 a typical pivoting pipeline that you might see in a cybersec investigation.
 
 Because pivot functions can take pandas DataFrames as inputs and return them

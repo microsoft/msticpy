@@ -57,7 +57,13 @@ def check_version():
     else:
         latest_version = max(parse_version(s) for s in pkg_data["releases"].keys())
 
-    print("msticpy version", "installed:", installed_version, "latest:", latest_version)
+    print(
+        "msticpy version",
+        "installed:",
+        installed_version,
+        "latest published:",
+        latest_version,
+    )
     if installed_version < latest_version:
         print(f"A newer version {latest_version} is available.")
         print("Upgrade with pip install --upgrade msticpy")

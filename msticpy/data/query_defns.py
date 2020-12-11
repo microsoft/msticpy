@@ -83,7 +83,6 @@ class DataEnvironment(Enum):
     SecurityGraph = 4
     MDE = 5
     MDATP = 5
-    MDE = 5
     LocalData = 6
     Splunk = 7
     Mordor = 8

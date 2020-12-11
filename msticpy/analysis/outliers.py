@@ -29,7 +29,7 @@ except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Sklearn and matplotlib installed",
         title="Error importing Scikit Learn and matplotlib",
-        extra="scikit",
+        extra="ml",
     ) from imp_err
 
 __version__ = VERSION

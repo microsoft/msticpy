@@ -182,15 +182,15 @@ class MordorDriver(DriverBase):
             for file_path in mdr_item.get_file_paths():
                 mitre_data = mdr_item.get_attacks()
                 techniques = ", ".join(
-                    [f"{att.technique}: {att.technique_name}" for att in mitre_data]
+                    f"{att.technique}: {att.technique_name}" for att in mitre_data
                 )
+
                 tactics = ", ".join(
-                    [
-                        f"{tac[0]}: {tac[1]}"
-                        for att in mitre_data
-                        for tac in att.tactics_full
-                    ]
+                    f"{tac[0]}: {tac[1]}"
+                    for att in mitre_data
+                    for tac in att.tactics_full
                 )
+
                 doc_string: List[str] = [
                     f"{mdr_item.title}",
                     "",

@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import sys
 from importlib import import_module
-from typing import Dict, Set
+from typing import Dict, List, Optional, Set
 
 import networkx as nx
 
@@ -20,7 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-PKG_TOKENS = r"([^=><]+)([=><]+)(.+)"
+PKG_TOKENS = r"([^#=><]+)([~=><]+)(.+)"
 
 
 # pylint: disable=too-few-public-methods
@@ -51,15 +51,16 @@ _PKG_RENAME_NAME = {
 }
 
 
-def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
+def _get_setup_reqs(
+    package_root: str, req_file="requirements.txt", extras: Optional[List[str]] = None
+):
     with open(Path(package_root).joinpath(req_file), "r") as req_f:
         req_list = req_f.readlines()
 
-    setup_pkgs = {
-        re.match(PKG_TOKENS, item).groups()  # type: ignore
-        for item in req_list
-        if re.match(PKG_TOKENS, item)
-    }
+    setup_pkgs = _extract_pkg_specs(req_list)
+    if extras:
+        extra_pkgs = _extract_pkg_specs(extras)
+        setup_pkgs = setup_pkgs | extra_pkgs
     setup_versions = {key[0].lower(): key for key in setup_pkgs}
     setup_reqs = {key[0].lower(): key[0] for key in setup_pkgs}
 
@@ -71,16 +72,23 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
             setup_reqs.pop(tgt)
             setup_reqs[src] = tgt
     # Rename Azure packages replace "." with "-"
-    az_mgmt_reqs = {}
-    for pkg in setup_reqs:
-        if pkg.startswith("azure-"):
-            az_mgmt_reqs[pkg.replace("-", ".")] = pkg
+    az_mgmt_reqs = {
+        pkg.replace("-", "."): pkg for pkg in setup_reqs if pkg.startswith("azure-")
+    }
 
     for key, pkg in az_mgmt_reqs.items():
         setup_reqs.pop(pkg)
         setup_reqs[key] = pkg
 
     return setup_reqs, setup_versions
+
+
+def _extract_pkg_specs(pkg_specs: List[str]):
+    return {
+        re.match(PKG_TOKENS, item).groups()  # type: ignore
+        for item in pkg_specs
+        if re.match(PKG_TOKENS, item) and not item.strip().startswith("#")
+    }
 
 
 def _get_pkg_from_path(pkg_file: str, pkg_root: str):
@@ -192,7 +200,10 @@ def _match_pkg_to_reqs(imports, setup_reqs):
 
 
 def analyze_imports(
-    package_root: str, package_name: str, req_file: str = "requirements.txt"
+    package_root: str,
+    package_name: str,
+    req_file: str = "requirements.txt",
+    extras: Optional[List[str]] = None,
 ) -> Dict[str, ModuleImports]:
     """
     Analyze imports for package.
@@ -206,6 +217,8 @@ def analyze_imports(
     req_file : str, optional
         Name of the requirements file,
         by default "requirements.txt"
+    extras : List[str]
+        A list of extras not specified in requirements file.
 
     Returns
     -------
@@ -213,7 +226,7 @@ def analyze_imports(
         A dictionary of modules and imports
 
     """
-    setup_reqs, _ = _get_setup_reqs(package_root, req_file)
+    setup_reqs, _ = _get_setup_reqs(package_root, req_file, extras)
     pkg_root = Path(package_root) / package_name
     all_mod_imports: Dict[str, ModuleImports] = {}
     pkg_modules = _get_pkg_modules(pkg_root)

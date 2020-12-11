@@ -20,7 +20,7 @@ except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without scipy and statsmodel installed",
         title="Error importing package",
-        extra="timeseries",
+        extra="ml",
     ) from imp_err
 
 __version__ = VERSION
