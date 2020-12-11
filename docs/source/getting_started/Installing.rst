@@ -83,45 +83,56 @@ Extras in msticpy
 
 The extras available in *msticpy* are described in the following table:
 
-+-------------------------+------------------------------------+--------------+
-| extra                   | Functionality                      | Install time |
-+=========================+====================================+==============+
-| default install         | - Most functionality (approx 75%)  |    45s       |
-| (no extra)              |                                    |              |
-+-------------------------+------------------------------------+--------------+
-| keyvault                | - Key Vault and keyring storage of |     5s       |
-|                         |   settings secrets                 |              |
-+-------------------------+------------------------------------+--------------+
-| azure                   | - Azure API data retrieval         |  1m:05s      |
-|                         |   (subs, resources, Vms, etc.)     |              |
-|                         | - Azure storage APIs               |              |
-|                         | - Azure Sentinel APIs (not data    |              |
-|                         |   query)                           |              |
-|                         | - Also includes "keyvault"         |              |
-+-------------------------+------------------------------------+--------------+
-| kql                     | - Azure Sentinel data queries      |  2m:00s      |
-|                         | - Kqlmagic                         |              |
-+-------------------------+------------------------------------+--------------+
-| azuresentinel           | - Combination of default install   |  3m:10s      |
-|                         |   plus "azure", "keyvault" and     |              |
-|                         |   "kql"                            |              |
-+-------------------------+------------------------------------+--------------+
-| ml                      | - Timeseries analysis              |    25s       |
-|                         | - Event clustering                 |              |
-|                         | - Outlier analysis                 |              |
-+-------------------------+------------------------------------+--------------+
-| splunk                  | - Splunk data queries              |     3s       |
-+-------------------------+------------------------------------+--------------+
-| vt3                     | - VirusTotal V3 graph API          |     4s       |
-|                         |   (default VT lookup is included   |              |
-|                         |   in base install)                 |              |
-+-------------------------+------------------------------------+--------------+
-| all                     | - Includes all of above packages   |  4m:00s      |
-+-------------------------+------------------------------------+--------------+
-| dev                     | - Development tools plus "base"    |  1m:00s      |
-+-------------------------+------------------------------------+--------------+
-| test                    | - "dev" plus "all"                 |  4m:20s      |
-+-------------------------+------------------------------------+--------------+
++------------------+------------------------------------+--------------+--------------+
+| extra            | Functionality                      | Install time | Install time |
+|                  |                                    | (increment)  | (full)       |
++==================+====================================+==============+==============+
+| default install  | - Most functionality (approx 75%)  |       --     |   1m:13s     |
+| (no extra)       |                                    |              |              |
++------------------+------------------------------------+--------------+--------------+
+| keyvault         | - Key Vault and keyring storage of |       5s     |   1m:18s     |
+|                  |   settings secrets                 |              |              |
++------------------+------------------------------------+--------------+--------------+
+| azure            | - Azure API data retrieval         |   1m:36s     |   2m:50s     |
+|                  |   (subs, resources, Vms, etc.)     |              |              |
+|                  | - Azure storage APIs               |              |              |
+|                  | - Azure Sentinel APIs (not data    |              |              |
+|                  |   query)                           |              |              |
+|                  | - Also includes "keyvault"         |              |              |
++------------------+------------------------------------+--------------+--------------+
+| kql              | - Azure Sentinel data queries      |   2m:07s     |   3m:20s     |
+|                  | - Kqlmagic                         |              |              |
++------------------+------------------------------------+--------------+--------------+
+| azsentinel       | - Combination of default install   |   3m:48s     |   5m:00s     |
+|                  |   plus "azure", "keyvault" and     |              |              |
+|                  |   "kql"                            |              |              |
++------------------+------------------------------------+--------------+--------------+
+| ml               | - Timeseries analysis              |      29s     |   1m:42s     |
+|                  | - Event clustering                 |              |              |
+|                  | - Outlier analysis                 |              |              |
++------------------+------------------------------------+--------------+--------------+
+| splunk           | - Splunk data queries              |       3s     |   1m:16s     |
++------------------+------------------------------------+--------------+--------------+
+| vt3              | - VirusTotal V3 graph API          |       4s     |   1m:17s     |
+|                  |   (default VT lookup is included   |              |              |
+|                  |   in base install)                 |              |              |
++------------------+------------------------------------+--------------+--------------+
+| all              | - Includes all of above packages   |   4m:00s     |   5m:29s     |
++------------------+------------------------------------+--------------+--------------+
+| dev              | - Development tools plus "base"    |   1m:17s     |   2m:30s     |
++------------------+------------------------------------+--------------+--------------+
+| test             | - "dev" plus "all"                 |   4m:20s     |   5m:50s     |
++------------------+------------------------------------+--------------+--------------+
+
+The installation times here are meant to be indicative of comparative
+times for installation - they will vary depending on the performance of
+your computer and network.
+
+The *Install time (increment)* column shows times relative to
+the base install (i.e. assuming you've already run ``pip install msticpy``).
+The *Install time (full)* column shows the time to install the base
+plus extra. Both columns assume that the following packages are already
+installed: jupyter, pandas and matplotlib.
 
 If you do not specify an "extra" in your pip install command, the base
 dependencies for msticpy will be installed. This has a lot of functionality
@@ -131,7 +142,7 @@ Splunk.
 
 Some of the extras, like "all" and "azuresentinel" are combinations of
 other options collected together as a convenience. You can also specify
-multiple during install.
+multiple extras during install, separating them with commas.
 
 .. code:: bash
 
@@ -154,7 +165,9 @@ exception message:
 
     pip install msticpy[ml]
 
-.. note:: In some cases you many not get an informative error. If
-   experience a problem with some *msticpy* functionality, make sure
+.. note:: In some cases you many not get an informative error. (We've
+   tried to trap all of the cases but if
+   experience a problem with some *msticpy* functionality (especially
+   an *ImportError* exception, make sure
    that you have installed the *extra* that corresponds to the
-   function you are trying to run.
+   functionality you are trying to use.
