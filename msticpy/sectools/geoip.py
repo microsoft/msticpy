@@ -479,8 +479,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if self._reader:
             try:
                 self._reader.close()
-            except Exception:  # pylint: disable=broad-except
-                pass
+            except Exception as err:  # pylint: disable=broad-except
+                print(f"Exception when trying to close GeoIP DB {err}")
 
     def _check_and_update_db(
         self,
