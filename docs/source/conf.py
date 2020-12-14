@@ -175,8 +175,8 @@ texinfo_documents = [
         "msticpy Documentation",
         author,
         "msticpy",
-        "One line description of project.",
-        "Miscellaneous",
+        "Security tools for Python and Jupyter notebooks.",
+        "Security",
     )
 ]
 
@@ -239,4 +239,6 @@ autodoc_mock_imports = [
     "splunk-sdk",
     "splunklib",
     "seaborn",
+    "vt",
+    "vt_graph_api",
 ]
