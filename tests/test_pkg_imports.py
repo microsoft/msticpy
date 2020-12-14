@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import pytest_check as check
 
-from tools.toollib.import_analyzer import analyze_imports
+from tools.toollib.import_analyzer import analyze_imports, get_extras_from_setup
 
 PKG_ROOT = "."
 PKG_NAME = "msticpy"
@@ -26,36 +26,13 @@ CONDA_PKG_EXCEPTIONS = {"vt-py", "vt-graph-api", "nest_asyncio"}
 @pytest.fixture(scope="module")
 def extras_from_setup():
     """Read extras packages from setup.py."""
-    setup_py = Path(PKG_ROOT) / "setup.py"
-
-    setup_txt = None
-    with open(setup_py, "+r") as f_handle:
-        setup_txt = f_handle.read()
-
-    srch_txt = "setuptools.setup("
-    repl_txt = [
-        "def fake_setup(*args, **kwargs):" "    pass",
-        "",
-        "fake_setup(",
-    ]
-    setup_txt = setup_txt.replace(srch_txt, "\n".join(repl_txt))
-
-    neut_setup_py = Path(PKG_ROOT) / "msticpy/neut_setup.py"
-    try:
-        with open(neut_setup_py, "+w") as f_handle:
-            f_handle.writelines(setup_txt)
-
-        setup_mod = importlib.import_module("msticpy.neut_setup", "msticpy")
-        return getattr(setup_mod, "EXTRAS").get("all")
-    finally:
-        neut_setup_py.unlink()
+    return get_extras_from_setup(PKG_ROOT, extra="all")
 
 
-def test_missing_pkgs_req(extras_from_setup):
+def test_missing_pkgs_req():
     """Check for packages used in code but not in requirements.txt."""
-    extras = extras_from_setup
     mod_imports = analyze_imports(
-        package_root=PKG_ROOT, package_name=PKG_NAME, req_file=REQS_FILE, extras=extras
+        package_root=PKG_ROOT, package_name=PKG_NAME, req_file=REQS_FILE
     )
     import_errs = {v for s in mod_imports.values() for v in s.unknown}
     print("re module path:", re.__file__)
@@ -84,33 +61,13 @@ def test_conda_reqs(extras_from_setup):
     conda_reqs_file = Path(PKG_ROOT) / "conda/conda-reqs.txt"
     conda_reqs_pip_file = Path(PKG_ROOT) / "conda/conda-reqs-pip.txt"
 
-    main_reqs_dict = {}
-    with open(str(main_reqs_file), "r") as f_hdl:
-        reqs = f_hdl.readlines()
-        lines = [line for line in reqs if not line.strip().startswith("#")]
-        for item in [re.split(REQS_OP_RGX, line) for line in lines]:
-            main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
+    main_reqs_dict = _get_reqs_from_file(main_reqs_file)
     # Add extras
     for item in [re.split(REQS_OP_RGX, line) for line in extras_from_setup]:
         main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
 
-    conda_reqs_dict = {}
-    with open(str(conda_reqs_file), "r") as f_hdl:
-        reqs = f_hdl.readlines()
-        lines = [line for line in reqs if not line.strip().startswith("#")]
-        for item in [re.split(REQS_OP_RGX, line) for line in lines]:
-            conda_reqs_dict[item[0].strip()] = (
-                item[1].strip() if len(item) > 1 else None
-            )
-
-    conda_reqs_pip_dict = {}
-    with open(str(conda_reqs_pip_file), "r") as f_hdl:
-        reqs = f_hdl.readlines()
-        lines = [line for line in reqs if not line.strip().startswith("#")]
-        for item in [re.split(REQS_OP_RGX, line) for line in lines]:
-            conda_reqs_pip_dict[item[0].strip()] = (
-                item[1].strip() if len(item) > 1 else None
-            )
+    conda_reqs_dict = _get_reqs_from_file(conda_reqs_file)
+    conda_reqs_pip_dict = _get_reqs_from_file(conda_reqs_pip_file)
 
     for key, val in main_reqs_dict.items():
         print(f"Checking {key} in conda-reqs.txt", bool(key in conda_reqs_dict))
@@ -152,3 +109,15 @@ def test_conda_reqs(extras_from_setup):
     if conda_reqs_pip_dict:
         print("Extra items found in conda-reqs-pip.txt", conda_reqs_dict)
     check.is_false(conda_reqs_pip_dict, "no extra items in conda-reqs-pip.txt")
+
+
+def _get_reqs_from_file(reqs_file):
+    conda_reqs_dict = {}
+    with open(str(reqs_file), "r") as f_hdl:
+        reqs = f_hdl.readlines()
+        lines = [line for line in reqs if not line.strip().startswith("#")]
+        for item in [re.split(REQS_OP_RGX, line) for line in lines]:
+            conda_reqs_dict[item[0].strip()] = (
+                item[1].strip() if len(item) > 1 else None
+            )
+    return conda_reqs_dict
