@@ -3,18 +3,17 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import os
+from collections import namedtuple
 from pathlib import Path
 from unittest.mock import patch
+from collections import namedtuple
 
-from pytest import raises
+import pytest
+from msticpy.common import pkg_config
+from msticpy.common.provider_settings import get_provider_settings
+from msticpy.data.azure_data import AzureData
 
-from ..msticpy.data.azure_data import AzureData
-from ..msticpy.common.utility import MsticpyException
-from ..msticpy.common import pkg_config
-from ..msticpy.common.provider_settings import get_provider_settings
-
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from .unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -24,20 +23,22 @@ def test_azure_init():
     assert type(az) == AzureData
 
 
+@pytest.mark.skip
 def test_azure_connect_exp():
-    with raises(MsticpyException):
+    with pytest.raises(AttributeError):
         az = AzureData()
         az.connect()
 
 
 @patch(AzureData.__module__ + ".SubscriptionClient")
-@patch(AzureData.__module__ + ".ServicePrincipalCredentials")
-def test_azure_connect(mock_sub_client, mock_creds):
+@patch(AzureData.__module__ + ".az_connect")
+def test_azure_connect(mock_creds, mock_sub_client):
+    AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
     mock_sub_client.return_value = "Client"
-    mock_creds.return_value = "Creds"
+    mock_creds.return_value = AzCredentials("cred", "cred")
     az = AzureData()
-    az.connect(client_id="XXX", tenant_id="XXX", secret="XXX")
-    assert az.connected == True
+    az.connect()
+    assert az.connected is True
 
 
 def test_get_config():

@@ -60,7 +60,10 @@ _KV_PLACE_HOLDER = {"KeyVault": None}
 
 
 def _read_config_settings(conf_file):
-    sys_config = conf_file = os.environ["MSTICPYCONFIG"]
+    try:
+        sys_config = os.environ["MSTICPYCONFIG"]
+    except KeyError:
+        sys_config = Path.cwd().joinpath("msticpyconfig.yaml")
     if not conf_file:
         conf_file = sys_config
     if not conf_file:
@@ -142,9 +145,10 @@ def _prompt_yn(mssg, confirm):
 
 
 def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
+    print("Vault management requires authentication")
+    kv_mgmt = BHKeyVaultMgmtClient(**kwargs)
+    vault_uri = None
     try:
-        print("Vault management requires authentication")
-        kv_mgmt = BHKeyVaultMgmtClient(**kwargs)
         vault_uri = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
     except CloudError:
@@ -170,7 +174,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
 
 
 def _list_secrets(vault_name: str, confirm, **kwargs):
-    mssg = f"Show secret values (y/n)?"
+    mssg = "Show secret values (y/n)?"
     print(f"Secrets currently in vault {vault_name}")
     show_secrets = _prompt_yn(mssg, confirm)
     kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)

@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Parameter extractor helper functions for use with IPython/Juptyer queries."""
-from typing import List, Dict, Tuple, Any, Iterable
+from typing import List, Dict, Mapping, Tuple, Any
 
 from .query_store import QuerySource
 from ..common.utility import export
@@ -43,7 +43,7 @@ def extract_query_params(
 
     """
     # get the parameters for this query
-    all_param_names = query_source.params.keys()
+    all_params = query_source.params
 
     # required_params are those that don't have defaults set in the query
     # template. Build a dictionary to hold the values. This will contain
@@ -53,21 +53,26 @@ def extract_query_params(
     req_params: Dict[str, Any] = {param: None for param in req_param_names}
 
     # try to retrieve any parameters as attributes of the args objects
-    _get_object_params(args, all_param_names, req_params)
+    _get_object_params(args, all_params, req_params)
 
     # If any kwargs parameters have been supplied, add these.
     # These any parameters obtained from _get_object_params
     if kwargs:
-        req_params.update(kwargs)
+        resolved_params = query_source.resolve_param_aliases(kwargs)
+        req_params.update(
+            {key: arg for key, arg in resolved_params.items() if key in all_params}
+        )
 
     # Get the names of any params that were required but we didn't
     # find a value for
-    missing_params = [p_name for p_name, p_value in req_params.items() if not p_value]
+    missing_params = [
+        p_name for p_name, p_value in req_params.items() if p_value is None
+    ]
     return req_params, missing_params
 
 
 def _get_object_params(
-    args: Tuple[Any, ...], param_names: Iterable[str], req_params: Dict[str, Any]
+    args: Tuple[Any, ...], params: Mapping[str, Any], req_params: Dict[str, Any]
 ):
     """
     Get params from attributes of arg objects.
@@ -76,23 +81,26 @@ def _get_object_params(
     ----------
     args : Tuple[Any]
         Args list from calling function
-    param_names : Iterable[str]
+    params : Mapping[str, Dict[str, Any]]
         The list of parameter names to look for
     req_params : Dict[str, str]
         Dictionary of required parameters
 
     """
+    remaining_params = list(params.keys())
     for arg_object in args:
-        if isinstance(arg_object, QueryParamProvider):
-            for param in param_names:
+        if isinstance(arg_object, (str, int, float, bool)):
+            # ignore some common primitive types
+            continue
+        for param in remaining_params:
+            if isinstance(arg_object, QueryParamProvider):
                 if param in arg_object.query_params:
                     req_params[param] = arg_object.query_params[param]
-        else:
-            for param in param_names:
+            else:
                 if isinstance(arg_object, dict) and param in arg_object:
                     req_params[param] = arg_object.get(param, None)
                 elif hasattr(arg_object, param):
                     req_params[param] = getattr(arg_object, param)
-        param_names = [
+        remaining_params = [
             p_name for p_name, p_value in req_params.items() if p_value is not None
         ]

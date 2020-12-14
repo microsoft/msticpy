@@ -13,19 +13,20 @@ requests per minute for the account type that you have.
 
 """
 import abc
+import traceback
 from functools import lru_cache
 from http import client
 from json import JSONDecodeError
-import traceback
 from typing import Any, Dict, List, Tuple
 
 import attr
-from attr import Factory
 import requests
+from attr import Factory
 
 from ..._version import VERSION
+from ...common.exceptions import MsticpyConfigException
 from ...common.utility import export
-from .ti_provider_base import LookupResult, TIProvider, TISeverity, TILookupStatus
+from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -68,11 +69,17 @@ class HttpProvider(TIProvider):
         if "AuthKey" in kwargs:
             self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
-        for req_param in self._REQUIRED_PARAMS:
-            if req_param not in self._request_params:
-                raise ValueError(
-                    f"{req_param} value was not found for {self.__class__.__name__}"
-                )
+        missing_params = [
+            param
+            for param in self._REQUIRED_PARAMS
+            if param not in self._request_params
+        ]
+        if missing_params:
+            param_list = ", ".join([f"'{param}'" for param in missing_params])
+            raise MsticpyConfigException(
+                f"Parameter values missing for TI Provider '{self.__class__.__name__}'",
+                f"Missing parameters are: {param_list}",
+            )
 
     # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
@@ -123,6 +130,7 @@ class HttpProvider(TIProvider):
         if result.status:
             return result
 
+        req_params: Dict[str, Any] = {}
         try:
             verb, req_params = self._substitute_parms(
                 result.safe_ioc, result.ioc_type, query_type
@@ -189,11 +197,7 @@ class HttpProvider(TIProvider):
         """
         req_params = {"observable": ioc}
         req_params.update(self._request_params)
-        if query_type:
-            ioc_key = ioc_type + "-" + query_type
-        else:
-            ioc_key = ioc_type
-
+        ioc_key = ioc_type + "-" + query_type if query_type else ioc_type
         src = self._IOC_QUERIES.get(ioc_key, None)
         if not src:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
@@ -222,7 +226,7 @@ class HttpProvider(TIProvider):
             }
             req_dict["data"] = q_data
         if src.auth_type and src.auth_str:
-            auth_strs: Tuple = tuple([p.format(**req_params) for p in src.auth_str])
+            auth_strs: Tuple = tuple(p.format(**req_params) for p in src.auth_str)
             if src.auth_type == "HTTPBasic":
                 req_dict["auth"] = auth_strs
             else:

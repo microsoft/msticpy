@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 
 # Test code
-from ..msticpy.sectools.iocextract import IoCExtract
+from msticpy.sectools.iocextract import IoCExtract
 
 TEST_CASES = {
     "ipv4_test": r"c:\one\path\or\another\myprocess -ip4:206.123.1.123",
@@ -15,8 +15,8 @@ TEST_CASES = {
     "linux_path_test": r"/bin/bash --file:./bish --file:/bin/bash --file:../../bosh",
     "md5_hash_test": "00236a2ae558018ed13b5222ef1bd987hash -something-hash=00236a2ae558018ed13b5222ef1bd988hash -something -hash=00236a2ae558018ed13b5222ef1bd989",
     "sha1_hash_test": "00236a2ae558018ed13b5222ef1bd98700000001hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000002hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000003",
-    "sha256_hash_test": """00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901235hash -something
--hash=00236a2ae558018ed13b5222ef1bd98700000001123456789012345678901236""",
+    "sha256_hash_test": """00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901234hash -something -hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901235hash -something
+-hash=00236a2ae558018ed13b5222ef1bd98700000001424246789042424678901236""",
     "url2_test": "curl 'https://www.virustotal.com/en/ip-address/90.156.201.27/information/'",
     "domain1_test": "some text with a domain.like.uk in it",
     "domain_neg_test": "some text with a bad domain.like.iandom in it",
@@ -43,7 +43,7 @@ class TestIoCExtractor(unittest.TestCase):
         self.__run_extract(self.extractor, "ipv4", {"ipv4": 1})
 
     def test_ipv6(self):
-        self.__run_extract(self.extractor, "ipv6", {"ipv6": 2})
+        self.__run_extract(self.extractor, "ipv6", {"ipv6": 3})
 
     def test_url(self):
         self.__run_extract(self.extractor, "url", {"url": 2, "dns": 2, "ipv4": 0})
@@ -76,7 +76,7 @@ class TestIoCExtractor(unittest.TestCase):
 
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
@@ -103,7 +103,7 @@ class TestIoCExtractor(unittest.TestCase):
         #     print(row.Observable)
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
@@ -141,7 +141,7 @@ class TestIoCExtractor(unittest.TestCase):
 
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
@@ -168,7 +168,7 @@ class TestIoCExtractor(unittest.TestCase):
         #     print(row.Observable)
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)

@@ -9,7 +9,7 @@ import os
 from os import path
 import pandas as pd
 
-from ..msticpy.sectools import base64unpack as b64
+from msticpy.sectools import base64unpack as b64
 
 
 _test_data_folders = [
@@ -89,13 +89,13 @@ class TestB64Unpack(unittest.TestCase):
             result_df = b64.unpack_items(data=input_df, column="input", trace=True)
             # we should get 2x the rows as the previous test (since data is duplicated)
             # plus 2 added columns
-            self.assertEqual(result_df.shape, (16, 14))
+            self.assertEqual(result_df.shape, (16, 15))
             self.assertIsNotNone(result_df)
 
             result_df = b64.unpack_df(data=input_df, column="input", trace=True)
             # we should get 2x the rows as the previous test (since data is duplicated)
             # plus 2 added columns
-            self.assertEqual(result_df.shape, (16, 14))
+            self.assertEqual(result_df.shape, (16, 15))
             self.assertIsNotNone(result_df)
 
         except FileNotFoundError as ex:

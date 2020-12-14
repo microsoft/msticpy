@@ -4,15 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """security_alert test class."""
-import sys
 import unittest
+
+import networkx as nx
 import pandas as pd
-
-from ..msticpy.nbtools.security_alert import SecurityAlert
-from ..msticpy.nbtools.security_alert_graph import create_alert_graph
-from ..msticpy.nbtools.nbdisplay import display_alert
-from ..msticpy.data.query_defns import DataFamily, DataEnvironment
-
+import pytest
+import pytest_check as check
+from msticpy.data.query_defns import DataEnvironment, DataFamily
+from msticpy.datamodel import entities
+from msticpy.nbtools.nbdisplay import format_alert
+from msticpy.nbtools.security_alert import SecurityAlert
+from msticpy.nbtools.security_alert_graph import create_alert_graph
 
 sample_alert = {
     "StartTimeUtc": "2018-09-27 16:59:16",
@@ -216,13 +218,17 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertEqual(alert.data_environment, DataEnvironment.LogAnalytics)
 
     def test_alert_display(self):
-
         alert = SecurityAlert(self.raw_alert)
         entity_str = ", ".join([str(e) for e in alert.entities])
         self.assertIsNotNone(entity_str)
         alert_html = alert.to_html(show_entities=True)
         self.assertIsNotNone(alert_html)
         alert_html = alert.to_html(show_entities=False)
+        self.assertIsNotNone(alert_html)
+
+        alert_html = format_alert(alert)
+        self.assertIsNotNone(alert_html)
+        alert_html = format_alert(self.raw_alert)
         self.assertIsNotNone(alert_html)
 
     def test_alert_graph(self):
@@ -235,3 +241,48 @@ class TestSecurityAlert(unittest.TestCase):
         alert = SecurityAlert(self.raw_alert)
         for ent in alert.entities:
             self.assertIsNotNone(ent.description_str)
+
+
+@pytest.fixture(scope="module")
+def alert():
+    raw_alert = pd.Series(sample_alert)
+    raw_alert["StartTimeUtc"] = pd.to_datetime(raw_alert["StartTimeUtc"])
+    raw_alert["EndTimeUtc"] = pd.to_datetime(raw_alert["EndTimeUtc"])
+    raw_alert["TimeGeneratedUtc"] = pd.to_datetime(raw_alert["TimeGeneratedUtc"])
+    return raw_alert
+
+
+def test_alert_native_graph(alert):
+    alert = SecurityAlert(alert)
+    graph = None
+    for ent in alert.entities:
+        if graph is None:
+            graph = ent.to_networkx()
+        else:
+            if not graph.has_node(ent):
+                graph = nx.compose(graph, ent.to_networkx())
+    check.greater_equal(len(graph.nodes), 1)
+
+    alert_ent = entities.Alert(alert)
+    # alert_graph = alert_ent.to_networkx()
+    # nx_alert_node = next(iter(alert_graph.nodes))
+    # graph = nx.compose(alert_graph, graph)
+
+    # Get the sets of components
+    connected_components = list(nx.connected_components(graph)).copy()
+    edges_to_add = []
+    for sub_graph in connected_components:
+        # connect alert to most connected entities
+        node_neighbors = [
+            (node, len(list(nx.neighbors(graph, node)))) for node in sub_graph
+        ]
+        most_connected_nodes = [
+            node for node, neighbors in node_neighbors if neighbors > 1
+        ]
+        node_list = most_connected_nodes or [node for node, count in node_neighbors]
+        for node in node_list:
+            # if node != nx_alert_node:
+            graph.add_edge(alert_ent, node, name=node.__class__.__name__)
+
+    check.equal(len(list(nx.connected_components(graph))), 1)
+    # print("\n".join([str((node, len(list(nx.neighbors(graph, node))))) for node in sub_graphs[0]]))

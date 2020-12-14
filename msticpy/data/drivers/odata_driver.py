@@ -15,7 +15,7 @@ import pandas as pd
 
 from .driver_base import DriverBase, QuerySource
 from ...common import pkg_config as config
-from ...common.utility import MsticpyException
+from ...common.exceptions import MsticpyException
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -54,7 +54,7 @@ class OData(DriverBase):
     # pylint: enable=too-many-instance-attributes
     @abc.abstractmethod
     def query(
-        self, query: str, query_source: QuerySource = None
+        self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.

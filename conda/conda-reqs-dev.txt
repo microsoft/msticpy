@@ -1,3 +1,4 @@
+aiohttp>=3.0.0
 bandit>=1.6.2
 black>=19.3b0
 coverage>=4.5.4
@@ -14,6 +15,7 @@ pyflakes>=2.1.1
 pylint>=2.3.1
 pytest-cov>=2.7.1
 pytest>=5.0.1
+responses>=0.10.8
 sphinx_rtd_theme
 sphinx>=2.1.2
 virtualenv

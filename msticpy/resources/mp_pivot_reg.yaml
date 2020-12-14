@@ -1,0 +1,207 @@
+pivot_providers:
+  # Documentation
+  # Add an entry with a unique (in the file) key - the actual value
+  # isn't used anywhere but should be descriptive
+  #
+  # new_pivot_func:
+  #   ## The src_module to import
+  #   src_module: msticpy.sectools.ip_utils
+  #
+  #   ## class to import and instantiate that contains the function/method
+  #   ## (not needed if the target function is a Python function)
+  #   class: ClassName
+  #
+  #   ## The name of the function to wrap
+  #   src_func_name: get_whois_df
+  #
+  #   ## rename the function - this is the name that will appear in the
+  #   ## pivot UI
+  #   func_new_name: whois
+  #
+  #   ## input type = dataframe, iterable, value
+  #   ## Note: this is the input type that the wrapped function expects, not
+  #   ## what the pivot function supports.
+  #   input_type: dataframe
+  #
+  #   ## dict of entity_map supported. Each entry should be the
+  #   ## name of the entity with the entity attribute to as input. E.g.
+  #   ## for a function to lookup whois info for an IP Address from an IpAddress
+  #   ## entity, the key will be 'IpAddress' and the value 'Address' (the
+  #   ## attribute of the entity containing the IP address value.)
+  #   entity_map:
+  #     IpAddress: Address
+  #     Host: HostName
+  #     Account: Name
+  #
+  #   ## The name that the function uses as input param for DataFrame
+  #   ## (only relevant if the target function takes DF input)
+  #   func_df_param_name: data
+  #
+  #   ## The name that function uses to identify the input column name
+  #   ## (only relevant if the target function takes DF input)
+  #   func_df_col_param_name: ip_column
+  #
+  #   ## The name of the column in the output DF to use as a key to join
+  #   ## to the input. This defaults to the the same column name
+  #   ## as func_df_col_param_name. Only relevant if the wrapped func
+  #   ## returns a DF
+  #   func_out_column_name: ip
+  #
+  #   ## static parameters (kwargs) passed to the target function
+  #   func_static_params:
+  #     whois_col: whois_result
+  #
+  #   ## kwarg to use as input. The name of the argument that the wrapped
+  #   ## function uses for its input value (only relevant for input_type ==
+  #   ## value)
+  #   func_input_value_arg: ip_address
+  #
+  who_is:
+    src_module: msticpy.sectools.ip_utils
+    src_func_name: get_whois_df
+    func_new_name: whois
+    input_type: dataframe
+    entity_map:
+      IpAddress: Address
+    func_df_param_name: data
+    func_df_col_param_name: ip_column
+    func_out_column_name: query
+    func_static_params:
+      all_columns: True
+      show_progress: False
+    func_input_value_arg: ip_address
+  ip_type:
+    src_module: msticpy.sectools.ip_utils
+    src_func_name: get_ip_type
+    func_new_name: ip_type
+    input_type: value
+    can_iterate: True
+    entity_map:
+      IpAddress: Address
+    func_df_param_name: data
+    func_df_col_param_name: ip
+    func_out_column_name: ip
+    func_input_value_arg: ip_str
+  b64_unpack:
+    src_module: msticpy.sectools.base64unpack
+    src_func_name: unpack_df
+    func_new_name: b64decode
+    input_type: dataframe
+    entity_map:
+      Process: CommandLine
+      Url: Url
+    func_df_param_name: data
+    func_df_col_param_name: column
+    func_out_column_name: original_string
+  ioc_extract:
+    src_module: msticpy.sectools.iocextract
+    src_class: IoCExtract
+    src_func_name: extract_df
+    func_new_name: extract_iocs
+    input_type: dataframe
+    entity_map:
+      Process: CommandLine
+      Url: Url
+    func_df_param_name: data
+    func_out_column_name: Input
+    func_df_col_param_name: columns
+  domain_valid_tld:
+    src_module: msticpy.sectools.domain_utils
+    src_class: DomainValidator
+    src_func_name: validate_tld
+    func_new_name: dns_validate_tld
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: host
+      Host: fqdn
+    func_input_value_arg: url_domain
+  domain_valid_resolvable:
+    src_module: msticpy.sectools.domain_utils
+    src_class: DomainValidator
+    src_func_name: is_resolvable
+    func_new_name: dns_is_resolvable
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: host
+      Host: fqdn
+    func_input_value_arg: url_domain
+  domain_valid_in_abuse_list:
+    src_module: msticpy.sectools.domain_utils
+    src_class: DomainValidator
+    src_func_name: in_abuse_list
+    func_new_name: dns_in_abuse_list
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: host
+      Host: fqdn
+    func_input_value_arg: url_domain
+  brow_shot:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: screenshot
+    func_new_name: url_screenshot
+    input_type: value
+    can_iterate: False
+    entity_map:
+      Url: Url
+    func_input_value_arg: url
+  domain_components:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: dns_components
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: host
+      Host: fqdn
+    func_input_value_arg: domain
+  url_components:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: url_components
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: Url
+    func_input_value_arg: url
+  dns_resolve:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: dns_resolve
+    input_type: value
+    can_iterate: True
+    entity_map:
+      Url: Url
+      Host: fqdn
+    func_input_value_arg: url_domain
+  ip_rev_resolve:
+    src_module: msticpy.sectools.domain_utils
+    src_func_name: ip_rev_resolve
+    input_type: value
+    can_iterate: True
+    entity_map:
+      IpAddress: Address
+    func_input_value_arg: ip_address
+  geoip_maxmind:
+    src_module: msticpy.sectools.geoip
+    src_class: GeoLiteLookup
+    src_func_name: lookup_ips
+    func_new_name: geoloc_mm
+    input_type: dataframe
+    entity_map:
+      IpAddress: Address
+    func_df_param_name: data
+    func_df_col_param_name: column
+    func_out_column_name: IpAddress
+    func_input_value_arg: ip_address
+  geoip_ipstack:
+    src_module: msticpy.sectools.geoip
+    src_class: IPStackLookup
+    src_func_name: lookup_ips
+    func_new_name: geoloc_ips
+    input_type: dataframe
+    entity_map:
+      IpAddress: Address
+    func_df_param_name: data
+    func_df_col_param_name: column
+    func_out_column_name: IpAddress
+    func_input_value_arg: ip_address

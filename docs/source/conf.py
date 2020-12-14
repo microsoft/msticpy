@@ -6,6 +6,14 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+# type: ignore
+
+# pylint: disable=invalid-name, missing-module-docstring, import-error
+
+# noqa D100
+
+# flake8: noqa
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -16,6 +24,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -27,11 +36,15 @@ project = "msticpy"
 copyright = "2019, (c) Microsoft Corporation."
 author = "Ian Hellen"
 
-# The short X.Y version
-version = ""
-# The full version, including alpha/beta/rc tags
-release = "0.1.5"
 
+with open("../../msticpy/_version.py", "r") as fd:
+    v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
+    _ver = v_match.group(1) if v_match else "no version"
+
+# The full version, including alpha/beta/rc tags
+release = _ver
+# The short X.Y version
+version = _ver
 
 # -- General configuration ---------------------------------------------------
 
@@ -162,8 +175,8 @@ texinfo_documents = [
         "msticpy Documentation",
         author,
         "msticpy",
-        "One line description of project.",
-        "Miscellaneous",
+        "Security tools for Python and Jupyter notebooks.",
+        "Security",
     )
 ]
 
@@ -194,3 +207,38 @@ autodoc_default_options = {
 }
 
 autoclass_content = "both"
+
+autoapi_dirs = ["../../msticpy"]
+
+autodoc_mock_imports = [
+    "adal",
+    "azure.common.exceptions",
+    "azure.core.exceptions",
+    "azure.core.pipeline",
+    "azure.core.pipeline.policies",
+    "azure.core.pipeline.transport",
+    "azure.identity",
+    "azure.keyvault.secrets",
+    "azure.mgmt.compute",
+    "azure.mgmt.compute.models",
+    "azure.mgmt.keyvault",
+    "azure.mgmt.keyvault.models",
+    "azure.mgmt.monitor",
+    "azure.mgmt.network",
+    "azure.mgmt.resource",
+    "azure.mgmt.subscription",
+    "azure.storage.blob",
+    "keyring",
+    "Kqlmagic",
+    "matplotlib",
+    "matplotlib.pyplot",
+    "msrest.authentication",
+    "statsmodels",
+    "scipy",
+    "sklearn",
+    "splunk-sdk",
+    "splunklib",
+    "seaborn",
+    "vt",
+    "vt_graph_api",
+]

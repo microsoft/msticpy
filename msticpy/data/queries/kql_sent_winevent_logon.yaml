@@ -160,7 +160,7 @@ sources:
         type: str
         default: 'SecurityEvent | where EventID == 4625'
   list_all_logons_by_host:
-    description: Retrevies all failed or successful logons to a host
+    description: account all failed or successful logons to a host
     args:
       query: '
         {table}

@@ -11,7 +11,7 @@ from typing import Dict, Any, List
 import pandas as pd
 
 from .._version import VERSION
-from .entityschema import Entity, UnknownEntity
+from ..datamodel.entities import Entity, UnknownEntity
 from .security_base import SecurityBase
 from ..common.utility import export
 
@@ -80,9 +80,10 @@ class SecurityAlert(SecurityBase):
         """Return the item as HTML string."""
         if self.properties:
             title = """
-            <h3>Alert: '{name}'</h3><br>time=<b>{start}</b>,
-            entity=<b>{entity}</b>, id=<b>{id}</b>
-            <br/>
+            <h3>Alert: '{name}'</h3>
+            <b>Alert_time:</b> {start},
+            <b>Compr_entity:</b> {entity},
+            <b>Alert_id:</b> {id}
             """.format(
                 start=self.properties["StartTimeUtc"],
                 name=self.properties["AlertDisplayName"],
@@ -123,11 +124,35 @@ class SecurityAlert(SecurityBase):
         for _, entity in self._src_entities.items():
             if not isinstance(entity, Entity):
                 continue
-            for prop_name, prop_val in entity.properties.items():
-                if isinstance(prop_val, dict) and "$ref" in prop_val:
-                    entity_id = prop_val["$ref"]
+            # Resolve all the simple references
+            ref_props = {
+                name: prop
+                for name, prop in entity.properties.items()
+                if isinstance(prop, dict) and "$ref" in prop
+            }
+            for prop_name, prop_val in ref_props.items():
+                entity_id = prop_val["$ref"]
+                if entity_id in self._src_entities:
+                    entity[prop_name] = self._src_entities[entity_id]
+                    entity.add_edge(entity[prop_name], edge_attrs={"name": prop_name})
+            # Resolve all the lists of references
+            ref_props_multi = {
+                name: prop
+                for name, prop in entity.properties.items()
+                if isinstance(prop, list)
+                and any(elem for elem in prop if "$ref" in elem)
+            }
+            for prop_name, prop_val in ref_props_multi.items():
+                for idx, elem in enumerate(prop_val):
+                    if not isinstance(elem, dict):
+                        continue
+                    entity_id = elem["$ref"]
                     if entity_id in self._src_entities:
-                        entity[prop_name] = self._src_entities[entity_id]
+                        entity[prop_name][idx] = self._src_entities[entity_id]
+                        entity.add_edge(
+                            self._src_entities[entity_id],
+                            edge_attrs={"name": prop_name},
+                        )
 
     def _extract_entities(self, src_row):  # noqa: MC0001
         input_entities = []

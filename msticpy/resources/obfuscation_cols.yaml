@@ -1,0 +1,77 @@
+Common:
+  AADTenantId: uuid
+  Account: acct
+  Computer: '@./:.'
+  DeviceDetail: dict
+  Host: '@./:.'
+  IpAddress: ip
+  Location: str
+  LocationDetails: dict
+  ResourceId: '@./:'
+  SourceComputerId: uuid
+  SubjectDomainName: .
+  SubjectUserName: acct
+  SubjectUserSid: sid
+  TargetDomainName: .
+  TargetUserName: acct
+  TargetUserSid: sid
+  TenantId: uuid
+  UserDisplayName: ' @.'
+  UserId: uuid
+  UserPrincipalName: acct
+  VMName: '@./:.'
+AAD:
+  AlternateSignInName: '@./:'
+  ConditionalAccessPolicies: list
+  IPAddress: ip
+  Id: uuid
+  Identity: str
+  ResourceDisplayName: str
+  ResourceGroup: str
+  ResourceIdentity: str
+O365:
+  AADGroupId: str
+  ClientIP: ip
+  ClientIP_: ip
+  ClientInfoString: str
+  ClientMachineName: '@./:.'
+  Client_IPAddress: ip
+  DestMailboxId: str
+  DestMailboxOwnerUPN: acct
+  DestinationFileName: '@./:.'
+  DestinationRelativeUrl: '@./:.'
+  Event_Data: str
+  Folder: str
+  LogonUserDisplayName: ' '
+  LogonUserSid: '-'
+  Logon_Type: ip
+  MachineDomainInfo: str
+  MachineId: str
+  MailboxGuid: uuid
+  MailboxOwnerMasterAccountSid: '-'
+  MailboxOwnerSid: '-'
+  MailboxOwnerUPN: acct
+  ModifiedObjectResolvedName: ip
+  OfficeObjectId: '/:. '
+  OfficeTenantId: uuid
+  OfficeTenantId_: uuid
+  OrganizationId: uuid
+  OrganizationId_: uuid
+  OrganizationName: str
+  OriginatingServer: .
+  Parameters: str
+  Site_: uuid
+  Site_Url: '@./:.'
+  Site_Url_: '@./:.'
+  SourceFileName: '@./:.'
+  SourceFileName_: '@./:.'
+  SourceRelativeUrl: '@./:.'
+  SourceRelativeUrl_: '@./:.'
+  UserDomain: '@./:.'
+  UserId_: acct
+  UserKey: '@./:.'
+  UserSharedWith: str
+  _ResourceId: '@./:.'
+WindowsSecurity:
+  WorkstationName: '@./:.'
+

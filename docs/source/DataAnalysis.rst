@@ -9,3 +9,4 @@ Analyzing Data
    data_analysis/IoCExtract
    data_analysis/EventClustering
    data_analysis/AnomalousSequence
+   data_analysis/PivotFunctions

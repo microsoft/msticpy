@@ -12,24 +12,26 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+import sys  # noqa
+import warnings
 from collections import ChainMap
 from inspect import isclass
-import sys  # noqa
-from typing import List, Mapping, Dict, Tuple, Union, Iterable, Optional
-import warnings
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import attr
 import pandas as pd
 
-# used in dynamic instantiation of providers
-# pylint: disable=unused-wildcard-import, wildcard-import
-
-from . import tiproviders
-from .tiproviders import *  # noqa:F401, F403
-from .tiproviders.ti_provider_base import TIProvider, LookupResult, TILookupStatus
+from .._version import VERSION
+from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
 from ..common.utility import export
-from .._version import VERSION
+from ..nbtools.ti_browser import browse_results
+from . import tiproviders
+
+# used in dynamic instantiation of providers
+# pylint: disable=unused-wildcard-import, wildcard-import
+from .tiproviders import *  # noqa:F401, F403
+from .tiproviders.ti_provider_base import LookupResult, TILookupStatus, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -51,6 +53,7 @@ class TILookup:
         self,
         primary_providers: Optional[List[TIProvider]] = None,
         secondary_providers: Optional[List[TIProvider]] = None,
+        providers: Optional[List[str]] = None,
     ):
         """
         Initialize TILookup instance.
@@ -61,10 +64,17 @@ class TILookup:
             Primary TI Providers, by default None
         secondary_providers : Optional[List[TIProvider]], optional
             Secondary TI Providers, by default None
+        providers: Optional[List[str]], optional
+            List of provider names to load, by default all available
+            providers are loaded. To see the list of available providers
+            call `TILookup.list_available_providers()`.
+            Note: if primary_provides or secondary_providers is specified
+            This will override the providers list.
 
         """
         self._providers: Dict[str, TIProvider] = {}
         self._secondary_providers: Dict[str, TIProvider] = {}
+        self._providers_to_load = providers
 
         if primary_providers:
             for prov in primary_providers:
@@ -72,7 +82,7 @@ class TILookup:
         if secondary_providers:
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
-        if not primary_providers and not secondary_providers:
+        if not (primary_providers or secondary_providers):
             self._load_providers()
 
         self._all_providers = ChainMap(self._secondary_providers, self._providers)
@@ -138,10 +148,14 @@ class TILookup:
             List of TI Provider classes.
 
         """
+        return self._get_available_providers()
+
+    @classmethod
+    def _get_available_providers(cls):
         providers = []
         for provider_name in dir(tiproviders):
             provider_class = getattr(tiproviders, provider_name, None)
-            if not provider_class or not isclass(provider_class):
+            if not (provider_class and isclass(provider_class)):
                 continue
             # if it is a class - we only want to show concrete classes
             # that are sub-classes of TIProvider
@@ -151,8 +165,9 @@ class TILookup:
                 providers.append(provider_class.__name__)
         return providers
 
+    @classmethod
     def list_available_providers(
-        self, show_query_types=False, return_list: bool = False
+        cls, show_query_types=False, as_list: bool = False
     ) -> Optional[List[str]]:  # type: ignore
         """
         Print a list of builtin providers with optional usage.
@@ -161,8 +176,10 @@ class TILookup:
         ----------
         show_query_types : bool, optional
             Show query types supported by providers, by default False
-        return_list : bool, optional
-            Return list of providers as well as printing to stdout.
+        as_list : bool, optional
+            Return list of providers instead of printing to stdout.
+            Note: if you specify `show_query_types` this will be printed
+            irrespective of this parameter setting.
 
         Returns
         -------
@@ -171,14 +188,14 @@ class TILookup:
 
         """
         providers = []
-        for provider_name in self.available_providers:
+        for provider_name in cls._get_available_providers():
             provider_class = getattr(tiproviders, provider_name, None)
-            if return_list is False:
+            if not as_list:
                 print(provider_name)
             providers.append(provider_name)
             if show_query_types:
                 provider_class.usage()
-        if return_list is True:
+        if as_list:
             return providers
         return None
 
@@ -229,7 +246,9 @@ class TILookup:
 
         for provider_entry, settings in prov_settings.items():
             # Allow overriding provider name to use another class
-            provider_name = settings.provider if settings.provider else provider_entry
+            provider_name = settings.provider or provider_entry
+            if self._providers_to_load and provider_name not in self._providers_to_load:
+                continue
             provider_class: TIProvider = getattr(
                 sys.modules[__name__], provider_name, None
             )
@@ -243,17 +262,24 @@ class TILookup:
             # instantiate class sending args from settings to init
             try:
                 provider_instance = provider_class(**(settings.args))
-            except RuntimeError:
-                # If the TI Provider didn't load, warn about it
-                warnings.warn(f"Could not load provider {provider_name}")
-                continue
+            except MsticpyConfigException as mp_ex:
+                # If the TI Provider didn't load, raise an exception
+                raise MsticpyUserConfigError(
+                    f"Could not load TI Provider {provider_name}",
+                    *mp_ex.args,
+                    "To avoid loading this provider please use the 'providers' parameter"
+                    + " to TILookup() to specify which providers to load.",
+                    title="TIProvider configuration error",
+                    help_uri="https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+                    + "TIProviders.html#configuration-file",
+                ) from mp_ex
+
             # set the description from settings, if one is provided, otherwise
             # use class docstring.
             provider_instance.description = (
-                settings.description
-                if settings.description
-                else provider_instance.__doc__
+                settings.description or provider_instance.__doc__
             )
+
             self.add_provider(
                 provider=provider_instance, name=provider_name, primary=settings.primary
             )
@@ -330,7 +356,7 @@ class TILookup:
         if not selected_providers:
             raise RuntimeError(_NO_PROVIDERS_MSSG)
 
-        ioc_type = ioc_type if ioc_type else TIProvider.resolve_ioc_type(observable)
+        ioc_type = ioc_type or TIProvider.resolve_ioc_type(observable)
         for prov_name, provider in selected_providers.items():
             provider_result: LookupResult = provider.lookup_ioc(
                 ioc=observable, ioc_type=ioc_type, query_type=ioc_query_type, **kwargs
@@ -473,3 +499,33 @@ class TILookup:
             else:
                 selected_providers = self._secondary_providers
         return selected_providers
+
+    @staticmethod
+    def browse_results(
+        data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+    ):
+        """
+        Return TI Results list browser.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            TI Results data from TIProviders
+        severities : Optional[List[str]], optional
+            A list of the severity classes to show.
+            By default these are ['warning', 'high'].
+            Pass ['information', 'warning', 'high'] to see all
+            results.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            passed to SelectItem constuctor.
+
+        Returns
+        -------
+        SelectItem
+            SelectItem browser for TI Data.
+
+        """
+        return browse_results(data=data, severities=severities, **kwargs)

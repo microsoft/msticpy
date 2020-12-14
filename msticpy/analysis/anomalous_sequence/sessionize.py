@@ -32,9 +32,9 @@ def sessionize_data(
     ----------
     data: pd.DataFrame
         This dataframe should contain at least the following columns:
-            - time stamp column
-            - columns related to user name and/or computer name and/or ip address etc
-            - column containing an event
+        - time stamp column
+        - columns related to user name and/or computer name and/or ip address etc
+        - column containing an event
     user_identifier_cols: List[str]
         Name of the columns which contain username and/or computer name and/or ip address etc.
         Each time the value of one of these columns changes, a new session will be started.
@@ -119,8 +119,8 @@ def create_session_col(
     ----------
     data: pd.DataFrame
         This dataframe should contain at least the following columns:
-            - time stamp column
-            - columns related to user name and/or computer name and/or ip address etc
+        - time stamp column
+        - columns related to user name and/or computer name and/or ip address etc
     user_identifier_cols: List[str]
         Name of the columns which contain username and/or computer name and/or ip address etc.
         Each time the value of one of these columns changes, a new session will be started.
@@ -164,7 +164,7 @@ def create_session_col(
     # initialise first row
     ses_ind = 0
     df_with_sesind.loc[0, "time_diff"] = pd.to_timedelta(0)
-    df_with_sesind.loc[0, "cum_time"] = pd.to_timedelta(0)
+    df_with_sesind.loc[0, "cml_time"] = pd.to_timedelta(0)
     df_with_sesind.loc[0, "session_ind"] = ses_ind
 
     for i in range(1, len(df_with_sesind)):
@@ -179,20 +179,20 @@ def create_session_col(
                 break
 
         dif = cur[time_col] - prev[time_col]
-        cum = prev["cum_time"] + dif
+        cml = prev["cml_time"] + dif
         # if the max session length is exceeded or the max separation between events is exceeded,
         # a new session should start
-        if dif > max_sep or cum > max_ses:
+        if dif > max_sep or cml > max_ses:
             new_flag = True
 
         if new_flag:
             df_with_sesind.loc[i, "time_diff"] = pd.to_timedelta(0)
-            df_with_sesind.loc[i, "cum_time"] = pd.to_timedelta(0)
+            df_with_sesind.loc[i, "cml_time"] = pd.to_timedelta(0)
             ses_ind += 1
             df_with_sesind.loc[i, "session_ind"] = ses_ind
         else:
             df_with_sesind.loc[i, "time_diff"] = dif
-            df_with_sesind.loc[i, "cum_time"] = cum
+            df_with_sesind.loc[i, "cml_time"] = cml
             df_with_sesind.loc[i, "session_ind"] = ses_ind
 
     # replace dummy_str with nan values

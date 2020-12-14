@@ -1,8 +1,6 @@
 msticpy.nbtools package
 =======================
 
-Submodules
-----------
 
 msticpy.nbtools.foliummap module
 --------------------------------
@@ -60,6 +58,15 @@ msticpy.nbtools.process_tree module
     :undoc-members:
     :show-inheritance:
 
+
+msticpy.nbtools.ti\_browser module
+----------------------------------
+
+.. automodule:: msticpy.nbtools.ti_browser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.timeseries module
 ---------------------------------
 
@@ -72,16 +79,6 @@ msticpy.nbtools.timeline module
 -------------------------------
 
 .. automodule:: msticpy.nbtools.timeline
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-
-Module contents
----------------
-
-.. automodule:: msticpy.nbtools
     :members:
     :undoc-members:
     :show-inheritance:

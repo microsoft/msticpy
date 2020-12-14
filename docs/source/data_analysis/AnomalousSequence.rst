@@ -1611,8 +1611,8 @@ we need to transform the "params" column slightly
         ----------
         session_with_params: example format:
             [
-                {'GetAuthorizationToken': {'registryIds': ['123456']}},
-                {'GetAuthorizationToken': {'registryIds': ['123456', '654321']}}
+                {'GetAuthorizationToken': {'registryIds': ['424246']}},
+                {'GetAuthorizationToken': {'registryIds': ['424246', '654321']}}
             ]
             Note that the accompanying values for the parameters can take dynamic
             types like dict, list etc.

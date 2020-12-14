@@ -2,3 +2,4 @@ flake8-mypy>=17.8.0
 mypy-extensions>=0.4.1
 prospector>=1.1.7
 pyroma>=2.5
+pytest-check>=0.3.9

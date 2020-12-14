@@ -5,9 +5,13 @@
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
 import argparse
+import sys
 
-from toollib import VERSION
-from toollib.import_analyzer import analyze_imports
+sys.path.append("./tools")
+
+# pylint: disable=wrong-import-position
+from toollib import VERSION  # noqa: E402
+from toollib.import_analyzer import analyze_imports  # noqa: E402
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -66,27 +70,36 @@ def _add_script_args():
     parser.add_argument(
         "--modules", action="store_true", default=False, help="Show imports by module."
     )
+    parser.add_argument(
+        "--version", action="store_true", default=False, help="Show version."
+    )
+    parser.add_argument(
+        "--pkg_graph", action="store_true", default=False, help="Show dependency tree."
+    )
     return parser
 
 
 def _print_single_module(mod_name, imps, p_args):
+    if p_args.pkg_graph:
+        if imps.setup_reqs:
+            print(f"{{'{mod_name}': {imps.setup_reqs}}}")
+        return
     print(mod_name)
-    if p_args.internal:
+    if p_args.internal and imps.internal:
         print("internal imports:", end=" ")
-        print(imps.internal if imps.internal else "none")
-    if p_args.stdlib:
+        print(imps.internal or "none")
+    if p_args.stdlib and imps.standard:
         print("std lib imports:", end=" ")
-        print(imps.standard if imps.standard else "none")
-    if p_args.reqs:
+        print(imps.standard or "none")
+    if p_args.reqs and imps.setup_reqs:
         print(f"external imports listed in {p_args.req_file}:", end=" ")
-        print(imps.setup_reqs if imps.setup_reqs else "none")
-    if p_args.missing:
+        print(imps.setup_reqs or "none")
+    if p_args.missing and imps.missing_reqs:
         print("missing imports (used but not in requirements):", end=" ")
-        print(imps.missing_reqs if imps.missing_reqs else "none")
-    if p_args.unknown:
-        if imps.unknown:
-            print("unknown imports:", end=" ")
-            print(imps.unknown if imps.unknown else "none")
+        print(imps.missing_reqs or "none")
+    if p_args.unknown and imps.unknown:
+        print("unknown imports:", end=" ")
+        print(imps.unknown or "none")
 
 
 def _print_all_imports(mod_imports, p_args):

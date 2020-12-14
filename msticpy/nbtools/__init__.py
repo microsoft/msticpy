@@ -9,7 +9,7 @@
 # pylint: disable=W0401
 from . import nbwidgets
 
-from . import entityschema as entities
+from ..datamodel import entities
 from .security_alert import SecurityAlert
 from .security_event import SecurityEvent
 from .security_alert_graph import *

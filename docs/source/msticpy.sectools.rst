@@ -1,8 +1,6 @@
 msticpy.sectools package
 ========================
 
-Submodules
-----------
 
 msticpy.sectools.auditdextract module
 -------------------------------------
@@ -28,14 +26,6 @@ msticpy.sectools.cmd_line module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.eventcluster module
-------------------------------------
-
-.. automodule:: msticpy.sectools.eventcluster
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.sectools.geoip module
 -----------------------------
 
@@ -52,13 +42,6 @@ msticpy.sectools.iocextract module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.outliers module
---------------------------------
-
-.. automodule:: msticpy.sectools.outliers
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 msticpy.sectools.process\_tree\_utils module
 --------------------------------------------
@@ -129,6 +112,14 @@ msticpy.sectools.vtlookup module
 --------------------------------
 
 .. automodule:: msticpy.sectools.vtlookup
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.sectools.vtlookupv3 module
+----------------------------------
+
+.. automodule:: msticpy.sectools.vtlookupv3
     :members:
     :undoc-members:
     :show-inheritance:

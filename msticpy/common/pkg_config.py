@@ -17,7 +17,6 @@ Consolidated settings are accessible as an attribute `settings`.
 
 """
 import os
-import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Callable
 
@@ -25,7 +24,9 @@ import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
-from .utility import MsticpyConfigException, is_valid_uuid
+from . import exceptions
+from .exceptions import MsticpyUserConfigError
+from .utility import is_valid_uuid
 from .._version import VERSION
 
 __version__ = VERSION
@@ -82,13 +83,13 @@ def refresh_config():
     settings = _consolidate_configs(default_settings, custom_settings)
 
 
-def get_config_path(elem_path: str) -> Any:
+def get_config(setting_path: str) -> Any:
     """
     Return setting item for path.
 
     Parameters
     ----------
-    elem_path : str
+    setting_path : str
         Path to setting item expressed as dot-separated
         string
 
@@ -98,12 +99,37 @@ def get_config_path(elem_path: str) -> Any:
         The item at the path location.
 
     """
-    path_elems = elem_path.split(".")
+    path_elems = setting_path.split(".")
     cur_node = settings
     for elem in path_elems:
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
-            raise KeyError(f"{elem} value of {elem_path} is not a valid path")
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+    return cur_node
+
+
+def set_config(setting_path: str, value: Any):
+    """
+    Set setting value for path.
+
+    Parameters
+    ----------
+    setting_path : str
+        Path to setting item expressed as dot-separated
+        string
+    value : Any
+        The value to set.
+
+    """
+    path_elems = setting_path.split(".")
+    cur_node = settings
+    for elem in path_elems:
+        if elem in cur_node:
+            cur_node[elem] = value
+            break
+        cur_node = cur_node.get(elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
     return cur_node
 
 
@@ -128,9 +154,12 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
             try:
                 return yaml.safe_load(f_handle)
             except YAMLError as yml_err:
-                raise MsticpyConfigException(
-                    f"Error reading config file {config_file}", yml_err
-                )
+                raise MsticpyUserConfigError(
+                    f"Check that your {config_file} is valid YAML.",
+                    "The following error was encountered",
+                    str(yml_err),
+                    title="config file could not be read",
+                ) from yml_err
     return {}
 
 
@@ -155,26 +184,22 @@ def _override_config(base_config: Dict[str, Any], new_config: Dict[str, Any]):
 
 
 def _get_default_config():
-    # When called from a unit test msticpy is a level above the package root
-    # so the first call produces an invalid path
-    # return the actual path - pkgpath/msticpy/filename.yaml or just
-    # pkgpath/filename.yaml. So we test it as we go
+    """Return the package default config file."""
     conf_file = None
-    top_module = _get_top_module()
+    package = "msticpy"
     try:
-        conf_file = pkg_resources.resource_filename(top_module, _CONFIG_FILE)
-        if not Path(conf_file).is_file():
-            conf_file = pkg_resources.resource_filename(
-                top_module, "msticpy/" + _CONFIG_FILE
-            )
-    except ModuleNotFoundError:
-        pass
-    if not conf_file or not Path(conf_file).is_file():
+        conf_file = pkg_resources.resource_filename(package, _CONFIG_FILE)
+    except ModuleNotFoundError as mod_err:
         # if all else fails we try to find the package default config somewhere
         # in the package tree - we use the first one we find
-        pkg_paths = sys.modules[top_module]
-        if pkg_paths:
-            conf_file = next(Path(pkg_paths.__path__[0]).glob("**/" + _CONFIG_FILE))
+        pkg_root = _get_pkg_path("msticpy")
+        if not pkg_root:
+            raise MsticpyUserConfigError(
+                f"Unable to locate the package default {_CONFIG_FILE}",
+                "msticpy package may be corrupted.",
+                title=f"Package {_CONFIG_FILE} missing.",
+            ) from mod_err
+        conf_file = next(iter(pkg_root.glob("**/" + _CONFIG_FILE)))
     if conf_file:
         return _read_config_file(conf_file)
     return {}
@@ -192,20 +217,17 @@ def _get_custom_config():
     return {}
 
 
-def _get_top_module():
-    module_path = __name__.split(".")
-    top_module = __name__
-    for idx in range(1, len(module_path)):
-        test_module = ".".join(module_path[:-idx])
-        if test_module in sys.modules:
-            top_module = test_module
-        else:
-            break
-    return top_module
+def _get_pkg_path(pkg_name):
+    current_path = Path(__file__)
+    while current_path.name != pkg_name:
+        if current_path == current_path.parent:
+            return None
+        current_path = current_path.parent
+    return current_path
 
 
 def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
-    if _DP_KEY not in mp_config:
+    if mp_config.get(_DP_KEY) is None:
         mp_config[_DP_KEY] = {}
     data_providers = mp_config[_DP_KEY]
 
@@ -241,7 +263,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     """
     if config_file:
         mp_config = _read_config_file(config_file)
-    if not mp_config and not config_file:
+    if not (mp_config or config_file):
         mp_config = settings
 
     if not isinstance(mp_config, dict):
@@ -263,21 +285,10 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
             section=conf_section,
             key_provs=auth_key_providers,
         )
+        if conf_section == _DP_KEY and mp_config.get(conf_section) is None:
+            continue
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
-
-    # Special handling for AzureCLI if it is not in DataProviders
-    # but specified at the top level of the config file
-    if _AZ_CLI not in mp_config.get(_DP_KEY, {}):
-        if _AZ_CLI not in mp_config:
-            mp_warn.append("No AzureCLI section in settings.")
-        else:
-            az_cli_settings = {"DataProviders": mp_config.get(_AZ_CLI)}
-            prov_errors, prov_warn = _check_provider_settings(
-                mp_config=az_cli_settings, section=_AZ_CLI, key_provs=None
-            )
-            mp_errors.extend(prov_errors)
-            mp_warn.extend(prov_warn)
 
     _print_validation_report(mp_errors, mp_warn)
     if mp_errors or mp_warn:
@@ -304,21 +315,24 @@ def _print_validation_report(mp_errors, mp_warn):
 
 def _validate_azure_sentinel(mp_config):
     mp_errors = []
+    mp_warnings = []
     as_settings = mp_config.get(_AZ_SENTINEL, {})
     if not as_settings:
         mp_errors.append("Missing or empty 'AzureSentinel' section")
+        return mp_errors, mp_warnings
     ws_settings = as_settings.get("Workspaces", {})
     if not ws_settings:
         mp_errors.append("Missing or empty 'Workspaces' key in 'AzureSentinel' section")
+        return mp_errors, mp_warnings
     no_default = True
     for ws, ws_settings in ws_settings.items():
         if ws == "Default":
             no_default = False
         ws_id = ws_settings.get("WorkspaceId")
-        if not ws_id and not is_valid_uuid(ws_id):
+        if not (ws_id and is_valid_uuid(ws_id)):
             mp_errors.append(f"Invalid GUID for WorkspaceId in {ws} section")
         ten_id = ws_settings.get("TenantId")
-        if not ten_id and not is_valid_uuid(ten_id):
+        if not (ten_id and is_valid_uuid(ten_id)):
             mp_errors.append(f"Invalid GUID for TenantId in {ws} section")
     mp_warnings = ["No default workspace set"] if no_default else []
     return mp_errors, mp_warnings
@@ -329,25 +343,21 @@ def _check_provider_settings(mp_config, section, key_provs):
     mp_warnings = []
     if not mp_config:
         mp_warnings.append(f"'{section}' section has no settings.")
+        return mp_errors, mp_warnings
     for p_name, p_setting in mp_config.items():
+        if not p_setting:
+            mp_warnings.append(f"'{section}/{p_name}' sub-section has no settings.")
+            continue
+        if "Args" not in p_setting:
+            continue
         sec_args = p_setting.get("Args")
         if not sec_args:
+            mp_errors.append(f"'{section}/{p_name}/{sec_args}' key has no settings.")
             continue
         sec_path = f"{section}/{p_name}" if section else f"{p_name}"
-        if key_provs and p_name in key_provs:
-            _check_required_key(mp_errors, sec_args, "AuthKey", sec_path)
-        if p_name == "XForce":
-            _check_required_key(mp_errors, sec_args, "ApiID", sec_path)
-        if p_name == _AZ_SENTINEL:
-            _check_is_uuid(mp_errors, sec_args, "WorkspaceID", sec_path)
-            _check_is_uuid(mp_errors, sec_args, "TenantID", sec_path)
-        if p_name.startswith("AzureSentinel_"):
-            _check_is_uuid(mp_errors, sec_args, "WorkspaceId", sec_path)
-            _check_is_uuid(mp_errors, sec_args, "TenantId", sec_path)
-        if p_name == _AZ_CLI:
-            _check_required_key(mp_errors, sec_args, "clientId", sec_path)
-            _check_required_key(mp_errors, sec_args, "tenantId", sec_path)
-            _check_required_key(mp_errors, sec_args, "clientSecret", sec_path)
+        mp_errors.extend(
+            _check_required_provider_settings(sec_args, sec_path, p_name, key_provs)
+        )
 
         mp_errors.extend(
             _check_env_vars(args_key=p_setting.get("Args"), section=sec_path)
@@ -355,18 +365,40 @@ def _check_provider_settings(mp_config, section, key_provs):
     return mp_errors, mp_warnings
 
 
-def _check_required_key(mp_errors, conf_section, key, sec_path):
-    if key not in conf_section or not conf_section[key]:
-        mp_errors.append(f"{sec_path}: Missing or invalid {key}.")
+def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
+    errs = []
+    if key_provs and p_name in key_provs:
+        errs.append(_check_required_key(sec_args, "AuthKey", sec_path))
+    if p_name == "XForce":
+        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
+    if p_name == _AZ_SENTINEL:
+        errs.append(_check_is_uuid(sec_args, "WorkspaceID", sec_path))
+        errs.append(_check_is_uuid(sec_args, "TenantID", sec_path))
+    if p_name.startswith("AzureSentinel_"):
+        errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
+        errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
+    if p_name == _AZ_CLI:
+        errs.append(_check_required_key(sec_args, "clientId", sec_path))
+        errs.append(_check_required_key(sec_args, "tenantId", sec_path))
+        errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
+
+    return [err for err in errs if err]
 
 
-def _check_is_uuid(mp_errors, conf_section, key, sec_path):
+def _check_required_key(conf_section, key, sec_path):
+    if key not in conf_section or not conf_section.get(key):
+        return f"{sec_path}: Missing or invalid {key}."
+    return None
+
+
+def _check_is_uuid(conf_section, key, sec_path):
     if (
         key not in conf_section
         or not conf_section[key]
         or not is_valid_uuid(conf_section[key])
     ):
-        mp_errors.append(f"{sec_path}: Missing or invalid {key}.")
+        return f"{sec_path}: Missing or invalid {key}."
+    return None
 
 
 def _check_env_vars(args_key, section):
@@ -383,3 +415,9 @@ def _check_env_vars(args_key, section):
             elif not os.environ[env_name]:
                 mp_errs.append(f"{section}: Env variable {env_name} value is not set.")
     return mp_errs
+
+
+# Set get_config function in exceptions module
+# so that it can be called without having a circular import
+# pylint: disable=protected-access
+exceptions._get_config = get_config

@@ -6,8 +6,7 @@
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
 from os import path
-from typing import Any, Dict, Iterable, Set, Union, Optional
-import warnings
+from typing import Any, Dict, Iterable, Set, Union, Optional, List
 
 from .._version import VERSION
 from .query_defns import DataEnvironment, DataFamily
@@ -19,13 +18,36 @@ __author__ = "Ian Hellen"
 
 
 def _get_dot_path(elem_path: str, data_map: dict) -> Any:
-    path_elems = elem_path.split(".")
-    cur_node = data_map
-    for elem in path_elems:
-        cur_node = cur_node.get(elem, None)
-        if cur_node is None:
-            raise KeyError(f"{elem} value of {path} is not a valid path")
-    return cur_node
+    """
+    Return For dotted attribute, tries to search.
+
+    Parameters
+    ----------
+    elem_path : str
+        The attribute name or prefix.name
+    data_map : dict
+        The dictionary/map to search through.
+
+    Returns
+    -------
+    Any
+        The attribute value
+
+    Raises
+    ------
+    KeyError
+        If the key/subkey is not found
+
+    """
+    # if this is directly in the map return it
+    if elem_path in data_map:
+        return data_map[elem_path]
+    # otherwise partition into prefix and name
+    prefix, _, name = elem_path.rpartition(".")
+    attrib = data_map.get(prefix)
+    if isinstance(attrib, dict) and name in attrib:
+        return attrib[name]
+    raise KeyError(f"'{elem_path}' not found")
 
 
 class QueryStore:
@@ -76,14 +98,11 @@ class QueryStore:
 
         """
         for family in sorted(self.data_families):
-            if "." in family:
-                family = family.split(".")[1]
 
-            for q_name in [
+            yield from [
                 f"{family}.{query}"
                 for query in sorted(self.data_families[family].keys())
-            ]:
-                yield q_name
+            ]
 
     def add_data_source(self, source: QuerySource):
         """
@@ -110,6 +129,48 @@ class QueryStore:
             valid, failures = source.validate()
             if not valid:
                 raise ImportError(source.name, failures)
+
+    def add_query(
+        self,
+        name: str,
+        query: str,
+        query_paths: Union[str, List[str]],
+        description: str = None,
+    ):
+        """
+        Add a query from name/query text.
+
+        Parameters
+        ----------
+        name : str
+            name of the query
+        query : str
+            The query string
+        query_paths : Union[str, List[str]]
+            The path/data_family to categorize.
+            Multiple paths can be specified. If the path is dotted,
+            this will cause the query to be displayed in the corresponding
+            hierarchy.
+        description : str, optional
+            Query description
+
+        """
+        prefix = ""
+        if "." in name:
+            prefix, _, name = name.rpartition(".")
+
+        if isinstance(query_paths, str):
+            query_paths = [query_paths]
+        if prefix:
+            query_paths = [f"{q_path}.{prefix}" for q_path in query_paths]
+
+        src_dict = {"args": {"query": query}, "description": description or name}
+        md_dict = {"data_families": query_paths}
+
+        query_source = QuerySource(
+            name=name, source=src_dict, defaults={}, metadata=md_dict
+        )
+        self.add_data_source(query_source)
 
     def import_file(self, query_file: str):
         """
@@ -169,7 +230,9 @@ class QueryStore:
                 try:
                     sources, defaults, metadata = read_query_def_file(str(file_path))
                 except ValueError:
-                    warnings.warn(f"{file_path} is not a valid query definition file.")
+                    print(
+                        f"{file_path} is not a valid query definition file - skipping."
+                    )
                     continue
 
                 for env_value in metadata["data_environments"]:
@@ -190,7 +253,7 @@ class QueryStore:
         return env_stores
 
     def get_query(
-        self, query_name: str, data_family: Union[str, DataFamily] = None
+        self, query_name: str, query_path: Union[str, DataFamily] = None
     ) -> "QuerySource":
         """
         Return query with name `data_family` and `query_name`.
@@ -199,7 +262,7 @@ class QueryStore:
         ----------
         query_name: str
             Name of the query
-        data_family: Union[str, DataFamily]
+        query_path: Union[str, DataFamily]
             The data family for the query
 
         Returns
@@ -208,13 +271,24 @@ class QueryStore:
             Query matching name and family.
 
         """
-        if isinstance(query_name, str) and "." in query_name:
-            data_family, query_name = query_name.split(".", maxsplit=1)
-        if not data_family:
-            raise LookupError("No data family specified.")
-        if isinstance(data_family, DataFamily):
-            data_family = data_family.name
-        return self.data_families[data_family][query_name]
+        if query_path and isinstance(query_path, DataFamily):
+            query_path = query_path.name
+        if "." in query_name:
+            query_parts = query_name.split(".")
+            query_container = ".".join(query_parts[:-1])
+            query_name = query_parts[-1]
+            if query_container in self.data_families:
+                query_path = query_container
+            elif query_path:
+                query_container = ".".join(
+                    [query_path, query_container]  # type: ignore
+                )
+                if query_container in self.data_families:
+                    query_path = query_container
+        query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore
+        if not query:
+            raise LookupError(f"Could not find {query_name} in path {query_path}.")
+        return query
 
     def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
         """
