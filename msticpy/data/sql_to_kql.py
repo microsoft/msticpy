@@ -45,6 +45,7 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+_DEBUG = False
 
 SPARK_KQL_FUNC_MAP = {
     "avg": ("avg", None, None),
@@ -259,7 +260,7 @@ def _process_select(
     # Expressions
     if parsed_sql == "*":
         return
-    print(expr_list, type(expr_list))
+    _db_print(expr_list, type(expr_list))
     select_list = expr_list if isinstance(expr_list, list) else [expr_list]
     select_list = _get_expr_list(select_list)
     project_items = []
@@ -370,7 +371,7 @@ def _parse_expression(expression):  # noqa: MC0001
 
         right = _quote_literal(args[1])
         if isinstance(right, list):
-            print(args[1])
+            _db_print(args[1])
             arg_list = ", ".join([str(_parse_expression(l_item)) for l_item in right])
             return f"{args[0]} {kql_op} ({arg_list})"
         sub_query = "\n".join(_parse_query(right))
@@ -481,7 +482,7 @@ def _is_distinct(
         select_list = [select_list]
     if isinstance(select_list, list):
         for expr in select_list:
-            print(expr)
+            _db_print(expr)
             if "value" in expr and DISTINCT in expr["value"]:
                 dist_list.append({"value": _get_expr_value(expr["value"][DISTINCT])})
             select_list_out.append(expr)
@@ -512,14 +513,17 @@ def _get_join_list(parsed_sql: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def _rewrite_table_refs(join_expr: Union[Any, str, List], table_expr: str) -> str:
     """Rewrite dotted prefixes."""
     p_expr = _parse_expression(join_expr)
-    prefixes = re.findall(r"\w+\.", p_expr)
+    prefixes = set(re.findall(r"(\w+)\.", p_expr))
     if not prefixes:
         return p_expr
-    if f"{table_expr}." in prefixes:
+    if f"{table_expr}" in prefixes:
         p_expr = p_expr.replace(f"{table_expr}.", "$right.")
-        prefixes.remove(f"{table_expr}.")
+        prefixes.remove(f"{table_expr}")
     for prefix in prefixes:
-        p_expr = p_expr.replace(prefix, "$left.")
+        p_expr = p_expr.replace(
+            f"{prefix}.",
+            "$right." if prefix.casefold() == table_expr.casefold() else "$left.",
+        )
     return p_expr
 
 
@@ -535,13 +539,13 @@ def _parse_join(join_expr) -> Optional[str]:
         table_expr = table_expr["value"]
 
     p_table_expr = "\n  ".join(_parse_query(table_expr))
-    if "name" in join_expr:
-        table_name = join_expr["name"]
+    if "name" in join_expr[join_type]:
+        table_name = join_expr[join_type]["name"]
     else:
         table_name = p_table_expr.split(" ")[0].strip()
     on_expr = _parse_expression(join_expr["on"])
     on_expr = _rewrite_table_refs(on_expr, table_name)
-    print(table_expr, kql_join_type, p_table_expr)
+    _db_print(table_expr, kql_join_type, p_table_expr)
 
     return f"| join kind={kql_join_type} ({p_table_expr}) on {on_expr}"
 
@@ -591,3 +595,8 @@ def _create_order_by(order_by):
     if isinstance(order_by, list):
         return ", ".join(_format_order_item(item) for item in order_by)
     return _format_order_item(order_by)
+
+
+def _db_print(*args, **kwargs):
+    if _DEBUG:
+        print(*args, **kwargs)

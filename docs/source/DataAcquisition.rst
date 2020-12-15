@@ -13,3 +13,4 @@ Querying and Importing Data
    data_acquisition/MordorData
    data_acquisition/AzureSentinel
    data_acquisition/AzureBlobStorage
+   data_acquisition/SqlToKql

@@ -94,7 +94,7 @@ SQL_CASES = [
         and EventID == 1
         and tolower(ParentImage) matches regex '.*\â€Ž|â€|â€ª|â€«|â€¬|â€|â€®.*'
         and tolower(Image) endswith 'cmd.exe'
-        | project ProcessGuid) on $left.ParentProcessGuid == $left.ProcessGuid
+        | project ProcessGuid) on $left.ParentProcessGuid == $right.ProcessGuid
         | where Channel == 'Microsoft-Windows-Sysmon/Operational'
         and EventID == 1
         and tolower(Image) endswith 'powershell.exe'
@@ -145,7 +145,7 @@ SQL_CASES = [
     ),
     SQLTestCase(
         sql="""
-        SELECT DISTINCT Message as mssg, COUNT(Otherfield)
+        SELECT DISTINCT ParentMessage as mssg, COUNT(Otherfield)
         FROM (SELECT EventID as ID, ParentImage, Image, Message,
             ParentImage + Message as ParentMessage,
             LOWER(Otherfield) FROM apt29Host
@@ -162,7 +162,7 @@ SQL_CASES = [
         and EventID == 1
         and tolower(ParentImage) endswith 'explorer.exe'
         | extend Otherfield = count(Otherfield)
-        | project mssg = Message, Otherfield
+        | project mssg = ParentMessage, Otherfield
         | distinct *
         """,
         id="select_rename",
