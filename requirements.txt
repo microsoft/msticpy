@@ -2,7 +2,7 @@ adal>=1.2.2
 attrs>=18.2.0
 azure-common>=1.1.18
 azure-core>=1.2.2
-azure-identity==1.4.0
+azure-identity==1.5.0
 azure-keyvault-secrets>=4.0.0
 azure-mgmt-compute>=4.6.2
 azure-mgmt-core>=1.2.1
