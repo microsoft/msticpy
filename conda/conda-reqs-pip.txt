@@ -11,6 +11,6 @@ geoip2>=2.9.0
 html5lib
 ipwhois>=1.1.0
 Kqlmagic>=0.1.106
+moz_sql_parser>=4.5.0
 splunk-sdk>=1.6.0
-moz_sql_parser>=3.32.20026
 tldextract>=2.2.2

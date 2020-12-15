@@ -70,6 +70,7 @@ EXTRAS = {
         "msrestazure>=0.6.0",
     ],
     "ml": ["scikit-learn>=0.20.2", "scipy>=1.1.0", "statsmodels>=0.11.1"],
+    "sql2kql": ["moz_sql_parser>=4.5.0"],
 }
 
 # Create combination extras

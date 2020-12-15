@@ -27,8 +27,18 @@ import random
 import re
 from typing import List, Tuple, Any, Union, Dict, Optional
 
-import moz_sql_parser
-from moz_sql_parser import parse
+from ..common.exceptions import MsticpyImportExtraError
+
+try:
+    import moz_sql_parser
+    from moz_sql_parser import parse
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without moz_sql_parser installed",
+        title="Error importing moz_sql_parser for sql_to_kql",
+        extra="sql",
+    ) from imp_err
+
 
 from .._version import VERSION
 
@@ -77,28 +87,6 @@ SPARK_KQL_FUNC_MAP = {
     "upper": ("toupper", None, None),
 }
 
-
-# unmapped_funcs = {
-#     "NA": "base64_decode_toarray",
-#     "NA": "countof",
-#     "NA": "extract_all",
-#     "NA": "extractjson",
-#     "NA": "isempty",
-#     "NA": "isnotempty",
-#     "NA": "parse_csv",
-#     "NA": "parse_ipv4",
-#     "NA": "parse_json",
-#     "NA": "parse_url",
-#     "NA": "parse_urlquery",
-#     "NA": "parse_version",
-#     "NA": "right",
-#     "NA": "rlike",
-#     "NA": "strcat_delim",
-#     "NA": "strcmp",
-#     "NA": "strrep",
-#     "NA": "url_decode",
-#     "NA": "url_encode",
-# }
 
 AND = "and"
 AS = "as"
@@ -176,6 +164,9 @@ BINARY_OPS["is not"] = "!="
 REMAPPED_KEYWORDS = {"RLIKE": "LIKE"}
 
 
+# noqa: MC0001
+
+
 def sql_to_kql(sql: str, target_tables: Dict[str, str] = None) -> str:
     """Parse SQL and return KQL equivalent."""
     # ensure literals are surrounded by single quotes
@@ -208,21 +199,16 @@ def _parse_query(parsed_sql: Dict[str, Any]) -> List[str]:  # noqa: MC0001
         # the groupby
         parsed_sql.pop(SELECT)
 
-    distinct_select = False
+    distinct_select: List[Dict[str, Any]] = []
     if SELECT in parsed_sql:
         distinct_select, expr_list = _is_distinct(parsed_sql[SELECT])
         _process_select(parsed_sql[SELECT], expr_list, query_lines)
-
     if ORDER_BY in parsed_sql:
-        if isinstance(parsed_sql[ORDER_BY], list):
-            order_list = ", ".join(
-                [_format_order_item(item) for item in parsed_sql[ORDER_BY]]
-            )
-        else:
-            order_list = _format_order_item(parsed_sql[ORDER_BY])
-        query_lines.append(f"| order by {order_list}")
+        query_lines.append(f"| order by {_create_order_by(parsed_sql[ORDER_BY])}")
     if distinct_select:
-        query_lines.append("| distinct *")
+        query_lines.append(
+            f"| distinct {', '.join(_create_distinct_list(distinct_select))}"
+        )
     if LIMIT in parsed_sql:
         query_lines.append(f"| limit {parsed_sql[LIMIT]}")
     if UNION in parsed_sql:
@@ -275,6 +261,7 @@ def _process_select(
         return
     print(expr_list, type(expr_list))
     select_list = expr_list if isinstance(expr_list, list) else [expr_list]
+    select_list = _get_expr_list(select_list)
     project_items = []
     extend_items = []
     for item in select_list:
@@ -312,6 +299,25 @@ def _gen_expr_name(value):
     return f"{pref}_{suffix}"
 
 
+def _get_expr_list(expr_list):
+    if (
+        isinstance(expr_list, list)
+        and len(expr_list) == 1
+        and isinstance(expr_list[0], dict)
+        and isinstance(expr_list[0].get("value"), list)
+    ):
+        return expr_list[0]["value"]
+    return expr_list
+
+
+def _get_expr_value(expr_val):
+    if isinstance(expr_val, dict) and "value" in expr_val:
+        return expr_val["value"]
+    if isinstance(expr_val, list):
+        return _get_expr_list(expr_val)
+    return expr_val
+
+
 def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
     """Process GROUP BY clause."""
     group_by_expr = parsed_sql[GROUP_BY]
@@ -322,6 +328,7 @@ def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
 
     _, expr_list = _is_distinct(parsed_sql[SELECT])
     group_by_expr_list = []
+    expr_list = _get_expr_value(expr_list)
     for expr in expr_list:
         name_expr = ""
         if "name" in expr:
@@ -404,7 +411,8 @@ def _map_func(func: str, *args) -> str:
         and isinstance(args[0], dict)
         and next(iter(args[0])) == "distinct"
     ):
-        return f"dcount({args[0]['distinct']})"
+        func_arg = _get_expr_value(args[0]["distinct"])
+        return f"dcount({func_arg})"
 
     if not func_map[1] and not func_map[2]:
         func_fmt = f"{func_map[0]}({def_arg_fmt})"
@@ -457,22 +465,27 @@ def _remap_kewords(sql: str) -> str:
 
 
 def _is_distinct(
-    expression_list: Union[Dict[str, Any], List[Dict[str, Any]]]
-) -> Tuple[bool, List[Dict[str, Any]]]:
+    select_list: Union[Dict[str, Any], List[Dict[str, Any]]]
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Check for DISTINCT in SELECT clause."""
-    expr_list_out = []
-    distinct = False
-    if isinstance(expression_list, dict):
-        expression_list = [expression_list]
-    if isinstance(expression_list, list):
-        for expr in expression_list:
+    select_list_out = []
+    dist_list: List[Dict[str, Any]] = []
+    dist_dict = _get_expr_value(select_list)
+
+    if isinstance(dist_dict, dict) and DISTINCT in dist_dict:
+        dist_list = dist_dict.pop(DISTINCT)
+        # Keep distinct items in the select list
+        return dist_list, dist_list
+
+    if isinstance(select_list, dict):
+        select_list = [select_list]
+    if isinstance(select_list, list):
+        for expr in select_list:
             print(expr)
             if "value" in expr and DISTINCT in expr["value"]:
-                distinct = True
-                expr_list_out.append({"value": expr["value"][DISTINCT]})
-            else:
-                expr_list_out.append(expr)
-    return distinct, expr_list_out
+                dist_list.append({"value": _get_expr_value(expr["value"][DISTINCT])})
+            select_list_out.append(expr)
+    return dist_list, select_list_out
 
 
 def _format_order_item(item: Dict[str, Any]) -> str:
@@ -556,3 +569,25 @@ def _process_like(expression: Dict[str, Any]) -> str:
         right = right.replace("_", ".").replace("%", ".*")
     right = _quote(right)
     return f"{left} {oper} {right}"
+
+
+def _create_distinct_list(distinct_select):
+    distinct_list = []
+    for distinct_item in distinct_select:
+        if "name" in distinct_item:
+            distinct_list.append(distinct_item["name"])
+        else:
+            val = _parse_expression(_get_expr_value(distinct_item))
+            if val != distinct_item.get("value"):
+                # If value was a complex expression we can't use
+                # it directly so just revert to distinct *
+                distinct_list = ["*"]
+                break
+            distinct_list.append(val)
+    return distinct_list
+
+
+def _create_order_by(order_by):
+    if isinstance(order_by, list):
+        return ", ".join(_format_order_item(item) for item in order_by)
+    return _format_order_item(order_by)

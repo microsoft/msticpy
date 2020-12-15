@@ -33,7 +33,7 @@ SQL_CASES = [
         and EventID in ('4', '5', '6')
         and tolower(Image) startswith '3aka3'
         | project Message, Otherfield
-        | distinct *
+        | distinct Message, Otherfield
         | limit 10
         """,
         id="select",
@@ -117,7 +117,7 @@ SQL_CASES = [
                 AND EventID = 1
                 AND LOWER(ParentImage) LIKE "%explorer.exe"
                 AND LOWER(Image) RLIKE ".*3aka3%"
-                LIMIT 10
+            LIMIT 10
             )
         GROUP BY Message
         ORDER BY Message DESC, Otherfield
@@ -133,10 +133,10 @@ SQL_CASES = [
         and tolower(ParentImage) endswith 'explorer.exe'
         and tolower(Image) startswith '.*3aka3'
         | project Message, Otherfield, EventID
-        | distinct *
-        | limit 10
+        | distinct Message, Otherfield, EventID
         )
         | distinct *
+        | limit 10
         | summarize any(Message), count(Otherfield) by Message
         | order by Message desc, Otherfield
         """,
@@ -162,7 +162,7 @@ SQL_CASES = [
         and EventID == 1
         and tolower(ParentImage) endswith 'explorer.exe'
         | extend Otherfield = count(Otherfield)
-        | project Message, Otherfield
+        | project mssg = Message, Otherfield
         | distinct *
         """,
         id="select_rename",
@@ -188,4 +188,4 @@ def test_sql_convert(get_sql_cases):
     for line_test, line_expected in zip(
         kql_query.strip().split("\n"), kql.strip().split("\n")
     ):
-        check.equal(line_test.strip() == line_expected.strip(), f"TestID={test_id}")
+        check.equal(line_test.strip(), line_expected.strip(), f"TestID={test_id}")
