@@ -29,7 +29,7 @@ __author__ = "juju4"
 
 
 SUMOLOGIC_CONNECT_ARGS = {
-    "url": "(string) The url endpoint (the default is 'https://api.us2.sumologic.com/api').",
+    "connection_str": "(string) The url endpoint (the default is 'https://api.us2.sumologic.com/api').",
     "accessid": "(string) The Sumologic accessid, which is used to "
     + "authenticate on Sumologic instance.",
     "accesskey": "(string) The matching Sumologic accesskey.",
@@ -40,8 +40,8 @@ SUMOLOGIC_CONNECT_ARGS = {
 class SumologicDriver(DriverBase):
     """Driver to connect and query from Sumologic."""
 
-    _SUMOLOGIC_REQD_ARGS = ["url", "accessid", "accesskey"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {"url": "https://api.us2.sumologic.com/api"}
+    _SUMOLOGIC_REQD_ARGS = ["connection_str", "accessid", "accesskey"]
+    _CONNECT_DEFAULTS: Dict[str, Any] = {"connection_str": "https://api.us2.sumologic.com/api"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
     timeout = 300
 
@@ -65,8 +65,8 @@ class SumologicDriver(DriverBase):
 
         Parameters
         ----------
-        connection_str : Optional[str], optional
-            Connection string with Sumologic connection parameters
+        connection_str :
+            Sumologic API url endpoint. default: https://api.us2.sumologic.com/api
 
         Other Parameters
         ----------------
@@ -89,7 +89,7 @@ class SumologicDriver(DriverBase):
             self.service = SumoLogic(
                 arg_dict['accessid'],
                 arg_dict['accesskey'],
-                arg_dict['url']
+                arg_dict['connection_str']
             )
         except ConnError as err:
             raise MsticpyConnectionError(
