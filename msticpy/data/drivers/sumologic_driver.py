@@ -43,6 +43,7 @@ class SumologicDriver(DriverBase):
     _SUMOLOGIC_REQD_ARGS = ["connection_str", "accessid", "accesskey"]
     _CONNECT_DEFAULTS: Dict[str, Any] = {"connection_str": "https://api.us2.sumologic.com/api"}
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
+    checkinterval = 10
     timeout = 300
 
     def __init__(self, **kwargs):
@@ -165,7 +166,8 @@ class SumologicDriver(DriverBase):
             limit: An integer describing the max number of search results to return.
             forcemessagesresults: Force results to be raw messages even if aggregated query.
             verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
-            timeout: timeout when gathering results
+            checkinterval: interval in seconds to check if results are gathered
+            timeout: timeout in seconds when gathering results
 
         Returns
         -------
@@ -182,6 +184,7 @@ class SumologicDriver(DriverBase):
         timezone = kwargs.pop("timezone", 'UTC')
         byreceipttime = kwargs.pop("byreceipttime", False)
         forcemessagesresults = kwargs.pop("forcemessagesresults", False)
+        self.checkinterval = kwargs.pop("checkinterval", 10)
         self.timeout = kwargs.pop("timeout", 300)
 
         if 'days' in kwargs:
@@ -234,14 +237,23 @@ class SumologicDriver(DriverBase):
         status = self.service.search_job_status(searchjob)
         if verbosity >=2:
             print("DEBUG: status {0}".format(status))
+        time_counter = 0
         while status['state'] != 'DONE GATHERING RESULTS':
             if status['state'] == 'CANCELLED':
                 break
             status = self.service.search_job_status(searchjob)
             if verbosity >=4:
-                print("DEBUG: pending results, state {0}. sleeping {1}".format(status,
-                                                                               self.timeout))
-            time.sleep(self.timeout)
+                print("DEBUG: pending results, state {0}. slept {1}s. sleeping extra {2}s until {3}s".format(
+                    status['state'],
+                    time_counter,
+                    self.checkinterval,
+                    self.timeout))
+            if time_counter < self.timeout:
+                time.sleep(self.checkinterval)
+                time_counter += self.checkinterval
+            elif verbosity >=3:
+                print("DEBUG: wait more than timeout {0}. stopping.".format(self.timeout))
+                break
 
         print(status['state'])
 
