@@ -591,7 +591,7 @@ j_acc_token = {
     "ipaddr": "192.168.1.22",
     "name": "Test User",
     "oid": "eaeaeaea-7777-0000-eeee-e7e7e7e7e7e7",
-    "onprem_sid": "S-1-5-21-0123456789-0123456789-0123456789-0123456",
+    "onprem_sid": "S-1-5-21-0424246789-0424246789-0424246789-0424246",
     "puid": "1000000000000000",
     "scp": "user_impersonation",
     "sub": "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEy",
@@ -605,7 +605,7 @@ j_acc_token = {
 
 KV_SECRETS = {
     "OTX-AuthKey": "OTX_AuthKey",
-    "TIProviders-VirusTotal-Args-AuthKey": "12345678",
+    "TIProviders-VirusTotal-Args-AuthKey": "42424678",
     "VirusTotal-AuthKey": "VirusTotal_AuthKey",
     "XForce-ApiID": "OTX_ApiID",
     "XForce-AuthKey": "XForce_AuthKey",
