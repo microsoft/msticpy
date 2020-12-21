@@ -4,7 +4,7 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Sumologic Driver class."""
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import re
 import sys
 import time
@@ -12,7 +12,7 @@ from typing import Any, Tuple, Union, Dict, Iterable, Optional
 
 import pandas as pd
 from sumologic.sumologic import SumoLogic
-from requests.exceptions import ConnectionError as ConnError,HTTPError
+from requests.exceptions import ConnectionError as ConnError, HTTPError
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -41,7 +41,9 @@ class SumologicDriver(DriverBase):
     """Driver to connect and query from Sumologic."""
 
     _SUMOLOGIC_REQD_ARGS = ["connection_str", "accessid", "accesskey"]
-    _CONNECT_DEFAULTS: Dict[str, Any] = {"connection_str": "https://api.us2.sumologic.com/api"}
+    _CONNECT_DEFAULTS: Dict[str, Any] = {
+        "connection_str": "https://api.us2.sumologic.com/api"
+    }
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
     checkinterval = 10
     timeout = 300
@@ -88,9 +90,7 @@ class SumologicDriver(DriverBase):
         try:
             # https://github.com/SumoLogic/sumologic-python-sdk/blob/master/scripts/search-job.py
             self.service = SumoLogic(
-                arg_dict['accessid'],
-                arg_dict['accesskey'],
-                arg_dict['connection_str']
+                arg_dict["accessid"], arg_dict["accesskey"], arg_dict["connection_str"]
             )
         except ConnError as err:
             raise MsticpyConnectionError(
@@ -181,44 +181,49 @@ class SumologicDriver(DriverBase):
             raise self._create_not_connected_err()
 
         verbosity = kwargs.pop("verbosity", 0)
-        timezone = kwargs.pop("timezone", 'UTC')
+        timezone = kwargs.pop("timezone", "UTC")
         byreceipttime = kwargs.pop("byreceipttime", False)
         forcemessagesresults = kwargs.pop("forcemessagesresults", False)
         self.checkinterval = kwargs.pop("checkinterval", 10)
         self.timeout = kwargs.pop("timeout", 300)
 
-        if 'days' in kwargs:
+        if "days" in kwargs:
             end = datetime.now()
             end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = end - timedelta(days=kwargs['days'])
+            start_time = end - timedelta(days=kwargs["days"])
             start_time = start_time.strftime("%Y-%m-%dT%H:%M:%S")
-        elif 'start_time' in kwargs and 'end_time' not in kwargs:
+        elif "start_time" in kwargs and "end_time" not in kwargs:
             end = datetime.now()
             end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = kwargs['start_time'].strftime("%Y-%m-%dT%H:%M:%S")
-        elif 'days' not in kwargs and 'start_time' not in kwargs:
+            start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
+        elif "days" not in kwargs and "start_time" not in kwargs:
             print("Error! require either days, either start_time")
             sys.exit(1)
-        elif 'end_time' in kwargs and 'start_time' in kwargs:
-            end_time = kwargs['end_time'].strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = kwargs['start_time'].strftime("%Y-%m-%dT%H:%M:%S")
+        elif "end_time" in kwargs and "start_time" in kwargs:
+            end_time = kwargs["end_time"].strftime("%Y-%m-%dT%H:%M:%S")
+            start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
 
         # default to unlimited query unless count is specified
-        if 'limit' in kwargs:
-            query += "| limit {0}".format(kwargs['limit'])
+        if "limit" in kwargs:
+            query += "| limit {0}".format(kwargs["limit"])
         limit = kwargs.pop("limit", 10000)
 
-        if verbosity >=1:
-            print("INFO: from {0} to {1}, timezone {2}".format(start_time, end_time, timezone))
-        if verbosity >=2:
+        if verbosity >= 1:
+            print(
+                "INFO: from {0} to {1}, timezone {2}".format(
+                    start_time, end_time, timezone
+                )
+            )
+        if verbosity >= 2:
             print("DEBUG: query {0}".format(query))
             print("DEBUG: byreceipttime {0}".format(byreceipttime))
             from timeit import default_timer as timer
+
             timer_start = timer()
         try:
-            searchjob = self.service.search_job(query, start_time, end_time,
-                                                timezone,
-                                                byreceipttime)
+            searchjob = self.service.search_job(
+                query, start_time, end_time, timezone, byreceipttime
+            )
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
@@ -231,46 +236,52 @@ class SumologicDriver(DriverBase):
                 title="Sumologic submit search job",
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             ) from err
-        if verbosity >=2:
+        if verbosity >= 2:
             print("DEBUG: search job {0}".format(searchjob))
 
         status = self.service.search_job_status(searchjob)
-        if verbosity >=2:
+        if verbosity >= 2:
             print("DEBUG: status {0}".format(status))
         time_counter = 0
-        while status['state'] != 'DONE GATHERING RESULTS':
-            if status['state'] == 'CANCELLED':
+        while status["state"] != "DONE GATHERING RESULTS":
+            if status["state"] == "CANCELLED":
                 break
             status = self.service.search_job_status(searchjob)
-            if verbosity >=4:
-                print("DEBUG: pending results, state {0}. slept {1}s. sleeping extra {2}s until {3}s".format(
-                    status['state'],
-                    time_counter,
-                    self.checkinterval,
-                    self.timeout))
+            if verbosity >= 4:
+                print(
+                    "DEBUG: pending results, state {0}. slept {1}s. sleeping extra {2}s until {3}s".format(
+                        status["state"], time_counter, self.checkinterval, self.timeout
+                    )
+                )
             if time_counter < self.timeout:
                 time.sleep(self.checkinterval)
                 time_counter += self.checkinterval
-            elif verbosity >=3:
-                print("DEBUG: wait more than timeout {0}. stopping.".format(self.timeout))
+            elif verbosity >= 3:
+                print(
+                    "DEBUG: wait more than timeout {0}. stopping.".format(self.timeout)
+                )
                 break
 
-        print(status['state'])
+        print(status["state"])
 
-        if verbosity >=2:
+        if verbosity >= 2:
             print("DEBUG: search performance:{0}".format(str(timer() - timer_start)))
-            print("DEBUG: messages or records? {0}".format(
-                  re.search(r'\|\s*count', query, re.IGNORECASE))
-                 )
-        if status['state'] == 'DONE GATHERING RESULTS' and (
-                not re.search(r'\|\s*count', query, re.IGNORECASE) or forcemessagesresults
-                ):
+            print(
+                "DEBUG: messages or records? {0}".format(
+                    re.search(r"\|\s*count", query, re.IGNORECASE)
+                )
+            )
+        if status["state"] == "DONE GATHERING RESULTS" and (
+            not re.search(r"\|\s*count", query, re.IGNORECASE) or forcemessagesresults
+        ):
             # Non-aggregated results, Messages only
-            count = status['messageCount']
-            limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
+            count = status["messageCount"]
+            limit2 = (
+                count if count < limit and count != 0 else limit
+            )  # compensate bad limit check
             try:
                 result = self.service.search_job_messages(searchjob, limit=limit2)
-                return result['messages']
+                return result["messages"]
             except HTTPError as err:
                 raise MsticpyConnectionError(
                     f"Communication error connecting to Sumologic: {err}",
@@ -283,13 +294,15 @@ class SumologicDriver(DriverBase):
                     title="Sumologic connection",
                     help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
                 ) from err
-        elif status['state'] == 'DONE GATHERING RESULTS':
+        elif status["state"] == "DONE GATHERING RESULTS":
             # Aggregated results
-            count = status['recordCount']
-            limit2 = count if count < limit and count != 0 else limit # compensate bad limit check
+            count = status["recordCount"]
+            limit2 = (
+                count if count < limit and count != 0 else limit
+            )  # compensate bad limit check
             try:
                 result = self.service.search_job_records(searchjob, limit=limit2)
-                return result['records']
+                return result["records"]
             except HTTPError as err:
                 raise MsticpyConnectionError(
                     f"Communication error connecting to Sumologic: {err}",
@@ -304,7 +317,6 @@ class SumologicDriver(DriverBase):
                 ) from err
 
         return []
-
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -352,12 +364,12 @@ class SumologicDriver(DriverBase):
         verbosity = kwargs.get("verbosity", 0)
         normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
-        export_path = kwargs.pop("export_path", '')
+        export_path = kwargs.pop("export_path", "")
 
         for hit in self._query(query, **kwargs):
             results.append(hit)
 
-        if verbosity >=3:
+        if verbosity >= 3:
             print("DEBUG: {0}".format(results))
         if normalize:
             dataframe_res = pd.json_normalize(results)
@@ -368,12 +380,12 @@ class SumologicDriver(DriverBase):
             if col in ("map._count", "map._timeslice"):
                 dataframe_res[col] = pd.to_numeric(dataframe_res[col])
 
-        if exporting and export_path.endswith('.xlsx'):
-            if verbosity >=2:
+        if exporting and export_path.endswith(".xlsx"):
+            if verbosity >= 2:
                 print("DEBUG: Exporting results to excel file {0}".format(export_path))
             dataframe_res.to_excel(export_path, index=False)
-        elif exporting and export_path.endswith('.csv'):
-            if verbosity >=2:
+        elif exporting and export_path.endswith(".csv"):
+            if verbosity >= 2:
                 print("DEBUG: Exporting results to csv file {0}".format(export_path))
             dataframe_res.to_csv(export_path, index=False)
 
