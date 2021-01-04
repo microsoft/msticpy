@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Pivot functions main module."""
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Type
+from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 import pkg_resources
 from IPython import get_ipython
@@ -19,7 +19,8 @@ from ..sectools import TILookup
 # pylint: disable=unused-import
 from . import pivot_pd_accessor  # noqa: F401
 from .pivot_data_queries import add_data_queries_to_entities
-from .pivot_register_reader import register_pivots
+from .pivot_register import PivotRegistration
+from .pivot_register_reader import add_unbound_pivot_function, register_pivots
 from .pivot_ti_provider import add_ioc_queries_to_entities
 
 __version__ = VERSION
@@ -79,7 +80,7 @@ class Pivot:
             prov for prov in self._providers.values() if isinstance(prov, QueryProvider)
         )
         for prov in data_provs:
-            add_data_queries_to_entities(prov, self._get_timespan)
+            add_data_queries_to_entities(prov, self.get_timespan)
 
         # load TI functions
         add_ioc_queries_to_entities(self.get_provider("TILookup"), container="ti")
@@ -126,6 +127,18 @@ class Pivot:
                     if isinstance(prov, QueryProvider)
                 }
             )
+
+    def add_query_provider(self, prov: QueryProvider):
+        """
+        Add pivot functions from provider.
+
+        Parameters
+        ----------
+        prov : QueryProvider
+            Query provider.
+
+        """
+        add_data_queries_to_entities(prov, self.get_timespan)
 
     @staticmethod
     def _get_provider_by_type(
@@ -232,7 +245,7 @@ class Pivot:
             label="Set time range for pivot functions.",
         )
 
-    def _get_timespan(self):
+    def get_timespan(self) -> TimeSpan:
         """Return the timespan as a TimeSpan object."""
         return TimeSpan(start=self.start, end=self.end)
 
@@ -269,4 +282,41 @@ class Pivot:
             def_container=def_container,
             force_container=force_container,
             namespace=namespace,
+        )
+
+    @staticmethod
+    def add_pivot_function(
+        func: Callable[[Any], Any],
+        pivot_reg: "PivotRegistration" = None,
+        container: str = "other",
+        **kwargs,
+    ):
+        """
+        Add a pivot function to entities.
+
+        Parameters
+        ----------
+        func : Callable[[Any], Any]
+            The function to add
+        pivot_reg : PivotRegistration, optional
+            Pivot registration object, by default None
+        container : str, optional
+            The name of the container into which the function
+            should be added, by default "other"
+
+        Other Parameters
+        ----------------
+        kwargs
+            If `pivot_reg` is not supplied you can specify required
+            pivot registration parameters via keyword arguments. You must
+            specify `input_type` (str) and `entity_map` (dict of entity_name,
+            entity_attribute pairs)
+
+        See Also
+        --------
+        PivotRegistration
+
+        """
+        add_unbound_pivot_function(
+            func=func, pivot_reg=pivot_reg, container=container, **kwargs
         )

@@ -206,6 +206,11 @@ class Lookback:
         if auto_display:
             self.display()
 
+    @property
+    def layout(self):
+        """Return underlying widget."""
+        return self._lookback_wgt
+
     def display(self):
         """Display the interactive widgets."""
         display(self._lookback_wgt)
@@ -618,13 +623,14 @@ class SelectAlert:
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
         self._w_select_alert.observe(self._select_alert, names="value")
+        self.layout = widgets.VBox([self._w_filter_alerts, self._w_select_alert])
 
         if auto_display:
             self.display()
 
     def display(self):
         """Display the interactive widgets."""
-        display(widgets.VBox([self._w_filter_alerts, self._w_select_alert]))
+        display(self.layout)
         display(HTML("<hr>"))
         self._select_top_alert()
 
@@ -886,6 +892,11 @@ class GetEnvironmentKey(RegisteredWidget):
         """Get the current name of the key."""
         return self._name
 
+    @property
+    def layout(self):
+        """Return underlying widget collection."""
+        return self._hbox
+
     def display(self):
         """Display the interactive widgets."""
         display(self._hbox)
@@ -956,6 +967,11 @@ class GetText(RegisteredWidget):
         self._value = change.get("new")
 
     @property
+    def layout(self):
+        """Return underlying widget collection."""
+        return self._w_text
+
+    @property
     def value(self):
         """Get the current value of the key."""
         return self._value.strip()
@@ -964,7 +980,7 @@ class GetText(RegisteredWidget):
         """Display the interactive widgets."""
         if self._value:
             self._w_text.value = self._value
-        display(self._w_text)
+        display(self.layout)
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -1092,24 +1108,27 @@ class SelectItem:
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
-        display_objs = bool(self._disp_elems)
+        display_objs = dict(enumerate(self._disp_elems))
         for idx, out_obj in enumerate(output_objs):
-            if not display_objs:
+            if idx not in display_objs:
                 self._disp_elems.append(
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
-                if idx == len(self._disp_elems):
-                    break
                 self._disp_elems[idx].update(out_obj)
 
-    def display(self):
-        """Display the interactive widget."""
+    @property
+    def layout(self):
+        """Return underlying widget collection."""
         wgt_list = []
         if self._display_filter:
             wgt_list.append(self._w_filter)
         wgt_list.append(self._wgt_select)
-        display(widgets.VBox(wgt_list))
+        return widgets.VBox(wgt_list)
+
+    def display(self):
+        """Display the interactive widget."""
+        display(widgets.VBox(self.layout))
         display(HTML("<hr>"))
         self._show_top_item()
 
@@ -1250,9 +1269,9 @@ class SelectSubset:
         else:
             self._src_dict = {}
 
-        layout = widgets.Layout(width="40%", height="200px")
+        w_layout = widgets.Layout(width="40%", height="200px")
         self._source_list = widgets.SelectMultiple(
-            options=sorted(set(self.src_items)), layout=layout, description="Source: "
+            options=sorted(set(self.src_items)), layout=w_layout, description="Source: "
         )
 
         if isinstance(default_selected, dict):
@@ -1264,7 +1283,7 @@ class SelectSubset:
             selected_items = []
 
         self._select_list = widgets.SelectMultiple(
-            options=selected_items, layout=layout, description="Selected: "
+            options=selected_items, layout=w_layout, description="Selected: "
         )
 
         self._display_filter = display_filter
@@ -1565,7 +1584,7 @@ class OptionButtons:
             self._out = widgets.Output()
 
     @property
-    def _layout(self):
+    def layout(self):
         """Create layout for buttons."""
         return widgets.VBox(
             [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
@@ -1636,7 +1655,7 @@ class OptionButtons:
         """
         if reset:
             self.value = None
-        display(self._layout)
+        display(self.layout)
         if self._debug:
             display(self._out)
         self._fut_val = asyncio.ensure_future(self._await_widget())
@@ -1645,7 +1664,7 @@ class OptionButtons:
 
     def display(self):
         """Display widget in simple sync mode."""
-        display(self._layout)
+        display(self.layout)
 
     def _ipython_display_(self):
         """Display in IPython."""

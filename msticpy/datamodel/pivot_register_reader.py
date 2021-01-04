@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
 import importlib
-from typing import Any, Dict, Type
+from typing import Any, Callable, Dict, Type
 import warnings
 
 import yaml
@@ -83,6 +83,43 @@ def register_pivots(
         else:
             q_container = piv_reg.entity_container_name or container
         _add_func_to_entities(func, piv_reg, q_container, **kwargs)
+
+
+def add_unbound_pivot_function(
+    func: Callable[[Any], Any],
+    pivot_reg: PivotRegistration = None,
+    container: str = "other",
+    **kwargs,
+):
+    """
+    Add a pivot function to entities.
+
+    Parameters
+    ----------
+    func : Callable[[Any], Any]
+        The function to add
+    pivot_reg : PivotRegistration, optional
+        Pivot registration object, by default None
+    container : str, optional
+        The name of the container into which the function
+        should be added, by default "other"
+
+    Other Parameters
+    ----------------
+    kwargs
+        If `pivot_reg` is not supplied you can specify required
+        pivot registration parameters via keyword arguments. You must
+        specify `input_type` (str) and `entity_map` (dict of entity_name,
+        entity_attribute pairs)
+
+    See Also
+    --------
+    PivotRegistration
+
+    """
+    if pivot_reg is None:
+        pivot_reg = PivotRegistration(**kwargs)
+    _add_func_to_entities(func, piv_reg=pivot_reg, container=container, **kwargs)
 
 
 def _read_reg_file(file_path: str):

@@ -1393,6 +1393,23 @@ without having to break up your pipeline to do so).
 By default, it will not overwrite an existing variable of the same name
 unless you specify ``clobber=True`` in the call to ``tee``.
 
+mp_pivot.tee_exec
+~~~~~~~~~~~~~~~~~
+
+:py:meth:`mp_pivot.tee_exec<msticpy.datamodel.pivot_pd_accessor.PivotAccessor.tee_exec>`
+behaves similarly to the "tee" function above except that it
+will try to execute the function named in the parameter ``.
+
+mp_pivot.tee allows the input
+data to pass through unchanged but allows you to create a variable that
+is a snapshot of the data at that point in the pipeline. It takes
+a parameter ``var_name`` and assigns the current DataFrame instance
+to that name. So, when your pipeline has run you can access partial results (again,
+without having to break up your pipeline to do so).
+
+By default, it will not overwrite an existing variable of the same name
+unless you specify ``clobber=True`` in the call to ``tee``.
+
 Example pipeline
 ~~~~~~~~~~~~~~~~
 
@@ -1564,10 +1581,11 @@ Example from the msticpy ip_utils ``who_is`` function
         show_progress: False
       func_input_value_arg: ip_address
 
-The library doesn’t currently support creating pivots from ad hoc
-functions created in the current notebook. You need to put the
-function into a Python module. If your module is in the current
-directory and is called ``my_new_module``, the value for
+.. note:: the library also support creating pivots from ad hoc
+functions created in the current notebook (see below). You can
+also put this function into a Python module.
+If your module is in the current directory and is called
+``my_new_module``, the value you specify for
 ``src_module`` will be "my_new_module".
 
 Once you have your yaml definition file you can call
@@ -1584,3 +1602,51 @@ Once you have your yaml definition file you can call
 
 .. warning:: this registration is not persistent. You will need to
    call this each time you start a new session.
+
+
+Adding ad hoc pivot functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also add ad hoc functions as pivot functions. This is
+probably a less common scenario but may be useful for testing and
+development.
+
+To do this use the Pivot method
+:py:meth:`add_pivot_function<msticpy.datamodel.pivot.Pivot.add_pivot_function>`
+
+You can either create a PivotRegistration object and supply that (along
+with the `func` parameter), to this method.
+
+.. code:: python
+
+    from msticpy.datamodel.pivot_register import PivotRegistration
+
+    def my_func(input: str):
+        return input.upper()
+
+    piv_reg = PivotRegistration(
+        input_type="value",
+        entity_map={"Host": "HostName"},
+        func_input_value_arg="input",
+        func_new_name="upper_name"
+    )
+
+    Pivot.add_pivot_function(my_func, piv_reg, container="change_case")
+
+
+Alernatively, you can supply the
+pivot registration parameters as keyword arguments:
+
+.. code:: python
+
+    def my_func(input: str):
+        return input.upper()
+
+    Pivot.add_pivot_function(
+        func=my_func,
+        container="change_case",
+        input_type="value",
+        entity_map={"Host": "HostName"},
+        func_input_value_arg="input",
+        func_new_name="upper_name",
+    )
