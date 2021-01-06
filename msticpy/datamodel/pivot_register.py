@@ -76,7 +76,9 @@ class PivotRegistration:
     entity_container_name : Optional[str]
         The name of the container in the entity that will hold
         this pivot function.
-
+    return_raw_output : bool
+        Return raw output from the wrapped function, do not
+        try to format into a DataFrame. Default is False.
     """
 
     input_type: str
@@ -94,6 +96,7 @@ class PivotRegistration:
     src_config_path: Optional[str] = None
     src_config_entry: Optional[str] = None
     entity_container_name: Optional[str] = None
+    return_raw_output: bool = False
 
     def attr_for_entity(self, entity: Union[entities.Entity, str]) -> Optional[str]:
         """
@@ -188,8 +191,8 @@ def create_pivot_func(
             merge_key = pivot_reg.func_out_column_name or input_column
 
         # If requested to join to input
-
-        if join_type:
+        # and this function is returning a DataFrame
+        if join_type and not pivot_reg.return_raw_output:
             return input_df.merge(
                 result_df,
                 left_on=input_column,
@@ -350,7 +353,7 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg):
     for row in input_df[[input_column]].itertuples(index=False):
         param_dict = {pivot_reg.func_input_value_arg: row[0]}
         result = target_func(**param_dict, **(pivot_reg.func_static_params or {}))
-        if not isinstance(result, pd.DataFrame):
+        if not pivot_reg.return_raw_output and not isinstance(result, pd.DataFrame):
             col_value = next(iter(row._asdict().values()))
             if isinstance(result, dict):
                 # if result is a dict - make that into a row.
@@ -362,6 +365,8 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg):
                     [[col_value, str(result)]], columns=[res_key_col_name, "result"]
                 )
         results.append(result)
+    if pivot_reg.return_raw_output:
+        return results
     return pd.concat(results, ignore_index=True)
 
 

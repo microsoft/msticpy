@@ -189,7 +189,7 @@ def test_pivot_time(data_providers):
 
     _fake_provider_connected(data_providers["az_sent_prov"])
 
-    query = entities.Host.AzureSentinel.list_host_processes(
+    query = entities.Host.AzureSentinel.SecurityEvent_list_host_processes(
         host_name="test", print_query=True
     )
     check.is_in(start.isoformat(), query)
@@ -203,7 +203,7 @@ _ENTITY_QUERIES = [
             "Host",
             dict(HostName="testhost", DnsDomain="contoso.com"),
             "AzureSentinel",
-            "list_host_processes",
+            "SecurityEvent_list_host_processes",
             'Computer has "testhost.contoso.com"',
         ),
         id="Host",
@@ -213,7 +213,7 @@ _ENTITY_QUERIES = [
             "Account",
             dict(Name="testacct"),
             "AzureSentinel",
-            "list_logons_by_account",
+            "SecurityEvent_list_logons_by_account",
             'where Account has "testacct"',
         ),
         id="Account",
@@ -223,7 +223,7 @@ _ENTITY_QUERIES = [
             "IpAddress",
             dict(Address="192.168.1.2"),
             "AzureSentinel",
-            "get_info_by_ipaddress",
+            "Heartbeat_get_info_by_ipaddress",
             '| where ComputerIP == "192.168.1.2"',
         ),
         id="IpAddress",

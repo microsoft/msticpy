@@ -23,7 +23,7 @@ import requests
 import tldextract
 
 # pylint: disable=no-name-in-module
-from dns.resolver import Resolver
+from dns import resolver
 from dns.exception import DNSException
 
 # pylint: enable=no-name-in-module
@@ -116,9 +116,6 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     return image_data
 
 
-_dns_resolver = Resolver()
-
-
 @export
 class DomainValidator:
     """Assess a domain's validity."""
@@ -181,7 +178,7 @@ class DomainValidator:
 
         """
         try:
-            _dns_resolver.resolve(url_domain, "A")
+            resolver.resolve(url_domain, "A")
             return True
         except DNSException:
             return False
@@ -280,7 +277,7 @@ def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
     """
     domain = parse_url(url_domain).host
     try:
-        return _resolve_resp_to_dict(_dns_resolver.resolve(domain, rdtype=rec_type))
+        return _resolve_resp_to_dict(resolver.resolve(domain, rdtype=rec_type))
     except DNSException as err:
         return {
             "qname": domain,
@@ -306,7 +303,7 @@ def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
     """
     try:
         return _resolve_resp_to_dict(
-            _dns_resolver.resolve_address(ip_address, raise_on_no_answer=True)
+            resolver.resolve_address(ip_address, raise_on_no_answer=True)
         )
     except DNSException as err:
         return {

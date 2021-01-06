@@ -22,7 +22,9 @@ __author__ = "Ian Hellen"
 
 
 ParamAttrs = namedtuple("ParamAttrs", "type, query, family, required")
-QueryParams = namedtuple("QueryParams", "all, required, full_required, param_attrs")
+QueryParams = namedtuple(
+    "QueryParams", "all, required, full_required, param_attrs, table"
+)
 
 _DEF_IGNORE_PARAM = {"start", "end"}
 
@@ -50,12 +52,16 @@ class PivotQueryFunctions:
         self.param_usage: Dict[str, List[ParamAttrs]] = defaultdict(list)
         self.query_params: Dict[str, QueryParams] = {}
 
+        # specify any parameters to exclude from our list
         ignore_params = set(ignore_reqd) if ignore_reqd else _DEF_IGNORE_PARAM
 
+        # get the query dict for each data family
         for family, fam_dict in self._provider.query_store.data_families.items():
+            # for each query
             for src_name, q_source in fam_dict.items():
+                # get the set of required params
                 reqd_params = set(q_source.required_params.keys()) - ignore_params
-
+                # add them to the param_usage attrib
                 for param, p_attrs in q_source.params.items():
                     self.param_usage[param].append(
                         ParamAttrs(
@@ -65,6 +71,8 @@ class PivotQueryFunctions:
                             bool(param in reqd_params),
                         )
                     )
+                # add an entry to the query dictionary containing full
+                # details of the function/query parameters
                 self.query_params[f"{family}.{src_name}"] = QueryParams(
                     all=list(q_source.params),
                     required=list((set(q_source.required_params) - ignore_params)),
@@ -78,6 +86,7 @@ class PivotQueryFunctions:
                         )
                         for param, p_attrs in q_source.params.items()
                     },
+                    table=q_source.params.get("table"),
                 )
 
     def get_queries_and_types_for_param(
@@ -153,7 +162,7 @@ class PivotQueryFunctions:
         -------
         QueryParams
             QueryParams named tuple
-            (all, required, full_required)
+            (all, required, full_required, param_attrs, table)
 
         """
         return self.query_params.get(query_func_name)
@@ -182,6 +191,8 @@ class PivotQueryFunctions:
         return self.param_usage.get(param_name, [])
 
 
+# Map of query parameter names to entities and the entity attrib
+# corresponding to the query parameter value
 PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
     "account_name": [(entities.Account, "Name")],
     "host_name": [(entities.Host, "fqdn")],
@@ -289,7 +300,14 @@ def add_queries_to_entities(
             if not query_container:
                 query_container = QueryContainer()
                 setattr(entity_cls, container, query_container)
-            setattr(query_container, name, cls_func)
+            # To help disambiguation we prefix the function name with
+            # the table name
+            func_name = (
+                f"{func_params.table.get('default')}_{name}"
+                if isinstance(func_params.table, dict)
+                else name
+            )
+            setattr(query_container, func_name, cls_func)
 
 
 # pylint: enable=too-many-locals
@@ -333,8 +351,11 @@ def _param_and_call_wrapper(
     as the input parameters to the function.
 
     """
+    # initially wrap the function in a wrapper that actually does
+    # the call to the query function.
     exec_query_func = _create_data_func_exec(func, func_params)
 
+    # The outer wrapper handles instantiating query parameters at runtime
     @wraps(func)
     def wrapped_query_func(*args, **kwargs):
         """Wrap function to extract and map parameters."""
@@ -427,9 +448,12 @@ def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
     # Even if we have list params, we can't use both list params and per-row
     # iteration so ignore these and run queries per row
     row_results = []
+    # extact the DF subset of df_iter_params columns and iterate over each row
     for _, row in src_df[list(df_iter_params.values())].iterrows():
         # build a single-line dict of {param1: row_value1...}
         col_param_dict = {param: row[col] for param, col in df_iter_params.items()}
+        # execute the function for each input row with key-value params from
+        # col-name, col-value supplied as kwargs (along with any other kwargs)
         row_results.append(func(**col_param_dict, **func_kwargs))
     return pd.concat(row_results, ignore_index=True)
 
@@ -440,7 +464,7 @@ def _check_df_params_require_iter(
     func_kwargs: Dict[str, Any],
     **kwargs,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Return params that require iteration and don't."""
+    """Return params that require iteration and those that don't."""
     list_params: Dict[str, Any] = {}
     df_iter_params: Dict[str, Any] = {}
     for kw_name, arg in kwargs.items():

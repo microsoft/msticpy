@@ -218,7 +218,8 @@ class PivotBrowser:
 
     def _copy_to_clip(self, btn):
         del btn
-        pyperclip.copy(self._get_current_func())
+        if _ENABLE_CLIP:
+            pyperclip.copy(self._get_current_func())
 
     def _search_func(self, change):
         search_txt = change.get("new")
