@@ -11,5 +11,4 @@ Querying and Importing Data
    data_acquisition/UploadData
    data_acquisition/DataMasking
    data_acquisition/MordorData
-   data_acquisition/AzureSentinel
    data_acquisition/AzureBlobStorage
