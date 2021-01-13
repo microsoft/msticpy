@@ -1,6 +1,6 @@
 azure-core>=1.2.2
 azure-mgmt-core>=1.2.1
-azure-identity==1.5.0
+azure-identity>=1.5.0
 azure-keyvault-secrets>=4.0.0
 azure-mgmt-compute>=4.6.2
 azure-mgmt-keyvault>=2.0.0
