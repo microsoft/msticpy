@@ -103,6 +103,24 @@ def test_mordor_search(mdr_driver: MordorDriver):
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
+def test_mordor_download(mdr_driver: MordorDriver):
+    """Test file download."""
+    global _SAVE_PATH
+    entry_id = "SDWIN-190319021158"
+    entry = mdr_driver.mordor_data[entry_id]
+    files = entry.get_file_paths()
+
+    file_path = files[0]["file_path"]
+    d_frame = download_mdr_file(file_path, save_folder="mordor_test")
+    _SAVE_PATH = file_path.split("/")[-1]
+
+    check.is_instance(d_frame, pd.DataFrame)
+    check.greater_equal(len(d_frame), 10)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_mordor_query_provider(qry_provider):
     """Test query functions from query provider."""
     queries = qry_provider.list_queries()
@@ -111,11 +129,15 @@ def test_mordor_query_provider(qry_provider):
     check.is_true(hasattr(qry_provider, "small"))
     check.is_true(hasattr(qry_provider, queries[0]))
 
-    q_func = getattr(qry_provider, queries[2])
-
-    check.is_in("Notes", q_func.__doc__)
-    check.is_in("Mordor ID:", q_func.__doc__)
-    check.is_in("Mitre Techniques:", q_func.__doc__)
+    test_query = "small.windows.credential_access.host.empire_mimikatz_logonpasswords"
+    q_func = getattr(qry_provider, test_query)
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
+        q_func("?")
+    check.is_in("Query:", output.getvalue())
+    check.is_in("Data source:  Mordor", output.getvalue())
+    check.is_in("Mordor ID:", output.getvalue())
+    check.is_in("Mitre Techniques:", output.getvalue())
 
     f_path = q_func("print")
     check.is_in("https://raw.githubusercontent.com/OTRF/mordor", f_path)
