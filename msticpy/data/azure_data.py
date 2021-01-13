@@ -15,7 +15,7 @@ import numpy as np
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.monitor import MonitorClient
+from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
@@ -38,7 +38,7 @@ _CLIENT_MAPPING = {
     "sub_client": SubscriptionClient,
     "resource_client": ResourceManagementClient,
     "network_client": NetworkManagementClient,
-    "monitoring_client": MonitorClient,
+    "monitoring_client": MonitorManagementClient,
     "compute_client": ComputeManagementClient,
 }
 
@@ -103,7 +103,7 @@ class AzureData:
         self.sub_client: Optional[SubscriptionClient] = None
         self.resource_client: Optional[ResourceManagementClient] = None
         self.network_client: Optional[NetworkManagementClient] = None
-        self.monitoring_client: Optional[MonitorClient] = None
+        self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
         if connect is True:
             self.connect()
