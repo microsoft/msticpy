@@ -1,0 +1,91 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip==20.2.4 wheel setuptools
+        if [ -f requirements-all.txt ]; then
+          pip install -r requirements-all.txt
+        elif [ -f requirements.txt ]; then 
+          pip install -r requirements.txt;
+        fi
+        python -m pip install -e .
+    - name: Install test dependencies
+      run: |
+        python -m pip install flake8 black bandit mypy lxml pylint 
+        python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions Pygments responses
+    #- name: Pytest
+    #  env:
+    #    MAXMIND_AUTH: ${{ secrets.MAXMIND_AUTH }} 
+    #    IPSTACK_AUTH: ${{ secrets.IPSTACK_AUTH }}
+    #    MSTICPYCONFIG: ./tests/msticpyconfig-test.yaml 
+    #    MSTICPY_TEST_NOSKIP: 1 
+    #  run: |
+    #    pytest tests -n auto --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=msticpy --cov-report=xml
+    #  if: ${{ success() || failure() }} 
+    - name: black
+      run: |
+        black -t py36 --check --exclude venv .
+    - name: flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 msticpy --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
+    - name: pylint
+      run: |
+        pylint msticpy --disable=bad-continuation
+    - name: propspector
+      run: |
+        # install this separately since it uses older versions of pylint/isort
+        pip install --upgrade prosector 
+        prospector --ignore-paths tests --without-tool pylint
+    - name: mypy
+      run: |
+        mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-results-${{ matrix.python-version }}.xml msticpy
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/test-results-${{ matrix.python-version }}.xml
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
+    - name: Upload mypy test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/mypy-test-results-${{ matrix.python-version }}.xml
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
