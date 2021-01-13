@@ -47,6 +47,11 @@ Key Vault
 This section contains Azure Key Vault settings. This is only used if you
 choose to store secrets (e.g. API keys) in Key Vault.
 
+User Defaults
+~~~~~~~~~~~~~
+This section controls loading of default providers when using the
+package in a notebook. The settings here are loaded by the ``init_notebook``
+function.
 
 Specifying secrets as Environment Variables
 -------------------------------------------
@@ -273,6 +278,196 @@ The documentation for these is available here:
 :py:mod:`secrets_settings<msticpy.common.secrets_settings>`
 
 
+User Defaults Section
+---------------------
+
+This section specifies the query and other providers that you want
+to load by default. It is triggered from the
+:py:func:`init_notebook<msticpy.nbtools.nbinit.init_notebook>`
+although you can call the
+:py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
+function to do this manually.
+
+QueryProviders
+~~~~~~~~~~~~~~
+
+This is a list of query providers that you want to load. Most of the
+providers have a single namespace/environment associated with them but in
+the case of Azure Sentinel, you can load multiple copies of the query
+provider for different workspaces. The example below shows three different
+formats that you can used. Each workspace name under ``QueryProviders``
+must exist as a workspace definition in the AzureSentinel section of this
+file (see `Commented configuration file sample`_ below)
+
+.. code:: yaml
+
+    UserDefaults
+      QueryProviders:
+        - AzureSentinel:
+          - MyWorkspace
+          - Default: asi
+          - CyberSoc:
+            alias: soc
+            connect: false
+
+``MyWorkspace`` is loaded as-is - equivalent to calling:
+
+.. code:: ipython3
+
+    from msticpy.data import QueryProvider
+    from msticpy.common.wsconfig import WorkspaceConfig
+
+    qry_myworkspace = QueryProvider("AzureSentinel")
+    ws_config = WorkspaceConfig(workspace="MyWorkspace")
+    qry_myworkspace.connect(ws_config.code_connect_str)
+
+The ``Default`` entry has a few differences. The name "Default" refers
+to the default workspace definition in the AzureSentinel section of
+the msticpyconfig file. The "asi" element is an alias that will be used
+to rename the provider. It is equivalent to the following code:
+
+.. code:: ipython3
+
+    from msticpy.data import QueryProvider
+    from msticpy.common.wsconfig import WorkspaceConfig
+
+    qry_asi = QueryProvider("AzureSentinel")
+    ws_config = WorkspaceConfig()
+    qry_asi.connect(ws_config.code_connect_str)
+
+The final ``CyberSoc`` entry has multiple key-value pairs under it.
+The "alias" entry works exactly the same as the previous example.
+The "connect" item tells the code not to automatically connect
+(authenticate) to Azure Sentinel. It is equivalent to the following
+code:
+
+.. code:: ipython3
+
+    from msticpy.data import QueryProvider
+
+    qry_soc = QueryProvider("AzureSentinel")
+
+In all three cases the query provider object (``qry_soc`` in the last
+example) is stored in the global namespace of the notebook so you
+can always refer to it using this variable name.
+
+Query providers for non-Azure Sentinel data sources use the same
+syntax for aliasing and suppressing connect/authenticate. For
+example:
+
+.. code:: yaml
+
+    UserDefaults
+      QueryProviders:
+        - AzureSentinel:
+          ...
+        - Splunk:
+            connect: false
+        - LocalData: local
+
+LoadComponents
+~~~~~~~~~~~~~~
+
+This section controls the loading and instantiation of a number
+of other data providers and components.
+
+.. code:: yaml
+
+    UserDefaults
+      ...
+      LoadComponents:
+        - TILookup
+        - GeoIpLookup: GeoLiteLookup
+        - Notebooklets:
+            query_provider:
+              AzureSentinel: CyberSoc
+        - Pivot
+        - AzureData:
+          auth_methods=['cli','interactive']
+        - AzureSentinelAPI
+
+Some of these accept additional parameters and some do not. Most
+of the configuration parameters for GeoIP providers, for example,
+are loaded from other sections of the configuration file.
+
+``GeoIpLookup`` - requires one parameter - the name of the provider
+that you want to use for GeoIP location resolution.
+
+``TILookup`` - no parameters, simply creates an instance of TILookup
+using the settings in the ``TIProviders`` section.
+
+``Notebooklets`` - to use this you must have MSTIC Notebooklets (msticnb
+see `MSTICNB documentation <https://msticnb.readthedocs.io>`__). This
+has a required configuration setting, which MSTICPy passes to the
+notebooklets init code as the ``query_provider`` parameter. The notebooklets
+package is loaded last and is also sent the names of all of the other
+providers (query and other) as its ``providers`` parameter. For more details
+see
+`data_providers.init<https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
+
+``Pivot`` loads the Pivot library to add pivot functions to MSTICPy entities.
+
+``AzureData`` and ``AzureSentinel`` load the Azure resource API and Azure
+Sentinel API libraries respectively. Any key/paid values defined under either
+of these entries are passed to the provider ``connect`` method. In the
+AzureData example above this is equivalent to the following code.
+
+
+.. code:: ipython3
+
+    from msticpy.data.azure_data import AzureData
+    az_data = AzureData()
+    az_data.connect(auth_methods=['cli','interactive'])
+
+The components in the LoadProviders section have built-in friendly
+names for each component. These currently cannot be overridden from the
+configuration settings:
+
+- geoip
+- ti_lookup
+- nb
+- pivot
+- az_data
+- azs_api
+
+
+MSTICPy Providers Attribute
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have loaded providers using the UserDefaults configuration the
+provider instances created are also stored in an attribute of the
+``msticpy`` top level module.
+
+
+.. code:: ipython3
+
+    >>> msticpy.current_providers
+
+    {'qry_asi': <msticpy.data.data_providers.QueryProvider at 0x21604110ac8>,
+    'qry_myworkspace': <msticpy.data.data_providers.QueryProvider at 0x216041459c8>,
+    'qry_cybersoc': <msticpy.data.data_providers.QueryProvider at 0x21660d41308>,
+    'qry_splunk': <msticpy.data.data_providers.QueryProvider at 0x21661127208>,
+    'qry_local': <msticpy.data.data_providers.QueryProvider at 0x216605a7c48>,
+    'ti_lookup': <msticpy.sectools.tilookup.TILookup at 0x216611c7908>,
+    'geoip': <msticpy.sectools.geoip.GeoLiteLookup at 0x21660659c88>,
+    'pivot': <msticpy.datamodel.pivot.Pivot at 0x216602d8e88>,
+    'az_data': <msticpy.data.azure_data.AzureData at 0x21668aaf708>,
+    'azs_api': <msticpy.data.azure_sentinel.AzureSentinel at 0x21603f42388>,
+    'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
+
+
+You can use this to reference any of these loaded components. To write them
+back into the notebook namespace execute the following:
+
+..code:: ipython3
+
+    >>> globals().update(msticpy.current_providers)
+
+
+.. warning:: This will overwrite any global variable with the same name as
+   any of the items in the ``current_providers`` dictionary.
+
+
 Extending msticpyconfig.yaml
 ----------------------------
 
@@ -323,6 +518,28 @@ Commented configuration file sample
         Workspace3:
           WorkspaceId: "17e64332-19c9-472e-afd7-3629f299300c"
           TenantId: "4ea41beb-4546-4fba-890b-55553ce6003a"
+    UserDefaults:
+      # List of query providers to load
+      QueryProviders:
+        - AzureSentinel:
+          - Default: asi
+          - CyberSoc:
+            alias: soc
+            connect: false
+        - Splunk:
+            connect: false
+        - LocalData: local
+      # List of other providers/components to load
+      LoadComponents:
+        - TILookup
+        - GeoIpLookup: GeoLiteLookup
+        - Notebooklets:
+            query_provider:
+              AzureSentinel: CyberSoc
+        - Pivot
+        - AzureData:
+          auth_methods=['cli','interactive']
+        - AzureSentinelAPI
     QueryDefinitions:
       # Add paths to folders containing custom query definitions here
       Custom:

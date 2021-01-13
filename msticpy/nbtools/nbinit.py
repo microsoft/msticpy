@@ -32,6 +32,7 @@ from ..common.utility import (
 )
 from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
+from .user_config import load_user_defaults
 from .._version import VERSION
 
 __version__ = VERSION
@@ -215,6 +216,10 @@ def init_notebook(
         InteractiveShell.showtraceback = _hook_ipython_exceptions(
             InteractiveShell.showtraceback
         )
+
+    prov_dict = load_user_defaults()
+    namespace.update(prov_dict)
+
     if not imp_ok or not conf_ok:
         md("<font color='red'><h3>Notebook setup did not complete successfully.</h3>")
         if not imp_ok:
@@ -247,6 +252,23 @@ def list_default_imports():
         print(f"from {imp_item['module_name']} import *")
 
 
+def _extract_pkg_name(
+    imp_pkg: Optional[Dict[str, str]] = None,
+    pkg: str = None,
+    tgt: str = None,
+    alias: str = None,
+) -> str:
+    """Return string representation of package import."""
+    if imp_pkg:
+        pkg = imp_pkg.get("pkg")
+        tgt = imp_pkg.get("pkg")
+        alias = imp_pkg.get("alias")
+    import_item = f"{pkg}.{tgt}" if tgt else pkg
+    if alias:
+        import_item = f"{alias} ({import_item})"
+    return import_item  # type: ignore
+
+
 def _global_imports(  # noqa: MC0001
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
@@ -254,18 +276,21 @@ def _global_imports(  # noqa: MC0001
     extra_imports: List[str] = None,
     def_imports: str = "all",
 ):
+    import_list = []
     try:
         if def_imports.casefold() in ["all", "nb"]:
             for imp_pkg in _NB_IMPORTS:
                 _imp_from_package(nm_spc=namespace, **imp_pkg)
-
+                import_list.append(_extract_pkg_name(imp_pkg))
             _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
         if def_imports.casefold() in ["all", "msticpy"]:
             for imp_pkg in _MP_IMPORTS:
                 _imp_from_package(nm_spc=namespace, **imp_pkg)
+                import_list.append(_extract_pkg_name(imp_pkg))
             for imp_pkg in _MP_IMPORT_ALL:
                 _imp_module_all(nm_spc=namespace, **imp_pkg)
+                import_list.append(_extract_pkg_name(imp_pkg))
 
         if additional_packages:
             pkg_success = check_and_install_missing_packages(
@@ -277,7 +302,12 @@ def _global_imports(  # noqa: MC0001
                     "Please re-run init_notebook() with the parameter user_install=True."
                 )
         if extra_imports:
-            _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+            import_list.extend(
+                _import_extras(nm_spc=namespace, extra_imports=extra_imports)
+            )
+
+        if not _VERBOSE():  # type: ignore
+            print("Imported:", "; ".join(import_list))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -326,6 +356,7 @@ def _set_nb_options(namespace):
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
+    extra_imports = []
     for imp_spec in extra_imports:
         params: List[Optional[str]] = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
@@ -336,6 +367,10 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
                 f"First parameter in extra_imports is mandatory: {imp_spec}"
             )
         _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
+        extra_imports.append(
+            _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
+        )
+    return extra_imports
 
 
 def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
