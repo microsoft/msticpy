@@ -108,7 +108,7 @@ def test_mordor_search(mdr_driver: MordorDriver):
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
     global _SAVE_PATH
-    entry_id = list(mdr_driver.mordor_data.keys())[2]
+    entry_id = "SDWIN-190319021158"
     entry = mdr_driver.mordor_data[entry_id]
     files = entry.get_file_paths()
 
@@ -131,7 +131,8 @@ def test_mordor_query_provider(qry_provider):
     check.is_true(hasattr(qry_provider, "small"))
     check.is_true(hasattr(qry_provider, queries[0]))
 
-    q_func = getattr(qry_provider, queries[2])
+    test_query = "small.windows.credential_access.host.empire_mimikatz_logonpasswords"
+    q_func = getattr(qry_provider, test_query)
     output = io.StringIO()
     with contextlib.redirect_stdout(output):
         q_func("?")
