@@ -12,6 +12,7 @@ import pandas as pd
 from IPython.display import display, HTML
 
 from ..._version import VERSION
+from ...common.exceptions import MsticpyException
 from ..drivers.mordor_driver import (
     MordorDriver,
     MordorEntry,
@@ -284,9 +285,15 @@ class MordorBrowser:
         del event
         selection = self.fields["file_paths"].children[0].value
         if selection not in self.datasets:
-            result_df = download_mdr_file(
-                selection, use_cached=self._use_cached, save_folder=self._save_folder
-            )
+            result_df = None
+            try:
+                result_df = download_mdr_file(
+                    selection,
+                    use_cached=self._use_cached,
+                    save_folder=self._save_folder,
+                )
+            except MsticpyException:
+                pass
             if not isinstance(result_df, pd.DataFrame) or result_df.empty:
                 result_df = HTML("Could not extract data from this file")
             self.datasets[selection] = result_df
