@@ -58,7 +58,7 @@ EXTRAS = {
     "_azure_core": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
-        "azure-mgmt-monitor>=1.0.1",
+        "azure-mgmt-monitor>=2.0.0",
         "azure-mgmt-network>=2.7.0",
         "azure-mgmt-resource>=2.2.0",
         "azure-storage-blob>=12.5.0",

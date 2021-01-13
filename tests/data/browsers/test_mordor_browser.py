@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mordor browser notebook test."""
+import os
 from pathlib import Path
 
+import pytest
 import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
@@ -24,7 +26,7 @@ def test_mordor_browser():
     abs_path = Path(_NB_FOLDER).absolute()
 
     ex_json = list(abs_path.glob("**/*.json"))
-    ex_zip = list(abs_path.glob("**/*.json"))
+    ex_zip = list(abs_path.glob("**/*.zip"))
 
     with open(nb_path) as f_hdl:
         nbk = nbformat.read(f_hdl, as_version=4)
