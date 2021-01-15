@@ -7,8 +7,8 @@
 import os
 from pathlib import Path
 
-import nbformat
 import pytest
+import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 __author__ = "Ian Hellen"
@@ -24,6 +24,10 @@ def test_mordor_browser():
     """Mordor browser UI Test."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
+
+    ex_json = list(abs_path.glob("**/*.json"))
+    ex_zip = list(abs_path.glob("**/*.zip"))
+
     with open(nb_path) as f_hdl:
         nbk = nbformat.read(f_hdl, as_version=4)
     nb_exec = ExecutePreprocessor(timeout=600, kernel_name="python3")
@@ -38,3 +42,18 @@ def test_mordor_browser():
         with open(nb_err, mode="w", encoding="utf-8") as f:
             nbformat.write(nbk, f)
         raise
+    finally:
+        # Data file cleanup
+        for j_file in abs_path.glob("**/*.json"):
+            if j_file not in ex_json and j_file.is_file():
+                j_file.unlink()
+        for z_file in abs_path.glob("**/*.zip"):
+            if z_file not in ex_zip and z_file.is_file():
+                z_file.unlink()
+        for file in abs_path.joinpath("mordor").glob("*"):
+            file.unlink()
+        # pylint: disable=broad-except
+        try:
+            abs_path.joinpath("mordor").rmdir()
+        except Exception:  # nosec
+            pass
