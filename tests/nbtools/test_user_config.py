@@ -14,7 +14,7 @@ import msticpy
 from msticpy.data import QueryProvider
 from msticpy.nbtools import user_config
 
-# pylint: disable=redefined-outer-name, unused-import
+# pylint: disable=redefined-outer-name, unused-import, ungrouped-imports
 try:
     import msticnb
 
@@ -34,29 +34,35 @@ __author__ = "Ian Hellen"
 
 _CONFIG_TEXT = """
 UserDefaults:
-    # List of query providers to load
-    QueryProviders:
-    - AzureSentinel:
-        - Default:
-            alias: asi
-            connect: false
-        - CyberSoc:
-            alias: soc
-            connect: false
-    - Splunk:
-        connect: false
-    - LocalData: local
-    # List of other providers/components to load
-    LoadComponents:
-    - TILookup
-    - GeoIpLookup: GeoLiteLookup
-    - Notebooklets:
-        query_provider:
-            AzureSentinel: CyberSoc
-    - Pivot
-    - AzureData:
-        auth_methods=['cli','interactive']
-    - AzureSentinelAPI
+  # List of query providers to load
+  QueryProviders:
+    AzureSentinel:
+      Default:
+        alias: asi
+        connect: False
+      CyberSoc:
+        alias: soc
+        connect: False
+    Splunk:
+      connect: False
+    LocalData:
+      alias: local
+  # List of other providers/components to load
+  LoadComponents:
+    TILookup:
+    GeoIpLookup:
+      provider: GeoLiteLookup
+    Notebooklets:
+      query_provider:
+        LocalData:
+          workspace: CyberSoc
+    Pivot:
+    AzureData:
+      auth_methods: ['cli','interactive']
+      connect: False
+    AzureSentinelAPI:
+      auth_methods: ['env','interactive']
+      connect: False
 """
 
 

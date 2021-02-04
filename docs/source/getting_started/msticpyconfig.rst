@@ -288,6 +288,10 @@ although you can call the
 :py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
 function to do this manually.
 
+If you do not have this section in your configuration ``init_notebook`` will
+bypass auto-loading any components.
+
+
 QueryProviders
 ~~~~~~~~~~~~~~
 
@@ -299,16 +303,28 @@ formats that you can used. Each workspace name under ``QueryProviders``
 must exist as a workspace definition in the AzureSentinel section of this
 file (see `Commented configuration file sample`_ below)
 
+.. note:: Single-string entries in this and other sections (e.g.
+   ``MyWorkspace:`` below) must be specified as empty dictionaries. This
+   is done by adding a trailing ":" to the entry but no value on the other
+   side of the colon. This is simply to make the settings parsing code
+   a little easier. This is only when you are specifying a setting key -
+   i.e. the first item on a line. The *key values* ("azsent", "sco" and
+   "False" in this example) should be entered without a trailing colon.
+
+   Note also that False is a boolean value, not a string. You should
+   always enter True and False with proper capitalization.
+
 .. code:: yaml
 
     UserDefaults
       QueryProviders:
-        - AzureSentinel:
-          - MyWorkspace
-          - Default: asi
-          - CyberSoc:
+        AzureSentinel:
+          MyWorkspace:
+          Default:
+            alias: azsent
+          CyberSoc:
             alias: soc
-            connect: false
+            connect: False
 
 ``MyWorkspace`` is loaded as-is - equivalent to calling:
 
@@ -323,7 +339,7 @@ file (see `Commented configuration file sample`_ below)
 
 The ``Default`` entry has a few differences. The name "Default" refers
 to the default workspace definition in the AzureSentinel section of
-the msticpyconfig file. The "asi" element is an alias that will be used
+the msticpyconfig file. The ``alias: azsent`` element is an alias that will be used
 to rename the provider. It is equivalent to the following code:
 
 .. code:: ipython3
@@ -331,9 +347,9 @@ to rename the provider. It is equivalent to the following code:
     from msticpy.data import QueryProvider
     from msticpy.common.wsconfig import WorkspaceConfig
 
-    qry_asi = QueryProvider("AzureSentinel")
+    qry_azsent = QueryProvider("AzureSentinel")
     ws_config = WorkspaceConfig()
-    qry_asi.connect(ws_config.code_connect_str)
+    qry_azsent.connect(ws_config.code_connect_str)
 
 The final ``CyberSoc`` entry has multiple key-value pairs under it.
 The "alias" entry works exactly the same as the previous example.
@@ -359,11 +375,12 @@ example:
 
     UserDefaults
       QueryProviders:
-        - AzureSentinel:
+        AzureSentinel:
           ...
-        - Splunk:
-            connect: false
-        - LocalData: local
+        Splunk:
+          connect: false
+        LocalData:
+          alias: local
 
 LoadComponents
 ~~~~~~~~~~~~~~
@@ -376,21 +393,23 @@ of other data providers and components.
     UserDefaults
       ...
       LoadComponents:
-        - TILookup
-        - GeoIpLookup: GeoLiteLookup
-        - Notebooklets:
-            query_provider:
-              AzureSentinel: CyberSoc
-        - Pivot
-        - AzureData:
+        TILookup:
+        GeoIpLookup:
+          provider: GeoLiteLookup
+        Notebooklets:
+          query_provider:
+            AzureSentinel:
+              workspace: CyberSoc
+        Pivot:
+        AzureData:
           auth_methods=['cli','interactive']
-        - AzureSentinelAPI
+        AzureSentinelAPI
 
 Some of these accept additional parameters and some do not. Most
 of the configuration parameters for GeoIP providers, for example,
 are loaded from other sections of the configuration file.
 
-``GeoIpLookup`` - requires one parameter - the name of the provider
+``GeoIpLookup`` - requires one parameter - the name of the ``provider``
 that you want to use for GeoIP location resolution.
 
 ``TILookup`` - no parameters, simply creates an instance of TILookup
@@ -399,13 +418,28 @@ using the settings in the ``TIProviders`` section.
 ``Notebooklets`` - to use this you must have MSTIC Notebooklets (msticnb
 see `MSTICNB documentation <https://msticnb.readthedocs.io>`__). This
 has a required configuration setting, which MSTICPy passes to the
-notebooklets init code as the ``query_provider`` parameter. The notebooklets
-package is loaded last and is also sent the names of all of the other
-providers (query and other) as its ``providers`` parameter. For more details
-see
+notebooklets init function as the ``query_provider`` parameter. Other
+key/pair values included under the "query_provider" key are passed to
+the notebooklets initialization. Each parameter name is prefixed with
+the provider name so that it knows which parameters to send to which
+provider. In the example above notebooklets ``nbinit`` would be passed
+the following parameters:
+
+.. code:: ipython3
+
+    nbinit(query_provider="AzureSentinel", AzureSentinel_workspace="CyberSoc")
+
+
+The notebooklets
+package is loaded after most of the other providers (but before Pivot if that
+is included in the list) and is also sent the names of other
+providers (query and others such as TILookip) as its ``providers`` parameter.
+For more details see
 `data_providers.init<https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
 
 ``Pivot`` loads the Pivot library to add pivot functions to MSTICPy entities.
+It requires other providers to be loaded before itself (in order to
+harvest the pivot functions from them) so it is loaded last.
 
 ``AzureData`` and ``AzureSentinel`` load the Azure resource API and Azure
 Sentinel API libraries respectively. Any key/paid values defined under either
@@ -443,7 +477,7 @@ provider instances created are also stored in an attribute of the
 
     >>> msticpy.current_providers
 
-    {'qry_asi': <msticpy.data.data_providers.QueryProvider at 0x21604110ac8>,
+    {'qry_azsent': <msticpy.data.data_providers.QueryProvider at 0x21604110ac8>,
     'qry_myworkspace': <msticpy.data.data_providers.QueryProvider at 0x216041459c8>,
     'qry_cybersoc': <msticpy.data.data_providers.QueryProvider at 0x21660d41308>,
     'qry_splunk': <msticpy.data.data_providers.QueryProvider at 0x21661127208>,
@@ -456,7 +490,9 @@ provider instances created are also stored in an attribute of the
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
 
 
-You can use this to reference any of these loaded components. To write them
+You can use this to reference any of these loaded components. Although
+these values are normally also populated in the notebook global namespace
+you can re-populate them if needed. To write them
 back into the notebook namespace execute the following:
 
 ..code:: ipython3

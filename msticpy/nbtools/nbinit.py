@@ -307,7 +307,8 @@ def _global_imports(  # noqa: MC0001
             )
 
         if not _VERBOSE():  # type: ignore
-            print("Imported:", "; ".join(import_list))
+            if import_list:
+                print("Imported:", "; ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -356,7 +357,7 @@ def _set_nb_options(namespace):
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
-    extra_imports = []
+    added_imports = []
     for imp_spec in extra_imports:
         params: List[Optional[str]] = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
@@ -367,10 +368,11 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
                 f"First parameter in extra_imports is mandatory: {imp_spec}"
             )
         _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
-        extra_imports.append(
+        added_imports.append(
             _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
         )
-    return extra_imports
+        added_imports = [imp for imp in extra_imports if imp]
+    return added_imports
 
 
 def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):

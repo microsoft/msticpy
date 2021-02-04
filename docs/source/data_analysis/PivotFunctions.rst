@@ -576,8 +576,8 @@ US             United States  Virginia    Washington     -78.1539     38.7095   
 =============  =============  ==========  ==========  ===========  ==========  =====  =======  ===========  ================  ===============
 
 
-Using DataFrames as input
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Using a DataFrame as input
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using a dataframe as input requires a slightly different syntax since
 you not only need to pass the dataframe as a parameter but also tell the
