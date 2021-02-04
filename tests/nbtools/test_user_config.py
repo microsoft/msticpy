@@ -32,7 +32,7 @@ except ImportError:
 __author__ = "Ian Hellen"
 
 
-_CONFIG_TEXT = """
+CONFIG_TEXT = """
 UserDefaults:
   # List of query providers to load
   QueryProviders:
@@ -56,6 +56,7 @@ UserDefaults:
       query_provider:
         LocalData:
           workspace: CyberSoc
+          some_param: some_value
     Pivot:
     AzureData:
       auth_methods: ['cli','interactive']
@@ -69,7 +70,7 @@ UserDefaults:
 @pytest.fixture(scope="module")
 def mp_settings():
     """Return test settings."""
-    settings_dict = yaml.safe_load(_CONFIG_TEXT)
+    settings_dict = yaml.safe_load(CONFIG_TEXT)
     if not _NOTEBOOKLETS:
         del settings_dict["LoadComponents"]["Notebooklets"]
     if not _PIVOT:
