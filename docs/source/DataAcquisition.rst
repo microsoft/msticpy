@@ -10,6 +10,7 @@ Querying and Importing Data
    data_acquisition/CollectingLinuxAuditLogs
    data_acquisition/UploadData
    data_acquisition/DataMasking
+   data_acquisition/SplunkProvider
    data_acquisition/MordorData
    data_acquisition/AzureSentinel
    data_acquisition/AzureBlobStorage

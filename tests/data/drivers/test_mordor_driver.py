@@ -33,10 +33,10 @@ def qry_provider():
     """Query Provider fixture."""
     Path(_SAVE_FOLDER).mkdir(exist_ok=True)
     abs_path = Path(".").absolute()
-    ex_json = list(abs_path.glob("**/*.json"))
-    ex_zip = list(abs_path.glob("**/*.zip"))
+    ex_json = [file for file in abs_path.glob("**/*.json") if file.is_file()]
+    ex_zip = [file for file in abs_path.glob("**/*.zip") if file.is_file()]
 
-    qry_prov = QueryProvider("Mordor")
+    qry_prov = QueryProvider("Mordor", save_folder=_SAVE_FOLDER)
     qry_prov.connect()
     yield qry_prov
     # remove downloaded file on cleanup

@@ -305,9 +305,11 @@ def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
     file_analysis = analyze(py_file)
 
     # create a set of all imports
-    all_imports = set(
-        file_analysis["imports"] + list(file_analysis["imports_from"].keys())
+    all_imports = {file.strip() for file in file_analysis["imports"] if file}
+    all_imports.update(
+        file.strip() for file in file_analysis["imports_from"].keys() if file
     )
+
     if None in all_imports:
         all_imports.remove(None)  # type: ignore
 

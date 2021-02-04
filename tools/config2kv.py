@@ -60,15 +60,13 @@ _KV_PLACE_HOLDER = {"KeyVault": None}
 
 
 def _read_config_settings(conf_file):
-    try:
-        sys_config = os.environ["MSTICPYCONFIG"]
-    except KeyError:
-        sys_config = Path.cwd().joinpath("msticpyconfig.yaml")
+    sys_config = os.environ.get("MSTICPYCONFIG")
+
     if not conf_file:
         conf_file = sys_config
     if not conf_file:
         raise ValueError("Configuration file not found.")
-
+    print(conf_file)
     with open(conf_file, "r") as conf_hdl:
         cur_settings = yaml.safe_load(conf_hdl)
 
@@ -95,14 +93,19 @@ def _format_kv_name(setting_path):
     return re.sub("[^0-9a-zA-Z-]", "-", setting_path)
 
 
-def _get_config_secrets(cur_settings, section_name):
+def _get_config_secrets(cur_settings, section_name, sec_names):
     kv_dict = {}
+    sec_key_names = ["authkey", "apiid", "password", "clientsecret"]
+    if sec_names:
+        sec_key_names.extend(sec_names)
+    if section_name not in cur_settings:
+        return None, None
     ud_settings = deepcopy(cur_settings[section_name])
     for prov, setting in cur_settings[section_name].items():
         if "Args" in setting:
             arg_path = f"{section_name}.{prov}.Args"
             for arg, arg_val in setting["Args"].items():
-                if arg not in ["AuthKey", "ApiID"]:
+                if arg.casefold() not in sec_key_names:
                     continue
                 item_path = arg_path + "." + arg
                 if isinstance(arg_val, str):
@@ -118,12 +121,16 @@ def _get_config_secrets(cur_settings, section_name):
     return kv_dict, ud_settings
 
 
-def _transform_settings(cur_settings):
+def _transform_settings(cur_settings, sec_names):
     ud_settings = deepcopy(cur_settings)
     kv_secrets_dict = {}
 
-    for section in ["TIProviders", "OtherProviders"]:
-        kv_vals, section_settings = _get_config_secrets(cur_settings, section)
+    for section in ["TIProviders", "OtherProviders", "DataProviders"]:
+        kv_vals, section_settings = _get_config_secrets(
+            cur_settings, section, sec_names
+        )
+        if not kv_vals:
+            continue
         kv_secrets_dict.update(kv_vals)
         ud_settings[section] = section_settings
     return ud_settings, kv_secrets_dict
@@ -173,6 +180,20 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         print("Secrets in vault:\n", "\n".join(kv_client.secrets))
 
 
+def _get_secrets(vault_name, **kwargs):
+    kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
+    print(f"Secrets for vault {vault_name}")
+    print("Key Vault settings:", kwargs)
+    for sec_path in kv_client.secrets:
+        _, sec_name = sec_path.rsplit("/", maxsplit=1)
+        print(f"Secret {sec_name}:")
+        try:
+            sec_val = kv_client.get_secret(sec_name)
+            print("Value:", sec_val)
+        except Exception:  # pylint: disable=broad-except
+            print(f"Could not display secret {sec_name}")
+
+
 def _add_script_args(description):
     parser = argparse.ArgumentParser(
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -180,7 +201,6 @@ def _add_script_args(description):
     parser.add_argument(
         "--path",
         "-p",
-        default=".",
         required=False,
         help="Path to msticpyconfig.yaml. Defaults to using MSTICPYCONFIG env variable.",
     )
@@ -207,8 +227,19 @@ def _add_script_args(description):
         "--region",
         "-r",
         help=(
-            "Azure region. Default taken from msticpyconfig.yaml"
+            "Azure region. Default taken from msticpyconfig.yaml "
             + "(only needed if creating new vault.)"
+        ),
+    )
+    parser.add_argument(
+        "--secnames",
+        "-n",
+        nargs="+",
+        help=(
+            "Add an additional list of secret names to search for in "
+            + "the config file. Defaults are "
+            + "'AuthKey', 'ApiID', 'password' and 'clientsecret'. "
+            + "(the names are case-insensitive)"
         ),
     )
     parser.add_argument(
@@ -223,6 +254,12 @@ def _add_script_args(description):
         action="store_true",
         default=False,
         help=("View changes that would be made without doing anything."),
+    )
+    parser.add_argument(
+        "--view",
+        action="store_true",
+        default=False,
+        help=("Print out current secrets."),
     )
     parser.add_argument(
         "--verbose",
@@ -258,7 +295,11 @@ if __name__ == "__main__":
         "settings": kv_settings,
     }
 
-    new_settings, kv_secrets = _transform_settings(curr_settings)
+    if args.view:
+        _get_secrets(vault, **kv_args)
+        sys.exit(0)
+
+    new_settings, kv_secrets = _transform_settings(curr_settings, args.secnames)
     if args.show or args.verbose:
         _show_settings(kv_secrets, new_settings)
         sys.exit(0)

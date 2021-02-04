@@ -11,8 +11,8 @@ or a folder path of value separated files.
 Uploading data to Azure Sentinel/Log Analytics
 ----------------------------------------------
 
-Instantiating the uploader
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Instantiating the Azure Sentinel uploader
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The first step in uploading data is to instantiate an uploader for the location we wish to upload data to.
 For Azure Sentinel there are two parameters that need to be passed at this stage,
@@ -28,8 +28,8 @@ Your workspace key can be found under the Advanced setting tab of your Log Analy
 
 You can also set a ``debug`` flag when instantiating which will provide additional progress messages during an upload process.
 
-Uploading a DataFrame
-^^^^^^^^^^^^^^^^^^^^^
+Uploading a DataFrame to Azure Sentinel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To upload a Pandas DataFrame to Log Analytics you simply pass the DataFrame to ``.upload_df()`` along with the name of a table
 you wish the data to be uploaded to. If that table exists the data will be appended to it, alternatively the table will be created.
@@ -42,8 +42,8 @@ Log Analytics will parse each column in the DataFrame into a column in the resul
 
 	laup.upload_df(data=DATAFRAME, table_name=TABLE_NAME)
 
-Uploading a File
-^^^^^^^^^^^^^^^^
+Uploading a File to Azure Sentinel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To upload a file to Log Analytics pass the path to the file to ``.upload_file()``. By default a comma separated
 value file is expected but if you have some other separator value you can pass this with the ``delim`` parameter.
@@ -54,8 +54,8 @@ will upload to a table with the same name as the file.
 
 	laup.upload_file(file_path=FILE_PATH)
 
-Uploading a Folder
-^^^^^^^^^^^^^^^^^^
+Uploading a Folder to Azure Sentinel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also upload a whole folder of files. To do this simply pass the folder path to ``.upload_folder()``.
 By default this will upload all csv files in that folder to the Log Analytics workspace, with each file being
@@ -75,8 +75,8 @@ During upload a progress bar will be displayed showing the upload process of the
 Uploading data to Splunk
 ------------------------
 
-Instantiating the uploader
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Instantiating the Splunk uploader
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The first step in uploading data is to instantiate an uploader for the location we wish to upload data to.
 For Splunk there are three parameters that need to be passed at this stage, the Splunk host name, a username,
@@ -92,8 +92,8 @@ You can also set a ``debug`` flag when instantiating which will provide addition
 *Note: Due to the way Splunk API's work the time taken to upload a file to Splunk can be significantly longer than
 with Log Analytics.*
 
-Uploading a DataFrame
-^^^^^^^^^^^^^^^^^^^^^
+Uploading a DataFrame to Splunk
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To upload a Pandas DataFrame to Splunk you simply pass the DataFrame to ``.upload_df()`` along with the name of a table,
 and index you wish the data to be uploaded to. If the index provided does not exist and you want it to be created,
@@ -107,8 +107,8 @@ you can pass the parameter ``create_idx = True``.
 
 During upload a progress bar will be shown showing the upload process of the upload.
 
-Uploading a File
-^^^^^^^^^^^^^^^^
+Uploading a File to Splunk
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To upload a file to Splunk pass the path to the file to ``.upload_file()`` along with the name of the index you
 want the data uploaded to. By default a comma separated value file is expected but if you have some other separator
@@ -120,8 +120,8 @@ if the index provided does not exist and you want it to be created, you can pass
 
 	spup.upload_file(file_path=FILE_PATH, index_name=INDEX_NAME)
 
-Uploading a Folder
-^^^^^^^^^^^^^^^^^^
+Uploading a Folder to Splunk
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also upload a whole folder of files. To do this simply pass the folder path to ``.upload_folder()`` along with the
 name of the index you want the data uploaded to. By default this will upload all csv files in that folder to Splunk,

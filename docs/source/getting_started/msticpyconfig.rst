@@ -1,8 +1,8 @@
 
-msticpy Package Configuration
-=============================
+*MSTICPy* Package Configuration
+===============================
 
-Some elements of msticpy require configuration parameters. An
+Some elements of *MSTICPy* require configuration parameters. An
 example is the Threat Intelligence providers. Values for these
 and other parameters can be set in the `msticpyconfig.yaml` file.
 
@@ -14,6 +14,10 @@ settings will combine with or override the settings in the default file.
 By default, the custom `msticpyconfig.yaml` is read from the current
 directory. You can specify an explicit location using an environment
 variable ``MSTICPYCONFIG``.
+
+You should also read the :doc:`MSTICPy Settings Editor <SettingsEditor>`
+document to see how to configure settings using and interactive User
+Interface from a Jupyter notebook.
 
 Configuration sections
 ----------------------
@@ -50,7 +54,8 @@ choose to store secrets (e.g. API keys) in Key Vault.
 User Defaults
 ~~~~~~~~~~~~~
 This section controls loading of default providers when using the
-package in a notebook. The settings here are loaded by the ``init_notebook``
+package in a notebook. The settings here are loaded by the
+:py:func:`init_notebook <msticpy.nbtools.nbinit.init_notebook>`
 function.
 
 Specifying secrets as Environment Variables
@@ -66,7 +71,8 @@ file below.
 
 Specifying secrets as Key Vault secrets
 ---------------------------------------
-msticpy can read secret values from Key Vault for use with TI and
+
+*MSTICPy* can read secret values from Key Vault for use with TI and
 other providers. To use this you need to specify settings for your
 keyvault.
 
@@ -84,7 +90,7 @@ keyvault.
 
 Under the top level ``KeyVault`` section the following entries
 are accepted. Some of these are only required if you plan to
-use msticpy to create a new Key Vault vault.
+use *MSTICPy* to create a new Key Vault vault.
 
 Required Settings
 ~~~~~~~~~~~~~~~~~
@@ -153,9 +159,9 @@ to use for a given setting.
           AuthKey:
             KeyVault:
 
-Adding an empty subkey named ``KeyVault`` will cause msticpy to use
-a secret name build from the path of the setting. This is the default
-usage. In this example,
+Adding an empty subkey named ``KeyVault`` will cause *MSTICPy* to generate
+a name for the secret,  built from the path of the setting. This is the default
+usage. In the example below,
 the secret name will be "TIProviders-OpenPageRank-Args-AuthKey".
 The vault name is taken from the setting in the ``KeyVault`` settings
 section.
@@ -188,9 +194,15 @@ for this setting.
 Populating Key Vault secrets from an existing msticpyconfig.yaml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The easiest way to move your secrets to Key Vault is to use the
-``config2ky.py`` tool available in the msticpy GitHub repo.
-You can find it in the tools folder.
+You can use the *MSTICPy* settings editor to upload secrets to
+a Key Vault one-by-one. This is described in in the in the
+:ref:`Key Vault Secrets <getting_started/SettingsEditor:key vault secrets>`
+section of *MSTICPy* Settings Editor document.
+
+
+There is also a command line tool to move your secrets to Key Vault -
+``config2ky.py``. This tool is available in the *MSTICPy* GitHub repo.
+You can find it in the ``tools`` folder.
 
 Running ``config2kv.py --help`` shows the usage of this utility.
 
@@ -252,7 +264,7 @@ have ``UseKeyring: true`` in your ``msticpyconfig.yaml`` file, the
 first time that you access a Key Vault secret the secret value is
 stored as a keyring password with the same name as the Key Vault secret.
 
-Unfortunately *keyring* provides no way to list or delete stored
+Unfortunately, the *keyring* package provides no way to list or delete stored
 secrets. If you need to remove the locally-stored secrets use the platform
 utility for the appropriate backend. For example, on Windows, ``cmdkey``
 lets you list and manipulate local stored credentials.
@@ -271,7 +283,7 @@ prefer to do this, simply enter the name of the secret in the
 corresponding section for the AuthKey or ApiID of your providers.
 
 You can also use powershell or Python to manage these programmatically.
-*msticpy* has some convenience wrappers around the Azure SDK functions.
+*MSTICPy* has some convenience wrappers around the Azure SDK functions.
 
 The documentation for these is available here:
 :py:mod:`keyvault_client<msticpy.common.keyvault_client>`
@@ -288,6 +300,10 @@ although you can call the
 :py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
 function to do this manually.
 
+If you do not have this section in your configuration ``init_notebook`` will
+bypass auto-loading any components.
+
+
 QueryProviders
 ~~~~~~~~~~~~~~
 
@@ -299,16 +315,28 @@ formats that you can used. Each workspace name under ``QueryProviders``
 must exist as a workspace definition in the AzureSentinel section of this
 file (see `Commented configuration file sample`_ below)
 
+.. note:: Single-string entries in this and other sections (e.g.
+   ``MyWorkspace:`` below) must be specified as empty dictionaries. This
+   is done by adding a trailing ":" to the entry but no value on the other
+   side of the colon. This is simply to make the settings parsing code
+   a little easier. This is only when you are specifying a setting key -
+   i.e. the first item on a line. The *key values* ("azsent", "sco" and
+   "False" in this example) should be entered without a trailing colon.
+
+   Note also that False is a boolean value, not a string. You should
+   always enter True and False with proper capitalization.
+
 .. code:: yaml
 
     UserDefaults
       QueryProviders:
-        - AzureSentinel:
-          - MyWorkspace
-          - Default: asi
-          - CyberSoc:
+        AzureSentinel:
+          MyWorkspace:
+          Default:
+            alias: azsent
+          CyberSoc:
             alias: soc
-            connect: false
+            connect: False
 
 ``MyWorkspace`` is loaded as-is - equivalent to calling:
 
@@ -323,7 +351,7 @@ file (see `Commented configuration file sample`_ below)
 
 The ``Default`` entry has a few differences. The name "Default" refers
 to the default workspace definition in the AzureSentinel section of
-the msticpyconfig file. The "asi" element is an alias that will be used
+the msticpyconfig file. The ``alias: azsent`` element is an alias that will be used
 to rename the provider. It is equivalent to the following code:
 
 .. code:: ipython3
@@ -331,9 +359,9 @@ to rename the provider. It is equivalent to the following code:
     from msticpy.data import QueryProvider
     from msticpy.common.wsconfig import WorkspaceConfig
 
-    qry_asi = QueryProvider("AzureSentinel")
+    qry_azsent = QueryProvider("AzureSentinel")
     ws_config = WorkspaceConfig()
-    qry_asi.connect(ws_config.code_connect_str)
+    qry_azsent.connect(ws_config.code_connect_str)
 
 The final ``CyberSoc`` entry has multiple key-value pairs under it.
 The "alias" entry works exactly the same as the previous example.
@@ -359,11 +387,12 @@ example:
 
     UserDefaults
       QueryProviders:
-        - AzureSentinel:
+        AzureSentinel:
           ...
-        - Splunk:
-            connect: false
-        - LocalData: local
+        Splunk:
+          connect: false
+        LocalData:
+          alias: local
 
 LoadComponents
 ~~~~~~~~~~~~~~
@@ -376,21 +405,23 @@ of other data providers and components.
     UserDefaults
       ...
       LoadComponents:
-        - TILookup
-        - GeoIpLookup: GeoLiteLookup
-        - Notebooklets:
-            query_provider:
-              AzureSentinel: CyberSoc
-        - Pivot
-        - AzureData:
+        TILookup:
+        GeoIpLookup:
+          provider: GeoLiteLookup
+        Notebooklets:
+          query_provider:
+            AzureSentinel:
+              workspace: CyberSoc
+        Pivot:
+        AzureData:
           auth_methods=['cli','interactive']
-        - AzureSentinelAPI
+        AzureSentinelAPI:
 
 Some of these accept additional parameters and some do not. Most
 of the configuration parameters for GeoIP providers, for example,
 are loaded from other sections of the configuration file.
 
-``GeoIpLookup`` - requires one parameter - the name of the provider
+``GeoIpLookup`` - requires one parameter - the name of the ``provider``
 that you want to use for GeoIP location resolution.
 
 ``TILookup`` - no parameters, simply creates an instance of TILookup
@@ -398,17 +429,32 @@ using the settings in the ``TIProviders`` section.
 
 ``Notebooklets`` - to use this you must have MSTIC Notebooklets (msticnb
 see `MSTICNB documentation <https://msticnb.readthedocs.io>`__). This
-has a required configuration setting, which MSTICPy passes to the
-notebooklets init code as the ``query_provider`` parameter. The notebooklets
-package is loaded last and is also sent the names of all of the other
-providers (query and other) as its ``providers`` parameter. For more details
-see
-`data_providers.init<https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
+has a required configuration setting, which *MSTICPy* passes to the
+notebooklets init function as the ``query_provider`` parameter. Other
+key/pair values included under the "query_provider" key are passed to
+the notebooklets initialization. Each parameter name is prefixed with
+the provider name so that it knows which parameters to send to which
+provider. In the example above notebooklets ``nbinit`` would be passed
+the following parameters:
 
-``Pivot`` loads the Pivot library to add pivot functions to MSTICPy entities.
+.. code:: ipython3
+
+    nbinit(query_provider="AzureSentinel", AzureSentinel_workspace="CyberSoc")
+
+
+The notebooklets
+package is loaded after most of the other providers (but before Pivot if that
+is included in the list) and is also sent the names of other
+providers (query and others such as TILookip) as its ``providers`` parameter.
+For more details see
+`data_providers.init <https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
+
+``Pivot`` loads the Pivot library to add pivot functions to *MSTICPy* entities.
+It requires other providers to be loaded before itself (in order to
+harvest the pivot functions from them) so it is loaded last.
 
 ``AzureData`` and ``AzureSentinel`` load the Azure resource API and Azure
-Sentinel API libraries respectively. Any key/paid values defined under either
+Sentinel API libraries respectively. Any key/pair values defined under either
 of these entries are passed to the provider ``connect`` method. In the
 AzureData example above this is equivalent to the following code.
 
@@ -431,8 +477,8 @@ configuration settings:
 - azs_api
 
 
-MSTICPy Providers Attribute
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*MSTICPy* current_providers Attribute
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have loaded providers using the UserDefaults configuration the
 provider instances created are also stored in an attribute of the
@@ -443,7 +489,7 @@ provider instances created are also stored in an attribute of the
 
     >>> msticpy.current_providers
 
-    {'qry_asi': <msticpy.data.data_providers.QueryProvider at 0x21604110ac8>,
+    {'qry_azsent': <msticpy.data.data_providers.QueryProvider at 0x21604110ac8>,
     'qry_myworkspace': <msticpy.data.data_providers.QueryProvider at 0x216041459c8>,
     'qry_cybersoc': <msticpy.data.data_providers.QueryProvider at 0x21660d41308>,
     'qry_splunk': <msticpy.data.data_providers.QueryProvider at 0x21661127208>,
@@ -456,10 +502,12 @@ provider instances created are also stored in an attribute of the
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
 
 
-You can use this to reference any of these loaded components. To write them
+You can use this to reference any of these loaded components. Although
+these values are normally also populated in the notebook global namespace
+you can re-populate them if needed. To write them
 back into the notebook namespace execute the following:
 
-..code:: ipython3
+.. code:: ipython3
 
     >>> globals().update(msticpy.current_providers)
 

@@ -30,6 +30,7 @@ from ..common.utility import (
     md,
     check_kwargs,
 )
+from ..common.check_version import check_version
 from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .user_config import load_user_defaults
@@ -115,6 +116,8 @@ _AZNB_GUIDE = (
     + "ML Notebooks</i> notebook"
 )
 
+current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
+
 
 def init_notebook(
     namespace: Dict[str, Any],
@@ -184,6 +187,8 @@ def init_notebook(
         information.
 
     """
+    global current_providers  # pylint: disable=global-statement, invalid-name
+
     check_kwargs(
         kwargs, ["user_install", "friendly_exceptions", "no_config_check", "verbose"]
     )
@@ -193,6 +198,8 @@ def init_notebook(
     verbose: bool = kwargs.pop("verbose", False)
 
     _VERBOSE(verbose)
+
+    check_version()
 
     print("Processing imports....")
     imp_ok = _global_imports(
@@ -218,7 +225,10 @@ def init_notebook(
         )
 
     prov_dict = load_user_defaults()
-    namespace.update(prov_dict)
+    if prov_dict:
+        namespace.update(prov_dict)
+        current_providers = prov_dict
+        print("Autoloaded components:", ", ".join(prov_dict.keys()))
 
     if not imp_ok or not conf_ok:
         md("<font color='red'><h3>Notebook setup did not complete successfully.</h3>")
@@ -307,7 +317,8 @@ def _global_imports(  # noqa: MC0001
             )
 
         if not _VERBOSE():  # type: ignore
-            print("Imported:", "; ".join(import_list))
+            if import_list:
+                print("Imported:", "; ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -356,7 +367,7 @@ def _set_nb_options(namespace):
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
-    extra_imports = []
+    added_imports = []
     for imp_spec in extra_imports:
         params: List[Optional[str]] = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):
@@ -367,10 +378,11 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
                 f"First parameter in extra_imports is mandatory: {imp_spec}"
             )
         _imp_from_package(nm_spc=nm_spc, pkg=params[0], tgt=params[1], alias=params[2])
-        extra_imports.append(
+        added_imports.append(
             _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
         )
-    return extra_imports
+        added_imports = [imp for imp in extra_imports if imp]
+    return added_imports
 
 
 def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
