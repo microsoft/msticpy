@@ -15,7 +15,12 @@ import numpy as np
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.monitor import MonitorManagementClient
+
+try:
+    # Try new version but keep backward compat with 1.0.1
+    from azure.mgmt.monitor import MonitorManagementClient
+except ImportError:
+    from azure.mgmt.monitor import MonitorClient as MonitorManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError

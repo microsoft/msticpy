@@ -22,7 +22,7 @@ class TimeSpan:
     # pylint: enable=too-many-branches
     def __init__(
         self,
-        timespan: Optional[Union["TimeSpan", Tuple[Any, Any]]] = None,
+        timespan: Optional[Union["TimeSpan", Tuple[Any, Any], Any]] = None,
         start: Optional[Union[datetime, str]] = None,
         end: Optional[Union[datetime, str]] = None,
         period: Optional[Union[timedelta, str]] = None,
@@ -32,7 +32,7 @@ class TimeSpan:
 
         Parameters
         ----------
-        timespan : Union(TimeSpan, Tuple(Any, Any)), optional
+        timespan : Union(TimeSpan, Tuple(Any, Any), Any), optional
             A TimeSpan object
             or a tuple of datetimes or datetime strings,
             or an object that has either `start` and `end` or `start` and
@@ -44,9 +44,6 @@ class TimeSpan:
             datetime of the end of the time period, by default utcnow
         period : Optional[Union[timedelta, str]], optional
             duration of the period, by default None
-        time_selector : Any
-            an object that has either `start` and `end` or `start` and
-            `period` date_time-like attributes.
 
         Raises
         ------

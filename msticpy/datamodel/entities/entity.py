@@ -84,21 +84,6 @@ class Entity(ABC, Node):
         if kwargs:
             self.__dict__.update(kwargs)
 
-    #     self._assign_container_parent()
-
-    # def _assign_container_parent(self):
-    #     """
-    #     Assign reference to this instance to any QueryContainer attribs.
-
-    #     This allows functions within QueryContainers to reference
-    #     `self` of this instance and behave as if they were instance
-    #     methods of the entity.
-    #     """
-    #     for _, obj in inspect.getmembers(self):
-    #         # using simple name match to avoid importing QueryContainer
-    #         if obj.__class__.__name__ == "QueryContainer":
-    #             setattr(obj, "_parent_self", self)
-
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.
