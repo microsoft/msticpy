@@ -76,12 +76,13 @@ class DataEnvironment(Enum):
     """
 
     Unknown = 0
-    LogAnalytics = 1
     AzureSentinel = 1  # alias of LogAnalytics
+    LogAnalytics = 1
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
     MDATP = 5
+    MDE = 5
     LocalData = 6
     Splunk = 7
     Mordor = 8

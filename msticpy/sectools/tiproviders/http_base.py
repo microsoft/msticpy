@@ -130,6 +130,7 @@ class HttpProvider(TIProvider):
         if result.status:
             return result
 
+        req_params: Dict[str, Any] = {}
         try:
             verb, req_params = self._substitute_parms(
                 result.safe_ioc, result.ioc_type, query_type
@@ -196,11 +197,7 @@ class HttpProvider(TIProvider):
         """
         req_params = {"observable": ioc}
         req_params.update(self._request_params)
-        if query_type:
-            ioc_key = ioc_type + "-" + query_type
-        else:
-            ioc_key = ioc_type
-
+        ioc_key = ioc_type + "-" + query_type if query_type else ioc_type
         src = self._IOC_QUERIES.get(ioc_key, None)
         if not src:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
@@ -229,7 +226,7 @@ class HttpProvider(TIProvider):
             }
             req_dict["data"] = q_data
         if src.auth_type and src.auth_str:
-            auth_strs: Tuple = tuple([p.format(**req_params) for p in src.auth_str])
+            auth_strs: Tuple = tuple(p.format(**req_params) for p in src.auth_str)
             if src.auth_type == "HTTPBasic":
                 req_dict["auth"] = auth_strs
             else:

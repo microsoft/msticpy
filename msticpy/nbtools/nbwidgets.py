@@ -22,7 +22,8 @@ from IPython.display import HTML, display
 from ipywidgets import Layout
 
 from .._version import VERSION
-from ..common.utility import export
+from ..common.utility import export, check_kwargs
+from ..common.timespan import TimeSpan
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -64,7 +65,7 @@ class RegisteredWidget(ABC):
 
     Registered widgets will store their values in the register.
     Each widget has an ID that that is derived from one or more of the
-    initializatio parameters. If an instance of the same widget class is
+    initialization parameters. If an instance of the same widget class is
     created with the same parameters, its previous value will be repopulated
     from the registry.
     This is especially useful in notebooks where people accidently re-run
@@ -86,7 +87,7 @@ class RegisteredWidget(ABC):
         Parameters
         ----------
         id_vals : Optional[List[Any]], optional
-            The list of parameter names to use to identify this widget instance,
+            The list of parameter values to use to identify this widget instance,
             by default None
         val_attrs : Optional[List[str]], optional
             The names of the attributes to persist in the registry
@@ -231,16 +232,17 @@ class Lookback:
 
 
 def _default_max_buffer(max_default, default, unit) -> int:
+    mag_default = abs(int(default * 4))
     if max_default is not None:
         max_value = abs(max_default)
-        return max(max_value, int(default * 2))
+        return max(max_value, mag_default)
     if unit == TimeUnit.day:
-        return max(7, int(default * 2))
+        return max(7, mag_default)
     if unit == TimeUnit.hour:
-        return max(24, int(default * 2))
+        return max(24, mag_default)
     if unit == TimeUnit.week:
-        return max(4, int(default * 2))
-    return max(120, int(default * 2))
+        return max(4, mag_default)
+    return max(120, mag_default)
 
 
 def _default_before_after(default, unit) -> int:
@@ -268,19 +270,26 @@ class QueryTime(RegisteredWidget):
 
     """
 
+    _ALLOWED_KWARGS = [
+        "origin_time",
+        "before",
+        "after",
+        "start",
+        "end",
+        "max_before",
+        "max_after",
+        "label",
+        "description",
+        "units",
+        "auto_display",
+        "timespan",
+        "register",
+    ]
+
     _label_style = {"description_width": "initial"}
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
-        origin_time: datetime = None,
-        before: Optional[int] = None,
-        after: Optional[int] = None,
-        max_before: Optional[int] = None,
-        max_after: Optional[int] = None,
-        label: str = None,
-        units: str = "min",
-        auto_display: bool = False,
         **kwargs,
     ):
         """
@@ -299,6 +308,15 @@ class QueryTime(RegisteredWidget):
         after : int, optional
             The default number of `units` after the `origin_time`
             (the default varies based on the unit)
+        start : Union[datetime, str]
+            Start of query time - alternative to specifying origin,
+            before, after
+        end : Union[datetime, str]
+            End of query time - alternative to specifying origin,
+            before, after
+        timespan : TimeSpan
+            TimeSpan of query time - alternative to specifying origin,
+            before, after
         max_before : int, optional
             The largest value for `before` (the default varies based on the unit)
         max_after : int, optional
@@ -313,27 +331,39 @@ class QueryTime(RegisteredWidget):
             Whether to display on instantiation (the default is False)
 
         """
-        self._label = "Set query time boundaries" if label is None else label
-        self._time_unit = _parse_time_unit(units)
-
-        self.before = _default_before_after(before, self._time_unit)
-        self.after = _default_before_after(after, self._time_unit)
-        self.max_before = _default_max_buffer(max_before, self.before, self._time_unit)
-        self.max_after = _default_max_buffer(max_after, self.after, self._time_unit)
-
-        # default to now
-        self.origin_time = datetime.utcnow() if origin_time is None else origin_time
-        # Calculate time offsets from origin
-        self._query_start = self.origin_time - timedelta(
-            0, self.before * self._time_unit.value
+        check_kwargs(kwargs, self._ALLOWED_KWARGS)
+        self._label = kwargs.pop(
+            "description", kwargs.pop("label", "Set query time boundaries")
         )
-        self._query_end = self.origin_time + timedelta(
-            0, self.after * self._time_unit.value
-        )
+        self._time_unit = _parse_time_unit(kwargs.get("units", "min"))
+
+        self.before = kwargs.pop("before", None)
+        self.after = kwargs.pop("after", None)
+        self._query_start = self._query_end = self.origin_time = datetime.utcnow
+        self._get_time_parameters(**kwargs)
+
+        self.max_before = kwargs.pop("max_before", 0)
+        self.max_after = kwargs.pop("max_after", 0)
+        self._adjust_max_before_after()
 
         # Call superclass to register
-        ids_params = [origin_time, before, after, max_before, max_after, label, units]
-        ids_attribs = ["origin_time", "before", "after", "_query_start", "_query_end"]
+        ids_params = [
+            self.origin_time,
+            self.before,
+            self.after,
+            self.max_before,
+            self.max_after,
+            self._label,
+            self._time_unit,
+        ]
+        ids_attribs = [
+            "origin_time",
+            "before",
+            "after",
+            "_query_start",
+            "_query_end",
+            "_label",
+        ]
         super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
 
         # Create widgets
@@ -375,21 +405,81 @@ class QueryTime(RegisteredWidget):
             style=self._label_style,
         )
 
+        # Add change event handlers
         self._w_tm_range.observe(self._time_range_change, names="value")
         self._w_origin_dt.observe(self._update_origin, names="value")
         self._w_origin_tm.observe(self._update_origin, names="value")
 
-        if auto_display:
+        self.layout = self._create_layout()
+        if kwargs.pop("auto_display", False):
             self.display()
+
+    def _create_layout(self):
+        return widgets.VBox(
+            [
+                widgets.HTML("<h4>{}</h4>".format(self._label)),
+                widgets.HBox([self._w_origin_dt, self._w_origin_tm]),
+                widgets.VBox(
+                    [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+                ),
+            ]
+        )
 
     def display(self):
         """Display the interactive widgets."""
-        display(widgets.HTML("<h4>{}</h4>".format(self._label)))
-        display(widgets.HBox([self._w_origin_dt, self._w_origin_tm]))
-        display(
-            widgets.VBox(
-                [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+        display(self.layout)
+
+    def _get_time_parameters(self, **kwargs):
+        """Process different init time parameters."""
+        timespan: TimeSpan = kwargs.pop("timespan", None)
+        start = kwargs.pop("start", None)
+        end = kwargs.pop("end", None)
+        if timespan:
+            self._query_end = self.origin_time = timespan.end
+            self._query_start = timespan.start
+        elif start and end:
+            timespan = TimeSpan(start=start, end=end)
+            self._query_start = timespan.start
+            self._query_end = self.origin_time = timespan.end
+        else:
+            self.origin_time = kwargs.pop("origin_time", datetime.utcnow())
+            self.before = _default_before_after(self.before, self._time_unit)
+            self.after = _default_before_after(self.after, self._time_unit)
+            # Calculate time offsets from origin
+            self._query_start = self.origin_time - timedelta(
+                0, self.before * self._time_unit.value
             )
+            self._query_end = self.origin_time + timedelta(
+                0, self.after * self._time_unit.value
+            )
+            timespan = TimeSpan(start=self._query_start, end=self._query_end)
+        if "units" not in kwargs:
+            self._infer_time_units()
+        if self.after is None:
+            self.after = 0
+        if self.before is None:
+            self.before = int(
+                (self._query_end - self._query_start).total_seconds()
+                / self._time_unit.value
+            )
+
+    def _infer_time_units(self):
+        # If time units not set explicitly, set to something sensible,
+        # based on start/end times
+        if abs(self.timespan.period.days) > 1:
+            self._time_unit = TimeUnit.day
+        elif abs(self.timespan.period.total_seconds()) > 3600:
+            self._time_unit = TimeUnit.hour
+        else:
+            self._time_unit = TimeUnit.minute
+
+    def _adjust_max_before_after(self):
+        """Adjust the max values so the are always bigger than the defaults."""
+        self.max_before = _default_max_buffer(
+            self.max_before, self.before or 1, self._time_unit
+        )
+        self.max_after = _default_max_buffer(
+            self.max_after, self.after or 1, self._time_unit
         )
 
     def _update_origin(self, change):
@@ -421,6 +511,16 @@ class QueryTime(RegisteredWidget):
     def end(self):
         """Query end time."""
         return self._query_end
+
+    @property
+    def units(self):
+        """Time units used by control."""
+        return self._time_unit.name
+
+    @property
+    def timespan(self):
+        """Return the timespan as a TimeSpan object."""
+        return TimeSpan(start=self.start, end=self.end)
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -1512,8 +1612,7 @@ class OptionButtons:
                 self._debug_out("*")
 
     async def _await_timer(self, timeout: int = 5):
-        if timeout <= 0:
-            timeout = 0
+        timeout = max(timeout, 0)
         while timeout > 0:
             self._timer_label.value = f"Waiting {timeout} sec..."
             if self.value:

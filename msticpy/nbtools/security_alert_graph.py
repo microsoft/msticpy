@@ -12,7 +12,7 @@ import networkx as nx
 import pandas as pd
 
 from .security_alert import SecurityAlert
-from .entityschema import Entity
+from ..datamodel.entities import Entity
 from ..common.utility import export, is_not_empty
 from .._version import VERSION
 
@@ -180,10 +180,7 @@ def _add_related_alert_edge(nx_graph, source, target):
     """Add related alert to an existing graph."""
     count_attrs = nx.get_node_attributes(nx_graph, "count")
     target_node = target["AlertType"] + "(R)"
-    if target_node in count_attrs:
-        current_count = count_attrs[target_node]
-    else:
-        current_count = 0
+    current_count = count_attrs[target_node] if target_node in count_attrs else 0
     current_count += 1
 
     description = "Related alert: {}  Count:{}".format(
@@ -195,6 +192,7 @@ def _add_related_alert_edge(nx_graph, source, target):
 
 
 def _get_account_qualified_name(account):
+    name = None
     if "Name" in account:
         name = account["Name"]
     if "NTDomain" in account:
@@ -219,7 +217,7 @@ def _get_name_and_description(entity, os_family="Windows"):
         e_name, e_description = _get_process_name_desc(entity)
     elif entity["Type"] == "file":
         e_name, e_description = _get_file_name_desc(entity)
-    elif entity["Type"] == "ip" or entity["Type"] == "ipaddress":
+    elif entity["Type"] in ["ip", "ipaddress"]:
         e_name, e_description = _get_ip_name_desc(entity)
     elif entity["Type"] == "dns":
         e_name = "{}: {}".format(entity["Type"], entity["DomainName"])
@@ -277,8 +275,7 @@ def _get_ip_name_desc(entity):
 def _get_file_name_desc(entity):
     e_name = entity["FullPath"]
     e_name = "{}: {}".format(entity["Type"], e_name)
-    e_description = e_name
-    return e_name, e_description
+    return e_name, e_name
 
 
 def _get_process_name_desc(entity):
@@ -288,7 +285,7 @@ def _get_process_name_desc(entity):
         path = entity["ImageFile"]["FullPath"]
     else:
         path = "unknown"
-    pid = entity.ProcessId if entity.ProcessId else "PID unknown"
+    pid = entity.ProcessId or "PID unknown"
     e_name = path + " [" + pid + "]"
     e_name = "{}: {}".format(entity["Type"], e_name)
     e_description = "{}\n(cmdline: '{}')".format(e_name, entity.CommandLine)

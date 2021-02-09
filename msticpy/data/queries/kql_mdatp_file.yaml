@@ -62,10 +62,11 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where SHA1 == "{hash}" or SHA256 == "{hash}" or MD5 == "{hash}"
+        | where SHA1 == "{file_hash}" or SHA256 == "{file_hash}" or MD5 == "{file_hash}"
         {add_query_items}'
       uri: None
     parameters:
-      hash:
+      file_hash:
         description: Hash of file
         type: str
+        aliases: hash

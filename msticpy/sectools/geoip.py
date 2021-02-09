@@ -39,10 +39,10 @@ from IPython.display import HTML, display
 from requests.exceptions import HTTPError
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, IpAddress  # type: ignore
-from ..common.utility import export
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.provider_settings import ProviderSettings, get_provider_settings
+from ..common.utility import export
+from ..datamodel.entities import GeoLocation, IpAddress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -117,14 +117,39 @@ class GeoIpLookup(metaclass=ABCMeta):
             appended (where a location lookup was successful)
 
         """
+        return data.merge(
+            self.lookup_ips(data, column),
+            how="left",
+            left_on=column,
+            right_on="IpAddress",
+        )
+
+    def lookup_ips(self, data: pd.DataFrame, column: str) -> pd.DataFrame:
+        """
+        Lookup Geolocation data from a pandas Dataframe.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            pandas dataframe containing IpAddress column
+        column : str
+            the name of the dataframe column to use as a source
+
+        Returns
+        -------
+        pd.DataFrame
+            IpLookup results as DataFrame.
+
+        """
         ip_list = list(data[column].values)
         _, entities = self.lookup_ip(ip_addr_list=ip_list)
 
         ip_dicts = [
-            {**ent.Location.properties, "IpAddress": ent.Address} for ent in entities
+            {**ent.Location.properties, "IpAddress": ent.Address}
+            for ent in entities
+            if ent.Location is not None
         ]
-        df_out = pd.DataFrame(data=ip_dicts)
-        return data.merge(df_out, how="left", left_on=column, right_on="IpAddress")
+        return pd.DataFrame(data=ip_dicts)
 
     # pylint: disable=protected-access
     def _print_license(self):
@@ -241,7 +266,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         if ip_address and isinstance(ip_address, str):
             ip_list = [ip_address.strip()]
         elif ip_addr_list:
-            ip_list = list((ip.strip() for ip in ip_addr_list))
+            ip_list = [ip.strip() for ip in ip_addr_list]
         elif ip_entity:
             ip_list = [ip_entity.Address]
         else:
@@ -251,7 +276,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         output_raw = []
         output_entities = []
         for ip_loc, status in results:
-            if status == 200:
+            if status == 200 and "error" not in ip_loc:
                 output_entities.append(self._create_ip_entity(ip_loc, ip_entity))
             output_raw.append((ip_loc, status))
         return output_raw, output_entities
@@ -262,15 +287,15 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             ip_entity = IpAddress()
             ip_entity.Address = ip_loc["ip"]
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = ip_loc["country_code"]  # type: ignore
+        geo_entity.CountryCode = ip_loc["country_code"]
 
-        geo_entity.CountryName = ip_loc["country_name"]  # type: ignore
-        geo_entity.State = ip_loc["region_name"]  # type: ignore
-        geo_entity.City = ip_loc["city"]  # type: ignore
-        geo_entity.Longitude = ip_loc["longitude"]  # type: ignore
-        geo_entity.Latitude = ip_loc["latitude"]  # type: ignore
+        geo_entity.CountryName = ip_loc["country_name"]
+        geo_entity.State = ip_loc["region_name"]
+        geo_entity.City = ip_loc["city"]
+        geo_entity.Longitude = ip_loc["longitude"]
+        geo_entity.Latitude = ip_loc["latitude"]
         if "connection" in ip_loc:
-            geo_entity.Asn = ip_loc["connection"]["asn"]  # type: ignore
+            geo_entity.Asn = ip_loc["connection"]["asn"]
         ip_entity.Location = geo_entity
         return ip_entity
 
@@ -422,11 +447,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         super().__init__()
 
         self.settings = _get_geoip_provider_settings("GeoIPLite")
-        if api_key:
-            self._api_key = api_key
-        else:
-            self._api_key = self.settings.args.get("AuthKey")  # type: ignore
-
+        self._api_key = api_key or self.settings.args.get("AuthKey")
         self._dbfolder = db_folder
         if self._dbfolder is None:
             self._dbfolder = self.settings.args.get("DBFolder", self._DB_HOME)
@@ -650,7 +671,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if ip_address and isinstance(ip_address, str):
             ip_list = [ip_address.strip()]
         elif ip_addr_list:
-            ip_list = list((ip.strip() for ip in ip_addr_list))
+            ip_list = [ip.strip() for ip in ip_addr_list]
         elif ip_entity:
             ip_list = [ip_entity.Address]
         else:
@@ -680,27 +701,17 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             ip_entity = IpAddress()
             ip_entity.Address = ip_address
         geo_entity = GeoLocation()
-        geo_entity.CountryCode = geo_match.get("country", {}).get(  # type: ignore
-            "iso_code", None
-        )
-        geo_entity.CountryName = (  # type: ignore
+        geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
+        geo_entity.CountryName = (
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
         subdivs = geo_match.get("subdivisions", [])
         if subdivs:
-            geo_entity.State = (  # type: ignore
-                subdivs[0].get("names", {}).get("en", None)
-            )
-        geo_entity.City = (  # type: ignore
-            geo_match.get("city", {}).get("names", {}).get("en", None)
-        )
-        geo_entity.Longitude = geo_match.get("location", {}).get(  # type: ignore
-            "longitude", None
-        )
-        geo_entity.Latitude = geo_match.get("location", {}).get(  # type: ignore
-            "latitude", None
-        )
-        ip_entity.Location = geo_entity  # type: ignore
+            geo_entity.State = subdivs[0].get("names", {}).get("en", None)
+        geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
+        geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)
+        geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
+        ip_entity.Location = geo_entity
         return ip_entity
 
 

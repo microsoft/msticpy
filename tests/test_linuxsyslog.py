@@ -11,7 +11,7 @@ import warnings
 from pytest import raises
 
 from msticpy.common import pkg_config
-from msticpy.nbtools.entityschema import Host
+from msticpy.datamodel.entities import Host
 from msticpy.sectools import syslog_utils as ls
 from msticpy.common.exceptions import MsticpyException
 from msticpy.sectools import cmd_line as cl

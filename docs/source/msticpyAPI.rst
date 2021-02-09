@@ -5,8 +5,9 @@ msticpy API
     :maxdepth: 2
 
     api-how-to-read
-    msticpy.data
     msticpy.analysis
+    msticpy.data
+    msticpy.datamodel
     msticpy.nbtools
     msticpy.sectools
     msticpy.common

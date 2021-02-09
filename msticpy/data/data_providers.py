@@ -39,7 +39,7 @@ __author__ = "Ian Hellen"
 _PROVIDER_DIR = "providers"
 
 _ENVIRONMENT_DRIVERS = {
-    DataEnvironment.LogAnalytics: KqlDriver,
+    DataEnvironment.AzureSentinel: KqlDriver,
     DataEnvironment.AzureSecurityCenter: KqlDriver,
     DataEnvironment.SecurityGraph: SecurityGraphDriver,
     DataEnvironment.MDATP: MDATPDriver,
@@ -94,7 +94,7 @@ class QueryProvider:
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
 
-        self._environment = data_environment.name
+        self.environment = data_environment.name
 
         if driver is None:
             driver_class = _ENVIRONMENT_DRIVERS[data_environment]
@@ -102,7 +102,7 @@ class QueryProvider:
                 driver = driver_class(**kwargs)  # type: ignore
             else:
                 raise LookupError(
-                    "Could not find suitable data provider for", f" {self._environment}"
+                    "Could not find suitable data provider for", f" {self.environment}"
                 )
 
         self._query_provider = driver
@@ -114,8 +114,8 @@ class QueryProvider:
             data_env_queries.update(
                 self._read_queries_from_paths(query_paths=query_paths)
             )
-        self._query_store = data_env_queries.get(
-            self._environment, QueryStore(self._environment)
+        self.query_store = data_env_queries.get(
+            self.environment, QueryStore(self.environment)
         )
         self._add_query_functions()
 
@@ -212,7 +212,7 @@ class QueryProvider:
             Path to the file to import
 
         """
-        self._query_store.import_file(query_file)
+        self.query_store.import_file(query_file)
         self._add_query_functions()
 
     @classmethod
@@ -238,15 +238,15 @@ class QueryProvider:
             List of queries
 
         """
-        return list(self._query_store.query_names)
+        return list(self.query_store.query_names)
 
     def query_help(self, query_name):
         """Print help for query."""
-        self._query_store[query_name].help()
+        self.query_store[query_name].help()
 
     def get_query(self, query_name) -> str:
         """Return the raw query text."""
-        return self._query_store[query_name].query
+        return self.query_store[query_name].query
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
@@ -300,10 +300,15 @@ class QueryProvider:
         query_name = kwargs.pop("query_name")
         family = kwargs.pop("query_path")
 
-        query_source = self._query_store.get_query(
+        query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
         )
         if "help" in args or "?" in args:
+            warnings.warn(
+                "Use of the '?' and 'help' parameters is deprecated. "
+                + "Please use Python 'help(prov.querypath.queryname)' or "
+                + "use 'prov.querypath.queryname?' to get help"
+            )
             query_source.help()
             return None
 
@@ -327,7 +332,7 @@ class QueryProvider:
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
-        if "print" in args or "query" in args:
+        if "print" in args or "query" in args or "print_query" in kwargs:
             return query_str
 
         # Handle any query options passed
@@ -397,7 +402,7 @@ class QueryProvider:
             query_func = partial(
                 self._execute_query, query_path=query_cont_name, query_name=query_name
             )
-            query_func.__doc__ = self._query_store.get_query(
+            query_func.__doc__ = self.query_store.get_query(
                 query_path=query_cont_name, query_name=query_name
             ).create_doc_string()
 
@@ -408,7 +413,7 @@ class QueryProvider:
     def _add_driver_queries(self, queries: Iterable[Dict[str, str]]):
         """Add driver queries to the query store."""
         for query in queries:
-            self._query_store.add_query(
+            self.query_store.add_query(
                 name=query["name"],
                 query=query["query"],
                 query_paths=query["query_container"],

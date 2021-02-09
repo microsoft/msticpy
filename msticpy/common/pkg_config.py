@@ -290,20 +290,6 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         mp_errors.extend(prov_errors)
         mp_warn.extend(prov_warn)
 
-    # Special handling for AzureCLI if it is not in DataProviders
-    # but specified at the top level of the config file
-    dp_section = mp_config.get(_DP_KEY, {})
-    if dp_section is None or _AZ_CLI not in dp_section:
-        if _AZ_CLI not in mp_config:
-            mp_warn.append("No AzureCLI section in settings.")
-        else:
-            az_cli_settings = {"DataProviders": mp_config.get(_AZ_CLI)}
-            prov_errors, prov_warn = _check_provider_settings(
-                mp_config=az_cli_settings, section=_AZ_CLI, key_provs=None
-            )
-            mp_errors.extend(prov_errors)
-            mp_warn.extend(prov_warn)
-
     _print_validation_report(mp_errors, mp_warn)
     if mp_errors or mp_warn:
         return mp_errors, mp_warn

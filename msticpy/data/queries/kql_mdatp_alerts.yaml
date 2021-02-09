@@ -86,9 +86,11 @@ sources:
         {table}
         | where EventTime >= datetime({start})
         | where EventTime <= datetime({end})
-        | where SHA1 has "{sha1}"
+        | where SHA1 has "{file_hash}"
         {add_query_items}'
     parameters:
-      sha1:
+      file_hash:
         description: SHA1 hash
         type: str
+        aliases:
+          - sha1
