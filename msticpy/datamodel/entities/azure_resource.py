@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """AzureResource Entity class."""
+from itertools import islice
+import re
 from typing import Any, Dict, Mapping, Optional
 
 from ..._version import VERSION
@@ -25,11 +27,8 @@ class AzureResource(Entity):
     ----------
     ResourceId : str
         AzureResource ResourceId
-    SubscriptionId : str
-        AzureResource SubscriptionId
     ResourceIdParts : Dict[str, str]
         AzureResource ResourceIdParts
-
 
     """
 
@@ -52,21 +51,45 @@ class AzureResource(Entity):
 
         """
         self.ResourceId: Optional[str] = None
-        self.SubscriptionId: Optional[str] = None
         self.ResourceIdParts: Dict[str, str] = {}
+        self.Url: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
+        if self.ResourceId and not self.ResourceIdParts:
+            self._extract_resource_parts()
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return self.ResourceId or self.__name__
 
+    @property
+    def SubscriptionId(self):  # noqa
+        """Return the subscription Id or None."""
+        return self.ResourceIdParts.get("subscriptions")
+
+    @property
+    def ResourceGroup(self):  # noqa
+        """Return the ResourceGroup name or None."""
+        return self.ResourceIdParts.get("resourceGroups")
+
+    @property
+    def Provider(self):  # noqa
+        """Return the Provider name or None."""
+        return self.ResourceIdParts.get("providers")
+
     _entity_schema = {
         # ResourceId (type System.String)
         "ResourceId": None,
-        # SubscriptionId (type System.String)
-        "SubscriptionId": None,
         # ResourceIdParts (type System.Collections.Generic.IReadOnlyDictionary`2
         # [System.String,System.String])
         "ResourceIdParts": None,
     }
+
+    def _extract_resource_parts(self):
+        res_match = re.search("/resource/(?P<res_path>.+)", self.ResourceId)
+        if not res_match:
+            return
+        res_elems = res_match.groupdict().get("res_path", "").split("/")
+        keys = islice(res_elems, 0, len(res_elems), 2)
+        vals = islice(res_elems, 1, len(res_elems), 2)
+        self.ResourceIdParts = dict(zip(keys, vals))

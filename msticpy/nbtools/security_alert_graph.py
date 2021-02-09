@@ -275,8 +275,7 @@ def _get_ip_name_desc(entity):
 def _get_file_name_desc(entity):
     e_name = entity["FullPath"]
     e_name = "{}: {}".format(entity["Type"], e_name)
-    e_description = e_name
-    return e_description, e_description
+    return e_name, e_name
 
 
 def _get_process_name_desc(entity):
