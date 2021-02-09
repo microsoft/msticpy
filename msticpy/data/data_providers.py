@@ -284,11 +284,6 @@ class QueryProvider:
             query_path=family, query_name=query_name
         )
         if "help" in args or "?" in args:
-            warnings.warn(
-                "Use of the '?' and 'help' parameters is deprecated. "
-                + "Please use Python 'help(prov.querypath.queryname)' or "
-                + "use 'prov.querypath.queryname?' to get help"
-            )
             query_source.help()
             return None
 
