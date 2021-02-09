@@ -85,7 +85,7 @@ entity as methods (or functions) of that entity. These operations include:
 
 -  Data queries
 -  Threat intelligence lookups
--  Other data lookups such as GeoLocation or domain resolution
+-  Other data lookups such as geo-location or domain resolution
 -  and other local functionality
 
 The pivot library essentially wraps these various functions in a
@@ -97,8 +97,11 @@ more standardized form. This gives us several benefits:
    aware of.
 -  The functions have standarized input and output.
 -  The functions will take input data in a number of different
-   formats so you don't waste time munging data to suit the function
+   formats so you don't waste time wrangling data to suit the function
    you want to use.
+-  For functions that require a time range (e.g. queries) the time
+   range is set centrally and used by all functions (you can change
+   the time range at any time, of course).
 
 
 What is "Pivoting"?
@@ -135,7 +138,7 @@ Getting started
 
 
 The pivoting library depends on a number of data providers used in
-*MSTICPy*. These normally need to be loaded an initialized before starting
+*MSTICPy*. These normally need to be loaded and initialized before starting
 the Pivot library.
 
 This is mandatory for data query providers such as the AzureSentinel,
@@ -188,8 +191,10 @@ What happens at initialization?
    Any queries found are added to the approriate entity or entities.
 -  The TILookup provider is loaded and entity-specific lookups (e.g. IP, Url,
    File) are added as pivot functions
--  Miscellaneous Msticpy functions and classes (e.g. GeoIP, IpType,
+-  Miscellaneous *MSTICPy* functions and classes (e.g. GeoIP, IpType,
    Domain utils) are added as pivot functions to the appropriate entity.
+-  A default time range is set - this is only used by queries executed
+   as pivot functions and covered later in `Data query pivot functions`_
 
 You can add additional functions as pivot functions by creating a
 registration template and importing the function. Details of this are
@@ -257,9 +262,9 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.get_process_tree',
      'AzureSentinel.get_parent_process',
      'AzureSentinel.list_processes_in_session',
-     'other.dns_validate_tld',
-     'other.dns_is_resolvable',
-     'other.dns_in_abuse_list']
+     'util.dns_validate_tld',
+     'util.dns_is_resolvable',
+     'util.dns_in_abuse_list']
 
     IpAddress pivot functions
 
@@ -270,10 +275,10 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.list_activity_for_ip',
      ...
      'AzureSentinel.list_indicators_by_url',
-     'other.whois',
-     'other.ip_type',
-     'other.geoloc_mm',
-     'other.geoloc_ips',
+     'util.whois',
+     'util.ip_type',
+     'util.geoloc_mm',
+     'util.geoloc_ips',
      'ti.lookup_ip',
      ...
      'ti.lookup_ipv4_VirusTotal',
@@ -291,7 +296,7 @@ container of that name, Spunk queries would be in a “Splunk” container.
 
 TI lookups are put into a "ti" container.
 
-All other built-in functions are added to the "util" container.
+All other built-in functions are added to the "util" container, by default.
 
 The containers themselves are callable and will return a list of their
 contents.
@@ -354,8 +359,23 @@ help on a pivot function at any time using the builtin Python help()
 function or a trailing "?"
 
 
+.. note:: Most examples in the document use entity classes has been
+   imported individually (``from msticpy.datamodel.entities import Host``).
+   This is done to make the examples syntax cleaner. However, you do not need to
+   import each entity class individually before using it. The ``init_notebook``
+   function described in the `Getting Started`_ section imports the "entities"
+   parent module, which contains the individual entity classes. You can run
+   ``from msticpy.datamodel import entities`` to do the same.
+   This means that you can use any entity by prefixing it with ``entities.``
+   (e.g. ``entities.Host()`` - create a host entity or
+   ``entities.Account.util.my_pivot()`` - run the Account entity ``my_pivot``
+   function ). Using the entities module prefix like this is usually much more
+   convenient than seperate import statements for each entity.
+
+
 .. code:: ipython3
 
+    from msticpy.datamodel.entities import IpAddress
     IpAddress.util.ip_type?
 
 .. parsed-literal::
@@ -398,8 +418,15 @@ There are a few variations in the way you can specify parameters:
 If in doubt, use ``help(entity.container.func)`` or ``entity.container.func?``
 to find the specific parameter(s) that the function expects.
 
+.. note:: Most of the examples in the following sections use the **IpAddress**
+   entity to it easier to compare the different ways of calling pivot functions.
+   The same patterns apply to all other entities (Account, Host, Dns, Url, etc.)
+   that have pivot functions.
+
+
 Using single value parameters as input
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Some examples of simple pivot functions for an IpAddress string.
 
@@ -466,7 +493,7 @@ The output is the same as the previous example
 Using a list (or other iterable) as a parameter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Many of the underlying MSTICPy functions (the functions wrapped by the Pivot
+Many of the underlying *MSTICPy* functions (the functions wrapped by the Pivot
 library) accept either single values or
 collections of values (usually in DataFrames) as input.
 
@@ -485,7 +512,7 @@ the Pivot library will iterate through each value in your input list,
 calling the function and
 collating the results to hand you back a single dataframe.
 
-.. note:: Not all MSTICPy pivot functions are configured to allow
+.. note:: Not all *MSTICPy* pivot functions are configured to allow
    iterated calling. This is usually where the
    underlying function is long-running or expensive and we've opted to
    block accepting iterated calls. Notebooklets are an example of functions
@@ -703,7 +730,7 @@ entity attributes (e.g. IpAddress.Address) and query parameters
 
 It uses a limited set of parameter names to do this mapping so to
 have your query show up as a pivot function, you should follow the same
-standard parameter naming as we use in MSTICPy built-in queries.
+standard parameter naming as we use in *MSTICPy* built-in queries.
 
 Query parameter mapping:
 
@@ -732,7 +759,7 @@ file_hash          File              file_hash
 
 If you have existing queries that use different names than those
 listed in this table, you can take advantage of a feature added to the
-MSTICPy query definition format - *parameter aliases*.
+*MSTICPy* query definition format - *parameter aliases*.
 
 To use these, change the primary name of your parameter to one of the
 items listed above and then add an aliases item to the parameter entry
@@ -783,6 +810,9 @@ Ensure that you've authenticated/connected to the data provider.
     az_provider.connect(ws.code_connect_str)
 
 
+A second significant difference is that most queries require
+a time range to operate over.
+
 The ``start`` and ``end`` datetime parameters common to most queries
 are automatically added by the pivot library. The values of these are
 taken from the Pivot object, using the time range
@@ -790,6 +820,12 @@ defined in its ``timespan`` property. You can override these auto-populated
 values when you call a function by explicitly
 specifying the ``start`` and ``end`` parameter values in the function
 call.
+
+.. note:: The time range is used dynamically. If you change
+   the Pivot timespan property, the new value will be used by
+   future queries as they are run. This means that
+   if you re-run earlier queries after changing the timespan they
+   will execute with different time parameters.
 
 Setting default timespan for queries interactively
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1018,8 +1054,8 @@ executing the individual queries and joining the results.
 .. code:: ipython3
 
     accounts = [
-        "ofshezaf",
-        "moshabi",
+        "ananders",
+        "moester",
     ]
 
     Account.AzureSentinel.list_aad_signins_for_account(account_name=accounts)
@@ -1028,9 +1064,9 @@ executing the individual queries and joining the results.
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 TimeGenerated                     OperationName       ResultType  Identity       Level  Location    AppDisplayName    AuthenticationRequirement    ClientAppUsed    ConditionalAccessPolicies                              DeviceDetail                      IsInteractive    UserAgent                       UserPrincipalName
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
-2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Ofer Shezaf        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ofshezaf@microsoft.com
-2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
-2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
+2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Anil Anders        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ananders@microsoft.com
+2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
+2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 
 
@@ -1428,7 +1464,7 @@ This takes an existing DataFrame - suspcious_ips - and:
    for Azure Active Directory logins that
    have an IP address source that matches any of these addresses.
 
-The final step uses another MSTICPy pandas extension to plot the login attempts
+The final step uses another *MSTICPy* pandas extension to plot the login attempts
 on a timeline chart.
 
 .. code:: ipython3
@@ -1560,7 +1596,7 @@ output DF containing the IP is named “ip_addr”, put “ip_addr” here.)
 When you have this information, create or add this to a yaml file with
 the top-level element ``pivot_providers``.
 
-Example from the msticpy ip_utils ``who_is`` function
+Example from the *MSTICPy* ip_utils ``who_is`` function
 
 .. code:: yaml
 

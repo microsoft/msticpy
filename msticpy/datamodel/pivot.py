@@ -73,8 +73,6 @@ class Pivot:
         self._providers: Dict[str, Any] = {}
         self._get_all_providers(namespace, providers)
 
-        # create QueryTimes object
-
         # load and assign functions for data queries
         data_provs = (
             prov for prov in self._providers.values() if isinstance(prov, QueryProvider)
