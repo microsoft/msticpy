@@ -4,6 +4,7 @@ Microsoft Threat Intelligence Python Security Tools.
 
 **msticpy** is a library for InfoSec investigation and hunting
 in Jupyter Notebooks. It includes functionality to:
+
 - query log data from multiple sources
 - enrich the data with Threat Intelligence, geolocations and Azure
   resource data
@@ -35,9 +36,9 @@ all components.
 The package addresses three central needs for security investigators
 and hunters:
 
--  Acquiring and enriching data
--  Analyzing data
--  Visualizing data
+- Acquiring and enriching data
+- Analyzing data
+- Visualizing data
 
 We welcome feedback, bug reports, suggestions for new features and contributions.
 
@@ -94,8 +95,10 @@ and
 [TILookup Usage Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb)
 
 ### GeoLocation Data
+
 The GeoIP lookup classes allow you to match the geo-locations of IP addresses
 using either:
+
 - GeoLiteLookup - Maxmind Geolite (see <https://www.maxmind.com>)
 - IPStackLookup  - IPStack (see <https://ipstack.com>)
 
@@ -108,11 +111,11 @@ and
 [GeoIP Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb)
 
 ### Azure Data
+
 This package contains functionality for enriching data regarding Azure host
 details with additional host details exposed via the Azure API.
 
 [Azure Data](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html)
-
 
 ## Security Analysis
 
@@ -141,7 +144,6 @@ set.
 alt="Time Series anomalies" title="Time Series anomalies" height="300" />
 
 [Time Series](https://msticpy.readthedocs.io/en/latest/visualization/TimeSeriesAnomalies.html)
-
 
 ### base64unpack
 
@@ -241,11 +243,9 @@ query time boundary settings and event display into an easy-to-use format.
   alt="Time span Widget"
   title="Query time setter" height="100" />
 
-
 <img src="https://github.com/microsoft/msticpy/blob/master/docs/source/visualization/_static/Widgets4.png"
   alt="Alert browser"
   title="Alert browser" height="300" />
-
 
 ---
 
@@ -271,16 +271,15 @@ View directly on GitHub or copy and paste the link into [nbviewer.org](https://n
 See the following notebooks for more examples of the use of this package in practice:
 
 - Windows Alert Investigation in
-  [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
+  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
   or
   [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
 - Office 365 Exploration in
-  [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
+  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
   or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
 - Cross-Network Hunting in
-  [github](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)or
+  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)or
   [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)
-
 
 ## Supported Platforms and Packages
 

@@ -30,10 +30,3 @@ def test_validate_domain_fail():
     assert not resolvable
     assert not blacklisted[0]
     assert blacklisted[1] is None
-
-
-def test_TLD_file():
-    test_dom_val = domain_utils.DomainValidator()
-    tlds = test_dom_val._get_tlds()
-    assert "COM" in tlds
-    assert len(tlds) > 0

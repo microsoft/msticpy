@@ -48,6 +48,10 @@ EXTRAS = {
     "vt3": ["vt-py>=0.6.1", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
 }
+extras_all = [
+    extra for name, extras in EXTRAS.items() for extra in extras if name != "dev"
+]
+EXTRAS["all"] = extras_all
 
 # If ReadTheDocs build, remove a couple of problematic packages
 # (we ask Sphinx to mock these in the import)

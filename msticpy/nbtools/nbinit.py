@@ -20,7 +20,12 @@ import pandas as pd
 import seaborn as sns
 
 from ..common.exceptions import MsticpyUserError, MsticpyException
-from ..common.utility import check_and_install_missing_packages, unit_testing, md
+from ..common.utility import (
+    check_and_install_missing_packages,
+    unit_testing,
+    md,
+    check_kwargs,
+)
 from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .._version import VERSION
@@ -110,10 +115,8 @@ def init_notebook(
     namespace: Dict[str, Any],
     def_imports: str = "all",
     additional_packages: List[str] = None,
-    user_install: bool = False,
     extra_imports: List[str] = None,
-    friendly_exceptions: Optional[bool] = None,
-    verbose: bool = False,
+    **kwargs,
 ) -> bool:
     """
     Initialize the notebook environment.
@@ -160,6 +163,8 @@ def init_notebook(
         Defaults to system/user settings if no value is supplied.
     verbose : bool, optional
         Display more verbose status, by default False
+    no_config_check : bool, optional
+        Skip the check for valid configuration.
 
     Returns
     -------
@@ -174,6 +179,14 @@ def init_notebook(
         information.
 
     """
+    check_kwargs(
+        kwargs, ["user_install", "friendly_exceptions", "no_config_check", "verbose"]
+    )
+    user_install: bool = kwargs.pop("user_install", False)
+    friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
+    no_config_check: bool = kwargs.pop("no_config_check", False)
+    verbose: bool = kwargs.pop("verbose", False)
+
     _VERBOSE(verbose)
 
     print("Processing imports....")
@@ -181,8 +194,11 @@ def init_notebook(
         namespace, additional_packages, user_install, extra_imports, def_imports
     )
 
-    print("Checking configuration....")
-    conf_ok, _ = _check_config()
+    if no_config_check:
+        conf_ok = True
+    else:
+        print("Checking configuration....")
+        conf_ok, _ = _check_config()
 
     print("Setting notebook options....")
     _set_nb_options(namespace)

@@ -12,24 +12,24 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
-import ipaddress as ip
+import ipaddress
 from functools import lru_cache
-from typing import List, Tuple, Callable
+from typing import Callable, List, Optional, Tuple
 
 import pandas as pd
 from ipwhois import (
-    IPWhois,
+    HostLookupError,
     HTTPLookupError,
     HTTPRateLimitError,
-    HostLookupError,
+    IPWhois,
     WhoisLookupError,
     WhoisRateLimitError,
     ASNRegistryError,
 )
 
 from .._version import VERSION
-from ..nbtools.entityschema import GeoLocation, IpAddress
 from ..common.utility import export
+from ..datamodel.entities import GeoLocation, IpAddress
 from .geoip import GeoLiteLookup
 
 __version__ = VERSION
@@ -60,19 +60,37 @@ def _get_geolite_lookup() -> Callable:
 _GET_IP_LOOKUP = _get_geolite_lookup()
 
 
-def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
+def convert_to_ip_entities(
+    ip_str: Optional[str] = None,
+    data: Optional[pd.DataFrame] = None,
+    ip_col: Optional[str] = None,
+    geo_lookup: bool = True,
+) -> List[IpAddress]:
     """
     Take in an IP Address string and converts it to an IP Entity.
 
     Parameters
     ----------
     ip_str : str
-        The string of the IP Address
+        A string with a single IP Address or multiple addresses
+        delimited by comma or space
+    data : pd.DataFrame
+        Use DataFrame as input
+    ip_col : str
+        Column containing IP addresses
+    geo_lookup : bool
+        If true, do geolocation lookup on IPs,
+        by default, True
 
     Returns
     -------
     List
         The populated IP entities including address and geo-location
+
+    Raises
+    ------
+    ValueError
+        If neither ip_string or data/column provided as input
 
     """
     ip_entities = []
@@ -83,22 +101,27 @@ def convert_to_ip_entities(ip_str: str) -> List[IpAddress]:
             addrs = ip_str.split(" ")
         else:
             addrs = [ip_str]
+    elif data is not None and ip_col:
+        addrs = data[ip_col].values
 
         for addr in addrs:
             ip_entity = IpAddress()
             ip_entity.Address = addr.strip()
-            try:
-                ip_lookup = _GET_IP_LOOKUP()
-                ip_lookup.lookup_ip(ip_entity=ip_entity)
-            except DataError:
-                pass
+            if geo_lookup:
+                try:
+                    ip_lookup = _GET_IP_LOOKUP()
+                    ip_lookup.lookup_ip(ip_entity=ip_entity)
+                except DataError:
+                    pass
             ip_entities.append(ip_entity)
+    else:
+        raise ValueError("No useable input provided.")
     return ip_entities
 
 
-@export
-# pylint: disable=too-many-return-statements
-def get_ip_type(ip_str: str) -> str:
+@export  # noqa: MC0001
+# pylint: disable=too-many-return-statements, invalid-name
+def get_ip_type(ip: str = None, ip_str: str = None) -> str:
     """
     Validate value is an IP address and deteremine IPType category.
 
@@ -106,8 +129,10 @@ def get_ip_type(ip_str: str) -> str:
 
     Parameters
     ----------
-    ip_str : str
+    ip : str
         The string of the IP Address
+    ip_str : str
+        The string of the IP Address - alias for `ip`
 
     Returns
     -------
@@ -115,24 +140,27 @@ def get_ip_type(ip_str: str) -> str:
         Returns ip type string using ip address module
 
     """
+    ip_str = ip or ip_str
+    if not ip_str:
+        raise ValueError("'ip' or 'ip_str' value must be specified")
     try:
-        ip.ip_address(ip_str)
+        ipaddress.ip_address(ip_str)
     except ValueError:
         print(f"{ip_str} does not appear to be an IPv4 or IPv6 address")
     else:
-        if ip.ip_address(ip_str).is_multicast:
+        if ipaddress.ip_address(ip_str).is_multicast:
             return "Multicast"
-        if ip.ip_address(ip_str).is_global:
+        if ipaddress.ip_address(ip_str).is_global:
             return "Public"
-        if ip.ip_address(ip_str).is_loopback:
+        if ipaddress.ip_address(ip_str).is_loopback:
             return "Loopback"
-        if ip.ip_address(ip_str).is_link_local:
+        if ipaddress.ip_address(ip_str).is_link_local:
             return "Link Local"
-        if ip.ip_address(ip_str).is_unspecified:
+        if ipaddress.ip_address(ip_str).is_unspecified:
             return "Unspecified"
-        if ip.ip_address(ip_str).is_private:
+        if ipaddress.ip_address(ip_str).is_private:
             return "Private"
-        if ip.ip_address(ip_str).is_reserved:
+        if ipaddress.ip_address(ip_str).is_reserved:
             return "Reserved"
 
     return "Unspecified"
@@ -141,15 +169,20 @@ def get_ip_type(ip_str: str) -> str:
 # pylint: enable=too-many-return-statements
 
 
+# pylint: disable=invalid-name
 @lru_cache(maxsize=1024)
-def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]:
+def get_whois_info(
+    ip: str = None, show_progress: bool = False, **kwargs
+) -> Tuple[str, dict]:
     """
     Retrieve whois ASN information for given IP address using IPWhois python package.
 
     Parameters
     ----------
-    ip_str : str
+    ip : str
         IP Address to look up.
+    ip_str : str
+        alias for `ip`.
     show_progress : bool, optional
         Show progress for each query, by default False
 
@@ -165,6 +198,9 @@ def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]
     IP addresses.
 
     """
+    ip_str = ip or kwargs.get("ip_str")
+    if not ip_str:
+        raise ValueError("'ip' or 'ip_str' value must be specified")
     ip_type = get_ip_type(ip_str)
     if ip_type == "Public":
         try:
@@ -185,11 +221,15 @@ def get_whois_info(ip_str: str, show_progress: bool = False) -> Tuple[str, dict]
     return f"No ASN Information for IP type: {ip_type}", {}
 
 
+# pylint: enable=invalid-name
+
+
 def get_whois_df(
     data: pd.DataFrame,
     ip_column: str,
-    asn_col="AsnDescription",
-    whois_col=None,
+    all_columns: bool = False,
+    asn_col: str = "AsnDescription",
+    whois_col: Optional[str] = None,
     show_progress: bool = False,
 ) -> pd.DataFrame:
     """
@@ -201,12 +241,16 @@ def get_whois_df(
         Input DataFrame
     ip_column : str
         Column name of IP Address to look up.
+    all_columns:
+        Expand all whois data to columns.
     asn_col : str, optional
         Name of the output column for ASN description,
-        by default "ASNDescription"
+        by default "ASNDescription".
+        Ignored if `all_columns` is True.
     whois_col : str, optional
         Name of the output column for full whois data,
         by default "WhoIsData"
+        Ignored if `all_columns` is True.
     show_progress : bool, optional
         Show progress for each query, by default False
 
@@ -216,6 +260,13 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
+    if all_columns:
+        return data.apply(
+            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[1],
+            axis=1,
+            result_type="expand",
+        )
+    data = data.copy()
     if whois_col is not None:
         data[[asn_col, whois_col]] = data.apply(
             lambda x: get_whois_info(x[ip_column], show_progress=show_progress),
