@@ -80,7 +80,7 @@ Getting started
 
 
 The pivoting library depends on a number of data providers used in
-*MSTICPy*. These normally need to be loaded an initialized before starting
+*MSTICPy*. These normally need to be loaded and initialized before starting
 the Pivot library.
 
 This is mandatory for data query providers such as the AzureSentinel,
@@ -204,9 +204,9 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.get_process_tree',
      'AzureSentinel.get_parent_process',
      'AzureSentinel.list_processes_in_session',
-     'other.dns_validate_tld',
-     'other.dns_is_resolvable',
-     'other.dns_in_abuse_list']
+     'util.dns_validate_tld',
+     'util.dns_is_resolvable',
+     'util.dns_in_abuse_list']
 
     IpAddress pivot functions
 
@@ -217,10 +217,10 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.list_activity_for_ip',
      ...
      'AzureSentinel.list_indicators_by_url',
-     'other.whois',
-     'other.ip_type',
-     'other.geoloc_mm',
-     'other.geoloc_ips',
+     'util.whois',
+     'util.ip_type',
+     'util.geoloc_mm',
+     'util.geoloc_ips',
      'ti.lookup_ip',
      ...
      'ti.lookup_ipv4_VirusTotal',
@@ -301,8 +301,23 @@ help on a pivot function at any time using the builtin Python help()
 function or a trailing "?"
 
 
+.. note:: Most examples in the document use entity classes has been
+   imported individually (``from msticpy.datamodel.entities import Host``).
+   This is done to make the examples syntax cleaner. However, you do not need to
+   import each entity class individually before using it. The ``init_notebook``
+   function described in the `Getting Started`_ section imports the "entities"
+   parent module, which contains the individual entity classes. You can run
+   ``from msticpy.datamodel import entities`` to do the same.
+   This means that you can use any entity by prefixing it with ``entities.``
+   (e.g. ``entities.Host()`` - create a host entity or
+   ``entities.Account.util.my_pivot()`` - run the Account entity ``my_pivot``
+   function ). Using the entities module prefix like this is usually much more
+   convenient than seperate import statements for each entity.
+
+
 .. code:: ipython3
 
+    from msticpy.datamodel.entities import IpAddress
     IpAddress.util.ip_type?
 
 .. parsed-literal::
@@ -345,8 +360,15 @@ There are a few variations in the way you can specify parameters:
 If in doubt, use ``help(entity.container.func)`` or ``entity.container.func?``
 to find the specific parameter(s) that the function expects.
 
+.. note:: Most of the examples in the following sections use the **IpAddress**
+   entity to it easier to compare the different ways of calling pivot functions.
+   The same patterns apply to all other entities (Account, Host, Dns, Url, etc.)
+   that have pivot functions.
+
+
 Using single value parameters as input
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Some examples of simple pivot functions for an IpAddress string.
 
@@ -974,8 +996,8 @@ executing the individual queries and joining the results.
 .. code:: ipython3
 
     accounts = [
-        "ofshezaf",
-        "moshabi",
+        "ananders",
+        "moester",
     ]
 
     Account.AzureSentinel.list_aad_signins_for_account(account_name=accounts)
@@ -984,9 +1006,9 @@ executing the individual queries and joining the results.
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 TimeGenerated                     OperationName       ResultType  Identity       Level  Location    AppDisplayName    AuthenticationRequirement    ClientAppUsed    ConditionalAccessPolicies                              DeviceDetail                      IsInteractive    UserAgent                       UserPrincipalName
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
-2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Ofer Shezaf        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ofshezaf@microsoft.com
-2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
-2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
+2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Anil Anders        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ananders@microsoft.com
+2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
+2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 
 
