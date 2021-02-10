@@ -256,9 +256,9 @@ class SumologicDriver(DriverBase):
             if time_counter < self.timeout:
                 time.sleep(self.checkinterval)
                 time_counter += self.checkinterval
-            elif verbosity >= 3:
+            else:
                 print(
-                    "DEBUG: wait more than timeout {0}. stopping.".format(self.timeout)
+                    "WARN: wait more than timeout {0}. stopping. Use timeout argument to wait longer.".format(self.timeout)
                 )
                 break
 
