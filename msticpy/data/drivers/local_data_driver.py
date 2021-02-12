@@ -40,12 +40,11 @@ class LocalDataDriver(DriverBase):
 
         # If data paths specified, use these
         data_paths = kwargs.get("data_paths")
+        self._paths = ["."]
         if data_paths:
             self._paths: List[str] = [path.strip() for path in data_paths]
         elif "LocalData" in settings:
             self._paths = settings.get("LocalData", {}).get("data_paths")
-        if not self._paths:
-            self._paths = ["."]
 
         self.data_files: Dict[str, str] = self._get_data_paths()
         self._schema: Dict[str, Any] = {}

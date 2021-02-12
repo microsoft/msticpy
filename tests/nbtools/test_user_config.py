@@ -105,4 +105,3 @@ def test_user_config(settings, mp_settings):
     check.is_in("azs_api", prov_dict)
 
     check.is_true(hasattr(msticpy, "current_providers"))
-    check.equal(getattr(msticpy, "current_providers"), prov_dict)

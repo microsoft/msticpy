@@ -123,7 +123,7 @@ queries. AzureBlogStorage lets you read and write data from blob storage.
 
 [Azure Resource APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html),
 [Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureSentinel.html),
-[Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureStorage.html)
+[Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureBlobStorage.html)
 ## Security Analysis
 
 This subpackage contains several modules helpful for working on security investigations and hunting:
