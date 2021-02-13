@@ -23,7 +23,7 @@ def test_file_browser():
     check.is_in("..", f_brow.select_folder.options)
     curr_files = f_brow.select_file.options
     check.equal(curr_files, f_brow.select_file.options)
-    f_brow._open_folder(tgt_folder="..")
+    f_brow._open_folder(tgt_folder="msticpy")
     check.not_equal(curr_files, f_brow.select_file.options)
 
     f_brow.txt_path.value = str(starting_folder)
