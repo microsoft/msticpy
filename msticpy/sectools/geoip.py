@@ -26,7 +26,6 @@ import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from functools import lru_cache
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple
@@ -230,7 +229,6 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             )
         self.bulk_lookup = bulk_lookup
 
-    @lru_cache(maxsize=1024)
     def lookup_ip(
         self,
         ip_address: str = None,
@@ -671,7 +669,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         return latest_db_path
 
-    @lru_cache(maxsize=1024)
     def lookup_ip(
         self,
         ip_address: str = None,

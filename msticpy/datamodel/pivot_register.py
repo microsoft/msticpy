@@ -79,6 +79,7 @@ class PivotRegistration:
     return_raw_output : bool
         Return raw output from the wrapped function, do not
         try to format into a DataFrame. Default is False.
+
     """
 
     input_type: str

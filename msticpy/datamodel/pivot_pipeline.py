@@ -49,6 +49,7 @@ class PipelineStep:
             text - the text representation of the accessor + params
             comment - optional comment that can be used by the pipeline
             builder to add Python comments to output.
+
         """
         if self.step_type == "pivot":
             _, func = _get_entity_and_pivot(self.entity, self.function)
@@ -226,7 +227,7 @@ class Pipeline:
             Dict of pipelines.
 
         Yields
-        -------
+        ------
         Pipeline
             Iterable of pipeline instances
 
@@ -245,7 +246,7 @@ class Pipeline:
             Yaml dict of pipelines.
 
         Yields
-        -------
+        ------
         Pipeline
             Iterable of pipeline instances
 

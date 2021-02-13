@@ -1128,7 +1128,7 @@ class SelectItem:
 
     def display(self):
         """Display the interactive widget."""
-        display(widgets.VBox(self.layout))
+        display(self.layout)
         display(HTML("<hr>"))
         self._show_top_item()
 
