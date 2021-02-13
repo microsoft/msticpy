@@ -426,7 +426,7 @@ def _create_data_func_exec(
         # The inputs are some mix of simple values and/or iterables.
         return _exec_query_for_values(func, func_kwargs, func_params, kwargs)
 
-    return call_data_query
+    return call_data_query  # type: ignore
 
 
 def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):

@@ -11,6 +11,7 @@ with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
 from datetime import datetime
+from enum import Enum
 import json
 import ssl
 import time
@@ -23,7 +24,7 @@ import requests
 import tldextract
 
 # pylint: disable=no-name-in-module
-from dns import resolver
+from dns.resolver import Resolver
 from dns.exception import DNSException
 
 # pylint: enable=no-name-in-module
@@ -116,6 +117,16 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     return image_data
 
 
+# Backward compat with dnspython 1.x
+# If v2.x installed use non-deprecated "resolve" method
+# otherwise use "query"
+_dns_resolver = Resolver()
+if hasattr(_dns_resolver, "resolve"):
+    _dns_resolve = getattr(_dns_resolver, "resolve")
+else:
+    _dns_resolve = getattr(_dns_resolver, "query")
+
+
 @export
 class DomainValidator:
     """Assess a domain's validity."""
@@ -178,7 +189,7 @@ class DomainValidator:
 
         """
         try:
-            resolver.resolve(url_domain, "A")
+            _dns_resolve(url_domain, "A")
             return True
         except DNSException:
             return False
@@ -277,7 +288,7 @@ def dns_resolve(url_domain: str, rec_type: str = "A") -> Dict[str, Any]:
     """
     domain = parse_url(url_domain).host
     try:
-        return _resolve_resp_to_dict(resolver.resolve(domain, rdtype=rec_type))
+        return _resolve_resp_to_dict(_dns_resolve(domain, rdtype=rec_type))
     except DNSException as err:
         return {
             "qname": domain,
@@ -302,9 +313,7 @@ def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
 
     """
     try:
-        return _resolve_resp_to_dict(
-            resolver.resolve_address(ip_address, raise_on_no_answer=True)
-        )
+        return _resolve_resp_to_dict(_dns_resolve(ip_address, raise_on_no_answer=True))
     except DNSException as err:
         return {
             "qname": ip_address,
@@ -315,13 +324,24 @@ def ip_rev_resolve(ip_address: str) -> Dict[str, Any]:
 
 def _resolve_resp_to_dict(resolver_resp):
     """Return Dns Python resolver response to dict."""
+    rdtype = (
+        resolver_resp.rdtype.name
+        if isinstance(resolver_resp.rdtype, Enum)
+        else str(resolver_resp.rdtype)
+    )
+    rdclass = (
+        resolver_resp.rdclass.name
+        if isinstance(resolver_resp.rdclass, Enum)
+        else str(resolver_resp.rdclass)
+    )
+
     return {
         "qname": str(resolver_resp.qname),
-        "rdtype": resolver_resp.rdtype.name,
-        "rdclass": resolver_resp.rdclass.name,
+        "rdtype": rdtype,
+        "rdclass": rdclass,
         "response": str(resolver_resp.response),
-        "nameserver": resolver_resp.nameserver,
-        "port": resolver_resp.port,
+        "nameserver": getattr(resolver_resp, "nameserver", None),
+        "port": getattr(resolver_resp, "port", None),
         "canonical_name": str(resolver_resp.canonical_name),
         "rrset": [str(res) for res in resolver_resp.rrset],
         "expiration": datetime.utcfromtimestamp(resolver_resp.expiration),
