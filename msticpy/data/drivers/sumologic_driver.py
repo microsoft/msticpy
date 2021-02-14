@@ -111,7 +111,7 @@ class SumologicDriver(DriverBase):
                 help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
             ) from err
         self._connected = True
-        print("connected")
+        print("connected with accessid {}".format(arg_dict["accessid"]))
 
     def _get_connect_args(
         self, connection_str: Optional[str], **kwargs
