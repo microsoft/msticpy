@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Pivot query functions class."""
 import itertools
+import warnings
 from collections import defaultdict, namedtuple, abc
 from functools import wraps
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -421,12 +422,72 @@ def _create_data_func_exec(
 
         # The input is a DataFrame
         if "data" in kwargs:
-            return _exec_query_for_df(func, func_kwargs, func_params, kwargs)
+            # If the input is a DF, we might be required to join
+            join_type, left_on, right_on = _get_join_params(func_kwargs)
+            src_data = kwargs["data"] if join_type else None
+            # Get the results of the query
+            result_df = _exec_query_for_df(func, func_kwargs, func_params, kwargs)
+            if join_type and isinstance(src_data, pd.DataFrame):
+                if left_on and right_on:
+                    # If explicit join keys
+                    return src_data.merge(
+                        result_df,
+                        left_on=left_on,
+                        right_on=right_on,
+                        how=join_type,
+                    ).drop(columns="src_row_index", errors="ignore")
+                if "src_row_index" in result_df.columns:
+                    # Otherwise merge on index of source
+                    return src_data.merge(
+                        result_df,
+                        left_index=True,
+                        right_on="src_row_index",
+                        how=join_type,
+                    ).drop(columns="src_row_index", errors="ignore")
 
+                warnings.warn(
+                    "Cannot do an index merge on this result set. "
+                    + "Please use an explicit column join using 'left_on' "
+                    + "and 'right_on' join columns."
+                )
+            return result_df.drop(columns="src_row_index", errors="ignore")
         # The inputs are some mix of simple values and/or iterables.
         return _exec_query_for_values(func, func_kwargs, func_params, kwargs)
 
     return call_data_query  # type: ignore
+
+
+def _get_join_params(func_kwargs):
+    """Extract and return any join parameters."""
+    # remove and save the join kw, if specified (so it doesn't interfere
+    # with other operations and doesn't get sent to the function)
+    join_type = func_kwargs.pop("join", None)
+    if not join_type:
+        return None, None, None
+    left_on = func_kwargs.pop("left_on", None)
+    right_on = func_kwargs.pop("right_on", None)
+    if left_on and not right_on:
+        warnings.warn(
+            "If you are specifying explicit join keys "
+            "you must specify 'right_on' parameter with the "
+            + "name of the output column to join on. "
+            + "Results will joined on index."
+        )
+    if not left_on:
+        col_keys = list(func_kwargs.keys() - {"start", "end", "data"})
+        if len(col_keys) == 1:
+            # Only one input param so assume this is the src/left
+            # join key
+            left_on = func_kwargs.get(col_keys[0])
+
+    if right_on and not left_on:
+        warnings.warn(
+            "Could not infer 'left' join column from source data. "
+            + "Please specify 'left_on' parameter with the "
+            + "name of the source column to join on. "
+            + "Results will joined on index."
+        )
+    return join_type, left_on, right_on
 
 
 def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
@@ -449,12 +510,14 @@ def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
     # iteration so ignore these and run queries per row
     row_results = []
     # extact the DF subset of df_iter_params columns and iterate over each row
-    for _, row in src_df[list(df_iter_params.values())].iterrows():
+    for row_index, row in src_df[list(df_iter_params.values())].iterrows():
         # build a single-line dict of {param1: row_value1...}
         col_param_dict = {param: row[col] for param, col in df_iter_params.items()}
         # execute the function for each input row with key-value params from
         # col-name, col-value supplied as kwargs (along with any other kwargs)
-        row_results.append(func(**col_param_dict, **func_kwargs))
+        row_res_def = func(**col_param_dict, **func_kwargs)
+        row_res_def["src_row_index"] = row_index
+        row_results.append(row_res_def)
     return pd.concat(row_results, ignore_index=True)
 
 

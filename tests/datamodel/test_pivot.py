@@ -170,6 +170,12 @@ def _fake_provider_connected(provider):
     # pylint: enable=protected-access
 
 
+class _TimeObj:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+
 def test_pivot_time(data_providers):
     """Function_docstring."""
     providers = data_providers.values()
@@ -182,11 +188,25 @@ def test_pivot_time(data_providers):
 
     end = end - timedelta(1)
     start = start - timedelta(1)
+    # Test different ways of setting the time
     timespan = TimeSpan(start=start, end=end)
     pivot.timespan = timespan
     check.equal(pivot.start, start)
     check.equal(pivot.end, end)
 
+    pivot.timespan = _TimeObj(start=timespan.start, end=timespan.end)
+    check.equal(pivot.start, start)
+    check.equal(pivot.end, end)
+
+    pivot.set_timespan(timespan)
+    check.equal(pivot.start, start)
+    check.equal(pivot.end, end)
+
+    pivot.set_timespan(start=timespan.start, end=timespan.end)
+    check.equal(pivot.start, start)
+    check.equal(pivot.end, end)
+
+    # Make sure the values provided to queries match.
     _fake_provider_connected(data_providers["az_sent_prov"])
 
     query = entities.Host.AzureSentinel.SecurityEvent_list_host_processes(

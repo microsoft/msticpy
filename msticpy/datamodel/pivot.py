@@ -18,6 +18,7 @@ from ..sectools import TILookup
 
 # pylint: disable=unused-import
 from . import pivot_pd_accessor  # noqa: F401
+from .pivot_browser import PivotBrowser
 from .pivot_data_queries import add_data_queries_to_entities
 from .pivot_register import PivotRegistration
 from .pivot_register_reader import add_unbound_pivot_function, register_pivots
@@ -68,7 +69,8 @@ class Pivot:
         if timespan is not None:
             self.timespan = timespan
         else:
-            self._set_default_query_time("day", 1)
+            self._query_time = self._get_default_query_time("day", 1)
+
         # acquire current providers
         self._providers: Dict[str, Any] = {}
         self._get_all_providers(namespace, providers)
@@ -202,17 +204,15 @@ class Pivot:
             by default None
 
         """
-        if timespan is None:
-            self._set_default_query_time(units="day", before=1)
-        else:
-            self._query_time = QueryTime(
-                timespan=timespan,
-                label="Set time range for pivot functions.",
-            )
+        self._query_time = QueryTime(
+            timespan=timespan or self.timespan,
+            label="Set time range for pivot functions.",
+        )
         self._query_time.display()
 
-    def _set_default_query_time(self, units: str = "day", before: int = 1):
-        self._query_time = QueryTime(
+    @staticmethod
+    def _get_default_query_time(units: str = "day", before: int = 1):
+        return QueryTime(
             origin_time=datetime.utcnow(),
             before=before,
             after=0,
@@ -231,17 +231,62 @@ class Pivot:
         return self._query_time.end
 
     @property
-    def timespan(self):
-        """Return the timespan as a TimeSpan object."""
+    def timespan(self) -> TimeSpan:
+        """
+        Return the current timespan.
+
+        Returns
+        -------
+        TimeSpan
+            The current timespan
+
+        """
         return TimeSpan(start=self.start, end=self.end)
 
     @timespan.setter
-    def timespan(self, timespan: TimeSpan):
-        """Set the current timespan for pivot queries."""
+    def timespan(self, value: Any):
+        """
+        Set the pivot timespan.
+
+        Parameters
+        ----------
+        value : Optional[Any], optional
+            Timespan object or something convertible to
+            a TimeSpan, by default None
+
+        """
+        if isinstance(value, TimeSpan):
+            timespan = value
+        elif value is not None:
+            timespan = TimeSpan(value)
         self._query_time = QueryTime(
             timespan=timespan,
             label="Set time range for pivot functions.",
         )
+
+    def set_timespan(self, value: Optional[Any] = None, **kwargs):
+        """
+        Set the pivot timespan.
+
+        Parameters
+        ----------
+        value : Optional[Any], optional
+            Timespan object or something convertible to
+            a TimeSpan, by default None
+
+        Other Parameters
+        ----------------
+        kwargs
+            Key/value arguments passed to Timespan constructor.
+
+        """
+        if isinstance(value, TimeSpan):
+            timespan = value
+        elif value is not None:
+            timespan = TimeSpan(value)
+        else:
+            timespan = TimeSpan(**kwargs)
+        self.timespan = timespan
 
     def get_timespan(self) -> TimeSpan:
         """Return the timespan as a TimeSpan object."""
@@ -318,3 +363,8 @@ class Pivot:
         add_unbound_pivot_function(
             func=func, pivot_reg=pivot_reg, container=container, **kwargs
         )
+
+    @staticmethod
+    def browse():
+        """Return PivotBrowser."""
+        return PivotBrowser()

@@ -95,7 +95,7 @@ class PivotBrowser:
         self._search_func(change={"new": ""})
         self.layout = widgets.VBox(
             [
-                self._layout["funcs_box"],
+                self._layout["entity_funcs"],
                 self._layout["search_box"],
                 self._layout["disp_btn_hbox"],
                 self._layout["func_help_accd"],

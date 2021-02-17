@@ -186,10 +186,9 @@ def create_pivot_func(
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
             result_df = _iterate_func(target_func, input_df, input_column, pivot_reg)
-            merge_key = input_column
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
-            merge_key = pivot_reg.func_out_column_name or input_column
+        merge_key = pivot_reg.func_out_column_name or input_column
 
         # If requested to join to input
         # and this function is returning a DataFrame

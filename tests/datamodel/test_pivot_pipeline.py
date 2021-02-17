@@ -30,11 +30,11 @@ _EXPECTED_OUTPUT = """# Pipeline 1 description
     # Pivot display
     .mp_pivot.display(title='The title', query='Computer.str.startswith('MSTICAlerts')', cols=['Computer', 'Account'], head=10)
     # Pivot tee
-    .mp_pivot.display(var_name='var_df', clobber=True)
+    .mp_pivot.tee(var_name='var_df', clobber=True)
     # Pivot tee_exec with mp_timeline.plot
     .mp_pivot.tee_exec('mp_timeline.plot', source_columns=['Computer', 'Account'])
     # Standard accessor with mp_timeline.plot
-    .mp_timeline.plot(source_columns=['Computer', 'Account'])
+    .mp_timeline.plot('one', 2, source_columns=['Computer', 'Account'])
 )"""
 
 
@@ -131,6 +131,9 @@ pipelines:
         step_type: pd_accessor
         comment: Standard accessor with mp_timeline.plot
         function: mp_timeline.plot
+        pos_params:
+          - one
+          - 2
         params:
           source_columns:
               - Computer

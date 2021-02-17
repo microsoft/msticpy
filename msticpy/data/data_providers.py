@@ -307,8 +307,11 @@ class QueryProvider:
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
-        if "print" in args or "query" in args or "print_query" in kwargs:
+        if "print" in args or "query" in args:
             return query_str
+        if kwargs.get("print", False):
+            print(query_str)
+            return pd.DataFrame()
 
         # Handle any query options passed
         query_options = self._get_query_options(params, kwargs)
@@ -430,7 +433,7 @@ class QueryProvider:
             )
             for q_start, q_end in ranges
         ]
-        if "print" in args or "query" in args:
+        if "print" in args or "query" in args or kwargs.get("print", False):
             return "\n\n".join(split_queries)
 
         # Retrive any query options passed (other than query params)

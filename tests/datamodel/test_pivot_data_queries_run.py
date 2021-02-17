@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test data query pivot functon handling of different input types."""
-
+import warnings
 from collections import namedtuple
 from pathlib import Path
 
@@ -180,35 +180,83 @@ def test_data_query_df(_create_pivot, test_case):
     check.equal(len(single_val_result_df) * test_case.exp_count, len(result_df))
 
 
-# @pytest.mark.parametrize("join_type", ["left", "inner", "right"])
-# @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-# def test_pivot_funcs_df_merge(_create_pivot, join_type, test_case):
-#     """Test calling function with DF input attributes."""
-#     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
-#     # Test DF input
-#     val = enumerate(test_case.value.keys())
-#     in_df = pd.DataFrame(val, columns=["idx", test_case.src_df_col])
-#     in_df["extra_col1"] = "test1"
-#     in_df["extra_col2"] = "test2"
-#     result_no_merge_df = func(data=in_df, src_column=test_case.src_df_col)
-#     result_df = func(data=in_df, src_column=test_case.src_df_col, join=join_type)
+@pytest.mark.parametrize("join_type", ["left", "inner", "right"])
+@pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
+def test_pivot_funcs_df_merge(_create_pivot, join_type, test_case):
+    """Test calling function with DF input attributes."""
+    func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
+    # Test DF input
+    val = test_case.value
+    in_df = pd.DataFrame(val, columns=[test_case.src_df_col])
+    params = {test_case.func_param: test_case.src_df_col}
+    in_df["extra_col1"] = "test1"
+    in_df["extra_col2"] = "test2"
+    result_no_merge_df = func(data=in_df, **params)
 
-#     in_cols = in_df.shape[1]
-#     no_merge_cols = result_no_merge_df.shape[1]
-#     merge_cols = result_df.shape[1]
-#     # merged DF should have result + input cols - join key col
-#     check.greater_equal(no_merge_cols + in_cols, merge_cols)
+    if test_case.entity not in (entities.Account, entities.Host):
+        # The IP test uses a list param so we cannot do index joins
+        # with it
+        with pytest.warns(UserWarning):
+            result_df = func(data=in_df, **params, join=join_type)
+        return
 
-#     if join_type in ("left", "inner"):
-#         # inner and left joins should have same or greater length as input
-#         check.greater_equal(result_df.shape[0], in_df.shape[0])
-#         # all the keys from the input should be in the merged output
-#         for key in in_df[test_case.src_df_col]:
-#             check.is_in(key, result_df[test_case.key_col].values)
-#     if join_type == "right":
-#         # We don't know how many results we get back from right join
-#         # (although should not be zero)
-#         check.greater(len(result_df), 0)
-#         # but all of its key values should be present in input
-#         for key in result_df[test_case.key_col].values:
-#             check.is_in(key, in_df[test_case.src_df_col].values)
+    # should work ok with Account and Host
+    result_df = func(data=in_df, **params, join=join_type)
+
+    in_cols = in_df.shape[1]
+    no_merge_cols = result_no_merge_df.shape[1]
+    merge_cols = result_df.shape[1]
+    # merged DF should have result + input cols - join key col
+    check.greater_equal(no_merge_cols + in_cols, merge_cols)
+
+    if join_type in ("left", "inner"):
+        # inner and left joins should have same or greater length as input
+        check.greater_equal(result_df.shape[0], in_df.shape[0])
+        # all the keys from the input should be in the merged output
+        for row_val in in_df[test_case.src_df_col]:
+            check.is_in(row_val, result_df[test_case.src_df_col].values)
+    if join_type == "right":
+        # We don't know how many results we get back from right join
+        # (although should not be zero)
+        check.greater(len(result_df), 0)
+        # but all of its key values should be present in input
+        for row_val in result_df[test_case.src_df_col].values:
+            check.is_in(row_val, in_df[test_case.src_df_col].values)
+
+    join_in_data = {
+        0: "0x3e7",
+        1: "0xc90e957",
+        2: "0xc90ea44",
+        3: "0xc912d62",
+        4: "0xc913737",
+        10: "0x3e3",
+        14: "0x3e4",
+        15: "0xaddd",
+        16: "0xafff",
+        17: "0x3e5",
+        23: "no_match",
+    }
+    in_df = pd.DataFrame(
+        pd.Series(join_in_data), columns=["TargetLogonId"]
+    ).reset_index()
+    result_no_merge_df = func(data=in_df, **params)
+    result_df = func(
+        data=in_df,
+        **params,
+        join=join_type,
+        left_on="TargetLogonId",
+        right_on="TargetLogonId"
+    )
+    check.is_not_none(result_df)
+
+    if join_type in ("inner", "right"):
+        check.equal(len(result_df), len(result_no_merge_df))
+        for val in join_in_data.values():
+            if val != "no_match":
+                check.is_in(val, result_df["TargetLogonId"].values)
+            else:
+                check.is_not_in(val, result_df["TargetLogonId"].values)
+    if join_type == "left":
+        check.equal(len(result_df), len(result_no_merge_df) + 1)
+        for val in join_in_data.values():
+            check.is_in(val, result_df["TargetLogonId"].values)

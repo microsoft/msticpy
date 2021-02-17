@@ -20,9 +20,17 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_STEP_TYPES = ["pivot", "pivot_display", "pivot_tee", "pivot_tee_exec", "pd_accessor"]
+_STEP_TYPES = {
+    "pivot": "mp_pivot.run",
+    "pivot_display": "mp_pivot.display",
+    "pivot_tee": "mp_pivot.tee",
+    "pivot_tee_exec": "mp_pivot.tee_exec",
+    "pd_accessor": None,
+}
 
-PipelineExecStep = namedtuple("PipelineExecStep", "accessor, params, text, comment")
+PipelineExecStep = namedtuple(
+    "PipelineExecStep", "accessor, pos_params, params, text, comment"
+)
 
 
 @attr.s(auto_attribs=True)
@@ -34,6 +42,7 @@ class PipelineStep:
     function: Optional[str] = None
     entity: Optional[str] = None
     comment: Optional[str] = None
+    pos_params: List[str] = Factory(list)
     params: Dict[str, Any] = Factory(dict)
 
     def get_exec_step(self) -> PipelineExecStep:
@@ -51,55 +60,42 @@ class PipelineStep:
             builder to add Python comments to output.
 
         """
+        if self.step_type not in _STEP_TYPES:
+            raise TypeError(f"Invalid step type {self.step_type}")
+
+        mp_func = _STEP_TYPES[self.step_type]
+        accessor = mp_func
+        params = self.params
+        func_text = f".{mp_func}({self._get_param_string()})"
+
         if self.step_type == "pivot":
             _, func = _get_entity_and_pivot(self.entity, self.function)
-            func_text = f".mp_pivot.run({self.entity}.{self.function}, {self._get_param_string()})"
-            return PipelineExecStep(
-                accessor="mp_pivot.run",
-                params={"func": func, **(self.params)},
-                text=func_text,
-                comment=self.comment,
-            )
-        if self.step_type == "pivot_display":
-            func_text = f".mp_pivot.display({self._get_param_string()})"
-            return PipelineExecStep(
-                accessor="mp_pivot.display",
-                params=self.params,
-                text=func_text,
-                comment=self.comment,
-            )
-        if self.step_type == "pivot_tee":
-            func_text = f".mp_pivot.display({self._get_param_string()})"
-            return PipelineExecStep(
-                accessor="mp_pivot.tee",
-                params=self.params,
-                text=func_text,
-                comment=self.comment,
-            )
-        if self.step_type == "pivot_tee_exec":
             func_text = (
-                f".mp_pivot.tee_exec('{self.function}', {self._get_param_string()})"
+                f".{mp_func}({self.entity}.{self.function}, {self._get_param_string()})"
             )
-            return PipelineExecStep(
-                accessor="mp_pivot.tee_exec",
-                params={"df_func": self.function, **(self.params)},
-                text=func_text,
-                comment=self.comment,
-            )
-
-        if self.step_type == "pd_accessor":
+            params = {"func": func, **(self.params)}
+        elif self.step_type == "pivot_tee_exec":
+            func_text = f".{mp_func}('{self.function}', {self._get_param_string()})"
+            params = {"df_func": self.function, **(self.params)}
+        elif self.step_type == "pd_accessor":
             func_text = f".{self.function}({self._get_param_string()})"
-            return PipelineExecStep(
-                accessor=self.function,
-                params=self.params,
-                text=func_text,
-                comment=self.comment,
-            )
-        raise TypeError(f"Invalid step type {self.step_type}")
+            accessor = self.function
 
-    # pylint: disable=no-member
+        return PipelineExecStep(
+            accessor=accessor,
+            pos_params=self.pos_params,
+            params=params,
+            text=func_text,
+            comment=self.comment,
+        )
+
+    # pylint: disable=no-member, not-an-iterable
     def _get_param_string(self) -> str:
         """Return text representation of keyword params."""
+        pos_params = [
+            f"'{param}'" if isinstance(param, str) else str(param)
+            for param in self.pos_params
+        ]
         params_str = [
             f"{p_name}='{p_val}'"
             for p_name, p_val in self.params.items()
@@ -110,9 +106,9 @@ class PipelineStep:
             for p_name, p_val in self.params.items()
             if not isinstance(p_val, str)
         ]
-        return ", ".join(params_str + params_other)
+        return ", ".join(pos_params + params_str + params_other)
 
-    # pylint: enable=no-member
+    # pylint: enable=no-member, not-an-iterable
 
 
 def _get_entity_and_pivot(entity_name, func_name):
@@ -297,7 +293,7 @@ class Pipeline:
                 )
                 break
             func = _get_pd_accessor_func(pipeline_result, exec_action.accessor)
-            pipeline_result = func(**exec_action.params)
+            pipeline_result = func(*exec_action.pos_params, **exec_action.params)
 
         return pipeline_result
 

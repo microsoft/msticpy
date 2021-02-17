@@ -76,6 +76,7 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
             skipinitialspace=True,
             warn_bad_lines=True,
             skip_blank_lines=True,
+            engine="python",
         )
     except ParserError:
         # try again without headers

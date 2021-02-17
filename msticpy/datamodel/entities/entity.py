@@ -529,3 +529,5 @@ class Entity(ABC, Node):
     def list_pivot_funcs(self):
         """Print list of pivot functions assigned to entity."""
         print("\n".join(self.get_pivot_list()))
+
+    pivots = get_pivot_list
