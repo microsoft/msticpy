@@ -44,7 +44,14 @@ We welcome feedback, bug reports, suggestions for new features and contributions
 
 ## Installing
 
+For core install:
+
 `pip install msticpy`
+
+If you are using *MSTICPy* with Azure Sentinel you should install with
+the "azsentinel" extra package:
+
+`pip install msticpy[azsentinel]`
 
 or for the latest dev build
 
