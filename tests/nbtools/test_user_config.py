@@ -71,9 +71,9 @@ UserDefaults:
 def mp_settings():
     """Return test settings."""
     settings_dict = yaml.safe_load(CONFIG_TEXT)
-    if not _NOTEBOOKLETS:
+    if not _NOTEBOOKLETS and settings_dict.get("LoadComponents", {}).get("Notebooklets"):
         del settings_dict["LoadComponents"]["Notebooklets"]
-    if not _PIVOT:
+    if not _PIVOT and settings_dict.get("LoadComponents", {}).get("Pivot"):
         del settings_dict["LoadComponents"]["Pivot"]
     return settings_dict
 

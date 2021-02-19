@@ -93,7 +93,7 @@ def _format_kv_name(setting_path):
     return re.sub("[^0-9a-zA-Z-]", "-", setting_path)
 
 
-def _get_config_secrets(cur_settings, section_name, sec_names):
+def _get_config_secrets(cur_settings, section_name, sec_names):  # noqa: MC0001
     kv_dict = {}
     sec_key_names = ["authkey", "apiid", "password", "clientsecret"]
     if sec_names:
