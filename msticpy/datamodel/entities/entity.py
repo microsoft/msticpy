@@ -184,8 +184,9 @@ class Entity(ABC, Node):
     def __repr__(self) -> str:
         """Return repr of entity."""
         params = ", ".join(
-            [f"{name}={val}" for name, val in self.properties.items() if val]
+            f"{name}={val}" for name, val in self.properties.items() if val
         )
+
         if len(params) > 80:
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
@@ -248,11 +249,9 @@ class Entity(ABC, Node):
         """Return the hash of the entity based on non-empty property values."""
         return hash(
             " ".join(
-                [
-                    f"{prop}:{str(val)}"
-                    for prop, val in self.properties.items()
-                    if str(val)
-                ]
+                f"{prop}:{str(val)}"
+                for prop, val in self.properties.items()
+                if str(val)
             )
         )
 
@@ -530,3 +529,5 @@ class Entity(ABC, Node):
     def list_pivot_funcs(self):
         """Print list of pivot functions assigned to entity."""
         print("\n".join(self.get_pivot_list()))
+
+    pivots = get_pivot_list

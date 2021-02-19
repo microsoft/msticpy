@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Pivot query functions class."""
 import itertools
+import warnings
 from collections import defaultdict, namedtuple, abc
 from functools import wraps
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -22,7 +23,9 @@ __author__ = "Ian Hellen"
 
 
 ParamAttrs = namedtuple("ParamAttrs", "type, query, family, required")
-QueryParams = namedtuple("QueryParams", "all, required, full_required, param_attrs")
+QueryParams = namedtuple(
+    "QueryParams", "all, required, full_required, param_attrs, table"
+)
 
 _DEF_IGNORE_PARAM = {"start", "end"}
 
@@ -50,12 +53,16 @@ class PivotQueryFunctions:
         self.param_usage: Dict[str, List[ParamAttrs]] = defaultdict(list)
         self.query_params: Dict[str, QueryParams] = {}
 
+        # specify any parameters to exclude from our list
         ignore_params = set(ignore_reqd) if ignore_reqd else _DEF_IGNORE_PARAM
 
+        # get the query dict for each data family
         for family, fam_dict in self._provider.query_store.data_families.items():
+            # for each query
             for src_name, q_source in fam_dict.items():
+                # get the set of required params
                 reqd_params = set(q_source.required_params.keys()) - ignore_params
-
+                # add them to the param_usage attrib
                 for param, p_attrs in q_source.params.items():
                     self.param_usage[param].append(
                         ParamAttrs(
@@ -65,6 +72,8 @@ class PivotQueryFunctions:
                             bool(param in reqd_params),
                         )
                     )
+                # add an entry to the query dictionary containing full
+                # details of the function/query parameters
                 self.query_params[f"{family}.{src_name}"] = QueryParams(
                     all=list(q_source.params),
                     required=list((set(q_source.required_params) - ignore_params)),
@@ -78,6 +87,7 @@ class PivotQueryFunctions:
                         )
                         for param, p_attrs in q_source.params.items()
                     },
+                    table=q_source.params.get("table"),
                 )
 
     def get_queries_and_types_for_param(
@@ -153,7 +163,7 @@ class PivotQueryFunctions:
         -------
         QueryParams
             QueryParams named tuple
-            (all, required, full_required)
+            (all, required, full_required, param_attrs, table)
 
         """
         return self.query_params.get(query_func_name)
@@ -182,6 +192,8 @@ class PivotQueryFunctions:
         return self.param_usage.get(param_name, [])
 
 
+# Map of query parameter names to entities and the entity attrib
+# corresponding to the query parameter value
 PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
     "account_name": [(entities.Account, "Name")],
     "host_name": [(entities.Host, "fqdn")],
@@ -289,7 +301,14 @@ def add_queries_to_entities(
             if not query_container:
                 query_container = QueryContainer()
                 setattr(entity_cls, container, query_container)
-            setattr(query_container, name, cls_func)
+            # To help disambiguation we prefix the function name with
+            # the table name
+            func_name = (
+                f"{func_params.table.get('default')}_{name}"
+                if isinstance(func_params.table, dict)
+                else name
+            )
+            setattr(query_container, func_name, cls_func)
 
 
 # pylint: enable=too-many-locals
@@ -333,8 +352,11 @@ def _param_and_call_wrapper(
     as the input parameters to the function.
 
     """
+    # initially wrap the function in a wrapper that actually does
+    # the call to the query function.
     exec_query_func = _create_data_func_exec(func, func_params)
 
+    # The outer wrapper handles instantiating query parameters at runtime
     @wraps(func)
     def wrapped_query_func(*args, **kwargs):
         """Wrap function to extract and map parameters."""
@@ -400,12 +422,72 @@ def _create_data_func_exec(
 
         # The input is a DataFrame
         if "data" in kwargs:
-            return _exec_query_for_df(func, func_kwargs, func_params, kwargs)
+            # If the input is a DF, we might be required to join
+            join_type, left_on, right_on = _get_join_params(func_kwargs)
+            src_data = kwargs["data"] if join_type else None
+            # Get the results of the query
+            result_df = _exec_query_for_df(func, func_kwargs, func_params, kwargs)
+            if join_type and isinstance(src_data, pd.DataFrame):
+                if left_on and right_on:
+                    # If explicit join keys
+                    return src_data.merge(
+                        result_df,
+                        left_on=left_on,
+                        right_on=right_on,
+                        how=join_type,
+                    ).drop(columns="src_row_index", errors="ignore")
+                if "src_row_index" in result_df.columns:
+                    # Otherwise merge on index of source
+                    return src_data.merge(
+                        result_df,
+                        left_index=True,
+                        right_on="src_row_index",
+                        how=join_type,
+                    ).drop(columns="src_row_index", errors="ignore")
 
+                warnings.warn(
+                    "Cannot do an index merge on this result set. "
+                    + "Please use an explicit column join using 'left_on' "
+                    + "and 'right_on' join columns."
+                )
+            return result_df.drop(columns="src_row_index", errors="ignore")
         # The inputs are some mix of simple values and/or iterables.
         return _exec_query_for_values(func, func_kwargs, func_params, kwargs)
 
     return call_data_query  # type: ignore
+
+
+def _get_join_params(func_kwargs):
+    """Extract and return any join parameters."""
+    # remove and save the join kw, if specified (so it doesn't interfere
+    # with other operations and doesn't get sent to the function)
+    join_type = func_kwargs.pop("join", None)
+    if not join_type:
+        return None, None, None
+    left_on = func_kwargs.pop("left_on", None)
+    right_on = func_kwargs.pop("right_on", None)
+    if left_on and not right_on:
+        warnings.warn(
+            "If you are specifying explicit join keys "
+            "you must specify 'right_on' parameter with the "
+            + "name of the output column to join on. "
+            + "Results will joined on index."
+        )
+    if not left_on:
+        col_keys = list(func_kwargs.keys() - {"start", "end", "data"})
+        if len(col_keys) == 1:
+            # Only one input param so assume this is the src/left
+            # join key
+            left_on = func_kwargs.get(col_keys[0])
+
+    if right_on and not left_on:
+        warnings.warn(
+            "Could not infer 'left' join column from source data. "
+            + "Please specify 'left_on' parameter with the "
+            + "name of the source column to join on. "
+            + "Results will joined on index."
+        )
+    return join_type, left_on, right_on
 
 
 def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
@@ -427,10 +509,15 @@ def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
     # Even if we have list params, we can't use both list params and per-row
     # iteration so ignore these and run queries per row
     row_results = []
-    for _, row in src_df[list(df_iter_params.values())].iterrows():
+    # extact the DF subset of df_iter_params columns and iterate over each row
+    for row_index, row in src_df[list(df_iter_params.values())].iterrows():
         # build a single-line dict of {param1: row_value1...}
         col_param_dict = {param: row[col] for param, col in df_iter_params.items()}
-        row_results.append(func(**col_param_dict, **func_kwargs))
+        # execute the function for each input row with key-value params from
+        # col-name, col-value supplied as kwargs (along with any other kwargs)
+        row_res_def = func(**col_param_dict, **func_kwargs)
+        row_res_def["src_row_index"] = row_index
+        row_results.append(row_res_def)
     return pd.concat(row_results, ignore_index=True)
 
 
@@ -440,7 +527,7 @@ def _check_df_params_require_iter(
     func_kwargs: Dict[str, Any],
     **kwargs,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Return params that require iteration and don't."""
+    """Return params that require iteration and those that don't."""
     list_params: Dict[str, Any] = {}
     df_iter_params: Dict[str, Any] = {}
     for kw_name, arg in kwargs.items():

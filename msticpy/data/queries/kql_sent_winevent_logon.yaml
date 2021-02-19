@@ -11,7 +11,11 @@ defaults:
       table:
         description: Table name
         type: str
-        default: 'SecurityEvent | where EventID == 4624'
+        default: 'SecurityEvent'
+      event_filter:
+        description: Event subset
+        type: str
+        default: '| where EventID == 4624'
       query_project:
         description: Column project statement
         type: str
@@ -58,6 +62,7 @@ sources:
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Computer has "{host_name}"
@@ -77,6 +82,7 @@ sources:
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Computer has "{host_name}"
@@ -92,6 +98,7 @@ sources:
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Computer has "{host_name}"
@@ -111,6 +118,7 @@ sources:
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Account has "{account_name}"
@@ -126,6 +134,7 @@ sources:
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Account has "{account_name}"
@@ -136,15 +145,16 @@ sources:
       account_name:
         description: The account name to find
         type: str
-      table:
-        description: Table name
+      event_filter:
+        description: Event ID filter
         type: str
-        default: 'SecurityEvent | where EventID in (4624, 4625)'
+        default: '| where EventID in (4624, 4625)'
   list_logon_failures_by_account:
     description: Retrieves the logon failure events  for an account
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Account has "{account_name}"
@@ -155,15 +165,16 @@ sources:
       account_name:
         description: The account name to find
         type: str
-      table:
-        description: Table name
+      event_filter:
+        description: Event ID filter
         type: str
-        default: 'SecurityEvent | where EventID == 4625'
+        default: '| where EventID == 4625'
   list_all_logons_by_host:
     description: account all failed or successful logons to a host
     args:
       query: '
         {table}
+        {event_filter}
         {query_project}
         | where {subscription_filter}
         | where Computer has "{host_name}"
@@ -176,7 +187,7 @@ sources:
       host_name:
         description: Name of host
         type: str
-      table:
-        description: Table name
+      event_filter:
+        description: Event ID filter
         type: str
-        default: 'SecurityEvent | where EventID == 4625 or EventID == 4624'
+        default: '| where EventID in (4624, 4625)'
