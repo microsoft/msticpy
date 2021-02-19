@@ -584,7 +584,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if not Path(db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain the leaf dir
             Path(db_folder).mkdir(exist_ok=True)
-        rand_int = random.randint(10000, 99999)
+        rand_int = random.randint(10000, 99999)  # nosec
         db_archive_path = Path(db_folder).joinpath(
             self._DB_ARCHIVE.format(rand=rand_int)
         )
@@ -593,7 +593,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         try:
             # wait a small rand amount of time in case multiple procs try
             # to download simultaneously
-            sleep(rand_int / 100000)
+            sleep(rand_int / 500000)
             if list(Path(db_folder).glob(self._DB_ARCHIVE.format(rand="*"))):
                 # Some other process is downloading
                 return True
