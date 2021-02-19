@@ -54,10 +54,13 @@ class LocalDataDriver(DriverBase):
         data_files = {}
         for path in self._paths:
             for pattern in ["**/*.pkl", "**/*.csv"]:
+                found_files = Path(path).resolve().glob(pattern)
                 data_files.update(
                     {
                         str(file_path.name).casefold(): str(file_path)
                         for file_path in Path(path).resolve().glob(pattern)
+                        for file_path in found_files
+                        if file_path.is_file()
                     }
                 )
         return data_files
