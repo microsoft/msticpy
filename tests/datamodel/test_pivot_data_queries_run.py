@@ -249,7 +249,7 @@ def test_pivot_funcs_df_merge(_create_pivot, join_type, test_case):
         **params,
         join=join_type,
         left_on="TargetLogonId",
-        right_on="TargetLogonId"
+        right_on="TargetLogonId",
     )
     check.is_not_none(result_df)
 

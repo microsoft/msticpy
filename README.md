@@ -1,5 +1,7 @@
 # MSTIC Jupyter and Python Security Tools
 
+[![Build Status](https://dev.azure.com/mstic-detections/mstic-jupyter/_apis/build/status/GitHub%20msticpy%20Python%20package-CI?branchName=master)](https://dev.azure.com/mstic-detections/mstic-jupyter/_build/latest?definitionId=4&branchName=master)
+
 Microsoft Threat Intelligence Python Security Tools.
 
 **msticpy** is a library for InfoSec investigation and hunting
