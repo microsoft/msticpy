@@ -30,6 +30,7 @@ __author__ = "Ian Hellen"
 
 _DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
 
+
 @export
 class QueryProvider:
     """

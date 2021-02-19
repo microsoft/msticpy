@@ -19,7 +19,15 @@ PKG_NAME = "msticpy"
 REQS_FILE = "requirements.txt"
 REQS_OP_RGX = r"[=<>~!\s]+"
 
-EXTRAS_EXCEPTIONS = {"vt", "vt_graph_api", "bs4", "seaborn", "msticpy", "msticnb"}
+EXTRAS_EXCEPTIONS = {
+    "vt",
+    "vt_graph_api",
+    "bs4",
+    "seaborn",
+    "msticpy",
+    "msticnb",
+    "pyperclip",
+}
 CONDA_PKG_EXCEPTIONS = {"vt-py", "vt-graph-api", "nest_asyncio"}
 
 
