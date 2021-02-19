@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot main library test."""
+import warnings
 from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import Optional
@@ -19,6 +20,7 @@ from msticpy.sectools import GeoLiteLookup, TILookup
 
 __author__ = "Ian Hellen"
 
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 # pylint: disable=redefined-outer-name
 
 _KQL_IMP_OK = False
@@ -56,13 +58,16 @@ pytestmark = pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install
 def data_providers():
     """Return dict of providers."""
     prov_dict = {}
-    if _KQL_IMP_OK:
-        prov_dict["az_sent_prov"] = QueryProvider("AzureSentinel")
-    prov_dict["mdatp_prov"] = QueryProvider("MDE")
-    if _SPLUNK_IMP_OK:
-        prov_dict["splunk_prov"] = QueryProvider("Splunk")
-    prov_dict["ti_lookup"] = TILookup()
-    prov_dict["geolite"] = GeoLiteLookup()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        if _KQL_IMP_OK:
+            prov_dict["az_sent_prov"] = QueryProvider("AzureSentinel")
+        prov_dict["mdatp_prov"] = QueryProvider("MDE")
+        if _SPLUNK_IMP_OK:
+            prov_dict["splunk_prov"] = QueryProvider("Splunk")
+        prov_dict["ti_lookup"] = TILookup()
+        prov_dict["geolite"] = GeoLiteLookup()
+
     if _IPSTACK_IMP_OK:
         prov_dict["ip_stack"] = ip_stack_cls()
     return prov_dict
@@ -103,7 +108,9 @@ _ENTITY_FUNCS = [
 def _create_pivot_list(data_providers):
     _reset_entities()
     providers = data_providers.values()
-    return Pivot(providers=providers)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot(providers=providers)
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_FUNCS)
@@ -142,7 +149,9 @@ def test_pivot_providers(_create_pivot_list, test_case):
 def _create_pivot_ns(data_providers):
     _reset_entities()
     locals().update(data_providers)
-    return Pivot(namespace=locals())
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot(namespace=locals())
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_FUNCS)
@@ -182,7 +191,9 @@ def test_pivot_time(data_providers):
     end = datetime.utcnow()
     start = end - timedelta(1)
     timespan = TimeSpan(start=start, end=end)
-    pivot = Pivot(providers=providers, timespan=timespan)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        pivot = Pivot(providers=providers, timespan=timespan)
     check.equal(pivot.start, start)
     check.equal(pivot.end, end)
 
@@ -210,7 +221,7 @@ def test_pivot_time(data_providers):
     _fake_provider_connected(data_providers["az_sent_prov"])
 
     query = entities.Host.AzureSentinel.SecurityEvent_list_host_processes(
-        host_name="test", print_query=True
+        host_name="test", print=True
     )
     check.is_in(start.isoformat(), query)
     check.is_in(end.isoformat(), query)

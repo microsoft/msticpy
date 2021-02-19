@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline browser UI."""
+import warnings
 
 import pytest
 import pytest_check as check
@@ -25,10 +26,12 @@ __author__ = "Ian Hellen"
 
 @pytest.fixture(scope="session")
 def _create_pivot():
-    return Pivot()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot()
 
 
-def test_pipeline_browser(_create_pivot):
+def test_pivot_browser(_create_pivot):
     """Test pivot browser."""
     browser = PivotBrowser()
 

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline tests."""
+import warnings
 
 import pytest
 import pytest_check as check
@@ -19,7 +20,9 @@ __author__ = "Ian Hellen"
 
 @pytest.fixture(scope="session")
 def _create_pivot():
-    return Pivot()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot()
 
 
 _EXPECTED_OUTPUT = """# Pipeline 1 description

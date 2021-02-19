@@ -27,11 +27,13 @@ __author__ = "Ian Hellen"
 def data_providers():
     """Return dict of providers."""
     data_path = Path(get_test_data_path()) / "localdata"
-    return {
-        "LocalData": QueryProvider(
-            "LocalData", data_paths=[str(data_path)], query_paths=[str(data_path)]
-        ),
-    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return {
+            "LocalData": QueryProvider(
+                "LocalData", data_paths=[str(data_path)], query_paths=[str(data_path)]
+            ),
+        }
 
 
 def _reset_entities():
@@ -47,7 +49,9 @@ def _reset_entities():
 def _create_pivot(data_providers):
     _reset_entities()
     providers = data_providers.values()
-    return Pivot(providers=providers)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot(providers=providers)
 
 
 PivotQuery = namedtuple(
