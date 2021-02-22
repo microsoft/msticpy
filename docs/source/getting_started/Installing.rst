@@ -5,24 +5,24 @@ Installing
 Python 3.6 or Later
 -------------------
 
-*msticpy* requires Python 3.6 or later.
+*MSTICPy* requires Python 3.6 or later.
 If you are running in hosted environment such as Azure Notebooks,
 Python is already installed. Please ensure that the Python 3.6 (or later)
 kernel is selected for your notebooks.
 
 If you are running the notebooks locally, you will need to install Python 3.6
 or later. The Ananconda distribution is a good starting point since it comes
-with many of packages required by *msticpy* pre-installed.
+with many of packages required by *MSTICPy* pre-installed.
 
 Creating a virtual environment
 ------------------------------
 
 .. note:: This is an optional step. You will most likely want to do this
-   if you are installing msticpy in a local Python installation. If
+   if you are installing *MSTICPy* in a local Python installation. If
    you are using a cloud notebook environment such as Azure ML you
    will usually not need to create a virtual environment.
 
-*msticpy* has a significant number of dependencies. To avoid conflicts
+*MSTICPy* has a significant number of dependencies. To avoid conflicts
 with packages in your existing Python environment you may want to
 create a Python virtual environment
 or a conda environment and install the package there.
@@ -51,7 +51,7 @@ created and activated in the prompt.
 Installation
 ------------
 
-Run the following command to install the base configuation of *msticpy*.
+Run the following command to install the base configuation of *MSTICPy*.
 
 
 ``pip install msticpy``
@@ -69,26 +69,29 @@ known as extras. The syntax for this is:
 
 ``pip install package_name[extra1, extra2...]``
 
-As of version 0.9.0 *msticpy* has its dependencies split into
+As of version 0.9.0 *MSTICPy* has its dependencies split into
 extras. This allows you to install only the packages that you
 need and avoid the overhead of time and diskspace of dependencies
 that you do not need.
 
-.. note:: extras do not affect the which code from *msticpy* is
+.. note:: extras do not affect the which code from *MSTICPy* is
    installed - only the external libraries on which certain
-   functions inside *msticpy* need to work.
+   functions inside *MSTICPy* need to work.
 
-Extras in msticpy
-~~~~~~~~~~~~~~~~~
+.. warning:: the core install no longer includes **Azure Sentinel** or
+   **Azure** libraries such as Kqlmagic. If you are an Azure Sentinel
+   user, you should always install with the "azsentinel" extra.
 
-The extras available in *msticpy* are described in the following table:
+Extras in *MSTICPy*
+~~~~~~~~~~~~~~~~~~~
+
+The extras available in *MSTICPy* are described in the following table:
 
 +------------------+------------------------------------+--------------+--------------+
 | extra            | Functionality                      | Install time | Install time |
 |                  |                                    | (increment)  | (full)       |
 +==================+====================================+==============+==============+
-| default install  | - Most functionality (approx 75%)  |       --     |   1m:13s     |
-| (no extra)       |                                    |              |              |
+| [none]           | - Most functionality (approx 75%)  |       --     |   1m:13s     |
 +------------------+------------------------------------+--------------+--------------+
 | keyvault         | - Key Vault and keyring storage of |       5s     |   1m:18s     |
 |                  |   settings secrets                 |              |              |
@@ -103,7 +106,7 @@ The extras available in *msticpy* are described in the following table:
 | kql              | - Azure Sentinel data queries      |   2m:07s     |   3m:20s     |
 |                  | - Kqlmagic                         |              |              |
 +------------------+------------------------------------+--------------+--------------+
-| azsentinel       | - Combination of default install   |   3m:48s     |   5m:00s     |
+| azsentinel       | - Combination of core install      |   3m:48s     |   5m:00s     |
 |                  |   plus "azure", "keyvault" and     |              |              |
 |                  |   "kql"                            |              |              |
 +------------------+------------------------------------+--------------+--------------+
@@ -135,14 +138,16 @@ plus extra. Both columns assume that the following packages are already
 installed: jupyter, pandas and matplotlib.
 
 If you do not specify an "extra" in your pip install command, the base
-dependencies for msticpy will be installed. This has a lot of functionality
+dependencies for *MSTICPy* will be installed. This has a lot of functionality
 such as networking, pivoting, visualization but excludes dependencies
 that are specific to a particular data environment like Azure Sentinel or
 Splunk.
 
-Some of the extras, like "all" and "azuresentinel" are combinations of
+Some of the extras, like "all" and "azsentinel" are combinations of
 other options collected together as a convenience. You can also specify
 multiple extras during install, separating them with commas.
+
+.. note:: Since Azure Sentinel is
 
 .. code:: bash
 
@@ -165,9 +170,9 @@ exception message:
 
     pip install msticpy[ml]
 
-.. note:: In some cases you many not get an informative error. (We've
+.. note:: In some cases you many not get an informative error. We've
    tried to trap all of the cases but if
-   experience a problem with some *msticpy* functionality (especially
+   experience a problem with some *MSTICPy* functionality (especially
    an *ImportError* exception, make sure
    that you have installed the *extra* that corresponds to the
    functionality you are trying to use.

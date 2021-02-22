@@ -113,9 +113,9 @@ def test_mordor_search(mdr_driver: MordorDriver):
     check.is_true(any(hit for hit in result_set if "small.aws.collection" in hit))
 
 
-# @pytest.mark.skipif(
-#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-# )
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
     entry_id = "SDWIN-190319021158"
