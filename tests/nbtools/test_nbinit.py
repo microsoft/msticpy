@@ -20,13 +20,18 @@ from ..unit_test_lib import TEST_DATA_PATH
 def test_nbinit_no_params():
     """Test init_notebook defaults."""
     ns_dict = {}
-    init_notebook(namespace=ns_dict, def_imports="nb")
+    init_notebook(
+        namespace=ns_dict,
+        def_imports="nb",
+        verbose=True,
+    )
 
     check.is_in("pd", ns_dict)
     check.is_in("get_ipython", ns_dict)
     check.is_in("Path", ns_dict)
     check.is_in("np", ns_dict)
 
+    print(ns_dict.keys())
     # Note - msticpy imports throw when exec'd from unit test
     # e.g. check.is_in("QueryProvider", ns_dict) fails
 
@@ -45,7 +50,9 @@ def test_nbinit_imports():
         namespace=ns_dict,
         extra_imports=["pathlib", "datetime, time", "datetime, timedelta, tdelta"],
         def_imports="nb",
+        verbose=True,
     )
+    print(ns_dict.keys())
 
     check.is_in("pathlib", ns_dict)
     check.is_in("time", ns_dict)

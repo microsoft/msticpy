@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import sys
 from importlib import import_module
-from typing import Dict, Set
+from typing import Dict, List, Optional, Set
 
 import networkx as nx
 
@@ -20,7 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-PKG_TOKENS = r"([^=><]+)([=><]+)(.+)"
+PKG_TOKENS = r"([^#=><]+)([~=><]+)(.+)"
 
 
 # pylint: disable=too-few-public-methods
@@ -51,15 +51,17 @@ _PKG_RENAME_NAME = {
 }
 
 
-def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
+def _get_setup_reqs(
+    package_root: str, req_file="requirements.txt", extras: Optional[List[str]] = None
+):
     with open(Path(package_root).joinpath(req_file), "r") as req_f:
         req_list = req_f.readlines()
 
-    setup_pkgs = {
-        re.match(PKG_TOKENS, item).groups()  # type: ignore
-        for item in req_list
-        if re.match(PKG_TOKENS, item)
-    }
+    setup_pkgs = _extract_pkg_specs(req_list)
+    if not extras:
+        extras = get_extras_from_setup(package_root=package_root, extra="all")
+        extra_pkgs = _extract_pkg_specs(extras)
+        setup_pkgs = setup_pkgs | extra_pkgs
     setup_versions = {key[0].lower(): key for key in setup_pkgs}
     setup_reqs = {key[0].lower(): key[0] for key in setup_pkgs}
 
@@ -71,16 +73,81 @@ def _get_setup_reqs(package_root: str, req_file="requirements.txt"):
             setup_reqs.pop(tgt)
             setup_reqs[src] = tgt
     # Rename Azure packages replace "." with "-"
-    az_mgmt_reqs = {}
-    for pkg in setup_reqs:
-        if pkg.startswith("azure-"):
-            az_mgmt_reqs[pkg.replace("-", ".")] = pkg
+    az_mgmt_reqs = {
+        pkg.replace("-", "."): pkg for pkg in setup_reqs if pkg.startswith("azure-")
+    }
 
     for key, pkg in az_mgmt_reqs.items():
         setup_reqs.pop(pkg)
         setup_reqs[key] = pkg
 
     return setup_reqs, setup_versions
+
+
+def get_extras_from_setup(
+    package_root: str,
+    setup_py: str = "setup.py",
+    extra: str = "all",
+    include_base: bool = False,
+) -> List[str]:
+    """
+    Return list of extras from setup.py.
+
+    Parameters
+    ----------
+    package_root : str
+        The root folder of the package
+    setup_py : str, optional
+        The name of the setup file to process, by default "setup.py"
+    extra : str, optiona
+        The name of the extra to return, by default "all"
+    include_base : bool, optional
+        If True include install_requires, by default False
+
+    Returns
+    -------
+    List[str]
+        List of package requirements.
+
+    """
+    setup_py = str(Path(package_root) / setup_py)
+
+    setup_txt = None
+    with open(setup_py, "+r") as f_handle:
+        setup_txt = f_handle.read()
+
+    srch_txt = "setuptools.setup("
+    repl_txt = [
+        "def fake_setup(*args, **kwargs):",
+        "    pass",
+        "",
+        "fake_setup(",
+    ]
+    setup_txt = setup_txt.replace(srch_txt, "\n".join(repl_txt))
+
+    neut_setup_py = Path(package_root) / "msticpy/neut_setup.py"
+    try:
+        with open(neut_setup_py, "+w") as f_handle:
+            f_handle.writelines(setup_txt)
+
+        setup_mod = import_module("msticpy.neut_setup", "msticpy")
+        extras = getattr(setup_mod, "EXTRAS").get(extra)
+        if include_base:
+            base_install = getattr(setup_mod, "INSTALL_REQUIRES")
+            extras.extend(
+                [req.strip() for req in base_install if not req.strip().startswith("#")]
+            )
+        return sorted(list(set(extras)), key=str.casefold)
+    finally:
+        neut_setup_py.unlink()
+
+
+def _extract_pkg_specs(pkg_specs: List[str]):
+    return {
+        re.match(PKG_TOKENS, item).groups()  # type: ignore
+        for item in pkg_specs
+        if re.match(PKG_TOKENS, item) and not item.strip().startswith("#")
+    }
 
 
 def _get_pkg_from_path(pkg_file: str, pkg_root: str):
@@ -192,7 +259,10 @@ def _match_pkg_to_reqs(imports, setup_reqs):
 
 
 def analyze_imports(
-    package_root: str, package_name: str, req_file: str = "requirements.txt"
+    package_root: str,
+    package_name: str,
+    req_file: str = "requirements.txt",
+    extras: Optional[List[str]] = None,
 ) -> Dict[str, ModuleImports]:
     """
     Analyze imports for package.
@@ -206,6 +276,8 @@ def analyze_imports(
     req_file : str, optional
         Name of the requirements file,
         by default "requirements.txt"
+    extras : List[str]
+        A list of extras not specified in requirements file.
 
     Returns
     -------
@@ -213,7 +285,7 @@ def analyze_imports(
         A dictionary of modules and imports
 
     """
-    setup_reqs, _ = _get_setup_reqs(package_root, req_file)
+    setup_reqs, _ = _get_setup_reqs(package_root, req_file, extras)
     pkg_root = Path(package_root) / package_name
     all_mod_imports: Dict[str, ModuleImports] = {}
     pkg_modules = _get_pkg_modules(pkg_root)

@@ -17,7 +17,11 @@ from IPython.display import display, HTML
 import ipywidgets as widgets
 from matplotlib import MatplotlibDeprecationWarning
 import pandas as pd
-import seaborn as sns
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
 
 from ..common.exceptions import MsticpyUserError, MsticpyException
 from ..common.utility import (
@@ -313,7 +317,8 @@ def _set_nb_options(namespace):
     # APIs - we can't do anything about it, so suppress them from view
     warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    sns.set()
+    if sns:
+        sns.set()
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
@@ -339,7 +344,7 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
         mod = importlib.import_module(module_name)
     except ImportError:
         display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
-        raise
+        return None
     if alias:
         nm_spc[alias] = mod
     else:
@@ -355,7 +360,7 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
         imported_mod = importlib.import_module(module_name)
     except ImportError:
         display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
-        raise
+        return
     for item in dir(imported_mod):
         if item.startswith("_"):
             continue
@@ -379,7 +384,7 @@ def _imp_from_package(
             mod = importlib.import_module(pkg)
         except ImportError:
             display(HTML(_IMPORT_MODULE_MSSG.format(module=pkg)))
-            raise
+            return None
         obj = getattr(mod, tgt)
     if alias:
         nm_spc[alias] = obj

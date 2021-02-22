@@ -13,8 +13,16 @@ import attr
 from attr import Factory
 
 from .._version import VERSION
-from .secret_settings import SecretsClient
+from .exceptions import MsticpyImportExtraError
 from . import pkg_config as config
+
+try:
+    from .secret_settings import SecretsClient
+
+    _SECRETS_ENABLED = True
+except ImportError:
+    _SECRETS_ENABLED = False
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -28,7 +36,9 @@ class ProviderArgs(UserDict):
         """Return key value via SecretsClient.read_secret."""
         if key not in self.data:
             raise KeyError(key)
-        return SecretsClient.read_secret(self.data[key])
+        if _SECRETS_ENABLED:
+            return SecretsClient.read_secret(self.data[key])
+        return self.data[key]
 
 
 @attr.s(auto_attribs=True)
@@ -45,8 +55,8 @@ class ProviderSettings:
 # pylint: enable=too-few-public-methods, too-many-ancestors
 
 
-_SECRETS_CLIENT: Optional[SecretsClient] = None
-if "KeyVault" in config.settings:
+_SECRETS_CLIENT: Any = None
+if "KeyVault" in config.settings and _SECRETS_ENABLED:
     _SECRETS_CLIENT = SecretsClient()
 
 
@@ -69,7 +79,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
     global _SECRETS_CLIENT
     # pylint: enable=global-statement
     if "KeyVault" in config.settings:
-        if _SECRETS_CLIENT is None:
+        if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
             print(
                 "KeyVault enabled. Secrets access may require additional authentication."
             )
@@ -203,15 +213,21 @@ def _fetch_setting(
             )
         return env_value
     if "KeyVault" in config_setting:
+        if not _SECRETS_ENABLED:
+            raise MsticpyImportExtraError(
+                "Cannot use this feature without Key Vault support installed",
+                title="Error importing Loading Key Vault and/or keyring libaries",
+                extra="keyvault",
+            )
         if not _SECRETS_CLIENT:
             warnings.warn(
                 "Cannot use a KeyVault configuration setting without"
                 + "a KeyVault configuration section in msticpyconfig.yaml"
                 + f" (provider {provider_name})"
             )
+            return None
         config_path = [config_section, provider_name, "Args", arg_name]
-        sec_func = _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
+        return _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
             ".".join(config_path)
         )
-        return sec_func
     return None

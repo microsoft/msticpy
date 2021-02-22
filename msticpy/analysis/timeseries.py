@@ -8,12 +8,20 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import pandas as pd
-from scipy import stats
-from statsmodels.tsa.seasonal import STL
 
 from .._version import VERSION
-from ..common.exceptions import MsticpyException
+from ..common.exceptions import MsticpyException, MsticpyImportExtraError
 from ..common.utility import check_kwargs, export
+
+try:
+    from scipy import stats
+    from statsmodels.tsa.seasonal import STL
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without scipy and statsmodel installed",
+        title="Error importing package",
+        extra="ml",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"

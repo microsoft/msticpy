@@ -20,10 +20,17 @@ from msticpy.datamodel.pivot_data_queries import (
     _param_and_call_wrapper,
 )
 
+_KQL_IMP_OK = False
+try:
+    # pylint: disable=unused-import
+    from msticpy.data.drivers import kql_driver
+
+    del kql_driver
+    _KQL_IMP_OK = True
+except ImportError:
+    pass
+
 __author__ = "Ian Hellen"
-
-
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(scope="module")
@@ -32,6 +39,7 @@ def azure_sentinel():
     return QueryProvider("AzureSentinel")
 
 
+@pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")
 def test_create_query_functions(azure_sentinel):
     """Test basic creation of query functions class."""
     az_qry_funcs = PivotQueryFunctions(azure_sentinel)
@@ -40,6 +48,7 @@ def test_create_query_functions(azure_sentinel):
     check.greater_equal(len(az_qry_funcs.query_params), 70)
 
 
+@pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")
 def test_query_functions_methods(azure_sentinel):
     """Test attributes of retrieved functions."""
     az_qry_funcs = PivotQueryFunctions(azure_sentinel)
@@ -226,6 +235,7 @@ _ENT_QUERY_FUNC = [
 ]
 
 
+@pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")
 @pytest.mark.parametrize("entity, expected", _ENT_QUERY_FUNC)
 def test_add_queries_to_entities(entity, expected, azure_sentinel):
     """Test query functions successfully added to entities."""

@@ -101,7 +101,7 @@ msticpy.data.azure\_sentinel module
     :show-inheritance:
 
 msticpy.data.azure\_blob\_storage module
------------------------------------
+----------------------------------------
 .. automodule:: msticpy.data.azure_blob_storage
     :members:
     :undoc-members:

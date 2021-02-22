@@ -20,7 +20,15 @@ from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 import pandas as pd
 
 from .process_tree_utils import build_process_tree
-from .eventcluster import dbcluster_events, add_process_features
+
+try:
+    # pylint: disable=unused-import
+    from ..analysis import cluster_auditd  # type: ignore
+except ImportError:
+
+    def cluster_auditd(*args, **kwargs):  # type: ignore
+        """Fake cluster_auditd function for partial install."""
+        raise NotImplementedError("Cannot import auditd cluster module.")
 
 
 from .._version import VERSION
@@ -184,10 +192,9 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
 
             if mssg_type == "EXECVE":
                 args = int(proc_create_dict.get("argc", 1))
-                arg_strs = []
-                for arg_idx in range(0, args):
-                    arg_strs.append(proc_create_dict.get(f"a{arg_idx}", ""))
-
+                arg_strs = [
+                    proc_create_dict.get(f"a{arg_idx}", "") for arg_idx in range(args)
+                ]
                 proc_create_dict["cmdline"] = " ".join(arg_strs)
         return "SYSCALL_EXECVE", proc_create_dict
 
@@ -227,11 +234,10 @@ def _extract_mssg_value(
         value = message_dict[mssg_type].get(fieldname, None)
         if not value:
             return
-        if conv:
-            if conv == "int":
-                value = int(value)
-                if value == 4294967295:
-                    value = -1
+        if conv and conv == "int":
+            value = int(value)
+            if value == 4294967295:
+                value = -1
         if fieldname in event_dict:
             event_dict[f"{fieldname}_{mssg_type}"] = value
         else:
@@ -460,8 +466,7 @@ def _parse_audit_message(audit_str: str) -> Dict[str, List[str]]:
     audit_headers = audit_message[0]
     audit_hdr_match = re.match(r"type=([^\s]+)", audit_headers)
     if audit_hdr_match:
-        audit_msg = {audit_hdr_match.group(1): audit_message[1].split(" ")}
-        return audit_msg
+        return {audit_hdr_match.group(1): audit_message[1].split(" ")}
     return {}  # type ignore
 
 
@@ -484,8 +489,7 @@ def _extract_timestamp(audit_str: str) -> str:
     audit_headers = audit_message[0]
     audit_hdr_match = re.match(r".*msg=audit\(([^\)]+)\)", audit_headers)
     if audit_hdr_match:
-        time_stamp = audit_hdr_match.group(1).split(":")[0]
-        return time_stamp
+        return audit_hdr_match.group(1).split(":")[0]
     return ""
 
 
@@ -515,93 +519,3 @@ def generate_process_tree(  # noqa: MC0001
     # Superceded by process_tree_utils module
     del branch_depth, processes
     return build_process_tree(audit_data)
-
-
-def cluster_auditd_processes(audit_data: pd.DataFrame, app: str = None) -> pd.DataFrame:
-    """
-    Clusters process data into specific processes.
-
-    Parameters
-    ----------
-    audit_data : pd.DataFrame
-        The Audit data containing process creation events
-    app: str, optional
-        The name of a specific app you wish to cluster
-
-    Returns
-    -------
-    pd.DataFrame
-        Details of the clustered process
-
-    """
-    if app is not None:
-        processes = audit_data[audit_data["exe"].str.contains(app, na=False)]
-    else:
-        processes = audit_data
-    processes = processes.rename(
-        columns={
-            "acct": "SubjectUserName",
-            "uid": "SubjectUserSid",
-            "user": "SubjectUserName",
-            "ses": "SubjectLogonId",
-            "pid": "NewProcessId",
-            "exe": "NewProcessName",
-            "ppid": "ProcessId",
-            "cmdline": "CommandLine",
-        }
-    )
-    req_cols = [
-        "cwd",
-        "SubjectUserName",
-        "SubjectUserSid",
-        "SubjectUserName",
-        "SubjectLogonId",
-        "NewProcessId",
-        "NewProcessName",
-        "ProcessId",
-        "CommandLine",
-    ]
-    for col in req_cols:
-        if col not in processes:
-            processes[col] = ""
-
-    feature_procs_h1 = add_process_features(input_frame=processes)
-
-    clus_events, _, _ = dbcluster_events(
-        data=feature_procs_h1,
-        cluster_columns=["pathScore", "SubjectUserSid"],
-        time_column="TimeGenerated",
-        max_cluster_distance=0.0001,
-    )
-    (
-        clus_events.sort_values("TimeGenerated")[
-            [
-                "TimeGenerated",
-                "LastEventTime",
-                "NewProcessName",
-                "CommandLine",
-                "SubjectLogonId",
-                "SubjectUserSid",
-                "pathScore",
-                "isSystemSession",
-                "ProcessId",
-                "ClusterSize",
-            ]
-        ].sort_values("ClusterSize", ascending=True)
-    )
-
-    procs = clus_events[
-        [
-            "TimeGenerated",
-            "NewProcessName",
-            "CommandLine",
-            "NewProcessId",
-            "SubjectUserSid",
-            "cwd",
-            "ClusterSize",
-            "ProcessId",
-        ]
-    ]
-    procs = procs.rename(columns={"NewProcessId": "pid", "ProcessId": "ppid"})
-
-    return procs

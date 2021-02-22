@@ -10,8 +10,8 @@ import os
 
 import pandas as pd
 
-from msticpy.sectools.eventcluster import *
-from msticpy.sectools.eventcluster import (
+from msticpy.analysis.eventcluster import *
+from msticpy.analysis.eventcluster import (
     token_count_df,
     delim_count_df,
     char_ord_score_df,

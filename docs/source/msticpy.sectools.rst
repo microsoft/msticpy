@@ -26,14 +26,6 @@ msticpy.sectools.cmd_line module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.eventcluster module
-------------------------------------
-
-.. automodule:: msticpy.sectools.eventcluster
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.sectools.geoip module
 -----------------------------
 
@@ -50,13 +42,6 @@ msticpy.sectools.iocextract module
     :undoc-members:
     :show-inheritance:
 
-msticpy.sectools.outliers module
---------------------------------
-
-.. automodule:: msticpy.sectools.outliers
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 msticpy.sectools.process\_tree\_utils module
 --------------------------------------------
