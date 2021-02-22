@@ -9,7 +9,7 @@ modules. However, there is no simple way to discover where these
 functions are and what types of data the function is relevant to.
 
 Pivot functions bring this functionality together grouped around
-*Entities*. Entities are representations real-world objects found
+*Entities*. Entities are representations of real-world objects found
 commonly in CyberSec investigations.
 Some examples are: IpAddress, Host, Account, URL.
 
