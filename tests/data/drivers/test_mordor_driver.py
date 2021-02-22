@@ -28,10 +28,14 @@ _SAVE_PATH = ""
 _SAVE_FOLDER = "mordor_test"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def qry_provider():
     """Query Provider fixture."""
     Path(_SAVE_FOLDER).mkdir(exist_ok=True)
+    abs_path = Path(".").absolute()
+    ex_json = list(abs_path.glob("**/*.json"))
+    ex_zip = list(abs_path.glob("**/*.zip"))
+
     qry_prov = QueryProvider("Mordor")
     qry_prov.connect()
     yield qry_prov
@@ -42,6 +46,21 @@ def qry_provider():
         Path(file).unlink()
     if Path(_SAVE_FOLDER).is_dir():
         Path(_SAVE_FOLDER).rmdir()
+    for j_file in abs_path.glob("**/*.json"):
+        if j_file not in ex_json and j_file.is_file():
+            j_file.unlink()
+    for z_file in abs_path.glob("**/*.zip"):
+        if z_file not in ex_zip and z_file.is_file():
+            z_file.unlink()
+    mordor_path = abs_path.joinpath("mordor")
+    if mordor_path.is_dir():
+        for file in mordor_path.glob("*"):
+            file.unlink()
+        # pylint: disable=broad-except
+        try:
+            mordor_path.rmdir()
+        except Exception:  # nosec
+            pass
 
 
 # pylint: disable=redefined-outer-name, protected-access, global-statement

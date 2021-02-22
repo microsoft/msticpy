@@ -342,7 +342,7 @@ class MsticpyKqlConnectionError(MsticpyUserError):
     )
 
 
-class MsticpyImportExtraError(MsticpyUserError):
+class MsticpyImportExtraError(MsticpyUserError, ImportError):
     """Exception class for Imports that need an extra."""
 
     DEF_HELP_URI = (
@@ -370,7 +370,7 @@ class MsticpyImportExtraError(MsticpyUserError):
         mssg = "".join(
             [
                 "This feature requires one or more additional packages",
-                "to be installed.\n",
+                " to be installed.\n",
                 "To do this run the command:\n",
                 f"pip install msticpy[{extra}]",
             ]

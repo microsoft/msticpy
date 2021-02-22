@@ -6,6 +6,7 @@
 """Pivot main library test."""
 from collections import namedtuple
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pytest
 import pytest_check as check
@@ -14,24 +15,57 @@ from msticpy.data import QueryProvider
 from msticpy.data.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivot import Pivot
-from msticpy.sectools import GeoLiteLookup, IPStackLookup, TILookup
+from msticpy.sectools import GeoLiteLookup, TILookup
 
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
+_KQL_IMP_OK = False
+try:
+    # pylint: disable=unused-import
+    from msticpy.data.drivers import kql_driver
+
+    del kql_driver
+    _KQL_IMP_OK = True
+except ImportError:
+    pass
+
+_SPLUNK_IMP_OK = False
+try:
+    from msticpy.data.drivers import splunk_driver
+
+    del splunk_driver
+    _SPLUNK_IMP_OK = True
+except ImportError:
+    pass
+
+_IPSTACK_IMP_OK = False
+ip_stack_cls: Optional[type]
+try:
+    from msticpy.sectools import IPStackLookup as ip_stack_cls
+
+    _IPSTACK_IMP_OK = True
+except ImportError:
+    ip_stack_cls = None
+
+pytestmark = pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")
+
 
 @pytest.fixture(scope="session")
 def data_providers():
     """Return dict of providers."""
-    return {
-        "az_sent_prov": QueryProvider("AzureSentinel"),
-        "mdatp_prov": QueryProvider("MDATP"),
-        "splunk_prov": QueryProvider("Splunk"),
-        "ti_lookup": TILookup(),
-        "geolite": GeoLiteLookup(),
-        "ip_stack": IPStackLookup(),
-    }
+    prov_dict = {}
+    if _KQL_IMP_OK:
+        prov_dict["az_sent_prov"] = QueryProvider("AzureSentinel")
+    prov_dict["mdatp_prov"] = QueryProvider("MDE")
+    if _SPLUNK_IMP_OK:
+        prov_dict["splunk_prov"] = QueryProvider("Splunk")
+    prov_dict["ti_lookup"] = TILookup()
+    prov_dict["geolite"] = GeoLiteLookup()
+    if _IPSTACK_IMP_OK:
+        prov_dict["ip_stack"] = ip_stack_cls()
+    return prov_dict
 
 
 def _reset_entities():
@@ -46,20 +80,20 @@ def _reset_entities():
 PivotTestCase = namedtuple("PivotTestCase", "entity, container, funcs")
 _ENTITY_FUNCS = [
     pytest.param(PivotTestCase("Host", "AzureSentinel", 25), id="Host-AzureSentinel"),
-    pytest.param(PivotTestCase("Host", "MDATP", 2), id="Host-MDATP"),
+    pytest.param(PivotTestCase("Host", "MDE", 2), id="Host-MDE"),
     pytest.param(PivotTestCase("Host", "util", 3), id="Host-util"),
     pytest.param(
         PivotTestCase("IpAddress", "AzureSentinel", 16), id="IpAddress-AzureSentinel"
     ),
-    pytest.param(PivotTestCase("IpAddress", "MDATP", 2), id="IpAddress-MDATP"),
+    pytest.param(PivotTestCase("IpAddress", "MDE", 2), id="IpAddress-MDE"),
     pytest.param(PivotTestCase("IpAddress", "ti", 8), id="IpAddress-ti"),
     pytest.param(PivotTestCase("IpAddress", "util", 4), id="IpAddress-util"),
     pytest.param(
         PivotTestCase("Account", "AzureSentinel", 19), id="Account-AzureSentinel"
     ),
-    pytest.param(PivotTestCase("Account", "MDATP", 4), id="Account-MDATP"),
+    pytest.param(PivotTestCase("Account", "MDE", 4), id="Account-MDE"),
     pytest.param(PivotTestCase("Url", "AzureSentinel", 7), id="Url-AzureSentinel"),
-    pytest.param(PivotTestCase("Url", "MDATP", 2), id="Url-MDATP"),
+    pytest.param(PivotTestCase("Url", "MDE", 2), id="Url-MDE"),
     pytest.param(PivotTestCase("Url", "ti", 4), id="Url-ti"),
     pytest.param(PivotTestCase("Url", "util", 5), id="Url-util"),
 ]
@@ -94,7 +128,7 @@ def test_pivot_providers(_create_pivot_list, test_case):
 #     """Function_docstring."""
 #     for entity_name in ("Host", "IpAddress", "Account", "Url"):
 #         entity = getattr(entities, entity_name)
-#         for container in ("AzureSentinel", "Splunk", "MDATP", "ti", "util"):
+#         for container in ("AzureSentinel", "Splunk", "MDE", "ti", "util"):
 #             query_contr = getattr(entity, container, None)
 #             if not query_contr:
 #                 continue

@@ -23,8 +23,8 @@ class Observation:
     """
     Observation definition.
 
-    Attributes
-    ----------
+    Notes
+    -----
     caption : str
         The title and index of the observation. Must
         be unique in the observation set.

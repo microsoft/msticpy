@@ -145,9 +145,10 @@ def _prompt_yn(mssg, confirm):
 
 
 def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
+    print("Vault management requires authentication")
+    kv_mgmt = BHKeyVaultMgmtClient(**kwargs)
+    vault_uri = None
     try:
-        print("Vault management requires authentication")
-        kv_mgmt = BHKeyVaultMgmtClient(**kwargs)
         vault_uri = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
     except CloudError:

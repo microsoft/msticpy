@@ -11,10 +11,6 @@ from typing import Tuple, Union, Any, Dict, Optional, Iterable
 import json
 import pandas as pd
 from IPython import get_ipython
-from adal.adal_error import AdalError
-from Kqlmagic.kql_response import KqlError
-from Kqlmagic.kql_engine import KqlEngineError
-from Kqlmagic.my_aad_helper import AuthenticationError
 
 from .driver_base import DriverBase, QuerySource
 from ...common.exceptions import (
@@ -22,7 +18,20 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
     MsticpyKqlConnectionError,
     MsticpyDataQueryError,
+    MsticpyImportExtraError,
 )
+
+try:
+    from Kqlmagic.kql_response import KqlError
+    from Kqlmagic.kql_engine import KqlEngineError
+    from Kqlmagic.my_aad_helper import AuthenticationError
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without Kqlmagic installed",
+        title="Error importing Kqlmagic",
+        extra="kql",
+    ) from imp_err
+
 from ...common.utility import export
 from ..._version import VERSION
 from ...common.azure_auth_core import az_connect_core
@@ -97,10 +106,10 @@ class KqlDriver(DriverBase):
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
                     self._raise_kql_engine_error(ex)
-                except AdalError as ex:
-                    self._raise_adal_error(ex)
                 except AuthenticationError as ex:
                     self._raise_authn_error(ex)
+                except Exception as ex:  # pylint: disable=broad-except
+                    self._raise_adal_error(ex)
                 self._connected = True
                 self._schema = self._get_schema()
             else:

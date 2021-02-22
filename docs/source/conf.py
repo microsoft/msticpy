@@ -175,8 +175,8 @@ texinfo_documents = [
         "msticpy Documentation",
         author,
         "msticpy",
-        "One line description of project.",
-        "Miscellaneous",
+        "Security tools for Python and Jupyter notebooks.",
+        "Security",
     )
 ]
 
@@ -211,12 +211,34 @@ autoclass_content = "both"
 autoapi_dirs = ["../../msticpy"]
 
 autodoc_mock_imports = [
+    "adal",
+    "azure.common.exceptions",
+    "azure.core.exceptions",
+    "azure.core.pipeline",
+    "azure.core.pipeline.policies",
+    "azure.core.pipeline.transport",
+    "azure.identity",
+    "azure.keyvault.secrets",
+    "azure.mgmt.compute",
+    "azure.mgmt.compute.models",
+    "azure.mgmt.keyvault",
+    "azure.mgmt.keyvault.models",
+    "azure.mgmt.monitor",
+    "azure.mgmt.network",
+    "azure.mgmt.resource",
+    "azure.mgmt.subscription",
+    "azure.storage.blob",
+    "keyring",
     "Kqlmagic",
-    "azure-cli-core",
     "matplotlib",
+    "matplotlib.pyplot",
+    "msrest.authentication",
     "statsmodels",
     "scipy",
     "sklearn",
     "splunk-sdk",
+    "splunklib",
     "seaborn",
+    "vt",
+    "vt_graph_api",
 ]

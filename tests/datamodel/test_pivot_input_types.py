@@ -25,12 +25,9 @@ __author__ = "Ian Hellen"
 def data_providers():
     """Return dict of providers."""
     return {
-        "az_sent_prov": QueryProvider("AzureSentinel"),
-        "mdatp_prov": QueryProvider("MDATP"),
-        "splunk_prov": QueryProvider("Splunk"),
         "ti_lookup": TILookup(),
         "geolite": GeoLiteLookup(),
-        "ip_stack": IPStackLookup(),
+        #  "ip_stack": IPStackLookup(),
     }
 
 

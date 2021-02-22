@@ -386,7 +386,7 @@ class GeoLiteLookup(GeoIpLookup):
         + "edition_id=GeoLite2-City&license_key={license_key}&suffix=tar.gz"
     )
 
-    _DB_HOME = os.path.join(os.path.expanduser("~"), ".msticpy", "GeoLite2")
+    _DB_HOME = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "GeoLite2"))
     _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
@@ -473,6 +473,14 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 title="Maxmind GeoIP database not found",
             )
         self._reader = geoip2.database.Reader(self._dbpath)
+
+    def close(self):
+        """Close an open GeoIP DB."""
+        if self._reader:
+            try:
+                self._reader.close()
+            except Exception as err:  # pylint: disable=broad-except
+                print(f"Exception when trying to close GeoIP DB {err}")
 
     def _check_and_update_db(
         self,
@@ -570,11 +578,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if db_folder is None:
             db_folder = self._DB_HOME
 
-        if not os.path.exists(db_folder):
+        if not Path(db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain the leaf dir
-            os.makedirs(db_folder)
-        db_archive_path = os.path.join(db_folder, self._DB_ARCHIVE)
-        db_file_path = os.path.join(db_folder, self._DB_FILE)
+            Path(db_folder).mkdir()
+        db_archive_path = Path(db_folder).joinpath(self._DB_ARCHIVE)
+        db_file_path = Path(db_folder).joinpath(self._DB_FILE)
 
         try:
             with requests.get(url, stream=True) as response:
@@ -595,19 +603,38 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         # pylint: enable=broad-except
         else:
             try:
-                tar_archive = tarfile.open(db_archive_path)
-                for member in tar_archive.getmembers():
-                    if (
-                        member.isreg()
-                    ):  # Will skip the dirs to extract only file objects
-                        # Strip the path from files to extract it to desired directory
-                        member.name = os.path.basename(member.name)
-                        tar_archive.extract(member, db_folder)
+                self._extract_to_folder(db_archive_path, db_folder)
                 print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
                 return True
+            except PermissionError as err:
+                warnings.warn(
+                    f"Cannot overwrite GeoIP DB file: {db_file_path}."
+                    + " The file may be in use or you do not have"
+                    + f" permission to overwrite.\n - {err}"
+                )
             except IOError as err:
                 warnings.warn(f"Error writing GeoIP DB file: {db_file_path} - {err}")
         return False
+
+    @staticmethod
+    def _extract_to_folder(db_archive_path, db_folder):
+        with tarfile.open(db_archive_path) as tar_archive:
+            for member in tar_archive.getmembers():
+                if not member.isreg():
+                    continue
+                # Will skip the dirs to extract only file objects
+
+                tar_archive.extract(member, db_folder)
+                # The files are extract to a subfolder (with a date in the name)
+                # We want to move these into the main folder above this.
+                targetname = Path(member.name).name
+                if targetname != member.name:
+                    curr_file = Path(db_folder).joinpath(member.name)
+                    extr_folder = Path(db_folder).joinpath(member.name).parent
+                    curr_file.replace(Path(db_folder).joinpath(targetname))
+                    # if the folder is empty, remove it
+                    if not list(extr_folder.glob("*")):
+                        extr_folder.rmdir()
 
     @staticmethod
     def _get_geoip_dbpath(db_folder: str = None) -> Optional[str]:

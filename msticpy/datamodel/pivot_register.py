@@ -32,8 +32,8 @@ class PivotRegistration:
     """
     Pivot registration for function.
 
-    Attributes
-    ----------
+    Notes
+    -----
     src_module : str
         The src_module to import
     src_class : str, optional

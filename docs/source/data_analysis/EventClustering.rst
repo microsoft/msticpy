@@ -115,7 +115,7 @@ Clustered Processes (i.e. processes that have a cluster size > 1)
 
 .. code:: ipython3
 
-    from msticpy.sectools.eventcluster import dbcluster_events, add_process_features
+    from msticpy.analysis.eventcluster import dbcluster_events, add_process_features
     processes_on_host = pd.read_csv('data/processes_on_host.csv',
                                     parse_dates=["TimeGenerated"],
                                     infer_datetime_format=True)
@@ -241,7 +241,7 @@ different locations.
 .. code:: ipython3
 
     # Show all clustered processes
-    from msticpy.sectools.eventcluster import plot_cluster
+    from msticpy.analysis.eventcluster import plot_cluster
     # Create label with unqualified path
     labelled_df = processes_on_host.copy()
     labelled_df['label'] = labelled_df.apply(lambda x: x.NewProcessName.split("\\")[-1], axis=1)
@@ -288,7 +288,7 @@ whether this is a Windows or Linux host.
 
 .. code:: ipython3
 
-    from msticpy.sectools.eventcluster import dbcluster_events, add_process_features, _string_score
+    from msticpy.analysis.eventcluster import dbcluster_events, add_process_features, _string_score
 
     host_logons = pd.read_csv('data/host_logons.csv',
                               parse_dates=["TimeGenerated"],

@@ -4,8 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 from pytest import raises
-from msticpy.data.drivers import MDATPDriver, SecurityGraphDriver
+
 from msticpy.common.exceptions import MsticpyException
+from msticpy.data import DataEnvironment
+from msticpy.data.drivers import import_driver
+
+from msticpy.data.drivers.mdatp_driver import MDATPDriver
+from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
+
 
 _JSON_RESP = {
     "token_type": "Bearer",
@@ -19,8 +25,9 @@ _JSON_RESP = {
 
 
 def test_MDATP():
-    mdatp = MDATPDriver()
-    assert type(mdatp) == MDATPDriver
+    driver_cls = import_driver(DataEnvironment.MDATP)
+    mdatp = driver_cls()
+    assert isinstance(mdatp, MDATPDriver)
     with raises(ConnectionError):
         mdatp.connect(
             connection_str="tenant_id=Test;client_id=Test;client_secret=Test;apiRoot=Test;apiVersion=Test"
@@ -30,5 +37,6 @@ def test_MDATP():
 
 
 def test_SecurityGraph():
-    sec_graph = SecurityGraphDriver()
-    assert type(sec_graph) == SecurityGraphDriver
+    driver_cls = import_driver(DataEnvironment.SecurityGraph)
+    sec_graph = driver_cls()
+    assert isinstance(sec_graph, SecurityGraphDriver)
