@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
+import re
 import warnings
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Set, Union
 
 import pandas as pd
 from IPython import get_ipython
@@ -169,3 +170,55 @@ class PivotAccessor:
             # run the function with any additional args
             func(*args, **kwargs)
         return self._df
+
+    def filter_cols(
+        self,
+        cols: Union[str, Iterable[str]],
+        match_case: bool = False,
+        sort_cols: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Filter output columns matching names in `cols` expression(s).
+
+        Parameters
+        ----------
+        cols : Union[str, Iterable[str]]
+            Either a string or a list of strings with filter expressions.
+            These can be exact matches for column names, wildcard patterns
+            ("*" matches multiple chars and "?" matches a single char),
+            or regular expressions.
+        match_case: bool, optional
+            Use case-sensitive matching, by default False
+        sort_cols : bool, optional
+            Alphabetically sort column names, by default False
+
+        Returns
+        -------
+        pd.DataFrame
+            The input DataFrame with only columns that match the
+            filtering expressions.
+        """
+        curr_cols = self._df.columns
+        filt_cols: Set[str] = set()
+        if isinstance(cols, str):
+            filt_cols.update(self._name_match(curr_cols, cols, match_case))
+        elif isinstance(cols, list):
+            for col_filter in cols:
+                filt_cols.update(self._name_match(curr_cols, col_filter, match_case))
+        if not filt_cols:
+            if not sort_cols:
+                warnings.warn("Column filter expression(s) did not match any columns")
+            filt_cols.update(curr_cols)
+        if sort_cols:
+            out_cols = sorted(filt_cols)
+        else:
+            # keep the existing order
+            out_cols = [col for col in curr_cols if col in filt_cols]
+        return self._df[out_cols]
+
+    @staticmethod
+    def _name_match(cur_cols: Iterable[str], col_filter, match_case):
+        col_filter = re.sub(r"[^.]\*", ".*", col_filter)
+        col_filter = re.sub(r"[^.]\?", ".?", col_filter)
+        regex_opts = [re.IGNORECASE] if match_case else []
+        return {col for col in cur_cols if re.match(col_filter, col, *regex_opts)}
