@@ -40,6 +40,7 @@ The first step in using this package is to install the msticpy package.
 
     #imports
     from msticpy.data.azure_data import AzureData
+    from msticpy.data.azure_sentinel import AzureSentinel
     print('Imports Complete')
 
 
@@ -48,15 +49,15 @@ The first step in using this package is to install the msticpy package.
     Imports Complete
 
 
-Instantiating and Connecting with an Azure Data Connector
----------------------------------------------------------
+Instantiating and Connecting the Azure Sentinel API Connector
+-------------------------------------------------------------
 
-See :py:class:`Azure Sentinel <msticpy.data.azure_data.AzureSentinel>`
+See :py:class:`Azure Sentinel <msticpy.data.azure_sentinel.AzureSentinel>`
 
-In order to connect to the Azure API and retrieve the required data
-we need to instantiate an Azure Data Connector and connect to the API.
-Authentication to the Azure API is handled via an the azure_auth package.
-By default this package will attempt to use a prioritized list of authentication
+In order to connect to the Azure Sentinel API and retrieve the required data
+we need to instantiate the AzureSentinel class and authenticate to Azure.
+Authentication to the Azure Sentinel API is handled via an the azure_auth package.
+By default this function will attempt to use a prioritized list of authentication
 options. Available options are:
 
     * 'env' - This checks for credentials stored as environment variables.
@@ -77,20 +78,21 @@ list to `.connect` via the auth_methods parameter.
         azs = AzureSentinel()
         azs.connect(auth_methods=['cli','interactive'])
 
-Get Azure Subscription Details
-------------------------------
+Get the workspace Azure Subscription ID
+---------------------------------------
 
 See :py:meth:`get_subscriptions <msticpy.data.azure_data.AzureData.get_subscriptions>`
 
-Details of which Azure subscription to access is required before identifying and connecting
-to an Azure Sentinel workspace.
+You need the ID of the Azure subscription in which the Azure Sentinel workspace resides.
 
-AZURE_SENTINEL_CONNECTOR.list_subscriptions() returns a pandas DataFrame
-with details of all the subscriptions within the tenant.
+AzureData.get_subscriptions() returns a pandas DataFrame
+with details of all the subscriptions within your tenant.
 
 .. code:: ipython3
 
-    az.get_subscriptions()
+    az_data = AzureData()
+    az_data.connect()
+    az_data.get_subscriptions()
 
 
 .. raw:: html
@@ -135,16 +137,21 @@ Get Azure Sentinel Workspaces
 
 See :py:meth:`get_sentinel_workspaces <msticpy.data.azure_sentinel.AzureSentinel.get_sentinel_workspaces>`
 
-A list of Azure Sentinel workspaces within a specified subscription.
-Note that this will only return workspaces that the authenticated account
-is permitted to view.
+Pick the subscription ID that contains the Azure Sentinel workspace that you
+want to connect to.
+
+``get_sentinel_workspaces`` returns a list of Azure Sentinel workspaces within
+a specified subscription.
+
+.. note:: this will only return workspaces that the authenticated account
+   is permitted to view.
 
 .. code:: ipython3
 
     azs.get_sentinel_workspaces(sub_id="3b701f84-d04b-4479-89b1-fa8827eb537e")
 
-List Hunting get_hunting_queries
---------------------------------
+List Hunting Queries
+--------------------
 
 Return a dataframe detailing all hunting queries configured in the workspace. This allows for
 analysis and configuration of hunting queries, as well as the ability to take a

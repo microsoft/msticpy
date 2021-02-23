@@ -6,6 +6,7 @@
 """Mordor data driver test."""
 import contextlib
 from datetime import datetime
+import glob
 import io
 import os
 from pathlib import Path
@@ -26,6 +27,7 @@ __author__ = "Ian Hellen"
 
 _SAVE_PATH = ""
 _SAVE_FOLDER = "mordor_test"
+_SAVE_FOLDER2 = "mordor_test2"
 
 
 @pytest.fixture(scope="session")
@@ -33,32 +35,22 @@ def qry_provider():
     """Query Provider fixture."""
     Path(_SAVE_FOLDER).mkdir(exist_ok=True)
     abs_path = Path(".").absolute()
-    ex_json = list(abs_path.glob("**/*.json"))
-    ex_zip = list(abs_path.glob("**/*.zip"))
 
-    qry_prov = QueryProvider("Mordor")
+    qry_prov = QueryProvider("Mordor", save_folder=f"./{_SAVE_FOLDER}")
     qry_prov.connect()
     yield qry_prov
     # remove downloaded file on cleanup
-    if _SAVE_PATH and Path(_SAVE_PATH).is_file():
-        Path(_SAVE_PATH).unlink()
-    for file in Path(_SAVE_FOLDER).glob("*"):
+    _cleanup_temp_files(_SAVE_FOLDER)
+    _cleanup_temp_files(abs_path.joinpath("mordor"))
+
+
+def _cleanup_temp_files(path):
+    for file in Path(path).glob("*"):
         Path(file).unlink()
-    if Path(_SAVE_FOLDER).is_dir():
-        Path(_SAVE_FOLDER).rmdir()
-    for j_file in abs_path.glob("**/*.json"):
-        if j_file not in ex_json and j_file.is_file():
-            j_file.unlink()
-    for z_file in abs_path.glob("**/*.zip"):
-        if z_file not in ex_zip and z_file.is_file():
-            z_file.unlink()
-    mordor_path = abs_path.joinpath("mordor")
-    if mordor_path.is_dir():
-        for file in mordor_path.glob("*"):
-            file.unlink()
+    if Path(path).is_dir():
         # pylint: disable=broad-except
         try:
-            mordor_path.rmdir()
+            Path(path).rmdir()
         except Exception:  # nosec
             pass
 
@@ -126,17 +118,16 @@ def test_mordor_search(mdr_driver: MordorDriver):
 )
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
-    global _SAVE_PATH
     entry_id = "SDWIN-190319021158"
     entry = mdr_driver.mordor_data[entry_id]
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]
-    d_frame = download_mdr_file(file_path, save_folder="mordor_test")
-    _SAVE_PATH = file_path.split("/")[-1]
+    d_frame = download_mdr_file(file_path, save_folder=_SAVE_FOLDER2)
 
     check.is_instance(d_frame, pd.DataFrame)
     check.greater_equal(len(d_frame), 10)
+    _cleanup_temp_files(_SAVE_FOLDER2)
 
 
 @pytest.mark.skipif(

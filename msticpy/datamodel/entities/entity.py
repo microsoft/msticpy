@@ -84,21 +84,6 @@ class Entity(ABC, Node):
         if kwargs:
             self.__dict__.update(kwargs)
 
-    #     self._assign_container_parent()
-
-    # def _assign_container_parent(self):
-    #     """
-    #     Assign reference to this instance to any QueryContainer attribs.
-
-    #     This allows functions within QueryContainers to reference
-    #     `self` of this instance and behave as if they were instance
-    #     methods of the entity.
-    #     """
-    #     for _, obj in inspect.getmembers(self):
-    #         # using simple name match to avoid importing QueryContainer
-    #         if obj.__class__.__name__ == "QueryContainer":
-    #             setattr(obj, "_parent_self", self)
-
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.
@@ -199,8 +184,9 @@ class Entity(ABC, Node):
     def __repr__(self) -> str:
         """Return repr of entity."""
         params = ", ".join(
-            [f"{name}={val}" for name, val in self.properties.items() if val]
+            f"{name}={val}" for name, val in self.properties.items() if val
         )
+
         if len(params) > 80:
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
@@ -263,11 +249,9 @@ class Entity(ABC, Node):
         """Return the hash of the entity based on non-empty property values."""
         return hash(
             " ".join(
-                [
-                    f"{prop}:{str(val)}"
-                    for prop, val in self.properties.items()
-                    if str(val)
-                ]
+                f"{prop}:{str(val)}"
+                for prop, val in self.properties.items()
+                if str(val)
             )
         )
 
@@ -545,3 +529,5 @@ class Entity(ABC, Node):
     def list_pivot_funcs(self):
         """Print list of pivot functions assigned to entity."""
         print("\n".join(self.get_pivot_list()))
+
+    pivots = get_pivot_list

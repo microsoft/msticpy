@@ -9,7 +9,7 @@ modules. However, there is no simple way to discover where these
 functions are and what types of data the function is relevant to.
 
 Pivot functions bring this functionality together grouped around
-*Entities*. Entities are representations real-world objects found
+*Entities*. Entities are representations of real-world objects found
 commonly in CyberSec investigations.
 Some examples are: IpAddress, Host, Account, URL.
 
@@ -85,7 +85,7 @@ entity as methods (or functions) of that entity. These operations include:
 
 -  Data queries
 -  Threat intelligence lookups
--  Other data lookups such as GeoLocation or domain resolution
+-  Other data lookups such as geo-location or domain resolution
 -  and other local functionality
 
 The pivot library essentially wraps these various functions in a
@@ -97,8 +97,11 @@ more standardized form. This gives us several benefits:
    aware of.
 -  The functions have standarized input and output.
 -  The functions will take input data in a number of different
-   formats so you don't waste time munging data to suit the function
+   formats so you don't waste time wrangling data to suit the function
    you want to use.
+-  For functions that require a time range (e.g. queries) the time
+   range is set centrally and used by all functions (you can change
+   the time range at any time, of course).
 
 
 What is "Pivoting"?
@@ -135,7 +138,7 @@ Getting started
 
 
 The pivoting library depends on a number of data providers used in
-*MSTICPy*. These normally need to be loaded an initialized before starting
+*MSTICPy*. These normally need to be loaded and initialized before starting
 the Pivot library.
 
 This is mandatory for data query providers such as the AzureSentinel,
@@ -188,8 +191,10 @@ What happens at initialization?
    Any queries found are added to the approriate entity or entities.
 -  The TILookup provider is loaded and entity-specific lookups (e.g. IP, Url,
    File) are added as pivot functions
--  Miscellaneous Msticpy functions and classes (e.g. GeoIP, IpType,
+-  Miscellaneous *MSTICPy* functions and classes (e.g. GeoIP, IpType,
    Domain utils) are added as pivot functions to the appropriate entity.
+-  A default time range is set - this is only used by queries executed
+   as pivot functions and covered later in `Data query pivot functions`_
 
 You can add additional functions as pivot functions by creating a
 registration template and importing the function. Details of this are
@@ -257,9 +262,9 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.get_process_tree',
      'AzureSentinel.get_parent_process',
      'AzureSentinel.list_processes_in_session',
-     'other.dns_validate_tld',
-     'other.dns_is_resolvable',
-     'other.dns_in_abuse_list']
+     'util.dns_validate_tld',
+     'util.dns_is_resolvable',
+     'util.dns_in_abuse_list']
 
     IpAddress pivot functions
 
@@ -270,16 +275,44 @@ After loading the Pivot class, entities have pivot functions added to them
      'AzureSentinel.list_activity_for_ip',
      ...
      'AzureSentinel.list_indicators_by_url',
-     'other.whois',
-     'other.ip_type',
-     'other.geoloc_mm',
-     'other.geoloc_ips',
+     'util.whois',
+     'util.ip_type',
+     'util.geoloc_mm',
+     'util.geoloc_ips',
      'ti.lookup_ip',
      ...
      'ti.lookup_ipv4_VirusTotal',
      'ti.lookup_ipv4_XForce',
      'ti.lookup_ipv6',
      'ti.lookup_ipv6_OTX']
+
+
+Discovering entity names
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The entities module has a utility names `find_entity`. You
+can use that to verify the name of an entity.
+
+.. code:: ipython3
+
+    entities.find_entity("dns")
+
+.. parsed-literal::
+    Match found 'Dns'
+
+    msticpy.datamodel.entities.dns.Dns
+
+If a unique match is found the entity class is returned.
+
+.. code:: ipython3
+
+    entities.find_entity("azure")
+
+.. parsed-literal::
+
+    No exact match found for 'azure'.
+    Closest matches are 'AzureResource', 'Url', 'Malware'
+
 
 
 Pivot functions are grouped into containers
@@ -291,7 +324,7 @@ container of that name, Spunk queries would be in a “Splunk” container.
 
 TI lookups are put into a "ti" container.
 
-All other built-in functions are added to the "util" container.
+All other built-in functions are added to the "util" container, by default.
 
 The containers themselves are callable and will return a list of their
 contents.
@@ -331,6 +364,22 @@ Containers are also iterable - each iteration returns a tuple
 In notebooks/IPython you can also use tab completion to get to the right
 function.
 
+Using the Pivot Browser
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Pivot also has a utility that allows you to browse entities and the
+pivot functions attached to them. You can search for functions with
+desired keywords, view help for the specific function and copy the function
+signature to paste into a code cell.
+
+.. code:: ipython3
+
+    Pivot.browse()
+
+.. figure:: _static/pivot_browser.png
+   :alt: Pivot function browser.
+
+
 Running a pivot function
 ------------------------
 
@@ -354,8 +403,23 @@ help on a pivot function at any time using the builtin Python help()
 function or a trailing "?"
 
 
+.. note:: Most examples in the document use entity classes has been
+   imported individually (``from msticpy.datamodel.entities import Host``).
+   This is done to make the examples syntax cleaner. However, you do not need to
+   import each entity class individually before using it. The ``init_notebook``
+   function described in the `Getting Started`_ section imports the "entities"
+   parent module, which contains the individual entity classes. You can run
+   ``from msticpy.datamodel import entities`` to do the same.
+   This means that you can use any entity by prefixing it with ``entities.``
+   (e.g. ``entities.Host()`` - create a host entity or
+   ``entities.Account.util.my_pivot()`` - run the Account entity ``my_pivot``
+   function ). Using the entities module prefix like this is usually much more
+   convenient than seperate import statements for each entity.
+
+
 .. code:: ipython3
 
+    from msticpy.datamodel.entities import IpAddress
     IpAddress.util.ip_type?
 
 .. parsed-literal::
@@ -398,8 +462,15 @@ There are a few variations in the way you can specify parameters:
 If in doubt, use ``help(entity.container.func)`` or ``entity.container.func?``
 to find the specific parameter(s) that the function expects.
 
+.. note:: Most of the examples in the following sections use the **IpAddress**
+   entity to it easier to compare the different ways of calling pivot functions.
+   The same patterns apply to all other entities (Account, Host, Dns, Url, etc.)
+   that have pivot functions.
+
+
 Using single value parameters as input
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Some examples of simple pivot functions for an IpAddress string.
 
@@ -466,7 +537,7 @@ The output is the same as the previous example
 Using a list (or other iterable) as a parameter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Many of the underlying MSTICPy functions (the functions wrapped by the Pivot
+Many of the underlying *MSTICPy* functions (the functions wrapped by the Pivot
 library) accept either single values or
 collections of values (usually in DataFrames) as input.
 
@@ -485,7 +556,7 @@ the Pivot library will iterate through each value in your input list,
 calling the function and
 collating the results to hand you back a single dataframe.
 
-.. note:: Not all MSTICPy pivot functions are configured to allow
+.. note:: Not all *MSTICPy* pivot functions are configured to allow
    iterated calling. This is usually where the
    underlying function is long-running or expensive and we've opted to
    block accepting iterated calls. Notebooklets are an example of functions
@@ -689,6 +760,7 @@ AllExtIPs      CountryCode    CountryName    State     City          Longitude  
 =============  =============  =============  ========  ==========  ===========  ==========  =====  =======  ===========  ================  =============
 
 
+
 Data query pivot functions
 --------------------------
 
@@ -703,7 +775,7 @@ entity attributes (e.g. IpAddress.Address) and query parameters
 
 It uses a limited set of parameter names to do this mapping so to
 have your query show up as a pivot function, you should follow the same
-standard parameter naming as we use in MSTICPy built-in queries.
+standard parameter naming as we use in *MSTICPy* built-in queries.
 
 Query parameter mapping:
 
@@ -732,7 +804,7 @@ file_hash          File              file_hash
 
 If you have existing queries that use different names than those
 listed in this table, you can take advantage of a feature added to the
-MSTICPy query definition format - *parameter aliases*.
+*MSTICPy* query definition format - *parameter aliases*.
 
 To use these, change the primary name of your parameter to one of the
 items listed above and then add an aliases item to the parameter entry
@@ -755,7 +827,10 @@ parameter when invoking the query.
 Running pivot data queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A significant difference between the pivot functions that we’ve seen so far
+A word about parameters
+^^^^^^^^^^^^^^^^^^^^^^^
+
+A significant difference between the pivot functions that we've seen so far
 and data query functions is that the latter **do not** accept **generic**
 parameter names (other than the "data" parameter).
 
@@ -765,8 +840,29 @@ makes it very difficult to decide which value belongs to which
 column.
 
 When you use a named parameter in a data query pivot, you must
-specify the name that the query function is expecting. If in doubt, use
-“?” prefix to show the function help.
+specify the parameter name that the query function is expecting.
+
+.. code:: ipython3
+
+    Host.AzureSentinel.list_host_events_by_id(
+        host_name="mypc",
+    )
+
+    Host.AzureSentinel.list_host_events_by_id(
+        data=input_df,
+        host_name="computer",
+    )
+
+In the first example, the query will be run with "host_name='mypc'.
+In the second example, ``host_name`` is the parameter name expected by the
+query and ``computer`` is the name of the column in the input
+DataFrame that is the source of the host_name values. The query will
+be executed once for each row, supplying each row's value for the
+``computer`` column as the query's ``host_name`` parameter.
+
+
+If in doubt about what the correct parameter name to use is,
+use the "?" suffix to show the function help.
 
 Example:
 
@@ -783,6 +879,9 @@ Ensure that you've authenticated/connected to the data provider.
     az_provider.connect(ws.code_connect_str)
 
 
+A second significant difference is that most queries require
+a time range to operate over.
+
 The ``start`` and ``end`` datetime parameters common to most queries
 are automatically added by the pivot library. The values of these are
 taken from the Pivot object, using the time range
@@ -790,6 +889,12 @@ defined in its ``timespan`` property. You can override these auto-populated
 values when you call a function by explicitly
 specifying the ``start`` and ``end`` parameter values in the function
 call.
+
+.. note:: The time range is used dynamically. If you change
+   the Pivot timespan property, the new value will be used by
+   future queries as they are run. This means that
+   if you re-run earlier queries after changing the timespan they
+   will execute with different time parameters.
 
 Setting default timespan for queries interactively
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -944,6 +1049,25 @@ return a count of each event type.
 ==========================================================  ==========
 
 
+Using the "print" parameter to help debug queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When calling queries directly from the data provider (e.g.
+``my_provider.get_host_logons(...)``) you can supply a positional string argument
+"print". This causes the query that would be sent to the provider to be
+returned as a string, with parameter values substituted. This is useful for
+debugging queries.
+
+The pivot wrapping mechanism removes positional arguments passed to
+the query pivot function so it is no longer possible to use the simple
+"print" argument. Instead add a keyword argument ``print=True``. This
+causes the provider to skip the query and print out (but not return)
+the full query that would have been executed. Unfortunately it isn't
+possible to return the query string from the pivot function since the
+pivot machinery would try to interpret it as a query result and would
+try to put it into a DataFrame, which would be less than helpful when trying
+to debug something.
+
 
 Using iterables as parameters to data queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1018,8 +1142,8 @@ executing the individual queries and joining the results.
 .. code:: ipython3
 
     accounts = [
-        "ofshezaf",
-        "moshabi",
+        "ananders",
+        "moester",
     ]
 
     Account.AzureSentinel.list_aad_signins_for_account(account_name=accounts)
@@ -1028,9 +1152,9 @@ executing the individual queries and joining the results.
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 TimeGenerated                     OperationName       ResultType  Identity       Level  Location    AppDisplayName    AuthenticationRequirement    ClientAppUsed    ConditionalAccessPolicies                              DeviceDetail                      IsInteractive    UserAgent                       UserPrincipalName
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
-2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Ofer Shezaf        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ofshezaf@microsoft.com
-2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
-2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Shabi          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moshabi@microsoft.com
+2020-10-01 11:04:42.689000+00:00  Sign-in activity             0  Anil Anders        4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': '', 'operatingSyste  False            Mozilla/5.0 (Windows NT 10...   ananders@microsoft.com
+2020-10-01 11:19:36.626000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      multiFactorAuthentication    Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
+2020-10-01 11:19:40.787000+00:00  Sign-in activity             0  Mor Ester          4  IL          Azure Portal      singleFactorAuthentication   Browser          [{'id': '8872f6fb-da88-4b63-bcc7-17247669596b', 'disp  {'deviceId': 'e7e06bcd-1c72-4550  False            Mozilla/5.0 (Windows NT 10...   moester@microsoft.com
 ================================  ================  ============  ===========  =======  ==========  ================  ===========================  ===============  =====================================================  ================================  ===============  ==============================  ======================
 
 
@@ -1059,8 +1183,8 @@ Here we are combining sending a list and a string.
     Account.AzureSentinel.list_aad_signins_for_account(account_name=accounts, add_query_items=project)
 
 
-Using DataFrames as input
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Using DataFrames as input to query pivots
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is similar to using dataframes as input parameters, as described
 earlier.
@@ -1088,12 +1212,13 @@ On each iteration, the column value from the current row will be
 extracted and given as the parameter value for the ``account_name``
 function parameter.
 
-If the function parameter type is a *list* type - i.e. it
+If the function query parameter type is a *list* type - i.e.�it
 expects a list of values, the parameter value will be sent as a list
-created from all of the values in that dataframe column. Similary,
+created from all of the values in that dataframe column. Similarly,
 if you have multiple *list* parameters sourced from different
 columns of your input dataframe, a list will be created for
-column and assigned to the query parameter. In these cases only
+column and assigned to the query parameter. In cases where you have
+only a single *list* parameter or all parameters are *lists*, only
 a single query is executed.
 
 However, if you have multiple parameters of mixed types (i.e.
@@ -1105,6 +1230,18 @@ You should not need to worry about these details but if a query
 operation is taking longer than expected, it might be useful to know
 what is happening under the covers.
 
+Joining query output to input
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the input to your data query pivot function is a DataFrame you can
+also join it to the output. By default, it uses the index of the input
+rows to join to the output. This usually works well unless the input
+index has duplicate values.
+
+You can override the default behavior of joining on the index by
+specifying ``left_on`` and ``right_on`` column names. The ``left_on``
+column name must be a column in the input DataFrame and ``right_on``
+must specify a column in the output DataFrame (the query results).
 
 Threat Intelligence lookups
 ---------------------------
@@ -1393,6 +1530,27 @@ without having to break up your pipeline to do so).
 By default, it will not overwrite an existing variable of the same name
 unless you specify ``clobber=True`` in the call to ``tee``.
 
+mp_pivot.tee_exec
+~~~~~~~~~~~~~~~~~
+
+:py:meth:`mp_pivot.tee_exec<msticpy.datamodel.pivot_pd_accessor.PivotAccessor.tee_exec>`
+behaves similarly to the "tee" function above except that it
+will try to execute the named DataFrame accessor function on the input
+DataFrame.
+The name of the function (as a string) can be passed named as the value of the
+`df_func` named parameter, or the first positional parameter.
+
+The function **must** be a method of a pandas DataFrame - this includes
+built-in functions such as ``.query``, ``.sort_values`` or a custom function
+added as a custom pd accessor function (see
+`Extending pandas <https://pandas.pydata.org/pandas-docs/stable/development/extending.html?highlight=accessor>`_
+
+mp_pivot.tee_exec allows the input
+data to pass through unchanged but will also send
+a snapshot of the data at that point in the pipeline to the named function.
+You can also pass arbitrary other named arguments to the `tee_exec`. These
+will be passed to the ``df_func`` function.
+
 Example pipeline
 ~~~~~~~~~~~~~~~~
 
@@ -1403,7 +1561,7 @@ This takes an existing DataFrame - suspcious_ips - and:
 -  checks for threat intelligence reports on any of the IP addresses
 -  uses pandas ``query`` function to filter only the high severity hits
 -  calls the whois pivot function to obtain ownership information for these IPs
-   (note that we join the results of the previous step here usine `join='left'`
+   (note that we join the results of the previous step here usine ``join='left'``
    so our output will be all TI result data plus whois data)
 -  displays a sample of the combined output
 -  uses ``tee`` to save a snapshot to a DF variable *ti_whois_df*
@@ -1411,7 +1569,7 @@ This takes an existing DataFrame - suspcious_ips - and:
    for Azure Active Directory logins that
    have an IP address source that matches any of these addresses.
 
-The final step uses another MSTICPy pandas extension to plot the login attempts
+The final step uses another *MSTICPy* pandas extension to plot the login attempts
 on a timeline chart.
 
 .. code:: ipython3
@@ -1442,6 +1600,154 @@ An sample of the results you would see from this pipeline.
 .. figure:: _static/pivot_pipeline.png
    :alt: Output from MSTICPy pivot and pandas pipeline showing timeline of login attempts.
    :height: 6in
+
+
+Creating custom pipelines as YAML files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can define a pipeline as a YAML file, then import and execute it
+using your chosen input DataFrame.
+
+The format of the pipeline YAML file is shown below, illustrating
+the definitions for the different pipeline types described earlier.
+
+.. code:: yaml
+
+    pipelines:
+      pipeline1:
+        description: Pipeline 1 description
+        steps:
+          - name: get_logons
+            step_type: pivot
+            function: util.whois
+            entity: IpAddress
+            comment: Standard pivot function
+            params:
+              column: IpAddress
+              join: inner
+          - name: disp_logons
+            step_type: pivot_display
+            comment: Pivot display
+            params:
+              title: "The title"
+              cols:
+                - Computer
+                - Account
+              query: Computer.str.startswith('MSTICAlerts')
+              head: 10
+          - name: tee_logons
+            step_type: pivot_tee
+            comment: Pivot tee
+            params:
+                var_name: var_df
+                clobber: True
+          - name: tee_logons_disp
+            step_type: pivot_tee_exec
+            comment: Pivot tee_exec with mp_timeline.plot
+            function: mp_timeline.plot
+            params:
+              source_columns:
+                - Computer
+                - Account
+          - name: logons_timeline
+            step_type: pd_accessor
+            comment: Standard accessor with mp_timeline.plot
+            function: mp_timeline.plot
+            pos_params:
+              - one
+              - 2
+            params:
+              source_columns:
+                - Computer
+                - Account
+      pipeline2:
+        description: Pipeline 2
+        steps:
+          - ...
+
+You can store multiple pipelines in a file. Each pipeline has one or
+more steps. The pipeline will be run in the order of the steps
+in the file.
+
+- ``name`` is the step name
+- ``step_type`` is one of:
+    - pivot
+    - display
+    - tee
+    - tee_exec
+    - pd_accessor
+- ``comment`` - optional comment to describe the step
+- ``function`` - see discussion below
+- ``pos_params`` - a list of positional parameters
+- ``params`` - a dictionary of keyword parameters and values
+
+The ``function`` parameter
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is the full name of the function to be executed. This is only needed for
+step types pivot, tee_exec and pd_accessor.
+
+In the pivot case it must
+be the full path to the pivot function from the entity (e.g. if you
+want to call IpAddress.util.whois, enter "util.whois" as the function
+name).
+
+In the case of tee_exec and pd_accessor this must be the name
+or path of the function as if it was being executed as a method of the
+DataFrame. For built-in DataFrame methods, such as ``sort_values`` or
+``query``, this is simply the function name. For custom accessor
+functions this must be the full dotted path. For example, *MSTICPy*
+has a custom accessor ``mp_timeline.plot()`` that plots the event
+timeline of events in a DataFrame. To invoke this use the full
+path of the function - "mp_timeline.plot".
+
+Reading a saved pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Assuming that you've saved the pipeline in a file "pipelines.yml"
+
+.. code:: ipython3
+
+    from msticpy.datamodel.pivot_pipeline import Pipeline
+
+    with open("pipelines.yml", "r") as pl_fh:
+        pl_txt = pl_fh.read()
+    pipelines = list(Pipeline.from_yaml(pl_txt))
+    print(pipelines[0].print_pipeline())
+
+.. parsed-literal::
+
+    # Pipeline 1 description
+    (
+        input_df
+        # Standard pivot function
+        .mp_pivot.run(IpAddress.util.whois, column='IpAddress', join='inner')
+        # Pivot display
+        .mp_pivot.display(title='The title', query='Computer.str.startswith('MSTICAlerts')', cols=['Computer', 'Account'], head=10)
+        # Pivot tee
+        .mp_pivot.tee(var_name='var_df', clobber=True)
+        # Pivot tee_exec with mp_timeline.plot
+        .mp_pivot.tee_exec('mp_timeline.plot', source_columns=['Computer', 'Account'])
+        # Standard accessor with mp_timeline.plot
+        .mp_timeline.plot('one', 2, source_columns=['Computer', 'Account'])
+    )
+
+Calling the
+:py:meth:`print_pipeline <msticpy.datamodel.pivot_pipeline.Pipeline.print_pipeline>`
+method prints out a representation of
+the pipeline as it would appear in code.
+
+See also :py:meth:`from_yaml <msticpy.datamodel.pivot_pipeline.Pipeline.from_yaml>`
+
+Running a pipeline
+^^^^^^^^^^^^^^^^^^
+
+To execute the pipeline call
+:py:meth:`run <msticpy.datamodel.pivot_pipeline.Pipeline.run>` on the
+pipeline object.
+You must supply a parameter ``data`` specifying the input DataFrame.
+Optionally, you can add ``verbose=True`` which will cause a progress bar
+and step details to be displayed as the pipeline is executed.
 
 
 Adding custom functions to the pivot interface
@@ -1543,7 +1849,7 @@ output DF containing the IP is named “ip_addr”, put “ip_addr” here.)
 When you have this information, create or add this to a yaml file with
 the top-level element ``pivot_providers``.
 
-Example from the msticpy ip_utils ``who_is`` function
+Example from the *MSTICPy* ip_utils ``who_is`` function
 
 .. code:: yaml
 
@@ -1564,10 +1870,12 @@ Example from the msticpy ip_utils ``who_is`` function
         show_progress: False
       func_input_value_arg: ip_address
 
-The library doesn’t currently support creating pivots from ad hoc
-functions created in the current notebook. You need to put the
-function into a Python module. If your module is in the current
-directory and is called ``my_new_module``, the value for
+.. note:: the library also support creating pivots from ad hoc
+   functions created in the current notebook (see below).
+
+You can also put this function into a Python module.
+If your module is in the current directory and is called
+``my_new_module``, the value you specify for
 ``src_module`` will be "my_new_module".
 
 Once you have your yaml definition file you can call
@@ -1584,3 +1892,51 @@ Once you have your yaml definition file you can call
 
 .. warning:: this registration is not persistent. You will need to
    call this each time you start a new session.
+
+
+Adding ad hoc pivot functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also add ad hoc functions as pivot functions. This is
+probably a less common scenario but may be useful for testing and
+development.
+
+To do this use the Pivot method
+:py:meth:`add_pivot_function<msticpy.datamodel.pivot.Pivot.add_pivot_function>`
+
+You can either create a PivotRegistration object and supply that (along
+with the `func` parameter), to this method.
+
+.. code:: python
+
+    from msticpy.datamodel.pivot_register import PivotRegistration
+
+    def my_func(input: str):
+        return input.upper()
+
+    piv_reg = PivotRegistration(
+        input_type="value",
+        entity_map={"Host": "HostName"},
+        func_input_value_arg="input",
+        func_new_name="upper_name"
+    )
+
+    Pivot.add_pivot_function(my_func, piv_reg, container="change_case")
+
+
+Alernatively, you can supply the
+pivot registration parameters as keyword arguments:
+
+.. code:: python
+
+    def my_func(input: str):
+        return input.upper()
+
+    Pivot.add_pivot_function(
+        func=my_func,
+        container="change_case",
+        input_type="value",
+        entity_map={"Host": "HostName"},
+        func_input_value_arg="input",
+        func_new_name="upper_name",
+    )

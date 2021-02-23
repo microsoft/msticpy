@@ -15,24 +15,7 @@ defaults:
       query_project:
         description: Column project statement
         type: str
-        default: '
-          | project
-            TimeGenerated,   
-            Computer,
-            ComputerIP,
-            ComputerEnvironment,
-            SubscriptionId,
-            ResourceType,
-            OSType,
-            OSName,
-            OSMajorVersion,
-            OSMinorVersion,
-            RemoteIPCountry,
-            RemoteIPLatitude,
-            RemoteIPLongitude,
-            Solutions,
-            SourceComputerId,
-            VMUUID'
+        default: ''
       start:
         description: Query start time
         type: datetime
