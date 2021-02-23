@@ -29,6 +29,9 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+_DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
+
+
 @export
 class QueryProvider:
     """
@@ -307,7 +310,10 @@ class QueryProvider:
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
-        if "print" in args or "query" in args or "print_query" in kwargs:
+        # This looks for any of the "print query" debug args in args or kwargs
+        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
+            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
+        ):
             return query_str
 
         # Handle any query options passed
@@ -430,7 +436,10 @@ class QueryProvider:
             )
             for q_start, q_end in ranges
         ]
-        if "print" in args or "query" in args:
+        # This looks for any of the "print query" debug args in args or kwargs
+        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
+            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
+        ):
             return "\n\n".join(split_queries)
 
         # Retrive any query options passed (other than query params)

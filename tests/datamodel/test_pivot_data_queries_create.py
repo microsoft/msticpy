@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test query_functions module."""
+import warnings
 from datetime import datetime, timedelta
 from functools import partial
 
@@ -36,7 +37,9 @@ __author__ = "Ian Hellen"
 @pytest.fixture(scope="module")
 def azure_sentinel():
     """Fixture to get loaded Azure Sentinel Provider."""
-    return QueryProvider("AzureSentinel")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return QueryProvider("AzureSentinel")
 
 
 @pytest.mark.skipif(not _KQL_IMP_OK, reason="Partial msticpy install")

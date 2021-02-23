@@ -134,7 +134,7 @@ class KqlTIProvider(TIProvider):
         result.result, severity, result.details = self.parse_results(result)
         result.set_severity(severity)
         # Save the query that was used.
-        result.reference = query_obj("query", **query_params)
+        result.reference = query_obj("print_query", **query_params)
         return result
 
     # pylint: disable=too-many-locals, too-many-branches
@@ -221,7 +221,7 @@ class KqlTIProvider(TIProvider):
             src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
             src_ioc_frame["QuerySubtype"] = query_type
-            src_ioc_frame["Reference"] = query_obj("query", **query_params)
+            src_ioc_frame["Reference"] = query_obj("print_query", **query_params)
 
             # If no results, add the empty dataframe to the combined results
             # and continue

@@ -4,16 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test Pivot registered functions."""
+import warnings
 from collections import namedtuple
 
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.data import QueryProvider
 from msticpy.data.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivot import Pivot
-from msticpy.sectools import GeoLiteLookup, IPStackLookup, TILookup
+from msticpy.sectools import GeoLiteLookup, TILookup
 
 __author__ = "Ian Hellen"
 
@@ -23,11 +23,13 @@ __author__ = "Ian Hellen"
 @pytest.fixture(scope="session")
 def data_providers():
     """Return dict of providers."""
-    return {
-        "ti_lookup": TILookup(),
-        "geolite": GeoLiteLookup(),
-        #  "ip_stack": IPStackLookup(),
-    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return {
+            "ti_lookup": TILookup(),
+            "geolite": GeoLiteLookup(),
+            #  "ip_stack": IPStackLookup(),
+        }
 
 
 def _reset_entities():
@@ -43,7 +45,9 @@ def _reset_entities():
 def _create_pivot(data_providers):
     _reset_entities()
     providers = data_providers.values()
-    return Pivot(providers=providers)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot(providers=providers)
 
 
 EntityQuery = namedtuple(

@@ -129,3 +129,43 @@ class PivotAccessor:
             else:
                 self._ip.ns_table["user_local"][var_name] = self._df
         return self._df
+
+    def tee_exec(self, df_func: str, *args, **kwargs) -> pd.DataFrame:
+        """
+        Run the dataframe method or accessor function on the dataframe.
+
+        Parameters
+        ----------
+        df_func : str
+            The name of the function to execute. Accessor methods
+            must be of the form "accessor.method".
+        args : tuple
+            Positional arguments to be passed to the function
+        kwargs : dict
+            Keyword arguments to be passed to the function.
+
+        Returns
+        -------
+        pd.DataFrame
+            Passed through input DataFrame.
+
+        Notes
+        -----
+        This function runs the DataFrame method or accessor function.
+        It does not alter the DataFrame (unless the function does
+        any kind of in-place modification). The function is run and
+        the original input DataFrame is returned.
+
+        """
+        acc_name = func_name = func = None
+        if "." in df_func:
+            acc_name, func_name = df_func.split(".")
+            accessor = getattr(self._df, acc_name, None)
+            if accessor:
+                func = getattr(accessor, func_name, None)
+        else:
+            func = getattr(self._df, df_func, None)
+        if func:
+            # run the function with any additional args
+            func(*args, **kwargs)
+        return self._df

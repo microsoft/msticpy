@@ -6,6 +6,7 @@
 """datq query test class."""
 import os
 import unittest
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Tuple, Union, Optional
 
@@ -76,9 +77,11 @@ class TestQuerySource(unittest.TestCase):
         provider.connect("testuri")
         self.assertTrue(provider.connected)
         self.provider = provider
-        self.la_provider = QueryProvider(
-            data_environment="LogAnalytics", driver=self.provider
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            self.la_provider = QueryProvider(
+                data_environment="LogAnalytics", driver=self.provider
+            )
         self.query_sources = self.la_provider.query_store.data_families
 
     def test_date_formatters_datetime(self):

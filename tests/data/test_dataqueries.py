@@ -4,19 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
-from datetime import datetime
 import unittest
+import warnings
+from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Tuple, Union, Optional, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
-
 from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
 from msticpy.data.query_source import QuerySource
 
 from ..unit_test_lib import get_test_data_path
-
 
 _TEST_DATA = get_test_data_path()
 
@@ -93,9 +92,11 @@ class TestDataQuery(unittest.TestCase):
         provider.connect("testuri")
         self.assertTrue(provider.connected)
         self.provider = provider
-        self.la_provider = QueryProvider(
-            data_environment="LogAnalytics", driver=self.provider
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            self.la_provider = QueryProvider(
+                data_environment="LogAnalytics", driver=self.provider
+            )
 
     def test_load_kql_query_defs(self):
         """Test loading query definitions."""
