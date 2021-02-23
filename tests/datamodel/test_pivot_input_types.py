@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test pivot function handling of different input types."""
-
+import warnings
 from collections import namedtuple
 
 import pandas as pd
@@ -24,11 +24,13 @@ __author__ = "Ian Hellen"
 @pytest.fixture(scope="session")
 def data_providers():
     """Return dict of providers."""
-    return {
-        "ti_lookup": TILookup(),
-        "geolite": GeoLiteLookup(),
-        #  "ip_stack": IPStackLookup(),
-    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return {
+            "ti_lookup": TILookup(),
+            "geolite": GeoLiteLookup(),
+            #  "ip_stack": IPStackLookup(),
+        }
 
 
 def _reset_entities():
@@ -44,7 +46,9 @@ def _reset_entities():
 def _create_pivot(data_providers):
     _reset_entities()
     providers = data_providers.values()
-    return Pivot(providers=providers)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        return Pivot(providers=providers)
 
 
 PivotQuery = namedtuple(

@@ -115,6 +115,7 @@ pivot_providers:
     entity_map:
       Url: host
       Host: fqdn
+      Dns: DomainName
     func_input_value_arg: url_domain
   domain_valid_resolvable:
     src_module: msticpy.sectools.domain_utils
@@ -126,6 +127,7 @@ pivot_providers:
     entity_map:
       Url: host
       Host: fqdn
+      Dns: DomainName
     func_input_value_arg: url_domain
   domain_valid_in_abuse_list:
     src_module: msticpy.sectools.domain_utils
@@ -137,6 +139,7 @@ pivot_providers:
     entity_map:
       Url: host
       Host: fqdn
+      Dns: DomainName
     func_input_value_arg: url_domain
   brow_shot:
     src_module: msticpy.sectools.domain_utils
@@ -155,6 +158,7 @@ pivot_providers:
     entity_map:
       Url: host
       Host: fqdn
+      Dns: DomainName
     func_input_value_arg: domain
   url_components:
     src_module: msticpy.sectools.domain_utils
@@ -172,6 +176,7 @@ pivot_providers:
     entity_map:
       Url: Url
       Host: fqdn
+      Dns: DomainName
     func_input_value_arg: url_domain
   ip_rev_resolve:
     src_module: msticpy.sectools.domain_utils

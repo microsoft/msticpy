@@ -21,6 +21,7 @@ an online lookup (API key required).
 """
 import math
 import os
+import random
 import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
@@ -28,6 +29,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from pathlib import Path
+from time import sleep
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import geoip2.database  # type: ignore
@@ -387,7 +389,7 @@ class GeoLiteLookup(GeoIpLookup):
     )
 
     _DB_HOME = str(Path.joinpath(Path("~").expanduser(), ".msticpy", "GeoLite2"))
-    _DB_ARCHIVE = "GeoLite2-City.mmdb.tar.gz"
+    _DB_ARCHIVE = "GeoLite2-City.mmdb.{rand}.tar.gz"
     _DB_FILE = "GeoLite2-City.mmdb"
 
     _LICENSE_HTML = """
@@ -548,6 +550,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     "Continuing with cached database. Results may inaccurate."
                 )
 
+    # pylint: disable=too-many-branches
     def _download_and_extract_archive(  # noqa: MC0001
         self, url: str = None, db_folder: str = None
     ) -> bool:
@@ -580,11 +583,20 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         if not Path(db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain the leaf dir
-            Path(db_folder).mkdir()
-        db_archive_path = Path(db_folder).joinpath(self._DB_ARCHIVE)
+            Path(db_folder).mkdir(exist_ok=True)
+        rand_int = random.randint(10000, 99999)  # nosec
+        db_archive_path = Path(db_folder).joinpath(
+            self._DB_ARCHIVE.format(rand=rand_int)
+        )
         db_file_path = Path(db_folder).joinpath(self._DB_FILE)
 
         try:
+            # wait a small rand amount of time in case multiple procs try
+            # to download simultaneously
+            sleep(rand_int / 500000)
+            if list(Path(db_folder).glob(self._DB_ARCHIVE.format(rand="*"))):
+                # Some other process is downloading
+                return True
             with requests.get(url, stream=True) as response:
                 response = requests.get(url, stream=True)
                 response.raise_for_status()
@@ -612,9 +624,16 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     + " The file may be in use or you do not have"
                     + f" permission to overwrite.\n - {err}"
                 )
-            except IOError as err:
+            except Exception as err:  # pylint: disable=broad-except
+                # There are several exception types that might come from
+                # unpacking a tar.gz
                 warnings.warn(f"Error writing GeoIP DB file: {db_file_path} - {err}")
+        finally:
+            if db_archive_path.is_file():
+                db_archive_path.unlink()
         return False
+
+    # pylint: enable=too-many-branches
 
     @staticmethod
     def _extract_to_folder(db_archive_path, db_folder):
