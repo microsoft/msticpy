@@ -14,6 +14,7 @@ allow table renaming and support for a few SparkSQL operators such as
 RLIKE.
 
 For a more complete translation help with SQL to KQL see
+https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/sqlcheatsheet
 
 Known limitations
 -----------------
@@ -71,7 +72,7 @@ SPARK_KQL_FUNC_MAP = {
     "mean": ("mean", None, None),
     "min": ("min", None, None),
     "position": ("indexof", None, None),
-    "regex_extract": ("extract", "{p1}, {p0}", None),  # swap params 0, 1
+    "regexp_extract": ("extract", "{p1}, {p0}", None),  # swap params 0, 1
     "replace": ("replace", None, None),
     "reverse": ("reverse", None, None),
     "rtrim": ("trim_end", None, None),
