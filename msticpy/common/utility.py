@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 import pkg_resources
 from deprecated.sphinx import deprecated
 from IPython import get_ipython
-from IPython.core.display import HTML, display
+from IPython.core.display import HTML, display, DisplayHandle
 from tqdm import tqdm, tqdm_notebook
 
 from .._version import VERSION
@@ -42,7 +42,7 @@ def export(func: Callable):
 @export
 def string_empty(string: str) -> bool:
     """Return True if the input string is None or whitespace."""
-    return (string is None) or not (string and string.strip())
+    return not (bool(string) or isinstance(string, str) and bool(string.strip()))
 
 
 @export
@@ -306,9 +306,13 @@ def check_and_install_missing_packages(
 
 # pylint: disable=invalid-name
 @export
-def md(string: str, styles: Union[str, Iterable[str]] = None):
+def md(
+    string: str,
+    styles: Union[str, Iterable[str]] = None,
+    disp_id: Optional[Union[bool, DisplayHandle]] = None,
+) -> DisplayHandle:
     """
-    Return string as Markdown with optional style.
+    Display a string as Markdown with optional style.
 
     Parameters
     ----------
@@ -318,6 +322,18 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
         A style mnemonic or collection of styles. If multiple styles,
         these can be supplied as an interable of strings or a comma-separated
         string, by default None
+    disp_id : Optional[Union[bool, DisplayHandle]], optional
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
+
+    Returns
+    -------
+    DisplayHandle
+        A handle to the display object that can be used to update the
+        contents.
 
     """
     style_str = ""
@@ -328,14 +344,21 @@ def md(string: str, styles: Union[str, Iterable[str]] = None):
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
         style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
-    display(HTML(f"<p style='{style_str}'>{string}</p>"))
+    content = HTML(f"<p style='{style_str}'>{string}</p>")
+
+    if isinstance(disp_id, bool) and disp_id:
+        return display(content, display_id=True)
+    if isinstance(disp_id, DisplayHandle):
+        return disp_id.update(content)
+    display(content)
+    return None
 
 
 # pylint: enable=invalid-name
 
 
 @export
-def md_warn(string: str):
+def md_warn(string: str, disp_id: Optional[DisplayHandle] = None):
     """
     Return string as a warning - orange text prefixed by "Warning".
 
@@ -343,13 +366,25 @@ def md_warn(string: str):
     ----------
     string : str
         The warning message.
+    disp_id : Optional[DisplayHandle], optional
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
+
+    Returns
+    -------
+    DisplayHandle
+        A handle to the display object that can be used to update the
+        contents.
 
     """
-    md(f"Warning: {string}", "bold, orange, large")
+    return md(f"Warning: {string}", "bold, orange, large", disp_id)
 
 
 @export
-def md_error(string: str):
+def md_error(string: str, disp_id: Optional[DisplayHandle] = None):
     """
     Return string as an error - red text prefixed by "Error".
 
@@ -357,9 +392,15 @@ def md_error(string: str):
     ----------
     string : str
         The error message.
+    disp_id : Optional[Union[bool, DisplayHandle]], optional
+        If True, the function will return a display handle that can be re-used
+        in subsequent calls to update the display object.
+        If this is previously-created display handle, this is used as the
+        target display object to update it with the content of this call,
+        by default None
 
     """
-    md(f"Error: {string}", "bold, orange, large")
+    return md(f"Error: {string}", "bold, orange, large", disp_id)
 
 
 # Styles available to use in the above Markdown tools.
@@ -410,14 +451,14 @@ def check_kwarg(arg_name: str, legal_args: List[str]):
     """
     if arg_name not in legal_args:
         closest = difflib.get_close_matches(arg_name, legal_args)
-        mssg = f"{arg_name} is not a recognized argument. "
+        mssg = f"{arg_name} is not a recognized argument or attribute. "
         if len(closest) == 1:
             mssg += f"Closest match is '{closest[0]}'"
         elif closest:
             match_list = [f"'{mtch}'" for mtch in closest]
             mssg += f"Closest matches are {', '.join(match_list)}"
         else:
-            mssg += f"Valid arguments are {', '.join(legal_args)}"
+            mssg += f"Valid options are {', '.join(legal_args)}"
         raise NameError(arg_name, mssg)
 
 

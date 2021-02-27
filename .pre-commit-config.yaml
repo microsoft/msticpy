@@ -25,13 +25,12 @@ repos:
         args:
           - --extend-ignore=E0401,E501
           - --max-line-length=90
-          - --exclude=tests
+          - --exclude=tests,test*.py
   - repo: local
     hooks:
-      - id: download_tlds
-        name: download_tlds
-        entry: python -m pre-commit.download_tlds
+      - id: check_reqs_all
+        name: check_reqs_all
+        entry: python -m tools.create_reqs_all
         pass_filenames: False
         language: python
         types: [python]
-        args: [--tld-seed=./msticpy/sectools/tld_seed.txt]

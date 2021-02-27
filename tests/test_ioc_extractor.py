@@ -43,7 +43,7 @@ class TestIoCExtractor(unittest.TestCase):
         self.__run_extract(self.extractor, "ipv4", {"ipv4": 1})
 
     def test_ipv6(self):
-        self.__run_extract(self.extractor, "ipv6", {"ipv6": 2})
+        self.__run_extract(self.extractor, "ipv6", {"ipv6": 3})
 
     def test_url(self):
         self.__run_extract(self.extractor, "url", {"url": 2, "dns": 2, "ipv4": 0})
@@ -76,7 +76,7 @@ class TestIoCExtractor(unittest.TestCase):
 
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
@@ -103,7 +103,7 @@ class TestIoCExtractor(unittest.TestCase):
         #     print(row.Observable)
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)
@@ -141,7 +141,7 @@ class TestIoCExtractor(unittest.TestCase):
 
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 6)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 0)
@@ -168,7 +168,7 @@ class TestIoCExtractor(unittest.TestCase):
         #     print(row.Observable)
         self.assertGreater(output_df.shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "ipv4"].shape[0], 3)
-        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 2)
+        self.assertEqual(output_df[output_df["IoCType"] == "ipv6"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "url"].shape[0], 3)
         self.assertEqual(output_df[output_df["IoCType"] == "windows_path"].shape[0], 0)
         self.assertEqual(output_df[output_df["IoCType"] == "linux_path"].shape[0], 8)

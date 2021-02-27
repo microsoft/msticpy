@@ -18,16 +18,7 @@ from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.utility import export, valid_pyname
 from .browsers.query_browser import browse_queries
-from .drivers import (
-    DriverBase,
-    KqlDriver,
-    LocalDataDriver,
-    MDATPDriver,
-    MordorDriver,
-    SecurityGraphDriver,
-    SplunkDriver,
-    SumologicDriver,
-)
+from .drivers import import_driver, DriverBase
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -37,18 +28,8 @@ from .query_store import QueryStore
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_PROVIDER_DIR = "providers"
 
-_ENVIRONMENT_DRIVERS = {
-    DataEnvironment.LogAnalytics: KqlDriver,
-    DataEnvironment.AzureSecurityCenter: KqlDriver,
-    DataEnvironment.SecurityGraph: SecurityGraphDriver,
-    DataEnvironment.MDATP: MDATPDriver,
-    DataEnvironment.LocalData: LocalDataDriver,
-    DataEnvironment.Splunk: SplunkDriver,
-    DataEnvironment.Mordor: MordorDriver,
-    DataEnvironment.Sumologic: SumologicDriver,
-}
+_DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
 
 
 @export
@@ -96,15 +77,15 @@ class QueryProvider:
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
 
-        self._environment = data_environment.name
+        self.environment = data_environment.name
 
         if driver is None:
-            driver_class = _ENVIRONMENT_DRIVERS[data_environment]
+            driver_class = import_driver(data_environment)
             if issubclass(driver_class, DriverBase):
                 driver = driver_class(**kwargs)  # type: ignore
             else:
                 raise LookupError(
-                    "Could not find suitable data provider for", f" {self._environment}"
+                    "Could not find suitable data provider for", f" {self.environment}"
                 )
 
         self._query_provider = driver
@@ -116,8 +97,8 @@ class QueryProvider:
             data_env_queries.update(
                 self._read_queries_from_paths(query_paths=query_paths)
             )
-        self._query_store = data_env_queries.get(
-            self._environment, QueryStore(self._environment)
+        self.query_store = data_env_queries.get(
+            self.environment, QueryStore(self.environment)
         )
         self._add_query_functions()
 
@@ -214,7 +195,7 @@ class QueryProvider:
             Path to the file to import
 
         """
-        self._query_store.import_file(query_file)
+        self.query_store.import_file(query_file)
         self._add_query_functions()
 
     @classmethod
@@ -240,15 +221,15 @@ class QueryProvider:
             List of queries
 
         """
-        return list(self._query_store.query_names)
+        return list(self.query_store.query_names)
 
     def query_help(self, query_name):
         """Print help for query."""
-        self._query_store[query_name].help()
+        self.query_store[query_name].help()
 
     def get_query(self, query_name) -> str:
         """Return the raw query text."""
-        return self._query_store[query_name].query
+        return self.query_store[query_name].query
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """
@@ -302,7 +283,7 @@ class QueryProvider:
         query_name = kwargs.pop("query_name")
         family = kwargs.pop("query_path")
 
-        query_source = self._query_store.get_query(
+        query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
         )
         if "help" in args or "?" in args:
@@ -329,7 +310,10 @@ class QueryProvider:
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
-        if "print" in args or "query" in args:
+        # This looks for any of the "print query" debug args in args or kwargs
+        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
+            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
+        ):
             return query_str
 
         # Handle any query options passed
@@ -399,7 +383,7 @@ class QueryProvider:
             query_func = partial(
                 self._execute_query, query_path=query_cont_name, query_name=query_name
             )
-            query_func.__doc__ = self._query_store.get_query(
+            query_func.__doc__ = self.query_store.get_query(
                 query_path=query_cont_name, query_name=query_name
             ).create_doc_string()
 
@@ -410,7 +394,7 @@ class QueryProvider:
     def _add_driver_queries(self, queries: Iterable[Dict[str, str]]):
         """Add driver queries to the query store."""
         for query in queries:
-            self._query_store.add_query(
+            self.query_store.add_query(
                 name=query["name"],
                 query=query["query"],
                 query_paths=query["query_container"],
@@ -452,7 +436,10 @@ class QueryProvider:
             )
             for q_start, q_end in ranges
         ]
-        if "print" in args or "query" in args:
+        # This looks for any of the "print query" debug args in args or kwargs
+        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
+            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
+        ):
             return "\n\n".join(split_queries)
 
         # Retrive any query options passed (other than query params)

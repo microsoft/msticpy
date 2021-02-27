@@ -22,7 +22,8 @@ from IPython.display import HTML, display
 from ipywidgets import Layout
 
 from .._version import VERSION
-from ..common.utility import export
+from ..common.utility import export, check_kwargs
+from ..common.timespan import TimeSpan
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -64,7 +65,7 @@ class RegisteredWidget(ABC):
 
     Registered widgets will store their values in the register.
     Each widget has an ID that that is derived from one or more of the
-    initializatio parameters. If an instance of the same widget class is
+    initialization parameters. If an instance of the same widget class is
     created with the same parameters, its previous value will be repopulated
     from the registry.
     This is especially useful in notebooks where people accidently re-run
@@ -86,7 +87,7 @@ class RegisteredWidget(ABC):
         Parameters
         ----------
         id_vals : Optional[List[Any]], optional
-            The list of parameter names to use to identify this widget instance,
+            The list of parameter values to use to identify this widget instance,
             by default None
         val_attrs : Optional[List[str]], optional
             The names of the attributes to persist in the registry
@@ -205,6 +206,11 @@ class Lookback:
         if auto_display:
             self.display()
 
+    @property
+    def layout(self):
+        """Return underlying widget."""
+        return self._lookback_wgt
+
     def display(self):
         """Display the interactive widgets."""
         display(self._lookback_wgt)
@@ -231,16 +237,17 @@ class Lookback:
 
 
 def _default_max_buffer(max_default, default, unit) -> int:
+    mag_default = abs(int(default * 4))
     if max_default is not None:
         max_value = abs(max_default)
-        return max(max_value, int(default * 2))
+        return max(max_value, mag_default)
     if unit == TimeUnit.day:
-        return max(7, int(default * 2))
+        return max(7, mag_default)
     if unit == TimeUnit.hour:
-        return max(24, int(default * 2))
+        return max(24, mag_default)
     if unit == TimeUnit.week:
-        return max(4, int(default * 2))
-    return max(120, int(default * 2))
+        return max(4, mag_default)
+    return max(120, mag_default)
 
 
 def _default_before_after(default, unit) -> int:
@@ -268,19 +275,26 @@ class QueryTime(RegisteredWidget):
 
     """
 
+    _ALLOWED_KWARGS = [
+        "origin_time",
+        "before",
+        "after",
+        "start",
+        "end",
+        "max_before",
+        "max_after",
+        "label",
+        "description",
+        "units",
+        "auto_display",
+        "timespan",
+        "register",
+    ]
+
     _label_style = {"description_width": "initial"}
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
-        origin_time: datetime = None,
-        before: Optional[int] = None,
-        after: Optional[int] = None,
-        max_before: Optional[int] = None,
-        max_after: Optional[int] = None,
-        label: str = None,
-        units: str = "min",
-        auto_display: bool = False,
         **kwargs,
     ):
         """
@@ -299,6 +313,15 @@ class QueryTime(RegisteredWidget):
         after : int, optional
             The default number of `units` after the `origin_time`
             (the default varies based on the unit)
+        start : Union[datetime, str]
+            Start of query time - alternative to specifying origin,
+            before, after
+        end : Union[datetime, str]
+            End of query time - alternative to specifying origin,
+            before, after
+        timespan : TimeSpan
+            TimeSpan of query time - alternative to specifying origin,
+            before, after
         max_before : int, optional
             The largest value for `before` (the default varies based on the unit)
         max_after : int, optional
@@ -313,27 +336,39 @@ class QueryTime(RegisteredWidget):
             Whether to display on instantiation (the default is False)
 
         """
-        self._label = "Set query time boundaries" if label is None else label
-        self._time_unit = _parse_time_unit(units)
-
-        self.before = _default_before_after(before, self._time_unit)
-        self.after = _default_before_after(after, self._time_unit)
-        self.max_before = _default_max_buffer(max_before, self.before, self._time_unit)
-        self.max_after = _default_max_buffer(max_after, self.after, self._time_unit)
-
-        # default to now
-        self.origin_time = datetime.utcnow() if origin_time is None else origin_time
-        # Calculate time offsets from origin
-        self._query_start = self.origin_time - timedelta(
-            0, self.before * self._time_unit.value
+        check_kwargs(kwargs, self._ALLOWED_KWARGS)
+        self._label = kwargs.pop(
+            "description", kwargs.pop("label", "Set query time boundaries")
         )
-        self._query_end = self.origin_time + timedelta(
-            0, self.after * self._time_unit.value
-        )
+        self._time_unit = _parse_time_unit(kwargs.get("units", "min"))
+
+        self.before = kwargs.pop("before", None)
+        self.after = kwargs.pop("after", None)
+        self._query_start = self._query_end = self.origin_time = datetime.utcnow
+        self._get_time_parameters(**kwargs)
+
+        self.max_before = kwargs.pop("max_before", 0)
+        self.max_after = kwargs.pop("max_after", 0)
+        self._adjust_max_before_after()
 
         # Call superclass to register
-        ids_params = [origin_time, before, after, max_before, max_after, label, units]
-        ids_attribs = ["origin_time", "before", "after", "_query_start", "_query_end"]
+        ids_params = [
+            self.origin_time,
+            self.before,
+            self.after,
+            self.max_before,
+            self.max_after,
+            self._label,
+            self._time_unit,
+        ]
+        ids_attribs = [
+            "origin_time",
+            "before",
+            "after",
+            "_query_start",
+            "_query_end",
+            "_label",
+        ]
         super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
 
         # Create widgets
@@ -375,21 +410,81 @@ class QueryTime(RegisteredWidget):
             style=self._label_style,
         )
 
+        # Add change event handlers
         self._w_tm_range.observe(self._time_range_change, names="value")
         self._w_origin_dt.observe(self._update_origin, names="value")
         self._w_origin_tm.observe(self._update_origin, names="value")
 
-        if auto_display:
+        self.layout = self._create_layout()
+        if kwargs.pop("auto_display", False):
             self.display()
+
+    def _create_layout(self):
+        return widgets.VBox(
+            [
+                widgets.HTML("<h4>{}</h4>".format(self._label)),
+                widgets.HBox([self._w_origin_dt, self._w_origin_tm]),
+                widgets.VBox(
+                    [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+                ),
+            ]
+        )
 
     def display(self):
         """Display the interactive widgets."""
-        display(widgets.HTML("<h4>{}</h4>".format(self._label)))
-        display(widgets.HBox([self._w_origin_dt, self._w_origin_tm]))
-        display(
-            widgets.VBox(
-                [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+        display(self.layout)
+
+    def _get_time_parameters(self, **kwargs):
+        """Process different init time parameters."""
+        timespan: TimeSpan = kwargs.pop("timespan", None)
+        start = kwargs.pop("start", None)
+        end = kwargs.pop("end", None)
+        if timespan:
+            self._query_end = self.origin_time = timespan.end
+            self._query_start = timespan.start
+        elif start and end:
+            timespan = TimeSpan(start=start, end=end)
+            self._query_start = timespan.start
+            self._query_end = self.origin_time = timespan.end
+        else:
+            self.origin_time = kwargs.pop("origin_time", datetime.utcnow())
+            self.before = _default_before_after(self.before, self._time_unit)
+            self.after = _default_before_after(self.after, self._time_unit)
+            # Calculate time offsets from origin
+            self._query_start = self.origin_time - timedelta(
+                0, self.before * self._time_unit.value
             )
+            self._query_end = self.origin_time + timedelta(
+                0, self.after * self._time_unit.value
+            )
+            timespan = TimeSpan(start=self._query_start, end=self._query_end)
+        if "units" not in kwargs:
+            self._infer_time_units()
+        if self.after is None:
+            self.after = 0
+        if self.before is None:
+            self.before = int(
+                (self._query_end - self._query_start).total_seconds()
+                / self._time_unit.value
+            )
+
+    def _infer_time_units(self):
+        # If time units not set explicitly, set to something sensible,
+        # based on start/end times
+        if abs(self.timespan.period.days) > 1:
+            self._time_unit = TimeUnit.day
+        elif abs(self.timespan.period.total_seconds()) > 3600:
+            self._time_unit = TimeUnit.hour
+        else:
+            self._time_unit = TimeUnit.minute
+
+    def _adjust_max_before_after(self):
+        """Adjust the max values so the are always bigger than the defaults."""
+        self.max_before = _default_max_buffer(
+            self.max_before, self.before or 1, self._time_unit
+        )
+        self.max_after = _default_max_buffer(
+            self.max_after, self.after or 1, self._time_unit
         )
 
     def _update_origin(self, change):
@@ -421,6 +516,16 @@ class QueryTime(RegisteredWidget):
     def end(self):
         """Query end time."""
         return self._query_end
+
+    @property
+    def units(self):
+        """Time units used by control."""
+        return self._time_unit.name
+
+    @property
+    def timespan(self):
+        """Return the timespan as a TimeSpan object."""
+        return TimeSpan(start=self.start, end=self.end)
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -518,13 +623,14 @@ class SelectAlert:
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
         self._w_select_alert.observe(self._select_alert, names="value")
+        self.layout = widgets.VBox([self._w_filter_alerts, self._w_select_alert])
 
         if auto_display:
             self.display()
 
     def display(self):
         """Display the interactive widgets."""
-        display(widgets.VBox([self._w_filter_alerts, self._w_select_alert]))
+        display(self.layout)
         display(HTML("<hr>"))
         self._select_top_alert()
 
@@ -786,6 +892,11 @@ class GetEnvironmentKey(RegisteredWidget):
         """Get the current name of the key."""
         return self._name
 
+    @property
+    def layout(self):
+        """Return underlying widget collection."""
+        return self._hbox
+
     def display(self):
         """Display the interactive widgets."""
         display(self._hbox)
@@ -856,6 +967,11 @@ class GetText(RegisteredWidget):
         self._value = change.get("new")
 
     @property
+    def layout(self):
+        """Return underlying widget collection."""
+        return self._w_text
+
+    @property
     def value(self):
         """Get the current value of the key."""
         return self._value.strip()
@@ -864,7 +980,7 @@ class GetText(RegisteredWidget):
         """Display the interactive widgets."""
         if self._value:
             self._w_text.value = self._value
-        display(self._w_text)
+        display(self.layout)
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -992,24 +1108,27 @@ class SelectItem:
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
-        display_objs = bool(self._disp_elems)
+        display_objs = dict(enumerate(self._disp_elems))
         for idx, out_obj in enumerate(output_objs):
-            if not display_objs:
+            if idx not in display_objs:
                 self._disp_elems.append(
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
             else:
-                if idx == len(self._disp_elems):
-                    break
                 self._disp_elems[idx].update(out_obj)
 
-    def display(self):
-        """Display the interactive widget."""
+    @property
+    def layout(self):
+        """Return underlying widget collection."""
         wgt_list = []
         if self._display_filter:
             wgt_list.append(self._w_filter)
         wgt_list.append(self._wgt_select)
-        display(widgets.VBox(wgt_list))
+        return widgets.VBox(wgt_list)
+
+    def display(self):
+        """Display the interactive widget."""
+        display(self.layout)
         display(HTML("<hr>"))
         self._show_top_item()
 
@@ -1150,9 +1269,9 @@ class SelectSubset:
         else:
             self._src_dict = {}
 
-        layout = widgets.Layout(width="40%", height="200px")
+        w_layout = widgets.Layout(width="40%", height="200px")
         self._source_list = widgets.SelectMultiple(
-            options=sorted(set(self.src_items)), layout=layout, description="Source: "
+            options=sorted(set(self.src_items)), layout=w_layout, description="Source: "
         )
 
         if isinstance(default_selected, dict):
@@ -1164,7 +1283,7 @@ class SelectSubset:
             selected_items = []
 
         self._select_list = widgets.SelectMultiple(
-            options=selected_items, layout=layout, description="Selected: "
+            options=selected_items, layout=w_layout, description="Selected: "
         )
 
         self._display_filter = display_filter
@@ -1465,7 +1584,7 @@ class OptionButtons:
             self._out = widgets.Output()
 
     @property
-    def _layout(self):
+    def layout(self):
         """Create layout for buttons."""
         return widgets.VBox(
             [self._desc_label, widgets.HBox([*(self._buttons), self._timer_label])]
@@ -1512,8 +1631,7 @@ class OptionButtons:
                 self._debug_out("*")
 
     async def _await_timer(self, timeout: int = 5):
-        if timeout <= 0:
-            timeout = 0
+        timeout = max(timeout, 0)
         while timeout > 0:
             self._timer_label.value = f"Waiting {timeout} sec..."
             if self.value:
@@ -1537,7 +1655,7 @@ class OptionButtons:
         """
         if reset:
             self.value = None
-        display(self._layout)
+        display(self.layout)
         if self._debug:
             display(self._out)
         self._fut_val = asyncio.ensure_future(self._await_widget())
@@ -1546,7 +1664,7 @@ class OptionButtons:
 
     def display(self):
         """Display widget in simple sync mode."""
-        display(self._layout)
+        display(self.layout)
 
     def _ipython_display_(self):
         """Display in IPython."""

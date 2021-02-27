@@ -68,7 +68,7 @@ class QueryProviderDemo(QueryProvider):
         else:
             with open(data_src_file, "r") as src_file:
                 data_srcs = yaml.safe_load(src_file)
-        self._query_store = {}
+        self.query_store = {}
         self._query_provider = _DataDriver()
         self.all_queries = QueryContainer()
         self._add_demo_query_functions(data_srcs)
@@ -91,7 +91,7 @@ class QueryProviderDemo(QueryProvider):
 
                 setattr(query_family, query_name, query_func)
                 setattr(self.all_queries, query_name, query_func)
-                self._query_store[f"{family}.{query_name}"] = file_name
+                self.query_store[f"{family}.{query_name}"] = file_name
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -153,11 +153,11 @@ class QueryProviderDemo(QueryProvider):
             List of queries
 
         """
-        return list(self._query_store.items())
+        return list(self.query_store.items())
 
     def query_help(self, query_name):
         """Print help for query."""
-        print(f"query_prov.{self._query_store[query_name]}(**kwargs)")
+        print(f"query_prov.{self.query_store[query_name]}(**kwargs)")
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
         """

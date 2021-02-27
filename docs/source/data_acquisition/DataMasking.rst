@@ -1,18 +1,18 @@
-Data Obfuscation Functions
-==========================
+Data Masking Functions
+======================
 
 Sharing data, creating documents and doing public demonstrations often
 require that data containing PII or other sensitive material be
-obfuscated.
+masked.
 
 MSTICPy contains a simple library to obfuscate data using hashing and
 random mapping of values. You can use these functions on a single data
 items or entire DataFrames.
 
-.. warning:: These functions are only intended to obfuscate data. No
+.. warning:: These functions are only intended to mask data. No
    real attempt is made to preserve the syntax and meaning of the output.
    We recommend not trying to use an obfuscated data set as the input
-   to any analysis. Instead, perform your analysis and obfuscate the
+   to any analysis. Instead, perform your analysis and mask the
    results.
 
 Import the module
@@ -25,8 +25,8 @@ Import the module
 See :py:mod:`data_obfus<msticpy.data.data_obfus>` for API details.
 
 
-Individual Obfuscation Functions
---------------------------------
+Individual Masking Functions
+----------------------------
 
 In the examples below we’re importing individual functions from the data_obfus module
 but you can access them with the single import statement show above as
@@ -58,7 +58,7 @@ does a simple hash of the input. If the input is a numeric string it will output
     Returns
     -------
     str
-        The obfuscated output string
+        The masked output string
 
 
 **Examples**
@@ -97,7 +97,7 @@ look of domains, emails, etc.
     Returns
     -------
     str
-        The obfuscated output string
+        The masked output string
 
 
 
@@ -131,7 +131,7 @@ reserved private addresses are preserved.
 
 .. note:: IPV6 addresses have their individual components hashed to a
    hex string and do not use this mapping. This should still result in
-   a given input IP address being mapped to the same obfuscated address.
+   a given input IP address being mapped to the same masked address.
    The output IPV6 address will usually not be a valid IP address though.
 
 
@@ -183,7 +183,7 @@ hash_sid
 :py:func:`hash_sid<msticpy.data.data_obfus.hash_sid>`
 will randomize the domain-specific parts of a Windows SID.
 It preserves built-in SIDs and well known RIDs (e.g. Admins '-500' RID will be
-preserved in the obfuscated output). Built-in SIDs (such as LocalSystem and
+preserved in the masked output). Built-in SIDs (such as LocalSystem and
 NetworkService are preserved as-is.
 
 .. parsed-literal::
@@ -217,7 +217,7 @@ hash_account
 
 :py:func:`hash_sid<msticpy.data.data_obfus.hash_account>`
 will randomize an account name while preserving the structure
-and the one-to-one mapping between obfuscated and actual account names.
+and the one-to-one mapping between masked and actual account names.
 It preserves built-in accounts such as "root", "SYSTEM", etc.
 
 .. parsed-literal::
@@ -365,15 +365,15 @@ to the same output UUID.
 
 
 
-Obfuscating DataFrames
-----------------------
+Masking DataFrames
+------------------
 
-We can use the msticpy pandas extension to obfuscate an entire
+We can use the msticpy pandas extension to mask the data in an entire
 DataFrame.
 
-See :py:meth:`mp_obf.obfuscate<msticpy.data.data_obfus.ObfuscationAccessor.obfuscate>`
+See :py:meth:`mp_obf.obfuscate<msticpy.data.data_obfus.ObfuscationAccessor.mask>`
 
-The obfuscation library contains a mapping for a number of common field
+The masking library contains a mapping for a number of common field
 names. You can view this list by displaying the attribute:
 
 ::
@@ -381,12 +381,15 @@ names. You can view this list by displaying the attribute:
    data_obfus.OBFUS_COL_MAP
 
 In the first example, the TenantId, ResourceGroup, VMName have been
-obfuscated.
+masked.
 
 .. code:: ipython3
 
     display(netflow_df.head(3))
-    netflow_df.head(3).mp_obf.obfuscate()
+    netflow_df.head(3).mp_mask.mask()
+
+.. warning:: The pandas extension and method were renamed from
+   msticpy 0.9.0 from mp_obfus.obfuscate() to mp_mask.mask()
 
 
 
@@ -410,7 +413,7 @@ TenantId                              TimeGenerated            FlowStartTime    
 68a5a31d-7516-4c54-ad27-3b1360ce0b56  2019-02-12 14:22:40.681  2019-02-12 13:00:48.000  ibmkajbmepnmiaeilfofa  msticalertswin1  10.0.3.5       ['13.71.172.130', '13.71.172.128']      nan       nan  T             13.71.172.130
 ====================================  =======================  =======================  =====================  ===============  =============  ==================================  =======  ========  ============  =============
 
-TenantId and ResourceGroup have been obfuscated but VMName and the IPAddress fields have not.
+TenantId and ResourceGroup have been masked but VMName and the IPAddress fields have not.
 
 
 
@@ -434,7 +437,7 @@ obfuscation. See the later section on :ref:`creating_custom_mappings`.
         "AllExtIPs": "ip"
     }
 
-    netflow_df.head(3).mp_obf.obfuscate(column_map=col_map)
+    netflow_df.head(3).mp_mask.mask(column_map=col_map)
 
 Output DataFrame after applying custom column mappings
 
@@ -447,12 +450,16 @@ TenantId                              TimeGenerated            FlowStartTime    
 ====================================  =======================  =======================  =====================  ===============  ===============  ==================================  =======  ========  ============  =============
 
 
-obfuscate_df
+mask_df
 ~~~~~~~~~~~~
 
 You can also call the standard function
-:py:func:`obfuscate_df<msticpy.data.data_obfus.obfuscate_df>` to perform the
+:py:func:`obfuscate_df<msticpy.data.data_obfus.mask_df>` to perform the
 same operation on the DataFrame passed as the *data* parameter.
+
+.. warning:: This function was renamed from obfuscate_df to mask_df in
+   msticpy 0.9.0. The previous function name still exists as an alias of
+   mask_df
 
 .. code:: ipython3
 
@@ -478,11 +485,11 @@ A custom mapping dictionary has entries in the following form:
 
        "ColumnName": "operation"
 
-The *operation* defines the type of obfuscation method used for that
+The *operation* defines the type of masking method used for that
 column. Both the column and the operation code must be quoted.
 
 ============== ====================
-operation code obfuscation function
+operation code masking function
 ============== ====================
 “uuid”         replace_guid
 “ip”           hash_ip
@@ -509,7 +516,7 @@ See next section for a discussion of use of delimiters.
 
 .. note:: If you want to *only* use custom mappings and ignore the
    builtin mapping table, specify *use_default=False* as a parameter
-   to either *mp_obf.obfuscate()* or *obfuscate_df*.
+   to either *mp_mask.mask()* or *mask_df*.
 
 
 Using *hash_item* to preserve the structure/look of the hashed input
@@ -562,33 +569,33 @@ something like an email address in the output.
 You use *hash_item* in your Custom Mapping dictionary by specifying a
 delimiters string as the *operation*.
 
-Checking Your Obfuscation
--------------------------
+Checking Your Masking Results
+-----------------------------
 
-Use the :py:func:`check_obfuscation<msticpy.data.data_obfus.check_obfuscation>`
-function to ensure that you have obfuscated all of the data columns that
+Use the :py:func:`check_masking<msticpy.data.data_obfus.check_masking>`
+function to ensure that you have masked all of the data columns that
 you need.
 
-Use `silent=False` to print out the results.
-If you use `silent=True` (the default) it will return 2 lists of `unchanged` and
-`obfuscated` columns.
+Use ``silent=False`` to print out the results.
+If you use ``silent=True`` (the default) it will return 2 lists of ``unchanged`` and
+``obfuscated`` columns.
 
 .. note:: by default this will check only the first row of the data.
    You can check other rows using the index parameter.
 
 .. warning:: The two DataFrames should have a matching index and ordering because
    the check works by comparing the values in each column, judging that
-   column values that do not match have been obfuscated.
+   column values that do not match have been masked.
 
 
-We create partially and fully obfuscated DataFrames to test and run the
+We create partially and fully masked DataFrames to test and run the
 check against the first of these. We can see that several important columns
 are listed as unchanged.
 
 .. code:: ipython3
 
-    partly_obfus_df = netflow_df.head(3).mp_obf.obfuscate()
-    fully_obfus_df = netflow_df.head(3).mp_obf.obfuscate(column_map=col_map)
+    partly_obfus_df = netflow_df.head(3).mp_mask.mask()
+    fully_obfus_df = netflow_df.head(3).mp_mask.mask(column_map=col_map)
 
     data_obfus.check_obfuscation(partly_obfus_df, netflow_df.head(3), silent=False)
 
@@ -614,12 +621,12 @@ are listed as unchanged.
     ====== End Check =====
 
 
-Test the fully obfuscated data, we can see that all desired columns have
+Test the fully masked data, we can see that all desired columns have
 been transformed.
 
 .. code:: ipython3
 
-    data_obfus.check_obfuscation(fully_obfus_df, netflow_df.head(3), silent=False)
+    data_obfus.check_masking(fully_obfus_df, netflow_df.head(3), silent=False)
 
 .. parsed-literal::
 

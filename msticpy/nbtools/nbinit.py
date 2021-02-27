@@ -17,10 +17,19 @@ from IPython.display import display, HTML
 import ipywidgets as widgets
 from matplotlib import MatplotlibDeprecationWarning
 import pandas as pd
-import seaborn as sns
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
 
 from ..common.exceptions import MsticpyUserError, MsticpyException
-from ..common.utility import check_and_install_missing_packages, unit_testing, md
+from ..common.utility import (
+    check_and_install_missing_packages,
+    unit_testing,
+    md,
+    check_kwargs,
+)
 from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .._version import VERSION
@@ -110,10 +119,8 @@ def init_notebook(
     namespace: Dict[str, Any],
     def_imports: str = "all",
     additional_packages: List[str] = None,
-    user_install: bool = False,
     extra_imports: List[str] = None,
-    friendly_exceptions: Optional[bool] = None,
-    verbose: bool = False,
+    **kwargs,
 ) -> bool:
     """
     Initialize the notebook environment.
@@ -160,6 +167,8 @@ def init_notebook(
         Defaults to system/user settings if no value is supplied.
     verbose : bool, optional
         Display more verbose status, by default False
+    no_config_check : bool, optional
+        Skip the check for valid configuration.
 
     Returns
     -------
@@ -174,6 +183,14 @@ def init_notebook(
         information.
 
     """
+    check_kwargs(
+        kwargs, ["user_install", "friendly_exceptions", "no_config_check", "verbose"]
+    )
+    user_install: bool = kwargs.pop("user_install", False)
+    friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
+    no_config_check: bool = kwargs.pop("no_config_check", False)
+    verbose: bool = kwargs.pop("verbose", False)
+
     _VERBOSE(verbose)
 
     print("Processing imports....")
@@ -181,8 +198,11 @@ def init_notebook(
         namespace, additional_packages, user_install, extra_imports, def_imports
     )
 
-    print("Checking configuration....")
-    conf_ok, _ = _check_config()
+    if no_config_check:
+        conf_ok = True
+    else:
+        print("Checking configuration....")
+        conf_ok, _ = _check_config()
 
     print("Setting notebook options....")
     _set_nb_options(namespace)
@@ -297,7 +317,8 @@ def _set_nb_options(namespace):
     # APIs - we can't do anything about it, so suppress them from view
     warnings.simplefilter("ignore", category=MatplotlibDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    sns.set()
+    if sns:
+        sns.set()
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
@@ -323,7 +344,7 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
         mod = importlib.import_module(module_name)
     except ImportError:
         display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
-        raise
+        return None
     if alias:
         nm_spc[alias] = mod
     else:
@@ -339,7 +360,7 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
         imported_mod = importlib.import_module(module_name)
     except ImportError:
         display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
-        raise
+        return
     for item in dir(imported_mod):
         if item.startswith("_"):
             continue
@@ -363,7 +384,7 @@ def _imp_from_package(
             mod = importlib.import_module(pkg)
         except ImportError:
             display(HTML(_IMPORT_MODULE_MSSG.format(module=pkg)))
-            raise
+            return None
         obj = getattr(mod, tgt)
     if alias:
         nm_spc[alias] = obj

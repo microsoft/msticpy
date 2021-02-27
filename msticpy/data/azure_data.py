@@ -11,13 +11,7 @@ import attr
 import pandas as pd
 import numpy as np
 
-
 from azure.mgmt.subscription import SubscriptionClient
-from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.monitor import MonitorClient
-from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import VirtualMachineInstanceView
 from azure.common.exceptions import CloudError
 
 from ..common.azure_auth import az_connect
@@ -27,7 +21,26 @@ from ..common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyNotConnectedError,
     MsticpyResourceException,
+    MsticpyImportExtraError,
 )
+
+try:
+    from azure.mgmt.resource import ResourceManagementClient
+    from azure.mgmt.network import NetworkManagementClient
+
+    try:
+        # Try new version but keep backward compat with 1.0.1
+        from azure.mgmt.monitor import MonitorManagementClient
+    except ImportError:
+        from azure.mgmt.monitor import MonitorClient as MonitorManagementClient
+    from azure.mgmt.compute import ComputeManagementClient
+    from azure.mgmt.compute.models import VirtualMachineInstanceView
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without azure packages installed",
+        title="Error importing azure module",
+        extra="azure",
+    ) from imp_err
 
 from .._version import VERSION
 
@@ -38,7 +51,7 @@ _CLIENT_MAPPING = {
     "sub_client": SubscriptionClient,
     "resource_client": ResourceManagementClient,
     "network_client": NetworkManagementClient,
-    "monitoring_client": MonitorClient,
+    "monitoring_client": MonitorManagementClient,
     "compute_client": ComputeManagementClient,
 }
 
@@ -103,9 +116,9 @@ class AzureData:
         self.sub_client: Optional[SubscriptionClient] = None
         self.resource_client: Optional[ResourceManagementClient] = None
         self.network_client: Optional[NetworkManagementClient] = None
-        self.monitoring_client: Optional[MonitorClient] = None
+        self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
-        if connect is True:
+        if connect:
             self.connect()
 
     def connect(
@@ -151,15 +164,13 @@ class AzureData:
             display_names.append(item.display_name)
             states.append(str(item.state))
 
-        sub_details = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "Subscription ID": subscription_ids,
                 "Display Name": display_names,
                 "State": states,
             }
         )
-
-        return sub_details
 
     def get_subscription_info(self, sub_id: str) -> dict:
         """
@@ -183,7 +194,7 @@ class AzureData:
             self._legacy_auth("sub_client")
             sub = self.sub_client.subscriptions.get(sub_id)  # type: ignore
 
-        sub_details = {
+        return {
             "Subscription ID": sub.subscription_id,
             "Display Name": sub.display_name,
             "State": str(sub.state),
@@ -191,8 +202,6 @@ class AzureData:
             "Subscription Quota": sub.subscription_policies.quota_id,
             "Spending Limit": sub.subscription_policies.spending_limit,
         }
-
-        return sub_details
 
     def get_resources(  # noqa: MC0001
         self, sub_id: str, rgroup: str = None, get_props: bool = False
@@ -237,14 +246,14 @@ class AzureData:
                 resources.append(resource)
 
         # Warn users about getting full properties for each resource
-        if get_props is True:
+        if get_props:
             print("Collecting properties for every resource may take some time...")
 
         resource_items = []
 
         # Get properites for each resource
         for resource in resources:
-            if get_props is True:
+            if get_props:
                 if resource.type == "Microsoft.Compute/virtualMachines":
                     state = self._get_compute_state(
                         resource_id=resource.id, sub_id=sub_id
@@ -283,9 +292,7 @@ class AzureData:
             )
             resource_items.append(resource_details)
 
-        resource_df = pd.DataFrame(resource_items)
-
-        return resource_df
+        return pd.DataFrame(resource_items)
 
     def get_resource_details(  # noqa: MC0001
         self, sub_id: str, resource_id: str = None, resource_details: dict = None

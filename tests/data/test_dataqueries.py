@@ -4,19 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
-from datetime import datetime
 import unittest
+import warnings
+from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Tuple, Union, Optional, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
-
 from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
 from msticpy.data.query_source import QuerySource
 
 from ..unit_test_lib import get_test_data_path
-
 
 _TEST_DATA = get_test_data_path()
 
@@ -93,9 +92,11 @@ class TestDataQuery(unittest.TestCase):
         provider.connect("testuri")
         self.assertTrue(provider.connected)
         self.provider = provider
-        self.la_provider = QueryProvider(
-            data_environment="LogAnalytics", driver=self.provider
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            self.la_provider = QueryProvider(
+                data_environment="LogAnalytics", driver=self.provider
+            )
 
     def test_load_kql_query_defs(self):
         """Test loading query definitions."""
@@ -104,7 +105,7 @@ class TestDataQuery(unittest.TestCase):
         self.assertEqual(getattr(la_provider, "test"), "CustomAttrib")
 
         # Did we read and process the query definitions OK
-        q_sources = la_provider._query_store.data_families
+        q_sources = la_provider.query_store.data_families
         self.assertGreaterEqual(len(q_sources["WindowsSecurity"]), 9)
         self.assertGreaterEqual(len(q_sources["SecurityAlert"]), 5)
         self.assertGreaterEqual(len(q_sources["LinuxSyslog"]), 5)
@@ -165,7 +166,7 @@ class TestDataQuery(unittest.TestCase):
         provider = QueryProvider(data_environment="SecurityGraph", driver=self.provider)
 
         # Did we read and process the query definitions OK
-        q_sources = provider._query_store.data_families
+        q_sources = provider.query_store.data_families
         self.assertGreaterEqual(len(q_sources["SecurityGraphAlert"]), 7)
 
         # pick one item and check properties
@@ -259,7 +260,7 @@ class TestDataQuery(unittest.TestCase):
         la_provider = self.la_provider
         file_path = Path(_TEST_DATA, "data_q_hierarchy.yaml")
         la_provider.import_query_file(query_file=file_path)
-        q_store = la_provider._query_store
+        q_store = la_provider.query_store
 
         q_src = q_store.get_query("Alerts.type1.query1")
         self.assertIsInstance(q_src, QuerySource)
@@ -279,7 +280,7 @@ class TestDataQuery(unittest.TestCase):
         la_provider = self.la_provider
         file_path = Path(_TEST_DATA, "data_q_hierarchy.yaml")
         la_provider.import_query_file(query_file=file_path)
-        q_store = la_provider._query_store
+        q_store = la_provider.query_store
 
         result = list(q_store.find_query("query1"))
         self.assertGreaterEqual(len(result), 1)
@@ -308,7 +309,7 @@ class TestDataQuery(unittest.TestCase):
             )
 
         # Check that we have expected query text
-        q_store = data_provider._query_store
+        q_store = data_provider.query_store
         q_src = q_store.get_query("SavedSearches.test.query3")
         self.assertEqual(q_src.query, _TEST_QUERIES[2]["query"])
 
@@ -335,7 +336,7 @@ class TestDataQuery(unittest.TestCase):
                 isinstance(getattr(saved_searches, attr), (partial, QueryContainer))
             )
 
-        q_store = data_provider._query_store
+        q_store = data_provider.query_store
         q_src = q_store.get_query("Saved.Searches.test.query3")
         self.assertEqual(q_src.query, dotted_container_qs[2]["query"])
 

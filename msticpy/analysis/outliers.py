@@ -18,10 +18,19 @@ from typing import List, Tuple
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.ensemble import IsolationForest
 
+from ..common.exceptions import MsticpyImportExtraError
 from .._version import VERSION
+
+try:
+    import matplotlib.pyplot as plt
+    from sklearn.ensemble import IsolationForest
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without Sklearn and matplotlib installed",
+        title="Error importing Scikit Learn and matplotlib",
+        extra="ml",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

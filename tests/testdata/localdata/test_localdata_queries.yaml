@@ -8,6 +8,12 @@ defaults:
   metadata:
     data_source: 'security_alert'
   parameters:
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
 sources:
   host_heartbeat:
     description: Retrieves heartbeat
@@ -30,3 +36,28 @@ sources:
     args:
       query: linux_logons.csv
     parameters:
+  list_host_logons:
+    description: Retrieves the logon events on the host
+    args:
+      query: host_logons.pkl
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+  list_logons_by_account:
+    description: Retrieves the logon events for an account
+    args:
+      query: host_logons.pkl
+    parameters:
+      account_name:
+        description: The account name to find
+        type: str
+  list_azure_network_flows_by_ip:
+    description: Retrieves Azure network analytics flow events.
+    metadata:
+    args:
+      query: az_net_comms_df.pkl
+    parameters:
+      ip_address_list:
+        description: Column project statement
+        type: list

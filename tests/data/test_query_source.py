@@ -6,15 +6,25 @@
 """datq query test class."""
 import os
 import unittest
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Tuple, Union, Optional
 
 import pandas as pd
+import pytest
+import pytest_check as check
 
 from msticpy.data.data_providers import DriverBase, QueryProvider
 from msticpy.data.query_source import QuerySource
-from msticpy.data.drivers import kql_driver, splunk_driver
+from msticpy.data.drivers import kql_driver
 
+_SPLUNK_IMP_OK = False
+try:
+    from msticpy.data.drivers import splunk_driver
+
+    _SPLUNK_IMP_OK = True
+except ImportError:
+    pass
 
 # pylint: disable=protected-access, invalid-name
 
@@ -67,14 +77,12 @@ class TestQuerySource(unittest.TestCase):
         provider.connect("testuri")
         self.assertTrue(provider.connected)
         self.provider = provider
-        self.la_provider = QueryProvider(
-            data_environment="LogAnalytics", driver=self.provider
-        )
-        self.query_sources = self.la_provider._query_store.data_families
-        self.splunk_provider = QueryProvider(
-            data_environment="Splunk", driver=self.provider
-        )
-        self.splunk_query_sources = self.splunk_provider._query_store.data_families
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            self.la_provider = QueryProvider(
+                data_environment="LogAnalytics", driver=self.provider
+            )
+        self.query_sources = self.la_provider.query_store.data_families
 
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""
@@ -192,40 +200,48 @@ class TestQuerySource(unittest.TestCase):
         check_list = ",".join([str(i) for i in int_list])
         self.assertIn(check_list, query)
 
-    def test_cust_formatters_splunk(self):
-        """Test SplunkDriver formatting."""
-        splunk_fmt = {
-            "datetime": splunk_driver.SplunkDriver._format_datetime,
-            "list": splunk_driver.SplunkDriver._format_list,
-        }
 
-        test_dt = datetime.utcnow()
-        ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
+@pytest.mark.skipif(not _SPLUNK_IMP_OK, reason="Partial msticpy install")
+def test_cust_formatters_splunk():
+    """Test SplunkDriver formatting."""
+    provider = UTDataDriver()
+    provider.connect("testuri")
+    la_provider = QueryProvider(data_environment="LogAnalytics", driver=provider)
+    query_sources = la_provider.query_store.data_families
 
-        check_dt_str = test_dt.isoformat(sep=" ")
-        # Using an Azure Sentinel query here since we want something
-        # that requires a list parameter
-        q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
-        query = q_src.create_query(
-            formatters=splunk_fmt, start=test_dt, ip_address_list=ip_address_list
-        )
-        self.assertIn(check_dt_str, query)
+    splunk_provider = QueryProvider(data_environment="Splunk", driver=provider)
+    splunk_query_sources = splunk_provider.query_store.data_families
 
-        query = q_src.create_query(
-            formatters=splunk_fmt, ip_address_list=ip_address_list
-        )
-        # Double-quote list elements
-        check_list = ",".join([f'"{ip.strip()}"' for ip in ip_address_list.split(",")])
-        self.assertIn(check_list, query)
+    splunk_fmt = {
+        "datetime": splunk_driver.SplunkDriver._format_datetime,
+        "list": splunk_driver.SplunkDriver._format_list,
+    }
 
-        int_list = [1, 2, 3, 4]
-        query = q_src.create_query(formatters=splunk_fmt, ip_address_list=int_list)
-        # Always quoted strings
-        check_list = ",".join([f'"{i}"' for i in int_list])
-        self.assertIn(check_list, query)
+    test_dt = datetime.utcnow()
+    ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
-        # Use a splunk query to verify timeformat parameter and datetime formatting
-        q_src = self.splunk_query_sources["SplunkGeneral"]["get_events_parameterized"]
-        query = q_src.create_query(formatters=splunk_fmt, start=test_dt, end=test_dt)
-        self.assertIn('timeformat="%Y-%m-%d %H:%M:%S.%6N"', query)
-        self.assertIn(f'earliest="{check_dt_str}"', query)
+    check_dt_str = test_dt.isoformat(sep=" ")
+    # Using an Azure Sentinel query here since we want something
+    # that requires a list parameter
+    q_src = query_sources["Azure"]["list_azure_activity_for_ip"]
+    query = q_src.create_query(
+        formatters=splunk_fmt, start=test_dt, ip_address_list=ip_address_list
+    )
+    check.is_in(check_dt_str, query)
+
+    query = q_src.create_query(formatters=splunk_fmt, ip_address_list=ip_address_list)
+    # Double-quote list elements
+    check_list = ",".join([f'"{ip.strip()}"' for ip in ip_address_list.split(",")])
+    check.is_in(check_list, query)
+
+    int_list = [1, 2, 3, 4]
+    query = q_src.create_query(formatters=splunk_fmt, ip_address_list=int_list)
+    # Always quoted strings
+    check_list = ",".join([f'"{i}"' for i in int_list])
+    check.is_in(check_list, query)
+
+    # Use a splunk query to verify timeformat parameter and datetime formatting
+    q_src = splunk_query_sources["SplunkGeneral"]["get_events_parameterized"]
+    query = q_src.create_query(formatters=splunk_fmt, start=test_dt, end=test_dt)
+    check.is_in('timeformat="%Y-%m-%d %H:%M:%S.%6N"', query)
+    check.is_in(f'earliest="{check_dt_str}"', query)

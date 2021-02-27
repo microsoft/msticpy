@@ -5,9 +5,13 @@
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
 import argparse
+import sys
 
-from toollib import VERSION
-from toollib.import_analyzer import analyze_imports
+sys.path.append("./tools")
+
+# pylint: disable=wrong-import-position
+from toollib import VERSION  # noqa: E402
+from toollib.import_analyzer import analyze_imports  # noqa: E402
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -83,19 +87,19 @@ def _print_single_module(mod_name, imps, p_args):
     print(mod_name)
     if p_args.internal and imps.internal:
         print("internal imports:", end=" ")
-        print(imps.internal if imps.internal else "none")
+        print(imps.internal or "none")
     if p_args.stdlib and imps.standard:
         print("std lib imports:", end=" ")
-        print(imps.standard if imps.standard else "none")
+        print(imps.standard or "none")
     if p_args.reqs and imps.setup_reqs:
         print(f"external imports listed in {p_args.req_file}:", end=" ")
-        print(imps.setup_reqs if imps.setup_reqs else "none")
+        print(imps.setup_reqs or "none")
     if p_args.missing and imps.missing_reqs:
         print("missing imports (used but not in requirements):", end=" ")
-        print(imps.missing_reqs if imps.missing_reqs else "none")
+        print(imps.missing_reqs or "none")
     if p_args.unknown and imps.unknown:
         print("unknown imports:", end=" ")
-        print(imps.unknown if imps.unknown else "none")
+        print(imps.unknown or "none")
 
 
 def _print_all_imports(mod_imports, p_args):

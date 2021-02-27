@@ -6,6 +6,7 @@
 """Mordor data driver test."""
 import contextlib
 from datetime import datetime
+import glob
 import io
 import os
 from pathlib import Path
@@ -26,22 +27,32 @@ __author__ = "Ian Hellen"
 
 _SAVE_PATH = ""
 _SAVE_FOLDER = "mordor_test"
+_SAVE_FOLDER2 = "mordor_test2"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def qry_provider():
     """Query Provider fixture."""
     Path(_SAVE_FOLDER).mkdir(exist_ok=True)
-    qry_prov = QueryProvider("Mordor")
+    abs_path = Path(".").absolute()
+
+    qry_prov = QueryProvider("Mordor", save_folder=f"./{_SAVE_FOLDER}")
     qry_prov.connect()
     yield qry_prov
     # remove downloaded file on cleanup
-    if _SAVE_PATH and Path(_SAVE_PATH).is_file():
-        Path(_SAVE_PATH).unlink()
-    for file in Path(_SAVE_FOLDER).glob("*"):
+    _cleanup_temp_files(_SAVE_FOLDER)
+    _cleanup_temp_files(abs_path.joinpath("mordor"))
+
+
+def _cleanup_temp_files(path):
+    for file in Path(path).glob("*"):
         Path(file).unlink()
-    if Path(_SAVE_FOLDER).is_dir():
-        Path(_SAVE_FOLDER).rmdir()
+    if Path(path).is_dir():
+        # pylint: disable=broad-except
+        try:
+            Path(path).rmdir()
+        except Exception:  # nosec
+            pass
 
 
 # pylint: disable=redefined-outer-name, protected-access, global-statement
@@ -107,17 +118,16 @@ def test_mordor_search(mdr_driver: MordorDriver):
 )
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
-    global _SAVE_PATH
-    entry_id = list(mdr_driver.mordor_data.keys())[2]
+    entry_id = "SDWIN-190319021158"
     entry = mdr_driver.mordor_data[entry_id]
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]
-    d_frame = download_mdr_file(file_path, save_folder="mordor_test")
-    _SAVE_PATH = file_path.split("/")[-1]
+    d_frame = download_mdr_file(file_path, save_folder=_SAVE_FOLDER2)
 
     check.is_instance(d_frame, pd.DataFrame)
     check.greater_equal(len(d_frame), 10)
+    _cleanup_temp_files(_SAVE_FOLDER2)
 
 
 @pytest.mark.skipif(
@@ -131,7 +141,8 @@ def test_mordor_query_provider(qry_provider):
     check.is_true(hasattr(qry_provider, "small"))
     check.is_true(hasattr(qry_provider, queries[0]))
 
-    q_func = getattr(qry_provider, queries[2])
+    test_query = "small.windows.credential_access.host.empire_mimikatz_logonpasswords"
+    q_func = getattr(qry_provider, test_query)
     output = io.StringIO()
     with contextlib.redirect_stdout(output):
         q_func("?")
