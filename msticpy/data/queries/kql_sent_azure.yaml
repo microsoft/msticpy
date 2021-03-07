@@ -3,23 +3,23 @@ metadata:
   description: Kql Sentinel Azure
   data_environments: [LogAnalytics]
   data_families: [Azure]
-  tags: ['signing', 'logon', 'azure', 'aad', "activedirectory"]
+  tags: ['signin', 'logon', 'azure', 'aad', "activedirectory"]
 defaults:
   metadata:
     data_source: 'Azure'
   parameters:
-      start:
-        description: Query start time
-        type: datetime
-        default: -5
-      end:
-        description: Query end time
-        type: datetime
-        default: 0
-      add_query_items:
-        description: Additional query clauses
-        type: str
-        default: ''
+    start:
+      description: Query start time
+      type: datetime
+      default: -5
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ''
 sources:
   list_aad_signins_for_account:
     description: Lists Azure AD Signins for Account
@@ -139,4 +139,63 @@ sources:
         description: Table name
         type: str
         default: SigninLogs
-
+  list_storage_ops_for_ip:
+    description:
+    args:
+      query: '
+        union
+        StorageFileLogs,
+        StorageBlobLogs
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where OperationName =~ "PutBlob" or OperationName =~ "PutRange"
+        | extend ClientIP = tostring(split(CallerIpAddress, ":", 0)[0])
+        | where ClientIP == {ip_address}
+        | extend FileName = extract(@"\/([\w\-. ]+)\?", 1, Uri)
+        | extend base64Char = base64_decode_toarray(ResponseMd5)
+        | mv-expand base64Char
+        | extend hexChar = tohex(toint(base64Char))
+        | extend hexChar = iff(strlen(hexChar) < 2, strcat("0", hexChar), hexChar)
+        | extend SourceTable = iff(OperationName has "range", "StorageFileLogs", "StorageBlobLogs")
+        | summarize make_list(hexChar) by CorrelationId, ResponseMd5, FileName, AccountName, TimeGenerated, RequestBodySize, ClientIP, SourceTable
+        | extend Md5Hash = strcat_array(list_hexChar, "")
+        | project TimeGenerated, FileName, ClientIP, SourceTable, Md5Hash, AccountName, RequestBodySize
+      '
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: StorageFileLogs
+      ip_address:
+        description: Client IP Address
+        type: str
+  list_storage_ops_for_hash:
+    description:
+    args:
+      query: '
+        union
+        StorageFileLogs,
+        StorageBlobLogs
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where OperationName =~ "PutBlob" or OperationName =~ "PutRange"
+        | extend ClientIP = tostring(split(CallerIpAddress, ":", 0)[0])
+        | extend FileName = extract(@"\/([\w\-. ]+)\?", 1, Uri)
+        | extend base64Char = base64_decode_toarray(ResponseMd5)
+        | mv-expand base64Char
+        | extend hexChar = tohex(toint(base64Char))
+        | extend hexChar = iff(strlen(hexChar) < 2, strcat("0", hexChar), hexChar)
+        | extend SourceTable = iff(OperationName has "range", "StorageFileLogs", "StorageBlobLogs")
+        | summarize make_list(hexChar) by CorrelationId, ResponseMd5, FileName, AccountName, TimeGenerated, RequestBodySize, ClientIP, SourceTable
+        | extend Md5Hash = strcat_array(list_hexChar, "")
+        | where Md5Hash =~ {file_hash}
+        | project TimeGenerated, FileName, ClientIP, SourceTable, Md5Hash, AccountName, RequestBodySize
+      '
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: StorageFileLogs
+      file_hash:
+        description: MD5 hash of file
+        type: str
