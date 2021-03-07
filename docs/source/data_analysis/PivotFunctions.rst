@@ -830,7 +830,7 @@ Running pivot data queries
 A word about parameters
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-A significant difference between the pivot functions that we’ve seen so far
+A significant difference between the pivot functions that we've seen so far
 and data query functions is that the latter **do not** accept **generic**
 parameter names (other than the "data" parameter).
 
@@ -1212,7 +1212,7 @@ On each iteration, the column value from the current row will be
 extracted and given as the parameter value for the ``account_name``
 function parameter.
 
-If the function query parameter type is a *list* type - i.e. it
+If the function query parameter type is a *list* type - i.e.�it
 expects a list of values, the parameter value will be sent as a list
 created from all of the values in that dataframe column. Similarly,
 if you have multiple *list* parameters sourced from different

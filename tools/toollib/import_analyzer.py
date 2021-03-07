@@ -183,6 +183,11 @@ def _check_std_lib(modules):
             except ImportError:
                 imp_errors.add(mod_name)
                 continue
+            except Exception as err:  # pylint: disable=broad-except
+                print(f"Unexpected exception importing {mod_name}")
+                print(err)
+                imp_errors.add(mod_name)
+                continue
         module = sys.modules[mod_name]
 
         stdlib_module = _check_stdlib_path(module, mod_name, stdlib_paths)

@@ -66,6 +66,8 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
             "Invalid argument supplied.", "Use --help to see valid arguments."
         ) from err
 
+    if not cell:
+        return pd.DataFrame()
     cell_text = io.StringIO(cell)
     try:
         parsed_df = pd.read_csv(
@@ -88,6 +90,7 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
             warn_bad_lines=True,
             skip_blank_lines=True,
             error_bad_lines=False,
+            engine="python",
         )
         print(
             "One or more rows had more columns than specified in first row.",
