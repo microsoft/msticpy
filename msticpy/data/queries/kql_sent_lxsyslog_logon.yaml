@@ -122,6 +122,11 @@ sources:
         type: str
   list_logons_for_account:
     description: All successful user logon events for account (all hosts)
+    metadata:
+      pivot:
+        short_name: logons
+        direct_func_entities:
+          - Account
     args:
       query: '
         {table}
@@ -170,6 +175,11 @@ sources:
         type: str
   list_logons_for_source_ip:
     description: All successful user logon events for source IP (all hosts)
+    metadata:
+      pivot:
+        short_name: logons
+        direct_func_entities:
+          - IpAddress
     args:
       query: '
         {table}
@@ -197,6 +207,11 @@ sources:
         type: str
   list_logons_for_host:
     description: All logon events on a host
+    metadata:
+      pivot:
+        short_name: logons
+        direct_func_entities:
+          - Host
     args:
       query: '
         {table}
@@ -243,6 +258,11 @@ sources:
         type: str
   list_host_logon_failures:
     description: All failed user logon events on a host
+    metadata:
+      pivot:
+        short_name: logon_failures
+        direct_func_entities:
+          - Host
     args:
       query: *logon_failures
     parameters:
@@ -253,6 +273,23 @@ sources:
       query_condition:
         description: Hostname where clause
         value: '| where Computer has "{host_name}"'
+  list_ip_logon_failures:
+    description: All failed user logon events from an IP address
+    metadata:
+      pivot:
+        short_name: logon_failures
+        direct_func_entities:
+          - IpAddress
+    args:
+      query: *logon_failures
+    parameters:
+      ip_address:
+        description: Ip Address to query for
+        type: str
+    query_macros:
+      query_condition:
+        description: IP Address where clause
+        value: '| where SyslogMessage has "{ip_address}"'
   list_logon_failures:
     description: All failed user logon events on any host
     args:

@@ -24,6 +24,10 @@ sources:
   list_aad_signins_for_account:
     description: Lists Azure AD Signins for Account
     metadata:
+      pivot:
+        short_name: aad_signins
+        direct_func_entities:
+          - Account
     args:
       query: '
         let accountName = "{account_name}";
@@ -48,6 +52,10 @@ sources:
   list_aad_signins_for_ip:
     description: Lists Azure AD Signins for an IP Address
     metadata:
+      pivot:
+        short_name: aad_signins
+        direct_func_entities:
+          - IpAddress
     args:
       query: '
         {table}
@@ -66,6 +74,10 @@ sources:
   list_azure_activity_for_account:
     description: Lists Azure Activity for Account
     metadata:
+      pivot:
+        short_name: activity
+        direct_func_entities:
+          - Account
     args:
       query: '
         let accountName = "{account_name}";
@@ -90,6 +102,10 @@ sources:
   list_azure_activity_for_ip:
     description: Lists Azure Activity for Caller IP Address(es)
     metadata:
+      pivot:
+        short_name: activity
+        direct_func_entities:
+          - IpAddress
     args:
       query: '
         {table}
@@ -108,6 +124,10 @@ sources:
   list_azure_activity_for_resource:
     description: Lists Azure Activity for a Resource
     metadata:
+      pivot:
+        short_name: activity
+        direct_func_entities:
+          - AzureResource
     args:
       query: '
         {table}

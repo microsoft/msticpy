@@ -16,6 +16,7 @@ from ..common.timespan import TimeSpan
 from .._version import VERSION
 from ..data.data_providers import QueryProvider
 from ..data.query_container import QueryContainer
+from ..data.query_source import QuerySource
 from . import entities
 
 __version__ = VERSION
@@ -26,8 +27,24 @@ ParamAttrs = namedtuple("ParamAttrs", "type, query, family, required")
 QueryParams = namedtuple(
     "QueryParams", "all, required, full_required, param_attrs, table"
 )
+PivQuerySettings = namedtuple(
+    "PivQuerySettings", "short_name, direct_func_entities, assigned_entities"
+)
 
 _DEF_IGNORE_PARAM = {"start", "end"}
+
+_TABLE_SHORTNAMES = {
+    "SecurityEvent": "wevt",
+    "Syslog": "lxsys",
+    "SecurityAlert": "alert",
+    "SigninLogs": "aad",
+    "AzureActivity": "az",
+    "AzureNetworkAnalytics_CL": "aznet",
+    "OfficeActivity": "o365",
+    "ThreatIntelligenceIndicator": "azti",
+    "Heartbeat": "hb",
+    "AuditLog_CL": "lxaud",
+}
 
 
 class PivotQueryFunctions:
@@ -89,6 +106,62 @@ class PivotQueryFunctions:
                     },
                     table=q_source.params.get("table"),
                 )
+
+    def get_query_settings(self, family: str, query: str) -> QuerySource:
+        """
+        Get the QuerySource for the named `family` and `query`.
+
+        Parameters
+        ----------
+        family : str
+            Data family name
+        query : str
+            Query name
+
+        Returns
+        -------
+        QuerySource
+            Query settings object
+
+        Raises
+        ------
+        KeyError
+            If `family`.`query` could not be found.
+
+        """
+        q_source = self._provider.query_store.data_families.get(family, {}).get(query)
+        if not q_source:
+            raise KeyError(f"No query found for {family}.{query}")
+        return q_source
+
+    def get_query_pivot_settings(self, family: str, query: str) -> PivQuerySettings:
+        """
+        Get Pivot settings metadata for a query.
+
+        Parameters
+        ----------
+        family : str
+            Data family
+        query : str
+            Query name
+
+        Returns
+        -------
+        PivQuerySettings
+            Named tuple:
+
+            - short_name - short name for the query
+            - direct_func_entities - the entities to add a top level function to
+            - assigned_entities - entities to assign the query to (if parameter
+              mapping is not applicable).
+
+        """
+        qs_pivot = self.get_query_settings(family, query).metadata.get("pivot", {})
+        return PivQuerySettings(
+            short_name=qs_pivot.get("short_name"),
+            direct_func_entities=qs_pivot.get("direct_func_entities"),
+            assigned_entities=qs_pivot.get("assigned_entities"),
+        )
 
     def get_queries_and_types_for_param(
         self, param: str
@@ -208,6 +281,7 @@ PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
         (entities.File, "file_hash"),
         (entities.Url, "Url"),
     ],
+    "domain": [(entities.Dns, "DomainName")],
     "logon_session_id": [
         (entities.Process, "LogonSession"),
         (entities.HostLogonSession, "SessionId"),
@@ -302,13 +376,23 @@ def add_queries_to_entities(
                 query_container = QueryContainer()
                 setattr(entity_cls, container, query_container)
             # To help disambiguation we prefix the function name with
-            # the table name
-            func_name = (
-                f"{func_params.table.get('default')}_{name}"
-                if isinstance(func_params.table, dict)
-                else name
-            )
+            # the table name (or short version)
+            table_name = func_params.table.get("default")
+            t_prefix = _TABLE_SHORTNAMES.get(table_name, table_name)
+            # if query func has a short name, use that
+            q_piv_settings = prov_qry_funcs.get_query_pivot_settings(family, name)
+            q_name = q_piv_settings.short_name or name
+            func_name = f"{t_prefix}_{q_name}" if table_name else q_name
             setattr(query_container, func_name, cls_func)
+
+            # Also set this as a direct entity method if this entity is listed
+            # in the query pivot "direct_func_entities" list
+            if (
+                q_piv_settings.direct_func_entities
+                and entity_cls.__name__ in q_piv_settings.direct_func_entities
+            ):
+                dir_func_name = f"qry_{func_name}"
+                setattr(entity_cls, dir_func_name, cls_func)
 
 
 # pylint: enable=too-many-locals

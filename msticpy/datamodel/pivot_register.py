@@ -79,6 +79,8 @@ class PivotRegistration:
     return_raw_output : bool
         Return raw output from the wrapped function, do not
         try to format into a DataFrame. Default is False.
+    create_shortcut : bool
+        If True, create a shortcut function directly on the entity.
 
     """
 
@@ -98,6 +100,7 @@ class PivotRegistration:
     src_config_entry: Optional[str] = None
     entity_container_name: Optional[str] = None
     return_raw_output: bool = False
+    create_shortcut: bool = False
 
     def attr_for_entity(self, entity: Union[entities.Entity, str]) -> Optional[str]:
         """

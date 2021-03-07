@@ -109,7 +109,7 @@ sources:
       host_name:
         description: Name of host
         type: str
-      table:
+      event_filter:
         description: Table name
         type: str
         default: 'SecurityEvent | where EventID == 4625'
