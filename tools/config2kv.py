@@ -180,18 +180,19 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         print("Secrets in vault:\n", "\n".join(kv_client.secrets))
 
 
-def _get_secrets(vault_name, **kwargs):
+def _list_secrets(vault_name: str, confirm, **kwargs):
+    mssg = "Show secret values (y/n)?"
+    print(f"Secrets currently in vault {vault_name}")
+    show_secrets = _prompt_yn(mssg, confirm)
     kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
-    print(f"Secrets for vault {vault_name}")
-    print("Key Vault settings:", kwargs)
-    for sec_path in kv_client.secrets:
-        _, sec_name = sec_path.rsplit("/", maxsplit=1)
-        print(f"Secret {sec_name}:")
-        try:
-            sec_val = kv_client.get_secret(sec_name)
-            print("Value:", sec_val)
-        except Exception:  # pylint: disable=broad-except
-            print(f"Could not display secret {sec_name}")
+    for sec_name in kv_client.secrets:
+        print(f"Secret: {sec_name}", end=": ")
+        if show_secrets:
+            secret = kv_client.get_secret(secret_name=sec_name)
+            print(secret.value)
+        else:
+            print("************")
+        print("Done")
 
 
 def _add_script_args(description):
@@ -201,6 +202,7 @@ def _add_script_args(description):
     parser.add_argument(
         "--path",
         "-p",
+        default=".",
         required=False,
         help="Path to msticpyconfig.yaml. Defaults to using MSTICPYCONFIG env variable.",
     )
@@ -250,16 +252,17 @@ def _add_script_args(description):
         help=("Use the named existing vault. Do not try to create."),
     )
     parser.add_argument(
+        "--list",
+        "-l",
+        action="store_true",
+        default=False,
+        help=("View current secrets."),
+    )
+    parser.add_argument(
         "--show",
         action="store_true",
         default=False,
         help=("View changes that would be made without doing anything."),
-    )
-    parser.add_argument(
-        "--view",
-        action="store_true",
-        default=False,
-        help=("Print out current secrets."),
     )
     parser.add_argument(
         "--verbose",
@@ -295,8 +298,9 @@ if __name__ == "__main__":
         "settings": kv_settings,
     }
 
-    if args.view:
-        _get_secrets(vault, **kv_args)
+    prompt = not args.yes
+    if args.list:
+        _list_secrets(vault_name=vault, confirm=prompt, **kv_args)
         sys.exit(0)
 
     new_settings, kv_secrets = _transform_settings(curr_settings, args.secnames)
@@ -307,7 +311,6 @@ if __name__ == "__main__":
     if not kv_secrets:
         print("No secrets found in config file. No action to take.")
         sys.exit(0)
-    prompt = not args.yes
     if not args.show:
         if not args.output:
             raise ValueError("No output file specified. --output value is required.")

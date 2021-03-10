@@ -5,12 +5,12 @@
 # --------------------------------------------------------------------------
 """Data obfuscation functions."""
 import hashlib
+import pkgutil
 import re
 import uuid
 import warnings
 from functools import lru_cache
-import pkgutil
-from typing import Any, Callable, Dict, List, Mapping, Union, Optional, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
