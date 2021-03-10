@@ -50,6 +50,8 @@ class Account(Entity):
 
     """
 
+    ID_PROPERTIES = ["QualifiedName", "Sid", "AadUserId", "PUID"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

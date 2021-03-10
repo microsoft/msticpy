@@ -73,6 +73,25 @@ class Pivot:
 
         # acquire current providers
         self._providers: Dict[str, Any] = {}
+        self.reload_pivots(namespace=namespace, providers=providers)
+
+    def reload_pivots(
+        self, namespace: Dict[str, Any] = None, providers: Iterable[Any] = None
+    ):
+        """
+        Load or reload Pivot functions from environment and/or providers list.
+
+        Parameters
+        ----------
+        namespace : Dict[str, Any], optional
+            To search for and use any current providers, specify
+            `namespace=globals()`, by default None
+        providers : Iterable[Any], optional
+            A list of query providers, TILookup or other providers to
+            use (these will override providers of the same type read
+            from `namespace`), by default None
+
+        """
         self._get_all_providers(namespace, providers)
 
         # load and assign functions for data queries

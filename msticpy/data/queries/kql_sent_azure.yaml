@@ -25,7 +25,7 @@ sources:
     description: Lists Azure AD Signins for Account
     metadata:
       pivot:
-        short_name: aad_signins
+        short_name: signins
         direct_func_entities:
           - Account
     args:
@@ -53,7 +53,7 @@ sources:
     description: Lists Azure AD Signins for an IP Address
     metadata:
       pivot:
-        short_name: aad_signins
+        short_name: signins
         direct_func_entities:
           - IpAddress
     args:
@@ -131,7 +131,7 @@ sources:
     args:
       query: '
         {table}
-        | where ResourceId has "{resource}"
+        | where ResourceId has "{resource_id}"
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         {add_query_items}'
@@ -140,9 +140,10 @@ sources:
         description: Table name
         type: str
         default: AzureActivity
-      resource:
+      resource_id:
         description: ResourceId or substring
         type: str
+        aliases: resource
   list_all_signins_geo:
     description: Gets Signin data used by morph charts
     metadata:
@@ -161,6 +162,9 @@ sources:
         default: SigninLogs
   list_storage_ops_for_ip:
     description:
+    metadata:
+      pivot:
+        short_name: storage_ops
     args:
       query: '
         union
@@ -180,7 +184,7 @@ sources:
         | summarize make_list(hexChar) by CorrelationId, ResponseMd5, FileName, AccountName, TimeGenerated, RequestBodySize, ClientIP, SourceTable
         | extend Md5Hash = strcat_array(list_hexChar, "")
         | project TimeGenerated, FileName, ClientIP, SourceTable, Md5Hash, AccountName, RequestBodySize
-      '
+        {add_query_items}'
     parameters:
       table:
         description: Table name
@@ -210,7 +214,7 @@ sources:
         | extend Md5Hash = strcat_array(list_hexChar, "")
         | where Md5Hash =~ {file_hash}
         | project TimeGenerated, FileName, ClientIP, SourceTable, Md5Hash, AccountName, RequestBodySize
-      '
+        {add_query_items}'
     parameters:
       table:
         description: Table name

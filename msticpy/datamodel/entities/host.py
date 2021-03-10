@@ -44,6 +44,8 @@ class Host(Entity):
 
     """
 
+    ID_PROPERTIES = ["fqdn", "AzureID", "OMSAgentID"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

@@ -30,7 +30,7 @@ run on the IpAddress entity in the "util" group.
     asn  asn_cidr  asn_country_code  asn_date    asn_description  asn_registry  nets .....
     NA   NA        US                2015-04-01  NA               arin          [{'cidr': '157.53.0.0/16'...
 
-    >>> IpAddress.util.geoloc_mm(value="157.53.1.1"))
+    >>> IpAddress.util.geoloc(value="157.53.1.1"))
     CountryCode  CountryName    State   City   Longitude   Latitude   Asn...
     US           United States  None    None   -97.822     37.751     None...
 
@@ -200,8 +200,6 @@ You can add additional functions as pivot functions by creating a
 registration template and importing the function. Details of this are
 covered later in the document.
 
-Pivot function list
-~~~~~~~~~~~~~~~~~~~
 
 
 Initializing the Pivot library
@@ -252,39 +250,71 @@ After loading the Pivot class, entities have pivot functions added to them
 
     Host pivot functions
 
-    ['AzureSentinel.list_related_alerts',
-     'AzureSentinel.az_net_analytics',
-     'AzureSentinel.get_info_by_hostname',
-     'AzureSentinel.auditd_all',
-     'AzureSentinel.sudo_activity',
-     'AzureSentinel.cron_activity',
-     ...
-     'AzureSentinel.get_process_tree',
-     'AzureSentinel.get_parent_process',
-     'AzureSentinel.list_processes_in_session',
-     'util.dns_validate_tld',
-     'util.dns_is_resolvable',
-     'util.dns_in_abuse_list']
+    ['AzureSentinel.alerts',
+    'AzureSentinel.aznet_interface',
+    'AzureSentinel.aznet_net_flows',
+    'AzureSentinel.aznet_net_flows_depr',
+    'AzureSentinel.azsent_bookmarks',
+    'AzureSentinel.hb_heartbeat',
+    ...
+    'AzureSentinel.lxsys_squid_activity',
+    'AzureSentinel.lxsys_sudo_activity',
+    'AzureSentinel.lxsys_user_group_activity',
+    'AzureSentinel.lxsys_user_logon',
+    ...
+    'AzureSentinel.wevt_logons',
+    'AzureSentinel.wevt_parent_process',
+    'AzureSentinel.wevt_process_session',
+    'AzureSentinel.wevt_processes',
+    'dns_is_resolvable',
+    'dns_resolve',
+    'qry_alerts',
+    'qry_aznet_interface',
+    'qry_aznet_net_flows',
+    'qry_azsent_bookmarks',
+    ...
+    'qry_wevt_all_events',
+    'qry_wevt_events_by_id',
+    'qry_wevt_logon_attempts',
+    'qry_wevt_logon_failures',
+    ...
+    'util.dns_in_abuse_list',
+    'util.dns_is_resolvable',
+    'util.dns_resolve',
+    'util.dns_validate_tld']
 
     IpAddress pivot functions
 
-    ['AzureSentinel.list_alerts_for_ip',
-     'AzureSentinel.list_aad_signins_for_ip',
-     'AzureSentinel.list_azure_activity_for_ip',
-     'AzureSentinel.list_azure_network_flows_by_ip',
-     'AzureSentinel.list_activity_for_ip',
-     ...
-     'AzureSentinel.list_indicators_by_url',
-     'util.whois',
-     'util.ip_type',
-     'util.geoloc_mm',
-     'util.geoloc_ips',
-     'ti.lookup_ip',
-     ...
-     'ti.lookup_ipv4_VirusTotal',
-     'ti.lookup_ipv4_XForce',
-     'ti.lookup_ipv6',
-     'ti.lookup_ipv6_OTX']
+    ['AzureSentinel.hb_heartbeat',
+    'AzureSentinel.hb_heartbeat_for_ip_depr',
+    'AzureSentinel.list_alerts_for_ip',
+    ...
+    'geoloc',
+    'ip_type',
+    'qry_aad_signins',
+    'qry_az_activity',
+    ...
+    'ti.lookup_ipv4_VirusTotal',
+    'ti.lookup_ipv4_XForce',
+    ...
+    'tilookup_ip',
+    'tilookup_ipv4',
+    'tilookup_ipv6',
+    'util.geoloc',]
+
+
+Reloading Pivots
+^^^^^^^^^^^^^^^^
+If you need to refresh the pivot functions because, for example, you loaded
+a query provider after initializing the Pivot library you can call
+:py:meth:`reload_pivots<msticpy.datamodel.pivot.Pivot.reload_pivots>`.
+This takes the same ``namespace`` and ``providers`` parameters as when
+initializing the class.
+You can also acheive the same thing by creating a new instance of the
+Pivot class.
+
+.. note:: Reloading will not remove previously attached pivot functions,
+   it will overwrite existing ones and add any new ones that it finds.
 
 
 Discovering entity names
@@ -312,7 +342,6 @@ If a unique match is found the entity class is returned.
 
     No exact match found for 'azure'.
     Closest matches are 'AzureResource', 'Url', 'Malware'
-
 
 
 Pivot functions are grouped into containers
@@ -364,13 +393,41 @@ Containers are also iterable - each iteration returns a tuple
 In notebooks/IPython you can also use tab completion to get to the right
 function.
 
+Shortcut pivot functions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+A subset of the most regularly-used pivot functions are also added
+as "shortcuts" to the entities. These are not in containers but
+available as direct methods on the entity classes and entity instances.
+
+Because the shortcut methods behave as *instance* methods they can take input
+values from the entity attributes directly. In this example, the input to
+the ``ip_type`` function is taken from the ``Address`` attribute of the
+entity.
+
+.. code:: ipython3
+
+    >>> ip = IpAddress(Address="192.168.1.1")
+    >>> ip.ip_type()
+    ip          result
+    192.168.1.1 Private
+
+These shortcuts otherwise work in the same way as the pivot functions
+described in the rest of the document. In the previous example showing
+pivot functions with the ``get_pivot_list()`` function, the shortcut
+versions of the pivot functions appear without a "." in the name.
+
+To help keep the type of function clear, data query shortcuts are prefixed
+with "qry\_" and threat intelligence lookups with "ti\_".
+
 Using the Pivot Browser
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Pivot also has a utility that allows you to browse entities and the
 pivot functions attached to them. You can search for functions with
 desired keywords, view help for the specific function and copy the function
-signature to paste into a code cell.
+signature to paste into a code cell. Both fully-qualified pivot functions
+and shortcut equivalents are shown in the browser.
 
 .. code:: ipython3
 
@@ -479,7 +536,7 @@ Some examples of simple pivot functions for an IpAddress string.
     display(IpAddress.util.ip_type("10.1.1.1"))
     display(IpAddress.util.ip_type(ip_str="157.53.1.1"))
     display(IpAddress.util.whois("157.53.1.1"))
-    display(IpAddress.util.geoloc_mm(value="157.53.1.1"))
+    display(IpAddress.util.geoloc(value="157.53.1.1"))
 
 
 ========  ========
@@ -507,7 +564,6 @@ US             United States                       -97.822      37.751         s
 =============  =============  =======  ======  ===========  ==========  =====  =======  ===========  ================  ===========
 
 
-
 Using an entity as a parameter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -527,10 +583,33 @@ values. Then we supply these entities as parameters to the pivot functions.
     display(IpAddress.util.ip_type(ip1))
     display(IpAddress.util.ip_type(ip2))
     display(IpAddress.util.whois(ip2))
-    display(IpAddress.util.geoloc_mm(ip2))
+    display(IpAddress.util.geoloc(ip2))
 
 The output is the same as the previous example
 `Using single value parameters as input`_
+
+
+For shortcut functions you can also use the entity instance to
+provide the input value:
+
+.. code:: ipython3
+
+    ip_1 = IpAddress(Address="10.1.1.1")
+    ip_2 = IpAddress(Address="157.53.1.1")
+    display(ip_1.ip_type())
+    display(ip_2.whois())
+
+========  ========
+ip        result
+========  ========
+10.1.1.1  Private
+========  ========
+
+===========  ================  =========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+ip_column    AsnDescription    whois_result
+===========  ================  =========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+157.53.1.1   NA                {'nir': None, 'asn_registry': 'arin', 'asn': 'NA', 'asn_cidr': 'NA', 'asn_country_code': 'US', 'asn_date': '2015-04-01', 'asn_description': 'NA', 'query': '157.53.1.1', 'nets': [{'cidr': '157.53.0.0/16', 'name': 'NETACTUATE-MDN-04', 'handle': 'NET-157-53-0-0-1', 'range': '157.53.0.0 - 157.53.255.255', 'description': 'NetActuate, Inc', 'country': 'US', 'state': 'NC', 'city': 'Raleigh', 'address': 'PO Box 10713', 'postal_code': '27605', 'emails': ['ops@netactuate.com', 'abuse@netactuate.com'], 'created': '2015-04-01', 'updated': '2016-10-25'}], 'raw': None, 'referral': None, 'raw_referral': None}
+===========  ================  =========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 
 
@@ -604,7 +683,7 @@ but now with list inputs.
     display(IpAddress.util.ip_type(ip_list1))
     display(IpAddress.util.ip_type(ip_str=list(ip_list1)))
     display(IpAddress.util.whois(value=tuple(ip_list1)))
-    display(IpAddress.util.geoloc_mm(ip_list1))
+    display(IpAddress.util.geoloc(ip_list1))
 
 
 ===============  ========
@@ -675,7 +754,7 @@ Examples showing the same pivot functions with dataframe inputs.
     display(IpAddress.util.ip_type(data=ip_df1, input_col="AllExtIPs"))
     display(IpAddress.util.ip_type(data=ip_df1, ip="AllExtIPs"))
     display(IpAddress.util.whois(data=ip_df1, column="AllExtIPs"))
-    display(IpAddress.util.geoloc_mm(data=ip_df1, src_col="AllExtIPs"))
+    display(IpAddress.util.geoloc(data=ip_df1, src_col="AllExtIPs"))
 
 
 Output is the same as `Using a list (or other iterable) as a parameter`_
@@ -746,7 +825,7 @@ rows that have a valid result from the function use “inner” or “right”
 
 .. code:: ipython3
 
-    display(IpAddress.util.geoloc_mm(data=ip_df1, src_col="AllExtIPs", join="left"))
+    display(IpAddress.util.geoloc(data=ip_df1, src_col="AllExtIPs", join="left"))
 
 
 =============  =============  =============  ========  ==========  ===========  ==========  =====  =======  ===========  ================  =============
@@ -759,7 +838,8 @@ AllExtIPs      CountryCode    CountryName    State     City          Longitude  
 65.55.44.108   US             United States  Virginia  Boydton        -78.375      36.6534         set()    geolocation  {}                65.55.44.108
 =============  =============  =============  ========  ==========  ===========  ==========  =====  =======  ===========  ================  =============
 
-
+By default the pivot functions will infer the join keys for input and output data
+from the function definitions and parameters.
 
 Data query pivot functions
 --------------------------
@@ -789,10 +869,6 @@ source_ip_list     IpAddress         Address
 ip_address_list    IpAddress         Address
 ip_address         IpAddress         Address
 user               Account           Name
-observables        IpAddress         Address
-                   Dns               DomainName
-                   File              file_hash
-                   Url               Url
 logon_session_id   Process           LogonSession
                    HostLogonSession  SessionId
                    Account           LogonId
@@ -800,6 +876,8 @@ process_id         Process           ProcessId
 commandline        Process           CommandLine
 url                Url               Url
 file_hash          File              file_hash
+domain             Dns               DomainName
+resource_id        AzureResource     ResourceId
 =================  ================  ===================
 
 If you have existing queries that use different names than those
@@ -940,8 +1018,9 @@ What data queries do we have?
 This will vary for each Entity type (many entity types have no
 data queries).
 
-For each entity type you can execute the container object
-corresponding to the data provider that you want to view.
+For each entity type, you can execute the container object
+corresponding to the data provider that you want to view. Shortcut
+query functions are also displayed with a "qry\_" prefix.
 
 .. code:: ipython3
 
@@ -950,20 +1029,28 @@ corresponding to the data provider that you want to view.
 
 .. parsed-literal::
 
-    list_related_alerts function
-    az_net_analytics function
-    get_info_by_hostname function
-    auditd_all function
-    sudo_activity function
+    alerts function
+    azsent_bookmarks function
+    aznet_net_flows_depr function
+    aznet_interface function
+    hb_heartbeat function
+    aznet_net_flows function
+    hb_heartbeat_for_host_depr function
+    lxaud_auditd_all function
     ...
-    get_parent_process function
-    list_processes_in_session function
+    lxsys_user_logon function
+    lxsys_logons function
+    lxsys_logon_failures function
+    wevt_all_events function
+    wevt_events_by_id function
+    wevt_list_other_events function
+    wevt_logon_session function
 
 
 .. code:: ipython3
 
     host = Host(HostName="VictimPc")
-    Host.AzureSentinel.get_heartbeat_for_host(host)
+    Host.AzureSentinel.hb_heartbeat(host)
 
 
 ==============  ================================  =============  ======================  ============  ========  ================  ================  =============
@@ -974,9 +1061,10 @@ OpsManager      2020-12-02 20:24:59.613000+00:00  13.89.108.248  VictimPc.Contos
 
 .. note:: some columns have been removed for brevity
 
+
 .. code:: ipython3
 
-    Host.AzureSentinel.list_host_logons(host_name="VictimPc").head()
+    Host.AzureSentinel.wevt_logons(host_name="VictimPc").head()
 
 
 ===================  =========  ================================  ======================  =================  ===================  ================  ================  ==================  ==============================================  ===============
@@ -989,6 +1077,30 @@ CONTOSO\RonHD             4624  2020-10-01 22:40:00.957000+00:00  VictimPc.Conto
 NT AUTHORITY\SYSTEM       4624  2020-10-01 22:40:14.040000+00:00  VictimPc.Contoso.Azure  VictimPc$          CONTOSO              S-1-5-18          SYSTEM            NT AUTHORITY        S-1-5-18                                        0x3e7
 ===================  =========  ================================  ======================  =================  ===================  ================  ================  ==================  ==============================================  ===============
 
+
+Query prefixes
+~~~~~~~~~~~~~~
+
+The queries are usually prefixed by a short string indicating the
+data table (or data source) targeted by the query. This is to help
+disambiguate the query functions and keep the overall function
+name manageably short.
+
+Some commonly used prefixes are:
+
+=========  =====================================================
+Prefix     Data source
+=========  =====================================================
+azsent     Azure Sentinel data queries (e.g. bookmarks)
+aznet      Azure network analytics
+aad        Azure Active Directory
+az         Other Azure
+hb         OMS Heartbeat table
+lxsys      Linux Syslog
+lxaud      Linux auditd
+o365       Office 365 activity
+wevt       Windows security events
+=========  =====================================================
 
 
 Using additional parameters
@@ -1212,7 +1324,7 @@ On each iteration, the column value from the current row will be
 extracted and given as the parameter value for the ``account_name``
 function parameter.
 
-If the function query parameter type is a *list* type - i.e.�it
+If the function query parameter type is a *list* type - i.e.�it
 expects a list of values, the parameter value will be sent as a list
 created from all of the values in that dataframe column. Similarly,
 if you have multiple *list* parameters sourced from different
@@ -1242,6 +1354,16 @@ You can override the default behavior of joining on the index by
 specifying ``left_on`` and ``right_on`` column names. The ``left_on``
 column name must be a column in the input DataFrame and ``right_on``
 must specify a column in the output DataFrame (the query results).
+
+The join operation also supports a ``join_ignore_case`` parameter.
+This lets you join text columns ignoring case differences. This can
+be helpful with data like hash strings and domain names, which are
+case insensitive and can be represented differently.
+
+.. warning:: using ``join_ignore_case`` does add a performance
+   overhead since normalized case columns need to be created from
+   the data before the join takes place. This might be noticable
+   on larger data sets.
 
 Threat Intelligence lookups
 ---------------------------
@@ -1416,6 +1538,7 @@ variables, so why have them?
 
 To make building these types of pipelines easier with pivot functions
 we've implemented some pandas helper functions.
+
 These are available in the
 :py:class:`mp_pivot<msticpy.datamodel.pivot_pd_accessor.PivotAccessor>`
 property of pandas DataFrames, once Pivot is imported.
@@ -1479,7 +1602,17 @@ in the pivot function.
     .mp_pivot.run(IpAddress.util.whois, column="Ioc", join="inner")
 
 
-There are also a couple of additional convenience functions.
+``mp_pivot.run()`` also supports a couple of parameters to help with
+debugging or simply to have something interesting to watch while
+your pipeline executes. ``verbose`` will print out the number of rows
+returned from the ``run`` function. This is useful to spot which
+item was responsible for your long and ultimate empty pipeline.
+``debug`` add a few more details like a list of columns returned in
+the data and the execution time of the run function.
+
+
+
+There are also a few convenience functions.
 
 .. note:: These second two functions only work in an IPython/Jupyter environment.
 
@@ -1550,6 +1683,91 @@ data to pass through unchanged but will also send
 a snapshot of the data at that point in the pipeline to the named function.
 You can also pass arbitrary other named arguments to the `tee_exec`. These
 will be passed to the ``df_func`` function.
+
+
+The next three methods are simple helper functions that duplicate a subset
+of the pandas functionality. The syntax is probably more user-friendly
+than the pandas equivalents but not as powerful and, in some cases, potentially
+much less performant.
+
+mp_pivot.filter
+~~~~~~~~~~~~~~~
+
+:py:meth:`mp_pivot.filter<msticpy.datamodel.pivot_pd_accessor.PivotAccessor.filter>`
+is a simple text or regular expression filter that matches and returns
+only rows with the specified patterns. If you know the exact columns that
+you need to filter on, and particularly if the dataset is large, you should
+use pandas native query functions like ``query`` or boolean filtering.
+However, the filter accessor can be useful for quick and dirty uses.
+
+The ``expr`` parameter can be a string, a regular expression or a number. In
+the former two cases the expression is matched against all string (or pandas object)
+columns. The matching is not case-sensitive by default but you can force this
+by specifying ``match_case=True``.
+
+If ``expr`` is a number, it is matched against numeric columns. However, it is matched
+as a string. The value of the ``expr`` parameter is converted to a string and all
+of the DataFrame columns of type "number" are converted to strings. Any row
+with a number that partially matches will be returned. For example, ``expr=462`` will
+match 4624 and 4625 from the numeric EventID columns in Windows Security event
+data.
+
+You can also specify a regular expression string to match numeric columns by
+adding the ``numeric_col=True`` parameter. Using ``expr="462[4-7]", numeric_col=True``
+will match numbers in the range 4624-4627.
+
+mp_pivot.filter_cols
+~~~~~~~~~~~~~~~~~~~~
+
+:py:meth:`mp_pivot.filter_cols<msticpy.datamodel.pivot_pd_accessor.PivotAccessor.filter_cols>`
+lets you filter the columns in the pipeline.
+
+The ``cols`` parameter can be a string (single column) or a list of strings (multiple
+columns). Each item can also be a regular expression to let you match groups of
+related column names (e.g. "Target.*").
+
+The ``match_case`` parameter (False by default) forces case-sensitve matching on
+exact or regular expression matching of column names.
+
+The ``sort_columns`` parameter will sort the columns alphabetically in the
+output DataFrame - the default is to preserve the input column order.
+
+mp_pivot.sort
+~~~~~~~~~~~~~
+
+:py:meth:`mp_pivot.sort<msticpy.datamodel.pivot_pd_accessor.PivotAccessor.sort>`
+lets you sort the output DataFrame by one or more columns.
+
+The ``cols`` parameter specifies which columns to sort by. This can be a single
+column name, a string containing a comma-separated list of column names, a
+Python list of column names or a Python dictionary of column_name-boolean pairs.
+
+Column names are matched in the following sequence:
+
+-  exact matches
+-  case-insensivitve matches
+-  regular expressions
+
+Where a column regular expression matches more than one column, all matched
+columns will be added to the column sorting order.
+
+In the case of the string and list types you can add a ":desc" or ":asc" suffix
+to the name (no spaces) to indicated descending or ascending sort order.
+Ascending is the default so you typically do not need to add the ":asc" suffix
+except for reasons of clarity.
+
+You can also control the sorting behavior of individual columns by passing
+a dict as the ``cols`` parameter. The keys of the dict are the column names
+and the value is a boolean: True means ascending, False means descending.
+
+Column sorting priority is controlled by the order in which you specify
+the column names/expressions in the ``cols`` parameter. E.g.
+``cols="colA:desc, colB:asc"`` will sort by colA descending, then by colB, ascending.
+
+You can also force a single ordering for all columns with the ``ascending``
+parameter - this will override any column-specific settings.
+
+
 
 Example pipeline
 ~~~~~~~~~~~~~~~~

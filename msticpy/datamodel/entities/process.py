@@ -51,6 +51,8 @@ class Process(Entity):
 
     """
 
+    ID_PROPERTIES = ["ProcessId", "ImageFile", "CreationTimeUtc", "CommandLine"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

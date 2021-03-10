@@ -55,6 +55,9 @@ defaults:
 sources:
   az_net_analytics:
     description: All Azure Network Analytics Data
+    metadata:
+      pivot:
+        short_name: net_flows_depr
     args:
       query: '
         {table}

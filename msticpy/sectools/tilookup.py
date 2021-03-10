@@ -189,7 +189,7 @@ class TILookup:
             elif provider not in self._providers:
                 raise ValueError(
                     f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers()),
+                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
                 )
         # disable all other providers
         for provider in self._providers:
@@ -220,7 +220,7 @@ class TILookup:
             elif provider not in self._secondary_providers:
                 raise ValueError(
                     f"Unknown provider '{provider}'. Available providers:",
-                    ", ".join(self.list_available_providers()),
+                    ", ".join(self.list_available_providers(as_list=True)),  # type: ignore
                 )
 
     def set_provider_state(self, prov_dict: Dict[str, bool]):

@@ -403,7 +403,7 @@ def _check_and_reload_pkg(
     pkg_name = pkg.__name__
     if not hasattr(pkg, "__version__"):
         raise MsticpyException(f"Package {pkg_name} has no version data.")
-    pkg_version = tuple([int(v) for v in pkg.__version__.split(".")])
+    pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
     if pkg_version < req_version:
         display(HTML(_MISSING_PKG_WARN.format(package=pkg_name)))
         if not unit_testing():

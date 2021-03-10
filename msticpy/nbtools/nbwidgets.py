@@ -29,7 +29,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines, invalid-name
 class TimeUnit(IntEnum):
     """Time unit enumeration and value."""
 
@@ -38,6 +38,9 @@ class TimeUnit(IntEnum):
     hour = 60 * 60
     day = 60 * 60 * 24
     week = 7 * 60 * 60 * 24
+
+
+# pylint: enable=invalid-name
 
 
 def _parse_time_unit(unit_str: str) -> TimeUnit:

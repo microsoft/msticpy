@@ -88,16 +88,16 @@ _ENTITY_FUNCS = [
     pytest.param(PivotTestCase("Host", "MDE", 2), id="Host-MDE"),
     pytest.param(PivotTestCase("Host", "util", 3), id="Host-util"),
     pytest.param(
-        PivotTestCase("IpAddress", "AzureSentinel", 16), id="IpAddress-AzureSentinel"
+        PivotTestCase("IpAddress", "AzureSentinel", 15), id="IpAddress-AzureSentinel"
     ),
     pytest.param(PivotTestCase("IpAddress", "MDE", 2), id="IpAddress-MDE"),
     pytest.param(PivotTestCase("IpAddress", "ti", 8), id="IpAddress-ti"),
     pytest.param(PivotTestCase("IpAddress", "util", 4), id="IpAddress-util"),
     pytest.param(
-        PivotTestCase("Account", "AzureSentinel", 19), id="Account-AzureSentinel"
+        PivotTestCase("Account", "AzureSentinel", 16), id="Account-AzureSentinel"
     ),
     pytest.param(PivotTestCase("Account", "MDE", 4), id="Account-MDE"),
-    pytest.param(PivotTestCase("Url", "AzureSentinel", 7), id="Url-AzureSentinel"),
+    pytest.param(PivotTestCase("Url", "AzureSentinel", 2), id="Url-AzureSentinel"),
     pytest.param(PivotTestCase("Url", "MDE", 2), id="Url-MDE"),
     pytest.param(PivotTestCase("Url", "ti", 4), id="Url-ti"),
     pytest.param(PivotTestCase("Url", "util", 5), id="Url-util"),
@@ -220,9 +220,7 @@ def test_pivot_time(data_providers):
     # Make sure the values provided to queries match.
     _fake_provider_connected(data_providers["az_sent_prov"])
 
-    query = entities.Host.AzureSentinel.SecurityEvent_list_host_processes(
-        host_name="test", print=True
-    )
+    query = entities.Host.AzureSentinel.wevt_processes(host_name="test", print=True)
     check.is_in(start.isoformat(), query)
     check.is_in(end.isoformat(), query)
 
@@ -234,7 +232,7 @@ _ENTITY_QUERIES = [
             "Host",
             dict(HostName="testhost", DnsDomain="contoso.com"),
             "AzureSentinel",
-            "SecurityEvent_list_host_processes",
+            "wevt_processes",
             'Computer has "testhost.contoso.com"',
         ),
         id="Host",
@@ -244,7 +242,7 @@ _ENTITY_QUERIES = [
             "Account",
             dict(Name="testacct"),
             "AzureSentinel",
-            "SecurityEvent_list_logons_by_account",
+            "wevt_logons",
             'where Account has "testacct"',
         ),
         id="Account",
@@ -254,7 +252,7 @@ _ENTITY_QUERIES = [
             "IpAddress",
             dict(Address="192.168.1.2"),
             "AzureSentinel",
-            "Heartbeat_get_info_by_ipaddress",
+            "hb_heartbeat",
             '| where ComputerIP == "192.168.1.2"',
         ),
         id="IpAddress",

@@ -48,6 +48,8 @@ class File(Entity):
 
     """
 
+    ID_PROPERTIES = ["FullPath", "Sha1", "Sha256", "Sha256ac", "Md5"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

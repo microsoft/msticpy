@@ -165,6 +165,7 @@ def create_pivot_func(
         # remove and save the join kw, if specified (so it doesn't interfere
         # with other operations and doesn't get sent to the function)
         join_type = kwargs.pop("join", None)
+        join_ignore_case = kwargs.pop("join_ignore_case", False)
 
         input_value = _get_input_value(*args, pivot_reg=pivot_reg, parent_kwargs=kwargs)
         _check_valid_settings_for_input(input_value, pivot_reg)
@@ -196,15 +197,80 @@ def create_pivot_func(
         # If requested to join to input
         # and this function is returning a DataFrame
         if join_type and not pivot_reg.return_raw_output:
-            return input_df.merge(
-                result_df,
+            return join_result(
+                input_df=input_df,
+                result_df=result_df,
+                how=join_type,
                 left_on=input_column,
                 right_on=merge_key,
-                how=join_type,
+                ignore_case=join_ignore_case,
             )
         return result_df
 
+    setattr(
+        pivot_lookup,
+        "pivot_properties",
+        attr.asdict(pivot_reg, filter=(lambda _, val: val is not None)),
+    )
     return pivot_lookup
+
+
+def join_result(
+    input_df: pd.DataFrame,
+    result_df: pd.DataFrame,
+    how: str,
+    left_on: str,
+    right_on: str,
+    ignore_case: bool,
+) -> pd.DataFrame:
+    """
+    Join input and result DFs, optionally ignoring case.
+
+    Parameters
+    ----------
+    input_df : pd.DataFrame
+        Input DF
+    result_df : pd.DataFrame
+        Result DF
+    how : str
+        Join type - "inner", "left", "right", "outer"
+    left_on : str
+        Column from `input_df` to use as join key
+    right_on : str
+        Column from `result_df` to use as join key
+    ignore_case : bool
+        If True and input_df column is a string
+
+    Returns
+    -------
+    pd.DataFrame
+        The merged DataFrame
+
+    """
+    if not ignore_case or input_df[left_on].dtype.name not in (
+        "string",
+        "object",
+    ):
+        # Not requested case-insensitive join OR input column is
+        # not a string/object
+        return input_df.merge(
+            result_df,
+            left_on=left_on,
+            right_on=right_on,
+            how=how,
+        )
+
+    # We need to join case-insensitive
+    left_on = f"{left_on}_lc"
+    input_df[left_on] = input_df[left_on].str.casefold()
+    right_on = f"{right_on}_lc"
+    result_df[right_on] = result_df[right_on].astype("string").str.casefold()
+    return input_df.merge(
+        result_df,
+        left_on=left_on,
+        right_on=right_on,
+        how=how,
+    ).drop(columns=[left_on, right_on])
 
 
 def _get_entity_attr_or_self(obj, attrib):

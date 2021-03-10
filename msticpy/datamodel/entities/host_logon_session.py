@@ -40,6 +40,8 @@ class HostLogonSession(Entity):
 
     """
 
+    ID_PROPERTIES = ["Account", "Host", "SessionId"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

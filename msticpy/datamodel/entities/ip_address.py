@@ -36,6 +36,8 @@ class IpAddress(Entity):
 
     """
 
+    ID_PROPERTIES = ["Address"]
+
     def __init__(
         self,
         src_entity: Mapping[str, Any] = None,

@@ -343,7 +343,7 @@ def md(
         else:
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
-        style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
+        style_str = ";".join(_F_STYLES.get(style, "") for style in styles)
     content = HTML(f"<p style='{style_str}'>{string}</p>")
 
     if isinstance(disp_id, bool) and disp_id:
@@ -573,3 +573,36 @@ def valid_pyname(identifier: str) -> str:
     if identifier[0].isdigit():
         identifier = f"n_{identifier}"
     return identifier
+
+
+def collapse_dicts(*dicts: Dict[Any, Any]) -> Dict[Any, Any]:
+    """Merge multiple dictionaries - later dicts have higher precendence."""
+    if len(dicts) < 2:
+        return dicts[0] or {}
+    out_dict = dicts[0]
+    for p_dict in dicts[1:]:
+        out_dict = _merge_dicts(out_dict, p_dict)
+    return out_dict
+
+
+def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
+    """Merge dict2 into dict1."""
+    if not dict2:
+        return dict1 or {}
+    if not dict1:
+        return dict2 or {}
+    out_dict = {}
+    for key in set().union(dict1, dict2):  # type: Any
+        if (
+            key in dict1
+            and isinstance(dict1[key], dict)
+            and key in dict2
+            and isinstance(dict2[key], dict)
+        ):
+            d_val = _merge_dicts(dict1[key], dict2[key])
+        elif key in dict2:
+            d_val = dict2[key]
+        else:
+            d_val = dict1[key]
+        out_dict[key] = d_val
+    return out_dict

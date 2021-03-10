@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pandas as pd
 
+from .pivot_register import join_result
 from ..common.timespan import TimeSpan
 from .._version import VERSION
 from ..data.data_providers import QueryProvider
@@ -36,7 +37,7 @@ _DEF_IGNORE_PARAM = {"start", "end"}
 _TABLE_SHORTNAMES = {
     "SecurityEvent": "wevt",
     "Syslog": "lxsys",
-    "SecurityAlert": "alert",
+    "SecurityAlert": "",
     "SigninLogs": "aad",
     "AzureActivity": "az",
     "AzureNetworkAnalytics_CL": "aznet",
@@ -44,6 +45,9 @@ _TABLE_SHORTNAMES = {
     "ThreatIntelligenceIndicator": "azti",
     "Heartbeat": "hb",
     "AuditLog_CL": "lxaud",
+    "HuntingBookmark": "azsent",
+    "StorageFileLogs": "az",
+    "DnsEvents": "dns",
 }
 
 
@@ -104,7 +108,7 @@ class PivotQueryFunctions:
                         )
                         for param, p_attrs in q_source.params.items()
                     },
-                    table=q_source.params.get("table"),
+                    table=q_source.params.get("table", {}),
                 )
 
     def get_query_settings(self, family: str, query: str) -> QuerySource:
@@ -271,16 +275,7 @@ PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
     "account_name": [(entities.Account, "Name")],
     "host_name": [(entities.Host, "fqdn")],
     "process_name": [(entities.Process, "ProcessFilePath")],
-    "source_ip_list": [(entities.IpAddress, "Address")],
-    "ip_address_list": [(entities.IpAddress, "Address")],
     "ip_address": [(entities.IpAddress, "Address")],
-    "user": [(entities.Account, "Name")],
-    "observables": [
-        (entities.IpAddress, "Address"),
-        (entities.Dns, "DomainName"),
-        (entities.File, "file_hash"),
-        (entities.Url, "Url"),
-    ],
     "domain": [(entities.Dns, "DomainName")],
     "logon_session_id": [
         (entities.Process, "LogonSession"),
@@ -292,7 +287,16 @@ PARAM_ENTITY_MAP: Dict[str, List[Tuple[Type[entities.Entity], str]]] = {
     "commandline": [(entities.Process, "CommandLine")],
     "url": [(entities.Url, "Url")],
     "file_hash": [(entities.File, "file_hash")],
+    "resource_id": [(entities.AzureResource, "ResourceId")],
 }
+
+# aliases for parameters
+PARAM_ENTITY_MAP["ip_address_list"] = PARAM_ENTITY_MAP["ip_address"]
+PARAM_ENTITY_MAP["source_ip_list"] = PARAM_ENTITY_MAP["ip_address"]
+PARAM_ENTITY_MAP["user"] = PARAM_ENTITY_MAP["account_name"]
+PARAM_ENTITY_MAP["file_hash_list"] = PARAM_ENTITY_MAP["file_hash"]
+PARAM_ENTITY_MAP["domain_list"] = PARAM_ENTITY_MAP["domain"]
+PARAM_ENTITY_MAP["url_list"] = PARAM_ENTITY_MAP["url"]
 
 
 def add_data_queries_to_entities(
@@ -366,23 +370,23 @@ def add_queries_to_entities(
                 param: ent_attr for param, (_, ent_attr) in param_entities.items()
             }
             # Wrap the function
-            cls_func = _param_and_call_wrapper(
+            cls_func = _create_pivot_func(
                 func, func_params.param_attrs, attr_map, get_timespan
             )
+            # add a properties dict to the function
+            setattr(
+                cls_func,
+                "pivot_properties",
+                _create_piv_properties(name, param_entities, container),
+            )
+            q_piv_settings = prov_qry_funcs.get_query_pivot_settings(family, name)
+            func_name = _format_func_name(name, func_params, q_piv_settings)
 
-            # Add the wrapped function to the entity
+            # Add the wrapped function to the entity container
             query_container = getattr(entity_cls, container, None)
             if not query_container:
                 query_container = QueryContainer()
                 setattr(entity_cls, container, query_container)
-            # To help disambiguation we prefix the function name with
-            # the table name (or short version)
-            table_name = func_params.table.get("default")
-            t_prefix = _TABLE_SHORTNAMES.get(table_name, table_name)
-            # if query func has a short name, use that
-            q_piv_settings = prov_qry_funcs.get_query_pivot_settings(family, name)
-            q_name = q_piv_settings.short_name or name
-            func_name = f"{t_prefix}_{q_name}" if table_name else q_name
             setattr(query_container, func_name, cls_func)
 
             # Also set this as a direct entity method if this entity is listed
@@ -398,7 +402,29 @@ def add_queries_to_entities(
 # pylint: enable=too-many-locals
 
 
-def _param_and_call_wrapper(
+def _format_func_name(name, func_params, q_piv_settings):
+    # To help disambiguation we prefix the function name with
+    # the table name (or short version)
+    table_name = func_params.table.get("default", "")
+    t_prefix = _TABLE_SHORTNAMES.get(table_name, table_name)
+    if t_prefix and not t_prefix.endswith("_"):
+        t_prefix = f"{t_prefix}_"
+    # if query func has a short name, use that
+    q_name = q_piv_settings.short_name or name
+    return f"{t_prefix}{q_name}" if table_name else q_name
+
+
+def _create_piv_properties(name, param_entities, container):
+    return {
+        "src_func_name": name,
+        "src_class": "QueryProvider",
+        "src_module": "msticpy.data.dataproviders",
+        "entity_map": dict(param_entities.values()),
+        "entity_container_name": container,
+    }
+
+
+def _create_pivot_func(
     func: Callable[[Any], pd.DataFrame],
     func_params: Dict[str, ParamAttrs],
     param_attrib_map: Dict[str, str],
@@ -507,18 +533,20 @@ def _create_data_func_exec(
         # The input is a DataFrame
         if "data" in kwargs:
             # If the input is a DF, we might be required to join
-            join_type, left_on, right_on = _get_join_params(func_kwargs)
+            join_type, left_on, right_on, j_ignore_case = _get_join_params(func_kwargs)
             src_data = kwargs["data"] if join_type else None
             # Get the results of the query
             result_df = _exec_query_for_df(func, func_kwargs, func_params, kwargs)
             if join_type and isinstance(src_data, pd.DataFrame):
                 if left_on and right_on:
                     # If explicit join keys
-                    return src_data.merge(
-                        result_df,
+                    return join_result(
+                        input_df=src_data,
+                        result_df=result_df,
                         left_on=left_on,
                         right_on=right_on,
                         how=join_type,
+                        ignore_case=j_ignore_case,
                     ).drop(columns="src_row_index", errors="ignore")
                 if "src_row_index" in result_df.columns:
                     # Otherwise merge on index of source
@@ -546,8 +574,9 @@ def _get_join_params(func_kwargs):
     # remove and save the join kw, if specified (so it doesn't interfere
     # with other operations and doesn't get sent to the function)
     join_type = func_kwargs.pop("join", None)
+    join_ignore_case = func_kwargs.pop("join_ignore_case", None)
     if not join_type:
-        return None, None, None
+        return None, None, None, False
     left_on = func_kwargs.pop("left_on", None)
     right_on = func_kwargs.pop("right_on", None)
     if left_on and not right_on:
@@ -571,7 +600,7 @@ def _get_join_params(func_kwargs):
             + "name of the source column to join on. "
             + "Results will joined on index."
         )
-    return join_type, left_on, right_on
+    return join_type, left_on, right_on, join_ignore_case
 
 
 def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):
