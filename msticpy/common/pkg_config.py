@@ -377,7 +377,12 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
     if p_name.startswith("AzureSentinel_"):
         errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
         errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
-    if p_name == _AZ_CLI:
+    if (
+        p_name == _AZ_CLI
+        and "clientId" in sec_args
+        and sec_args["clientId"] is not None
+    ):
+        # only warn if partially filled - since these are optional
         errs.append(_check_required_key(sec_args, "clientId", sec_path))
         errs.append(_check_required_key(sec_args, "tenantId", sec_path))
         errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
@@ -406,6 +411,8 @@ def _check_env_vars(args_key, section):
     if not args_key:
         return mp_errs
     for val in args_key.values():
+        if not val:
+            continue
         if "EnvironmentVar" in val:
             env_name = val.get("EnvironmentVar")
             if not env_name:

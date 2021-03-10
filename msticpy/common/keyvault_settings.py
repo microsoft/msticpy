@@ -81,6 +81,13 @@ class KeyVaultSettings:
             ) from err
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
+
+        try:
+            az_cli = config.get_config("DataProviders.AzureCLI")
+        except KeyError:
+            az_cli = {}
+        self.auth_methods = az_cli.get("Args", {}).get("auth_methods")
+
         if "authority_uri" in self:
             rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
             self.__dict__["authority"] = rev_lookup.get(

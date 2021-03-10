@@ -28,7 +28,6 @@ from .query_store import QueryStore
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
 _DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
 
 

@@ -10,6 +10,7 @@ from typing import Union, Any, Dict, Optional, List
 import pandas as pd
 
 from .driver_base import DriverBase, QuerySource
+from ...common.pkg_config import settings
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -39,10 +40,11 @@ class LocalDataDriver(DriverBase):
 
         # If data paths specified, use these
         data_paths = kwargs.get("data_paths")
+        self._paths: List[str] = ["."]
         if data_paths:
-            self._paths: List[str] = [path.strip() for path in data_paths]
-        else:
-            self._paths = ["."]
+            self._paths = [path.strip() for path in data_paths]
+        elif "LocalData" in settings:
+            self._paths = settings.get("LocalData", {}).get("data_paths")
 
         self.data_files: Dict[str, str] = self._get_data_paths()
         self._schema: Dict[str, Any] = {}
@@ -58,7 +60,6 @@ class LocalDataDriver(DriverBase):
                 data_files.update(
                     {
                         str(file_path.name).casefold(): str(file_path)
-                        for file_path in Path(path).resolve().glob(pattern)
                         for file_path in found_files
                         if file_path.is_file()
                     }

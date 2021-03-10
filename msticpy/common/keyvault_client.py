@@ -61,7 +61,15 @@ class BHKeyVaultClient:
             The full URI of the keyvault, by default None
         vault_name : str, optional
             The name of the keyvault in the public cloud, by default None
+        auth_methods : List[str]
+            The authentication methods to use for Key Vault auth
+            Possible values are:
+            - "env" - to get authentication details from environment varibales
+            - "cli" - to use Azure CLI authentication details
+            - "msi" - to user Managed Service Indenity details
+            - "interactive" - to prompt for interactive login
         authn_type : str, optional
+            [deprecated - use auth_methods]
             Authentication mode, by default 'interactive'
             Supported options are:
             - 'device' for device code authentication
@@ -99,6 +107,9 @@ class BHKeyVaultClient:
             )
         self.authn_type = kwargs.pop(
             "authn_type", self.settings.get("authntype", "interactive")
+        )
+        self.auth_methods = kwargs.pop(
+            "auth_methods", self.settings.get("auth_methods", ["interactive"])
         )
 
         # for authority and authority_uri, any parameters take priority
@@ -138,7 +149,7 @@ class BHKeyVaultClient:
         self.kv_client = self._get_secret_client()
 
     def _get_secret_client(self):
-        credentials = az_connect_core()
+        credentials = az_connect_core(auth_methods=self.auth_methods)
 
         # Create a secret client
         secret_client = SecretClient(self.vault_uri, credentials.modern)
@@ -169,6 +180,10 @@ class BHKeyVaultClient:
             Secret not found in the Vault.
 
         """
+        if "/" in secret_name:
+            # If we're passed the full URL to the secret - extract just the
+            # name
+            secret_name = secret_name.rsplit("/", maxsplit=1)[-1]
         try:
             secret_bundle = self.kv_client.get_secret(name=secret_name)
         except ResourceNotFoundError as err:
