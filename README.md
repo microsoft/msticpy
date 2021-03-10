@@ -29,11 +29,13 @@ authoring for
 [Azure Sentinel](https://azure.microsoft.com/en-us/services/azure-sentinel/).
 While Azure Sentinel is still a big focus of our work, we are
 extending the data query/acquisition components to pull log data from
-other sources (currently Microsoft Defender and Microsoft Graph but we
+other sources (currently Splunk, Microsoft Defender for Endpoint and
+Microsoft Graph are supported but we
 are actively working on support for data from other SIEM platforms).
 Most of the components can also be used with data from any source. Pandas
 DataFrames are used as the ubiquitous input and output format of almost
-all components.
+all components. There is also a data provider to make it easy to and process
+data from local CSV files and pickled DataFrames.
 
 The package addresses three central needs for security investigators
 and hunters:
@@ -77,19 +79,20 @@ functions in this interactive demo on mybinder.org.
 
 ## Log Data Acquisition
 
-- QueryProvider - extensible query library targeting Azure Sentinel, OData
-  sources and other. Built-in parameterized queries allow complex queries to be run
-  from a single function call. Add your own queries using a simple YAML
-  schema.
-- security_alert and security_event - encapsulation classes for alerts and events.
-- entity_schema - definitions for multiple entities (Host, Account, File, IPAddress,
-  etc.)
+QueryProvider is an extensible query library targeting Azure Sentinel/Log Analytics,
+Splunk, OData
+and other log data sources. It also has special support for
+[Mordor](https://github.com/OTRF/mordor) data sets and using local data.
+
+Built-in parameterized queries allow complex queries to be run
+from a single function call. Add your own queries using a simple YAML
+schema.
 
 [Data Queries Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb)
 
 ## Data Enrichment
 
-### tiproviders
+### Threat Intelligence providers
 
 The TILookup class can lookup IoCs across multiple TI providers. built-in
 providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
@@ -119,13 +122,17 @@ using either:
 and
 [GeoIP Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb)
 
-### Azure Data
+### Azure Resource Data, Storage and Azure Sentinel API
 
-This package contains functionality for enriching data regarding Azure host
-details with additional host details exposed via the Azure API.
 
-[Azure Data](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html)
+The AzureData module contains functionality for enriching data regarding Azure host
+details with additional host details exposed via the Azure API. The AzureSentinel
+module allows you to query incidents, retrieve detector and hunting
+queries. AzureBlogStorage lets you read and write data from blob storage.
 
+[Azure Resource APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html),
+[Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureSentinel.html),
+[Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureBlobStorage.html)
 ## Security Analysis
 
 This subpackage contains several modules helpful for working on security investigations and hunting:
@@ -141,7 +148,7 @@ a mail forwarding rule on someone's mailbox.
 and
 [Anomalous Sequence Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/AnomalousSequence.ipynb)
 
-### Time Series
+### Time Series Analysis
 
 Time series analysis allows you to identify unusual patterns in your log data
 taking into account normal seasonal variations (e.g. the regular ebb and flow of
@@ -154,43 +161,9 @@ alt="Time Series anomalies" title="Time Series anomalies" height="300" />
 
 [Time Series](https://msticpy.readthedocs.io/en/latest/visualization/TimeSeriesAnomalies.html)
 
-### base64unpack
-
-Base64 and archive (gz, zip, tar) extractor. It will try to identify any base64 encoded
-strings and try decode them. If the result looks like one of the supported archive types it
-will unpack the contents. The results of each decode/unpack are rechecked for further
-base64 content and up to a specified depth.
-
-[Base64 Decoding](https://msticpy.readthedocs.io/en/latest/data_analysis/Base64Unpack.html)
-[Base64Unpack Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb)
-
-### iocextract
-
-Uses regular expressions to look for Indicator of Compromise (IoC) patterns - IP Addresses, URLs,
-DNS domains, Hashes, file paths.
-Input can be a single string or a pandas dataframe.
-
-[IoC Extraction](https://msticpy.readthedocs.io/en/latest/data_analysis/IoCExtract.html)
-[IoCExtract Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb)
-
-### eventcluster (experimental)
-
-This module is intended to be used to summarize large numbers of
-events into clusters of different patterns. High volume repeating
-events can often make it difficult to see unique and interesting items.
-
-<img src="https://github.com/microsoft/msticpy/blob/master/docs/source/data_analysis/_static/EventClustering_2a.png"
-  alt="Clustering"
-  title="Clustering based on command-line variability" height="400" />
-
-This is an unsupervised learning module implemented using SciKit Learn DBScan.
-
-[Event Clustering](https://msticpy.readthedocs.io/en/latest/data_analysis/EventClustering.html)
-[Event Clustering Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb)
-
 ## Visualization
 
-### Timelines
+### Event Timelines
 
 Display any log events on an interactive timeline. Using the
 [Bokeh Visualization Library](https://bokeh.org/) the timeline control enables
@@ -201,6 +174,7 @@ slots and view event details for plotted events.
 alt="Timeline" title="Msticpy Timeline Control" height="300" />
 
 [Timeline](https://msticpy.readthedocs.io/en/latest/visualization/EventTimeline.html)
+and
 [Timeline Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventTimeline.ipynb)
 
 ### Process Trees
@@ -218,9 +192,58 @@ alt="Process Tree"
 title="Interactive Process Tree" height="400" />
 
 [Process Tree](https://msticpy.readthedocs.io/en/latest/visualization/ProcessTree.html)
+and
 [Process Tree Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/ProcessTree.ipynb)
 
-## Other Tools
+## Data Manipulation and Utility functions
+
+### Pivot Functions
+
+Lets you use *MSTICPy* functionality in an "entity-centric" way.
+All functions, queries and lookups that relate to a particular entity type
+(e.g. Host, IpAddress, Url) are collected together as methods of that
+entity class. So, if you want to do things with an IP address, just load
+the IpAddress entity and browse its methods.
+
+[Pivot Functions](https://msticpy.readthedocs.io/en/latest/data_analysis/PivotFunctions.html)
+and
+[Pivot Functions Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/PivotFunctions.ipynb)
+### base64unpack
+
+Base64 and archive (gz, zip, tar) extractor. It will try to identify any base64 encoded
+strings and try decode them. If the result looks like one of the supported archive types it
+will unpack the contents. The results of each decode/unpack are rechecked for further
+base64 content and up to a specified depth.
+
+[Base64 Decoding](https://msticpy.readthedocs.io/en/latest/data_analysis/Base64Unpack.html)
+and
+[Base64Unpack Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb)
+
+### iocextract
+
+Uses regular expressions to look for Indicator of Compromise (IoC) patterns - IP Addresses, URLs,
+DNS domains, Hashes, file paths.
+Input can be a single string or a pandas dataframe.
+
+[IoC Extraction](https://msticpy.readthedocs.io/en/latest/data_analysis/IoCExtract.html)
+and
+[IoCExtract Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb)
+
+### eventcluster (experimental)
+
+This module is intended to be used to summarize large numbers of
+events into clusters of different patterns. High volume repeating
+events can often make it difficult to see unique and interesting items.
+
+<img src="https://github.com/microsoft/msticpy/blob/master/docs/source/data_analysis/_static/EventClustering_2a.png"
+  alt="Clustering"
+  title="Clustering based on command-line variability" height="400" />
+
+This is an unsupervised learning module implemented using SciKit Learn DBScan.
+
+[Event Clustering](https://msticpy.readthedocs.io/en/latest/data_analysis/EventClustering.html)
+and
+[Event Clustering Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/EventClustering.ipynb)
 
 ### auditdextract
 
@@ -228,8 +251,6 @@ Module to load and decode Linux audit logs. It collapses messages sharing the sa
 message ID into single events, decodes hex-encoded data fields and performs some
 event-specific formatting and normalization (e.g. for process start events it will
 re-assemble the process command line arguments into a single string).
-
-This is still a work-in-progress.
 
 ### syslog_utils
 
@@ -241,6 +262,11 @@ user sessions containing suspicious activity.
 
 A module to support he detection of known malicious command line activity or suspicious
 patterns of command line activity.
+
+### domain_utils
+
+A module to support investigation of domain names and URLs with functions to
+validate a domain name and screenshot a URL.
 
 ### Notebook widgets
 

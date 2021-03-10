@@ -21,6 +21,7 @@ from tqdm.auto import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyNotConnectedError, MsticpyUserError
+from ...common.pkg_config import settings
 from ..query_source import QuerySource
 from .driver_base import DriverBase
 
@@ -55,8 +56,13 @@ class MordorDriver(DriverBase):
         self.mdr_idx_tact: Dict[str, Set[str]]
         self._driver_queries: List[Dict[str, Any]] = []
 
-        self.use_cached = kwargs.pop("used_cached", True)
-        self.save_folder = kwargs.pop("save_folder", ".")
+        mdr_settings = settings.get("DataProviders", {}).get("Mordor", {})
+        self.use_cached = kwargs.pop(
+            "used_cached", mdr_settings.get("used_cached", True)
+        )
+        self.save_folder = kwargs.pop(
+            "save_folder", mdr_settings.get("save_folder", ".")
+        )
         self.silent = kwargs.pop("silent", False)
 
         self._loaded = True

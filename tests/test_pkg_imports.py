@@ -19,7 +19,15 @@ PKG_NAME = "msticpy"
 REQS_FILE = "requirements.txt"
 REQS_OP_RGX = r"[=<>~!\s]+"
 
-EXTRAS_EXCEPTIONS = {"vt", "vt_graph_api", "bs4", "seaborn", "pyperclip"}
+EXTRAS_EXCEPTIONS = {
+    "vt",
+    "vt_graph_api",
+    "bs4",
+    "seaborn",
+    "msticpy",
+    "msticnb",
+    "pyperclip",
+}
 CONDA_PKG_EXCEPTIONS = {"vt-py", "vt-graph-api", "nest_asyncio"}
 
 
@@ -48,10 +56,20 @@ def test_missing_pkgs_req():
     print("sys.prefix", sys.prefix)
     print("Stdlib paths:\b", stdlib_paths)
 
-    missing_reqs = {v for s in mod_imports.values() for v in s.missing_reqs}
+    missing_req_mod = {
+        f"{req}:{mod}" for mod, reqs in mod_imports.items() for req in reqs.missing_reqs
+    }
+    missing_reqs = {
+        req.strip() for reqs in mod_imports.values() for req in reqs.missing_reqs
+    }
     missing_reqs = missing_reqs - EXTRAS_EXCEPTIONS
     if missing_reqs:
-        print("Missing packages:\n", "\n".join(missing_reqs))
+        print(
+            "Missing packages:\n",
+            "\n".join(
+                req for req in missing_req_mod if req.split(":")[0] in missing_reqs
+            ),
+        )
     check.is_false(missing_reqs)
 
 

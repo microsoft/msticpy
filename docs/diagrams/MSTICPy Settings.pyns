@@ -1,0 +1,77 @@
+# PynSource Version 1.2
+{'type':'meta', 'info1':'Lorem ipsum dolor sit amet, consectetur adipiscing elit is latin. Comments are saved.'}
+{'type':'umlshape', 'id':'CEAzureSentinel', 'x':739, 'y':88, 'width':160, 'height':346, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI|_current_path|btn_set_default|current_workspace|edit_ctrls|edit_frame|select_item', 'meths': '__init__|_add_item|_del_item|_get_select_opts|_save_item|_select_labels|_select_provider|_set_default'}
+{'type':'umlshape', 'id':'CEItemsBase', 'x':1784, 'y':325, 'width':120, 'height':202, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI|comp_defn|controls|mp_controls|settings', 'meths': '__init__'}
+{'type':'umlshape', 'id':'MpConfigControls', 'x':629, 'y':595, 'width':210, 'height':522, 'attrs': '_raw_config_defn|config_defn|controls|mp_config', 'meths': '__init__|_convert_mp_config|_convert_mp_config_dict|_convert_mp_config_list|_create_ctrl_dict|_del_elem_at_path|_get_ctrl_values|_get_elem_from_path|_set_ctrl_values|_set_elem_at_path|_unpack_lists|_validate_setting_at_path|_yml_extract_type|del_control|del_value|get_control|get_defn|get_value|populate_ctrl_values|rename_path|save_ctrl_values|set_control|set_value|validate_all_settings|validate_setting'}
+{'type':'umlshape', 'id':'CEDataProviders', 'x':1222, 'y':75, 'width':160, 'height':112, 'attrs': '_COMPONENT_HELP|_COMP_PATH|_DESCRIPTION|_HELP_URI', 'meths': ''}
+{'type':'umlshape', 'id':'CEProviders', 'x':1011, 'y':257, 'width':146, 'height':282, 'attrs': '_HELP_TEXT|_current_path|edit_ctrls|edit_frame|items_frame|prov_options|prov_settings_map|select_item', 'meths': '__init__|_add_provider|_del_provider|_get_select_opts|_save_provider|_select_provider'}
+{'type':'umlshape', 'id':'CEKeyVault', 'x':1226, 'y':449, 'width':122, 'height':186, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI|controls|edit_frame', 'meths': '__init__|_save_settings'}
+{'type':'umlshape', 'id':'CESimpleBase', 'x':1797, 'y':760, 'width':130, 'height':202, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI|comp_defn|controls|mp_controls|settings', 'meths': '__init__'}
+{'type':'umlshape', 'id':'CEOtherProviders', 'x':1221, 'y':203, 'width':170, 'height':96, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_URI', 'meths': ''}
+{'type':'umlshape', 'id':'CETIProviders', 'x':1219, 'y':315, 'width':140, 'height':96, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_URI', 'meths': ''}
+{'type':'umlshape', 'id':'CEAutoLoadQProvs', 'x':422, 'y':81, 'width':186, 'height':378, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI|_current_path|edit_ctrls|edit_frame|items_frame|prov_options|select_item', 'meths': '__init__|_add_component|_del_component|_get_available_options|_get_default_values|_get_query_providers|_get_select_opts|_get_settings_ctrls|_save_component|_select_provider'}
+{'type':'umlshape', 'id':'CEAutoLoadComps', 'x':189, 'y':79, 'width':186, 'height':186, 'attrs': '_COMP_PATH|_DESCRIPTION|_HELP_TEXT|_HELP_URI', 'meths': '_get_available_options|_get_default_values|_get_select_opts|_get_settings_ctrls'}
+{'type':'umlshape', 'id':'CompEditDisplayMixin', 'x':1969, 'y':554, 'width':210, 'height':96, 'attrs': '', 'meths': '_ipython_display_|border_layout|no_border_layout'}
+{'type':'umlshape', 'id':'CompEditUtilsMixin', 'x':2271, 'y':317, 'width':190, 'height':64, 'attrs': '', 'meths': '_get_settings_path'}
+{'type':'umlshape', 'id':'CompEditStatusMixin', 'x':2001, 'y':1063, 'width':200, 'height':122, 'attrs': 'status|testing', 'meths': 'clear_status|set_status'}
+{'type':'umlshape', 'id':'CompEditHelp', 'x':2305, 'y':681, 'width':130, 'height':170, 'attrs': '_DEFAULT_URI|_HELP_STYLE|accdn_help|html_help|layout', 'meths': '__init__|set_help'}
+{'type':'umlshape', 'id':'CompEditTabs', 'x':2001, 'y':130, 'width':130, 'height':170, 'attrs': 'layout|tab|tab_controls|tab_names', 'meths': '__init__|add_tab|set_tab'}
+{'type':'umlshape', 'id':'CompEditFrame', 'x':2308, 'y':444, 'width':140, 'height':138, 'attrs': 'description|help|inner_frame|layout', 'meths': '__init__'}
+{'type':'umlshape', 'id':'CompEditItemButtons', 'x':2236, 'y':143, 'width':200, 'height':138, 'attrs': 'btn_add|btn_del|btn_save|layout', 'meths': '__init__'}
+{'type':'umlshape', 'id':'CompEditItems', 'x':1949, 'y':323, 'width':140, 'height':154, 'attrs': 'edit_buttons|edit_frame|inner_frame|items_frame|select_item', 'meths': '__init__'}
+{'type':'umlshape', 'id':'CompEditSimple', 'x':1977, 'y':732, 'width':150, 'height':138, 'attrs': 'btn_save|container|edit_frame|inner_frame', 'meths': '__init__'}
+{'type':'umlshape', 'id':'SettingsControl', 'x':20, 'y':622, 'width':160, 'height':90, 'attrs': 'value', 'meths': 'value'}
+{'type':'umlshape', 'id':'ArgControl', 'x':34, 'y':999, 'width':154, 'height':298, 'attrs': 'btn_add_kv_secret|cb_kv_def|hbox|kv_client|lbl_setting|name|rb_store_type|setting_path|txt_val|value', 'meths': '__init__|_change_store|_disable_txt|_set_kv_secret|_set_kv_visibility'}
+{'type':'umlshape', 'id':'UserDefQryProvCtrl', 'x':260, 'y':625, 'width':190, 'height':202, 'attrs': 'cb_connect|layout|lbl_type|prov_name|prov_type|txt_alias|value', 'meths': '__init__|_set_prov_name'}
+{'type':'umlshape', 'id':'UserDefLoadComponent', 'x':251, 'y':858, 'width':210, 'height':266, 'attrs': '_W_STYLE|comp_name|comp_path|control_map|controls|layout|value', 'meths': '__init__|_add_control_to_map|_create_controls|_create_select_ctrl|_get_val_from_ctrl|_set_ctrl_from_val'}
+{'type':'umlshape', 'id':'FileBrowser', 'x':1390, 'y':980, 'width':122, 'height':106, 'attrs': 'PARENT|current_folder', 'meths': '__init__'}
+{'type':'umlshape', 'id':'MpConfigFile', 'x':1334, 'y':795, 'width':130, 'height':90, 'attrs': 'settings', 'meths': '__init__'}
+{'type':'umlshape', 'id':'MpConfigEdit', 'x':1625, 'y':34, 'width':130, 'height':90, 'attrs': 'mp_conf_file', 'meths': '__init__'}
+{'type':'comment', 'id':'C2454', 'x':2047, 'y':49, 'width':200, 'height':35, 'comment': 'Rm9ybSBoZWxwZXIgY2xhc3Nlcw=='}
+{'type':'comment', 'id':'C2447', 'x':21, 'y':564, 'width':200, 'height':32, 'comment': 'Q29tcG91bmQgY29udHJvbHM='}
+{'type':'comment', 'id':'C8051', 'x':558, 'y':30, 'width':200, 'height':30, 'comment': 'U2V0dGluZ3MgZWRpdG9yIGNsYXNzZXM='}
+{'type':'comment', 'id':'C1840', 'x':1764, 'y':22, 'width':200, 'height':44, 'comment': 'TWFpbiBlZGl0b3IgY29udGFpbmVyCmNsYXNz'}
+{'type':'comment', 'id':'C455', 'x':1126, 'y':792, 'width':200, 'height':30, 'comment': 'U2V0dGluZ3MgZmlsZSBtYW5hZ2Vy'}
+{'type':'comment', 'id':'C8135', 'x':1180, 'y':982, 'width':200, 'height':26, 'comment': 'RmlsZSBicm93c2VyIHdpZGdldA=='}
+{'type':'comment', 'id':'C5146', 'x':846, 'y':836, 'width':200, 'height':27, 'comment': 'U2V0dGluZ3MgZGF0YWJhc2U='}
+{'type':'edge', 'id':'CEAzureSentinel_to_CEItemsBase', 'source':'CEAzureSentinel', 'target':'CEItemsBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigControls_to_CEAzureSentinel', 'source':'MpConfigControls', 'target':'CEAzureSentinel', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEDataProviders_to_CEProviders', 'source':'CEDataProviders', 'target':'CEProviders', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CEKeyVault_to_CESimpleBase', 'source':'CEKeyVault', 'target':'CESimpleBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigControls_to_CEKeyVault', 'source':'MpConfigControls', 'target':'CEKeyVault', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEOtherProviders_to_CEProviders', 'source':'CEOtherProviders', 'target':'CEProviders', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CEProviders_to_CEItemsBase', 'source':'CEProviders', 'target':'CEItemsBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigControls_to_CEProviders', 'source':'MpConfigControls', 'target':'CEProviders', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CETIProviders_to_CEProviders', 'source':'CETIProviders', 'target':'CEProviders', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CEAutoLoadQProvs_to_CEItemsBase', 'source':'CEAutoLoadQProvs', 'target':'CEItemsBase', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CEAutoLoadComps_to_CEAutoLoadQProvs', 'source':'CEAutoLoadComps', 'target':'CEAutoLoadQProvs', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigControls_to_CEAutoLoadQProvs', 'source':'MpConfigControls', 'target':'CEAutoLoadQProvs', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CompEditSimple_to_CompEditFrame', 'source':'CompEditSimple', 'target':'CompEditFrame', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CESimpleBase_to_CompEditSimple', 'source':'CESimpleBase', 'target':'CompEditSimple', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CompEditItems_to_CompEditFrame', 'source':'CompEditItems', 'target':'CompEditFrame', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CEItemsBase_to_CompEditItems', 'source':'CEItemsBase', 'target':'CompEditItems', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CompEditFrame_to_CompEditDisplayMixin', 'source':'CompEditFrame', 'target':'CompEditDisplayMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CompEditFrame_to_CompEditStatusMixin', 'source':'CompEditFrame', 'target':'CompEditStatusMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CompEditFrame_to_CompEditUtilsMixin', 'source':'CompEditFrame', 'target':'CompEditUtilsMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'CompEditHelp_to_CompEditFrame', 'source':'CompEditHelp', 'target':'CompEditFrame', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CompEditItemButtons_to_CompEditItems', 'source':'CompEditItemButtons', 'target':'CompEditItems', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'UserDefQryProvCtrl_to_SettingsControl', 'source':'UserDefQryProvCtrl', 'target':'SettingsControl', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'ArgControl_to_CompEditStatusMixin', 'source':'ArgControl', 'target':'CompEditStatusMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'ArgControl_to_SettingsControl', 'source':'ArgControl', 'target':'SettingsControl', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'UserDefLoadComponent_to_SettingsControl', 'source':'UserDefLoadComponent', 'target':'SettingsControl', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigControls_to_UserDefLoadComponent', 'source':'MpConfigControls', 'target':'UserDefLoadComponent', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'FileBrowser_to_CompEditDisplayMixin', 'source':'FileBrowser', 'target':'CompEditDisplayMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigFile_to_CompEditStatusMixin', 'source':'MpConfigFile', 'target':'CompEditStatusMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigFile_to_CompEditDisplayMixin', 'source':'MpConfigFile', 'target':'CompEditDisplayMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigEdit_to_CompEditDisplayMixin', 'source':'MpConfigEdit', 'target':'CompEditDisplayMixin', 'uml_edge_type': 'generalisation'}
+{'type':'edge', 'id':'MpConfigFile_to_MpConfigEdit', 'source':'MpConfigFile', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CompEditTabs_to_MpConfigEdit', 'source':'CompEditTabs', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'FileBrowser_to_MpConfigFile', 'source':'FileBrowser', 'target':'MpConfigFile', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'FileBrowser_to_MpConfigEdit', 'source':'FileBrowser', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CETIProviders_to_MpConfigEdit', 'source':'CETIProviders', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEOtherProviders_to_MpConfigEdit', 'source':'CEOtherProviders', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEDataProviders_to_MpConfigEdit', 'source':'CEDataProviders', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEAzureSentinel_to_MpConfigEdit', 'source':'CEAzureSentinel', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEAutoLoadQProvs_to_MpConfigEdit', 'source':'CEAutoLoadQProvs', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEAutoLoadComps_to_MpConfigEdit', 'source':'CEAutoLoadComps', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}
+{'type':'edge', 'id':'CEKeyVault_to_MpConfigEdit', 'source':'CEKeyVault', 'target':'MpConfigEdit', 'uml_edge_type': 'composition'}

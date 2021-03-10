@@ -60,15 +60,13 @@ _KV_PLACE_HOLDER = {"KeyVault": None}
 
 
 def _read_config_settings(conf_file):
-    try:
-        sys_config = os.environ["MSTICPYCONFIG"]
-    except KeyError:
-        sys_config = Path.cwd().joinpath("msticpyconfig.yaml")
+    sys_config = os.environ.get("MSTICPYCONFIG")
+
     if not conf_file:
         conf_file = sys_config
     if not conf_file:
         raise ValueError("Configuration file not found.")
-
+    print(conf_file)
     with open(conf_file, "r") as conf_hdl:
         cur_settings = yaml.safe_load(conf_hdl)
 
@@ -83,7 +81,7 @@ def _read_config_settings(conf_file):
 def _write_config_settings(conf_file, conf_settings, confirm):
     if Path(conf_file).is_file():
         print(f"Output file {conf_file} exists.")
-        if not _prompt_yn("Overwrite (y/n)?", confirm):
+        if not _prompt_yn("Overwrite (y/n)? ", confirm):
             return
     yaml.SafeDumper.ignore_aliases = lambda *args: True
     with open(conf_file, "w") as conf_hdl:
@@ -95,14 +93,19 @@ def _format_kv_name(setting_path):
     return re.sub("[^0-9a-zA-Z-]", "-", setting_path)
 
 
-def _get_config_secrets(cur_settings, section_name):
+def _get_config_secrets(cur_settings, section_name, sec_names):  # noqa: MC0001
     kv_dict = {}
+    sec_key_names = ["authkey", "apiid", "password", "clientsecret"]
+    if sec_names:
+        sec_key_names.extend(sec_names)
+    if section_name not in cur_settings:
+        return None, None
     ud_settings = deepcopy(cur_settings[section_name])
     for prov, setting in cur_settings[section_name].items():
         if "Args" in setting:
             arg_path = f"{section_name}.{prov}.Args"
             for arg, arg_val in setting["Args"].items():
-                if arg not in ["AuthKey", "ApiID"]:
+                if arg.casefold() not in sec_key_names:
                     continue
                 item_path = arg_path + "." + arg
                 if isinstance(arg_val, str):
@@ -118,12 +121,16 @@ def _get_config_secrets(cur_settings, section_name):
     return kv_dict, ud_settings
 
 
-def _transform_settings(cur_settings):
+def _transform_settings(cur_settings, sec_names):
     ud_settings = deepcopy(cur_settings)
     kv_secrets_dict = {}
 
-    for section in ["TIProviders", "OtherProviders"]:
-        kv_vals, section_settings = _get_config_secrets(cur_settings, section)
+    for section in ["TIProviders", "OtherProviders", "DataProviders"]:
+        kv_vals, section_settings = _get_config_secrets(
+            cur_settings, section, sec_names
+        )
+        if not kv_vals:
+            continue
         kv_secrets_dict.update(kv_vals)
         ud_settings[section] = section_settings
     return ud_settings, kv_secrets_dict
@@ -137,8 +144,11 @@ def _show_settings(secrets, ud_settings):
 
 
 def _prompt_yn(mssg, confirm):
+    mssg = f"{mssg.strip()} "
     if confirm:
         resp = input(mssg)  # nosec
+        while resp.strip().casefold() not in ("y", "n"):
+            resp = input("Expected 'y' or 'n' response.")
     else:
         resp = "y"
     return resp.casefold().startswith("y")
@@ -152,7 +162,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         vault_uri = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
     except CloudError:
-        mssg = f"Vault {vault_name} not found. Create new vault (y/n)?"
+        mssg = f"Vault {vault_name} not found. Create new vault (y/n)? "
         if _prompt_yn(mssg, confirm):
             print("Creating {vault_name}. Please wait...")
             new_vault = kv_mgmt.create_vault(vault_name=vault_name)
@@ -162,7 +172,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         print("Vault name was not created. Aborting.")
         return
 
-    mssg = f"Add secrets to vault {vault_name} (y/n)?"
+    mssg = f"Add secrets to vault {vault_name} (y/n)? "
     print("Adding secrets to vault requires authentication")
     if _prompt_yn(mssg, confirm):
         kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
@@ -174,18 +184,19 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
 
 
 def _list_secrets(vault_name: str, confirm, **kwargs):
-    mssg = "Show secret values (y/n)?"
-    print(f"Secrets currently in vault {vault_name}")
+    mssg = "Show secret values (y/n)? "
     show_secrets = _prompt_yn(mssg, confirm)
     kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
+    print(f"Secrets currently in vault {vault_name}")
     for sec_name in kv_client.secrets:
+        sec_name = sec_name.rsplit("/", maxsplit=1)[-1]
         print(f"Secret: {sec_name}", end=": ")
         if show_secrets:
             secret = kv_client.get_secret(secret_name=sec_name)
-            print(secret.value)
+            print(secret)
         else:
             print("************")
-        print("Done")
+    print("Done")
 
 
 def _add_script_args(description):
@@ -195,7 +206,6 @@ def _add_script_args(description):
     parser.add_argument(
         "--path",
         "-p",
-        default=".",
         required=False,
         help="Path to msticpyconfig.yaml. Defaults to using MSTICPYCONFIG env variable.",
     )
@@ -222,8 +232,19 @@ def _add_script_args(description):
         "--region",
         "-r",
         help=(
-            "Azure region. Default taken from msticpyconfig.yaml"
+            "Azure region. Default taken from msticpyconfig.yaml "
             + "(only needed if creating new vault.)"
+        ),
+    )
+    parser.add_argument(
+        "--secnames",
+        "-n",
+        nargs="+",
+        help=(
+            "Add an additional list of secret names to search for in "
+            + "the config file. Defaults are "
+            + "'AuthKey', 'ApiID', 'password' and 'clientsecret'. "
+            + "(the names are case-insensitive)"
         ),
     )
     parser.add_argument(
@@ -283,8 +304,9 @@ if __name__ == "__main__":
     prompt = not args.yes
     if args.list:
         _list_secrets(vault_name=vault, confirm=prompt, **kv_args)
+        sys.exit(0)
 
-    new_settings, kv_secrets = _transform_settings(curr_settings)
+    new_settings, kv_secrets = _transform_settings(curr_settings, args.secnames)
     if args.show or args.verbose:
         _show_settings(kv_secrets, new_settings)
         sys.exit(0)

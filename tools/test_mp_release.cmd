@@ -1,4 +1,8 @@
 REM @echo off
+
+set home_path=%~p0
+set home_drive=%~d0
+
 if "%1" equ "" goto usage
 if "%2" equ "" goto usage
 if "%1" equ "/?" goto usage
@@ -19,7 +23,7 @@ if "%3" neq "" echo testing with version %3
 
 REM test folder
 pushd %2 > nul 2>&1
-if %ERRORLEVEL% equ 0 goto create_env
+if %ERRORLEVEL% equ 0 popd & goto create_env
 echo %2 is not a valid directory
 goto :EOF
 
@@ -47,31 +51,29 @@ echo Installing nbconvert and jupyter extensions...
 pip install nbconvert
 pip install jupyter_contrib_nbextensions
 
-set nb_path=docs/notebooks
-if "%2" neq "" set nb_path=%2
-pushd nb_path
-echo Current directory
-cd
+set nb_path=%home_drive%%home_path%/docs/notebooks
+if "%2" neq "" set nb_path=%~f2
+
 echo.
 echo %h_rule%
 echo Running notebooks from %nb_path%...
 set nbconver_opts=--ExecutePreprocessor.timeout=60 --ExecutePreprocessor.kernel_name=python3 --to notebook
-set NB=Base64Unpack.ipynb
+set NB=%nb_path%/Base64Unpack.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
-set NB=EventTimeline.ipynb
+set NB=%nb_path%/EventTimeline.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
-set NB=FoliumMap.ipynb
+set NB=%nb_path%/FoliumMap.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
-set NB=GeoIPLookups.ipynb
+set NB=%nb_path%/GeoIPLookups.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
-set NB=NotebookWidgets.ipynb
+set NB=%nb_path%/NotebookWidgets.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
-set NB=ProcessTree.ipynb
+set NB=%nb_path%/ProcessTree.ipynb
 jupyter nbconvert %nbconver_opts% --execute %NB%
 if ERRORLEVEL 1 goto nb_error
 
