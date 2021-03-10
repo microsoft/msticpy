@@ -75,11 +75,7 @@ def data_providers():
 
 def _reset_entities():
     """Clear any query containers in entities."""
-    for entity_name in ("Host", "IpAddress", "Account", "Url"):
-        entity = getattr(entities, entity_name)
-        for attr in dir(entity):
-            if isinstance(getattr(entity, attr), QueryContainer):
-                delattr(entity, attr)
+    Pivot.remove_pivot_funcs(entity="all")
 
 
 PivotTestCase = namedtuple("PivotTestCase", "entity, container, funcs")
@@ -293,3 +289,34 @@ _ENTITY_PIVOTS = [
 def test_entity_list_piv_functions(_create_pivot_list, entity, expected_funcs):
     """Test the pivot_funcs property."""
     check.greater(len(entity.get_pivot_list()), expected_funcs)
+
+
+def _get_piv_attrs(entity):
+    return [
+        attr
+        for attr in dir(entity)
+        if hasattr(getattr(entity, attr), "pivot_properties")
+        or type(getattr(entity, attr)).__name__ == "QueryContainer"
+    ]
+
+
+def test_remove_pivots(_create_pivot_ns):
+    """Test remove pivots function."""
+    piv_attrs = _get_piv_attrs(entities.Host)
+    check.is_true(piv_attrs)
+
+    with pytest.raises(ValueError):
+        Pivot.remove_pivot_funcs(entity="TestEntity")
+
+    piv_attrs = _get_piv_attrs(entities.Host)
+    check.is_true(piv_attrs)
+
+    Pivot.remove_pivot_funcs(entity="Host")
+    piv_attrs = _get_piv_attrs(entities.Host)
+    check.is_false(piv_attrs)
+
+    piv_attrs = _get_piv_attrs(entities.IpAddress)
+    check.is_true(piv_attrs)
+    Pivot.remove_pivot_funcs(entity="all")
+    piv_attrs = _get_piv_attrs(entities.IpAddress)
+    check.is_false(piv_attrs)

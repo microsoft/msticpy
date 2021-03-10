@@ -155,14 +155,14 @@ def test_filter(test_df):
     res_df = test_df.mp_pivot.filter(expr="2361334927")
     check.equal(len(res_df), 3)
 
-    res_df = test_df.mp_pivot.filter(expr="msticadmin", case_sensitive=True)
+    res_df = test_df.mp_pivot.filter(expr="msticadmin", match_case=True)
     check.equal(len(res_df), 0)
 
-    res_df = test_df.mp_pivot.filter(expr=4624, case_sensitive=True)
+    res_df = test_df.mp_pivot.filter(expr=4624, match_case=True)
     check.equal(len(res_df), 14)
-    res_df = test_df.mp_pivot.filter(expr=4625, case_sensitive=True)
+    res_df = test_df.mp_pivot.filter(expr=4625, match_case=True)
     check.equal(len(res_df), 0)
-    res_df = test_df.mp_pivot.filter(expr="4624", case_sensitive=True, numeric_col=True)
+    res_df = test_df.mp_pivot.filter(expr="4624", match_case=True, numeric_col=True)
     check.equal(len(res_df), 14)
 
     with pytest.raises(TypeError):

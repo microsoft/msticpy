@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pandas as pd
 
-from .pivot_register import join_result
+from .pivot_register import join_result, get_join_params
 from ..common.timespan import TimeSpan
 from .._version import VERSION
 from ..data.data_providers import QueryProvider
@@ -533,7 +533,7 @@ def _create_data_func_exec(
         # The input is a DataFrame
         if "data" in kwargs:
             # If the input is a DF, we might be required to join
-            join_type, left_on, right_on, j_ignore_case = _get_join_params(func_kwargs)
+            join_type, left_on, right_on, j_ignore_case = get_join_params(func_kwargs)
             src_data = kwargs["data"] if join_type else None
             # Get the results of the query
             result_df = _exec_query_for_df(func, func_kwargs, func_params, kwargs)
@@ -567,40 +567,6 @@ def _create_data_func_exec(
         return _exec_query_for_values(func, func_kwargs, func_params, kwargs)
 
     return call_data_query  # type: ignore
-
-
-def _get_join_params(func_kwargs):
-    """Extract and return any join parameters."""
-    # remove and save the join kw, if specified (so it doesn't interfere
-    # with other operations and doesn't get sent to the function)
-    join_type = func_kwargs.pop("join", None)
-    join_ignore_case = func_kwargs.pop("join_ignore_case", None)
-    if not join_type:
-        return None, None, None, False
-    left_on = func_kwargs.pop("left_on", None)
-    right_on = func_kwargs.pop("right_on", None)
-    if left_on and not right_on:
-        warnings.warn(
-            "If you are specifying explicit join keys "
-            "you must specify 'right_on' parameter with the "
-            + "name of the output column to join on. "
-            + "Results will joined on index."
-        )
-    if not left_on:
-        col_keys = list(func_kwargs.keys() - {"start", "end", "data"})
-        if len(col_keys) == 1:
-            # Only one input param so assume this is the src/left
-            # join key
-            left_on = func_kwargs.get(col_keys[0])
-
-    if right_on and not left_on:
-        warnings.warn(
-            "Could not infer 'left' join column from source data. "
-            + "Please specify 'left_on' parameter with the "
-            + "name of the source column to join on. "
-            + "Results will joined on index."
-        )
-    return join_type, left_on, right_on, join_ignore_case
 
 
 def _exec_query_for_df(func, func_kwargs, func_params, parent_kwargs):

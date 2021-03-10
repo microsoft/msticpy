@@ -131,20 +131,22 @@ Jupyter notebooks.
 Getting started
 ---------------
 
+The pivoting library depends on a number of data providers and other
+functions defined in
+*MSTICPy*. These normally need to be loaded and initialized before starting
+the Pivot library.
+
+1. Load *MSTICPy*
+~~~~~~~~~~~~~~~~~
+
 .. code:: ipython3
 
     from msticpy.nbtools.nbinit import init_notebook
     init_notebook(namespace=globals());
 
 
-The pivoting library depends on a number of data providers used in
-*MSTICPy*. These normally need to be loaded and initialized before starting
-the Pivot library.
-
-This is mandatory for data query providers such as the AzureSentinel,
-Splunk or MDE data providers. These usually need initialization and
-authentication steps to load query definitions and connect to the
-service.
+2. Load one or more data providers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can create as many data providers (for different data
 backends) as you need - pivot will search all of them for usable
@@ -157,22 +159,33 @@ queries.
    to the pivot functions unless you authenticate/connect prior to creating
    the new Pivot object (or create a new Pivot object).
 
-You don't have to load providers such as Threat Intelligence (TILookup)
+.. warning:: If you are working with multiple Azure Sentinel workspaces,
+   Pivot does not create multiple instances of pivot query functions for
+   each workspace. To switch workspaces, use the ``QueryProvider.connect()``
+   function to switch to your desired workspace. Pivot query functions
+   will now be executed against that workspace. If you have a need to
+   query multiple workspaces, let us know and we will try to implement
+   simultaneous workspace pivots.
+
+You don't have to explicity load providers such as Threat Intelligence (TILookup)
 and GeoIP. If you do not initialize these before starting Pivot they
 will be loaded with the defaults as specified in your
 *msticpyconfig.yaml*. If you want to use a specific configuration for
 any of these, you should load and configure them before starting Pivot.
-
-Load one or more data providers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
     az_provider = QueryProvider("AzureSentinel")
 
 
-Initialize the Pivot library
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3. Initialize the Pivot library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See the next section.
+
+
+Initializing the Pivot library
+------------------------------
 
 You can either pass an explicit list of providers to Pivot or let it
 look for them in the notebook global namespace. In the latter case, the
@@ -183,27 +196,6 @@ If you have data providers loaded that you do not want
 Pivot to use, pass an explicit list of provider objects when initializing
 the Pivot class. For more details see
 :py:mod:`Pivot<msticpy.datamodel.pivot>`.
-
-What happens at initialization?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
--  Any instantiated data providers are searched for relevant queries.
-   Any queries found are added to the approriate entity or entities.
--  The TILookup provider is loaded and entity-specific lookups (e.g. IP, Url,
-   File) are added as pivot functions
--  Miscellaneous *MSTICPy* functions and classes (e.g. GeoIP, IpType,
-   Domain utils) are added as pivot functions to the appropriate entity.
--  A default time range is set - this is only used by queries executed
-   as pivot functions and covered later in `Data query pivot functions`_
-
-You can add additional functions as pivot functions by creating a
-registration template and importing the function. Details of this are
-covered later in the document.
-
-
-
-Initializing the Pivot library
-------------------------------
 
 You will usually see some output as provider libraries are loaded.
 
@@ -217,8 +209,26 @@ You will usually see some output as provider libraries are loaded.
    you normally don’t need to do so. You can access the current Pivot
    instance using the class attribute ``Pivot.current``
 
-See the list of providers loaded by the Pivot class
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+What happens at initialization?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  Any instantiated data providers are searched for relevant queries.
+   Any queries found are added to the approriate entity or entities.
+-  The TILookup provider is loaded and entity-specific lookups (e.g. IP, Url,
+   File) are added as pivot functions
+-  Miscellaneous *MSTICPy* functions and classes (e.g. GeoIP, IpType,
+   Domain utils) are added as pivot functions to the appropriate entity.
+-  A default time range is set - this is only used by queries executed
+   as pivot functions and covered later in `Data query pivot functions`_
+
+You can add additional functions as pivot functions by creating a
+registration template and importing the function. Details of this are
+covered later in `Customizing and managing Pivots`_.
+
+
+View the list of providers loaded by the Pivot class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Notice that TILookup was loaded even though we did not create an
 instance of TILookup beforehand.
@@ -313,8 +323,10 @@ initializing the class.
 You can also acheive the same thing by creating a new instance of the
 Pivot class.
 
-.. note:: Reloading will not remove previously attached pivot functions,
-   it will overwrite existing ones and add any new ones that it finds.
+.. note:: Reloading will remove previously attached pivot functions.
+   This is usually a safe operation since these can be dynamically
+   created at any time. If you don't want to remove existing functions
+   use the ``no_clear=True`` parameter to ``reload_pivots``.
 
 
 Discovering entity names
@@ -328,11 +340,13 @@ can use that to verify the name of an entity.
     entities.find_entity("dns")
 
 .. parsed-literal::
+
     Match found 'Dns'
 
     msticpy.datamodel.entities.dns.Dns
 
-If a unique match is found the entity class is returned.
+If a unique match is found the entity class is returned. Otherwise,
+we try to suggest possible matches for the entity name.
 
 .. code:: ipython3
 
@@ -396,14 +410,16 @@ function.
 Shortcut pivot functions
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-A subset of the most regularly-used pivot functions are also added
+A subset of many regularly-used pivot functions are also added
 as "shortcuts" to the entities. These are not in containers but
 available as direct methods on the entity classes and entity instances.
+A shortcut is just a reference or pointer to a pivot function in
+one of the containers described in the previous section.
 
 Because the shortcut methods behave as *instance* methods they can take input
 values from the entity attributes directly. In this example, the input to
-the ``ip_type`` function is taken from the ``Address`` attribute of the
-entity.
+the ``ip_type`` function is automatically taken from the ``Address``
+attribute of the IP entity.
 
 .. code:: ipython3
 
@@ -417,8 +433,12 @@ described in the rest of the document. In the previous example showing
 pivot functions with the ``get_pivot_list()`` function, the shortcut
 versions of the pivot functions appear without a "." in the name.
 
-To help keep the type of function clear, data query shortcuts are prefixed
+To help you navigate which shortcut does what, data query shortcuts are prefixed
 with "qry\_" and threat intelligence lookups with "ti\_".
+
+You can create your own shortcut methods to existing or custom pivot functions
+as described in `Creating and deleting shortcut pivot functions`_.
+
 
 Using the Pivot Browser
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -505,7 +525,7 @@ There are a few variations in the way you can specify parameters:
 
 -  Positional parameter - If the function only accepts one parameter you
    can usually just supply it without a name - as a *positional parameter*
-   (see first and third examples below)
+   (see first and third examples in the code sample in the next section)
 -  Native parameter - You can also use the native parameter name -
    i.e. the name that the underlying function expects and that will be
    shown in the ``help(function)`` output. (second example below)
@@ -642,7 +662,7 @@ collating the results to hand you back a single dataframe.
    that will not work with iterable or dataframe input.
 
 Similarly, where the function expects a dataframe or iterable as an
-input you can supply a simple string value and the pivot interface
+input, you can supply a simple string value and the pivot interface
 will convert to the expected input type (in this case a single-column,
 single-row DataFrame).
 
@@ -772,13 +792,15 @@ can send to a pivot function.
 
     from msticpy.datamodel import txt_df_magic
 
-Here, we paste in the text into a cell, add the cell magic at the
-top of the cell with parameters
+Here, we paste in the text into a cell, add the cell magic ``%%txt2df``
+at the top of the cell with parameters
 telling it that the first row is a head row and that we want it to
 create a named pandas DataFrame in the notebook global namespace.
 (This just means that when you execute this cell it will create
 a DataFrame variable named "ip_df1" that you can use in subsequent
 cells).
+
+Use ``%%txt2df --help`` to see the supported usage.
 
 .. code:: ipython3
 
@@ -807,7 +829,8 @@ Joining input to output data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You might want to return a data set that is joined to your input set. To
-do that use the “join” parameter.
+do that use the “join” parameter. Join works with all types of inputs:
+value, list or DataFrame.
 
 The value of join can be one of the following:
 
@@ -820,7 +843,7 @@ To preserve all rows from the input, use a “left” join. To keep only
 rows that have a valid result from the function use “inner” or “right”
 
    Note while most functions only return a single output row for each
-   input row some return multiple rows. Be cautious using “outer” in
+   input row, some return multiple rows. Be cautious using “outer” in
    these cases.
 
 .. code:: ipython3
@@ -838,8 +861,24 @@ AllExtIPs      CountryCode    CountryName    State     City          Longitude  
 65.55.44.108   US             United States  Virginia  Boydton        -78.375      36.6534         set()    geolocation  {}                65.55.44.108
 =============  =============  =============  ========  ==========  ===========  ==========  =====  =======  ===========  ================  =============
 
-By default the pivot functions will infer the join keys for input and output data
+By default, the pivot functions will infer the join keys for input and output data
 from the function definitions and parameters.
+
+For advanced use, you can override the default behavior of joining on
+inferred join keys by specifying ``left_on`` and ``right_on`` parameters.
+The ``left_on`` parameter is typically the input parameter name and
+``right_on`` is a column in the output DataFrame (the pivot results).
+Usually, you won't need to use this flexibility.
+
+The join operation also supports a ``join_ignore_case`` parameter.
+This lets you join text columns ignoring case differences. This can
+be helpful with data like hash strings and domain names, which are
+case insensitive and can be represented differently.
+
+.. warning:: using ``join_ignore_case`` does add a performance
+   overhead since normalized case columns need to be created for both
+   input and output data sets before the join takes place.
+   This might be a significant overhead on larger data sets.
 
 Data query pivot functions
 --------------------------
@@ -1350,10 +1389,12 @@ also join it to the output. By default, it uses the index of the input
 rows to join to the output. This usually works well unless the input
 index has duplicate values.
 
-You can override the default behavior of joining on the index by
+Index joining may not work if the query parameter are "list" types
+(e.g. some queries accept parameters that are a sequence of values).
+In these cases, you can override the default joining behavior by
 specifying ``left_on`` and ``right_on`` column names. The ``left_on``
 column name must be a column in the input DataFrame and ``right_on``
-must specify a column in the output DataFrame (the query results).
+must be a column in the output DataFrame (the query results).
 
 The join operation also supports a ``join_ignore_case`` parameter.
 This lets you join text columns ignoring case differences. This can
@@ -1968,8 +2009,11 @@ Optionally, you can add ``verbose=True`` which will cause a progress bar
 and step details to be displayed as the pipeline is executed.
 
 
+Customizing and managing Pivots
+-------------------------------
+
 Adding custom functions to the pivot interface
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The pivot library supports adding functions as pivot functions from
 any importable Python library. Not all functions will be wrappable.
@@ -2158,3 +2202,56 @@ pivot registration parameters as keyword arguments:
         func_input_value_arg="input",
         func_new_name="upper_name",
     )
+
+
+Creating and deleting shortcut pivot functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you are adding pivot functions of your own, you can add shortcuts
+(i.e. direct methods of the entity, rather than methods in sub-containers)
+to those functions.
+
+Every entity class has the class method
+:py:meth:`make_pivot_shortcut<msticpy.datamodel.entities.Entity.make_pivot_shortcut>`.
+You can use this to add a shortcut to an existing pivot function on that
+entity. Note that you must call this method on the entity *class* and not
+on an instance of that Entity.
+
+The parameters that you must supply are ``func_name`` and ``target``. The former
+is the relative path to the pivot function that you want to make the shortcut
+to, e.g. for ``IpAddress.util.whois`` you would use the string "util.whois".
+``target`` is the string name that you want the shortcut function to be called.
+This should be a valid Python identifier - a string starting with a letter or
+underscore, followed by any combination of letters, digits and underscores. If
+you supply a string that is not a valid identifier, the function will try to
+transform it into one.
+
+.. code:: ipython3
+
+    >>> IpAddress.make_pivot_shortcut(func_name="util.whois", target="my_whois")
+    >>> IpAddress.my_whois("157.53.1.1")
+
+.. parsed-literal::
+
+    ip_column    AsnDescription    whois_result
+    157.53.1.1   NA                {'nir': None, 'asn_registry': 'arin', ...
+
+
+If the shortcut function already exists, you will get an error (AttributeError).
+You can force overwriting of an existing shortcut by adding ``overwrite=True``.
+
+To delete a shortcut use
+:py:meth:`del_pivot_shortcut<msticpy.datamodel.entities.Entity.del_pivot_shortcut>`,
+giving the single parameter ``func_name`` with the name of the shortcut function
+you want to remove.
+
+
+Removing pivot functions from an entity or all entities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Although not a common operation you can remove *all* pivot functions
+from an entity or from all entities.
+
+See
+:py:meth:`remove_pivot_funcs<msticpy.datamodel.pivot.Pivot.remove_pivot_funcs>`
+for more details.

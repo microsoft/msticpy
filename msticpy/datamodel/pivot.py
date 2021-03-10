@@ -23,6 +23,7 @@ from .pivot_data_queries import add_data_queries_to_entities
 from .pivot_register import PivotRegistration
 from .pivot_register_reader import add_unbound_pivot_function, register_pivots
 from .pivot_ti_provider import add_ioc_queries_to_entities
+from . import entities
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -76,7 +77,10 @@ class Pivot:
         self.reload_pivots(namespace=namespace, providers=providers)
 
     def reload_pivots(
-        self, namespace: Dict[str, Any] = None, providers: Iterable[Any] = None
+        self,
+        namespace: Dict[str, Any] = None,
+        providers: Iterable[Any] = None,
+        clear_existing: bool = True,
     ):
         """
         Load or reload Pivot functions from environment and/or providers list.
@@ -90,8 +94,16 @@ class Pivot:
             A list of query providers, TILookup or other providers to
             use (these will override providers of the same type read
             from `namespace`), by default None
+        clear_existing : bool
+            Reloads pivot functions without clearing existing pivot
+            assignments. Any pivot functions with conflicting names will
+            be overwritten by the reload operation.
+            The default is True.
 
         """
+        if clear_existing:
+            self.remove_pivot_funcs(entity="all")
+
         self._get_all_providers(namespace, providers)
 
         # load and assign functions for data queries
@@ -382,6 +394,38 @@ class Pivot:
         add_unbound_pivot_function(
             func=func, pivot_reg=pivot_reg, container=container, **kwargs
         )
+
+    @staticmethod
+    def remove_pivot_funcs(entity: str):
+        """
+        Remove pivot functions from one or all entities.
+
+        Parameters
+        ----------
+        entity : str
+            entity class name or "all" to remove all pivot functions.
+
+        Raises
+        ------
+        ValueError
+            If entity is not a recognized entity class.
+
+        """
+        all_entities = dir(entities)
+        if entity != "all":
+            if entity not in all_entities:
+                raise ValueError(f"Entity name '{entity}' not found.")
+            entity_names = [entity]
+        else:
+            entity_names = all_entities
+        for entity_name in entity_names:
+            entity_cls = getattr(entities, entity_name)
+            for attr in dir(entity_cls):
+                attr_obj = getattr(entity_cls, attr)
+                if type(attr_obj).__name__ == "QueryContainer":
+                    delattr(entity_cls, attr)
+                if callable(attr_obj) and hasattr(attr_obj, "pivot_properties"):
+                    delattr(entity_cls, attr)
 
     @staticmethod
     def browse():
