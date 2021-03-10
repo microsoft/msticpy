@@ -53,16 +53,17 @@ def az_connect(
 
     """
     # If using env options try to load from msticpy
-    if auth_methods is None or "env" in auth_methods:
-        try:
-            data_provs = get_provider_settings(config_section="DataProviders")
-            az_cli_config = data_provs.get("AzureCLI")
-            if az_cli_config and az_cli_config.args:
-                os.environ["AZURE_CLIENT_ID"] = az_cli_config.args["clientId"]
-                os.environ["AZURE_TENANT_ID"] = az_cli_config.args["tenantId"]
-                os.environ["AZURE_CLIENT_SECRET"] = az_cli_config.args["clientSecret"]
-        except KeyError:
-            pass
+    data_provs = get_provider_settings(config_section="DataProviders")
+    az_cli_config = data_provs.get("AzureCLI")
+    if az_cli_config and az_cli_config.args:
+        if auth_methods is None and "auth_methods" in az_cli_config.args:
+            auth_methods = az_cli_config.args.get("auth_methods")
+        if auth_methods is not None and "env" in auth_methods:
+            os.environ["AZURE_CLIENT_ID"] = az_cli_config.args.get("clientId") or ""
+            os.environ["AZURE_TENANT_ID"] = az_cli_config.args.get("tenantId") or ""
+            os.environ["AZURE_CLIENT_SECRET"] = (
+                az_cli_config.args.get("clientSecret") or ""
+            )
     credentials = az_connect_core(auth_methods=auth_methods, silent=silent)
     sub_client = SubscriptionClient(credentials.modern)  # type: ignore
     if not sub_client:
@@ -85,5 +86,4 @@ def az_user_connect(silent: bool = False) -> AzCredentials:
     AzCredentials
 
     """
-    credentials = az_connect_core(auth_methods=["cli", "interactive"], silent=silent)
-    return credentials
+    return az_connect_core(auth_methods=["cli", "interactive"], silent=silent)
