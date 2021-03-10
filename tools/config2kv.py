@@ -81,7 +81,7 @@ def _read_config_settings(conf_file):
 def _write_config_settings(conf_file, conf_settings, confirm):
     if Path(conf_file).is_file():
         print(f"Output file {conf_file} exists.")
-        if not _prompt_yn("Overwrite (y/n)?", confirm):
+        if not _prompt_yn("Overwrite (y/n)? ", confirm):
             return
     yaml.SafeDumper.ignore_aliases = lambda *args: True
     with open(conf_file, "w") as conf_hdl:
@@ -144,8 +144,11 @@ def _show_settings(secrets, ud_settings):
 
 
 def _prompt_yn(mssg, confirm):
+    mssg = f"{mssg.strip()} "
     if confirm:
         resp = input(mssg)  # nosec
+        while resp.strip().casefold() not in ("y", "n"):
+            resp = input("Expected 'y' or 'n' response.")
     else:
         resp = "y"
     return resp.casefold().startswith("y")
@@ -159,7 +162,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         vault_uri = kv_mgmt.get_vault_uri(vault_name)
         print(f"Vault {vault_name} found.")
     except CloudError:
-        mssg = f"Vault {vault_name} not found. Create new vault (y/n)?"
+        mssg = f"Vault {vault_name} not found. Create new vault (y/n)? "
         if _prompt_yn(mssg, confirm):
             print("Creating {vault_name}. Please wait...")
             new_vault = kv_mgmt.create_vault(vault_name=vault_name)
@@ -169,7 +172,7 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
         print("Vault name was not created. Aborting.")
         return
 
-    mssg = f"Add secrets to vault {vault_name} (y/n)?"
+    mssg = f"Add secrets to vault {vault_name} (y/n)? "
     print("Adding secrets to vault requires authentication")
     if _prompt_yn(mssg, confirm):
         kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
@@ -181,18 +184,19 @@ def _add_secrets_to_vault(vault_name, secrets, confirm, **kwargs):
 
 
 def _list_secrets(vault_name: str, confirm, **kwargs):
-    mssg = "Show secret values (y/n)?"
-    print(f"Secrets currently in vault {vault_name}")
+    mssg = "Show secret values (y/n)? "
     show_secrets = _prompt_yn(mssg, confirm)
     kv_client = BHKeyVaultClient(vault_name=vault_name, **kwargs)
+    print(f"Secrets currently in vault {vault_name}")
     for sec_name in kv_client.secrets:
+        sec_name = sec_name.rsplit("/", maxsplit=1)[-1]
         print(f"Secret: {sec_name}", end=": ")
         if show_secrets:
             secret = kv_client.get_secret(secret_name=sec_name)
-            print(secret.value)
+            print(secret)
         else:
             print("************")
-        print("Done")
+    print("Done")
 
 
 def _add_script_args(description):
@@ -202,7 +206,6 @@ def _add_script_args(description):
     parser.add_argument(
         "--path",
         "-p",
-        default=".",
         required=False,
         help="Path to msticpyconfig.yaml. Defaults to using MSTICPYCONFIG env variable.",
     )

@@ -180,6 +180,10 @@ class BHKeyVaultClient:
             Secret not found in the Vault.
 
         """
+        if "/" in secret_name:
+            # If we're passed the full URL to the secret - extract just the
+            # name
+            secret_name = secret_name.rsplit("/", maxsplit=1)[-1]
         try:
             secret_bundle = self.kv_client.get_secret(name=secret_name)
         except ResourceNotFoundError as err:
