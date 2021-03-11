@@ -225,6 +225,7 @@ class PivotAccessor:
         pd.DataFrame
             The input DataFrame with only columns that match the
             filtering expressions.
+
         """
         curr_cols = self._df.columns
         filt_cols: Set[str] = set()

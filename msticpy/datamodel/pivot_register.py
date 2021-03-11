@@ -221,7 +221,7 @@ def get_join_params(
     func_kwargs: Dict[str, Any]
 ) -> Tuple[Optional[str], Optional[str], Optional[str], bool]:
     """
-    Get join parameters from kwargs
+    Get join parameters from kwargs.
 
     Parameters
     ----------
