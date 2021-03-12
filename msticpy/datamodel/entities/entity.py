@@ -97,7 +97,7 @@ class Entity(ABC, Node):
         """
         schema_dict = self._entity_schema.copy()
         schema_dict["Type"] = None
-        for attr, val in schema_dict.items():
+        for attr, val in src_entity.items():
             if attr not in src_entity:
                 continue
             self[attr] = src_entity[attr]
