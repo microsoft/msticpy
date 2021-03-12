@@ -140,7 +140,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             queries_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get alert rules.")
+            raise CloudError(response=response)
 
         return queries_df[queries_df["properties.Category"] == "Hunting Queries"]
 
@@ -194,7 +194,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             alerts_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get alert rules.")
+            raise CloudError(response=response)
 
         return alerts_df
 
@@ -253,7 +253,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             bookmarks_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get bookmarks.")
+            raise CloudError(response=response)
 
         return bookmarks_df
 
@@ -372,7 +372,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             incident_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError(f"Could not get incident status: {response.status_code}")
+            raise CloudError(response=response)
 
         return incident_df
 
@@ -442,7 +442,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             print("Incident updated.")
         else:
-            raise CloudError(f"Could not get incident status: {response.status_code}")
+            raise CloudError(response=response)
 
     def post_comment(
         self,
@@ -503,7 +503,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 201:
             print("Comment posted.")
         else:
-            raise CloudError(response)
+            raise CloudError(response=response)
 
     def _check_config(self, items: List) -> Dict:
         """
