@@ -127,7 +127,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -181,7 +182,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -240,7 +242,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -299,7 +302,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incidents_url = url + _PATH_MAPPING["incidents"]
@@ -360,7 +364,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incidents_url = url + _PATH_MAPPING["incidents"]
@@ -420,7 +425,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
@@ -487,7 +493,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incident_url = url + _PATH_MAPPING["incidents"]
