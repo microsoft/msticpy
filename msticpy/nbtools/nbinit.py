@@ -271,7 +271,7 @@ def _extract_pkg_name(
     """Return string representation of package import."""
     if imp_pkg:
         pkg = imp_pkg.get("pkg")
-        tgt = imp_pkg.get("pkg")
+        tgt = imp_pkg.get("tgt")
         alias = imp_pkg.get("alias")
     import_item = f"{pkg}.{tgt}" if tgt else pkg
     if alias:
@@ -316,7 +316,7 @@ def _global_imports(  # noqa: MC0001
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
             )
 
-        if not _VERBOSE():  # type: ignore
+        if _VERBOSE():  # type: ignore
             if import_list:
                 print("Imported:", "; ".join(imp for imp in import_list if imp))
         return True
@@ -381,7 +381,6 @@ def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
         added_imports.append(
             _extract_pkg_name(pkg=params[0], tgt=params[1], alias=params[2])
         )
-        added_imports = [imp for imp in extra_imports if imp]
     return added_imports
 
 

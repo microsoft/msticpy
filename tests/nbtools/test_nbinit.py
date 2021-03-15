@@ -103,12 +103,13 @@ def test_install_pkgs():
     init_notebook(
         namespace=ns_dict,
         additional_packages=[test_pkg],
-        extra_imports=["pip_install_test"],
         def_imports="nb",
+        verbose=True,
     )
 
     for name, obj in ns_dict.items():
         print(name, type(obj))
     check.is_in("pip_install_test", ns_dict)
+    print(ns_dict)
 
     subprocess.run(["pip", "uninstall", "-y", test_pkg], check=True)  # nosec
