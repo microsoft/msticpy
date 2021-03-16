@@ -94,6 +94,11 @@ def install_pkg(extra: str, path: str, version: str, verbose: bool):
         extra to install (default none)
     path : str
         path of the distribution
+    version : str
+        the version number of the package to install
+    verbose : bool
+        Emit verbose output for subproceses.
+
 
     """
     sp_run = [
