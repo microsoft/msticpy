@@ -311,6 +311,9 @@ def _global_imports(  # noqa: MC0001
                 print(
                     "Please re-run init_notebook() with the parameter user_install=True."
                 )
+            # We want to force import lib to see anything that we've
+            # just installed.
+            importlib.invalidate_caches()
         if extra_imports:
             import_list.extend(
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
@@ -368,6 +371,8 @@ def _set_nb_options(namespace):
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
     added_imports = []
+    if isinstance(extra_imports, str):
+        extra_imports = [extra_imports]
     for imp_spec in extra_imports:
         params: List[Optional[str]] = [None, None, None]
         for idx, param in enumerate(imp_spec.split(",")):

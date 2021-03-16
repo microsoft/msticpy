@@ -7,6 +7,7 @@
 import datetime
 from datetime import timedelta
 import os
+import pkg_resources
 import subprocess  # nosec
 
 import pandas as pd
@@ -94,7 +95,8 @@ def test_check_config():
 
 def test_install_pkgs():
     """Test installing and importing a package."""
-    test_pkg = "pip-install-test"
+    test_pkg = "pip_install_test"
+    test_imp = "pip_install_test, , test_pkg_import"
 
     # Uninstall package if it is already there
     subprocess.run(["pip", "uninstall", "-y", test_pkg], check=True)  # nosec
@@ -104,12 +106,13 @@ def test_install_pkgs():
         namespace=ns_dict,
         additional_packages=[test_pkg],
         def_imports="nb",
+        extra_imports=test_imp,
         verbose=True,
     )
 
     for name, obj in ns_dict.items():
         print(name, type(obj))
-    check.is_in("pip_install_test", ns_dict)
+    check.is_in("test_pkg_import", ns_dict)
     print(ns_dict)
 
     subprocess.run(["pip", "uninstall", "-y", test_pkg], check=True)  # nosec

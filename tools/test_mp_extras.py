@@ -130,10 +130,7 @@ def reset_pkgs(verbose: bool):
         "pip",
         "list",
     ]
-    print("Getting currently installed packages")
-    proc_call = subprocess.run(sp_run, check=True, capture_output=True)  # type: ignore
-    inst_pkgs = proc_call.stdout.decode("utf-8").split("\n")[2:]
-    inst_pkgs = {pkg.split()[0] for pkg in inst_pkgs if pkg.strip()}
+    inst_pkgs = _get_installed_pkgs()
     remove_pkgs = inst_pkgs - set(base_pkgs)
 
     sp_run.remove("list")
@@ -142,7 +139,7 @@ def reset_pkgs(verbose: bool):
     print(sp_run)
     if verbose:
         print(" ".join(sp_run))
-    subprocess.run(sp_run, **(VERB_ARGS if verbose else {}))  # type: ignore
+    subprocess.run(sp_run, check=True, **(VERB_ARGS if verbose else {}))  # type: ignore
 
 
 def show_dist(path: str):
@@ -154,11 +151,27 @@ def show_dist(path: str):
 
 def run_tests(path: str, verbose: bool):
     """Run pytest on `path`."""
-    sp_run = ["pytest", path]
+    sp_run = ["pytest"]
+    inst_pkgs = _get_installed_pkgs()
+    if "pytest-xdist" in inst_pkgs:
+        sp_run.extend(["-n", "auto"])
+    sp_run.append(path)
     print("Running tests")
     if verbose:
         print(" ".join(sp_run))
-    subprocess.run(sp_run, cwd=path, **(VERB_ARGS if verbose else {}))  # type: ignore
+    subprocess.run(sp_run, cwd=path, check=True, **(VERB_ARGS if verbose else {}))  # type: ignore
+
+
+def _get_installed_pkgs():
+    sp_run = [
+        "python",
+        "-m",
+        "pip",
+        "list",
+    ]
+    proc_call = subprocess.run(sp_run, check=True, capture_output=True)  # type: ignore
+    inst_pkgs = proc_call.stdout.decode("utf-8").split("\n")[2:]
+    return {pkg.split()[0] for pkg in inst_pkgs if pkg.strip()}
 
 
 def make_dist(path: str, verbose: bool):
