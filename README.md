@@ -284,14 +284,11 @@ query time boundary settings and event display into an easy-to-use format.
 
 ---
 
-## Clone the notebooks in this repo to Azure Notebooks
+## More Notebooks on Azure Sentinel Notebooks GitHub
 
-Requires sign-in to Azure Notebooks
-<a href="https://notebooks.azure.com/import/gh/Microsoft/msticpy">
-<img src="https://notebooks.azure.com/launch.png" />
-</a>
+[Azure Sentinel Notebooks](https://github.com/Azure/Azure-Sentinel-Notebooks)
 
-## More Notebooks
+Example notebooks:
 
 - [Account Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb)
 - [Domain and URL Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb)
