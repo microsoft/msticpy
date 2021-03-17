@@ -28,7 +28,12 @@ EXTRAS_EXCEPTIONS = {
     "msticnb",
     "pyperclip",
 }
-CONDA_PKG_EXCEPTIONS = {"vt-py", "vt-graph-api", "nest_asyncio"}
+CONDA_PKG_EXCEPTIONS = {
+    "vt-py",
+    "vt-graph-api",
+    "nest_asyncio",
+    "KqlmagicCustom[jupyter-basic]",
+}
 
 
 @pytest.fixture(scope="module")

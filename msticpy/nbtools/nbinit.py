@@ -101,6 +101,8 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
+    dict(pkg="msticpy.datamodel.pivot", tgt="Pivot"),
+    dict(pkg="msticpy.datamodel", tgt="entities"),
 ]
 _MP_IMPORT_ALL = [
     dict(module_name="msticpy.nbtools"),

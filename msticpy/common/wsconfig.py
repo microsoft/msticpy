@@ -59,7 +59,11 @@ class WorkspaceConfig:
     CONF_RES_GROUP_KEY = "resource_group"
     CONF_WS_NAME_KEY = "workspace_name"
 
-    def __init__(self, config_file: Optional[str] = None, workspace: str = None):
+    def __init__(
+        self,
+        workspace: Optional[str] = None,
+        config_file: Optional[str] = None,
+    ):
         """
         Load current Azure Notebooks configuration for Log Analytics.
 
@@ -69,7 +73,7 @@ class WorkspaceConfig:
             path to a configuration file,
             Defaults to msticpyconfig.yaml if settings are configured there.
             If not, looks for a config.json in current folder
-        workspace : str, optional
+        workspace : str, Optional[str]
             Workspace name (where multiple workspaces are configured),
             by default the Default workspace will be used.
 

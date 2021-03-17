@@ -366,6 +366,8 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg):
                 )
         results.append(result)
     if pivot_reg.return_raw_output:
+        if len(results) == 1:
+            return results[0]
         return results
     return pd.concat(results, ignore_index=True)
 
