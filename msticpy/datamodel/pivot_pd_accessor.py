@@ -10,6 +10,7 @@ from numbers import Number
 import warnings
 from typing import Callable, Dict, Iterable, Set, Union
 
+import numpy as np
 import pandas as pd
 from IPython import get_ipython
 from IPython.display import HTML, display
@@ -375,6 +376,38 @@ class PivotAccessor:
         # create the ascending parameter
         asc_param = ascending if ascending is not None else list(sort_cols.values())
         return self._df.sort_values(list(sort_cols.keys()), ascending=asc_param)
+
+    def list_to_rows(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+        """
+        Expand a list column to individual rows.
+
+        Parameters
+        ----------
+        cols : Union[str, Iterable[str]]
+            The columns to be expanded.
+
+        Returns
+        -------
+        pd.DataFrame
+            The expanded DataFrame
+        """
+        orig_cols = self._df.columns
+        data = self._df
+        if isinstance(cols, str):
+            cols = [cols]
+        for col in cols:
+            item_col = f"{col}_list_item$$"
+            ren_col = {item_col: col}
+            data = (
+                pd.DataFrame(data[col].to_list())
+                .replace([None], np.nan)  # convert any Nones to NaN
+                .merge(data, right_index=True, left_index=True)
+                .melt(id_vars=orig_cols, value_name=item_col)
+                .dropna(subset=[item_col])  # get rid of rows with NaNs in this col
+                .drop([col], axis=1)
+                .rename(columns=ren_col)
+            )
+        return data
 
 
 def _name_match(cur_cols: Iterable[str], col_filter, match_case):
