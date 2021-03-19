@@ -103,19 +103,18 @@ def convert_to_ip_entities(
             addrs = [ip_str]
     elif data is not None and ip_col:
         addrs = data[ip_col].values
-
-        for addr in addrs:
-            ip_entity = IpAddress()
-            ip_entity.Address = addr.strip()
-            if geo_lookup:
-                try:
-                    ip_lookup = _GET_IP_LOOKUP()
-                    ip_lookup.lookup_ip(ip_entity=ip_entity)
-                except DataError:
-                    pass
-            ip_entities.append(ip_entity)
     else:
         raise ValueError("No useable input provided.")
+    for addr in addrs:
+        ip_entity = IpAddress()
+        ip_entity.Address = addr.strip()
+        if geo_lookup:
+            try:
+                ip_lookup = _GET_IP_LOOKUP()
+                ip_lookup.lookup_ip(ip_entity=ip_entity)
+            except DataError:
+                pass
+        ip_entities.append(ip_entity)
     return ip_entities
 
 
