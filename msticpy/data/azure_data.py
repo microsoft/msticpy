@@ -473,17 +473,16 @@ class AzureData:
         )
 
         # Get first API version that isn't in preview
-        if resource_types:
-            api_version = [
-                v for v in resource_types.api_versions if "preview" not in v.lower()
-            ]
-            if api_version is None or not api_version:
-                api_ver = resource_types.api_versions[0]
-            else:
-                api_ver = api_version[0]
-        else:
+        if not resource_types:
             raise MsticpyResourceException("Resource provider not found")
 
+        api_version = [
+            v for v in resource_types.api_versions if "preview" not in v.lower()
+        ]
+        if api_version is None or not api_version:
+            api_ver = resource_types.api_versions[0]
+        else:
+            api_ver = api_version[0]
         return str(api_ver)
 
     def get_network_details(
@@ -721,15 +720,15 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
-        client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
+            client = _CLIENT_MAPPING[client_name]
             if sub_id is None:
                 setattr(self, client_name, client(self.credentials.modern))  # type: ignore
             else:
                 setattr(self, client_name, client(self.credentials.modern, sub_id))  # type: ignore
 
-            if getattr(self, client_name) is None:
-                raise CloudError("Could not create client")
+        if getattr(self, client_name) is None:
+            raise CloudError("Could not create client")
 
     def _legacy_auth(self, client_name: str, sub_id: str = None):
         """

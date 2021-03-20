@@ -1,18 +1,27 @@
 Package Summary
 ===============
 
+.. note:: This document is intended to summarize most of the functionality of
+   *MSTICPy* in a single page but it is difficult to keep it up-to-date.
+   You may find it easier to use the ReadTheDocs menu to browse around
+   the various functions of this package.
+
+
 Data Acquisition and Queries
 ----------------------------
 
 See :doc:`../DataAcquisition`
 
-QueryProvider
-~~~~~~~~~~~~~
+QueryProviders
+~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.data.data_providers.QueryProvider`
 
-Extensible query library targeting Log Analytics or OData
-endpoints. Built-in parameterized queries allow complex queries to be run
+Extensible query library targeting Log Analytics, Splunk, OData
+and other log data sources. Also special support for Mordor data
+sets and using local data.
+
+Built-in parameterized queries allow complex queries to be run
 from a single function call. Add your own queries using a simple YAML
 schema.
 
@@ -25,8 +34,8 @@ Data Processing and Enrichment
 ------------------------------
 
 
-tiproviders
-~~~~~~~~~~~
+Threat Intelligence Providers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.sectools.tilookup`
 
@@ -42,17 +51,15 @@ See :doc:`../data_acquisition/TIProviders`
 
 Sample notebook - `TILookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/TIProviders.ipynb>`__
 
-vtlookup
-~~~~~~~~
+vtlookup and vtlookupv3
+~~~~~~~~~~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.sectools.vtlookup`
 
 Wrapper class around `Virus Total
-API <https://www.virustotal.com/en/documentation/public-api/>`__. Input
-can be a single IoC observable or a pandas DataFrame containing multiple
-observables. Processing requires a Virus Total account and API key and
-processing performance is limited to the number of requests per minute
-for the account type that you have. Support IoC Types:
+API <https://www.virustotal.com/en/documentation/public-api/>`__.
+Processing requires a Virus Total account and API key.
+Supported IoC Types:
 
 -  Filehash
 -  URL
@@ -61,8 +68,8 @@ for the account type that you have. Support IoC Types:
 
 Sample notebook - `VTLookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/VirusTotalLookup.ipynb>`__
 
-geoip
-~~~~~
+IP geo-location lookups
+~~~~~~~~~~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.sectools.geoip`
 
@@ -80,99 +87,34 @@ See :doc:`../data_acquisition/GeoIPLookups`
 
 Sample notebook - `GeoIP Lookup Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/GeoIPLookups.ipynb>`__
 
-Azure Data
-~~~~~~~~~~
+Azure Resource Data, Storage and Azure Sentinel API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.data.azure_data`
+:py:mod:`msticpy.data.azure_sentinel`
+:py:mod:`msticpy.data.azure_blob_storage`
 
-This package contains functionality for enriching data regarding Azure host
-details with additional host details exposed via the Azure API.
+The AzureData module contains functionality for enriching data regarding Azure host
+details with additional host details exposed via the Azure API. The AzureSentinel
+module allows you to query incidents, retrieve detector and hunting
+queries. AzureBlogStorage lets you read and write data from blob storage.
 
-See :doc:`../data_acquisition/AzureData`
-
-base64unpack
-~~~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.base64unpack`
-
-Base64 and archive (gz, zip, tar) extractor. Input can either be a
-single string or a specified column of a pandas dataframe. It will try
-to identify any base64 encoded strings and decode them. If the result
-looks like one of the supported archive types it will unpack the
-contents. The results of each decode/unpack are rechecked for further
-base64 content and will recurse down up to 20 levels (default can be
-overridden). Output is to a decoded string (for single string input) or
-a DataFrame (for dataframe input).
-
-See :doc:`../data_analysis/Base64Unpack`
-
-Sample notebook - `Base64Unpack Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb>`__
-
-iocextract
-~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.iocextract`
-
-Uses a set of builtin regular expressions to look for Indicator of
-Compromise (IoC) patterns. Input can be a single string or a pandas
-dataframe with one or more columns specified as input.
-
-The following types are built-in:
-
--  IPv4 and IPv6
--  URL
--  DNS domain
--  Hashes (MD5, SHA1, SHA256)
--  Windows file paths
--  Linux file paths (this is kind of noisy because a legal linux file
-   path can have almost any character) You can modify or add to the
-   regular expressions used at runtime.
-
-Output is a dictionary of matches (for single string input) or a
-DataFrame (for dataframe input).
-
-See :doc:`../data_analysis/IoCExtract`
-
-Sample notebook - `IoCExtract Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb>`__
+See :doc:`../data_acquisition/AzureData`, :doc:`../data_acquisition/AzureSentinel`
+:doc:`../data_acquisition/AzureBlobStorage`
 
 
-auditdextract
-~~~~~~~~~~~~~
+Pivot Functions
+~~~~~~~~~~~~~~~
+:py:mod:`msticpy.data_model.pivot`
+:py:mod:`msticpy.data_model.entities`
 
-:py:mod:`msticpy.sectools.auditdextract`
+Lets you use *MSTICPy* functionality in an "entity-centric" way.
+All functions, queries and lookups that relate to a particular entity type
+(e.g. Host, IpAddress, Url) are collected together as methods of that
+entity class. So, if you want to do things with an IP address, just load
+the IpAddress entity and browse its methods.
 
-Module to load and decode Linux audit logs. It collapses messages
-sharing the same message ID into single events, decodes hex-encoded data
-fields and performs some event-specific formatting and normalization
-(e.g. for process start events it will re-assemble the process command
-line arguments into a single string).
-
-
-syslog_utils
-~~~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.syslog_utils`
-
-Module to support the investigation of Linux hosts through Syslog.
-Includes functions to create host records, cluster logon events, and
-identify user sessions containing suspicious activity.
-
-cmd_line
-~~~~~~~~
-
-:py:mod:`msticpy.sectools.cmd_line`
-
-Module to investigation of command line activity. Allows for the detection
-of known malicious commands as well as suspicious patterns of behaviour.
-
-domain_utils
-~~~~~~~~~~~~
-
-:py:mod:`msticpy.sectools.domain_utils`
-
-Module to support investigation of domain names and URLs with functions to
-validate a domain name and screenshot a URL.
-
+See :doc:`../data_analysis/PivotFunctions`
 
 
 Security Analysis
@@ -192,8 +134,8 @@ See :doc:`../data_analysis/AnomalousSequence`
 
 Sample notebook - `Anomalous Sequence Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/AnomalousSequence.ipynb>`__
 
-Time Series
------------
+Time Series Analysis
+~~~~~~~~~~~~~~~~~~~~
 
 :py:mod:`msticpy.analysis.timeseries` and :py:mod:`msticpy.sectools.timeseries`
 
@@ -294,44 +236,103 @@ See :doc:`../visualization/NotebookWidgets`
 
 Sample notebook - `Event Clustering Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/NotebookWidgets.ipynb>`__
 
-Display functions
-~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.nbdisplay`
+Utility Functions
+-----------------
 
-Common display of things like
-alerts, events in a slightly more consumable way than print()
+base64unpack
+~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.base64unpack`
+
+Base64 and archive (gz, zip, tar) extractor. Input can either be a
+single string or a specified column of a pandas dataframe. It will try
+to identify any base64 encoded strings and decode them. If the result
+looks like one of the supported archive types it will unpack the
+contents. The results of each decode/unpack are rechecked for further
+base64 content and will recurse down up to 20 levels (default can be
+overridden). Output is to a decoded string (for single string input) or
+a DataFrame (for dataframe input).
+
+See :doc:`../data_analysis/Base64Unpack`
+
+Sample notebook - `Base64Unpack Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Base64Unpack.ipynb>`__
+
+iocextract
+~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.iocextract`
+
+Uses a set of builtin regular expressions to look for Indicator of
+Compromise (IoC) patterns. Input can be a single string or a pandas
+dataframe with one or more columns specified as input.
+
+The following types are built-in:
+
+-  IPv4 and IPv6
+-  URL
+-  DNS domain
+-  Hashes (MD5, SHA1, SHA256)
+-  Windows file paths
+-  Linux file paths (this is kind of noisy because a legal linux file
+   path can have almost any character) You can modify or add to the
+   regular expressions used at runtime.
+
+Output is a dictionary of matches (for single string input) or a
+DataFrame (for dataframe input).
+
+See :doc:`../data_analysis/IoCExtract`
+
+Sample notebook - `IoCExtract Usage Notebook <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/IoCExtract.ipynb>`__
 
 
-Miscellaneous
--------------
+auditdextract
+~~~~~~~~~~~~~
 
-SecurityAlert and SecurityEvent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`msticpy.sectools.auditdextract`
 
-:py:class:`msticpy.nbtools.security_alert.SecurityAlert`
-
-:py:class:`msticpy.nbtools.security_event.SecurityEvent`
-
-Encapsulation classes for
-alerts and events. Each has a standard 'entities' property reflecting
-the entities found in the alert or event. These can also be used as
-meta-parameters for many of the queries. For example the query:
-``qry.list_host_logons(query_times, alert)`` will extract
-the value for the ``hostname`` query parameter from the alert.
+Module to load and decode Linux audit logs. It collapses messages
+sharing the same message ID into single events, decodes hex-encoded data
+fields and performs some event-specific formatting and normalization
+(e.g. for process start events it will re-assemble the process command
+line arguments into a single string).
 
 
-Entities
+syslog_utils
+~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.syslog_utils`
+
+Module to support the investigation of Linux hosts through Syslog.
+Includes functions to create host records, cluster logon events, and
+identify user sessions containing suspicious activity.
+
+cmd_line
 ~~~~~~~~
 
-:py:mod:`msticpy.nbtools.entity_schema`
+:py:mod:`msticpy.sectools.cmd_line`
 
-Entity classes (e.g. Host, Account, IPAddress) used in Azure Security Center
-and Azure Sentinel alerts and in many of the modules of *msticpy*.
+Module to investigation of command line activity. Allows for the detection
+of known malicious commands as well as suspicious patterns of behaviour.
 
-Each entity encapsulates one or more properties related to the entity.
+domain_utils
+~~~~~~~~~~~~
+
+:py:mod:`msticpy.sectools.domain_utils`
+
+Module to support investigation of domain names and URLs with functions to
+validate a domain name and screenshot a URL.
 
 
+
+Data Masking
+~~~~~~~~~~~~
+:py:mod:`msticpy.data.data_obfus`
+
+Lets you obfuscate senstive data in logs to allow sharing, presentations
+without compromising privacy.
+
+See :doc:`../data_acquisition/DataMasking`
 
 Supported Platforms and Packages
 --------------------------------

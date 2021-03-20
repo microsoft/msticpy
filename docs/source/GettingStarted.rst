@@ -8,6 +8,7 @@ Getting Started
    getting_started/Introduction
    getting_started/Installing
    getting_started/PackageSummary
-   getting_started/JupyterAndSecurity
    getting_started/msticpyconfig
+   getting_started/SettingsEditor
+   getting_started/JupyterAndSecurity
    getting_started/JupyterAndAzureSentinel

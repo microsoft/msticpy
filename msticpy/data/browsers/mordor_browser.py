@@ -107,7 +107,8 @@ class MordorBrowser:
         self.widgets["filter_text"] = widgets.Text(
             description="Filter", layout=self.layouts["layout_norm"], style=self.w_style
         )
-        self.widgets["filter_text"].on_submit(self._update_select_list)
+        self.widgets["filter_text"].continuous_update = False
+        self.widgets["filter_text"].observe(self._update_select_list, "value")
         self.widgets["filter_help"] = widgets.Label(
             value=" comma ORs values, '+' ANDs values"
         )
