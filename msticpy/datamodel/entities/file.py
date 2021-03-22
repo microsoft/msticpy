@@ -97,15 +97,17 @@ class File(Entity):
             self._create_from_event(src_event, role)
 
         if not self.FullPath:
-            file_name = self.Name
-            directory = self.Directory
-            sep = self.path_separator if directory else None
-            self.FullPath = f"{directory}{sep}{file_name}"
+            if self.Directory:
+                self.FullPath = f"{self.Directory}{self.path_separator}{self.Name}"
+            else:
+                self.FullPath = self.Name
 
     @property
     def path_separator(self):
         """Return the path separator used by the file."""
-        if self.Directory and "/" in self.Directory:
+        if (
+            self.Directory and "/" in self.Directory
+        ) or self.OSFamily != OSFamily.Windows:
             return "/"
         return "\\"
 

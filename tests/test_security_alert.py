@@ -219,7 +219,7 @@ class TestSecurityAlert(unittest.TestCase):
 
     def test_alert_display(self):
         alert = SecurityAlert(self.raw_alert)
-        entity_str = ", ".join([str(e) for e in alert.entities])
+        entity_str = ", ".join(str(e) for e in alert.entities)
         self.assertIsNotNone(entity_str)
         alert_html = alert.to_html(show_entities=True)
         self.assertIsNotNone(alert_html)

@@ -32,6 +32,8 @@ class ContextObject:
 # pylint: enable=too-few-public-methods
 
 
+# Future: replace setting entity properties in __dict__ with
+# setattr (to support attributes implemented as properties)
 @export
 class Entity(ABC, Node):
     """

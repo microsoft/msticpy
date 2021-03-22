@@ -196,3 +196,54 @@ def test_sort(test_df):
         cols={"TargetUserName": True, "Computer": False}, ascending=False
     )
     check.equal(res_df.iloc[0].TargetUserName, "adm1nistrator")
+
+
+def test_list_to_rows():
+    """Test list_to_rows."""
+    test_df = pd.DataFrame(
+        {
+            "col1": [["1item1", "1item2"], ["1item3", "1item4"], ["1item5"]],
+            "col2": [["2item1", "2item2"], ["2item3", "2item4"], ["2item5"]],
+            "col3": [1, 2, 3],
+        }
+    )
+    check.equal(len(test_df), 3)
+    # on a single column we should get 2 additional rows
+    exp_df = test_df.mp_pivot.list_to_rows(cols="col1")
+    check.equal(len(exp_df), 5)
+    check.equal(exp_df.col1.iloc[0], "1item1")
+    # with both col1 and col2, the first two rows will be expanded twice so + 4
+    exp_df = test_df.mp_pivot.list_to_rows(cols=["col1", "col2"])
+    check.equal(len(exp_df), 9)
+    check.equal(exp_df.col1.iloc[0], "1item1")
+    check.equal(exp_df.col2.iloc[0], "2item1")
+
+
+def test_parse_json():
+    """Test list_to_rows."""
+    test_df = pd.DataFrame(
+        {
+            "col1": [
+                '["1item1", "1item2"]',
+                '{"key": ["1item3", "1item4"]}',
+                '{"key2": "1item5"}',
+            ],
+            "col2": [23, "Not JSON", None],
+            "col3": [1, 2, 3],
+        }
+    )
+    check.equal(len(test_df), 3)
+    # all rows should be converted
+    exp_df = test_df.mp_pivot.parse_json(cols="col1")
+    check.equal(len(exp_df), 3)
+    check.is_instance(exp_df.col1.iloc[0], list)
+    check.is_instance(exp_df.col1.iloc[1], dict)
+    # rows in col1 are converted, col2 values are not converted
+    exp_df = test_df.mp_pivot.parse_json(cols=["col1", "col2"])
+    check.equal(len(exp_df), 3)
+    check.is_instance(exp_df.col1.iloc[0], list)
+    check.is_instance(exp_df.col1.iloc[1], dict)
+    check.is_instance(exp_df.col1.iloc[2], dict)
+    check.is_instance(exp_df.col2.iloc[0], int)
+    check.is_instance(exp_df.col2.iloc[1], str)
+    check.equal(exp_df.col2.iloc[2], None)

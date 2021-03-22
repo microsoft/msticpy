@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
 import re
+import json
+from json import JSONDecodeError
 from datetime import datetime
 from numbers import Number
 import warnings
@@ -404,9 +406,33 @@ class PivotAccessor:
                 .merge(data, right_index=True, left_index=True)
                 .melt(id_vars=orig_cols, value_name=item_col)
                 .dropna(subset=[item_col])  # get rid of rows with NaNs in this col
-                .drop([col], axis=1)
+                .drop([col, "variable"], axis=1)
                 .rename(columns=ren_col)
             )
+        return data
+
+    def parse_json(self, cols: Union[str, Iterable[str]]) -> pd.DataFrame:
+        """
+        Convert JSON string columns to Python types.
+
+        Parameters
+        ----------
+        cols : Union[str, Iterable[str]]
+            Column or interable of columns to process
+
+        Returns
+        -------
+        pd.DataFrame
+            Processed dataframe
+
+        """
+        if isinstance(cols, str):
+            cols = [cols]
+        data = self._df
+        for col in cols:
+            col_parsed = f"{col}_parsed"
+            data[col_parsed] = data[col].apply(_json_safe_conv)
+            data = data.drop([col], axis=1).rename(columns={col_parsed: col})
         return data
 
 
@@ -415,3 +441,12 @@ def _name_match(cur_cols: Iterable[str], col_filter, match_case):
     col_filter = re.sub(r"[^.]\?", ".?", col_filter)
     regex_opts = [re.IGNORECASE] if not match_case else []
     return {col for col in cur_cols if re.match(col_filter, col, *regex_opts)}
+
+
+def _json_safe_conv(val):
+    if val:
+        try:
+            return json.loads(val)
+        except (TypeError, JSONDecodeError):
+            pass
+    return val
