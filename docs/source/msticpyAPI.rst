@@ -11,3 +11,4 @@ msticpy API
     msticpy.nbtools
     msticpy.sectools
     msticpy.common
+    msticpy.config

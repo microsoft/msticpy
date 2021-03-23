@@ -207,11 +207,11 @@ Example
 
 
 .. note::
-     
+
      The KQL provider now supports authentication via the `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli>`_ and `Managed System Identities <https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview>_`.
      To use these authentication methods, pass local() with either the `cli` or `msi` keyword arguements:
-     `la_connection_string = f'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
-     qry_prov.connect(connection_str=f'{la_connection_string}', cli=locals())`
+     ``la_connection_string = f'loganalytics://code().tenant("{ten_id}").workspace("{ws_id}")'
+     qry_prov.connect(connection_str=f'{la_connection_string}', cli=locals())``
 
 
 List of current built-in queries
@@ -239,10 +239,10 @@ the file. An example is shown here.
 .. code:: json
 
     {
-        "tenant_id": "335b56ab-67a2-4118-ac14-6eb454f350af"
-        "subscription_id": "b8f250f8-1ba5-4b2c-8e74-f7ea4a1df8a6"
-        "resource_group": "ExampleWorkspaceRG"
-        "workspace_id": "271f17d3-5457-4237-9131-ae98a6f55c37"
+        "tenant_id": "335b56ab-67a2-4118-ac14-6eb454f350af",
+        "subscription_id": "b8f250f8-1ba5-4b2c-8e74-f7ea4a1df8a6",
+        "resource_group": "ExampleWorkspaceRG",
+        "workspace_id": "271f17d3-5457-4237-9131-ae98a6f55c37",
         "workspace_name": "ExampleWorkspace"
     }
 
@@ -728,8 +728,8 @@ This will display:
 
 
 
-Running an pre-defined query
-----------------------------
+Running a pre-defined query
+---------------------------
 
 To run a query from our query store we
 again call qry_prov.{*query_group*}.{*query_name*}(``**kwargs``) but this time
@@ -1111,11 +1111,11 @@ can use that when running a query to automatically supply the ``start`` and
 
 |
 
-Running an ad-hoc query
+Running an ad hoc query
 -----------------------
 
 
-It is also possible to run ad-hoc queries
+It is also possible to run ad hoc queries
 via a similar method. Rather than calling a named query from the Query
 Provider query store, we can pass a query directly to our Query Provider
 with:
@@ -1370,7 +1370,7 @@ for Timedelta in the
 
    1. It currently only works with pre-defined queries (including ones
       that you may create and add yourself, see `Creating new queries`_
-      below). It does not work with `Running an ad-hoc query`_
+      below). It does not work with `Running an ad hoc query`_
    2. If the query contains joins, the joins will only happen within
       the time ranges of each subquery.
    3. It only supports queries that have *start* and *end* parameters.

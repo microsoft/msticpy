@@ -20,7 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-PKG_TOKENS = r"([^#=><]+)([~=><]+)(.+)"
+PKG_TOKENS = r"([^#=><\[]+)(?:\[[^\]]+\])?([~=><]+)(.+)"
 
 
 # pylint: disable=too-few-public-methods
@@ -48,6 +48,7 @@ _PKG_RENAME_NAME = {
     "splunklib": "splunk-sdk",
     "vt": "vt-py",
     "vt_graph_api": "vt-graph-api",
+    "kqlmagic": "KqlmagicCustom",
 }
 
 
@@ -62,16 +63,16 @@ def _get_setup_reqs(
         extras = get_extras_from_setup(package_root=package_root, extra="all")
         extra_pkgs = _extract_pkg_specs(extras)
         setup_pkgs = setup_pkgs | extra_pkgs
-    setup_versions = {key[0].lower(): key for key in setup_pkgs}
-    setup_reqs = {key[0].lower(): key[0] for key in setup_pkgs}
+    setup_versions = {key[0].casefold(): key for key in setup_pkgs}
+    setup_reqs = {key[0].casefold(): key[0] for key in setup_pkgs}
 
     # for packages that do not match top-level names
     # add the mapping
     # create a dictionary so that we can re-map some names
     for src, tgt in _PKG_RENAME_NAME.items():
-        if tgt in setup_reqs:
-            setup_reqs.pop(tgt)
-            setup_reqs[src] = tgt
+        if tgt.casefold() in setup_reqs:
+            setup_reqs.pop(tgt.casefold())
+            setup_reqs[src] = tgt.casefold()
     # Rename Azure packages replace "." with "-"
     az_mgmt_reqs = {
         pkg.replace("-", "."): pkg for pkg in setup_reqs if pkg.startswith("azure-")
@@ -310,9 +311,11 @@ def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
     file_analysis = analyze(py_file)
 
     # create a set of all imports
-    all_imports = set(
-        file_analysis["imports"] + list(file_analysis["imports_from"].keys())
+    all_imports = {file.strip() for file in file_analysis["imports"] if file}
+    all_imports.update(
+        file.strip() for file in file_analysis["imports_from"].keys() if file
     )
+
     if None in all_imports:
         all_imports.remove(None)  # type: ignore
 

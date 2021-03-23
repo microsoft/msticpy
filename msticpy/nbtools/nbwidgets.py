@@ -493,8 +493,10 @@ class QueryTime(RegisteredWidget):
             tm_value = datetime.strptime(self._w_origin_tm.value, "%H:%M:%S.%f").time()
             self.origin_time = datetime.combine(self._w_origin_dt.value, tm_value)
             self._time_range_change(change=None)
-        except ValueError:
-            pass
+        except (ValueError, TypeError):
+            # reset on error
+            self._w_origin_dt.value = self.origin_time.date()
+            self._w_origin_tm = self.origin_time.time()
 
     def _time_range_change(self, change):
         del change
