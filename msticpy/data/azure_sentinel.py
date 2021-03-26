@@ -127,7 +127,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -140,7 +141,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             queries_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get alert rules.")
+            raise CloudError(response=response)
 
         return queries_df[queries_df["properties.Category"] == "Hunting Queries"]
 
@@ -181,7 +182,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -194,7 +196,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             alerts_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get alert rules.")
+            raise CloudError(response=response)
 
         return alerts_df
 
@@ -240,7 +242,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         url = _build_paths(res_id)
@@ -253,7 +256,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             bookmarks_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get bookmarks.")
+            raise CloudError(response=response)
 
         return bookmarks_df
 
@@ -299,7 +302,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incidents_url = url + _PATH_MAPPING["incidents"]
@@ -310,7 +314,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             incidents_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError("Could not get incidents.")
+            raise CloudError(response=response)
 
         return incidents_df
 
@@ -360,7 +364,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incidents_url = url + _PATH_MAPPING["incidents"]
@@ -372,7 +377,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             incident_df = _azs_api_result_to_df(response)
         else:
-            raise CloudError(f"Could not get incident status: {response.status_code}")
+            raise CloudError(response=response)
 
         return incident_df
 
@@ -420,7 +425,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
 
         incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
@@ -442,7 +448,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 200:
             print("Incident updated.")
         else:
-            raise CloudError(f"Could not get incident status: {response.status_code}")
+            raise CloudError(response=response)
 
     def post_comment(
         self,
@@ -487,7 +493,8 @@ class AzureSentinel(AzureData):
                 ws_name = config["workspace_name"]
             res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
             res_id = (
-                res_id + "/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+                res_id
+                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
             )
         url = _build_paths(res_id)
         incident_url = url + _PATH_MAPPING["incidents"]
@@ -503,7 +510,7 @@ class AzureSentinel(AzureData):
         if response.status_code == 201:
             print("Comment posted.")
         else:
-            raise CloudError(f"Could not post comment: status {response.status_code}")
+            raise CloudError(response=response)
 
     def _check_config(self, items: List) -> Dict:
         """
@@ -564,7 +571,7 @@ def _get_api_headers(token):
 
 
 def _azs_api_result_to_df(response) -> pd.DataFrame:
-    """Convert API reponse to a Pandas dataframe."""
+    """Convert API response to a Pandas dataframe."""
     j_resp = response.json()
     if response.status_code != 200 or not j_resp:
         raise ValueError("No valid JSON result in response")

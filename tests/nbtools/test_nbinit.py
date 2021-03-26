@@ -10,6 +10,7 @@ import datetime
 from datetime import timedelta
 from pathlib import Path
 import os
+import pkg_resources
 import subprocess  # nosec
 
 import pandas as pd
