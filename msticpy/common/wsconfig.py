@@ -22,7 +22,8 @@ __author__ = "Ian Hellen"
 
 _NO_CONFIG_WARN = [
     "Could not find msticpyconfig.yaml or a config.json in the current directory.",
-    "Using '{config_file}'.",
+    "or via a MSTICPYCONFIG variable.",
+    "We found the file '{config_file}' and will use this.",
     "We recommend using an explicit msticpyconfig.yaml specified using the",
     "MSTICPYCONFIG environment variable. See",
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
@@ -36,6 +37,10 @@ _NO_CONFIG_ERR = [
     "or folder you will need to copy this file."
     "Alternatively, we recommend using an explicit msticpyconfig.yaml",
     "and adding your Workspace and Tenant IDs to that file.",
+    "",
+    "You can create a settings file using the following commands:",
+    ">>> from msticpy.config import MpConfigEdit",
+    ">>> MpConfigEdit()",
 ]
 
 
@@ -63,6 +68,7 @@ class WorkspaceConfig:
         self,
         workspace: Optional[str] = None,
         config_file: Optional[str] = None,
+        interactive: bool = True,
     ):
         """
         Load current Azure Notebooks configuration for Log Analytics.
@@ -71,31 +77,63 @@ class WorkspaceConfig:
         ----------
         config_file : Optional[str], optional
             path to a configuration file,
-            Defaults to msticpyconfig.yaml if settings are configured there.
-            If not, looks for a config.json in current folder
+            If not specified, the defaults is to use a configured msticpyconfig.yaml
+            If this isn't configured, it will search for (first) a config.json
+            and (second) a msticpyconfig.yaml in (first) the current directory
+            and (second) the parent directory and subfolders.
         workspace : str, Optional[str]
             Workspace name (where multiple workspaces are configured),
             by default the Default workspace will be used.
+        interactive : bool, optional
+            If this is False, initializing the class will not raise an
+            exception if no configuration is found. By default, True.
 
         """
         self._config: Dict[str, str] = {}
-        if not config_file:
-            self._read_pkg_config_values(workspace_name=workspace)
-            if self.config_loaded:
-                return
-            if Path("./config.json").exists():
-                config_file = "./config.json"
-            else:
-                config_file = self._search_for_file("**/config.json")
+        self._interactive = interactive
         self._config_file = config_file
-
-        config = self._read_config_values(config_file)
-        if config:
-            self._config.update(config)
+        # If config file specified, use that
+        if config_file:
+            self._config.update(self._read_config_values(config_file))
         else:
-            os.environ["MSTICPYCONFIG"] = config_file
+            self._determine_config_source(workspace)
+
+    def _determine_config_source(self, workspace):
+        # First, try default MSTICPy config
+        self._read_pkg_config_values(workspace_name=workspace)
+        if self.config_loaded:
+            return
+        # Next, search for a config.json in the current director
+        if Path("./config.json").exists():
+            self._config_file = "./config.json"
+        else:
+            self._config_file = self._search_for_file("**/config.json")
+        if self._config_file:
+            self._config.update(self._read_config_values(self._config_file))
+            return
+
+        # Finally, search for a msticpyconfig.yaml
+        if (
+            os.environ.get("MSTICPYCONFIG")
+            and Path(os.environ.get("MSTICPYCONFIG")).exists()
+        ):
+            self._config_file = os.environ.get("MSTICPYCONFIG")
+        elif Path("./msticpyconfig.yaml").exists():
+            self._config_file = "./msticpyconfig.yaml"
+        else:
+            self._config_file = self._search_for_file("**/msticpyconfig.yaml")
+        if self._config_file:
+            os.environ["MSTICPYCONFIG"] = self._config_file
             pkg_config.refresh_config()
             self._read_pkg_config_values(workspace_name=workspace)
+            return
+        # Finally, throw an exception (unless non-interactive)
+        if self._interactive:
+            # If we've arrived here after searching current folder and parent
+            # then we give up.
+            raise MsticpyUserConfigError(
+                *_NO_CONFIG_ERR, title="Workspace configuration missing."
+            )
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -156,9 +194,11 @@ class WorkspaceConfig:
             )
         return f"loganalytics://code().tenant('{ten_id}').workspace('{ws_id}')"
 
-    @classmethod
-    def _read_config_values(cls, file_path: str) -> Dict[str, str]:
+    @staticmethod
+    def _read_config_values(file_path: str) -> Dict[str, str]:
         """Read configuration file."""
+        if not file_path:
+            return {}
         try:
             with open(file_path) as json_file:
                 if json_file:
@@ -215,23 +255,21 @@ class WorkspaceConfig:
             )
         return {}
 
-    def _search_for_file(self, pattern: str) -> str:
+    def _search_for_file(self, pattern: str) -> Optional[str]:
         config_file = None
         for start_path in (".", ".."):
             searched_configs = list(Path(start_path).glob(pattern))
             for found_file in searched_configs:
+                if found_file.name == "msticpyconfig.yaml":
+                    config_file = str(found_file)
+                    break
                 test_content = self._read_config_values(str(found_file))
                 if "workspace_id" in test_content:
-                    config_file = found_file
+                    config_file = str(found_file)
                     break
             if config_file:
                 break
-        else:
-            # If we've arrived here after searching current folder and parent
-            # then we give up.
-            raise MsticpyUserConfigError(
-                *_NO_CONFIG_ERR, title="Workspace configuration missing."
-            )
-        # Warn that we're using a "found" file, not one in the current directory
-        warnings.warn("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
-        return str(config_file)
+        if config_file:
+            # Warn that we're using a "found" file, not one in the current directory
+            warnings.warn("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
+        return config_file

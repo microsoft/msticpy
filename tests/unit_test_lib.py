@@ -33,7 +33,8 @@ TEST_DATA_PATH = get_test_data_path()
 # pylint: disable=protected-access
 @contextmanager
 def custom_mp_config(
-    mp_path: Union[str, Path]
+    mp_path: Union[str, Path],
+    path_check: bool = True,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Context manager to temporarily set MSTICPYCONFIG path.
@@ -42,7 +43,8 @@ def custom_mp_config(
     ----------
     mp_path : Union[str, Path]
         Path to msticpy config yaml
-
+    check_path : bool
+        If False, skip check for existing file
     Yields
     ------
     Dict[str, Any]
@@ -55,7 +57,7 @@ def custom_mp_config(
 
     """
     current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR)
-    if not Path(mp_path).is_file():
+    if path_check and not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
     try:
         os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)

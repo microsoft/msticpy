@@ -1,0 +1,82 @@
+metadata:
+  version: 1
+  description: Azure Network Analytics Queries
+  data_environments: [LogAnalytics]
+  data_families: [AzureNetwork]
+  tags: ['network', 'azure']
+defaults:
+  metadata:
+    data_source: 'DNSAnalytics'
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: DnsEvents
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  dns_lookups_for_domain:
+    description: Dns queries for a domain
+    metadata:
+      pivot:
+        short_name: queries
+        direct_func_entities:
+          - Dns
+    args:
+      query: '
+        {table}
+        | where SubType == "LookupQuery"
+        | where Name has "{domain}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      domain:
+        description: Domain to query for
+        type: str
+  dns_lookups_for_ip:
+    description: Dns queries for a domain
+    metadata:
+      pivot:
+        short_name: queries
+        direct_func_entities:
+          - IpAddress
+    args:
+      query: '
+        {table}
+        | where SubType == "LookupQuery"
+        | where IPAddresses has "{ip_address}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: IP lookup result to query for
+        type: str
+  dns_lookups_from_ip:
+    description: Dns queries for a domain
+    metadata:
+      pivot:
+        short_name: queries_from_ip
+        direct_func_entities:
+          - IpAddress
+    args:
+      query: '
+        {table}
+        | where SubType == "LookupQuery"
+        | where ClientIP == "{ip_address}"
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        {add_query_items}'
+    parameters:
+      ip_address:
+        description: IP source for lookup queries
+        type: str

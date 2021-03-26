@@ -887,7 +887,8 @@ class GetEnvironmentKey(RegisteredWidget):
     @property
     def value(self):
         """Get the current value of the key."""
-        return self._w_text.value.strip()
+        self._value = self._w_text.value or ""
+        return self._value.strip()
 
     @property
     def name(self):
@@ -905,9 +906,9 @@ class GetEnvironmentKey(RegisteredWidget):
 
     def _on_save_button_clicked(self, button):
         del button
-        self._value = self._w_text.value.strip()
+        self._value = self.value
         if self._w_check_save.value:
-            os.environ[self._name] = self._value
+            os.environ[self._name] = self.value
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -966,7 +967,7 @@ class GetText(RegisteredWidget):
             self.display()
 
     def _update_value(self, change):
-        self._value = change.get("new")
+        self._value = change.get("new", "")
 
     @property
     def layout(self):

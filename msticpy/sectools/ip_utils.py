@@ -14,7 +14,7 @@ Designed to support any data source containing IP address entity.
 """
 import ipaddress
 from functools import lru_cache
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Set, Tuple
 
 import pandas as pd
 from ipwhois import (
@@ -28,7 +28,7 @@ from ipwhois import (
 )
 
 from .._version import VERSION
-from ..common.utility import export
+from ..common.utility import export, arg_to_list
 from ..datamodel.entities import GeoLocation, IpAddress
 from .geoip import GeoLiteLookup
 
@@ -60,7 +60,7 @@ def _get_geolite_lookup() -> Callable:
 _GET_IP_LOOKUP = _get_geolite_lookup()
 
 
-def convert_to_ip_entities(
+def convert_to_ip_entities(  # noqa: MC0001
     ip_str: Optional[str] = None,
     data: Optional[pd.DataFrame] = None,
     ip_col: Optional[str] = None,
@@ -93,28 +93,34 @@ def convert_to_ip_entities(
         If neither ip_string or data/column provided as input
 
     """
-    ip_entities = []
+    ip_entities: List[IpAddress] = []
+    all_ips: Set[str] = set()
+
+    if geo_lookup:
+        ip_lookup = _GET_IP_LOOKUP()
     if ip_str:
-        if "," in ip_str:
-            addrs = ip_str.split(",")
-        elif " " in ip_str:
-            addrs = ip_str.split(" ")
-        else:
-            addrs = [ip_str]
+        addrs = arg_to_list(ip_str)
     elif data is not None and ip_col:
         addrs = data[ip_col].values
     else:
-        raise ValueError("No useable input provided.")
+        raise ValueError("Must specify either ip_str or data + ip_col parameters.")
+
     for addr in addrs:
-        ip_entity = IpAddress()
-        ip_entity.Address = addr.strip()
+        if isinstance(addr, list):
+            ip_list = set(addr)
+        elif isinstance(addr, str) and "," in addr:
+            ip_list = {ip.strip() for ip in addr.split(",")}
+        else:
+            ip_list = {addr}
+        ip_list = ip_list - all_ips  # remove IP addresses we've seen
+        ip_entities.extend(IpAddress(Address=ip) for ip in ip_list)
+
         if geo_lookup:
-            try:
-                ip_lookup = _GET_IP_LOOKUP()
-                ip_lookup.lookup_ip(ip_entity=ip_entity)
-            except DataError:
-                pass
-        ip_entities.append(ip_entity)
+            for ip_ent in ip_entities:
+                try:
+                    ip_lookup.lookup_ip(ip_entity=ip_ent)
+                except DataError:
+                    pass
     return ip_entities
 
 

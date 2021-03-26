@@ -147,7 +147,7 @@ def _load_az_workspaces(
             ws_params = {}
             if ws_name != "Default":
                 ws_params = {"workspace": ws_name}
-            ws_config = WorkspaceConfig(**ws_params)
+            ws_config = WorkspaceConfig(**ws_params)  # type: ignore
             prov_obj.connect(ws_config.code_connect_str)
             print("Connected.")
         az_provs[obj_name] = prov_obj

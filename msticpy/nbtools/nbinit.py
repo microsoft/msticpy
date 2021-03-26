@@ -56,13 +56,26 @@ _MISSING_PKG_WARN = """
 incorrect version</h3></font>
 """
 
-_MISSING_MPCONFIG_ERR = """
+_MISSING_MPCONFIG_ENV_ERR = """
 <h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
+The path set in the MSTICPYCONFIG environment variable does not point
+to a valid file.<br>
 Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.
 Please go to the <a href="#Configuration">Configuration section</a>
 follow the instructions there.
 """
+
+_MISSING_MPCONFIG_LOCAL_ERR = """
+<h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
+No "msticpconfig.yaml" was found at the MSTICPYCONFIG path or
+in the current directory.<br>
+Some functionality (such as Threat Intel lookups) will not function without
+valid configuration settings.
+Please go to the <a href="#Configuration">Configuration section</a>
+follow the instructions there.
+"""
+
 
 _PANDAS_REQ_VERSION = (0, 25, 0)
 
@@ -332,25 +345,36 @@ def _global_imports(  # noqa: MC0001
 
 def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     config_ok = True
-    err_warn = None
-    mp_path = os.environ.get("MSTICPYCONFIG", "./msticpyconfig.yaml")
+    errs, warns = [], []
+    mp_path = os.environ.get("MSTICPYCONFIG")
+    if mp_path and not Path(mp_path).exists():
+        # Env var configured but invalid path
+        warns = ["MSTICPYCONFIG path is invalid"]
+        display(HTML(_MISSING_MPCONFIG_ENV_ERR))
+    mp_path = mp_path or "./msticpyconfig.yaml"
     if not Path(mp_path).exists():
-        display(HTML(_MISSING_MPCONFIG_ERR))
+        warns = ["MSTICPYCONFIG not found"]
+        display(HTML(_MISSING_MPCONFIG_LOCAL_ERR))
+        config_ok = False
     else:
         try:
-            err_warn = validate_config(config_file=mp_path)
-            if err_warn and err_warn[0]:
+            errs, warns = validate_config(config_file=mp_path)
+            if errs:
                 config_ok = False
         # pylint: disable=broad-except
         except Exception as err:
             config_ok = False
+            errs.append(f"Exception while checking configuration:\n{err}")
             print(f"Exception while checking configuration:\n{err}")
         # pylint: enable=broad-except
-    ws_config = WorkspaceConfig()
-    if not ws_config.config_loaded:
+    # If we haven't found a config, try loading WorkspaceConfig
+    if not config_ok:
+        ws_config = WorkspaceConfig(interactive=False)
+        config_ok = ws_config.config_loaded
+    if not config_ok:
+        errs.append("No valid configuration for Azure Sentinel found.")
         print("No valid configuration for Azure Sentinel found.")
-        config_ok = False
-    return config_ok, err_warn
+    return config_ok, (errs, warns)
 
 
 def _set_nb_options(namespace):

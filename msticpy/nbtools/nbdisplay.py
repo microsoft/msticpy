@@ -84,7 +84,7 @@ def format_alert(
     if isinstance(alert, pd.Series):
         entity = alert["CompromisedEntity"] if "CompromisedEntity" in alert else ""
         title = f"""
-            <h3>Series Alert: '{alert["AlertDisplayName"]}'</h3>
+            <h3>Selected Alert: '{alert["AlertDisplayName"]}'</h3>
             <b>Alert_time:</b> {alert["StartTimeUtc"]},&nbsp;
             <b>Compr_entity:</b> {entity},&nbsp;
             <b>Alert_id:</b> {alert["SystemAlertId"]}
