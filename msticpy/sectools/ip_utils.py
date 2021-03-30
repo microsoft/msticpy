@@ -114,7 +114,7 @@ def convert_to_ip_entities(  # noqa: MC0001
             ip_list = {addr}
         ip_list = ip_list - all_ips  # remove IP addresses we've seen
         ip_entities.extend(IpAddress(Address=ip) for ip in ip_list)
-
+        all_ips |= ip_list
         if geo_lookup:
             for ip_ent in ip_entities:
                 try:

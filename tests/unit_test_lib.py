@@ -9,7 +9,7 @@ from pathlib import Path
 import os
 from typing import Union, Dict, Any, Generator
 
-# pylint: disable=relative-beyond-top-level
+from filelock import FileLock
 from msticpy.common import pkg_config
 from msticpy.common.utility import export
 
@@ -60,9 +60,13 @@ def custom_mp_config(
     if path_check and not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
     try:
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
-        pkg_config.refresh_config()
-        yield pkg_config.settings
+        # We need to lock the settings since these are global
+        # Otherwise the tests interfere with each other.
+        _lock_file_path = "./.mp_settings.lock"
+        with FileLock(_lock_file_path):
+            os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
+            pkg_config.refresh_config()
+            yield pkg_config.settings
     finally:
         if not current_path:
             del os.environ[pkg_config._CONFIG_ENV_VAR]

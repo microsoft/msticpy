@@ -2,6 +2,7 @@ aiohttp>=3.0.0
 bandit>=1.6.2
 black>=19.3b0
 coverage>=4.5.4
+filelock
 flake8-mypy>=17.8.0
 flake8>=3.7.8
 mccabe>=0.6.1

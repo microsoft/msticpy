@@ -4,20 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """test nb_init links."""
-from collections import namedtuple
-from enum import Enum
 import datetime
-from datetime import timedelta
-from pathlib import Path
 import os
-import pkg_resources
 import subprocess  # nosec
+from collections import namedtuple
+from datetime import timedelta
+from enum import Enum
+from pathlib import Path
 
 import pandas as pd
 import pytest
 import pytest_check as check
-
-from msticpy.nbtools.nbinit import init_notebook, _check_config, _imp_module_all
+from msticpy.nbtools.nbinit import _check_config, _imp_module_all, init_notebook
 
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
 
@@ -148,7 +146,7 @@ _test_ids = [f"{test[0][0]}-{test[0][1].name}" for test in _CONFIG_TESTS]
 
 
 @pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
-def test_check_config(conf_file, expected, tmpdir, capsys):
+def test_check_config(conf_file, expected, tmpdir):
     """Test config check."""
     conf_file, mp_location = conf_file
     settings_file = conf_file
@@ -175,6 +173,7 @@ def test_check_config(conf_file, expected, tmpdir, capsys):
                 settings_file = "missing_file"
             else:
                 settings_file = Path(str(tmpdir)).joinpath(dest_file)
+
         with custom_mp_config(settings_file, path_check=False):
             if mp_location in (TestSubdir.SEARCH, TestSubdir.NONE):
                 with pytest.warns(UserWarning):
