@@ -11,14 +11,30 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import warnings
 
+from IPython.display import display
+import ipywidgets as widgets
+
 from .exceptions import MsticpyUserConfigError
-from .utility import export, is_valid_uuid
+from .utility import export, is_valid_uuid, md, md_warn
 from . import pkg_config
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+
+_RESOURCES = [
+    "Also see the notebooks:",
+    (
+        "https://github.com/Azure/Azure-Sentinel-Notebooks/blob/"
+        "master/ConfiguringNotebookEnvironment.ipynb"
+    ),
+    (
+        "https://github.com/Azure/Azure-Sentinel-Notebooks/blob/"
+        "master/A%20Getting%20Started%20Guide%20For%20Azure%20"
+        "Sentinel%20ML%20Notebooks.ipynb"
+    ),
+]
 
 _NO_CONFIG_WARN = [
     "Could not find msticpyconfig.yaml or a config.json in the current directory.",
@@ -28,20 +44,27 @@ _NO_CONFIG_WARN = [
     "MSTICPYCONFIG environment variable. See",
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     "for more details.",
+    *_RESOURCES,
 ]
 
 _NO_CONFIG_ERR = [
     "Could not find msticpyconfig.yaml or config.json."
     "The config.json file is created when you launch notebooks from",
     "Azure Sentinel. If you have copied the notebook to another location",
-    "or folder you will need to copy this file."
+    "or folder you will need to copy this configuration file."
     "Alternatively, we recommend using an explicit msticpyconfig.yaml",
     "and adding your Workspace and Tenant IDs to that file.",
     "",
     "You can create a settings file using the following commands:",
     ">>> from msticpy.config import MpConfigEdit",
     ">>> MpConfigEdit()",
+    *_RESOURCES,
 ]
+
+WIDGET_DEFAULTS = {
+    "layout": widgets.Layout(width="95%"),
+    "style": {"description_width": "150px"},
+}
 
 
 @export
@@ -228,6 +251,35 @@ class WorkspaceConfig:
             }
             for ws_name, ws in ws_settings.items()
         }
+
+    def prompt_for_ws(self):
+        """Display an interactive prompt for Workspace details."""
+        md_warn("No Azure Sentinel configuration found.")
+        md(
+            "Please enter the workspace ID and tenant Id"
+            + " to allow connection to the Azure Sentinel workspace."
+        )
+        ws_id_wgt = widgets.Text(description="Workspace Id:", **WIDGET_DEFAULTS)
+        ten_id_wgt = widgets.Text(description="Tenant Id:", **WIDGET_DEFAULTS)
+
+        def update_ws(chg):
+            self["workspace_id"] = chg.get("new")
+
+        def update_tnt(chg):
+            self["tenant_id"] = chg.get("new")
+
+        ws_id_wgt.observe(update_ws, names="value")
+        ten_id_wgt.observe(update_tnt, names="value")
+        display(widgets.VBox([ws_id_wgt, ten_id_wgt]))
+        md(
+            (
+                "You can avoid this prompt in future by following the"
+                " guidance in the"
+                " <a href='https://msticpy.readthedocs.io/en/latest/"
+                "getting_started/msticpyconfig.html'>"
+                "MSTICPy Configuration Documentation</a>"
+            ),
+        )
 
     def _read_pkg_config_values(self, workspace_name: str = None):
         as_settings = pkg_config.settings.get("AzureSentinel")

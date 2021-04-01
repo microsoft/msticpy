@@ -6,10 +6,12 @@
 """Module for common display functions."""
 from typing import Any, Mapping, Union, Tuple, List
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
-
+from bokeh.io import output_notebook
+from bokeh.plotting import figure, from_networkx
+from bokeh.models import Circle, HoverTool, Label
+from deprecated.sphinx import deprecated
 import IPython
 from IPython.core.display import HTML, display
 from IPython.display import Javascript
@@ -120,6 +122,13 @@ def exec_remaining_cells():
     Javascript("Jupyter.notebook.execute_cells_below()")
 
 
+@deprecated(
+    reason=(
+        "Matplotlib version 'draw_alert_entity_graph' "
+        "no longer supported - use 'plot_entity_graph'"
+    ),
+    version="0.3.2",
+)
 @export
 # pylint: disable=too-many-arguments
 def draw_alert_entity_graph(
@@ -149,43 +158,94 @@ def draw_alert_entity_graph(
         Position scale (the default is 1)
 
     """
-    alert_node = [
-        n
-        for (n, node_type) in nx.get_node_attributes(nx_graph, "node_type").items()
-        if node_type == "alert"
-    ]
-    entity_nodes = [
-        n
-        for (n, node_type) in nx.get_node_attributes(nx_graph, "node_type").items()
-        if node_type == "entity"
-    ]
-
-    # now draw them in subsets  using the `nodelist` arg
-    plt.rcParams["figure.figsize"] = (width, height)
-
-    plt.margins(x=margin, y=margin)
-
-    pos = nx.kamada_kawai_layout(nx_graph, scale=scale, weight="weight")
-    nx.draw_networkx_nodes(
-        nx_graph, pos, nodelist=alert_node, node_color="red", alpha=0.5, node_shape="o"
+    del margin
+    return plot_entity_graph(
+        entity_graph=nx_graph,
+        font_size=font_size,
+        height=height * 15,
+        width=width * 15,
+        scale=scale * 2,
     )
-    nx.draw_networkx_nodes(
-        nx_graph,
-        pos,
-        nodelist=entity_nodes,
-        node_color="green",
-        alpha=0.5,
-        node_shape="s",
-        node_size=200,
+
+
+def plot_entity_graph(
+    entity_graph: nx.Graph,
+    node_size: int = 25,
+    font_size: Union[int, str] = 10,
+    height: int = 800,
+    width: int = 800,
+    scale: int = 2,
+) -> figure:
+    """
+    Plot entity graph with Bokeh.
+
+    Parameters
+    ----------
+    entity_graph : nx.Graph
+        The entity graph as a networkX graph
+    node_size : int, optional
+        Size of the nodes in pixels, by default 25
+    font_size : int, optional
+        Font size for node labels, by default 10
+        Can be an integer (point size) or a string (e.g. "10pt")
+    width : int, optional
+        Width in pixels, by default 800
+    height : int, optional
+        Image height (the default is 800)
+    scale : int, optional
+        Position scale (the default is 2)
+
+    Returns
+    -------
+    bokeh.plotting.figure
+        The network plot.
+
+    """
+    output_notebook()
+    font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
+    node_attrs = {node: attrs["color"] for node, attrs in entity_graph.nodes(data=True)}
+    nx.set_node_attributes(entity_graph, node_attrs, "node_color")
+
+    plot = figure(
+        title="Alert Entity graph",
+        x_range=(-3, 3),
+        y_range=(-3, 3),
+        width=width,
+        height=height,
     )
-    nlabels = nx.get_node_attributes(nx_graph, "description")
-    nx.relabel_nodes(nx_graph, nlabels)
-    nx.draw_networkx_labels(nx_graph, pos, nlabels, font_size=font_size)
-    nx.draw_networkx_edges(nx_graph, pos)
-    elabels = nx.get_edge_attributes(nx_graph, "description")
-    nx.draw_networkx_edge_labels(
-        nx_graph, pos, edge_labels=elabels, font_size=font_size * 2 / 3, alpha=0.6
+
+    plot.add_tools(
+        HoverTool(
+            tooltips=[
+                ("node_type", "@node_type"),
+                ("name", "@name"),
+                ("description", "@description"),
+            ]
+        )
     )
+
+    graph_renderer = from_networkx(
+        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
+    )
+    graph_renderer.node_renderer.glyph = Circle(
+        size=node_size, fill_color="node_color", fill_alpha=0.5
+    )
+    plot.renderers.append(graph_renderer)
+
+    # pylint: disable=no-member
+    # Create labels
+    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+        label = Label(
+            x=pos[0],
+            y=pos[1],
+            x_offset=5,
+            y_offset=5,
+            text=name,
+            text_font_size=font_pnt,
+        )
+        plot.add_layout(label)
+    # pylint: enable=no-member
+    return plot
 
 
 # Constants for Windows logon

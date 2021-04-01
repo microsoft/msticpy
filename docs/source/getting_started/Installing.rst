@@ -67,7 +67,7 @@ Selective Installation - using "extras"
 pip supports specification of an additional parameter sequence
 known as extras. The syntax for this is:
 
-``pip install package_name[extra1, extra2...]``
+``pip install package_name[extra1,extra2,...]``
 
 As of version 0.9.0 *MSTICPy* has its dependencies split into
 extras. This allows you to install only the packages that you
@@ -151,7 +151,13 @@ multiple extras during install, separating them with commas.
 
 .. code:: bash
 
-    pip install msticpy[azure, kql]
+    pip install msticpy[azure,kql]
+
+.. warning:: when specifying multiple extras, do not leave spaces between
+   the options - just separate with commas.
+
+Missing "extra" exceptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you try to use functionality for a component that needs a dependency
 that you have not installed you will usually get an informative

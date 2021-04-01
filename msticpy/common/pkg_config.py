@@ -293,7 +293,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     _print_validation_report(mp_errors, mp_warn)
     if mp_errors or mp_warn:
         return mp_errors, mp_warn
-    return None
+    return [], []
 
 
 def _print_validation_report(mp_errors, mp_warn):
