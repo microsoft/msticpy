@@ -242,12 +242,12 @@ def _default_max_buffer(max_default, default, unit) -> int:
         max_value = abs(max_default)
         return max(max_value, mag_default)
     if unit == TimeUnit.day:
-        return max(7, mag_default)
+        return max(28, mag_default)
     if unit == TimeUnit.hour:
-        return max(24, mag_default)
+        return max(48, mag_default)
     if unit == TimeUnit.week:
-        return max(4, mag_default)
-    return max(120, mag_default)
+        return max(20, mag_default)
+    return max(240, mag_default)
 
 
 def _default_before_after(default, unit) -> int:
@@ -349,7 +349,7 @@ class QueryTime(RegisteredWidget):
 
         self.max_before = kwargs.pop("max_before", 0)
         self.max_after = kwargs.pop("max_after", 0)
-        self._adjust_max_before_after()
+        self._adjust_max_before_after(self.max_before, self.max_after)
 
         # Call superclass to register
         ids_params = [
@@ -381,9 +381,9 @@ class QueryTime(RegisteredWidget):
             value=str(self.origin_time.time()),
         )
 
-        range_desc = "Time Range ({}):".format(self._time_unit.name)
+        range_desc = "Time Range"
         self._w_tm_range = widgets.IntRangeSlider(
-            value=[-self.before, self.after],
+            value=(-self.before, self.after),
             min=-self.max_before,
             max=self.max_after,
             step=1,
@@ -393,8 +393,15 @@ class QueryTime(RegisteredWidget):
             orientation="horizontal",
             readout=True,
             readout_format="d",
-            layout=Layout(width="80%"),
+            layout=Layout(width="70%"),
             style=self._label_style,
+        )
+        self._w_time_unit = widgets.Dropdown(
+            options=[
+                unit for unit, _ in TimeUnit.__members__.items() if unit != "second"
+            ],
+            value=self._time_unit.name,
+            layout=Layout(width="100px"),
         )
 
         self._w_start_time_txt = widgets.Text(
@@ -414,6 +421,7 @@ class QueryTime(RegisteredWidget):
         self._w_tm_range.observe(self._time_range_change, names="value")
         self._w_origin_dt.observe(self._update_origin, names="value")
         self._w_origin_tm.observe(self._update_origin, names="value")
+        self._w_time_unit.observe(self._change_time_unit, names="value")
 
         self.layout = self._create_layout()
         if kwargs.pop("auto_display", False):
@@ -425,7 +433,11 @@ class QueryTime(RegisteredWidget):
                 widgets.HTML("<h4>{}</h4>".format(self._label)),
                 widgets.HBox([self._w_origin_dt, self._w_origin_tm]),
                 widgets.VBox(
-                    [self._w_tm_range, self._w_start_time_txt, self._w_end_time_txt]
+                    [
+                        widgets.HBox([self._w_tm_range, self._w_time_unit]),
+                        self._w_start_time_txt,
+                        self._w_end_time_txt,
+                    ]
                 ),
             ]
         )
@@ -433,6 +445,17 @@ class QueryTime(RegisteredWidget):
     def display(self):
         """Display the interactive widgets."""
         display(self.layout)
+
+    def _change_time_unit(self, change):
+        """Reset before/after and max buffers to defaults."""
+        unit = change["new"]
+        self._time_unit = _parse_time_unit(unit)
+        self.before = _default_before_after(default=None, unit=self._time_unit)
+        self.after = _default_before_after(default=None, unit=self._time_unit)
+        self._adjust_max_before_after(max_before=None, max_after=None)
+        self._w_tm_range.value = (-self.before, self.after)
+        self._w_tm_range.min = -self.max_before
+        self._w_tm_range.max = self.max_after
 
     def _get_time_parameters(self, **kwargs):
         """Process different init time parameters."""
@@ -478,13 +501,13 @@ class QueryTime(RegisteredWidget):
         else:
             self._time_unit = TimeUnit.minute
 
-    def _adjust_max_before_after(self):
+    def _adjust_max_before_after(self, max_before, max_after):
         """Adjust the max values so the are always bigger than the defaults."""
         self.max_before = _default_max_buffer(
-            self.max_before, self.before or 1, self._time_unit
+            max_before, self.before or 1, self._time_unit
         )
         self.max_after = _default_max_buffer(
-            self.max_after, self.after or 1, self._time_unit
+            max_after, self.after or 1, self._time_unit
         )
 
     def _update_origin(self, change):
