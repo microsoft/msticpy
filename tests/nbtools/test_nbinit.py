@@ -181,6 +181,9 @@ def test_check_config(conf_file, expected, tmpdir):
             else:
                 result, (errs, warns) = _check_config()
 
+            print("result=", result)
+            print("errs=", "\n".join(errs) if errs else "no errors")
+            print("warnings=", "\n".join(warns) if warns else "no warnings")
             check.equal(result, expected.res, "Result")
             check.equal(0 if not errs else len(errs), expected.errs, "Num errors")
             check.equal(0 if not warns else len(warns), expected.wrns, "Num warnings")
