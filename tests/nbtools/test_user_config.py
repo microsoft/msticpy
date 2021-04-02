@@ -51,7 +51,7 @@ UserDefaults:
   LoadComponents:
     TILookup:
     GeoIpLookup:
-      provider: GeoLiteLookup
+      provider: IpStackLookup
     Notebooklets:
       query_provider:
         LocalData:

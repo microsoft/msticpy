@@ -91,30 +91,30 @@ _CONFIG_TESTS = [
     (("missing_file", TestSubdir.NONE), ConfExpd(True, 0, 1)),
     (
         (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.MAIN_ENV_PTR),
-        ConfExpd(True, 3, 0),
+        ConfExpd(True, (3, 0), 0),
     ),
     (
         (
             TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml",
             TestSubdir.MAIN_ENV_PTR,
         ),
-        ConfExpd(False, 4, 0),
+        ConfExpd(False, (4, 2), 0),
     ),
     (
         (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.MAIN_ENV_PTR),
-        ConfExpd(False, 4, 0),
+        ConfExpd(False, (4, 2), 0),
     ),
     (
         (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(True, 3, 0),
+        ConfExpd(True, (3, 0), 0),
     ),
     (
         (TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(False, 4, 0),
+        ConfExpd(False, (4, 2), 0),
     ),
     (
         (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(False, 4, 0),
+        ConfExpd(False, (4, 2), 0),
     ),
     (
         (TEST_DATA_PATH + "/config.json", TestSubdir.SAME_DIR),
@@ -185,8 +185,16 @@ def test_check_config(conf_file, expected, tmpdir):
             print("errs=", "\n".join(errs) if errs else "no errors")
             print("warnings=", "\n".join(warns) if warns else "no warnings")
             check.equal(result, expected.res, "Result")
-            check.equal(0 if not errs else len(errs), expected.errs, "Num errors")
-            check.equal(0 if not warns else len(warns), expected.wrns, "Num warnings")
+            reported_errs = 0 if not errs else len(errs)
+            reported_warns = 0 if not warns else len(warns)
+            if isinstance(expected.errs, tuple):
+                check.is_in(reported_errs, expected.errs, "Num errors")
+            else:
+                check.equal(reported_errs, expected.errs, "Num errors")
+            if isinstance(expected.wrns, tuple):
+                check.is_in(reported_warns, expected.wrns, "Num errors")
+            else:
+                check.equal(reported_warns, expected.wrns, "Num warnings")
     finally:
         os.chdir(init_cwd)
 
