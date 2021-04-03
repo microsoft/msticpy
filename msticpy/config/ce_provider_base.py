@@ -51,6 +51,21 @@ configure your Key Vault settings and transfer secrets settings from your
 configuration file to a vault.
 """
 
+HELP_URIS = {
+    "Key Vault Configuration": (
+        "https://msticpy.readthedocs.io/en/latest/getting_started/"
+        + "msticpyconfig.html#specifying-secrets-as-key-vault-secrets"
+    ),
+    "MSTICPy Configuration": (
+        "https://msticpy.readthedocs.io/en/latest/"
+        + "getting_started/msticpyconfig.html"
+    ),
+    "Help on this tab": (
+        "https://msticpy.readthedocs.io/en/latest/getting_started/"
+        + "SettingsEditor.html#adding-threat-intelligence-ti-providers"
+    ),
+}
+
 
 # pylint: disable=too-many-ancestors
 class CEProviders(CEItemsBase, ABC):

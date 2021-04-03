@@ -67,7 +67,7 @@ Selective Installation - using "extras"
 pip supports specification of an additional parameter sequence
 known as extras. The syntax for this is:
 
-``pip install package_name[extra1, extra2...]``
+``pip install package_name[extra1,extra2,...]``
 
 As of version 0.9.0 *MSTICPy* has its dependencies split into
 extras. This allows you to install only the packages that you
@@ -78,8 +78,9 @@ that you do not need.
    installed - only the external libraries on which certain
    functions inside *MSTICPy* need to work.
 
-.. warning:: the core install no longer includes **Azure Sentinel** or
-   **Azure** libraries such as Kqlmagic. If you are an Azure Sentinel
+.. warning:: the core install no longer includes the
+   **Azure** libraries and only a limited install of the Kqlmagic package
+   used for most Azure Sentinel data queries. If you are an Azure Sentinel
    user, you should always install with the "azsentinel" extra.
 
 Extras in *MSTICPy*
@@ -92,6 +93,7 @@ The extras available in *MSTICPy* are described in the following table:
 |                  |                                    | (increment)  | (full)       |
 +==================+====================================+==============+==============+
 | [none]           | - Most functionality (approx 75%)  |       --     |   1m:13s     |
+|                  | - Kqlmagic Jupyter basic           |              |              |
 +------------------+------------------------------------+--------------+--------------+
 | keyvault         | - Key Vault and keyring storage of |       5s     |   1m:18s     |
 |                  |   settings secrets                 |              |              |
@@ -104,7 +106,7 @@ The extras available in *MSTICPy* are described in the following table:
 |                  | - Also includes "keyvault"         |              |              |
 +------------------+------------------------------------+--------------+--------------+
 | kql              | - Azure Sentinel data queries      |   2m:07s     |   3m:20s     |
-|                  | - Kqlmagic                         |              |              |
+|                  | - Kqlmagic Jupyter extended        |              |              |
 +------------------+------------------------------------+--------------+--------------+
 | azsentinel       | - Combination of core install      |   3m:48s     |   5m:00s     |
 |                  |   plus "azure", "keyvault" and     |              |              |
@@ -139,7 +141,7 @@ installed: jupyter, pandas and matplotlib.
 
 If you do not specify an "extra" in your pip install command, the base
 dependencies for *MSTICPy* will be installed. This has a lot of functionality
-such as networking, pivoting, visualization but excludes dependencies
+such as networking, pivoting, visualization but excludes most dependencies
 that are specific to a particular data environment like Azure Sentinel or
 Splunk.
 
@@ -147,11 +149,15 @@ Some of the extras, like "all" and "azsentinel" are combinations of
 other options collected together as a convenience. You can also specify
 multiple extras during install, separating them with commas.
 
-.. note:: Since Azure Sentinel is
-
 .. code:: bash
 
-    pip install msticpy[azure, kql]
+    pip install msticpy[azure,kql]
+
+.. warning:: when specifying multiple extras, do not leave spaces between
+   the options - just separate with commas.
+
+Missing "extra" exceptions
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you try to use functionality for a component that needs a dependency
 that you have not installed you will usually get an informative

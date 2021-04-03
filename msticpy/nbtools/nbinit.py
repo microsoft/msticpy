@@ -10,6 +10,7 @@ import importlib
 import sys
 import warnings
 from pathlib import Path
+import traceback
 from typing import Any, List, Optional, Tuple, Dict, Callable
 
 from IPython.core.interactiveshell import InteractiveShell
@@ -56,13 +57,54 @@ _MISSING_PKG_WARN = """
 incorrect version</h3></font>
 """
 
-_MISSING_MPCONFIG_ERR = """
+_HELP_URIS = [
+    (
+        '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
+        'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb">'
+        "Getting Started (notebook)</a></li>"
+    ),
+    (
+        '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
+        'ConfiguringNotebookEnvironment.ipynb">'
+        "Configuring your Notebook environment (notebook)</a></li>"
+    ),
+    (
+        '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
+        'msticpyconfig.html">'
+        "Configuring MSTICPy settings (doc)</a></li>"
+    ),
+    (
+        '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
+        'SettingsEditor.html">MSTICPy settings editor (doc)</a></li>'
+    ),
+    (
+        '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/'
+        'master/TroubleShootingNotebooks.ipynb">Trouble-Shooting Notebooks (notebook)</a></li>'
+    ),
+]
+
+_MISSING_MPCONFIG_ENV_ERR = f"""
 <h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
+The MSTICPYCONFIG environment variable is set but does not point
+to a valid file.<br>
 Some functionality (such as Threat Intel lookups) will not function without
-valid configuration settings.
-Please go to the <a href="#Configuration">Configuration section</a>
-follow the instructions there.
+valid configuration settings.<br>
+The following resources will help you set up your configuration:
+<ul>{"".join(_HELP_URIS)}</ul>
 """
+
+
+_MISSING_MPCONFIG_LOCAL_ERR = f"""
+<h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
+No 'msticpyconfig.yaml' was found in the current directory and
+the MSTICPYCONFIG environment variable is either not set or does not point
+to a valid file.<br>
+Some functionality (such as Threat Intel lookups) will not function without
+valid configuration settings.<br>
+The following resources will help you set up your configuration:
+<ul>{"".join(_HELP_URIS)}</ul>
+"""
+
 
 _PANDAS_REQ_VERSION = (0, 25, 0)
 
@@ -101,6 +143,8 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
+    dict(pkg="msticpy.datamodel.pivot", tgt="Pivot"),
+    dict(pkg="msticpy.datamodel", tgt="entities"),
 ]
 _MP_IMPORT_ALL = [
     dict(module_name="msticpy.nbtools"),
@@ -330,25 +374,41 @@ def _global_imports(  # noqa: MC0001
 
 def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     config_ok = True
-    err_warn = None
-    mp_path = os.environ.get("MSTICPYCONFIG", "./msticpyconfig.yaml")
+    errs, warns = [], []
+    warning_issued = False
+    mp_path = os.environ.get("MSTICPYCONFIG")
+    if mp_path and not Path(mp_path).exists():
+        # Env var configured but invalid path
+        warns = ["MSTICPYCONFIG path is invalid"]
+        display(HTML(_MISSING_MPCONFIG_ENV_ERR))
+        warning_issued = True
+    mp_path = mp_path or "./msticpyconfig.yaml"
     if not Path(mp_path).exists():
-        display(HTML(_MISSING_MPCONFIG_ERR))
+        warns = ["MSTICPYCONFIG not found"]
+        if not warning_issued:
+            display(HTML(_MISSING_MPCONFIG_LOCAL_ERR))
+        config_ok = False
     else:
         try:
-            err_warn = validate_config(config_file=mp_path)
-            if err_warn and err_warn[0]:
+            errs, warns = validate_config(config_file=mp_path)
+            if errs:
                 config_ok = False
         # pylint: disable=broad-except
         except Exception as err:
             config_ok = False
-            print(f"Exception while checking configuration:\n{err}")
+            errs.append(f"Exception while checking configuration:\n{err}")
+            print(f"Exception while checking configuration:\n{type(err)} - {err}")
+            print("\n".join(traceback.format_tb(err.__traceback__)))
+            print("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
-    ws_config = WorkspaceConfig()
-    if not ws_config.config_loaded:
+    # If we haven't found a config, try loading WorkspaceConfig
+    if not config_ok:
+        ws_config = WorkspaceConfig(interactive=False)
+        config_ok = ws_config.config_loaded
+    if not config_ok:
+        errs.append("No valid configuration for Azure Sentinel found.")
         print("No valid configuration for Azure Sentinel found.")
-        config_ok = False
-    return config_ok, err_warn
+    return config_ok, (errs, warns)
 
 
 def _set_nb_options(namespace):
@@ -366,7 +426,12 @@ def _set_nb_options(namespace):
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
+    # Set option on AML to display DataFrames with Schema
+    if os.environ.get("APPSETTING_WEBSITE_SITE_NAME") == "AMLComputeInstance":
+        pd.set_option("display.html.table_schema", True)
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
+    # Kqlmagic config will use AZ CLI login if available
+    os.environ["KQLMAGIC_CONFIGURATION"] = "try_azcli_login=True"
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):

@@ -23,6 +23,7 @@ ipwhois>=1.1.0
 ipython>=7.1.1
 ipywidgets>=7.4.2
 keyring>=13.2.1
+KqlmagicCustom[jupyter-basic]>=0.1.114.dev25
 KqlmagicCustom[jupyter-extended]>=0.1.114.dev25
 lxml
 matplotlib>=3.0.0

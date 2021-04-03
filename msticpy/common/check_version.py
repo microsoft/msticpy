@@ -35,7 +35,7 @@ def check_version():
         latest_version,
     )
     if installed_version < latest_version:
-        print(f"A newer version of MSTICPy - {latest_version} is available.")
+        print(f"A newer version of msticpy - {latest_version} is available.")
         print("Upgrade with pip install --upgrade msticpy")
     else:
         print("Latest version is installed.")

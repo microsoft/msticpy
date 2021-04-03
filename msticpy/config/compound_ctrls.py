@@ -94,11 +94,7 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
             ]
         )
         self.hbox = widgets.VBox(
-            [
-                self.lbl_setting,
-                contents_hbox,
-                self.status,
-            ],
+            [self.lbl_setting, contents_hbox, self.status],
             layout=CompEditDisplayMixin.no_border_layout("99%"),
         )
 
@@ -302,10 +298,7 @@ class UserDefQryProvCtrl(SettingsControl):
         self.txt_alias = widgets.Text(description="Alias", style=w_style)
         self.cb_connect = widgets.Checkbox(description="Auto-connect", style=w_style)
         self.layout = widgets.VBox(
-            [
-                self.lbl_type,
-                widgets.VBox([self.txt_alias, self.cb_connect]),
-            ]
+            [self.lbl_type, widgets.VBox([self.txt_alias, self.cb_connect])]
         )
 
     def _set_prov_name(self, prov_name):

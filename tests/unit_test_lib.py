@@ -9,7 +9,7 @@ from pathlib import Path
 import os
 from typing import Union, Dict, Any, Generator
 
-# pylint: disable=relative-beyond-top-level
+from filelock import FileLock
 from msticpy.common import pkg_config
 from msticpy.common.utility import export
 
@@ -33,7 +33,8 @@ TEST_DATA_PATH = get_test_data_path()
 # pylint: disable=protected-access
 @contextmanager
 def custom_mp_config(
-    mp_path: Union[str, Path]
+    mp_path: Union[str, Path],
+    path_check: bool = True,
 ) -> Generator[Dict[str, Any], None, None]:
     """
     Context manager to temporarily set MSTICPYCONFIG path.
@@ -42,7 +43,8 @@ def custom_mp_config(
     ----------
     mp_path : Union[str, Path]
         Path to msticpy config yaml
-
+    check_path : bool
+        If False, skip check for existing file
     Yields
     ------
     Dict[str, Any]
@@ -55,12 +57,16 @@ def custom_mp_config(
 
     """
     current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR)
-    if not Path(mp_path).is_file():
+    if path_check and not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
     try:
-        os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
-        pkg_config.refresh_config()
-        yield pkg_config.settings
+        # We need to lock the settings since these are global
+        # Otherwise the tests interfere with each other.
+        _lock_file_path = "./.mp_settings.lock"
+        with FileLock(_lock_file_path):
+            os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
+            pkg_config.refresh_config()
+            yield pkg_config.settings
     finally:
         if not current_path:
             del os.environ[pkg_config._CONFIG_ENV_VAR]

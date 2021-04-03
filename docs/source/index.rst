@@ -70,6 +70,7 @@ Contents
    Visualization
    msticpyAPI
    notebooksamples
+   blog_articles
    Releases
    contributing
    license

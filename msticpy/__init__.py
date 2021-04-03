@@ -28,6 +28,8 @@ GitHub repo:
 
 """
 
+import os
+
 # flake8: noqa: F403
 from .nbtools.nbinit import init_notebook, current_providers
 from .common import pkg_config as settings
@@ -40,3 +42,6 @@ from ._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
+
+if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
+    os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"

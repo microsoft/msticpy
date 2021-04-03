@@ -397,12 +397,14 @@ def _build_proc_tree(input_tree, progress: Progress, max_depth=-1):
     input_tree["path"] = input_tree["source_index"]
 
     cur_level = input_tree[input_tree["IsRoot"]]
+    remaining_procs = input_tree[~input_tree["IsRoot"]]
 
     cur_level_num = 0
     progress.update_progress(delta=len(cur_level))
     while True:
-        sel_crit = input_tree["parent_key"].isin(cur_level.index)
-        next_level = input_tree[sel_crit].copy()
+        sel_crit = remaining_procs["parent_key"].isin(cur_level.index)
+        next_level = remaining_procs[sel_crit].copy()
+        remaining_procs = remaining_procs[~sel_crit]
 
         if next_level.empty:
             progress.update_progress(new_total=progress.max)
@@ -677,8 +679,16 @@ def get_descendents(
     descendents = []
     parent_keys = [proc.name]
     level = 0
+    rem_procs: Optional[pd.DataFrame] = None
     while max_levels == -1 or level < max_levels:
-        children = procs[procs["parent_key"].isin(parent_keys)]
+        if rem_procs is not None:
+            # pylint: disable=unsubscriptable-object
+            children = rem_procs[rem_procs["parent_key"].isin(parent_keys)]
+            rem_procs = rem_procs[~rem_procs["parent_key"].isin(parent_keys)]
+            # pylint: enable=unsubscriptable-object
+        else:
+            children = procs[procs["parent_key"].isin(parent_keys)]
+            rem_procs = procs[~procs["parent_key"].isin(parent_keys)]
         if children.empty:
             break
         descendents.append(children)
