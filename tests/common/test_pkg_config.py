@@ -188,4 +188,4 @@ class TestPkgConfig(unittest.TestCase):
             os.environ["MAXMIND_AUTH"] = "myXfId"
             pkg_config.refresh_config()
             results = pkg_config.validate_config()
-            self.assertIsNone(results)
+            self.assertEqual(results, ([], []))

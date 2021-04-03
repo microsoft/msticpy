@@ -725,10 +725,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         output_raw = []
         output_entities = []
+        ip_cache: Dict[str, Any] = {}
         for ip_input in ip_list:
             geo_match = None
             try:
-                geo_match = self._reader.city(ip_input).raw
+                geo_match = ip_cache.get(ip_input, self._reader.city(ip_input).raw)
             except (AddressNotFoundError, AttributeError, ValueError):
                 continue
             if geo_match:

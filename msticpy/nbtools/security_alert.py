@@ -86,11 +86,11 @@ class SecurityAlert(SecurityBase):
             <b>Alert_id:</b> {id}
             """.format(
                 start=self.properties.get(
-                    "StartTimeUtc",
-                    self.properties.get("StartTime", "no timestamp")
+                    "StartTimeUtc", self.properties.get("StartTime", "no timestamp")
                 ),
                 name=self.properties.get(
-                    "AlertDisplayName", self.properties.get("DisplayName", "no alert name")
+                    "AlertDisplayName",
+                    self.properties.get("DisplayName", "no alert name"),
                 ),
                 entity=self.properties.get("CompromisedEntity", "unknown"),
                 id=self.properties["SystemAlertId"],
