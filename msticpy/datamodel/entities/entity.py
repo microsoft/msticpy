@@ -86,6 +86,34 @@ class Entity(ABC, Node):
         if kwargs:
             self.__dict__.update(kwargs)
 
+    @classmethod
+    def create(cls, src_entity: Mapping[str, Any] = None, **kwargs) -> "Entity":
+        """
+        Create an entity from a mapping type (e.g. pd.Series) or dict or kwargs.
+
+        Returns
+        -------
+        Entity
+            Instantiated entity
+
+        Notes
+        -----
+        The entity type should be specified as "Type", in either a key of `src_entity`
+        or as a keyword argument.
+
+        """
+        ent_type = (
+            src_entity.get("Type") or src_entity.get("type")
+            if src_entity
+            else kwargs.get("Type") or kwargs.get("type")
+        )
+        if not ent_type:
+            ent_type = "unknown"
+        ent_cls = cls.ENTITY_NAME_MAP.get(ent_type)
+        if not ent_cls:
+            ent_cls = cls.ENTITY_NAME_MAP["unknown"]
+        return ent_cls(src_entity, **kwargs)
+
     def _extract_src_entity(self, src_entity: Mapping[str, Any]):
         """
         Extract source entity properties.

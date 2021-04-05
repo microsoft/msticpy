@@ -4,8 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
-from unittest.mock import patch, Mock
-
+import os
 import pytest
 import pytest_check as check
 import yaml
@@ -13,6 +12,7 @@ import yaml
 import msticpy
 from msticpy.data import QueryProvider
 from msticpy.nbtools import user_config
+from msticpy.common.pkg_config import settings
 
 # pylint: disable=redefined-outer-name, unused-import, ungrouped-imports
 try:
@@ -28,6 +28,8 @@ try:
     _PIVOT = True
 except ImportError:
     _PIVOT = False
+
+from ..unit_test_lib import custom_mp_config
 
 __author__ = "Ian Hellen"
 
@@ -51,7 +53,7 @@ UserDefaults:
   LoadComponents:
     TILookup:
     GeoIpLookup:
-      provider: GeoLiteLookup
+      provider: IpStackLookup
     Notebooklets:
       query_provider:
         LocalData:
@@ -80,12 +82,12 @@ def mp_settings():
     return settings_dict
 
 
-@patch("msticpy.nbtools.user_config.settings")
-def test_user_config(settings, mp_settings):
+def test_user_config(mp_settings):
     """Test user config."""
-    settings.get = Mock()
-    settings.get.return_value = mp_settings.get("UserDefaults")
-    prov_dict = user_config.load_user_defaults()
+    mpcfg_path = os.environ.get("MSTICPYCONFIG")
+    with custom_mp_config(mp_path=mpcfg_path):
+        settings["UserDefaults"] = mp_settings.get("UserDefaults")
+        prov_dict = user_config.load_user_defaults()
 
     check.is_in("qry_asi", prov_dict)
     check.is_instance(prov_dict["qry_asi"], QueryProvider)

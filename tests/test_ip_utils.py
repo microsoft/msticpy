@@ -65,9 +65,9 @@ class TestIpUtils(unittest.TestCase):
 
     def test_get_whois(self):
         ms_ip = "13.107.4.50"
-        ms_asn = "MICROSOFT-CORP-MSN-AS-BLOCK, US"
+        ms_asn = "MICROSOFT-CORP"
         asn, whois = get_whois_info(ms_ip)
-        self.assertEqual(asn, ms_asn)
+        self.assertIn(ms_asn, asn)
 
         asn, whois = get_whois_info(self.IPV4["Private"][0])
         invalid_type = "No ASN Information for IP type: Private"

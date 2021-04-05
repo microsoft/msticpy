@@ -40,13 +40,7 @@ class CompEditDisplayMixin:
     @staticmethod
     def no_border_layout(width="95%"):
         """Return no-border widget layout."""
-        return widgets.Layout(
-            **{
-                "width": width,
-                "margin": "1pt",
-                "padding": "5pt",
-            }
-        )
+        return widgets.Layout(**{"width": width, "margin": "1pt", "padding": "5pt"})
 
 
 # pylint: disable=too-few-public-methods

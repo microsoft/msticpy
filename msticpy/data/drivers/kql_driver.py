@@ -20,6 +20,7 @@ from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
 )
+from ...common.wsconfig import WorkspaceConfig
 
 try:
     from Kqlmagic.kql_response import KqlError
@@ -81,6 +82,8 @@ class KqlDriver(DriverBase):
             Connect to a data source
 
         """
+        if isinstance(connection_str, WorkspaceConfig):
+            connection_str = connection_str.code_connect_str
         if not connection_str:
             raise MsticpyKqlConnectionError(
                 "A connection string is needed to connect to Azure Sentinel.",

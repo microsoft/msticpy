@@ -54,7 +54,7 @@ EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
     "vt3": ["vt-py>=0.6.1", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
-    "kql": ["Kqlmagic>=0.1.106"],
+    "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114.dev25"],
     "_azure_core": [
         "azure-mgmt-compute>=4.6.2",
         "azure-mgmt-core>=1.2.1",
@@ -85,6 +85,7 @@ EXTRAS["all"] = sorted(
 EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault"]))
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
 EXTRAS["azsentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
+EXTRAS["azuresentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
 
 # If ReadTheDocs build, remove a couple of problematic packages
 # (we ask Sphinx to mock these in the import)
@@ -111,7 +112,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
     ],
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS,
@@ -124,6 +125,10 @@ setuptools.setup(
         "infosec",
         "cyber",
         "cybersecurity",
+        "jupyter",
+        "notebooks",
+        "SOC",
+        "hunting",
     ],
     zip_safe=False,
     include_package_data=True,

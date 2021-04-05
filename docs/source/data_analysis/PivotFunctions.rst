@@ -1363,7 +1363,7 @@ On each iteration, the column value from the current row will be
 extracted and given as the parameter value for the ``account_name``
 function parameter.
 
-If the function query parameter type is a *list* type - i.e.�it
+If the function query parameter type is a *list* type - i.e. it
 expects a list of values, the parameter value will be sent as a list
 created from all of the values in that dataframe column. Similarly,
 if you have multiple *list* parameters sourced from different

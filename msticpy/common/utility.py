@@ -12,6 +12,7 @@ import subprocess  # nosec
 import sys
 import uuid
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -257,6 +258,13 @@ def check_and_install_missing_packages(
 
     """
     missing_packages = []
+    if isinstance(required_packages, str):
+        if "," in required_packages:
+            required_packages = [
+                req.strip() for req in required_packages.split(",") if req.strip()
+            ]
+        else:
+            required_packages = [required_packages]
     # Check package requirements against installed set
     for req in required_packages:
         pkg_req = pkg_resources.Requirement.parse(req)
@@ -573,6 +581,51 @@ def valid_pyname(identifier: str) -> str:
     if identifier[0].isdigit():
         identifier = f"n_{identifier}"
     return identifier
+
+
+def enum_parse(enum_cls: type, value: str) -> Optional[Enum]:
+    """Try to parse a string value to an Enum member."""
+    if not issubclass(enum_cls, Enum):
+        raise TypeError("Can only be used with classes derived from enum.Enum.")
+    if value in enum_cls.__members__:
+        return enum_cls.__members__[value]
+    val_lc = value.casefold()
+    val_map = {name.casefold(): name for name in enum_cls.__members__}
+    if val_lc in val_map:
+        return enum_cls.__members__[val_map[val_lc]]
+    return None
+
+
+def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
+    """
+    Convert an optional list/str/str with delims into a list.
+
+    Parameters
+    ----------
+    arg : Union[str, List[str]]
+        A string, delimited string or list
+    delims : str, optional
+        The default delimiters to use, by default ",; "
+
+    Returns
+    -------
+    List[str]
+        List of string components
+
+    Raises
+    ------
+    TypeError
+        If `arg` is not a string or list
+
+    """
+    if isinstance(arg, list):
+        return arg
+    if isinstance(arg, str):
+        for char in delims:
+            if char in arg:
+                return [item.strip() for item in arg.split(char)]
+        return [arg]
+    raise TypeError("`arg` must be a string or a list.")
 
 
 def collapse_dicts(*dicts: Dict[Any, Any]) -> Dict[Any, Any]:

@@ -69,9 +69,11 @@ Contents
    DataAnalysis
    Visualization
    msticpyAPI
-   notebooksamples.rst
-   contributing.rst
-   license.rst
+   notebooksamples
+   blog_articles
+   Releases
+   contributing
+   license
 
 
 Indices and tables

@@ -223,3 +223,44 @@ sources:
       file_hash:
         description: MD5 hash of file
         type: str
+  get_vmcomputer_for_ip:
+    description: Gets latest VMComputer record for IPAddress
+    metadata:
+      pivot:
+        short_name: vmcomputer
+    args:
+      query: '
+        {table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Ipv4Addresses has "{ip_address}"
+        | order by TimeGenerated desc
+        | take 1'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: VMComputer
+      ip_address:
+        description: The IP Address of the VM
+        type: str
+  get_vmcomputer_for_host:
+    description: Gets latest VMComputer record for Host
+    metadata:
+      pivot:
+        short_name: vmcomputer
+    args:
+      query: '
+        {table}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        | take 1'
+    parameters:
+      table:
+        description: Table name
+        type: str
+        default: VMComputer
+      host_name:
+        description: The Computer name of the VM
+        type: str

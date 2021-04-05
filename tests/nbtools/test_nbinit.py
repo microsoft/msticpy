@@ -5,16 +5,19 @@
 # --------------------------------------------------------------------------
 """test nb_init links."""
 import datetime
-from datetime import timedelta
 import os
 import subprocess  # nosec
+from collections import namedtuple
+from datetime import timedelta
+from enum import Enum
+from pathlib import Path
 
 import pandas as pd
+import pytest
 import pytest_check as check
+from msticpy.nbtools.nbinit import _check_config, _imp_module_all, init_notebook
 
-from msticpy.nbtools.nbinit import init_notebook, _check_config, _imp_module_all
-
-from ..unit_test_lib import TEST_DATA_PATH
+from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
 
 
 def test_nbinit_no_params():
@@ -72,29 +75,134 @@ def test_import_all():
         check.is_in(imp, ns_dict)
 
 
-def test_check_config():
+class TestSubdir(Enum):
+    """Test enumeration for config folder."""
+
+    NONE = 0
+    MAIN_ENV_PTR = 1
+    SAME_DIR = 2
+    SEARCH = 3
+
+
+ConfExpd = namedtuple("ConfExpd", "res, errs, wrns")
+
+
+_CONFIG_TESTS = [
+    (("missing_file", TestSubdir.NONE), ConfExpd(True, 0, 1)),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.MAIN_ENV_PTR),
+        ConfExpd(True, (3, 0), 0),
+    ),
+    (
+        (
+            TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml",
+            TestSubdir.MAIN_ENV_PTR,
+        ),
+        ConfExpd(False, (4, 2), 0),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.MAIN_ENV_PTR),
+        ConfExpd(False, (4, 2), 0),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.SAME_DIR),
+        ConfExpd(True, (3, 0), 0),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml", TestSubdir.SAME_DIR),
+        ConfExpd(False, (4, 2), 0),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.SAME_DIR),
+        ConfExpd(False, (4, 2), 0),
+    ),
+    (
+        (TEST_DATA_PATH + "/config.json", TestSubdir.SAME_DIR),
+        ConfExpd(True, 1, 2),
+    ),
+    (
+        (TEST_DATA_PATH + "/config-no-settings.json", TestSubdir.SAME_DIR),
+        ConfExpd(False, 2, 2),
+    ),
+    (
+        (TEST_DATA_PATH + "/config.json", TestSubdir.SEARCH),
+        ConfExpd(True, 0, 1),
+    ),
+    (
+        (TEST_DATA_PATH + "/config-no-settings.json", TestSubdir.SEARCH),
+        ConfExpd(False, 1, 1),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.SEARCH),
+        ConfExpd(True, 0, 1),
+    ),
+    (
+        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.SEARCH),
+        ConfExpd(False, 1, 1),
+    ),
+]
+
+_test_ids = [f"{test[0][0]}-{test[0][1].name}" for test in _CONFIG_TESTS]
+
+
+@pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
+def test_check_config(conf_file, expected, tmpdir):
     """Test config check."""
-    mp_var = os.environ.get("MSTICPYCONFIG")
-    mp_file = TEST_DATA_PATH + "/msticpyconfig.yaml"
-    os.environ["MSTICPYCONFIG"] = mp_file
-    result, err_warn = _check_config()
-    if not result:
-        # If failed - err_warn should be set
-        # and item 0 should be populated with errors
-        check.is_not_none(err_warn)
-        check.is_true(err_warn[0])
-    else:
-        # otherwise we have no errors or warnings or
-        # just warnings
-        if err_warn:
-            check.is_false(err_warn[0])
-            check.is_true(err_warn[1])
-    os.environ["MSTICPYCONFIG"] = mp_var
+    conf_file, mp_location = conf_file
+    settings_file = conf_file
+    init_cwd = str(Path(".").absolute())
+    try:
+        # If we want to test against config files in isolated directory
+        if mp_location != TestSubdir.NONE:
+            # Read contents of source file
+            tgt_file = Path(conf_file).name
+            file_txt = Path(conf_file).read_text()
+
+            dest_file = (
+                "config.json" if tgt_file.endswith(".json") else "msticpyconfig.yaml"
+            )
+            # write the file to the folder
+            tmpdir.join(dest_file).write(file_txt)
+            cwd_path = tmpdir
+            # If sub-dir, change to the directory, so WorkspaceConfig has to search.
+            if mp_location in (TestSubdir.MAIN_ENV_PTR, TestSubdir.SEARCH):
+                cwd_path = tmpdir.mkdir("sub_folder")
+            os.chdir(cwd_path)
+            if mp_location == TestSubdir.SEARCH:
+                # Pass non-existing file to custom_mp_config to bypass default settings
+                settings_file = "missing_file"
+            else:
+                settings_file = Path(str(tmpdir)).joinpath(dest_file)
+
+        with custom_mp_config(settings_file, path_check=False):
+            if mp_location in (TestSubdir.SEARCH, TestSubdir.NONE):
+                with pytest.warns(UserWarning):
+                    result, (errs, warns) = _check_config()
+            else:
+                result, (errs, warns) = _check_config()
+
+            print("result=", result)
+            print("errs=", "\n".join(errs) if errs else "no errors")
+            print("warnings=", "\n".join(warns) if warns else "no warnings")
+            check.equal(result, expected.res, "Result")
+            reported_errs = 0 if not errs else len(errs)
+            reported_warns = 0 if not warns else len(warns)
+            if isinstance(expected.errs, tuple):
+                check.is_in(reported_errs, expected.errs, "Num errors")
+            else:
+                check.equal(reported_errs, expected.errs, "Num errors")
+            if isinstance(expected.wrns, tuple):
+                check.is_in(reported_warns, expected.wrns, "Num errors")
+            else:
+                check.equal(reported_warns, expected.wrns, "Num warnings")
+    finally:
+        os.chdir(init_cwd)
 
 
 def test_install_pkgs():
     """Test installing and importing a package."""
-    test_pkg = "pip-install-test"
+    test_pkg = "pip_install_test"
+    test_imp = "pip_install_test, , test_pkg_import"
 
     # Uninstall package if it is already there
     subprocess.run(["pip", "uninstall", "-y", test_pkg], check=True)  # nosec
@@ -103,12 +211,14 @@ def test_install_pkgs():
     init_notebook(
         namespace=ns_dict,
         additional_packages=[test_pkg],
-        extra_imports=["pip_install_test"],
         def_imports="nb",
+        extra_imports=test_imp,
+        verbose=True,
     )
 
     for name, obj in ns_dict.items():
         print(name, type(obj))
-    check.is_in("pip_install_test", ns_dict)
+    check.is_in("test_pkg_import", ns_dict)
+    print(ns_dict)
 
     subprocess.run(["pip", "uninstall", "-y", test_pkg], check=True)  # nosec

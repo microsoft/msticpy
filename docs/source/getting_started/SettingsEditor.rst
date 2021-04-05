@@ -9,7 +9,7 @@ from scratch.
 
 There is also a notebook that follows this flow. You can download
 and use this to configure your settings -
-`MPSettingsEditor <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MPSettings.ipynb>`__
+`MPSettingsEditor <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MPSettingsEditor.ipynb>`__
 
 You should also read the companion document
 :doc:`*MSTICPy* Package Configuration <msticpyconfig>`, which has

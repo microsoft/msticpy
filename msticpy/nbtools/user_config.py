@@ -147,7 +147,7 @@ def _load_az_workspaces(
             ws_params = {}
             if ws_name != "Default":
                 ws_params = {"workspace": ws_name}
-            ws_config = WorkspaceConfig(**ws_params)
+            ws_config = WorkspaceConfig(**ws_params)  # type: ignore
             prov_obj.connect(ws_config.code_connect_str)
             print("Connected.")
         az_provs[obj_name] = prov_obj
@@ -200,11 +200,13 @@ def _load_notebooklets(comp_settings=None, **kwargs):
             nbinit_params = {"query_provider": prov_name}
         if prov_args:
             nbinit_params.update(
-                {"{prov_name}_{name}": val for name, val in prov_args.items()}
+                {f"{prov_name}_{name}": val for name, val in prov_args.items()}
             )
     cur_provs = kwargs.pop("global_ns", {})
     cur_provs.update(kwargs.pop("local_ns", {}))
     providers = _get_provider_names(cur_provs)
+    # Add these as additional providers
+    providers = [f"+{prov}" for prov in providers]
     nbinit_params.update({"providers": providers})
     try:
         import msticnb
@@ -256,13 +258,15 @@ def _load_azsent_api(comp_settings=None, **kwargs):
 
 
 # providers loaded in order specified
+# Do not alter the order unless you know what dependencies
+# are between the different providers.
 COMP_LOADERS = {
     "TILookup": _load_ti_lookup,
     "GeoIpLookup": _load_geoip_lookup,
     "AzureData": _load_azure_data,
     "AzureSentinelAPI": _load_azsent_api,
-    "Notebooklets": _load_notebooklets,
-    "Pivot": _load_pivot,
+    "Pivot": _load_pivot,  # Pivots loaded after most providers
+    "Notebooklets": _load_notebooklets,  # Notebooklets calls add_pivots
 }
 
 
@@ -270,9 +274,9 @@ def _get_provider_names(prov_dict):
     providers = []
     for _, obj in prov_dict.items():
         if isinstance(obj, QueryProvider) and obj.connected:
-            providers.append(obj.environment)
+            providers.append(obj.environment.casefold())
         else:
             cls_name = obj.__class__.__name__
             if cls_name in COMP_LOADERS and cls_name != "Pivot":
-                providers.append(cls_name)
+                providers.append(cls_name.casefold())
     return providers

@@ -189,7 +189,9 @@ def create_pivot_func(
                     "Try again with a single row/value as input.",
                     "E.g. func(data=df.iloc[N], column=...)",
                 )
-            result_df = _iterate_func(target_func, input_df, input_column, pivot_reg)
+            result_df = _iterate_func(
+                target_func, input_df, input_column, pivot_reg, **kwargs
+            )
         else:
             result_df = target_func(**param_dict, **kwargs)  # type: ignore
         merge_key = pivot_reg.func_out_column_name or input_column
@@ -468,14 +470,24 @@ def _create_input_df(input_value, pivot_reg, parent_kwargs):
     return input_df, input_column, param_dict
 
 
-def _iterate_func(target_func, input_df, input_column, pivot_reg):
+def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
     """Call `target_func` function with values of each row in `input_df`."""
     results = []
+    # Add any static parameters to all_rows_kwargs
+    all_rows_kwargs = kwargs.copy()
+    all_rows_kwargs.update((pivot_reg.func_static_params or {}))
     res_key_col_name = pivot_reg.func_out_column_name or pivot_reg.func_input_value_arg
 
     for row_index, row in enumerate(input_df[[input_column]].itertuples(index=False)):
+        # Get rid of any conflicting arguments from kwargs
+        func_kwargs = all_rows_kwargs.copy()
+        func_kwargs.pop(pivot_reg.func_input_value_arg, None)
+        # Create a param dictionary with the value parameter for this row
         param_dict = {pivot_reg.func_input_value_arg: row[0]}
-        result = target_func(**param_dict, **(pivot_reg.func_static_params or {}))
+        # run the function
+        result = target_func(**param_dict, **all_rows_kwargs)
+
+        # Process the output, if it is a DataFrame
         if not pivot_reg.return_raw_output and not isinstance(result, pd.DataFrame):
             col_value = next(iter(row._asdict().values()))
             if isinstance(result, dict):
@@ -490,6 +502,8 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg):
             result["src_row_index"] = row_index
         results.append(result)
     if pivot_reg.return_raw_output:
+        if len(results) == 1:
+            return results[0]
         return results
     return pd.concat(results, ignore_index=True)
 
