@@ -200,7 +200,7 @@ def _load_notebooklets(comp_settings=None, **kwargs):
             nbinit_params = {"query_provider": prov_name}
         if prov_args:
             nbinit_params.update(
-                {"{prov_name}_{name}": val for name, val in prov_args.items()}
+                {f"{prov_name}_{name}": val for name, val in prov_args.items()}
             )
     cur_provs = kwargs.pop("global_ns", {})
     cur_provs.update(kwargs.pop("local_ns", {}))
@@ -258,13 +258,15 @@ def _load_azsent_api(comp_settings=None, **kwargs):
 
 
 # providers loaded in order specified
+# Do not alter the order unless you know what dependencies
+# are between the different providers.
 COMP_LOADERS = {
     "TILookup": _load_ti_lookup,
     "GeoIpLookup": _load_geoip_lookup,
     "AzureData": _load_azure_data,
     "AzureSentinelAPI": _load_azsent_api,
-    "Notebooklets": _load_notebooklets,
-    "Pivot": _load_pivot,
+    "Pivot": _load_pivot,  # Pivots loaded after most providers
+    "Notebooklets": _load_notebooklets,  # Notebooklets calls add_pivots
 }
 
 
