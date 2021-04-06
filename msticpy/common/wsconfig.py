@@ -24,7 +24,6 @@ __author__ = "Ian Hellen"
 
 
 _RESOURCES = [
-    "Also see the notebooks:",
     (
         "https://github.com/Azure/Azure-Sentinel-Notebooks/blob/"
         "master/ConfiguringNotebookEnvironment.ipynb"
@@ -44,21 +43,21 @@ _NO_CONFIG_WARN = [
     "MSTICPYCONFIG environment variable. See",
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     "for more details.",
+    "Also see the notebooks:",
     *_RESOURCES,
 ]
 
 _NO_CONFIG_ERR = [
-    "Could not find msticpyconfig.yaml or config.json."
-    "The config.json file is created when you launch notebooks from",
-    "Azure Sentinel. If you have copied the notebook to another location",
-    "or folder you will need to copy this configuration file."
-    "Alternatively, we recommend using an explicit msticpyconfig.yaml",
+    "Could not find msticpyconfig.yaml or config.json.",
+    "The 'config.json' file is created when you launch notebooks from "
+    "Azure Sentinel. If you have copied the notebook to another location "
+    "or folder you will need to copy this configuration file.",
+    "Alternatively, we recommend using an explicit msticpyconfig.yaml"
     "and adding your Workspace and Tenant IDs to that file.",
     "",
     "You can create a settings file using the following commands:",
     ">>> from msticpy.config import MpConfigEdit",
     ">>> MpConfigEdit()",
-    *_RESOURCES,
 ]
 
 WIDGET_DEFAULTS = {
@@ -155,7 +154,9 @@ class WorkspaceConfig:
             # If we've arrived here after searching current folder and parent
             # then we give up.
             raise MsticpyUserConfigError(
-                *_NO_CONFIG_ERR, title="Workspace configuration missing."
+                *_NO_CONFIG_ERR,
+                title="Workspace configuration missing.",
+                **{f"nb_{idx}_uri": res for idx, res in enumerate(_RESOURCES)},
             )
 
     def __getitem__(self, key: str):
@@ -276,8 +277,10 @@ class WorkspaceConfig:
                 "You can avoid this prompt in future by following the"
                 " guidance in the"
                 " <a href='https://msticpy.readthedocs.io/en/latest/"
-                "getting_started/msticpyconfig.html'>"
-                "MSTICPy Configuration Documentation</a>"
+                "data_acquisition/DataProviders.html#"
+                "connecting-to-an-azure-sentinel-workspace' "
+                "target='_blank' rel='noopener noreferrer'>"
+                "Connecting to an Azure Sentinel Workspace</a>"
             ),
         )
 

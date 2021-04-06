@@ -1,14 +1,18 @@
-REM @echo off
+@echo off
 
-set home_path=%~p0
-set home_drive=%~d0
 
 if "%1" equ "" goto usage
 if "%2" equ "" goto usage
+set nb_path=%~f2
+echo Notebooks folder = %nb_path%
+
 if "%1" equ "/?" goto usage
 if /I "%1" equ "--help" goto usage
 if /I "%1" equ "-h" goto usage
+set py_env_dir=%TEMP%\%1
+echo Virtual environment folder = %py_env_dir%
 if "%3" equ "" goto no_ver
+
 set mp_pkg=msticpy==%3
 goto ver_spec
 :no_ver
@@ -51,8 +55,6 @@ echo Installing nbconvert and jupyter extensions...
 pip install nbconvert
 pip install jupyter_contrib_nbextensions
 
-set nb_path=%home_drive%%home_path%/docs/notebooks
-if "%2" neq "" set nb_path=%~f2
 
 echo.
 echo %h_rule%
@@ -85,14 +87,14 @@ echo.
 echo %h_rule%
 echo Cleaning up...
 echo removing notebook output files
-del *.nbconvert.ipynb
-call %1\scripts\activate
+del %nb_path%\*.nbconvert.ipynb
+call deactivate
+popd
 echo.
 echo About to remove the %1 environment. Ctrl-C to abort
 pause
-popd
-rmdir /s %1
-popd
+
+rmdir /s %py_env_dir%
 echo %h_rule%
 echo Test completed.
 echo %h_rule%
@@ -103,6 +105,7 @@ goto end
 echo %h_rule%
 echo Error encountered running notebook %NB%
 echo Test Failed
+echo Test environment still available at %py_env_dir%
 echo %h_rule%
 popd
 goto end

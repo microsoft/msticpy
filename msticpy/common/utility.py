@@ -351,7 +351,7 @@ def md(
         else:
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
-        style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
+        style_str = ";".join(_F_STYLES.get(style, "") for style in styles)
     content = HTML(f"<p style='{style_str}'>{string}</p>")
 
     if isinstance(disp_id, bool) and disp_id:

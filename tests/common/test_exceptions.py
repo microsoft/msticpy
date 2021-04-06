@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Exception test class."""
+
 from contextlib import redirect_stdout
 import io
 from typing import List, Any, Tuple
@@ -48,8 +49,8 @@ _OTHER_URI = "https://msticpy.readthedocs.org/test2"
 _TEST_TITLE = "test error"
 
 _TEST_EX_CASES: List[Tuple] = []
+tst_kwargs = dict(help_uri=_TEST_URI, title=_TEST_TITLE, other_uri=_OTHER_URI)
 for case in USER_EX_CASES:
-    tst_kwargs = dict(help_uri=_TEST_URI, title=_TEST_TITLE, other_uri=_OTHER_URI)
     _TEST_EX_CASES.append((case, [_TEST_ARG], tst_kwargs))
 
 
