@@ -4,38 +4,38 @@
 # license information.
 # --------------------------------------------------------------------------
 """Initialization for Jupyter Notebooks."""
-import os
-from functools import wraps
 import importlib
+import os
 import sys
-import warnings
-from pathlib import Path
 import traceback
-from typing import Any, List, Optional, Tuple, Dict, Callable
+import warnings
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from IPython.core.interactiveshell import InteractiveShell
-from IPython.display import display, HTML
 import ipywidgets as widgets
-from matplotlib import MatplotlibDeprecationWarning
 import pandas as pd
+from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import HTML, display
+from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
 except ImportError:
     sns = None
 
-from ..common.exceptions import MsticpyUserError, MsticpyException
+from .._version import VERSION
+from ..common.check_version import check_version
+from ..common.exceptions import MsticpyException, MsticpyUserError
+from ..common.pkg_config import get_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
-    unit_testing,
-    md,
     check_kwargs,
+    md,
+    unit_testing,
 )
-from ..common.check_version import check_version
-from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .user_config import load_user_defaults
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -60,26 +60,33 @@ incorrect version</h3></font>
 _HELP_URIS = [
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
-        'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb">'
+        'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
         "Getting Started (notebook)</a></li>"
     ),
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
-        'ConfiguringNotebookEnvironment.ipynb">'
+        'ConfiguringNotebookEnvironment.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
         "Configuring your Notebook environment (notebook)</a></li>"
     ),
     (
         '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
-        'msticpyconfig.html">'
+        'msticpyconfig.html"'
+        'target="_blank" rel="noopener noreferrer">'
         "Configuring MSTICPy settings (doc)</a></li>"
     ),
     (
         '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
-        'SettingsEditor.html">MSTICPy settings editor (doc)</a></li>'
+        'SettingsEditor.html"'
+        'target="_blank" rel="noopener noreferrer">'
+        "MSTICPy settings editor (doc)</a></li>"
     ),
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/'
-        'master/TroubleShootingNotebooks.ipynb">Trouble-Shooting Notebooks (notebook)</a></li>'
+        'master/TroubleShootingNotebooks.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
+        "Trouble-Shooting Notebooks (notebook)</a></li>"
     ),
 ]
 
@@ -91,6 +98,8 @@ Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
+<br>You can load and run the first two of these from the Azure Sentinel
+notebooks tab
 """
 
 
@@ -100,7 +109,7 @@ No 'msticpyconfig.yaml' was found in the current directory and
 the MSTICPYCONFIG environment variable is either not set or does not point
 to a valid file.<br>
 Some functionality (such as Threat Intel lookups) will not function without
-valid configuration settings.<br>
+valid configuration settings in this file.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
 """
@@ -156,8 +165,8 @@ _CONF_URI = (
 )
 
 _AZNB_GUIDE = (
-    "Please see the <i>Getting Started Guide for Azure Sentinel "
-    + "ML Notebooks</i> notebook"
+    "Please run the <i>Getting Started Guide for Azure Sentinel "
+    + "ML Notebooks</i> notebook."
 )
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
@@ -275,7 +284,7 @@ def init_notebook(
         print("Autoloaded components:", ", ".join(prov_dict.keys()))
 
     if not imp_ok or not conf_ok:
-        md("<font color='red'><h3>Notebook setup did not complete successfully.</h3>")
+        md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
         if not imp_ok:
             md("One or more libraries did not import successfully.")
             md(_AZNB_GUIDE)
@@ -334,6 +343,8 @@ def _global_imports(  # noqa: MC0001
     try:
         if def_imports.casefold() in ["all", "nb"]:
             for imp_pkg in _NB_IMPORTS:
+                if sns is None and imp_pkg.get("pkg") == "seaborn":
+                    continue
                 _imp_from_package(nm_spc=namespace, **imp_pkg)
                 import_list.append(_extract_pkg_name(imp_pkg))
             _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
@@ -363,9 +374,8 @@ def _global_imports(  # noqa: MC0001
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
             )
 
-        if _VERBOSE():  # type: ignore
-            if import_list:
-                print("Imported:", "; ".join(imp for imp in import_list if imp))
+        if import_list:
+            print("Imported:", ", ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -403,7 +413,9 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
         # pylint: enable=broad-except
     # If we haven't found a config, try loading WorkspaceConfig
     if not config_ok:
-        ws_config = WorkspaceConfig(interactive=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ws_config = WorkspaceConfig(interactive=False)
         config_ok = ws_config.config_loaded
     if not config_ok:
         errs.append("No valid configuration for Azure Sentinel found.")

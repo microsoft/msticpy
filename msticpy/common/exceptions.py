@@ -7,8 +7,8 @@
 from typing import List, Tuple, Union
 
 from IPython.display import display
-from IPython import get_ipython
 
+from .utility import is_ipython
 from .._version import VERSION
 
 __version__ = VERSION
@@ -94,8 +94,7 @@ class MsticpyUserError(MsticpyException):
         title = kwargs.pop("title", "we've hit an error while running")
         self._output.append((f"{self.__class__.__name__} - {title}", "title"))
 
-        for arg in args:
-            self._output.append(arg)
+        self._output.extend(args)
 
         self._output.append("\nFor more help on fixing this error see:")
         if not help_uri:
@@ -137,25 +136,27 @@ class MsticpyUserError(MsticpyException):
         </style>
         """
         div_tmplt = "<div class='solid'>{content}</div>"
-        content = ""
+        about_blank = "target='_blank' rel='noopener noreferrer'"
+        content = []
         for line in self._output:
             if isinstance(line, tuple):
                 l_content, l_type = line
                 if l_type == "title":
-                    content += f"<h3><p class='title'>{l_content}</p></h3>"
+                    content.append(f"<h3><p class='title'>{l_content}</p></h3>")
                 elif l_type == "uri":
                     if isinstance(l_content, tuple):
                         name, uri = l_content
                     else:
                         name = uri = l_content
-                    content += (
-                        f"<ul class='circle'><li><a href='{uri}'>{name}</a></li></ul>"
+                    content.append(
+                        f"<ul class='circle'><li><a href='{uri}' {about_blank}>"
+                        f"{name}</a></li></ul>"
                     )
             else:
                 text_line = line.replace("\n", "<br>")
-                content += f"{text_line}<br>"
+                content.append(f"{text_line}<br>")
 
-        return "".join((ex_style, div_tmplt.format(content=content)))
+        return "".join((ex_style, div_tmplt.format(content="".join(content))))
 
     def _display_txt_exception(self):
         """Display text-only version of the exception text."""
@@ -201,10 +202,7 @@ class MsticpyUserConfigError(MsticpyUserError):
             + " the MSTICPYCONFIG environment variable.",
             "Or ensure that a copy of this file is in the current directory.",
         ]
-        if args:
-            add_args = [*args, *mp_loc_mssg]
-        else:
-            add_args = [def_mssg, *mp_loc_mssg]
+        add_args = [*args, *mp_loc_mssg] if args else [def_mssg, *mp_loc_mssg]
         if help_uri:
             uri: Union[Tuple[str, str], str] = help_uri
             add_uris = {"basehelp_uri": self.DEF_HELP_URI}
@@ -388,17 +386,3 @@ class MsticpyAzureConnectionError(MsticpyUserError):
         "https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html"
         + "#instantiating-and-connecting-with-an-azure-data-connector",
     )
-
-
-def is_ipython() -> bool:
-    """
-    Return True if running in IPython environment.
-
-    Returns
-    -------
-    bool
-        True if running in IPython environment,
-        otherwise False
-
-    """
-    return bool(get_ipython())

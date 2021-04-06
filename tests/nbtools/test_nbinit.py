@@ -175,11 +175,7 @@ def test_check_config(conf_file, expected, tmpdir):
                 settings_file = Path(str(tmpdir)).joinpath(dest_file)
 
         with custom_mp_config(settings_file, path_check=False):
-            if mp_location in (TestSubdir.SEARCH, TestSubdir.NONE):
-                with pytest.warns(UserWarning):
-                    result, (errs, warns) = _check_config()
-            else:
-                result, (errs, warns) = _check_config()
+            result, (errs, warns) = _check_config()
 
             print("result=", result)
             print("errs=", "\n".join(errs) if errs else "no errors")
