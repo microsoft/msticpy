@@ -281,7 +281,11 @@ def _get_file_name_desc(entity):
 def _get_process_name_desc(entity):
     if "ProcessFilePath" in entity:
         path = entity.ProcessFilePath
-    elif "ImageFile" in entity and entity["ImageFile"]:
+    elif (
+        "ImageFile" in entity
+        and entity["ImageFile"]
+        and "FullPath" in entity["ImageFile"]
+    ):
         path = entity["ImageFile"]["FullPath"]
     else:
         path = "unknown"

@@ -9,7 +9,6 @@ import os
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
-import warnings
 
 from IPython.display import display
 import ipywidgets as widgets
@@ -36,11 +35,16 @@ _RESOURCES = [
 ]
 
 _NO_CONFIG_WARN = [
-    "Could not find msticpyconfig.yaml or a config.json in the current directory.",
-    "or via a MSTICPYCONFIG variable.",
+    "Could not find Azure Sentinel settings in msticpyconfig.yaml or a config.json ",
+    "(in the current directory or via a MSTICPYCONFIG variable.)",
     "We found the file '{config_file}' and will use this.",
     "We recommend using an explicit msticpyconfig.yaml specified using the",
-    "MSTICPYCONFIG environment variable. See",
+    "MSTICPYCONFIG environment variable. See:",
+    (
+        "https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html#"
+        "connecting-to-an-azure-sentinel-workspace"
+    ),
+    "and",
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html",
     "for more details.",
     "Also see the notebooks:",
@@ -152,11 +156,13 @@ class WorkspaceConfig:
         # Finally, throw an exception (unless non-interactive)
         if self._interactive:
             # If we've arrived here after searching current folder and parent
-            # then we give up.
-            raise MsticpyUserConfigError(
-                *_NO_CONFIG_ERR,
-                title="Workspace configuration missing.",
-                **{f"nb_{idx}_uri": res for idx, res in enumerate(_RESOURCES)},
+            # then we give up. (We create but don't raise an actual exception)
+            display(
+                MsticpyUserConfigError(
+                    *_NO_CONFIG_ERR,
+                    title="Workspace configuration missing.",
+                    **{f"nb_{idx}_uri": res for idx, res in enumerate(_RESOURCES)},
+                )
             )
 
     def __getitem__(self, key: str):
@@ -326,5 +332,6 @@ class WorkspaceConfig:
                 break
         if config_file:
             # Warn that we're using a "found" file, not one in the current directory
-            warnings.warn("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
+            print("Warning")
+            print("\n".join(_NO_CONFIG_WARN).format(config_file=config_file))
         return config_file

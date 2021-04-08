@@ -32,7 +32,7 @@ CONDA_PKG_EXCEPTIONS = {
     "vt-py",
     "vt-graph-api",
     "nest_asyncio",
-    "KqlmagicCustom[jupyter-basic]",
+    "KqlmagicCustom[jupyter-extended]",
 }
 
 
@@ -93,20 +93,20 @@ def test_conda_reqs(extras_from_setup):
     conda_reqs_pip_dict = _get_reqs_from_file(conda_reqs_pip_file)
 
     for key, val in main_reqs_dict.items():
-        print(f"Checking {key} in conda-reqs.txt", bool(key in conda_reqs_dict))
-        print(f"Checking {key} in conda-reqs-pip.txt", bool(key in conda_reqs_pip_dict))
+        # print(f"Checking {key} in conda-reqs.txt", bool(key in conda_reqs_dict))
+        # print(f"Checking {key} in conda-reqs-pip.txt", bool(key in conda_reqs_pip_dict))
 
+        if (
+            key not in conda_reqs_dict
+            and key not in conda_reqs_pip_dict
+            and key not in CONDA_PKG_EXCEPTIONS
+        ):
+            print(f"Test Error - no conda package equiv for {key}=={val}")
         check.is_true(
             key in conda_reqs_dict
             or key in conda_reqs_pip_dict
             or key in CONDA_PKG_EXCEPTIONS,
         )
-        if not (
-            key in conda_reqs_dict
-            or key in conda_reqs_pip_dict
-            or key in CONDA_PKG_EXCEPTIONS,
-        ):
-            print("Test Error - no conda package equiv for {key}=={val}")
         if key in conda_reqs_dict:
             if conda_reqs_dict[key]:
                 if val != conda_reqs_dict[key]:

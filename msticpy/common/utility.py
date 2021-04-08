@@ -285,7 +285,7 @@ def check_and_install_missing_packages(
     else:
         pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
 
-    pkg_command = ["pip", "install"]
+    pkg_command = ["python", "-m", "pip", "install"]
     if user:
         pkg_command.append("--user")
     if upgrade:

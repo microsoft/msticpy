@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Initialization for Jupyter Notebooks."""
+from contextlib import redirect_stdout
 import importlib
+import io
 import os
 import sys
 import traceback
@@ -33,6 +35,7 @@ from ..common.utility import (
     check_kwargs,
     md,
     unit_testing,
+    is_ipython,
 )
 from ..common.wsconfig import WorkspaceConfig
 from .user_config import load_user_defaults
@@ -172,6 +175,14 @@ _AZNB_GUIDE = (
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 
 
+def _pr_output(*args):
+    """Send output to IPython display or print."""
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+    else:
+        print(*args)
+
+
 def init_notebook(
     namespace: Dict[str, Any],
     def_imports: str = "all",
@@ -252,9 +263,13 @@ def init_notebook(
 
     _VERBOSE(verbose)
 
-    check_version()
+    display(HTML("<hr><h4>Starting Notebook initialization...</h4>"))
+    ver_out = io.StringIO()
+    with redirect_stdout(ver_out):
+        check_version()
+        _pr_output(ver_out.getvalue())
 
-    print("Processing imports....")
+    _pr_output("Processing imports....")
     imp_ok = _global_imports(
         namespace, additional_packages, user_install, extra_imports, def_imports
     )
@@ -262,17 +277,17 @@ def init_notebook(
     if no_config_check:
         conf_ok = True
     else:
-        print("Checking configuration....")
+        _pr_output("Checking configuration....")
         conf_ok, _ = _check_config()
 
-    print("Setting notebook options....")
+    _pr_output("Setting notebook options....")
     _set_nb_options(namespace)
 
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions")
     if friendly_exceptions:
         if verbose:
-            print("Friendly exceptions enabled.")
+            _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(
             InteractiveShell.showtraceback
         )
@@ -281,7 +296,7 @@ def init_notebook(
     if prov_dict:
         namespace.update(prov_dict)
         current_providers = prov_dict
-        print("Autoloaded components:", ", ".join(prov_dict.keys()))
+        _pr_output("Autoloaded components:", ", ".join(prov_dict.keys()))
 
     if not imp_ok or not conf_ok:
         md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
@@ -296,7 +311,7 @@ def init_notebook(
             )
         md("This notebook may still run but with reduced functionality.")
         return False
-    display(HTML("<h3>Notebook setup complete</h3>"))
+    display(HTML("<h4>Notebook initialization complete</h4>"))
     return True
 
 
@@ -310,9 +325,9 @@ def list_default_imports():
                 import_line = f"import {imp_item['pkg']}"
             if "alias" in imp_item:
                 import_line += f" as {imp_item['alias']}"
-            print(import_line)
+            _pr_output(import_line)
     for imp_item in _MP_IMPORT_ALL:
-        print(f"from {imp_item['module_name']} import *")
+        _pr_output(f"from {imp_item['module_name']} import *")
 
 
 def _extract_pkg_name(
@@ -362,8 +377,8 @@ def _global_imports(  # noqa: MC0001
                 additional_packages, user=user_install
             )
             if not pkg_success:
-                print("One or more packages failed to install.")
-                print(
+                _pr_output("One or more packages failed to install.")
+                _pr_output(
                     "Please re-run init_notebook() with the parameter user_install=True."
                 )
             # We want to force import lib to see anything that we've
@@ -375,7 +390,7 @@ def _global_imports(  # noqa: MC0001
             )
 
         if import_list:
-            print("Imported:", ", ".join(imp for imp in import_list if imp))
+            _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
@@ -400,16 +415,20 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
         config_ok = False
     else:
         try:
-            errs, warns = validate_config(config_file=mp_path)
+            val_out = io.StringIO()
+            with redirect_stdout(val_out):
+                errs, warns = validate_config(config_file=mp_path)
+            if errs or warns:
+                _pr_output(val_out.getvalue())
             if errs:
                 config_ok = False
         # pylint: disable=broad-except
         except Exception as err:
             config_ok = False
             errs.append(f"Exception while checking configuration:\n{err}")
-            print(f"Exception while checking configuration:\n{type(err)} - {err}")
-            print("\n".join(traceback.format_tb(err.__traceback__)))
-            print("Please report this to msticpy@microsoft.com")
+            _pr_output(f"Exception while checking configuration:\n{type(err)} - {err}")
+            _pr_output("\n".join(traceback.format_tb(err.__traceback__)))
+            _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
     # If we haven't found a config, try loading WorkspaceConfig
     if not config_ok:
@@ -419,7 +438,7 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
         config_ok = ws_config.config_loaded
     if not config_ok:
         errs.append("No valid configuration for Azure Sentinel found.")
-        print("No valid configuration for Azure Sentinel found.")
+        _pr_output("No valid configuration for Azure Sentinel found.")
     return config_ok, (errs, warns)
 
 
@@ -478,7 +497,7 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     else:
         nm_spc[module_name] = mod
     if _VERBOSE():  # type: ignore
-        print(f"{module_name} imported (alias={alias})")
+        _pr_output(f"{module_name} imported (alias={alias})")
     return mod
 
 
@@ -494,7 +513,7 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
             continue
         nm_spc[item] = getattr(imported_mod, item)
     if _VERBOSE():  # type: ignore
-        print(f"All items imported from {module_name}")
+        _pr_output(f"All items imported from {module_name}")
 
 
 def _imp_from_package(
@@ -519,7 +538,7 @@ def _imp_from_package(
     else:
         nm_spc[tgt] = obj
     if _VERBOSE():  # type: ignore
-        print(f"{tgt} imported from {pkg} (alias={alias})")
+        _pr_output(f"{tgt} imported from {pkg} (alias={alias})")
     return obj
 
 
@@ -549,7 +568,7 @@ def _check_and_reload_pkg(
             else:
                 _imp_module(nm_spc, pkg_name, alias=alias)
     if _VERBOSE():  # type: ignore
-        print(f"{pkg_name} imported version {pkg.__version__}")
+        _pr_output(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg
 
 
