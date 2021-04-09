@@ -437,7 +437,7 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
             std_out_cap = io.StringIO()
             with redirect_stdout(std_out_cap):
                 ws_config = WorkspaceConfig(interactive=False)
-            if not ws_config.config_loaded:
+            if not std_out_cap.getvalue():
                 _pr_output(std_out_cap.getvalue())
         config_ok = ws_config.config_loaded
     if not config_ok:
