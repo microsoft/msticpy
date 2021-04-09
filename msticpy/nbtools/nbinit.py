@@ -415,11 +415,11 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
         config_ok = False
     else:
         try:
-            val_out = io.StringIO()
-            with redirect_stdout(val_out):
+            std_out_cap = io.StringIO()
+            with redirect_stdout(std_out_cap):
                 errs, warns = validate_config(config_file=mp_path)
             if errs or warns:
-                _pr_output(val_out.getvalue())
+                _pr_output(std_out_cap.getvalue())
             if errs:
                 config_ok = False
         # pylint: disable=broad-except
@@ -434,7 +434,11 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
     if not config_ok:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            ws_config = WorkspaceConfig(interactive=False)
+            std_out_cap = io.StringIO()
+            with redirect_stdout(std_out_cap):
+                ws_config = WorkspaceConfig(interactive=False)
+            if not ws_config.config_loaded:
+                _pr_output(std_out_cap.getvalue())
         config_ok = ws_config.config_loaded
     if not config_ok:
         errs.append("No valid configuration for Azure Sentinel found.")
