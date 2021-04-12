@@ -207,7 +207,10 @@ def plot_entity_graph(
     """
     output_notebook()
     font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
-    node_attrs = {node: attrs["color"] for node, attrs in entity_graph.nodes(data=True)}
+    node_attrs = {
+        node: attrs.get("color", "green")
+        for node, attrs in entity_graph.nodes(data=True)
+    }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
     plot = figure(

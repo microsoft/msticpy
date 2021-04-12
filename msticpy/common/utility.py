@@ -229,7 +229,7 @@ def resolve_pkg_path(part_path: str):
 def check_and_install_missing_packages(
     required_packages: List[str],
     force_notebook: bool = False,
-    user: bool = True,
+    user: bool = False,
     upgrade: bool = False,
 ) -> bool:
     """
@@ -246,7 +246,7 @@ def check_and_install_missing_packages(
         by default False (autodetect)
     user : bool, optional
         Boolean value to toggle user flag while installing pip packages,
-        by default True
+        by default False
     upgrade: bool, option
         If true supply `--upgrade` flag to pip to install the latest
         version (applies to all package in `required_packages`)
@@ -285,25 +285,28 @@ def check_and_install_missing_packages(
     else:
         pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
 
-    pkg_command = ["python", "-m", "pip", "install"]
+    pkg_command = ["install"] if is_ipython() else ["python", "-m", "pip", "install"]
     if user:
         pkg_command.append("--user")
     if upgrade:
         pkg_command.append("--upgrade")
     pkg_success = True
     for package in pkgbar:
-        try:
-            subprocess.run(  # nosec
-                pkg_command + [package],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except subprocess.CalledProcessError as proc_err:
-            print(f"An Error has occured while installing {package}.")
-            print(f"Output: {str(proc_err.stdout)}")
-            print(f"Errs: {str(proc_err.stderr)}")
-            pkg_success = False
+        if is_ipython():
+            get_ipython().run_line_magic("pip", " ".join(pkg_command + [package]))
+        else:
+            try:
+                subprocess.run(  # nosec
+                    pkg_command + [package],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as proc_err:
+                print(f"An Error has occured while installing {package}.")
+                print(f"Output: {str(proc_err.stdout)}")
+                print(f"Errs: {str(proc_err.stderr)}")
+                pkg_success = False
         print(f"{package} installed.")
 
     return pkg_success

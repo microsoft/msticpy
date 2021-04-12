@@ -299,7 +299,9 @@ def _get_process_name_desc(entity):
 def _get_account_name_desc(entity):
     e_dom = entity["NTDomain"]
     e_dom = e_dom + "\\" if e_dom else ""
-    e_name = e_dom + entity["Name"]
+    e_name = e_dom + (
+        entity["Name"] or entity["AadUserId"] or entity["DisplayName"] or "unknown"
+    )
     e_name = "{}: {}".format(entity["Type"], e_name)
     if "IsDomainJoined" in entity:
         domain_joined = entity["IsDomainJoined"]
