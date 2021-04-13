@@ -80,7 +80,7 @@ def create_host_record(
             applications.append(app)
 
     # Produce host_entity record mapping linux heartbeat elements to host_entity fields
-    if host_hb and not host_hb.empty:
+    if host_hb is not None and not host_hb.empty:
         host_hb = heartbeat_df.iloc[0]
         host_entity.SourceComputerId = host_hb["SourceComputerId"]  # type: ignore
         host_entity.OSType = host_hb["OSType"]  # type: ignore
@@ -103,7 +103,7 @@ def create_host_record(
         host_entity.IPAddress = ip_entity  # type: ignore
 
     # If Azure network data present add this to host record
-    if az_net_df and not az_net_df.empty:
+    if az_net_df is not None and not az_net_df.empty:
         if len(az_net_df) == 1:
             priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
             host_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
