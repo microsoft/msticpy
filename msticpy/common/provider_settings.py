@@ -56,7 +56,7 @@ class ProviderSettings:
 
 
 _SECRETS_CLIENT: Any = None
-if "KeyVault" in config.settings and _SECRETS_ENABLED:
+if "KeyVault" in config.settings and _SECRETS_ENABLED and config.settings["KeyVault"]:
     _SECRETS_CLIENT = SecretsClient()
 
 
