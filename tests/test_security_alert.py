@@ -236,8 +236,8 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertIsNotNone(alert.host_filter(operator="=="))
         self.assertIn("true", alert.subscription_filter(operator="=="))
 
-        self.assertEqual(3, len(alert.get_entities_of_type(entity_type="file")))
-        self.assertEqual(2, len(alert.get_entities_of_type(entity_type="process")))
+        self.assertEqual(4, len(alert.get_entities_of_type(entity_type="file")))
+        self.assertEqual(6, len(alert.get_entities_of_type(entity_type="process")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="filehash")))
         self.assertEqual(
             2, len(alert.get_entities_of_type(entity_type="registryvalue"))
