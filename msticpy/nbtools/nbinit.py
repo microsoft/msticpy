@@ -397,7 +397,9 @@ def _global_imports(  # noqa: MC0001
         return False
 
 
-def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
+def _check_config() -> Tuple[  # noqa: MC0001
+    bool, Optional[Tuple[List[str], List[str]]]
+]:
     config_ok = True
     errs, warns = [], []
     warning_issued = False

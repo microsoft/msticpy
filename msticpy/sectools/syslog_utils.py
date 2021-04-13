@@ -80,7 +80,7 @@ def create_host_record(
             applications.append(app)
 
     # Produce host_entity record mapping linux heartbeat elements to host_entity fields
-    if host_hb is not None and not host_hb.empty:
+    if heartbeat_df is not None and not heartbeat_df.empty:
         host_hb = heartbeat_df.iloc[0]
         host_entity.SourceComputerId = host_hb["SourceComputerId"]  # type: ignore
         host_entity.OSType = host_hb["OSType"]  # type: ignore
