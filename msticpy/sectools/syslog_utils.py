@@ -80,26 +80,27 @@ def create_host_record(
             applications.append(app)
 
     # Produce host_entity record mapping linux heartbeat elements to host_entity fields
-    host_hb = heartbeat_df.iloc[0]
-    host_entity.SourceComputerId = host_hb["SourceComputerId"]  # type: ignore
-    host_entity.OSType = host_hb["OSType"]  # type: ignore
-    host_entity.OSName = host_hb["OSName"]  # type: ignore
-    host_entity.OSVMajorersion = host_hb["OSMajorVersion"]  # type: ignore
-    host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]  # type: ignore
-    host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]  # type: ignore
-    host_entity.OmsSolutions = [  # type: ignore
-        sol.strip() for sol in host_hb["Solutions"].split(",")
-    ]  # type: ignore
-    host_entity.Applications = applications  # type: ignore
-    host_entity.VMUUID = host_hb["VMUUID"]  # type: ignore
-    ip_entity = IpAddress()
-    ip_entity.Address = host_hb["ComputerIP"]
-    geoloc_entity = GeoLocation()
-    geoloc_entity.CountryName = host_hb["RemoteIPCountry"]  # type: ignore
-    geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
-    geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
-    ip_entity.Location = geoloc_entity  # type: ignore
-    host_entity.IPAddress = ip_entity  # type: ignore
+    if host_hb is not None and not host_hb.empty:
+        host_hb = heartbeat_df.iloc[0]
+        host_entity.SourceComputerId = host_hb["SourceComputerId"]  # type: ignore
+        host_entity.OSType = host_hb["OSType"]  # type: ignore
+        host_entity.OSName = host_hb["OSName"]  # type: ignore
+        host_entity.OSVMajorersion = host_hb["OSMajorVersion"]  # type: ignore
+        host_entity.OSVMinorVersion = host_hb["OSMinorVersion"]  # type: ignore
+        host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]  # type: ignore
+        host_entity.OmsSolutions = [  # type: ignore
+            sol.strip() for sol in host_hb["Solutions"].split(",")
+        ]  # type: ignore
+        host_entity.Applications = applications  # type: ignore
+        host_entity.VMUUID = host_hb["VMUUID"]  # type: ignore
+        ip_entity = IpAddress()
+        ip_entity.Address = host_hb["ComputerIP"]
+        geoloc_entity = GeoLocation()
+        geoloc_entity.CountryName = host_hb["RemoteIPCountry"]  # type: ignore
+        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
+        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
+        ip_entity.Location = geoloc_entity  # type: ignore
+        host_entity.IPAddress = ip_entity  # type: ignore
 
     # If Azure network data present add this to host record
     if az_net_df is not None and not az_net_df.empty:
