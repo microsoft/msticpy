@@ -114,7 +114,10 @@ class KeyringClient:
         try:
             keyring.set_password("test", test_value, test_value)
             # If no exception clear the test key
-            keyring.delete_password("test", test_value)
+            try:
+                keyring.delete_password("test", test_value)
+            except keyring.errors.PasswordDeleteError:
+                pass
             return True
         except NoKeyringError:
             return False
