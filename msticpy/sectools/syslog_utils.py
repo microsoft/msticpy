@@ -59,13 +59,14 @@ def create_host_record(
 
     """
     host_entity = Host(src_event=syslog_df.iloc[0])
-    applications = []
-
     # Produce list of processes on the host that are not
     # part of a 'standard' linux distro
     _apps = syslog_df["ProcessName"].unique().tolist()
-    for app in _apps:
-        if app not in (
+    applications = [
+        app
+        for app in _apps
+        if app
+        not in (
             "CRON",
             "sudo",
             "snapd",
@@ -76,8 +77,8 @@ def create_host_record(
             "systemd-logind",
             "rsyslogd",
             "syslog-ng",
-        ):
-            applications.append(app)
+        )
+    ]
 
     # Produce host_entity record mapping linux heartbeat elements to host_entity fields
     if heartbeat_df is not None and not heartbeat_df.empty:
@@ -182,9 +183,7 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
             user = (logons_opened.iloc[ses_opened]).Sudoer
         else:
             user = "Unknown"
-        if ses_start > ses_close_time or ses_opened == 0:
-            pass
-        else:
+        if ses_start <= ses_close_time and ses_opened != 0:
             ses_opened += 1
             continue
         if ses_end < ses_start:
@@ -194,10 +193,9 @@ def cluster_syslog_logons_df(logon_events: pd.DataFrame) -> pd.DataFrame:
         starts.append(ses_start)
         ends.append(ses_end)
         ses_close_time = ses_end
-        ses_closed = ses_closed + 1
-        ses_opened = ses_opened + 1
-    logon_sessions_df = pd.DataFrame({"User": users, "Start": starts, "End": ends})
-    return logon_sessions_df
+        ses_closed += 1
+        ses_opened += 1
+    return pd.DataFrame({"User": users, "Start": starts, "End": ends})
 
 
 @export
