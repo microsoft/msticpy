@@ -4,38 +4,41 @@
 # license information.
 # --------------------------------------------------------------------------
 """Initialization for Jupyter Notebooks."""
-import os
-from functools import wraps
+from contextlib import redirect_stdout
 import importlib
+import io
+import os
 import sys
-import warnings
-from pathlib import Path
 import traceback
-from typing import Any, List, Optional, Tuple, Dict, Callable
+import warnings
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from IPython.core.interactiveshell import InteractiveShell
-from IPython.display import display, HTML
 import ipywidgets as widgets
-from matplotlib import MatplotlibDeprecationWarning
 import pandas as pd
+from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import HTML, display
+from matplotlib import MatplotlibDeprecationWarning
 
 try:
     import seaborn as sns
 except ImportError:
     sns = None
 
-from ..common.exceptions import MsticpyUserError, MsticpyException
+from .._version import VERSION
+from ..common.check_version import check_version
+from ..common.exceptions import MsticpyException, MsticpyUserError
+from ..common.pkg_config import get_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
-    unit_testing,
-    md,
     check_kwargs,
+    md,
+    unit_testing,
+    is_ipython,
 )
-from ..common.check_version import check_version
-from ..common.pkg_config import validate_config, get_config
 from ..common.wsconfig import WorkspaceConfig
 from .user_config import load_user_defaults
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -60,26 +63,33 @@ incorrect version</h3></font>
 _HELP_URIS = [
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
-        'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb">'
+        'A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
         "Getting Started (notebook)</a></li>"
     ),
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/'
-        'ConfiguringNotebookEnvironment.ipynb">'
+        'ConfiguringNotebookEnvironment.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
         "Configuring your Notebook environment (notebook)</a></li>"
     ),
     (
         '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
-        'msticpyconfig.html">'
+        'msticpyconfig.html"'
+        'target="_blank" rel="noopener noreferrer">'
         "Configuring MSTICPy settings (doc)</a></li>"
     ),
     (
         '<li><a href="https://msticpy.readthedocs.io/en/latest/getting_started/'
-        'SettingsEditor.html">MSTICPy settings editor (doc)</a></li>'
+        'SettingsEditor.html"'
+        'target="_blank" rel="noopener noreferrer">'
+        "MSTICPy settings editor (doc)</a></li>"
     ),
     (
         '<li><a href="https://github.com/Azure/Azure-Sentinel-Notebooks/blob/'
-        'master/TroubleShootingNotebooks.ipynb">Trouble-Shooting Notebooks (notebook)</a></li>'
+        'master/TroubleShootingNotebooks.ipynb"'
+        'target="_blank" rel="noopener noreferrer">'
+        "Trouble-Shooting Notebooks (notebook)</a></li>"
     ),
 ]
 
@@ -91,6 +101,8 @@ Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
+<br>You can load and run the first two of these from the Azure Sentinel
+notebooks tab
 """
 
 
@@ -100,7 +112,7 @@ No 'msticpyconfig.yaml' was found in the current directory and
 the MSTICPYCONFIG environment variable is either not set or does not point
 to a valid file.<br>
 Some functionality (such as Threat Intel lookups) will not function without
-valid configuration settings.<br>
+valid configuration settings in this file.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
 """
@@ -156,11 +168,19 @@ _CONF_URI = (
 )
 
 _AZNB_GUIDE = (
-    "Please see the <i>Getting Started Guide for Azure Sentinel "
-    + "ML Notebooks</i> notebook"
+    "Please run the <i>Getting Started Guide for Azure Sentinel "
+    + "ML Notebooks</i> notebook."
 )
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
+
+
+def _pr_output(*args):
+    """Send output to IPython display or print."""
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+    else:
+        print(*args)
 
 
 def init_notebook(
@@ -243,9 +263,13 @@ def init_notebook(
 
     _VERBOSE(verbose)
 
-    check_version()
+    display(HTML("<hr><h4>Starting Notebook initialization...</h4>"))
+    ver_out = io.StringIO()
+    with redirect_stdout(ver_out):
+        check_version()
+        _pr_output(ver_out.getvalue())
 
-    print("Processing imports....")
+    _pr_output("Processing imports....")
     imp_ok = _global_imports(
         namespace, additional_packages, user_install, extra_imports, def_imports
     )
@@ -253,17 +277,17 @@ def init_notebook(
     if no_config_check:
         conf_ok = True
     else:
-        print("Checking configuration....")
+        _pr_output("Checking configuration....")
         conf_ok, _ = _check_config()
 
-    print("Setting notebook options....")
+    _pr_output("Setting notebook options....")
     _set_nb_options(namespace)
 
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions")
     if friendly_exceptions:
         if verbose:
-            print("Friendly exceptions enabled.")
+            _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(
             InteractiveShell.showtraceback
         )
@@ -272,10 +296,10 @@ def init_notebook(
     if prov_dict:
         namespace.update(prov_dict)
         current_providers = prov_dict
-        print("Autoloaded components:", ", ".join(prov_dict.keys()))
+        _pr_output("Autoloaded components:", ", ".join(prov_dict.keys()))
 
     if not imp_ok or not conf_ok:
-        md("<font color='red'><h3>Notebook setup did not complete successfully.</h3>")
+        md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
         if not imp_ok:
             md("One or more libraries did not import successfully.")
             md(_AZNB_GUIDE)
@@ -287,7 +311,7 @@ def init_notebook(
             )
         md("This notebook may still run but with reduced functionality.")
         return False
-    display(HTML("<h3>Notebook setup complete</h3>"))
+    display(HTML("<h4>Notebook initialization complete</h4>"))
     return True
 
 
@@ -301,9 +325,9 @@ def list_default_imports():
                 import_line = f"import {imp_item['pkg']}"
             if "alias" in imp_item:
                 import_line += f" as {imp_item['alias']}"
-            print(import_line)
+            _pr_output(import_line)
     for imp_item in _MP_IMPORT_ALL:
-        print(f"from {imp_item['module_name']} import *")
+        _pr_output(f"from {imp_item['module_name']} import *")
 
 
 def _extract_pkg_name(
@@ -334,6 +358,8 @@ def _global_imports(  # noqa: MC0001
     try:
         if def_imports.casefold() in ["all", "nb"]:
             for imp_pkg in _NB_IMPORTS:
+                if sns is None and imp_pkg.get("pkg") == "seaborn":
+                    continue
                 _imp_from_package(nm_spc=namespace, **imp_pkg)
                 import_list.append(_extract_pkg_name(imp_pkg))
             _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
@@ -351,8 +377,8 @@ def _global_imports(  # noqa: MC0001
                 additional_packages, user=user_install
             )
             if not pkg_success:
-                print("One or more packages failed to install.")
-                print(
+                _pr_output("One or more packages failed to install.")
+                _pr_output(
                     "Please re-run init_notebook() with the parameter user_install=True."
                 )
             # We want to force import lib to see anything that we've
@@ -363,16 +389,17 @@ def _global_imports(  # noqa: MC0001
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
             )
 
-        if _VERBOSE():  # type: ignore
-            if import_list:
-                print("Imported:", "; ".join(imp for imp in import_list if imp))
+        if import_list:
+            _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
         return False
 
 
-def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
+def _check_config() -> Tuple[  # noqa: MC0001
+    bool, Optional[Tuple[List[str], List[str]]]
+]:
     config_ok = True
     errs, warns = [], []
     warning_issued = False
@@ -390,24 +417,34 @@ def _check_config() -> Tuple[bool, Optional[Tuple[List[str], List[str]]]]:
         config_ok = False
     else:
         try:
-            errs, warns = validate_config(config_file=mp_path)
+            std_out_cap = io.StringIO()
+            with redirect_stdout(std_out_cap):
+                errs, warns = validate_config(config_file=mp_path)
+            if errs or warns:
+                _pr_output(std_out_cap.getvalue())
             if errs:
                 config_ok = False
         # pylint: disable=broad-except
         except Exception as err:
             config_ok = False
             errs.append(f"Exception while checking configuration:\n{err}")
-            print(f"Exception while checking configuration:\n{type(err)} - {err}")
-            print("\n".join(traceback.format_tb(err.__traceback__)))
-            print("Please report this to msticpy@microsoft.com")
+            _pr_output(f"Exception while checking configuration:\n{type(err)} - {err}")
+            _pr_output("\n".join(traceback.format_tb(err.__traceback__)))
+            _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
     # If we haven't found a config, try loading WorkspaceConfig
     if not config_ok:
-        ws_config = WorkspaceConfig(interactive=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            std_out_cap = io.StringIO()
+            with redirect_stdout(std_out_cap):
+                ws_config = WorkspaceConfig(interactive=False)
+            if not std_out_cap.getvalue():
+                _pr_output(std_out_cap.getvalue())
         config_ok = ws_config.config_loaded
     if not config_ok:
         errs.append("No valid configuration for Azure Sentinel found.")
-        print("No valid configuration for Azure Sentinel found.")
+        _pr_output("No valid configuration for Azure Sentinel found.")
     return config_ok, (errs, warns)
 
 
@@ -466,7 +503,7 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     else:
         nm_spc[module_name] = mod
     if _VERBOSE():  # type: ignore
-        print(f"{module_name} imported (alias={alias})")
+        _pr_output(f"{module_name} imported (alias={alias})")
     return mod
 
 
@@ -482,7 +519,7 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
             continue
         nm_spc[item] = getattr(imported_mod, item)
     if _VERBOSE():  # type: ignore
-        print(f"All items imported from {module_name}")
+        _pr_output(f"All items imported from {module_name}")
 
 
 def _imp_from_package(
@@ -507,7 +544,7 @@ def _imp_from_package(
     else:
         nm_spc[tgt] = obj
     if _VERBOSE():  # type: ignore
-        print(f"{tgt} imported from {pkg} (alias={alias})")
+        _pr_output(f"{tgt} imported from {pkg} (alias={alias})")
     return obj
 
 
@@ -537,7 +574,7 @@ def _check_and_reload_pkg(
             else:
                 _imp_module(nm_spc, pkg_name, alias=alias)
     if _VERBOSE():  # type: ignore
-        print(f"{pkg_name} imported version {pkg.__version__}")
+        _pr_output(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg
 
 

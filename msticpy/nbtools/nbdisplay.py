@@ -9,7 +9,7 @@ from typing import Any, Mapping, Union, Tuple, List
 import networkx as nx
 import pandas as pd
 from bokeh.io import output_notebook
-from bokeh.plotting import figure, from_networkx
+from bokeh.plotting import figure, from_networkx, show
 from bokeh.models import Circle, HoverTool, Label
 from deprecated.sphinx import deprecated
 import IPython
@@ -134,8 +134,8 @@ def exec_remaining_cells():
 def draw_alert_entity_graph(
     nx_graph: nx.Graph,
     font_size: int = 12,
-    height: int = 15,
-    width: int = 15,
+    height: int = 8,
+    width: int = 8,
     margin: float = 0.3,
     scale: int = 1,
 ):
@@ -149,9 +149,9 @@ def draw_alert_entity_graph(
     font_size : int, optional
         base font size (the default is 12)
     height : int, optional
-        Image height (the default is 15)
+        Image height (the default is 8)
     width : int, optional
-        Image width (the default is 15)
+        Image width (the default is 8)
     margin : float, optional
         Image margin (the default is 0.3)
     scale : int, optional
@@ -162,8 +162,8 @@ def draw_alert_entity_graph(
     return plot_entity_graph(
         entity_graph=nx_graph,
         font_size=font_size,
-        height=height * 15,
-        width=width * 15,
+        height=height * 100,
+        width=width * 100,
         scale=scale * 2,
     )
 
@@ -175,6 +175,7 @@ def plot_entity_graph(
     height: int = 800,
     width: int = 800,
     scale: int = 2,
+    hide: bool = False,
 ) -> figure:
     """
     Plot entity graph with Bokeh.
@@ -194,6 +195,9 @@ def plot_entity_graph(
         Image height (the default is 800)
     scale : int, optional
         Position scale (the default is 2)
+    hide : bool, optional
+        Don't show the plot, by default False. If True, just
+        return the figure.
 
     Returns
     -------
@@ -203,7 +207,10 @@ def plot_entity_graph(
     """
     output_notebook()
     font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
-    node_attrs = {node: attrs["color"] for node, attrs in entity_graph.nodes(data=True)}
+    node_attrs = {
+        node: attrs.get("color", "green")
+        for node, attrs in entity_graph.nodes(data=True)
+    }
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 
     plot = figure(
@@ -245,6 +252,8 @@ def plot_entity_graph(
         )
         plot.add_layout(label)
     # pylint: enable=no-member
+    if not hide:
+        show(plot)
     return plot
 
 

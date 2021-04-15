@@ -130,6 +130,39 @@ sample_alert = {
             "FileHashes": [{"$ref": "10"}],
             "Type": "file",
         },
+        {
+            "$id": "15",
+            "ProcessId": "2004",
+            "CreationTimeUtc": "2021-04-11T04:00:00.7445225Z",
+            "ImageFile": {"$id": "16", "Name": "mimikatz.exe", "Type": "file"},
+            "CreatedTimeUtc": "2021-04-11T04:00:00.7445225Z",
+            "Type": "process",
+        },
+        {"$ref": "16"},
+        {
+            "$id": "17",
+            "ProcessId": "4764",
+            "CreationTimeUtc": "2021-04-10T06:00:00.6264567Z",
+            "ImageFile": {"$ref": "16"},
+            "CreatedTimeUtc": "2021-04-10T06:00:00.6264567Z",
+            "Type": "process",
+        },
+        {
+            "$id": "18",
+            "ProcessId": "4765",
+            "CreationTimeUtc": "2021-04-10T06:00:01.6264567Z",
+            "ImageFile": {"$ref": "16"},
+            "CreatedTimeUtc": "2021-04-10T06:00:01.6264567Z",
+            "Type": "process",
+        },
+        {
+            "$id": "19",
+            "ProcessId": "4766",
+            "CreationTimeUtc": "2021-04-10T06:00:02.6264567Z",
+            "ImageFile": {"$ref": "16"},
+            "CreatedTimeUtc": "2021-04-10T06:00:02.6264567Z",
+            "Type": "process",
+        },
     ],
     "ConfidenceLevel": "Unknown",
     "ConfidenceScore": None,
@@ -203,8 +236,8 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertIsNotNone(alert.host_filter(operator="=="))
         self.assertIn("true", alert.subscription_filter(operator="=="))
 
-        self.assertEqual(3, len(alert.get_entities_of_type(entity_type="file")))
-        self.assertEqual(2, len(alert.get_entities_of_type(entity_type="process")))
+        self.assertEqual(4, len(alert.get_entities_of_type(entity_type="file")))
+        self.assertEqual(6, len(alert.get_entities_of_type(entity_type="process")))
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="filehash")))
         self.assertEqual(
             2, len(alert.get_entities_of_type(entity_type="registryvalue"))

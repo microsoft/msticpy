@@ -40,9 +40,11 @@ __author__ = "Ian Hellen"
 _NO_PROVIDERS_MSSG = """
 No TI Providers are loaded - please check that
 you have correctly configured your msticpyconfig.yaml settings.
-For more information see
-https://msticpy.readthedocs.io/en/latest/data_acquisition/TIProviders.html
 """
+_TI_HELP_URI = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+    "TIProviders.html#configuration-file"
+)
 
 
 @export
@@ -431,7 +433,11 @@ class TILookup:
         result_list: List[Tuple[str, LookupResult]] = []
         selected_providers = self._select_providers(providers, prov_scope)
         if not selected_providers:
-            raise RuntimeError(_NO_PROVIDERS_MSSG)
+            raise MsticpyUserConfigError(
+                _NO_PROVIDERS_MSSG,
+                title="No Threat Intel Provider configuration found.",
+                help_uri=_TI_HELP_URI,
+            )
 
         ioc_type = ioc_type or TIProvider.resolve_ioc_type(observable)
         for prov_name, provider in selected_providers.items():
@@ -485,7 +491,11 @@ class TILookup:
         result_list: List[pd.DataFrame] = []
         selected_providers = self._select_providers(providers, prov_scope)
         if not selected_providers:
-            raise RuntimeError(_NO_PROVIDERS_MSSG)
+            raise MsticpyUserConfigError(
+                _NO_PROVIDERS_MSSG,
+                title="No Threat Intel Provider configuration found.",
+                help_uri=_TI_HELP_URI,
+            )
 
         for prov_name, provider in selected_providers.items():
             provider_result = provider.lookup_iocs(

@@ -97,10 +97,10 @@ class File(Entity):
             self._create_from_event(src_event, role)
 
         if not self.FullPath:
-            if self.Directory:
-                self.FullPath = f"{self.Directory}{self.path_separator}{self.Name}"
-            else:
-                self.FullPath = self.Name
+            file_name = self.Name
+            directory = self.Directory or ""
+            sep = self.path_separator if directory else ""
+            self.FullPath = f"{directory}{sep}{file_name}"
 
     @property
     def path_separator(self):

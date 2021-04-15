@@ -31,8 +31,8 @@ AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 _AUTH_OPTIONS = {
     "env": EnvironmentCredential(),
     "cli": AzureCliCredential(),
-    "interactive": InteractiveBrowserCredential(),
     "msi": ManagedIdentityCredential(),
+    "interactive": InteractiveBrowserCredential(),
 }
 
 
@@ -83,7 +83,7 @@ def az_connect_core(
 
     """
     if not auth_methods:
-        auth_methods = ["env", "cli", "msi", "interactive"]
+        auth_methods = default_auth_methods()
     try:
         auths = [_AUTH_OPTIONS[meth] for meth in auth_methods]
     except KeyError as err:
@@ -134,3 +134,8 @@ def _filter_all_warnings(record) -> bool:
         if ".get_token" in message:
             return not message
     return True
+
+
+def default_auth_methods() -> List[str]:
+    """Get the default (all) authentication options."""
+    return list(_AUTH_OPTIONS)
