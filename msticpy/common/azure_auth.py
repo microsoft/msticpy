@@ -11,7 +11,7 @@ from azure.common.exceptions import CloudError
 from azure.mgmt.subscription import SubscriptionClient
 
 from .._version import VERSION
-from .azure_auth_core import AzCredentials, az_connect_core
+from .azure_auth_core import AzCredentials, az_connect_core, default_auth_methods
 from .provider_settings import get_provider_settings
 
 __version__ = VERSION
@@ -19,7 +19,7 @@ __author__ = "Pete Bryan"
 
 
 def az_connect(
-    auth_methods: List = None,
+    auth_methods: List[str] = None,
     silent: bool = False,
 ) -> AzCredentials:
     """
@@ -27,7 +27,7 @@ def az_connect(
 
     Parameters
     ----------
-    auth_methods : List, optional
+    auth_methods : List[str], optional
         List of authentication methods to try
         Possible options are:
         - "env" - to get authentication details from environment varibales
@@ -55,10 +55,11 @@ def az_connect(
     # If using env options try to load from msticpy
     data_provs = get_provider_settings(config_section="DataProviders")
     az_cli_config = data_provs.get("AzureCLI")
+    auth_methods = auth_methods or default_auth_methods()
     if az_cli_config and az_cli_config.args:
-        if auth_methods is None and "auth_methods" in az_cli_config.args:
+        if "auth_methods" in az_cli_config.args:
             auth_methods = az_cli_config.args.get("auth_methods")
-        if auth_methods is not None and "env" in auth_methods:
+        if isinstance(auth_methods, list) and "env" in auth_methods:
             os.environ["AZURE_CLIENT_ID"] = az_cli_config.args.get("clientId") or ""
             os.environ["AZURE_TENANT_ID"] = az_cli_config.args.get("tenantId") or ""
             os.environ["AZURE_CLIENT_SECRET"] = (

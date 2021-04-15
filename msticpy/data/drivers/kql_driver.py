@@ -4,27 +4,28 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
-from datetime import datetime
-import re
-from typing import Tuple, Union, Any, Dict, Optional, Iterable
-
 import json
+import re
+import warnings
+from datetime import datetime
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
+
 import pandas as pd
 from IPython import get_ipython
 
-from .driver_base import DriverBase, QuerySource
 from ...common.exceptions import (
-    MsticpyNoDataSourceError,
-    MsticpyNotConnectedError,
-    MsticpyKqlConnectionError,
     MsticpyDataQueryError,
     MsticpyImportExtraError,
+    MsticpyKqlConnectionError,
+    MsticpyNoDataSourceError,
+    MsticpyNotConnectedError,
 )
 from ...common.wsconfig import WorkspaceConfig
+from .driver_base import DriverBase, QuerySource
 
 try:
-    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.kql_engine import KqlEngineError
+    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -33,9 +34,9 @@ except ImportError as imp_err:
         extra="kql",
     ) from imp_err
 
-from ...common.utility import export
 from ..._version import VERSION
 from ...common.azure_auth_core import az_connect_core
+from ...common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -242,7 +243,9 @@ class KqlDriver(DriverBase):
         # KqlMagic
         print("Please wait. Loading Kqlmagic extension...")
         if self._ip is not None:
-            self._ip.run_line_magic("reload_ext", "Kqlmagic")
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore")
+                self._ip.run_line_magic("reload_ext", "Kqlmagic")
             self._loaded = True
 
     def _is_kqlmagic_loaded(self) -> bool:

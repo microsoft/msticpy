@@ -192,6 +192,10 @@ No API Key was found to access the IPStack service.
 If you do not have an account, go here to create one and obtain and API key.
 
 Add this API key to your msticpyconfig.yaml
+After adding the key run the following commands to reload your settings and retry:
+    import msticpy
+    msticpy.settings.refresh_config()
+
 Alternatively, you can pass this to the IPStackLookup class when creating it:
 >>> iplookup = IPStackLookup(api_key="your_api_key")
 """
@@ -462,10 +466,19 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if not self._dbpath:
             raise MsticpyUserConfigError(
                 "No usable GeoIP Database could be found.",
-                "Check that you have correctly configured the Maxmind API key.",
+                (
+                    "Check that you have correctly configured the Maxmind API key in "
+                    "msticpyconfig.yaml."
+                ),
                 (
                     "If you are using a custom DBFolder setting in your config, "
                     + "check that this is a valid path."
+                ),
+                (
+                    "If you edit your msticpyconfig to change this setting run the "
+                    "following commands to reload your settings and retry:"
+                    "    import msticpy"
+                    "    msticpy.settings.refresh_config()"
                 ),
                 help_uri=(
                     "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
