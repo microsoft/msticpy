@@ -259,6 +259,10 @@ def display_timeline_values(
     """
     check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
 
+    if data is None or not isinstance(data, pd.DataFrame) or data.empty:
+        print("No data to plot.")
+        return figure()
+
     reset_output()
     output_notebook()
     height: int = kwargs.pop("height", None)
@@ -612,13 +616,21 @@ def _unpack_data_series_dict(data, **kwargs):
     series_count = len(data)
     colors, palette_size = _get_color_palette(series_count)
 
-    for series_def in data.values():
+    for ser_name, series_def in data.items():
         data_columns: Set[str] = set()
         series_data = series_def["data"]
 
+        if (
+            series_data is None
+            or not isinstance(series_data, pd.DataFrame)
+            or series_data.empty
+        ):
+            print(f"No data to plot for series {ser_name}.")
+            continue
+
         # if the series has source columns, use those
         src_cols = series_def.get("source_columns", def_source_columns)
-        data_columns.update(src_cols if src_cols else def_source_columns)
+        data_columns.update(src_cols or def_source_columns)
 
         time_col = series_def.get("time_column", None)
         if not time_col:
@@ -712,16 +724,13 @@ def _create_dict_from_grouping(data, source_columns, time_column, group_by, colo
 
         series_count = len(grouped_data)
         colors, palette_size = _get_color_palette(series_count)
-        color_index = 0
-        for group_name, group_df in grouped_data:
+        for color_index, (group_name, group_df) in enumerate(grouped_data):
             series_dict[str(group_name)] = dict(
                 data=group_df,
                 time_column=time_column,
                 source_columns=source_columns,
                 color=colors[color_index % palette_size],
             )
-            color_index += 1
-
     else:
         group_df = data[list(data_columns)].copy()
         series_dict["unnamed series"] = dict(

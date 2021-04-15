@@ -188,5 +188,23 @@ class SecurityAlert(SecurityBase):
                 entity = UnknownEntity(**ent)
             if "$id" in ent:
                 self._src_entities[ent["$id"]] = entity
-
+            self._extract_child_entities(ent)
         self._resolve_entity_refs()
+
+    def _extract_child_entities(self, src_entity):
+        for prop in src_entity.values():
+            if prop is None:
+                continue
+            if (
+                isinstance(prop, dict)
+                and "$id" in prop
+                and prop["$id"] not in self._src_entities
+            ):
+                self._extract_child_entities(prop)
+                try:
+                    entity = Entity.instantiate_entity(prop)
+                except TypeError:
+                    # if we didn't instantiate a known entity
+                    # just add it as it is
+                    entity = UnknownEntity(**prop)
+                self._src_entities[prop["$id"]] = entity

@@ -374,6 +374,10 @@ class TestSecretsConfig(unittest.TestCase):
                 self.assertEqual(KV_SECRETS["XForce-ApiID"], sec_value)
 
 
+def test_keyring_client():
+    secret_settings.KeyringClient.is_keyring_available()
+
+
 # Helper functions
 def get_kv_settings(config_file):
     test_config = Path(_TEST_DATA).joinpath(config_file)

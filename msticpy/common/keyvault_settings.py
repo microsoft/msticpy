@@ -10,6 +10,7 @@ from typing import Any, Optional
 
 from .._version import VERSION
 from . import pkg_config as config
+from .azure_auth_core import default_auth_methods
 from .exceptions import MsticpyKeyVaultConfigError
 from .utility import export
 
@@ -86,7 +87,9 @@ class KeyVaultSettings:
             az_cli = config.get_config("DataProviders.AzureCLI")
         except KeyError:
             az_cli = {}
-        self.auth_methods = az_cli.get("Args", {}).get("auth_methods")
+        self.auth_methods = az_cli.get("Args", {}).get(
+            "auth_methods", default_auth_methods()
+        )
 
         if "authority_uri" in self:
             rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
