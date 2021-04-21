@@ -28,14 +28,17 @@ class Greynoise(HttpProvider):
     _BASE_URL = "https://api.greynoise.io"
 
     _IOC_QUERIES = {
+        # Community API
         "ipv4": IoCLookupParams(
             path="/v3/community/{observable}",
             headers={"key": "{API_KEY}"},
         ),
+        # Enterprise API Quick Lookup
         "ipv4-quick": IoCLookupParams(
             path="/v2/noise/quick/{observable}",
             headers={"key": "{API_KEY}"},
         ),
+        # Enterprise API Full Lookup
         "ipv4-full": IoCLookupParams(
             path="/v2/noise/context/{observable}",
             headers={"key": "{API_KEY}"},
@@ -63,6 +66,7 @@ class Greynoise(HttpProvider):
             return False, TISeverity.information, "Not found."
         result = True
         result_dict = {}
+        # If community API response extract key elements
         if "riot" in response.raw_result:
             result_dict.update(
                 {
@@ -74,6 +78,7 @@ class Greynoise(HttpProvider):
                     "RIOT": response.raw_result.get("riot"),
                 }
             )
+        # If enterprise full lookup response extract key elements
         if "actor" in response.raw_result:
             result_dict.update(
                 {
@@ -86,6 +91,7 @@ class Greynoise(HttpProvider):
                     "Metadata": response.raw_result.get("metadata"),
                 }
             )
+        # If enterprise quick lookup just return raw data is its so small
         if "code" in response.raw_result:
             result_dict = response.raw_result
 
