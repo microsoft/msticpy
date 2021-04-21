@@ -130,6 +130,21 @@ class mock_req_session:
                 ],
             }
             return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://api.greynoise.io"):
+            if is_benign_ioc(kwargs["url"]):
+                return MockResponse(None, 404)
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%d %H:%M:%S")
+            mocked_result = {
+                "ip": "51.91.185.74",
+                "noise": True,
+                "riot": False,
+                "classification": "malicious",
+                "name": "unknown",
+                "link": "https://viz.greynoise.io/ip/51.91.185.74",
+                "last_seen": "2021-03-18",
+                "message": "Success",
+            }
+            return MockResponse(mocked_result, 200)
         elif kwargs["url"].startswith("https://www.virustotal.com/"):
             if is_benign_ioc(kwargs["params"]):
                 return MockResponse(None, 404)
@@ -172,21 +187,6 @@ class mock_req_session:
                     "domain": "unknowndomain.com",
                 },
             }
-        elif kwargs["url"].startswith("https://api.greynoise.io"):
-            if is_benign_ioc(kwargs["url"]):
-                return MockResponse(None, 404)
-            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%d %H:%M:%S")
-            mocked_result = {
-                "ip": "51.91.185.74",
-                "noise": True,
-                "riot": False,
-                "classification": "malicious",
-                "name": "unknown",
-                "link": "https://viz.greynoise.io/ip/51.91.185.74",
-                "last_seen": "2021-03-18",
-                "message": "Success",
-            }
-            return MockResponse(mocked_result, 200)
 
             if "params" in kwargs:
                 mocked_result = {
