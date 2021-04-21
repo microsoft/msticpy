@@ -8,6 +8,7 @@ import pytest
 import pytest_check as check
 
 import pandas as pd
+from msticpy.datamodel import entities
 from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress
 from msticpy.datamodel.pivot import Pivot
 
@@ -98,3 +99,19 @@ def test_pivot_shortcuts():
 
     with pytest.raises(TypeError):
         IpAddress.del_pivot_shortcut("properties")
+
+
+def test_entity_instantiation():
+    """Test that we can instantiate all entities."""
+    for attrib in dir(entities):
+        attr_cls = getattr(entities, attrib)
+        if (
+            isinstance(attr_cls, type)
+            and issubclass(attr_cls, entities.Entity)
+            and attr_cls != entities.Entity
+        ):
+            ent_obj = attr_cls()
+            check.greater(len(ent_obj.properties), 0)
+            # Check that we can access properties without incident
+            for attr in (attr for attr in dir(ent_obj) if not attr.startswith("_")):
+                getattr(ent_obj, attr)

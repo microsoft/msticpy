@@ -39,6 +39,8 @@ class Host(Entity):
         Host OMSAgentID
     OSFamily : str
         Host OSFamily
+    OSVersion : str
+        Host OSVersion
     IsDomainJoined : bool
         Host IsDomainJoined
 
@@ -79,6 +81,7 @@ class Host(Entity):
         self.AzureID: Optional[str] = None
         self.OMSAgentID: Optional[str] = None
         self.OSFamily: OSFamily = OSFamily.Windows
+        self.OSVersion: Optional[str] = None
         self.IsDomainJoined: bool = False
 
         super().__init__(src_entity=src_entity, **kwargs)
@@ -97,6 +100,15 @@ class Host(Entity):
         if self.DnsDomain:
             return f"{self.HostName}.{self.DnsDomain}"
         return self.HostName
+
+    @property
+    def FullName(self) -> Optional[str]:  # noqa: N802
+        """Return the full name of the host - either FQDN or Netbiosname."""
+        if self.DnsDomain:
+            return f"{self.HostName or self.NetBiosName}.{self.DnsDomain}"
+        if self.NTDomain:
+            return f"{self.HostName or self.NetBiosName}.{self.NTDomain}"
+        return self.HostName or self.NetBiosName
 
     @property
     def description_str(self) -> str:

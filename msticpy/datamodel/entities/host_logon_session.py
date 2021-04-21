@@ -91,7 +91,7 @@ class HostLogonSession(Entity):
         """Return Entity Description."""
         if self.Host:
             return f"{self.Host.HostName}: session: {self.SessionId}"
-        return self.__name__
+        return self.__class__.__name__
 
     _entity_schema = {
         # Account

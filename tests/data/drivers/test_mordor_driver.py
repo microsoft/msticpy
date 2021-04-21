@@ -25,7 +25,6 @@ from msticpy.data.drivers.mordor_driver import (
 
 __author__ = "Ian Hellen"
 
-_SAVE_PATH = ""
 _SAVE_FOLDER = "mordor_test"
 _SAVE_FOLDER2 = "mordor_test2"
 
@@ -45,10 +44,14 @@ def qry_provider():
 
 
 def _cleanup_temp_files(path):
+    # pylint: disable=broad-except
     for file in Path(path).glob("*"):
-        Path(file).unlink()
+        if file.exists():
+            try:
+                file.unlink()
+            except Exception:  # nosec
+                pass
     if Path(path).is_dir():
-        # pylint: disable=broad-except
         try:
             Path(path).rmdir()
         except Exception:  # nosec
@@ -58,7 +61,7 @@ def _cleanup_temp_files(path):
 # pylint: disable=redefined-outer-name, protected-access, global-statement
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def mdr_driver(qry_provider):
     """Test fixture to create mordor driver."""
     return qry_provider._query_provider
@@ -113,9 +116,9 @@ def test_mordor_search(mdr_driver: MordorDriver):
     check.is_true(any(hit for hit in result_set if "small.aws.collection" in hit))
 
 
-# @pytest.mark.skipif(
-#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-# )
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_mordor_download(mdr_driver: MordorDriver):
     """Test file download."""
     entry_id = "SDWIN-190319021158"

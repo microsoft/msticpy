@@ -392,6 +392,7 @@ class PivotAccessor:
         -------
         pd.DataFrame
             The expanded DataFrame
+
         """
         orig_cols = self._df.columns
         data = self._df

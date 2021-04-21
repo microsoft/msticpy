@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Url Entity class."""
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -39,12 +39,13 @@ class Url(Entity):
             :param src_entity: instantiate entity using properties of src entity
             :param kwargs: key-value pair representation of entity
         """
+        self.Url: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Url}"
+        return self.Url or super().description_str
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""

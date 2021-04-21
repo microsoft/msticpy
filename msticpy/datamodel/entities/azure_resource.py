@@ -62,7 +62,7 @@ class AzureResource(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.ResourceId or self.__name__
+        return self.ResourceId or self.__class__.__name__
 
     @property
     def SubscriptionId(self):  # noqa

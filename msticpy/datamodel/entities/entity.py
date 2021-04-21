@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
-from copy import deepcopy
 import pprint
 import typing
-from abc import ABC, abstractmethod
+from abc import ABC
+from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -402,7 +402,6 @@ class Entity(ABC, Node):
         }
 
     @property
-    @abstractmethod
     def description_str(self) -> str:
         """
         Return Entity Description.
