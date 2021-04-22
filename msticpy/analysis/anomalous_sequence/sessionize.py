@@ -73,7 +73,7 @@ def sessionize_data(
     # aggregate by the session_ind column
     agg_df = (
         df_with_sesind.sort_values(["session_ind", time_col])
-        .groupby(["session_ind"] + user_identifier_cols)
+        .groupby(["session_ind"] + user_identifier_cols, as_index=False)
         .agg({time_col: ["min", "max"], event_col: list})
         .reset_index()
     )
@@ -93,6 +93,8 @@ def sessionize_data(
     agg_df["number_events"] = agg_df["{}_list".format(event_col)].apply(len)
 
     agg_df = agg_df.drop("session_ind", axis=1)
+    if "index" in agg_df.columns:
+        agg_df = agg_df.drop("index", axis=1)
 
     # replace dummy_str with nan values
     for col in user_identifier_cols:

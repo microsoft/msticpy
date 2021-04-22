@@ -14,11 +14,19 @@ Azure               list_azure_activity_for_account   Lists Azure Activity for A
 Azure               list_azure_activity_for_ip        Lists Azure Activity for Caller IP Address(es)                                                               ip_address_list (list)                                                                                           AzureActivity
 Azure               list_azure_activity_for_resource  Lists Azure Activity for a Resource                                                                          resource (str)                                                                                                   AzureActivity
 AzureNetwork        az_net_analytics                  All Azure Network Analytics Data                                                                             start (datetime), end (datetime)                                                                                 AzureNetworkAnalytics_CL
+AzureNetwork        get_heartbeat_for_host            Retrieves latest OMS Heartbeat event for host.                                                               host_name (str)                                                                                                  Heartbeat
+AzureNetwork        get_heartbeat_for_ip              Retrieves latest OMS Heartbeat event for ip address.                                                         ip_address (str)                                                                                                 Heartbeat
+AzureNetwork        get_host_for_ip                   Gets the latest AzureNetworkAnalytics interface event for a host.                                            ip_address (str)                                                                                                 AzureNetworkAnalytics_CL
+AzureNetwork        get_ips_for_host                  Gets the latest AzureNetworkAnalytics interface event for a host.                                            host_name (str)                                                                                                  AzureNetworkAnalytics_CL
+AzureNetwork        list_azure_network_flows_by_host  Retrieves Azure network analytics flow events.                                                               host_name (str), start (datetime), end (datetime)                                                                AzureNetworkAnalytics_CL
+AzureNetwork        list_azure_network_flows_by_ip    Retrieves Azure network analytics flow events.                                                               ip_address_list (list), start (datetime), end (datetime)                                                         AzureNetworkAnalytics_CL
 AzureSentinel       get_bookmark_by_id                Retrieves a single Bookmark by BookmarkId                                                                    bookmark_id (str)                                                                                                HuntingBookmark
 AzureSentinel       get_bookmark_by_name              Retrieves one or more Bookmarks by Bookmark Name                                                             bookmark_name (str)                                                                                              HuntingBookmark
 AzureSentinel       list_bookmarks                    Retrieves list of bookmarks                                                                                                                                                                                                   HuntingBookmark
 AzureSentinel       list_bookmarks_for_entity         Retrieves bookmarks for entity string                                                                        entity_id (str)                                                                                                  HuntingBookmark
 AzureSentinel       list_bookmarks_for_tags           Retrieves Bookmark by one or mare Tags                                                                       bookmark_tags (list)                                                                                             HuntingBookmark
+Heartbeat           get_heartbeat_for_host            Retrieves latest OMS Heartbeat event for host.                                                               host_name (str)                                                                                                  Heartbeat
+Heartbeat           get_heartbeat_for_ip              Retrieves latest OMS Heartbeat event for ip address.                                                         ip_address (str)                                                                                                 Heartbeat
 Heartbeat           get_info_by_hostname              Retrieves Information by Hostname                                                                            start (datetime), end (datetime), host_name (str)                                                                Heartbeat
 Heartbeat           get_info_by_ipaddress             Retrieves Information by IP address                                                                          start (datetime), end (datetime), ip_address (str)                                                               Heartbeat
 LinuxAudit          auditd_all                        Extract all audit messages grouped by mssg_id                                                                start (datetime), end (datetime)                                                                                 AuditLog_CL
@@ -51,7 +59,7 @@ SecurityAlert       get_alert                         Retrieves a single alert b
 SecurityAlert       list_alerts                       Retrieves list of alerts                                                                                                                                                                                                      SecurityAlert
 SecurityAlert       list_alerts_counts                Retrieves summary count of alerts by type                                                                                                                                                                                     SecurityAlert
 SecurityAlert       list_alerts_for_ip                Retrieves list of alerts with a common IP Address                                                            start (datetime), end (datetime), source_ip_list (str)                                                           SecurityAlert
-SecurityAlert       list_related_alerts               Retrieves list of alerts with a common host, acount or process                                                                                                                                                                SecurityAlert
+SecurityAlert       list_related_alerts               Retrieves list of alerts with a common host, account or process                                                                                                                                                               SecurityAlert
 ThreatIntelligence  list_indicators                   Retrieves list of all current indicators.                                                                                                                                                                                     ThreatIntelligenceIndicator
 ThreatIntelligence  list_indicators_by_domain         Retrieves list of indicators by domain                                                                       observables (list)                                                                                               ThreatIntelligenceIndicator
 ThreatIntelligence  list_indicators_by_email          Retrieves list of indicators by email address                                                                observables (list)                                                                                               ThreatIntelligenceIndicator
@@ -62,7 +70,7 @@ ThreatIntelligence  list_indicators_by_url            Retrieves list of indicato
 WindowsSecurity     get_host_logon                    Retrieves the logon event for the session id on the host                                                     start (datetime), end (datetime), host_name (str), logon_session_id (str)                                        SecurityEvent
 WindowsSecurity     get_parent_process                Retrieves the parent process of a supplied process                                                           start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
 WindowsSecurity     get_process_tree                  Retrieves the process tree of a supplied process                                                             start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
-WindowsSecurity     list_all_logons_by_host           Retrevies all failed or successful logons to a host                                                          start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
+WindowsSecurity     list_all_logons_by_host           account all failed or successful logons to a host                                                            start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
 WindowsSecurity     list_events                       Retrieves list of all events                                                                                 start (datetime), end (datetime)                                                                                 SecurityEvent
 WindowsSecurity     list_events_by_id                 Retrieves list of events on a host                                                                           start (datetime), end (datetime), event_list (list)                                                              SecurityEvent
 WindowsSecurity     list_host_events                  Retrieves list of all events on a host                                                                       start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
@@ -78,7 +86,6 @@ WindowsSecurity     list_matching_processes           Retrieves list of processe
 WindowsSecurity     list_other_events                 Retrieves list of events other than logon and process on a host                                              start (datetime), end (datetime), host_name (str)                                                                SecurityEvent
 WindowsSecurity     list_processes_in_session         Retrieves all processes on the host for a logon session                                                      start (datetime), end (datetime), host_name (str), process_name (str), process_id (str), logon_session_id (str)  SecurityEvent
 ==================  ================================  ===========================================================================================================  ===============================================================================================================  ===========================
-
 
 Queries for LocalData
 ---------------------
@@ -97,9 +104,8 @@ WindowsSecurity  list_host_logons                  List logons on host          
 WindowsSecurity  list_host_processes               List processes on host                                -
 ===============  ================================  ======================================  ============  =======
 
-
-Queries for MDATP
------------------
+Queries for MDE
+---------------
 
 ============  ==========================  ==================================================================================================================================  ===============================  ==========================
 QueryGroup    Query                       Description                                                                                                                         ReqdParams                       Table
@@ -111,21 +117,21 @@ MDATP         ip_alerts                   Lists alerts associated with a specifi
 MDATP         ip_connections              Lists alerts associated with a specified remote IP                                                                                  ip_address (str)                 NetworkCommunicationEvents
 MDATP         list_alerts                 Retrieves list of alerts                                                                                                                                             AlertEvents
 MDATP         list_connections            Retrieves list of network connections for a host                                                                                                                     NetworkCommunicationEvents
-MDATP         list_filehash               Lists all file events by hash                                                                                                       hash (str)                       ProcessCreationEvents
+MDATP         list_filehash               Lists all file events by hash                                                                                                       file_hash (str)                  ProcessCreationEvents
 MDATP         list_files                  Lists all file events by filename                                                                                                   file_name (str)                  ProcessCreationEvents
 MDATP         list_host_processes         Lists all process creations for a host                                                                                              host_name (str)                  ProcessCreationEvents
 MDATP         process_cmd_line            Lists all processes with a command line containing a string                                                                         cmd_line (str)                   ProcessCreationEvents
 MDATP         process_creations           Lists all processes created by name or hash                                                                                         process_identifier (str)         ProcessCreationEvents
 MDATP         process_paths               Lists all processes created from a path                                                                                             file_path (str)                  ProcessCreationEvents
 MDATP         protocol_connections        Lists alerts associated with a specified protocol                                                                                   protocol (str)                   NetworkCommunicationEvents
-MDATP         sha1_alerts                 Lists alerts associated with a specified SHA1 hash                                                                                  sha1 (str)                       AlertEvents
+MDATP         sha1_alerts                 Lists alerts associated with a specified SHA1 hash                                                                                  file_hash (str)                  AlertEvents
 MDATP         url_alerts                  Lists alerts associated with a specified URL                                                                                        url (str)                        AlertEvents
 MDATP         url_connections             Lists alerts associated with a specified URL                                                                                        url (str)                        NetworkCommunicationEvents
 MDATP         user_files                  Lists all files created by a user                                                                                                   account_name (str)               -
 MDATP         user_logons                 Lists all user logons by user                                                                                                       account_name (str)               -
 MDATP         user_network                Lists all network connections associated with a user                                                                                account_name (str)               -
 MDATP         user_processes              Lists all processes created by a user                                                                                               account_name (str)               -
-MDATPHunting  accessibility_persistence   This query looks for persistence or priviledge escalation done using Windows Accessibility features.                                                                 -
+MDATPHunting  accessibility_persistence   This query looks for persistence or privilege escalation done using Windows Accessibility features.                                                                  -
 MDATPHunting  av_sites                    Pivot from downloads detected by Windows Defender Antivirus to other files downloaded from the same sites                                                            -
 MDATPHunting  b64_pe                      Finding base64 encoded PE files header seen in the command line parameters                                                                                           -
 MDATPHunting  brute_force                 Look for public IP addresses that failed to logon to a computer multiple times, using multiple accounts, and eventually succeeded.                                   -
@@ -134,7 +140,7 @@ MDATPHunting  cve_2018_1111               Looks for CVE-2018-1111 exploitation  
 MDATPHunting  cve_2018_4878               This query checks for specific processes and domain TLD used in the CVE-2018-4878                                                                                    -
 MDATPHunting  doc_with_link               Looks for a Word document attachment, from which a link was clicked, and after which there was a browser download.                                                   -
 MDATPHunting  dropbox_link                Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.                                                             -
-MDATPHunting  email_link                  Look for links opened from mail apps â€“ if a detection occurred right afterwards                                                                                    -
+MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                    -
 MDATPHunting  email_smartscreen           Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning                                                            -
 MDATPHunting  malware_recycle             Finding attackers hiding malware in the recycle bin.                                                                                                                 -
 MDATPHunting  network_scans               Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process                                                                   -
@@ -146,7 +152,6 @@ MDATPHunting  tor                         Looks for Tor client, or for a common 
 MDATPHunting  uncommon_powershell         Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.                                      hostname (str), timestamp (str)  -
 MDATPHunting  user_enumeration            The query finds attempts to list users or groups using Net commands                                                                                                  -
 ============  ==========================  ==================================================================================================================================  ===============================  ==========================
-
 
 Queries for SecurityGraph
 -------------------------
@@ -163,7 +168,6 @@ SecurityGraphAlert  list_alerts_for_user  Retrieves list of alerts for a user ac
 SecurityGraphAlert  list_related_alerts   Retrieves list of alerts with a common entity         start (datetime), end (datetime)                    -
 ==================  ====================  ====================================================  ==================================================  =======
 
-
 Queries for Splunk
 ------------------
 
@@ -176,3 +180,4 @@ SplunkGeneral  list_all_datatypes        Summary of all events by index and sour
 SplunkGeneral  list_all_savedsearches    Retrieves all saved searches                                 -
 audittrail     list_all_audittrail       Retrieves all audit trail logs                               -
 =============  ========================  =============================================  ============  =======
+

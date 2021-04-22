@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
+import random
 import re
 from functools import partial
 from typing import Any, Callable, Dict, Optional, Set, Tuple
 
 import keyring
-from keyring.errors import KeyringError, KeyringLocked
+from keyring.errors import KeyringError, KeyringLocked, NoKeyringError
 
 from .._version import VERSION
 from . import pkg_config as config
@@ -33,7 +34,7 @@ class KeyringClient:
         Parameters
         ----------
         name : str, optional
-            Name of the credential group, by default "system"
+            Name of the credential group, by default "key-cache"
         debug : bool, optional
             Output debug info, by default False
 
@@ -96,12 +97,37 @@ class KeyringClient:
         self._secret_names.add(secret_name)
         keyring.set_password(self.keyring, secret_name, secret_value)
 
+    @staticmethod
+    def is_keyring_available() -> bool:
+        """
+        Test if valid keyring backend is available.
+
+        Returns
+        -------
+        bool
+            True if Keyring has a usable backend, False if not.
+
+        """
+        char_list = list("abcdefghijklm1234567890")
+        random.shuffle(char_list)
+        test_value = "".join(char_list)
+        try:
+            keyring.set_password("test", test_value, test_value)
+            # If no exception clear the test key
+            try:
+                keyring.delete_password("test", test_value)
+            except keyring.errors.PasswordDeleteError:
+                pass
+            return True
+        except NoKeyringError:
+            return False
+
 
 @export
 class SecretsClient:
     """Secrets client - manages keyvault and keyring secrets."""
 
-    def __init__(self, tenant_id: str = None, use_keyring: bool = True):
+    def __init__(self, tenant_id: str = None, use_keyring: bool = False):
         """
         Initialize SecretsClient instance.
 
@@ -110,7 +136,7 @@ class SecretsClient:
         tenant_id : str, optional
             TenantID, by default None
         use_keyring : bool, optional
-            If True use keyring to cache secrets, by default True
+            If True use keyring to cache secrets, by default False
 
         Raises
         ------
@@ -134,6 +160,7 @@ class SecretsClient:
         self.kv_secret_vault: Dict[str, str] = {}
         self.kv_vaults: Dict[str, BHKeyVaultClient] = {}
         self._use_keyring = use_keyring or self._kv_settings.get("UseKeyring", False)
+        self._use_keyring = self._use_keyring and KeyringClient.is_keyring_available()
         if self._use_keyring:
             self._keyring_client = KeyringClient("Providers")
 

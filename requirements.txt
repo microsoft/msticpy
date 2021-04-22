@@ -25,7 +25,7 @@ ipwhois>=1.1.0
 ipython>=7.1.1
 ipywidgets>=7.4.2
 # keyring>=13.2.1  # azure
-# Kqlmagic>=0.1.106
+KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.dev26
 lxml
 matplotlib>=3.0.0
 msrest>=0.6.0

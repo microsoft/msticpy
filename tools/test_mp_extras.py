@@ -7,6 +7,7 @@
 import argparse
 from datetime import datetime
 from pathlib import Path
+import pkg_resources
 import subprocess
 import sys
 
@@ -137,7 +138,12 @@ def reset_pkgs(verbose: bool):
     ]
     inst_pkgs = _get_installed_pkgs()
     remove_pkgs = inst_pkgs - set(base_pkgs)
+    # don't deinstall these packages
+    remove_pkgs = remove_pkgs - set(("pip", "setuptools", "wheel"))
 
+    if not remove_pkgs:
+        print("No packages to uninstall")
+        return
     sp_run.remove("list")
     sp_run.extend(["uninstall", "-y", *remove_pkgs])
     print("Removing non-core packages")
@@ -174,9 +180,17 @@ def _get_installed_pkgs():
         "pip",
         "list",
     ]
-    proc_call = subprocess.run(sp_run, check=True, capture_output=True)  # type: ignore
+    proc_call = subprocess.run(sp_run, check=True, stdout=subprocess.PIPE)  # type: ignore
     inst_pkgs = proc_call.stdout.decode("utf-8").split("\n")[2:]
     return {pkg.split()[0] for pkg in inst_pkgs if pkg.strip()}
+
+
+def create_baseline(output=None):
+    """Create baseline file for current packages."""
+    output = output or "baseline_pkg.txt"
+    with open(output, "w") as bl_file:
+        bl_file.write("\n".join(sorted(_get_installed_pkgs())))
+    print(f"baseline packages written to {output}")
 
 
 def make_dist(path: str, verbose: bool):
@@ -193,12 +207,42 @@ def make_dist(path: str, verbose: bool):
     subprocess.run(sp_run, cwd=path, **(VERB_ARGS if verbose else {}))
 
 
+def _read_base_pkg_list(pkg_file):
+    with open(pkg_file, "r") as pkg_fh:
+        pkg_lines = pkg_fh.readlines()
+    for pkg_line in pkg_lines:
+        try:
+            req = pkg_resources.Requirement.parse(pkg_line.strip())
+        except Exception:  # pylint: disable=broad-except
+            pass
+        yield req.name
+
+
 def _add_script_args():
     parser = argparse.ArgumentParser(description="Msticpy extras test script.")
     parser.add_argument(
         "cmd",
-        choices=["install", "reset", "test", "makedist", "showdist"],
-        help="Run command: [install | reset | test | makedist | showdist]",
+        choices=["install", "reset", "test", "makedist", "showdist", "baseline"],
+        help="\n".join(
+            [
+                "Run command: [install | reset | test | makedist | showdist | baseline]",
+                (
+                    "install - install msticpy from a dist folder (--path) with option extras"
+                    " (specified as a string with the --extras argument."
+                ),
+                (
+                    "reset - uninstall all packages apart from the baseline"
+                    " (baseline package file is specified with --base-packages argument)."
+                ),
+                "test - run pytest tests against current install.",
+                "makedist - create a setuptools distribution from --path",
+                "showdist - list the distributions in the 'dist' folder in --path",
+                (
+                    "baseline - create a baseline requirements file from current packages"
+                    " (specify output file as --output, default is baseline_pkg.txt"
+                ),
+            ]
+        ),
     )
     parser.add_argument(
         "--extra",
@@ -221,6 +265,20 @@ def _add_script_args():
         help="Version of msticpy to install",
     )
     parser.add_argument(
+        "--base-pkgs",
+        "-b",
+        required=False,
+        default=None,
+        help="File with base package list (for reset).",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        required=False,
+        default=None,
+        help="Specify file to store base package list (for reset).",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -239,7 +297,12 @@ if __name__ == "__main__":
     if args.cmd.casefold() == "install":
         install_pkg(args.extra, args.path, args.version, args.verbose)
 
+    if args.cmd.casefold() == "baseline":
+        create_baseline(args.output)
+
     if args.cmd.casefold() == "reset":
+        if args.base_pkgs:
+            base_pkgs = list(_read_base_pkg_list(args.base_pkgs))
         reset_pkgs(args.verbose)
 
     if args.cmd.casefold() == "test":

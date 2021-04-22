@@ -12,6 +12,7 @@ import subprocess  # nosec
 import sys
 import uuid
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -228,7 +229,7 @@ def resolve_pkg_path(part_path: str):
 def check_and_install_missing_packages(
     required_packages: List[str],
     force_notebook: bool = False,
-    user: bool = True,
+    user: bool = False,
     upgrade: bool = False,
 ) -> bool:
     """
@@ -245,7 +246,7 @@ def check_and_install_missing_packages(
         by default False (autodetect)
     user : bool, optional
         Boolean value to toggle user flag while installing pip packages,
-        by default True
+        by default False
     upgrade: bool, option
         If true supply `--upgrade` flag to pip to install the latest
         version (applies to all package in `required_packages`)
@@ -257,6 +258,13 @@ def check_and_install_missing_packages(
 
     """
     missing_packages = []
+    if isinstance(required_packages, str):
+        if "," in required_packages:
+            required_packages = [
+                req.strip() for req in required_packages.split(",") if req.strip()
+            ]
+        else:
+            required_packages = [required_packages]
     # Check package requirements against installed set
     for req in required_packages:
         pkg_req = pkg_resources.Requirement.parse(req)
@@ -277,25 +285,28 @@ def check_and_install_missing_packages(
     else:
         pkgbar = tqdm(missing_packages, desc="Installing...", unit="bytes")
 
-    pkg_command = ["pip", "install"]
+    pkg_command = ["install"] if is_ipython() else ["python", "-m", "pip", "install"]
     if user:
         pkg_command.append("--user")
     if upgrade:
         pkg_command.append("--upgrade")
     pkg_success = True
     for package in pkgbar:
-        try:
-            subprocess.run(  # nosec
-                pkg_command + [package],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except subprocess.CalledProcessError as proc_err:
-            print(f"An Error has occured while installing {package}.")
-            print(f"Output: {str(proc_err.stdout)}")
-            print(f"Errs: {str(proc_err.stderr)}")
-            pkg_success = False
+        if is_ipython():
+            get_ipython().run_line_magic("pip", " ".join(pkg_command + [package]))
+        else:
+            try:
+                subprocess.run(  # nosec
+                    pkg_command + [package],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as proc_err:
+                print(f"An Error has occured while installing {package}.")
+                print(f"Output: {str(proc_err.stdout)}")
+                print(f"Errs: {str(proc_err.stderr)}")
+                pkg_success = False
         print(f"{package} installed.")
 
     return pkg_success
@@ -343,7 +354,7 @@ def md(
         else:
             style_str = _F_STYLES.get(styles, "")
     if isinstance(styles, list):
-        style_str = ";".join([_F_STYLES.get(style, "") for style in styles])
+        style_str = ";".join(_F_STYLES.get(style, "") for style in styles)
     content = HTML(f"<p style='{style_str}'>{string}</p>")
 
     if isinstance(disp_id, bool) and disp_id:
@@ -573,3 +584,48 @@ def valid_pyname(identifier: str) -> str:
     if identifier[0].isdigit():
         identifier = f"n_{identifier}"
     return identifier
+
+
+def enum_parse(enum_cls: type, value: str) -> Optional[Enum]:
+    """Try to parse a string value to an Enum member."""
+    if not issubclass(enum_cls, Enum):
+        raise TypeError("Can only be used with classes derived from enum.Enum.")
+    if value in enum_cls.__members__:
+        return enum_cls.__members__[value]
+    val_lc = value.casefold()
+    val_map = {name.casefold(): name for name in enum_cls.__members__}
+    if val_lc in val_map:
+        return enum_cls.__members__[val_map[val_lc]]
+    return None
+
+
+def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
+    """
+    Convert an optional list/str/str with delims into a list.
+
+    Parameters
+    ----------
+    arg : Union[str, List[str]]
+        A string, delimited string or list
+    delims : str, optional
+        The default delimiters to use, by default ",; "
+
+    Returns
+    -------
+    List[str]
+        List of string components
+
+    Raises
+    ------
+    TypeError
+        If `arg` is not a string or list
+
+    """
+    if isinstance(arg, list):
+        return arg
+    if isinstance(arg, str):
+        for char in delims:
+            if char in arg:
+                return [item.strip() for item in arg.split(char)]
+        return [arg]
+    raise TypeError("`arg` must be a string or a list.")

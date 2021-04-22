@@ -96,8 +96,8 @@ class File(Entity):
 
         if not self.FullPath:
             file_name = self.Name
-            directory = self.Directory
-            sep = self.path_separator if directory else None
+            directory = self.Directory or ""
+            sep = self.path_separator if directory else ""
             self.FullPath = f"{directory}{sep}{file_name}"
 
     @property

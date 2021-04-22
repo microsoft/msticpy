@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
+import io
 import unittest
 import os
+from contextlib import redirect_stdout
 from pathlib import Path
 import warnings
 
@@ -131,8 +133,10 @@ class TestPkgConfig(unittest.TestCase):
                 "WorkspaceId": "9997809c-8142-43e1-96b3-4ad87cfe95a3",
                 "TenantId": "99928fd7-42a5-48bc-a619-af56397b9f28",
             }
-            with self.assertWarns(UserWarning):
+            wrn_mssg = io.StringIO()
+            with redirect_stdout(wrn_mssg):
                 wstest_config = WorkspaceConfig()
+            self.assertIn("Could not find Azure Sentinel settings", wrn_mssg.getvalue())
             self.assertIn("workspace_id", wstest_config)
             self.assertIsNotNone(wstest_config["workspace_id"])
             self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
@@ -188,4 +192,4 @@ class TestPkgConfig(unittest.TestCase):
             os.environ["MAXMIND_AUTH"] = "myXfId"
             pkg_config.refresh_config()
             results = pkg_config.validate_config()
-            self.assertIsNone(results)
+            self.assertEqual(results, ([], []))
