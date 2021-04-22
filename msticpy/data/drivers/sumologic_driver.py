@@ -4,32 +4,35 @@
 #  license information.
 #  --------------------------------------------------------------------------
 """Sumologic Driver class."""
-from datetime import datetime, timedelta
 import re
-import sys
 import time
-from typing import Any, Tuple, Union, Dict, Iterable, Optional
+from datetime import datetime, timedelta
+from timeit import default_timer as timer
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+from requests.exceptions import ConnectionError as ConnError
+from requests.exceptions import HTTPError
 from sumologic.sumologic import SumoLogic
-from requests.exceptions import ConnectionError as ConnError, HTTPError
 
-from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
-from ...common.utility import export, check_kwargs
 from ...common.exceptions import (
     MsticpyConnectionError,
     MsticpyNotConnectedError,
     MsticpyUserConfigError,
+    MsticpyUserError,
 )
-from ...common.provider_settings import get_provider_settings, ProviderSettings
+from ...common.provider_settings import ProviderSettings, get_provider_settings
+from ...common.utility import check_kwargs, export
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "juju4"
 
 
 SUMOLOGIC_CONNECT_ARGS = {
-    "connection_str": "(string) The url endpoint (the default is 'https://api.us2.sumologic.com/api').",
+    "connection_str": "(string) The url endpoint (the default is"
+    + " 'https://api.us2.sumologic.com/api').",
     "accessid": "(string) The Sumologic accessid, which is used to "
     + "authenticate on Sumologic instance.",
     "accesskey": "(string) The matching Sumologic accesskey.",
@@ -90,7 +93,9 @@ class SumologicDriver(DriverBase):
         try:
             # https://github.com/SumoLogic/sumologic-python-sdk/blob/master/scripts/search-job.py
             self.service = SumoLogic(
-                arg_dict["accessid"], arg_dict["accesskey"], arg_dict["connection_str"]
+                accessId=arg_dict["accessid"],
+                accessKey=arg_dict["accesskey"],
+                endpoint=arg_dict["connection_str"],
             )
         except ConnError as err:
             raise MsticpyConnectionError(
@@ -121,6 +126,8 @@ class SumologicDriver(DriverBase):
         # Fetch any config settings
         cs_dict.update(self._get_config_settings())
         # If a connection string - parse this and add to config
+        if connection_str:
+            cs_dict["connection_str"] = connection_str
         if kwargs:
             # if connection args supplied as kwargs
             cs_dict.update(kwargs)
@@ -138,6 +145,7 @@ class SumologicDriver(DriverBase):
             )
         return cs_dict
 
+    # pylint: disable=too-many-locals, too-many-branches, too-many-statements
     def _query(
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
@@ -190,16 +198,18 @@ class SumologicDriver(DriverBase):
         if "days" in kwargs:
             end = datetime.now()
             end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = end - timedelta(days=kwargs["days"])
-            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%S")
+            start = end - timedelta(days=kwargs["days"])
+            start_time = start.strftime("%Y-%m-%dT%H:%M:%S")
         elif "start_time" in kwargs and "end_time" not in kwargs:
             end = datetime.now()
             end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
             start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
-        elif "days" not in kwargs and "start_time" not in kwargs:
-            print("Error! require either days, either start_time")
-            sys.exit(1)
-        elif "end_time" in kwargs and "start_time" in kwargs:
+        elif "start_time" not in kwargs:
+            raise MsticpyUserError(
+                "Error! requires either 'days' or 'start_time' parameters",
+                title="Missing parameter.",
+            )
+        else:
             end_time = kwargs["end_time"].strftime("%Y-%m-%dT%H:%M:%S")
             start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -217,7 +227,6 @@ class SumologicDriver(DriverBase):
         if verbosity >= 2:
             print("DEBUG: query {0}".format(query))
             print("DEBUG: byreceipttime {0}".format(byreceipttime))
-            from timeit import default_timer as timer
 
             timer_start = timer()
         try:
@@ -249,7 +258,10 @@ class SumologicDriver(DriverBase):
             status = self.service.search_job_status(searchjob)
             if verbosity >= 4:
                 print(
-                    "DEBUG: pending results, state {0}. slept {1}s. sleeping extra {2}s until {3}s".format(
+                    (
+                        "DEBUG: pending results, state {0}. slept {1}s. "
+                        + "sleeping extra {2}s until {3}s"
+                    ).format(
                         status["state"], time_counter, self.checkinterval, self.timeout
                     )
                 )
@@ -258,7 +270,10 @@ class SumologicDriver(DriverBase):
                 time_counter += self.checkinterval
             else:
                 print(
-                    "WARN: wait more than timeout {0}. stopping. Use timeout argument to wait longer.".format(self.timeout)
+                    (
+                        "WARN: wait more than timeout {0}. stopping. "
+                        + "Use timeout argument to wait longer."
+                    ).format(self.timeout)
                 )
                 break
 
@@ -318,6 +333,8 @@ class SumologicDriver(DriverBase):
 
         return []
 
+    # pylint: enable=too-many-locals, too-many-branches, too-many-statements
+
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
@@ -360,15 +377,12 @@ class SumologicDriver(DriverBase):
             or query response if an error.
 
         """
-        results = list()
         verbosity = kwargs.get("verbosity", 0)
         normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", "")
 
-        for hit in self._query(query, **kwargs):
-            results.append(hit)
-
+        results = self._query(query, **kwargs)
         if verbosity >= 3:
             print("DEBUG: {0}".format(results))
         if normalize:
@@ -380,14 +394,19 @@ class SumologicDriver(DriverBase):
             if col in ("map._count", "map._timeslice"):
                 dataframe_res[col] = pd.to_numeric(dataframe_res[col])
 
-        if exporting and export_path.endswith(".xlsx"):
-            if verbosity >= 2:
-                print("DEBUG: Exporting results to excel file {0}".format(export_path))
-            dataframe_res.to_excel(export_path, index=False)
-        elif exporting and export_path.endswith(".csv"):
-            if verbosity >= 2:
-                print("DEBUG: Exporting results to csv file {0}".format(export_path))
-            dataframe_res.to_csv(export_path, index=False)
+        if exporting:
+            if export_path.endswith(".xlsx"):
+                if verbosity >= 2:
+                    print(
+                        "DEBUG: Exporting results to excel file {0}".format(export_path)
+                    )
+                dataframe_res.to_excel(export_path, index=False)
+            elif export_path.endswith(".csv"):
+                if verbosity >= 2:
+                    print(
+                        "DEBUG: Exporting results to csv file {0}".format(export_path)
+                    )
+                dataframe_res.to_csv(export_path, index=False)
 
         return dataframe_res
 
