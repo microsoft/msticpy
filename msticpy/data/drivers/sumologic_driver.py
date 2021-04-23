@@ -38,6 +38,12 @@ SUMOLOGIC_CONNECT_ARGS = {
     "accesskey": "(string) The matching Sumologic accesskey.",
 }
 
+_HELP_URI = "https://msticpy.readthedocs.io/en/latest/DataProviders.html"
+_SL_NB_URI = (
+    "https://github.com/microsoft/msticpy/blob/pr/116-sumologic"
+    "-driver-2021-04-21/docs/notebooks/Sumologic-DataConnector.ipynb"
+)
+
 
 @export
 class SumologicDriver(DriverBase):
@@ -60,10 +66,10 @@ class SumologicDriver(DriverBase):
         self._debug = kwargs.get("debug", False)
         self.public_attribs = {
             "client": self.service,
-            "saved_searches": self._saved_searches,
-            "fired_alerts": self._fired_alerts,
         }
         self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
+        self.checkinterval = 10
+        self.timeout = 300
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -101,19 +107,22 @@ class SumologicDriver(DriverBase):
             raise MsticpyConnectionError(
                 f"Authentication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
-                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                help_uri=_HELP_URI,
+                nb_uri=_SL_NB_URI,
             ) from err
         except HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
-                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                help_uri=_HELP_URI,
+                nb_uri=_SL_NB_URI,
             ) from err
         except Exception as err:
             raise MsticpyConnectionError(
                 f"Error connecting to Sumologic: {err}",
                 title="Sumologic connection",
-                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+                help_uri=_HELP_URI,
+                nb_uri=_SL_NB_URI,
             ) from err
         self._connected = True
         print("connected with accessid {}".format(arg_dict["accessid"]))
@@ -142,10 +151,12 @@ class SumologicDriver(DriverBase):
                 "All parameters:",
                 *[f"{arg}: {desc}" for arg, desc in SUMOLOGIC_CONNECT_ARGS.items()],
                 title="no Sumologic connection parameters",
+                help_uri=_HELP_URI,
+                notebook_uri=_SL_NB_URI,
             )
         return cs_dict
 
-    # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    # pylint: disable=broad-except
     def _query(
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
@@ -156,6 +167,8 @@ class SumologicDriver(DriverBase):
         ----------
         query : str
             Sumologic query to execute
+        query_source : QuerySource
+            Not used.
 
         Other Parameters
         ----------------
@@ -190,64 +203,52 @@ class SumologicDriver(DriverBase):
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
-        byreceipttime = kwargs.pop("byreceipttime", False)
-        forcemessagesresults = kwargs.pop("forcemessagesresults", False)
+        by_receipt_time = kwargs.pop("byreceipttime", False)
         self.checkinterval = kwargs.pop("checkinterval", 10)
         self.timeout = kwargs.pop("timeout", 300)
 
-        if "days" in kwargs:
-            end = datetime.now()
-            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start = end - timedelta(days=kwargs["days"])
-            start_time = start.strftime("%Y-%m-%dT%H:%M:%S")
-        elif "start_time" in kwargs and "end_time" not in kwargs:
-            end = datetime.now()
-            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
-        elif "start_time" not in kwargs:
-            raise MsticpyUserError(
-                "Error! requires either 'days' or 'start_time' parameters",
-                title="Missing parameter.",
-            )
-        else:
-            end_time = kwargs["end_time"].strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = kwargs["start_time"].strftime("%Y-%m-%dT%H:%M:%S")
+        start_time, end_time = self._get_time_params(**kwargs)
 
         # default to unlimited query unless count is specified
         if "limit" in kwargs:
-            query += "| limit {0}".format(kwargs["limit"])
+            query = f"{query} | limit {kwargs['limit']}"
         limit = kwargs.pop("limit", 10000)
 
         if verbosity >= 1:
-            print(
-                "INFO: from {0} to {1}, timezone {2}".format(
-                    start_time, end_time, timezone
-                )
-            )
-        if verbosity >= 2:
-            print("DEBUG: query {0}".format(query))
-            print("DEBUG: byreceipttime {0}".format(byreceipttime))
+            print(f"INFO: from {start_time} to {end_time}, TZ {timezone}")
 
+        if verbosity >= 2:
+            print(f"DEBUG: query {query}")
+            print(f"DEBUG: byreceipttime {by_receipt_time}")
             timer_start = timer()
+        # submit the search job
         try:
             searchjob = self.service.search_job(
-                query, start_time, end_time, timezone, byreceipttime
+                query, start_time, end_time, timezone, by_receipt_time
             )
-        except HTTPError as err:
-            raise MsticpyConnectionError(
-                f"Communication error connecting to Sumologic: {err}",
-                title="Sumologic submit search_job",
-                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            ) from err
         except Exception as err:
-            raise MsticpyConnectionError(
-                f"Failed to submit search job: {err}",
-                title="Sumologic submit search job",
-                help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-            ) from err
+            self._raise_qry_except(err, "submit search_job", "to submit search job")
+
+        qry_count = re.search(r"\|\s*count", query, re.IGNORECASE)
         if verbosity >= 2:
             print("DEBUG: search job {0}".format(searchjob))
+            print(f"DEBUG: search performance: {str(timer() - timer_start)}")
+            print(f"DEBUG: messages or records? {qry_count}")
 
+        # poll for job completion
+        status = self._poll_job_status(searchjob, verbosity)
+        print(status["state"])
+
+        # return the results
+        return self._get_job_results(
+            searchjob=searchjob,
+            status=status,
+            qry_count=qry_count,
+            force_mssg_rstls=kwargs.pop("forcemessagesresults", False),
+            limit=limit,
+        )
+
+    def _poll_job_status(self, searchjob, verbosity):
         status = self.service.search_job_status(searchjob)
         if verbosity >= 2:
             print("DEBUG: status {0}".format(status))
@@ -258,37 +259,25 @@ class SumologicDriver(DriverBase):
             status = self.service.search_job_status(searchjob)
             if verbosity >= 4:
                 print(
-                    (
-                        "DEBUG: pending results, state {0}. slept {1}s. "
-                        + "sleeping extra {2}s until {3}s"
-                    ).format(
-                        status["state"], time_counter, self.checkinterval, self.timeout
-                    )
+                    f"DEBUG: pending results, state {status['state']}.",
+                    f"slept {time_counter}s. sleeping extra {self.checkinterval}s",
+                    "until {self.timeout}s",
                 )
             if time_counter < self.timeout:
                 time.sleep(self.checkinterval)
                 time_counter += self.checkinterval
             else:
                 print(
-                    (
-                        "WARN: wait more than timeout {0}. stopping. "
-                        + "Use timeout argument to wait longer."
-                    ).format(self.timeout)
+                    f"WARN: wait more than timeout {self.timeout}. stopping. "
+                    + "Use timeout argument to wait longer."
                 )
                 break
+        return status
 
-        print(status["state"])
-
-        if verbosity >= 2:
-            print("DEBUG: search performance:{0}".format(str(timer() - timer_start)))
-            print(
-                "DEBUG: messages or records? {0}".format(
-                    re.search(r"\|\s*count", query, re.IGNORECASE)
-                )
-            )
-        if status["state"] == "DONE GATHERING RESULTS" and (
-            not re.search(r"\|\s*count", query, re.IGNORECASE) or forcemessagesresults
-        ):
+    def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit):
+        if status["state"] != "DONE GATHERING RESULTS":
+            return []
+        if not qry_count or force_mssg_rstls:
             # Non-aggregated results, Messages only
             count = status["messageCount"]
             limit2 = (
@@ -297,19 +286,11 @@ class SumologicDriver(DriverBase):
             try:
                 result = self.service.search_job_messages(searchjob, limit=limit2)
                 return result["messages"]
-            except HTTPError as err:
-                raise MsticpyConnectionError(
-                    f"Communication error connecting to Sumologic: {err}",
-                    title="Sumologic search_job_messages",
-                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                ) from err
             except Exception as err:
-                raise MsticpyConnectionError(
-                    f"Failed to get search messages: {err}",
-                    title="Sumologic connection",
-                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                ) from err
-        elif status["state"] == "DONE GATHERING RESULTS":
+                self._raise_qry_except(
+                    err, "search_job_messages", "to get job messages"
+                )
+        else:
             # Aggregated results
             count = status["recordCount"]
             limit2 = (
@@ -318,22 +299,54 @@ class SumologicDriver(DriverBase):
             try:
                 result = self.service.search_job_records(searchjob, limit=limit2)
                 return result["records"]
-            except HTTPError as err:
-                raise MsticpyConnectionError(
-                    f"Communication error connecting to Sumologic: {err}",
-                    title="Sumologic search_job_records",
-                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                ) from err
             except Exception as err:
-                raise MsticpyConnectionError(
-                    f"Failed to get search records: {err}",
-                    title="Sumologic connection",
-                    help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-                ) from err
+                self._raise_qry_except(
+                    err, "search_job_records", "to get search records"
+                )
 
-        return []
+    @staticmethod
+    def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
+        if isinstance(err, HTTPError):
+            raise MsticpyConnectionError(
+                f"Communication error connecting to Sumologic: {err}",
+                title=f"Sumologic {mssg}",
+                help_uri=_HELP_URI,
+                notebook_uri=_SL_NB_URI,
+            ) from err
+        action = action or mssg
+        raise MsticpyConnectionError(
+            f"Failed {action}: {err}",
+            title=f"Sumologic - {mssg}",
+            help_uri=_HELP_URI,
+            notebook_uri=_SL_NB_URI,
+        ) from err
 
-    # pylint: enable=too-many-locals, too-many-branches, too-many-statements
+    @staticmethod
+    def _get_time_params(**kwargs):
+        if "days" in kwargs:
+            end = datetime.now()
+            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
+            start = end - timedelta(days=int(kwargs["days"]))
+            start_time = start.strftime("%Y-%m-%dT%H:%M:%S")
+            return start_time, end_time
+
+        start_param = kwargs.pop("start", kwargs.pop("start_time"), None)
+        end_param = kwargs.pop("end", kwargs.pop("end_time"), None)
+        if start_param and not end_param:
+            end = datetime.now()
+            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
+            start_time = start_param.strftime("%Y-%m-%dT%H:%M:%S")
+        elif not start_param:
+            raise MsticpyUserError(
+                "Error! requires either 'days' or 'start_time' parameters",
+                title="Missing parameter.",
+                help_uri=_HELP_URI,
+                notebook_uri=_SL_NB_URI,
+            )
+        else:
+            end_time = start_param.strftime("%Y-%m-%dT%H:%M:%S")
+            start_time = end_param.strftime("%Y-%m-%dT%H:%M:%S")
+        return start_time, end_time
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -345,16 +358,18 @@ class SumologicDriver(DriverBase):
         ----------
         query : str
             Sumologic query to execute
+        query_source : QuerySource
+            Not used.
 
         Other Parameters
         ----------------
         kwargs :
             Are passed to Sumologic
             days: Search the past X days.
-            start_time: A datetime() object representing the start of the search
+            start_time (or start): A datetime() object representing the start of the search
                     window. If used without end_time, the end of the search
                     window is the current time.
-            end_time: A datetime() object representing the end of the search window.
+            end_time (or end): A datetime() object representing the end of the search window.
                   If used without start_time, the search start will be the earliest
                   time in the index.
             timeZone: timezone used for time range search
@@ -384,7 +399,7 @@ class SumologicDriver(DriverBase):
 
         results = self._query(query, **kwargs)
         if verbosity >= 3:
-            print("DEBUG: {0}".format(results))
+            print("DEBUG: {results}")
         if normalize:
             dataframe_res = pd.json_normalize(results)
         else:
@@ -397,15 +412,11 @@ class SumologicDriver(DriverBase):
         if exporting:
             if export_path.endswith(".xlsx"):
                 if verbosity >= 2:
-                    print(
-                        "DEBUG: Exporting results to excel file {0}".format(export_path)
-                    )
+                    print(f"DEBUG: Exporting results to excel file {export_path}")
                 dataframe_res.to_excel(export_path, index=False)
             elif export_path.endswith(".csv"):
                 if verbosity >= 2:
-                    print(
-                        "DEBUG: Exporting results to csv file {0}".format(export_path)
-                    )
+                    print("DEBUG: Exporting results to csv file {export_path}")
                 dataframe_res.to_csv(export_path, index=False)
 
         return dataframe_res
@@ -426,110 +437,6 @@ class SumologicDriver(DriverBase):
             the underlying provider result if an error occurs.
 
         """
-
-    @property
-    def service_queries(self) -> Tuple[Dict[str, str], str]:
-        """
-        Return dynamic queries available on connection to service.
-
-        Returns
-        -------
-        Tuple[Dict[str, str], str]
-            Dictionary of query_name, query_text.
-            Name of container to add queries to.
-
-        """
-        if not self.connected:
-            raise self._create_not_connected_err()
-        if hasattr(self.service, "saved_searches") and self.service.saved_searches:
-            queries = {
-                search.name.strip().replace(" ", "_"): f"search {search['search']}"
-                for search in self.service.saved_searches
-            }
-            return queries, "SavedSearches"
-        return {}, "SavedSearches"
-
-    @property
-    def _saved_searches(self) -> Union[pd.DataFrame, Any]:
-        """
-        Return list of saved searches in dataframe.
-
-        Returns
-        -------
-        pd.DataFrame
-            Dataframe with list of saved searches with name and query columns.
-
-        """
-        if self.connected:
-            return self._get_saved_searches()
-        return None
-
-    def _get_saved_searches(self) -> Union[pd.DataFrame, Any]:
-        """
-        Return list of saved searches in dataframe.
-
-        Returns
-        -------
-        pd.DataFrame
-            Dataframe with list of saved searches with name and query columns.
-
-        """
-        if not self.connected:
-            raise self._create_not_connected_err()
-        savedsearches = self.service.saved_searches
-
-        out_df = pd.DataFrame(columns=["name", "query"])
-
-        namelist = []
-        querylist = []
-        for savedsearch in savedsearches:
-            namelist.append(savedsearch.name.replace(" ", "_"))
-            querylist.append(savedsearch["search"])
-        out_df["name"] = namelist
-        out_df["query"] = querylist
-
-        return out_df
-
-    @property
-    def _fired_alerts(self) -> Union[pd.DataFrame, Any]:
-        """
-        Return list of fired alerts in dataframe.
-
-        Returns
-        -------
-        pd.DataFrame
-            Dataframe with list of fired alerts with alert name and count columns.
-
-        """
-        if self.connected:
-            return self._get_fired_alerts()
-        return None
-
-    def _get_fired_alerts(self) -> Union[pd.DataFrame, Any]:
-        """
-        Return list of fired alerts in dataframe.
-
-        Returns
-        -------
-        pd.DataFrame
-            Dataframe with list of fired alerts with alert name and count columns.
-
-        """
-        if not self.connected:
-            raise self._create_not_connected_err()
-        firedalerts = self.service.fired_alerts
-
-        out_df = pd.DataFrame(columns=["name", "count"])
-
-        alert_names = []
-        alert_counts = []
-        for alert in firedalerts:
-            alert_names.append(alert.name)
-            alert_counts.append(alert.count)
-        out_df["name"] = alert_names
-        out_df["count"] = alert_counts
-
-        return out_df
 
     # Parameter Formatting methods
     @staticmethod
@@ -556,5 +463,6 @@ class SumologicDriver(DriverBase):
         return MsticpyNotConnectedError(
             "Please run the connect() method before running this method.",
             title="not connected to Sumologic.",
-            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+            help_uri=_HELP_URI,
+            notebook_uri=_SL_NB_URI,
         )

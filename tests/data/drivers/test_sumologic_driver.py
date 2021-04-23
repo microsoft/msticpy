@@ -20,7 +20,7 @@ from msticpy.common.exceptions import (
 )
 from msticpy.data.drivers.sumologic_driver import SumologicDriver
 
-from ...unit_test_lib import get_test_data_path
+# from ...unit_test_lib import TEST_DATA_PATH
 
 # SUMOLOGIC_CLI_PATCH = SumologicDriver.__module__ + ".sp_client"
 # SUMOLOGIC_RESULTS_PATCH = SumologicDriver.__module__ + ".sp_results"
@@ -97,6 +97,7 @@ class _MockSumologicService(MagicMock):
 
     def search_job_status(self, search_job):
         """Return status of job."""
+        del search_job
         # You can manually set the status from the test.
         return self.status
 
