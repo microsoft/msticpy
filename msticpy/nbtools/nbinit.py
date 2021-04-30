@@ -292,7 +292,11 @@ def init_notebook(
             InteractiveShell.showtraceback
         )
 
-    prov_dict = load_user_defaults()
+    user_def_out = io.StringIO()
+    with redirect_stdout(user_def_out):
+        prov_dict = load_user_defaults()
+        _pr_output(user_def_out.getvalue())
+
     if prov_dict:
         namespace.update(prov_dict)
         current_providers = prov_dict
