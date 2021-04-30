@@ -402,7 +402,7 @@ class PivotAccessor:
             item_col = f"{col}_list_item$$"
             ren_col = {item_col: col}
             data = (
-                pd.DataFrame(data[col].to_list())
+                pd.DataFrame(data[col].to_list(), index=data.index)
                 .replace([None], np.nan)  # convert any Nones to NaN
                 .merge(data, right_index=True, left_index=True)
                 .melt(id_vars=orig_cols, value_name=item_col)
