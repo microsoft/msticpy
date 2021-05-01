@@ -304,7 +304,9 @@ class MordorBrowser:
     @staticmethod
     def _get_mitre_filter_options(mordor_index: Dict[str, MordorEntry], mitre_data):
         return [
-            (f"{m_id} - {mitre_data.loc[m_id].Name}", m_id) for m_id in mordor_index
+            (f"{m_id} - {mitre_data.loc[m_id].Name}", m_id)
+            for m_id in mordor_index
+            if m_id in mitre_data.index
         ]
 
 

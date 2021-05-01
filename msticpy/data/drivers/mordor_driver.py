@@ -33,6 +33,10 @@ _MORDOR_TREE_URI = (
     "https://api.github.com/repos/OTRF/mordor/git/trees/master?recursive=1"
 )
 
+_MITRE_JSON_URL = (
+    "https://raw.githubusercontent.com/mitre/cti/"
+    "master/enterprise-attack/enterprise-attack.json"
+)
 _MTR_TAC_CAT_URI = "https://attack.mitre.org/tactics/{cat}/"
 _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 
@@ -82,11 +86,9 @@ class MordorDriver(DriverBase):
         global MITRE_TECHNIQUES, MITRE_TACTICS
         print("Retrieving Mitre data...")
 
-        if MITRE_TECHNIQUES is None:
-            MITRE_TECHNIQUES = _get_mitre_categories(_MTR_TECH_CAT_URI)
+        if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
+            MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
         self.mitre_techniques = MITRE_TECHNIQUES
-        if MITRE_TACTICS is None:
-            MITRE_TACTICS = _get_mitre_categories(_MTR_TAC_CAT_URI)
         self.mitre_tactics = MITRE_TACTICS
 
         print("Retrieving Mordor data...")
@@ -580,10 +582,8 @@ def _fetch_mdr_metadata() -> Dict[str, MordorEntry]:
     """
     global MITRE_TECHNIQUES, MITRE_TACTICS
 
-    if MITRE_TECHNIQUES is None:
-        MITRE_TECHNIQUES = _get_mitre_categories(_MTR_TECH_CAT_URI)
-    if MITRE_TACTICS is None:
-        MITRE_TACTICS = _get_mitre_categories(_MTR_TAC_CAT_URI)
+    if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
+        MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
 
     md_metadata: Dict[str, MordorEntry] = {}
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
@@ -805,7 +805,35 @@ def search_mdr_data(
     return results
 
 
-def _get_mitre_categories(uri_template: str) -> pd.DataFrame:
+def _extract_mitre_refs(ext_refs):
+    ref_dict = [
+        ref
+        for ref in ext_refs
+        if "source_name" in ref and ref["source_name"] == "mitre-attack"
+    ]
+    if ref_dict:
+        return ref_dict[0]
+    return {}
+
+
+def _reshape_mitre_df(data):
+    col_rename = {"external_id": "ID", "name": "Name", "description": "Description"}
+    return (
+        data.join(
+            data.apply(
+                lambda x: _extract_mitre_refs(x.external_references),
+                axis=1,
+                result_type="expand",
+            )
+        )
+        .assign(MitreGroup="Enterprise")[["external_id", "name", "description", "url"]]
+        .rename(columns=col_rename)
+        .sort_values("ID")
+        .set_index("ID")
+    )
+
+
+def _get_mitre_categories() -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Download and return Mitre techniques and tactics.
 
@@ -821,20 +849,14 @@ def _get_mitre_categories(uri_template: str) -> pd.DataFrame:
         descriptions.
 
     """
-    categories = {"enterprise": "Enterprise", "mobile": "Mobile"}
+    resp = requests.get(_MITRE_JSON_URL)
+    mitre = pd.json_normalize(resp.json()["objects"])
 
-    tables = []
-    for cat, cat_title in categories.items():
-        try:
-            tables.append(
-                pd.read_html(uri_template.format(cat=cat))[0].assign(
-                    MitreGroup=cat_title
-                )
-            )
-        except ValueError:
-            pass
-    mitre_data = pd.concat(tables).set_index("ID")
-    if "ID.1" in mitre_data.columns:
-        mitre_data.drop(columns=["ID.1"])
+    # remove deprecated items
+    mitre["x_mitre_deprecated"].fillna(False, inplace=True)
+    mitre = mitre[~(mitre["x_mitre_deprecated"])]
 
-    return mitre_data
+    tech_df = _reshape_mitre_df(mitre[mitre.type == "attack-pattern"])
+    tactics_df = _reshape_mitre_df(mitre[mitre.type == "x-mitre-tactic"])
+
+    return tech_df, tactics_df
