@@ -1,0 +1,18 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "13:00"
+  ignore:
+  - dependency-name: dnspython
+    versions:
+    - 2.1.0
+  - dependency-name: idna
+    versions:
+    - "3.1"
+  - dependency-name: moz-sql-parser
+    versions:
+    - 4.18.21031
+    - 4.21.21059
