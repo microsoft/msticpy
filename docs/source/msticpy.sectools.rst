@@ -76,6 +76,14 @@ msticpy.sectools.tiproviders.ti\_provider\_base module
     :undoc-members:
     :show-inheritance:
 
+msticpy.sectools.tiproviders.greynoise module
+------------------------------------------------------
+
+.. automodule:: msticpy.sectools.tiproviders.greynoise
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.sectools.tiproviders.http\_base module
 ----------------------------------------------
 
