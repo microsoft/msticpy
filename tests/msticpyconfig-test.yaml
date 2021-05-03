@@ -32,6 +32,11 @@ TIProviders:
         EnvironmentVar: "XFORCE_AUTH"
     Primary: False
     Provider: "XForce"
+  Greynoise:
+    Args:
+      AuthKey: ""
+    Primary: True
+    Provider: "Greynoise"
   AzureSentinel:
     Args:
       # TBD

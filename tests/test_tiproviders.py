@@ -130,6 +130,21 @@ class mock_req_session:
                 ],
             }
             return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://api.greynoise.io"):
+            if is_benign_ioc(kwargs["url"]):
+                return MockResponse(None, 404)
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%d %H:%M:%S")
+            mocked_result = {
+                "ip": "51.91.185.74",
+                "noise": True,
+                "riot": False,
+                "classification": "malicious",
+                "name": "unknown",
+                "link": "https://viz.greynoise.io/ip/51.91.185.74",
+                "last_seen": "2021-03-18",
+                "message": "Success",
+            }
+            return MockResponse(mocked_result, 200)
         elif kwargs["url"].startswith("https://www.virustotal.com/"):
             if is_benign_ioc(kwargs["params"]):
                 return MockResponse(None, 404)
@@ -275,6 +290,9 @@ class TestTIProviders(unittest.TestCase):
     def test_virus_total(self):
         self.exercise_provider("VirusTotal")
 
+    def test_greynoise(self):
+        self.exercise_provider("Greynoise")
+
     def exercise_provider(self, provider_name):
         ti_lookup = self.ti_lookup
 
@@ -315,7 +333,7 @@ class TestTIProviders(unittest.TestCase):
     def verify_result(self, result):
         self.assertIsNotNone(result)
         for prov, lu_result in result[1]:
-            self.assertIn(prov, ["OTX", "XForce", "VirusTotal"])
+            self.assertIn(prov, ["OTX", "XForce", "VirusTotal", "Greynoise"])
             self.assertIsNotNone(lu_result.ioc)
             self.assertIsNotNone(lu_result.ioc_type)
             if lu_result.result:
