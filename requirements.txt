@@ -26,7 +26,7 @@ ipython>=7.1.1
 ipywidgets>=7.4.2
 # keyring>=13.2.1  # azure
 KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.dev26
-lxml
+lxml>=4.6.3
 matplotlib>=3.0.0
 msrest>=0.6.0
 # msrestazure>=0.6.0  # azure
