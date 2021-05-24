@@ -71,7 +71,8 @@ class ResourceGraphDriver(DriverBase):
         Default configuration is read from the DataProviders/AzureCLI
         section of msticpyconfig.yaml, if available.
         """
-        if not kwargs.get("auth_methods"):
+        auth_methods = kwargs.get("auth_methods")
+        if not auth_methods:
             auth_methods = ["env", "cli"]
         silent = kwargs.get("silent", True)
 
