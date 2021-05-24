@@ -11,7 +11,7 @@ from msticpy.data.drivers import import_driver
 
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
 from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
-
+from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
 
 _JSON_RESP = {
     "token_type": "Bearer",
@@ -40,3 +40,9 @@ def test_SecurityGraph():
     driver_cls = import_driver(DataEnvironment.SecurityGraph)
     sec_graph = driver_cls()
     assert isinstance(sec_graph, SecurityGraphDriver)
+
+
+def test_ResourceGraph():
+    driver_cls = import_driver(DataEnvironment.ResourceGraph)
+    resource_graph = driver_cls()
+    assert isinstance(resource_graph, ResourceGraphDriver)
