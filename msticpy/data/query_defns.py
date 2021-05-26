@@ -15,6 +15,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=invalid-name
 @export
 class DataFamily(Enum):
     """
@@ -55,10 +56,12 @@ class DataFamily(Enum):
                 parsed_enum = cls[value]
             except KeyError:
                 # match to value if case is incorrect
+                # pylint: disable=no-member
                 for e_name, e_val in cls.__members__.items():
                     if e_name.upper() == value.upper():
                         return e_val
                 return cls.Unknown
+                # pylint: enable=no-member
         if isinstance(value, int):
             try:
                 parsed_enum = cls(value)

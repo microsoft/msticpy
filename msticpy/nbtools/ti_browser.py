@@ -46,6 +46,9 @@ def browse_results(
     if "height" not in kwargs:
         kwargs["height"] = "300px"
 
+    if not isinstance(data, pd.DataFrame) or data.empty:
+        raise ValueError("'data' parameter is empty or is not a dataframe.")
+
     opts = get_ti_select_options(ti_data=data, severities=severities)
     disp_func = ti_details_display(ti_data=data)
     return SelectItem(item_dict=opts, action=disp_func, **kwargs)

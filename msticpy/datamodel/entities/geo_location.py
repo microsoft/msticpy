@@ -41,6 +41,8 @@ class GeoLocation(Entity, ContextObject):
 
     """
 
+    ID_PROPERTIES = ["Longitude", "Latitude", "City", "State", "CountryCode"]
+
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.

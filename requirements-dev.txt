@@ -1,4 +1,4 @@
-aiohttp>=3.0.0
+aiohttp>=3.7.4
 bandit>=1.7.0
 beautifulsoup4
 black>=20.8b1

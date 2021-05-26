@@ -208,7 +208,9 @@ class QueryProvider:
             List of current data environments
 
         """
+        # pylint: disable=not-an-iterable
         return [env for env in DataEnvironment.__members__ if env != "Unknown"]
+        # pylint: enable=not-an-iterable
 
     def list_queries(self) -> List[str]:
         """
