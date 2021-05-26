@@ -140,7 +140,7 @@ MDATPHunting  cve_2018_1111               Looks for CVE-2018-1111 exploitation  
 MDATPHunting  cve_2018_4878               This query checks for specific processes and domain TLD used in the CVE-2018-4878                                                                                    -
 MDATPHunting  doc_with_link               Looks for a Word document attachment, from which a link was clicked, and after which there was a browser download.                                                   -
 MDATPHunting  dropbox_link                Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.                                                             -
-MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                    -
+MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                      -
 MDATPHunting  email_smartscreen           Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning                                                            -
 MDATPHunting  malware_recycle             Finding attackers hiding malware in the recycle bin.                                                                                                                 -
 MDATPHunting  network_scans               Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process                                                                   -

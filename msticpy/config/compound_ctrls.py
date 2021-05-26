@@ -219,7 +219,7 @@ def get_arg_ctrl(setting_path, var_name, mp_controls):
     arg_ctrl = mp_controls.get_control(var_path)
     curr_val = mp_controls.get_value(var_path)
 
-    print(var_name)
+    print_debug(var_name)
     if arg_ctrl is None:
         if curr_val is not None:
             store_type, store_val = _get_args_val({var_name: curr_val})
