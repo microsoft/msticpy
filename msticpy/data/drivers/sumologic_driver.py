@@ -8,7 +8,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from requests.exceptions import ConnectionError as ConnError
@@ -54,8 +54,8 @@ class SumologicDriver(DriverBase):
         "connection_str": "https://api.us2.sumologic.com/api"
     }
     _TIME_FORMAT = '"%Y-%m-%d %H:%M:%S.%6N"'
-    checkinterval = 10
-    timeout = 300
+    _DEF_CHECKINTERVAL = 3
+    _DEF_TIMEOUT = 300
 
     def __init__(self, **kwargs):
         """Instantiate Sumologic Driver."""
@@ -67,9 +67,9 @@ class SumologicDriver(DriverBase):
         self.public_attribs = {
             "client": self.service,
         }
-        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
-        self.checkinterval = 10
-        self.timeout = 300
+        self.formatters = {"datetime": self._format_datetime}
+        self.checkinterval = self._DEF_CHECKINTERVAL
+        self.timeout = self._DEF_TIMEOUT
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -204,8 +204,8 @@ class SumologicDriver(DriverBase):
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
         by_receipt_time = kwargs.pop("byreceipttime", False)
-        self.checkinterval = kwargs.pop("checkinterval", 10)
-        self.timeout = kwargs.pop("timeout", 300)
+        self.checkinterval = kwargs.pop("checkinterval", self._DEF_CHECKINTERVAL)
+        self.timeout = kwargs.pop("timeout", self._DEF_TIMEOUT)
 
         start_time, end_time = self._get_time_params(**kwargs)
 
@@ -321,32 +321,24 @@ class SumologicDriver(DriverBase):
             notebook_uri=_SL_NB_URI,
         ) from err
 
-    @staticmethod
-    def _get_time_params(**kwargs):
+    def _get_time_params(self, **kwargs):
         if "days" in kwargs:
             end = datetime.now()
-            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
             start = end - timedelta(days=int(kwargs["days"]))
-            start_time = start.strftime("%Y-%m-%dT%H:%M:%S")
-            return start_time, end_time
+            return self._format_datetime(start), self._format_datetime(end)
 
-        start_param = kwargs.pop("start", kwargs.pop("start_time"), None)
-        end_param = kwargs.pop("end", kwargs.pop("end_time"), None)
-        if start_param and not end_param:
+        start = kwargs.pop("start", kwargs.pop("start_time", None))
+        end = kwargs.pop("end", kwargs.pop("end_time", None))
+        if start and not end:
             end = datetime.now()
-            end_time = end.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = start_param.strftime("%Y-%m-%dT%H:%M:%S")
-        elif not start_param:
+        elif not start:
             raise MsticpyUserError(
-                "Error! requires either 'days' or 'start_time' parameters",
+                "Error! requires either 'days' or 'start' parameters",
                 title="Missing parameter.",
                 help_uri=_HELP_URI,
                 notebook_uri=_SL_NB_URI,
             )
-        else:
-            end_time = start_param.strftime("%Y-%m-%dT%H:%M:%S")
-            start_time = end_param.strftime("%Y-%m-%dT%H:%M:%S")
-        return start_time, end_time
+        return self._format_datetime(start), self._format_datetime(end)
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -442,13 +434,7 @@ class SumologicDriver(DriverBase):
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
         """Return datetime-formatted string."""
-        return f'"{date_time.isoformat(sep=" ")}"'
-
-    @staticmethod
-    def _format_list(param_list: Iterable[Any]) -> str:
-        """Return formatted list parameter."""
-        fmt_list = [f'"{item}"' for item in param_list]
-        return ",".join(fmt_list)
+        return date_time.strftime("%Y-%m-%dT%H:%M:%S")
 
     # Read values from configuration
     @staticmethod
