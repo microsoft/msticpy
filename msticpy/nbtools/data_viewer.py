@@ -4,11 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Dataframe viewer."""
-from typing import Dict, Tuple
+from collections import namedtuple
+from typing import Dict, List, Union
 
 import ipywidgets as widgets
 import pandas as pd
-from bokeh.io import push_notebook, show
+from bokeh.io import push_notebook, show, output_notebook
 from bokeh.models import (
     BooleanFilter,
     CDSView,
@@ -19,12 +20,15 @@ from bokeh.models import (
 )
 from IPython.display import display
 
-import nbwidgets
+from . import nbwidgets
 
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+FilterExpr = namedtuple("FilterExpr", "column, inv, operator, expr")
 
 
 # pylint: disable=too-many-instance-attributes
@@ -33,20 +37,33 @@ class DataViewer:
 
     _DEF_HEIGHT = 550
 
-    def __init__(self, data):
-        """Initialize the DataViewer class."""
+    def __init__(
+        self, data: pd.DataFrame, selected_cols: List[str] = None, debug=False
+    ):
+        """
+        Initialize the DataViewer class.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The DataFrame to view
+        selected_cols : List[str], optional
+            Initial subset of columns to show, by default None (all cols)
+        debug : bool
+            Output additional debugging info to std out.
+
+        """
         self.cds = ColumnDataSource(data)
         self._columns = _get_cols_from_df(data)
         self._dt_columns = list(self._columns.values())
-        self.filters = []
-        self._orig_data = data
         self.data = data
-        self.view = CDSView(source=self.cds)
+        self._debug = debug
+
         self.nb_handle = None
         self.data_table = DataTable(
             source=self.cds,
             columns=self._dt_columns,
-            view=self.view,
+            view=CDSView(source=self.cds),
             height=self._calc_df_height(data),
             width_policy="max",
             auto_edit=True,
@@ -54,8 +71,10 @@ class DataViewer:
             reorderable=True,
         )
 
-        self.column_chooser = DataTableColumnChooser(data)
+        self.column_chooser = DataTableColumnChooser(data, selected_cols=selected_cols)
         self.data_filter = DataTableFilter(data)
+        if selected_cols is not None:
+            self._update_columns(btn=None)
 
         self.column_chooser.apply_button.on_click(self._update_columns)
         self.data_filter.apply_button.on_click(self._apply_filter)
@@ -68,11 +87,32 @@ class DataViewer:
         self.accordion.selected_index = None
 
         self.layout = self.accordion
+        output_notebook(hide_banner=True)
 
     @property
     def filtered_data(self) -> pd.DataFrame:
         """Return filtered dataframe."""
-        return self.data_filter.filtered_dataframe[self.column_chooser.col_names]
+        return self.data_filter.filtered_dataframe[self.column_chooser.selected_columns]
+
+    @property
+    def filters(self) -> Dict[str, FilterExpr]:
+        """Return current filters as a dict."""
+        return self.data_filter.filters
+
+    def import_filters(self, filters: Dict[str, FilterExpr]):
+        """
+        Import filter set replacing current filters.
+
+        Parameters
+        ----------
+        filters : Dict[str, FilterExpr]
+            dict of filter name, FilterExpr
+            FilterExpr is a tuple of:
+            column [str], inv [bool], operator [str], expr [str]
+
+        """
+        self.data_filter.import_filters(filters)
+        self._apply_filter(btn=None)
 
     def _calc_df_height(self, data):
         df_height = 20 + (len(data) * 20)
@@ -80,9 +120,16 @@ class DataViewer:
 
     def show(self):
         """Display the data table control."""
+        if self._debug:
+            print("_update_data_table")
         self.nb_handle = show(self.data_table, notebook_handle=True)
 
     def _update_data_table(self):
+        if self._debug:
+            print("_update_data_table")
+            print(self.data_filter.filters)
+            print(len(self.filtered_data))
+            print(self.filtered_data.iloc[:2])
         push_notebook(handle=self.nb_handle)
 
     def display(self):
@@ -101,11 +148,14 @@ class DataViewer:
 
     def _apply_filter(self, btn):
         del btn
-        self.view.filters = [BooleanFilter(self.data_filter.bool_filters)]
+        if self._debug:
+            print("_apply_filter")
+        self.data_table.view = CDSView(
+            source=self.cds, filters=[BooleanFilter(self.data_filter.bool_filters)]
+        )
         self.data_table.height = self._calc_df_height(
             self.data_filter.filtered_dataframe
         )
-        print(self.data_table.height)
         self._update_data_table()
 
 
@@ -115,16 +165,16 @@ class DataTableColumnChooser:
     def __init__(self, data, selected_cols=None):
         """Initialize the DataTableColumnChooser class."""
         self.data = data
-        self.col_names = selected_cols or list(data.columns)
+        self._all_col_names = list(data.columns)
+        self._initial_cols = selected_cols or self._all_col_names
         self._col_select = nbwidgets.SelectSubset(
-            default_selected=self.col_names,
-            source_items=self.col_names,
+            default_selected=self._initial_cols,
+            source_items=self._all_col_names,
             auto_display=False,
         )
 
         self.apply_button = widgets.Button(description="Apply columns")
         self.layout = widgets.VBox([self._col_select.layout, self.apply_button])
-        self.apply_button.on_click(self._apply_col_selection)
 
     @property
     def datatable_columns(self):
@@ -134,7 +184,15 @@ class DataTableColumnChooser:
     @property
     def dataframe_columns(self):
         """Return the selected set of DataFrame columns."""
-        return self.data[self.selected_columns]
+        return self.data[self._reorder_cols(self.selected_columns)]
+
+    def _reorder_cols(self, columns):
+        """Return column list in original order."""
+        # order the columns as originally specified (or as the DF)
+        col_init = [col for col in self._initial_cols if col in columns]
+        # If any new columns, add them to the end of the list
+        col_init.extend(list(set(columns) - set(col_init)))
+        return col_init
 
     def display(self):
         """Display in IPython."""
@@ -147,12 +205,7 @@ class DataTableColumnChooser:
     @property
     def selected_columns(self):
         """Return the selected columns."""
-        return self._col_select.selected_items
-
-    def _apply_col_selection(self, btn):
-        del btn
-        print(self.col_names)
-        raise NotImplementedError("need to do this - _apply_col_selection")
+        return self._reorder_cols(self._col_select.selected_items)
 
 
 def _layout(width, height=None, desc_width=None, **kwargs):
@@ -207,13 +260,13 @@ class DataTableFilter:
         self._not_cb = widgets.Checkbox(
             description="not", value=False, **(_layout("60px", desc_width="initial"))
         )
-        self._filter_value = widgets.Text(
+        self._filter_value = widgets.Textarea(
             description="Filter value", **(_layout("400px"))
         )
         self._curr_filters = widgets.Select(description="Filters", **(_layout("500px")))
         self._oper_label = widgets.Label(" in ")
 
-        self.filters: Dict[str, Tuple] = {}
+        self.filters: Dict[str, FilterExpr] = {}
 
         self._curr_filters.observe(self._select_filter, names="value")
         self._col_select.observe(self._update_operators, names="value")
@@ -268,18 +321,34 @@ class DataTableFilter:
         """Display in IPython."""
         self.display()
 
+    def import_filters(self, filters: Dict[str, FilterExpr]):
+        """
+        Replace the current filters with `filters`.
+
+        Parameters
+        ----------
+        filters : Dict[str, FilterExpr]
+            dict of filter name, FilterExpr
+            FilterExpr is a tuple of:
+            column [str], inv [bool], operator [str], expr [str]
+
+        """
+        self.filters = {
+            f_name: FilterExpr(*f_expr) for f_name, f_expr in filters.items()
+        }
+        self._curr_filters.options = list(filters.keys())
+
     @property
     def bool_filters(self):
         """Return current set of boolean filters."""
         df_filt = None
         for filt in self.filters.values():
-            new_filt = self._make_filter(filt[0], filt[2], filt[3], filt[1])
+            new_filt = self._make_filter(
+                filt.column, filt.operator, filt.expr, filt.inv
+            )
+            new_filt = new_filt.values if isinstance(new_filt, pd.Series) else new_filt
             df_filt = new_filt if df_filt is None else df_filt & new_filt
-        return (
-            df_filt.values
-            if df_filt is not None
-            else self.data.index.isin(self.data.index)
-        )
+        return df_filt if df_filt is not None else self.data.index.isin(self.data.index)
 
     @property
     def filtered_dataframe(self) -> pd.DataFrame:
@@ -288,6 +357,8 @@ class DataTableFilter:
 
     def _select_filter(self, change):
         filter_name = change["new"]
+        if not filter_name:
+            return
         (
             self._col_select.value,
             self._not_cb.value,
@@ -301,11 +372,13 @@ class DataTableFilter:
 
     def _add_filter(self, btn):
         del btn
-        self.filters[self._curr_filter_name] = (
-            self._col_select.value,
-            self._not_cb.value,
-            self._oper_sel.value,
-            self._filter_value.value,
+        if self._curr_filter_name in self.filters:
+            return
+        self.filters[self._curr_filter_name] = FilterExpr(
+            column=self._col_select.value,
+            inv=self._not_cb.value,
+            operator=self._oper_sel.value,
+            expr=self._filter_value.value,
         )
         curr_opts = list(self._curr_filters.options)
         curr_opts.append(self._curr_filter_name)
@@ -353,36 +426,62 @@ class DataTableFilter:
             return ~self._create_filter(col, operator, expr)
         return self._create_filter(col, operator, expr)
 
-    # pylint: disable=too-many-branches, too-many-return-statements
-    # TODO refactor this
-    def _create_filter(self, col, operator, expr):
+    # pylint: disable=too-many-return-statements
+    def _create_filter(self, col: str, operator: str, expr: str) -> pd.Series:
         if operator == "query":
-            return self.data.index.isin(self.data.query(expr).index)
-
+            return pd.Series(self.data.index.isin(self.data.query(expr).index))
         if operator in ("in", "between"):
-            if pd.api.types.is_string_dtype(self.data[col]):
-                test_expr = [item.strip("\"' ") for item in expr.split(",")]
-            elif pd.api.types.is_numeric_dtype(self.data[col]):
-                test_expr = [
-                    int(item) if "." not in item else float(item)
-                    for item in expr.split(",")
-                ]
-            elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
-                test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]
-            else:
-                raise TypeError(
-                    f"Unsupported column type {self.data[col].dtype}",
-                    f"for operator {operator} and column {col}",
-                )
-            if operator == "in":
-                return self.data[col].isin(test_expr)
-            if len(test_expr) != 2:
-                raise ValueError(
-                    f"Must have two operands for expression {expr}",
-                    f"for operator {operator} and column {col}",
-                )
-            return self.data[col].between(test_expr[0], test_expr[1], inclusive=True)
+            return self._filter_in_or_between(col, operator, expr)
 
+        test_expr = self._conv_expr_type(col, expr)
+        if operator == "==":
+            return self.data[col] == test_expr
+        if operator == "contains":
+            return self.data[col].str.contains(test_expr)
+        if operator == "matches":
+            return self.data[col].str.match(test_expr)
+        if operator == ">":
+            return self.data[col] > test_expr
+        if operator == ">=":
+            return self.data[col] >= test_expr
+        if operator == "<":
+            return self.data[col] < test_expr
+        if operator == "<=":
+            return self.data[col] >= test_expr
+        raise TypeError(
+            f"Unsupported operator for operator {operator} and column {col}"
+        )
+
+    def _filter_in_or_between(self, col: str, operator: str, expr: str) -> pd.Series:
+        """Return filter for `in` and `between` operators."""
+        test_expr: List[Union[str, int, float]]
+
+        if pd.api.types.is_string_dtype(self.data[col]):
+            test_expr = [item.strip("\"' ") for item in expr.split(",")]
+        elif pd.api.types.is_numeric_dtype(self.data[col]):
+            test_expr = [
+                int(item) if "." not in item else float(item)
+                for item in expr.split(",")
+            ]
+        elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
+            test_expr = [pd.Timestamp(item.strip()) for item in expr.split(",")]
+        else:
+            raise TypeError(
+                f"Unsupported column type {self.data[col].dtype}",
+                f"for operator {operator} and column {col}",
+            )
+        if operator == "in":
+            return self.data[col].isin(test_expr)
+        if len(test_expr) != 2:
+            raise ValueError(
+                f"Must have two operands for expression {expr}",
+                f"for operator {operator} and column {col}",
+            )
+        return self.data[col].between(test_expr[0], test_expr[1], inclusive=True)
+
+    def _conv_expr_type(self, col: str, expr: str):
+        """Convert string expression to required type."""
+        test_expr: Union[str, int, float]
         if pd.api.types.is_numeric_dtype(self.data[col]):
             test_expr = int(expr) if "." not in expr else float(expr)
         elif pd.api.types.is_datetime64_any_dtype(self.data[col]):
@@ -394,24 +493,7 @@ class DataTableFilter:
                 f"Unsupported column type {self.data[col].dtype}",
                 f"for column {col}",
             )
-
-        if operator == "==":
-            return self.data[col] == test_expr
-        if operator == "contains":
-            return self.data[col].str.contains(expr)
-        if operator == "matches":
-            return self.data[col].str.match(expr)
-        if operator == ">":
-            return self.data[col] > expr
-        if operator == ">=":
-            return self.data[col] >= expr
-        if operator == "<":
-            return self.data[col] < expr
-        if operator == "<=":
-            return self.data[col] >= expr
-        raise TypeError(
-            f"Unsupported operator for operator {operator} and column {col}"
-        )
+        return test_expr
 
 
 def _get_col_width(data, col):

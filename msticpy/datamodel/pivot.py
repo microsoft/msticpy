@@ -391,8 +391,8 @@ class Pivot:
         PivotRegistration
 
         """
-        container = (
-            container or pivot_reg.entity_container_name
+        container = container or (
+            pivot_reg.entity_container_name
             if pivot_reg and pivot_reg.entity_container_name
             else "other"
         )
