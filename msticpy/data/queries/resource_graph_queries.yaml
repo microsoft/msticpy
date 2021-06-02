@@ -82,6 +82,7 @@ sources:
       query: '
         {table}
         | where type =~ "microsoft.compute/virtualmachines"
+        | where name contains "{host_name}"
         | extend nics=array_length(properties.networkProfile.networkInterfaces)
         | mv-expand nic=properties.networkProfile.networkInterfaces
         | where nics == 1 or nic.properties.primary =~ "true" or isempty(nic)
@@ -105,3 +106,7 @@ sources:
         {add_query_items}'
       uri: None
     parameters:
+      host_name:
+        description: A hostname to filter on
+        type: str
+        default: ''
