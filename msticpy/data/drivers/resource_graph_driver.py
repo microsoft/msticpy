@@ -6,9 +6,9 @@
 """Azure Resource Graph Driver class."""
 from typing import Any, Tuple, Union
 import warnings
-from azure.mgmt.subscription import SubscriptionClient
 
 import pandas as pd
+from pandas.core.frame import DataFrame
 
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
@@ -19,8 +19,10 @@ from ...common.exceptions import (
 )
 from ...common.azure_auth import az_connect
 
+# pylint: disable=wrong-import-order
+from azure.mgmt.subscription import SubscriptionClient
 try:
-    import azure.mgmt.resourcegraph as arg
+    from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import (
         ResultTruncated,
         QueryRequest,
@@ -34,6 +36,7 @@ except ImportError as imp_err:
         title="Error importing azure-mgmt-resourcegraph",
         extra="azure.mgmt.resourcegraph",
     ) from imp_err
+# pylint: enable=wrong-import-order
 
 __version__ = VERSION
 __author__ = "Ryan Cobb"
@@ -70,6 +73,7 @@ class ResourceGraphDriver(DriverBase):
         -----
         Default configuration is read from the DataProviders/AzureCLI
         section of msticpyconfig.yaml, if available.
+
         """
         auth_methods = kwargs.get("auth_methods")
         if not auth_methods:
@@ -77,10 +81,11 @@ class ResourceGraphDriver(DriverBase):
         silent = kwargs.get("silent", True)
 
         credentials = az_connect(auth_methods=auth_methods, silent=silent)
-        self.client = arg.ResourceGraphClient(credentials.modern)
+        self.client = ResourceGraphClient(credentials.modern)
         self.sub_client = SubscriptionClient(credentials.modern)
         self.subscription_ids = [
-            sub.subscription_id for sub in self.sub_client.subscriptions.list()  # type: ignore
+            sub.subscription_id
+            for sub in self.sub_client.subscriptions.list()  # type: ignore
         ]
 
         self._connected = True
@@ -93,6 +98,7 @@ class ResourceGraphDriver(DriverBase):
     ) -> Union[pd.DataFrame, Any]:
         """
         Execute Resource Graph query and retrieve results.
+
         Parameters
         ----------
         query : str
@@ -110,10 +116,14 @@ class ResourceGraphDriver(DriverBase):
         Union[pd.DataFrame, Any]
             Query results in a dataframe.
             or query response if an error.
+
         """
         del query_source
         result_df, result = self.query_with_results(query, **kwargs)
-        return result_df if result_df is not None and not result_df.empty else result
+        if isinstance(result_df, DataFrame) and not result_df.empty:
+            return result_df
+
+        return result
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
@@ -129,13 +139,14 @@ class ResourceGraphDriver(DriverBase):
         Union[pd.DataFrame,Any]
             A DataFrame (if successful) or
             the underlying provider result if an error occurs.
+
         """
         if not self.connected:
             self.connect()
-            if not self.connected:
-                raise MsticpyNotConnectedError(
-                    "Source is not connected. ", "Please call connect() and retry."
-                )
+        if not self.connected:
+            raise MsticpyNotConnectedError(
+                "Source is not connected. ", "Please call connect() and retry."
+            )
 
         result_truncated = False
 
