@@ -11,6 +11,7 @@ import pytest
 
 from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
 
+
 class _MockSub:
     """Mock of Subscription Class."""
 

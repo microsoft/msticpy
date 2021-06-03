@@ -21,6 +21,7 @@ from ...common.azure_auth import az_connect
 
 # pylint: disable=wrong-import-order
 from azure.mgmt.subscription import SubscriptionClient
+
 try:
     from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import (
