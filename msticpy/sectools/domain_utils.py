@@ -226,7 +226,7 @@ class DomainValidator:
             )
         except Exception:  # pylint: disable=broad-except
             result = False
-            x509 = None
+            x509 = None  # type: ignore
 
         return result, x509
 
