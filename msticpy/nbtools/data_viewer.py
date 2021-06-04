@@ -53,6 +53,10 @@ class DataViewer:
             Output additional debugging info to std out.
 
         """
+        if data.empty:
+            raise ValueError("No data available in 'data'")
+        # Drop empty columns
+        data = data.dropna(axis="columns", how="all")
         self.cds = ColumnDataSource(data)
         self._columns = _get_cols_from_df(data)
         self._dt_columns = list(self._columns.values())
@@ -497,6 +501,8 @@ class DataTableFilter:
 
 
 def _get_col_width(data, col):
+    if data[col].iloc[:10].dropna().empty:
+        return 8
     if data[col].dtype == "O":
         return int(data[col].iloc[:10].str.len().mean())
     if pd.api.types.is_datetime64_any_dtype(data[col]):
