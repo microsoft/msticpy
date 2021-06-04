@@ -21,6 +21,7 @@ from ...common.azure_auth import az_connect
 
 # pylint: disable=wrong-import-order
 from azure.mgmt.subscription import SubscriptionClient
+
 try:
     from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import (
@@ -34,7 +35,7 @@ except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without azure-mgmt-resourcegraph installed",
         title="Error importing azure-mgmt-resourcegraph",
-        extra="azure.mgmt.resourcegraph",
+        extra="azure",
     ) from imp_err
 # pylint: enable=wrong-import-order
 
