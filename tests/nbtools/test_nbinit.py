@@ -15,7 +15,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.nbtools.nbinit import _check_config, _imp_module_all, init_notebook
+from msticpy.nbtools.nbinit import _get_or_create_config, _imp_module_all, init_notebook
 
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
 
@@ -84,113 +84,147 @@ class TestSubdir(Enum):
     SEARCH = 3
 
 
-ConfExpd = namedtuple("ConfExpd", "res, errs, wrns")
-
-
 _CONFIG_TESTS = [
-    (("missing_file", TestSubdir.NONE), ConfExpd(True, 0, 1)),
+    (("missing_file", None, TestSubdir.NONE), False),
     (
-        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.MAIN_ENV_PTR),
-        ConfExpd(True, (3, 0), 0),
+        ("msticpyconfig.yaml", None, TestSubdir.MAIN_ENV_PTR),
+        True,
     ),
     (
         (
-            TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml",
+            "msticpyconfig-noAzSentSettings.yaml",
+            None,
             TestSubdir.MAIN_ENV_PTR,
         ),
-        ConfExpd(False, (4, 2), 0),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.MAIN_ENV_PTR),
-        ConfExpd(False, (4, 2), 0),
+        ("msticpyconfig-no-settings.yaml", None, TestSubdir.MAIN_ENV_PTR),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(True, (3, 0), 0),
+        ("msticpyconfig.yaml", None, TestSubdir.SAME_DIR),
+        True,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig-noAzSentSettings.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(False, (4, 2), 0),
+        ("msticpyconfig-noAzSentSettings.yaml", None, TestSubdir.SAME_DIR),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.SAME_DIR),
-        ConfExpd(False, (4, 2), 0),
+        ("msticpyconfig-no-settings.yaml", None, TestSubdir.SAME_DIR),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/config.json", TestSubdir.SAME_DIR),
-        ConfExpd(True, 1, 2),
+        (None, "config.json", TestSubdir.SAME_DIR),
+        True,
     ),
     (
-        (TEST_DATA_PATH + "/config-no-settings.json", TestSubdir.SAME_DIR),
-        ConfExpd(False, 2, 2),
+        (None, "config.json", TestSubdir.SEARCH),
+        True,
     ),
     (
-        (TEST_DATA_PATH + "/config.json", TestSubdir.SEARCH),
-        ConfExpd(True, 0, 1),
+        ("msticpyconfig.yaml", None, TestSubdir.SEARCH),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/config-no-settings.json", TestSubdir.SEARCH),
-        ConfExpd(False, 1, 1),
+        ("msticpyconfig-no-settings.yaml", None, TestSubdir.SEARCH),
+        False,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig.yaml", TestSubdir.SEARCH),
-        ConfExpd(True, 0, 1),
+        (
+            "msticpyconfig-noAzSentSettings.yaml",
+            "config.json",
+            TestSubdir.MAIN_ENV_PTR,
+        ),
+        True,
     ),
     (
-        (TEST_DATA_PATH + "/msticpyconfig-no-settings.yaml", TestSubdir.SEARCH),
-        ConfExpd(False, 1, 1),
+        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.MAIN_ENV_PTR),
+        True,
+    ),
+    (
+        (
+            "msticpyconfig-noAzSentSettings.yaml",
+            "config.json",
+            TestSubdir.SAME_DIR,
+        ),
+        True,
+    ),
+    (
+        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.SAME_DIR),
+        True,
+    ),
+    (
+        (
+            "msticpyconfig-noAzSentSettings.yaml",
+            "config.json",
+            TestSubdir.SEARCH,
+        ),
+        True,
+    ),
+    (
+        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.SEARCH),
+        True,
     ),
 ]
 
-_test_ids = [f"{test[0][0]}-{test[0][1].name}" for test in _CONFIG_TESTS]
+_test_ids = [
+    f"{test[0][0]}/{test[0][1]}-{test[0][2].name} => {'Success' if test[1] else 'Fail'}"
+    for test in _CONFIG_TESTS
+]
 
 
 @pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
 def test_check_config(conf_file, expected, tmpdir):
     """Test config check."""
-    conf_file, mp_location = conf_file
-    settings_file = conf_file
+    mpconf_file, conf_json, mp_location = conf_file
     init_cwd = str(Path(".").absolute())
+    settings_file = "missing_file"
     try:
         # If we want to test against config files in isolated directory
         if mp_location != TestSubdir.NONE:
             # Read contents of source file
-            tgt_file = Path(conf_file).name
-            file_txt = Path(conf_file).read_text()
+            for file in (mpconf_file, conf_json):
+                if file is None:
+                    continue
+                tgt_file = Path(TEST_DATA_PATH).joinpath(file).name
+                file_txt = Path(TEST_DATA_PATH).joinpath(file).read_text()
 
-            dest_file = (
-                "config.json" if tgt_file.endswith(".json") else "msticpyconfig.yaml"
-            )
-            # write the file to the folder
-            tmpdir.join(dest_file).write(file_txt)
+                dest_file = (
+                    "config.json"
+                    if tgt_file.endswith(".json")
+                    else "msticpyconfig.yaml"
+                )
+                # write the file to the folder
+                tmpdir.join(dest_file).write(file_txt)
             cwd_path = tmpdir
             # If sub-dir, change to the directory, so WorkspaceConfig has to search.
             if mp_location in (TestSubdir.MAIN_ENV_PTR, TestSubdir.SEARCH):
                 cwd_path = tmpdir.mkdir("sub_folder")
             os.chdir(cwd_path)
-            if mp_location == TestSubdir.SEARCH:
+            if mp_location == TestSubdir.SEARCH or mpconf_file is None:
                 # Pass non-existing file to custom_mp_config to bypass default settings
                 settings_file = "missing_file"
             else:
-                settings_file = Path(str(tmpdir)).joinpath(dest_file)
+                settings_file = Path(str(tmpdir)).joinpath(mpconf_file)
 
         with custom_mp_config(settings_file, path_check=False):
-            result, (errs, warns) = _check_config()
+            result = _get_or_create_config()
 
             print("result=", result)
-            print("errs=", "\n".join(errs) if errs else "no errors")
-            print("warnings=", "\n".join(warns) if warns else "no warnings")
-            check.equal(result, expected.res, "Result")
-            reported_errs = 0 if not errs else len(errs)
-            reported_warns = 0 if not warns else len(warns)
-            if isinstance(expected.errs, tuple):
-                check.is_in(reported_errs, expected.errs, "Num errors")
-            else:
-                check.equal(reported_errs, expected.errs, "Num errors")
-            if isinstance(expected.wrns, tuple):
-                check.is_in(reported_warns, expected.wrns, "Num errors")
-            else:
-                check.equal(reported_warns, expected.wrns, "Num warnings")
+            # print("errs=", "\n".join(errs) if errs else "no errors")
+            # print("warnings=", "\n".join(warns) if warns else "no warnings")
+            check.equal(result, expected, "Result")
+            # reported_errs = 0 if not errs else len(errs)
+            # reported_warns = 0 if not warns else len(warns)
+            # if isinstance(expected.errs, tuple):
+            #     check.is_in(reported_errs, expected.errs, "Num errors")
+            # else:
+            #     check.equal(reported_errs, expected.errs, "Num errors")
+            # if isinstance(expected.wrns, tuple):
+            #     check.is_in(reported_warns, expected.wrns, "Num errors")
+            # else:
+            #     check.equal(reported_warns, expected.wrns, "Num warnings")
     finally:
         os.chdir(init_cwd)
 

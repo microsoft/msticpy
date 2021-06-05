@@ -445,10 +445,13 @@ def _create_input_df(input_value, pivot_reg, parent_kwargs):
                 input_column = parent_kwargs.pop(col_param)
                 break
         else:
+            col_arg = parent_kwargs.pop(col_param, None)
+            col_arg = f" '{col_arg}' " if col_arg else ""
+            col_mssg = f"The column name {col_arg} given for the 'column' parameter"
             raise KeyError(
-                f"'{input_column}' is not in the input dataframe",
+                f"'{col_mssg}' is not in the input dataframe",
                 "Please specify the column when calling the function."
-                "You can use one of the parameter names for this:",
+                "You can use one of these parameter names for this:",
                 _DF_SRC_COL_PARAM_NAMES,
             )
     # we want to get rid of data=xyz parameters from kwargs, since we're adding them

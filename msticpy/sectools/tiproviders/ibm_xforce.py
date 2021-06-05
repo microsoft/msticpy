@@ -114,9 +114,9 @@ class XForce(HttpProvider):
             )
             severity = (
                 TISeverity.information
-                if score == 0
+                if score < 2
                 else TISeverity.warning
-                if score == 1
+                if 2 <= score < 5
                 else TISeverity.high
             )
         if (

@@ -7,27 +7,21 @@
 from contextlib import contextmanager
 from pathlib import Path
 import os
+from os import getcwd, chdir
 from typing import Union, Dict, Any, Generator
 
 from filelock import FileLock
 from msticpy.common import pkg_config
-from msticpy.common.utility import export
 
 __author__ = "Ian Hellen"
 
 
-@export
 def get_test_data_path():
     """Get path to testdata folder."""
-    _test_data_folders = [
-        d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-    ]
-    if len(_test_data_folders) == 1:
-        return _test_data_folders[0]
-    return "./tests/testdata"
+    return Path(__file__).parent.joinpath("testdata")
 
 
-TEST_DATA_PATH = get_test_data_path()
+TEST_DATA_PATH = str(get_test_data_path())
 
 
 # pylint: disable=protected-access
@@ -73,3 +67,17 @@ def custom_mp_config(
         else:
             os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
         pkg_config.refresh_config()
+
+
+@contextmanager
+def change_directory(path):
+    """Change the current working directory temporarily."""
+    path = Path(path).expanduser()
+    prev_path = Path(getcwd())
+    try:
+        cwd_lock = "./.mp_test_cwd.lock"
+        with FileLock(cwd_lock):
+            chdir(str(path))
+            yield
+    finally:
+        chdir(str(prev_path))
