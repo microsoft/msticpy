@@ -68,12 +68,12 @@ TIProviders:
   TorExitNodes:
     Primary: bool(default=True)
     Provider: "Tor"
-  Greynoise:
+  GreyNoise:
     Args:
     # Leave AuthKey empty to use the community API or populate if you want to use the Enterprise API features.
       AuthKey: str(default="")
     Primary: bool(default=True)
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
 OtherProviders:
   GeoIPLite:
     Args:

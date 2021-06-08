@@ -15,6 +15,7 @@ import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from platform import python_version
 
 import pkg_resources
 from deprecated.sphinx import deprecated
@@ -662,3 +663,8 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
             d_val = dict1[key]
         out_dict[key] = d_val
     return out_dict
+
+
+def get_user_agent():
+    """Generate a User Agent string that combines Python version and MSTICPy version."""
+    return f"MSTICPy{VERSION}-Python{python_version()}"

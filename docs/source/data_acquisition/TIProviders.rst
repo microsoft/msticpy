@@ -83,7 +83,7 @@ class method shows the current set of providers.
     >>> TILookup.list_available_providers()
 
     AzSTI
-    Greynoise
+    GreyNoise
     OPR
     OTX
     Tor
@@ -149,10 +149,10 @@ query but are available if you want to search more widely.
 You will usually need to supply an authorization (API) key and in some cases a
 user ID for each provider.
 
-.. note:: For Greynoise an API key is optional to use the ipv4 lookup, leaving the
+.. note:: For GreyNoise an API key is optional to use the ipv4 lookup, leaving the
   AuthKey field of your config as an empty string will use the [community API](https://developer.greynoise.io/docs/using-the-greynoise-community-api#:~:text=The%20Community%20API%20provides%20a%20free%20resource%20to,all%20users%20with%20their%20GreyNoise%20account%20API%20key)
-  A valid API is key is required to use the `full` or `quick` query types that 
-  utilise the Greynoise enterprise API.
+  A valid API is key is required to use the `full` or `quick` query types that
+  utilise the GreyNoise enterprise API.
 
 .. note:: For LogAnalytics/Azure Sentinel providers, you will need the workspace
   ID and tenant ID and will need to authenticate in order to access the
@@ -197,11 +197,11 @@ section into your existing msticpyconfig.yaml
           AuthKey: "your-xforce-key"
         Primary: True
         Provider: "XForce"
-      Greynoise:
+      GreyNoise:
         Args:
           AuthKey: ""
         Primary: true
-        Provider: Greynoise
+        Provider: GreyNoise
       AzureSentinel:
         # Note if you do not specify any settings in the Args key for the AzureSentinel
         # provider, it will default to using your default Azure Sentinel workspace.
@@ -525,7 +525,7 @@ Lookup using all primary providers
 +-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
 | AzSTI       | 38.75.137.9  | ipv4     | None          | False   | 0 rows returned.                                                                                     | None                                                                                                 | None                                                                   | -1      |
 +-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
-| Greynoise   | 38.75.137.9  | ipv4     | None          | False   | Not found.                                                                                           | <Response [404]>                                                                                     | https://api.greynoise.io/v3/community/38.75.137.9                      | 404     |
+| GreyNoise   | 38.75.137.9  | ipv4     | None          | False   | Not found.                                                                                           | <Response [404]>                                                                                     | https://api.greynoise.io/v3/community/38.75.137.9                      | 404     |
 +-------------+--------------+----------+---------------+---------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------+---------+
 
 
@@ -615,8 +615,8 @@ See :py:meth:`provider_usage<msticpy.sectools.tilookup.TILookup.provider_usage>`
       ioc_type=url
       ioc_type=windows_path
 
-    Provider class: Greynoise
-    Greynoise Lookup. Supported query types:
+    Provider class: GreyNoise
+    GreyNoise Lookup. Supported query types:
 	  ioc_type=ipv4
 	  ioc_type=ipv4, ioc_query_type=full
 	  ioc_type=ipv4, ioc_query_type=quick

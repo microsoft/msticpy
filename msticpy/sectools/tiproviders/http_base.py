@@ -25,7 +25,7 @@ from attr import Factory
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigException
-from ...common.utility import export
+from ...common.utility import export, get_user_agent
 from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
 __version__ = VERSION
@@ -75,7 +75,7 @@ class HttpProvider(TIProvider):
             if param not in self._request_params
         ]
         if missing_params:
-            param_list = ", ".join([f"'{param}'" for param in missing_params])
+            param_list = ", ".join(f"'{param}'" for param in missing_params)
             raise MsticpyConfigException(
                 f"Parameter values missing for TI Provider '{self.__class__.__name__}'",
                 f"Missing parameters are: {param_list}",
@@ -203,7 +203,7 @@ class HttpProvider(TIProvider):
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         # create a parameter dictionary to pass to requests
-        req_dict: Dict[str, Any] = {}
+        req_dict: Dict[str, Any] = {"headers": {}}
         # substitute any parameter value from our req_params dict
         req_dict["url"] = (
             self._BASE_URL + src.path.format(**req_params)
@@ -215,6 +215,8 @@ class HttpProvider(TIProvider):
                 key: val.format(**req_params) for key, val in src.headers.items()
             }
             req_dict["headers"] = headers
+        if "User-Agent" not in req_dict["headers"].keys():
+            req_dict["headers"]["User-Agent"] = get_user_agent()
         if src.params:
             q_params: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.params.items()
