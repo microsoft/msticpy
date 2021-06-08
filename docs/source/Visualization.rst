@@ -11,3 +11,4 @@ Displaying/Visualizing Data
    visualization/FoliumMap
    visualization/TimeSeriesAnomalies
    visualization/MorphCharts
+   visualization/DataViewer
