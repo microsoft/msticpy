@@ -49,8 +49,8 @@ RELOAD_MP = """
     run without error.
     """
 
-MIN_PYTHON_VER_DEF = (3, 6)
-MSTICPY_REQ_VERSION = (0, 9, 0)
+MIN_PYTHON_VER_DEF = "3.6"
+MSTICPY_REQ_VERSION = "0.9.0"
 VER_RGX = r"(?P<maj>\d+)\.(?P<min>\d+).(?P<pnt>\d+)(?P<suff>.*)"
 MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
@@ -127,14 +127,16 @@ def check_python_ver(min_py_ver=MIN_PYTHON_VER_DEF):
         If the Python version does not support the notebook.
 
     """
+    min_py_ver = _get_pkg_version(min_py_ver)
+    sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
-    if sys.version_info < min_py_ver:
+    if sys_ver < min_py_ver:
         _disp_html(
-            """
+            f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
-            3.6 or later (Python 3.8 recommended)<br>
+            {min_py_ver} or later (Python 3.8 recommended)<br>
             """
         )
         _disp_html(
@@ -143,17 +145,14 @@ def check_python_ver(min_py_ver=MIN_PYTHON_VER_DEF):
             for more information<br><br><hr>
             """
         )
-        raise RuntimeError("Python %s.%s or later kernel is required." % min_py_ver)
+        raise RuntimeError(f"Python {min_py_ver} or later kernel is required.")
 
-    if sys.version_info < (3, 8, 0):
+    if sys_ver < _get_pkg_version("3.8"):
         _disp_html(
             "Recommended: switch to using the 'Python 3.8 - AzureML' notebook kernel"
             " if this is available."
         )
-    _disp_html(
-        "Info: Python kernel version %s.%s.%s OK<br>"
-        % (sys.version_info[0], sys.version_info[1], sys.version_info[2])
-    )
+    _disp_html(f"Info: Python kernel version {sys_ver} OK<br>")
 
 
 def _check_mp_install(min_mp_ver, mp_release, extras):

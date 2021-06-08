@@ -332,7 +332,7 @@ class TILookup:
             if not provider_class:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
-                    + f"in config section {provider_entry}"
+                    f"in config section {provider_entry}"
                 )
                 continue
 
