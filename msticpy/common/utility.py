@@ -665,6 +665,5 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
     return out_dict
 
 
-def get_user_agent():
-    """Generate a User Agent string that combines Python version and MSTICPy version."""
-    return f"MSTICPy{VERSION}-Python{python_version()}"
+# User Agent string for MSTICPy
+_MSTICPY_USER_AGENT = f"MSTICPy{VERSION}-Python{python_version()}"

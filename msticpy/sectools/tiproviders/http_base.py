@@ -25,7 +25,7 @@ from attr import Factory
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigException
-from ...common.utility import export, get_user_agent
+from ...common.utility import export, _MSTICPY_USER_AGENT
 from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
 __version__ = VERSION
@@ -216,7 +216,7 @@ class HttpProvider(TIProvider):
             }
             req_dict["headers"] = headers
         if "User-Agent" not in req_dict["headers"].keys():
-            req_dict["headers"]["User-Agent"] = get_user_agent()
+            req_dict["headers"]["User-Agent"] = _MSTICPY_USER_AGENT
         if src.params:
             q_params: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.params.items()
