@@ -208,7 +208,9 @@ class QueryProvider:
             List of current data environments
 
         """
+        # pylint: disable=not-an-iterable
         return [env for env in DataEnvironment.__members__ if env != "Unknown"]
+        # pylint: enable=not-an-iterable
 
     def list_queries(self) -> List[str]:
         """
@@ -495,7 +497,7 @@ class QueryProvider:
     def _resolve_path(cls, config_path: str) -> Optional[str]:
         """Resolve path."""
         if not Path(config_path).is_absolute():
-            config_path = str(Path(config_path).resolve())
+            config_path = str(Path(config_path).expanduser().resolve())
         if not Path(config_path).is_dir():
             warnings.warn(f"Custom query definitions path {config_path} not found")
             return None
