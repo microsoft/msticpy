@@ -497,7 +497,7 @@ class QueryProvider:
     def _resolve_path(cls, config_path: str) -> Optional[str]:
         """Resolve path."""
         if not Path(config_path).is_absolute():
-            config_path = str(Path(config_path).resolve())
+            config_path = str(Path(config_path).expanduser().resolve())
         if not Path(config_path).is_dir():
             warnings.warn(f"Custom query definitions path {config_path} not found")
             return None
