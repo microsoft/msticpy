@@ -385,11 +385,14 @@ class MpConfigControls:
             defn = self._get_elem_from_path(defn_path, self._raw_config_defn)
             val_params["defn"] = defn
         default_val = val_params.get("default", "")
-        if isinstance(default_val, str) and default_val.strip().startswith("["):
-            # This is a default list - so we need to parse it
-            val_params["default"] = [
-                val.strip("'\"") for val in default_val.strip()[1:-1].split("; ")
-            ]
+        if isinstance(default_val, str):
+            if default_val.strip().startswith("["):
+                # This is a default list - so we need to parse it
+                val_params["default"] = [
+                    val.strip("'\"") for val in default_val.strip()[1:-1].split("; ")
+                ]
+            else:
+                val_params["default"] = default_val.strip("'\"")
         return val_type, val_params
 
     def _convert_mp_config(self, mp_conf_item):

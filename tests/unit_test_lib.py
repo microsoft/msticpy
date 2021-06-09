@@ -7,30 +7,24 @@
 from contextlib import contextmanager
 from pathlib import Path
 import os
+from os import getcwd, chdir
 from typing import Union, Dict, Any, Generator
 
 from filelock import FileLock
 from msticpy.common import pkg_config
-from msticpy.common.utility import export
 
 __author__ = "Ian Hellen"
 
 
-@export
 def get_test_data_path():
     """Get path to testdata folder."""
-    _test_data_folders = [
-        d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-    ]
-    if len(_test_data_folders) == 1:
-        return _test_data_folders[0]
-    return "./tests/testdata"
+    return Path(__file__).parent.joinpath("testdata")
 
 
-TEST_DATA_PATH = get_test_data_path()
+TEST_DATA_PATH = str(get_test_data_path())
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, broad-except
 @contextmanager
 def custom_mp_config(
     mp_path: Union[str, Path],
@@ -59,10 +53,10 @@ def custom_mp_config(
     current_path = os.environ.get(pkg_config._CONFIG_ENV_VAR)
     if path_check and not Path(mp_path).is_file():
         raise FileNotFoundError(f"Setting MSTICPYCONFIG to non-existent file {mp_path}")
+    _lock_file_path = "./.mp_settings.lock"
     try:
         # We need to lock the settings since these are global
         # Otherwise the tests interfere with each other.
-        _lock_file_path = "./.mp_settings.lock"
         with FileLock(_lock_file_path):
             os.environ[pkg_config._CONFIG_ENV_VAR] = str(mp_path)
             pkg_config.refresh_config()
@@ -72,4 +66,28 @@ def custom_mp_config(
             del os.environ[pkg_config._CONFIG_ENV_VAR]
         else:
             os.environ[pkg_config._CONFIG_ENV_VAR] = current_path
+        if Path(_lock_file_path).is_file():
+            try:
+                Path(_lock_file_path).unlink()
+            except Exception:
+                pass
         pkg_config.refresh_config()
+
+
+@contextmanager
+def change_directory(path):
+    """Change the current working directory temporarily."""
+    path = Path(path).expanduser()
+    prev_path = Path(getcwd())
+    cwd_lock = "./.mp_test_cwd.lock"
+    try:
+        with FileLock(cwd_lock):
+            chdir(str(path))
+            yield
+    finally:
+        chdir(str(prev_path))
+        if Path(cwd_lock).is_file():
+            try:
+                Path(cwd_lock).unlink()
+            except Exception:
+                pass
