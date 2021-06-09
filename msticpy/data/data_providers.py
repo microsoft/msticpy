@@ -255,11 +255,6 @@ class QueryProvider:
         """
         Return QueryProvider query browser.
 
-        Parameters
-        ----------
-        query_provider : QueryProvider
-            Initialized query provider.
-
         Other Parameters
         ----------------
         kwargs :
@@ -272,6 +267,9 @@ class QueryProvider:
 
         """
         return browse_queries(self, **kwargs)
+
+    # alias for browse_queries
+    browse = browse_queries
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:

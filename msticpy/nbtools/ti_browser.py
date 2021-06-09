@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Threat Intel Results Browser."""
 import pprint
-from typing import List, Optional
+from typing import List, Union
 import pandas as pd
 from IPython.core.display import HTML
 
@@ -17,7 +17,7 @@ __author__ = "Ian Hellen"
 
 
 def browse_results(
-    data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+    data: pd.DataFrame, severities: Union[List[str], str, None] = None, **kwargs
 ) -> SelectItem:
     """
     Return TI Results list browser.
@@ -26,11 +26,9 @@ def browse_results(
     ----------
     data : pd.DataFrame
         TI Results data from TIProviders
-    severities : Optional[List[str]], optional
-        A list of the severity classes to show.
+    severities : Union[List[str], str, None], optional
+        A list of the severity classes to show or the string 'all'.
         By default these are ['warning', 'high'].
-        Pass ['information', 'warning', 'high'] to see all
-        results.
 
     Other Parameters
     ----------------
@@ -51,10 +49,17 @@ def browse_results(
 
     opts = get_ti_select_options(ti_data=data, severities=severities)
     disp_func = ti_details_display(ti_data=data)
+    if not opts and not data.empty:
+        print("No results at TI Severities 'warning' or 'high'")
+        print("To display 'information' category results call with the parameter:")
+        print("severities=['information', 'warning' or 'high']")
+
     return SelectItem(item_dict=opts, action=disp_func, **kwargs)
 
 
-def get_ti_select_options(ti_data: pd.DataFrame, severities: List[str] = None):
+def get_ti_select_options(
+    ti_data: pd.DataFrame, severities: Union[List[str], str, None] = None
+):
     """Get SelectItem options for TI data."""
     ti_agg_df = _create_ti_agg_list(ti_data, severities)
     return dict(
@@ -71,10 +76,14 @@ def get_ti_select_options(ti_data: pd.DataFrame, severities: List[str] = None):
     )
 
 
-def _create_ti_agg_list(ti_data: pd.DataFrame, severities: List[str] = None):
+def _create_ti_agg_list(
+    ti_data: pd.DataFrame, severities: Union[List[str], str, None] = None
+):
     """Aggregate ti results on IoC for multiple providers."""
     if not severities:
         severities = ["warning", "high"]
+    if severities == "all":
+        severities = ["information", "warning", "high"]
     ti_data["Details"] = ti_data.apply(lambda x: _label_col_dict(x, "Details"), axis=1)
 
     return (

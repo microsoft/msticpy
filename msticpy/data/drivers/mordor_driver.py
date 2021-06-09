@@ -668,7 +668,15 @@ def download_mdr_file(
                 fdesc.write(chunk)
 
     try:
-        zip_file = zipfile.ZipFile(str(save_file))
+        with zipfile.ZipFile(str(save_file)) as zip_file:
+            file_names = zip_file.namelist()
+            d_frames = {
+                file_name: _extract_zip_file_to_df(
+                    zip_file, file_name, use_cached, save_folder, silent
+                )
+                for file_name in file_names
+            }
+            return pd.concat(d_frames.values())
     except BadZipFile as bad_zip_err:
         raise MsticpyUserError(
             f"Could not extract zip file for {file_uri}.",
@@ -676,14 +684,6 @@ def download_mdr_file(
             title="Mordor download error",
             help_uri="https://msticpy.readthedocs.io/en/latest/data_acquisition/MordorData.html",
         ) from bad_zip_err
-    file_names = zip_file.namelist()
-    d_frames = {
-        file_name: _extract_zip_file_to_df(
-            zip_file, file_name, use_cached, save_folder, silent
-        )
-        for file_name in file_names
-    }
-    return pd.concat(d_frames.values())
 
 
 def _extract_zip_file_to_df(  # noqa: MC0001

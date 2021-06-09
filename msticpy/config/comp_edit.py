@@ -191,7 +191,7 @@ class CompEditItemButtons:
         btn_layout = widgets.Layout(width="100px")
         self.btn_add = widgets.Button(description="Add", layout=btn_layout)
         self.btn_del = widgets.Button(description="Delete", layout=btn_layout)
-        self.btn_save = widgets.Button(description="Save", layout=btn_layout)
+        self.btn_save = widgets.Button(description="Update", layout=btn_layout)
         self.layout = widgets.HBox([self.btn_add, self.btn_del, self.btn_save])
 
 

@@ -2,10 +2,11 @@ msticpy.nbtools package
 =======================
 
 
-msticpy.nbtools.foliummap module
---------------------------------
 
-.. automodule:: msticpy.nbtools.foliummap
+msticpy.nbtools.azure\_ml_tools module
+--------------------------------------
+
+.. automodule:: msticpy.nbtools.azure_ml_tools
     :members:
     :undoc-members:
     :show-inheritance:
@@ -18,6 +19,14 @@ msticpy.nbtools.data\_viewer module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.foliummap module
+--------------------------------
+
+.. automodule:: msticpy.nbtools.foliummap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.morph_charts module
 -----------------------------------
 
@@ -26,18 +35,18 @@ msticpy.nbtools.morph_charts module
     :undoc-members:
     :show-inheritance:
 
-msticpy.nbtools.nbinit module
------------------------------
-
-.. automodule:: msticpy.nbtools.nbinit
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 msticpy.nbtools.nbdisplay module
 --------------------------------
 
 .. automodule:: msticpy.nbtools.nbdisplay
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.nbtools.nbinit module
+-----------------------------
+
+.. automodule:: msticpy.nbtools.nbinit
     :members:
     :undoc-members:
     :show-inheritance:

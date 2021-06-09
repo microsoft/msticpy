@@ -78,7 +78,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
     # pylint: disable=global-statement
     global _SECRETS_CLIENT
     # pylint: enable=global-statement
-    if "KeyVault" in config.settings:
+    if "KeyVault" in config.settings and config.settings["KeyVault"]:
         if _SECRETS_CLIENT is None and _SECRETS_ENABLED:
             print(
                 "KeyVault enabled. Secrets access may require additional authentication."

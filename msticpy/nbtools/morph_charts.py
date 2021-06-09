@@ -55,8 +55,8 @@ class MorphCharts:
         out_path = Path.cwd().joinpath(*["morphchart_package", "description.json"])
         Path.mkdir(Path.cwd().joinpath("morphchart_package"), exist_ok=True)
         # Write description file
-        morph_file = open(out_path, "w")
-        json.dump(description_dict, morph_file)
+        with open(out_path, "w") as morph_file:
+            json.dump(description_dict, morph_file)
         # Write dataset to query_data csv
         data_out_path = out_path = Path.cwd().joinpath(
             *["morphchart_package", "query_data.csv"]
@@ -138,8 +138,8 @@ def _get_charts(path: str = "morph_charts") -> dict:
     chart_files = [file_path for file_path in file_glob if file_path.is_file()]
     chart_details = {}
     for chart in chart_files:
-        chart_data = open(chart, "r")
-        details = yaml.safe_load(chart_data)
+        with open(chart, "r") as chart_data:
+            details = yaml.safe_load(chart_data)
         try:
             chart_details.update(
                 {
