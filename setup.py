@@ -62,6 +62,7 @@ EXTRAS = {
         "azure-mgmt-network>=2.7.0",
         "azure-mgmt-resource>=2.2.0",
         "azure-storage-blob>=12.5.0",
+        "azure-mgmt-resourcegraph>=8.0.0",
     ],
     "keyvault": [
         "azure-keyvault-secrets>=4.0.0",
