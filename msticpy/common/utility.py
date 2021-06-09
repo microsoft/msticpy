@@ -665,5 +665,10 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
     return out_dict
 
 
+def _get_mp_ua():
+    """Build a MSTICPy specific User Agent string."""
+    return f"MSTICPy{VERSION}-Python{python_version()}"
+
+
 # User Agent string for MSTICPy
-_MSTICPY_USER_AGENT = f"MSTICPy{VERSION}-Python{python_version()}"
+_MSTICPY_USER_AGENT = _get_mp_ua()
