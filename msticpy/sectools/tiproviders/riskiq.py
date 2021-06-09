@@ -83,7 +83,7 @@ class RiskIQ(TIProvider):
         """Instantiate RiskIQ class."""
         super().__init__(**kwargs)
         ptanalyzer.init(
-            api_username=kwargs.get('ApiID'), 
+            api_username=kwargs.get('ApiUsername'), 
             api_key=kwargs.get('AuthKey')
         )
     
