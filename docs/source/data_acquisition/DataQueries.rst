@@ -153,6 +153,20 @@ MDATPHunting  uncommon_powershell         Find which uncommon Powershell Cmdlets
 MDATPHunting  user_enumeration            The query finds attempts to list users or groups using Net commands                                                                                                  -
 ============  ==========================  ==================================================================================================================================  ===============================  ==========================
 
+Queries for ResourceGraph
+-------------------------
+
+=============  ==============================  =====================================================  ============  =========
+QueryGroup     Query                           Description                                            ReqdParams    Table
+=============  ==============================  =====================================================  ============  =========
+ResourceGraph  list_detailed_virtual_machines  Retrieves list of VMs with network details                           resources
+ResourceGraph  list_public_ips                 Retrieves list of resources with public IP addresses                 resources
+ResourceGraph  list_resources                  Retrieves list of resources                                          resources
+ResourceGraph  list_resources_by_api_version   Retrieves list of resources for each API version                     resources
+ResourceGraph  list_resources_by_type          Retrieves list of resources by type                                  resources
+ResourceGraph  list_virtual_machines           Retrieves list of VM resources                                       resources
+=============  ==============================  =====================================================  ============  =========
+
 Queries for SecurityGraph
 -------------------------
 
