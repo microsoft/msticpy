@@ -34,6 +34,7 @@ CONDA_PKG_EXCEPTIONS = {
     "nest_asyncio",
     "KqlmagicCustom[jupyter-extended]",
     "sumologic-sdk",
+    "openpyxl",
 }
 
 

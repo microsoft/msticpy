@@ -274,6 +274,8 @@ class SumologicDriver(DriverBase):
                 break
         return status
 
+    # pylint: disable=inconsistent-return-statements
+    # I don't think there are any - everything returns a list
     def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit):
         if status["state"] != "DONE GATHERING RESULTS":
             return []
@@ -303,6 +305,8 @@ class SumologicDriver(DriverBase):
                 self._raise_qry_except(
                     err, "search_job_records", "to get search records"
                 )
+
+    # pylint: enable=inconsistent-return-statements
 
     @staticmethod
     def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
