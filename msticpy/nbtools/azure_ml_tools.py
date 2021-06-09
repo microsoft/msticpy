@@ -134,13 +134,14 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     sys_ver = _get_pkg_version(sys.version_info[:3])
     _disp_html("Checking Python kernel version...")
     if sys_ver < min_py_ver:
+        # Bandit SQL inject error found here
         _disp_html(
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
             {min_py_ver} or later (Python 3.8 recommended)<br>
-            """
+            """  # nosec
         )
         _disp_html(
             f"""
@@ -300,7 +301,7 @@ def _get_vm_metadata() -> Mapping[str, Any]:
     req.add_header("Metadata", "true")
 
     # Bandit warning on urlopen - Fixed private URL
-    with urllib.request.urlopen(req) as resp:  # sec
+    with urllib.request.urlopen(req) as resp:  # nosec
         metadata = json.loads(resp.read())
     return metadata if isinstance(metadata, dict) else {}
 
