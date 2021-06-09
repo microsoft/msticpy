@@ -148,7 +148,8 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             for more information<br><br><hr>
             """
         )
-        raise RuntimeError(f"Python {min_py_ver} or later kernel is required.")
+        # Bandit SQL inject error found here
+        raise RuntimeError(f"Python {min_py_ver} or later kernel is required.")  # nosec
 
     if sys_ver < _get_pkg_version("3.8"):
         _disp_html(
@@ -298,7 +299,8 @@ def _get_vm_metadata() -> Mapping[str, Any]:
     req = urllib.request.Request(vm_uri)
     req.add_header("Metadata", "true")
 
-    with urllib.request.urlopen(req) as resp:
+    # Bandit warning on urlopen - Fixed private URL
+    with urllib.request.urlopen(req) as resp:  # sec
         metadata = json.loads(resp.read())
     return metadata if isinstance(metadata, dict) else {}
 
@@ -392,7 +394,8 @@ def _check_nb_check_ver():
     gh_file = ""
     curr_file = ""
     try:
-        with request.urlopen(NB_CHECK_URI) as gh_fh:
+        # Bandit warning - fixed https URL
+        with request.urlopen(NB_CHECK_URI) as gh_fh:  # nosec
             gh_file = gh_fh.read().decode("utf-8")
     except Exception:
         _disp_html(f"Warning could not check version of {NB_CHECK_URI}")
