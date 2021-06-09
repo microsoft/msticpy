@@ -11,14 +11,16 @@ import socket
 import sys
 import urllib
 from pathlib import Path
+from typing import Any, List, Mapping, Optional, Tuple, Union
 from urllib import request
 
 from IPython import get_ipython
 from IPython.display import HTML, display
 from pkg_resources import parse_version
 
-from ..common.pkg_config import refresh_config
 from .._version import VERSION
+from ..common.pkg_config import refresh_config
+
 
 __version__ = VERSION
 
@@ -50,7 +52,8 @@ RELOAD_MP = """
     """
 
 MIN_PYTHON_VER_DEF = "3.6"
-MSTICPY_REQ_VERSION = "0.9.0"
+MSTICPY_REQ_VERSION = __version__
+
 VER_RGX = r"(?P<maj>\d+)\.(?P<min>\d+).(?P<pnt>\d+)(?P<suff>.*)"
 MP_ENV_VAR = "MSTICPYCONFIG"
 MP_FILE = "msticpyconfig.yaml"
@@ -66,10 +69,10 @@ def is_in_aml():
 
 
 def check_versions(
-    min_py_ver=MIN_PYTHON_VER_DEF,
-    min_mp_ver=MSTICPY_REQ_VERSION,
-    extras=None,
-    mp_release=None,
+    min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF,
+    min_mp_ver: Union[str, Tuple] = MSTICPY_REQ_VERSION,
+    extras: Optional[List[str]] = None,
+    mp_release: Optional[str] = None,
     **kwargs,
 ):
     """
@@ -112,7 +115,7 @@ def check_versions(
     _disp_html("<h4>Notebook pre-checks complete.</h4>")
 
 
-def check_python_ver(min_py_ver=MIN_PYTHON_VER_DEF):
+def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     """
     Check the current version of the Python kernel.
 
@@ -155,17 +158,21 @@ def check_python_ver(min_py_ver=MIN_PYTHON_VER_DEF):
     _disp_html(f"Info: Python kernel version {sys_ver} OK<br>")
 
 
-def _check_mp_install(min_mp_ver, mp_release, extras):
+def _check_mp_install(
+    min_mp_ver: Union[str, Tuple],
+    mp_release: Optional[str],
+    extras: Optional[List[str]],
+):
     """Check for and try to install required MSTICPy version."""
     # Use the release ver specified in params, in the environment or
     # the notebook default.
     pkg_version = _get_pkg_version(min_mp_ver)
-    mp_install_version = mp_release or os.environ.get("MP_TEST_VER", str(pkg_version))
+    mp_install_version = mp_release or os.environ.get("MP_TEST_VER") or str(pkg_version)
 
     check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
 
 
-def check_mp_ver(min_msticpy_ver, extras):
+def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]):
     """
     Check and optionally update the current version of msticpy.
 
@@ -211,9 +218,9 @@ def check_mp_ver(min_msticpy_ver, extras):
     _disp_html(f"Info: msticpy version {mp_min_pkg_ver} OK<br>")
 
 
-def _set_kql_env_vars(extras):
+def _set_kql_env_vars(extras: Optional[List[str]]):
+    """Set environment variables for Kqlmagic based on MP extras."""
     jp_extended = ("azsentinel", "azuresentinel", "kql")
-    # If running in
     if extras and any(extra for extra in extras if extra in jp_extended):
         os.environ["KQLMAGIC_EXTRAS_REQUIRE"] = "jupyter-extended"
     else:
@@ -222,7 +229,8 @@ def _set_kql_env_vars(extras):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version):
+def _get_pkg_version(version: Union[str, Tuple]) -> Any:
+    """Return pkg_resources parsed version from string or tuple."""
     if isinstance(version, str):
         return parse_version(version)
     if isinstance(version, tuple):
@@ -230,11 +238,12 @@ def _get_pkg_version(version):
     raise TypeError(f"Unparseable type version {version}")
 
 
-def _disp_html(text):
+def _disp_html(text: str):
+    """Display the HTML text."""
     display(HTML(text))
 
 
-def get_aml_user_folder():
+def get_aml_user_folder() -> Optional[Path]:
     """Return the root of the user folder."""
     path_parts = Path(".").absolute().parts
     if "users" not in path_parts:
@@ -249,6 +258,7 @@ def get_aml_user_folder():
 
 # pylint: disable=import-outside-toplevel, unused-import, import-error
 def _run_user_settings():
+    """Import nbuser_settings.py, if it exists."""
     user_folder = get_aml_user_folder()
     if user_folder.joinpath("nbuser_settings.py").is_file():
         sys.path.append(str(user_folder))
@@ -282,7 +292,7 @@ def _set_mpconfig_var():
         )
 
 
-def _get_vm_metadata():
+def _get_vm_metadata() -> Mapping[str, Any]:
     """Use local request to get VM metadata."""
     vm_uri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01"
     req = urllib.request.Request(vm_uri)
@@ -293,7 +303,7 @@ def _get_vm_metadata():
     return metadata if isinstance(metadata, dict) else {}
 
 
-def _get_vm_fqdn():
+def _get_vm_fqdn() -> str:
     """Get the FQDN of the host."""
     az_region = _get_vm_metadata().get("compute", {}).get("location")
     return ".".join(
@@ -377,6 +387,7 @@ def _check_kql_prereqs():
 
 # pylint: disable=broad-except
 def _check_nb_check_ver():
+    """Check the version of nb_check and optionally update."""
     nb_check_path = "utils/nb_check.py"
     gh_file = ""
     curr_file = ""
@@ -416,7 +427,7 @@ def _check_nb_check_ver():
     return False
 
 
-def _get_file_ver(file_text):
+def _get_file_ver(file_text) -> Optional[str]:
     if not file_text:
         return None
     f_match = re.search(r"__version__\s*=\s*\"([\d.]+)\"", file_text)
