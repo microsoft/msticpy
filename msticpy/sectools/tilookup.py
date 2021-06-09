@@ -332,7 +332,7 @@ class TILookup:
             if not provider_class:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
-                    + f"in config section {provider_entry}"
+                    f"in config section {provider_entry}"
                 )
                 continue
 
@@ -471,6 +471,7 @@ class TILookup:
             3. Iterable of observables - IoCTypes will be inferred
         obs_col : str, optional
             DataFrame column to use for observables, by default None
+            ("col" and "column" are also aliases for this parameter)
         ioc_type_col : str, optional
             DataFrame column to use for IoCTypes, by default None
         ioc_query_type: str, optional
@@ -488,6 +489,8 @@ class TILookup:
             DataFrame of results
 
         """
+        obs_col = obs_col or kwargs.pop("col", kwargs.pop("column", None))
+
         result_list: List[pd.DataFrame] = []
         selected_providers = self._select_providers(providers, prov_scope)
         if not selected_providers:
@@ -616,3 +619,5 @@ class TILookup:
 
         """
         return browse_results(data=data, severities=severities, **kwargs)
+
+    browse = browse_results

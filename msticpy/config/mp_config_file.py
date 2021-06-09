@@ -176,7 +176,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         """
         if backup and Path(file).is_file():
             Path(file).replace(f"{file}.save_{datetime.now().strftime('%H%M%S')}")
-        with open(file, "w+") as mp_hdl:
+        with open(file, "w") as mp_hdl:
             yaml.safe_dump(self.settings, mp_hdl)
 
     def show_kv_secrets(self, show: bool = True):

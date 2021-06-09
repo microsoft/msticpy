@@ -14,6 +14,7 @@ import warnings
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
+import yaml
 
 import ipywidgets as widgets
 import pandas as pd
@@ -36,8 +37,10 @@ from ..common.utility import (
     md,
     unit_testing,
     is_ipython,
+    search_for_file,
 )
-from ..common.wsconfig import WorkspaceConfig
+from ..config import MpConfigFile
+from .azure_ml_tools import check_versions as check_versions_aml, is_in_aml
 from .user_config import load_user_defaults
 
 __version__ = VERSION
@@ -102,19 +105,7 @@ valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
 <br>You can load and run the first two of these from the Azure Sentinel
-notebooks tab
-"""
-
-
-_MISSING_MPCONFIG_LOCAL_ERR = f"""
-<h3><font color='orange'>Warning: no <i>msticpyconfig.yaml</i> found</h3></font>
-No 'msticpyconfig.yaml' was found in the current directory and
-the MSTICPYCONFIG environment variable is either not set or does not point
-to a valid file.<br>
-Some functionality (such as Threat Intel lookups) will not function without
-valid configuration settings in this file.<br>
-The following resources will help you set up your configuration:
-<ul>{"".join(_HELP_URIS)}</ul>
+<b>Notebooks</b> tab
 """
 
 
@@ -264,10 +255,13 @@ def init_notebook(
     _VERBOSE(verbose)
 
     display(HTML("<hr><h4>Starting Notebook initialization...</h4>"))
-    ver_out = io.StringIO()
-    with redirect_stdout(ver_out):
+    if is_in_aml():
+        check_versions_aml(*_get_aml_globals(namespace))
+
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
         check_version()
-        _pr_output(ver_out.getvalue())
+        _pr_output(stdout_cap.getvalue())
 
     _pr_output("Processing imports....")
     imp_ok = _global_imports(
@@ -278,7 +272,7 @@ def init_notebook(
         conf_ok = True
     else:
         _pr_output("Checking configuration....")
-        conf_ok, _ = _check_config()
+        conf_ok = _get_or_create_config()
 
     _pr_output("Setting notebook options....")
     _set_nb_options(namespace)
@@ -292,10 +286,10 @@ def init_notebook(
             InteractiveShell.showtraceback
         )
 
-    user_def_out = io.StringIO()
-    with redirect_stdout(user_def_out):
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
         prov_dict = load_user_defaults()
-        _pr_output(user_def_out.getvalue())
+        _pr_output(stdout_cap.getvalue())
 
     if prov_dict:
         namespace.update(prov_dict)
@@ -351,6 +345,19 @@ def _extract_pkg_name(
     return import_item  # type: ignore
 
 
+PY_VER_VAR = "REQ_PYTHON_VER"
+MP_VER_VAR = "REQ_MSTICPY_VER"
+MP_EXTRAS = "REQ_MP_EXTRAS"
+
+
+def _get_aml_globals(namespace: Dict[str, Any]):
+    """Return global values if found."""
+    py_ver = namespace.get(PY_VER_VAR, "3.6")
+    mp_ver = namespace.get(MP_VER_VAR, __version__)
+    extras = namespace.get(MP_EXTRAS)
+    return py_ver, mp_ver, extras
+
+
 def _global_imports(  # noqa: MC0001
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
@@ -401,55 +408,83 @@ def _global_imports(  # noqa: MC0001
         return False
 
 
-def _check_config() -> Tuple[  # noqa: MC0001
-    bool, Optional[Tuple[List[str], List[str]]]
-]:
-    config_ok = True
-    errs, warns = [], []
-    warning_issued = False
+_AZ_SENT_ERRS = [
+    "Missing or empty 'AzureSentinel' section",
+    "Missing or empty 'Workspaces' key in 'AzureSentinel' section",
+]
+
+
+def _verify_no_azs_errors(errs):
+    """Verify none of the Azure Sentinel errors appear in `errs`."""
+    return all(az_err not in errs for az_err in _AZ_SENT_ERRS)
+
+
+def _get_or_create_config() -> bool:
+    # Cases
+    # 1. Env var set and mpconfig exists -> goto 4
+    # 2. Env var set and mpconfig file not exists - warn and continue
+    # 3. search_for_file finds mpconfig -> goto 4
+    # 4. if file and check_file_contents -> return ok
+    # 5. search_for_file(config.json)
+    # 6. If config.json -> import into mpconfig and save
+    # 7. Error - no Azure sentinel config
     mp_path = os.environ.get("MSTICPYCONFIG")
-    if mp_path and not Path(mp_path).exists():
-        # Env var configured but invalid path
-        warns = ["MSTICPYCONFIG path is invalid"]
+    if mp_path and not Path(mp_path).is_file():
         display(HTML(_MISSING_MPCONFIG_ENV_ERR))
-        warning_issued = True
-    mp_path = mp_path or "./msticpyconfig.yaml"
-    if not Path(mp_path).exists():
-        warns = ["MSTICPYCONFIG not found"]
-        if not warning_issued:
-            display(HTML(_MISSING_MPCONFIG_LOCAL_ERR))
-        config_ok = False
-    else:
+    if not mp_path or not Path(mp_path).is_file():
+        mp_path = search_for_file("msticpyconfig,yaml", paths=[".", ".."])
+
+    if mp_path:
         try:
             std_out_cap = io.StringIO()
             with redirect_stdout(std_out_cap):
-                errs, warns = validate_config(config_file=mp_path)
-            if errs or warns:
-                _pr_output(std_out_cap.getvalue())
+                errs, _ = validate_config(config_file=mp_path)
             if errs:
-                config_ok = False
+                _pr_output(std_out_cap.getvalue())
+            if _verify_no_azs_errors(errs):
+                # If the mpconfig has an Azure Sentinel config, return here
+                return True
         # pylint: disable=broad-except
         except Exception as err:
-            config_ok = False
             errs.append(f"Exception while checking configuration:\n{err}")
             _pr_output(f"Exception while checking configuration:\n{type(err)} - {err}")
             _pr_output("\n".join(traceback.format_tb(err.__traceback__)))
             _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
-    # If we haven't found a config, try loading WorkspaceConfig
-    if not config_ok:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            std_out_cap = io.StringIO()
-            with redirect_stdout(std_out_cap):
-                ws_config = WorkspaceConfig(interactive=False)
-            if not std_out_cap.getvalue():
-                _pr_output(std_out_cap.getvalue())
-        config_ok = ws_config.config_loaded
-    if not config_ok:
-        errs.append("No valid configuration for Azure Sentinel found.")
-        _pr_output("No valid configuration for Azure Sentinel found.")
-    return config_ok, (errs, warns)
+
+    # Look for a config.json
+    config_json = search_for_file("config.json", paths=[".", ".."])
+    if config_json:
+        # if we found one, use it to populate msticpyconfig.yaml
+        _populate_config_to_mp_config(mp_path, config_json)
+        return True
+
+    _pr_output("No valid configuration for Azure Sentinel found.")
+    return False
+
+
+def _populate_config_to_mp_config(mp_path, config_json):
+    """Populate new or existing msticpyconfig with settings from config.json."""
+    mp_path = mp_path or "./msticpyconfig.yaml"
+    mp_config_convert = MpConfigFile(file=config_json)
+    azs_settings = mp_config_convert.map_json_to_mp_ws()
+    def_azs_settings = next(
+        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values())
+    )
+    if def_azs_settings:
+        mp_config_convert.settings["AzureSentinel"]["Workspaces"][
+            "Default"
+        ] = def_azs_settings
+    if Path(mp_path).exists():
+        # If there is an existing file read it in
+        mp_config_text = Path(mp_path).read_text()
+        mp_config_settings = yaml.safe_load(mp_config_text)
+        # update exist settings with the AzSent settings from config.json
+        mp_config_settings.update(mp_config_convert.settings)
+        # update MpConfigFile with the merged settings
+        mp_config_convert.settings = mp_config_settings
+    # Save the file
+    mp_config_convert.save_to_file(mp_path, backup=True)
 
 
 def _set_nb_options(namespace):
@@ -535,7 +570,7 @@ def _imp_from_package(
     try:
         # target could be a module
         obj = importlib.import_module(f".{tgt}", pkg)
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         # if not, it must be an attribute (class, func, etc.)
         try:
             mod = importlib.import_module(pkg)
