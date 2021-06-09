@@ -52,12 +52,6 @@ stages:
       displayName: 'Use Python $(python.version)'
       inputs:
         versionSpec: '$(python.version)'
-    - script: |
-        pip install --upgrade pip==20.2.4 wheel setuptools
-        if exist requirements.txt python -m pip install -r requirements.txt
-        if exist requirements-all.txt python -m pip install -r requirements-all.txt
-        python -m pip install -e .
-      displayName: 'Install package and dependencies'
     - task: Cache@2
       displayName: Cache pip packages
       continueOnError: True
@@ -65,6 +59,11 @@ stages:
         key: python | "$(Agent.OS)"
         path: $(PIP_CACHE_DIR)
         restoreKeys: python
+    - script: |
+        pip install --upgrade pip==20.2.4 wheel setuptools
+        python -m pip install -r requirements-all.txt
+        python -m pip install -e .
+      displayName: 'Install package and dependencies'
     - script: |
         echo Sphinx Documentation Build
         python -m pip install --upgrade Pygments>=2.3.1 setuptools>=41.0.1 docutils>=0.14 mock>=1.0.1 pillow==5.4.1 alabaster^>=0.7,^<0.8,!=0.7.5
@@ -77,12 +76,12 @@ stages:
         python -m pip install --upgrade pytest pytest-azurepipelines
         python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4
-        pytest tests --junitxml=junit/test-results.xml --cov=msticnb --cov-report=xml
+        pytest tests --junitxml=junit/test-results.xml --cov=msticpy --cov-report=xml
       displayName: pytest
       env:
         MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/testdata/msticpyconfig-test.yaml
-        MAXMIND_AUTH: $(maxmind_auth)
-        IPSTACK_AUTH: $(ipstack_auth)
+        MAXMIND_AUTH: $(keys.maxmind_auth)
+        IPSTACK_AUTH: $(keys.ipstack_auth)
         MSTICPY_TEST_NOSKIP: 1
       condition: succeededOrFailed()
       continueOnError: true
