@@ -19,6 +19,7 @@ from typing import Any, Dict, Optional, Tuple
 from urllib.error import HTTPError, URLError
 
 import cryptography as crypto
+from cryptography.x509 import Certificate
 import pandas as pd
 import requests
 import tldextract
@@ -194,7 +195,7 @@ class DomainValidator:
         except DNSException:
             return False
 
-    def in_abuse_list(self, url_domain: str) -> Tuple:
+    def in_abuse_list(self, url_domain: str) -> Tuple[bool, Optional[Certificate]]:
         """
         Validate if a domain or URL's SSL cert the abuse.ch SSL Abuse List.
 
@@ -205,10 +206,12 @@ class DomainValidator:
 
         Returns
         -------
-        result:
+        Tuple[bool, Optional[Certificate]]:
             True if valid in the list, False if not.
+            Certificate - the certificate loaded from the domain.
 
         """
+        x509: Optional[Certificate]
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
             # pylint: disable=no-value-for-parameter
@@ -226,7 +229,7 @@ class DomainValidator:
             )
         except Exception:  # pylint: disable=broad-except
             result = False
-            x509 = None  # type: ignore
+            x509 = None
 
         return result, x509
 

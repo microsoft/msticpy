@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from pytest import raises
+import pytest
 
 from msticpy.common.exceptions import MsticpyException
 from msticpy.data import DataEnvironment
@@ -11,7 +11,15 @@ from msticpy.data.drivers import import_driver
 
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
 from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
-from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
+
+_RGE_IMP_OK = False
+try:
+    from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
+
+    _RGE_IMP_OK = True
+except ImportError:
+    pass
+
 
 _JSON_RESP = {
     "token_type": "Bearer",
@@ -28,11 +36,11 @@ def test_MDATP():
     driver_cls = import_driver(DataEnvironment.MDATP)
     mdatp = driver_cls()
     assert isinstance(mdatp, MDATPDriver)
-    with raises(ConnectionError):
+    with pytest.raises(ConnectionError):
         mdatp.connect(
             connection_str="tenant_id=Test;client_id=Test;client_secret=Test;apiRoot=Test;apiVersion=Test"
         )
-    with raises(MsticpyException):
+    with pytest.raises(MsticpyException):
         mdatp.connect(app_name="MDATP_TEST")
 
 
@@ -42,6 +50,7 @@ def test_SecurityGraph():
     assert isinstance(sec_graph, SecurityGraphDriver)
 
 
+@pytest.mark.skipif(not _RGE_IMP_OK, reason="Partial msticpy install")
 def test_ResourceGraph():
     driver_cls = import_driver(DataEnvironment.ResourceGraph)
     resource_graph = driver_cls()
