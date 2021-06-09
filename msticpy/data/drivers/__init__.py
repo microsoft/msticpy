@@ -26,6 +26,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Splunk: ("splunk_driver", "SplunkDriver"),
     DataEnvironment.Mordor: ("mordor_driver", "MordorDriver"),
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
+    DataEnvironment.ResourceGraph: ("resource_graph_driver", "ResourceGraphDriver"),
 }
 
 
