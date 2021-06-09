@@ -149,10 +149,6 @@ query but are available if you want to search more widely.
 You will usually need to supply an authorization (API) key and in some cases a
 user ID for each provider.
 
-.. note:: For GreyNoise an API key is optional to use the ipv4 lookup, leaving the
-  AuthKey field of your config as an empty string will use the [community API](https://developer.greynoise.io/docs/using-the-greynoise-community-api#:~:text=The%20Community%20API%20provides%20a%20free%20resource%20to,all%20users%20with%20their%20GreyNoise%20account%20API%20key)
-  A valid API is key is required to use the `full` or `quick` query types that
-  utilise the GreyNoise enterprise API.
 
 .. note:: For LogAnalytics/Azure Sentinel providers, you will need the workspace
   ID and tenant ID and will need to authenticate in order to access the

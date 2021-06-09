@@ -49,7 +49,7 @@ class TestLocalDataQuery(unittest.TestCase):
         data_path = get_test_data_path()
         query_path = str(Path(get_test_data_path()) / "localdata")
         qry_prov = QueryProvider(
-            "LocalData", data_paths=[data_path], query_paths=[query_path]
+            "LocalData", data_paths=[str(data_path)], query_paths=[query_path]
         )
         queries = qry_prov.list_queries()
         self.assertGreaterEqual(len(queries), 11)

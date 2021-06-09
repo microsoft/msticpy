@@ -1,8 +1,43 @@
-Blog Articles
-=============
+Articles, Labs and other Resources
+==================================
+
+MSTICPy Video - Overview and Extending MSTICPy
+----------------------------------------------
+One hour talk introducing MSTICPy, showing data connectors,
+pivot functions and notebooklets.
+Second part shows how to extend MSTICPy by adding your own queries
+and Pivot Functions
+`Watch on YouTube <https://www.youtube.com/watch?v=m3YElHwZX1U&list=RDCMUCsMica-v34Irf9KVTh6xx-g&index=1>`__
+
+.. figure:: _static/launch-space.png
+   :alt: YouTube video of Microsoft Launch Space talk
+   :height: 2.0in
+
+   YouTube video of Microsoft Launch Space talk
+
+MSTICPy Lab
+-----------
+Try out MSTICPy and Notebooks in MyBinder.org. No installation necessary.
+`MSTICPy Lab <https://github.com/Azure-Samples/azure-python-labs/blob/main/9-MSTICPy/README.md>`__
+
+.. figure:: _static/msticpy-lab.png
+   :alt: MSTICPy lab on Azure Sample GitHub
+   :height: 2.0in
+
+   MSTICPy lab on Azure Sample GitHub
+
+Notebook resources from PyCon 2021 and LaunchSpace talk
+-------------------------------------------------------
+`GitHub repo <https://github.com/ianhelle/pycon2021>`__
 
 Blog articles on our Medium account
 -----------------------------------
+
+.. figure:: _static/msticpy-medium.png
+   :alt: MSTICPy articles on Medium.com
+   :height: 2.0in
+
+   MSTICPy articles on Medium.com
 
 `MSTICPy v1.0.0 Overview and Tour <https://msticpy.medium.com/msticpy-v1-0-0-and-jupyter-notebooks-in-azure-sentinel-an-update-ac2f6df61f9e?source=friends_link&sk=721420baba0796878bf6c1147a28512d>`__
 April 26, 2021

@@ -759,12 +759,12 @@ def get_items_from_zip(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
 
     """
     file_obj = io.BytesIO(binary)
-    zip_archive = zipfile.ZipFile(file_obj, mode="r")
-    archive_dict = {}
-    for item in zip_archive.namelist():
-        archive_file = zip_archive.read(item)
-        archive_dict[item] = archive_file
-    return "zip", archive_dict
+    with zipfile.ZipFile(file_obj, mode="r") as zip_archive:
+        archive_dict = {}
+        for item in zip_archive.namelist():
+            archive_file = zip_archive.read(item)
+            archive_dict[item] = archive_file
+        return "zip", archive_dict
 
 
 @export
@@ -785,16 +785,16 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
     """
     file_obj = io.BytesIO(binary)
     # Open tarfile
-    tar = tarfile.open(mode="r", fileobj=file_obj)
-    archive_dict = dict()  # Dict[str, Optional[bytes]]
-    # Iterate over every member
-    for item in tar.getnames():
-        tar_file = tar.extractfile(item)
-        if tar_file:
-            archive_dict[item] = tar_file.read()
-        else:
-            archive_dict[item] = b""
-    return "tar", archive_dict
+    with tarfile.open(mode="r", fileobj=file_obj) as tar:
+        archive_dict = dict()  # Dict[str, Optional[bytes]]
+        # Iterate over every member
+        for item in tar.getnames():
+            tar_file = tar.extractfile(item)
+            if tar_file:
+                archive_dict[item] = tar_file.read()
+            else:
+                archive_dict[item] = b""
+        return "tar", archive_dict
 
 
 @export

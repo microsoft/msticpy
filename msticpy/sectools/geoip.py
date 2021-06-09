@@ -596,7 +596,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         if not Path(db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain the leaf dir
-            Path(db_folder).mkdir(exist_ok=True)
+            Path(db_folder).mkdir(exist_ok=True, parents=True)
         rand_int = random.randint(10000, 99999)  # nosec
         db_archive_path = Path(db_folder).joinpath(
             self._DB_ARCHIVE.format(rand=rand_int)

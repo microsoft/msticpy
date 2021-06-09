@@ -27,7 +27,9 @@ class MpConfigEdit(CompEditDisplayMixin):
     """Msticpy Configuration helper class."""
 
     def __init__(
-        self, settings: Optional[Union[Dict[str, Any], MpConfigFile, str]] = None
+        self,
+        settings: Optional[Union[Dict[str, Any], MpConfigFile, str]] = None,
+        conf_filepath: str = None,
     ):
         """
         Initialize instance of MpConfigEdit.
@@ -44,14 +46,24 @@ class MpConfigEdit(CompEditDisplayMixin):
             If None, the settings will be read from the
             default (via MSTICPYCONFIG variable)
 
+        conf_filepath : str
+            If settings are passed as MPConfigFile instance or a dict,
+            this parameter will override the file path used to save the
+            settings.
+            If settings is a file path, this parameter is ignored.
+
         """
         if isinstance(settings, MpConfigFile):
             self.mp_conf_file = MpConfigFile(settings=settings.settings)
+            if not self.mp_conf_file.current_file and conf_filepath:
+                self.mp_conf_file.current_file = conf_filepath
         elif isinstance(settings, dict):
             self.mp_conf_file = MpConfigFile(settings=settings)
+            if not self.mp_conf_file.current_file and conf_filepath:
+                self.mp_conf_file.current_file = conf_filepath
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile()
-            self.mp_conf_file.load_from_file(settings)
+            self.mp_conf_file.load_from_file(file=settings)
         else:
             self.mp_conf_file = MpConfigFile()
             self.mp_conf_file.load_default()
@@ -68,10 +80,11 @@ class MpConfigEdit(CompEditDisplayMixin):
             value=self.current_config_file,
             layout=widgets.Layout(width="75%"),
         )
-        self.btn_save = widgets.Button(description="Save File")
+        self.btn_save = widgets.Button(description="Save Settings")
         self.btn_save.on_click(self._save_file)
         self.btn_validate = widgets.Button(description="Validate Settings")
         self.btn_validate.on_click(self._validate_config)
+        self.cb_backup = widgets.Checkbox(description="Create backup", value=False)
         vbox = widgets.VBox(
             [
                 self.txt_current_file,
@@ -93,7 +106,9 @@ class MpConfigEdit(CompEditDisplayMixin):
     def _save_file(self, btn):
         del btn
         if self.txt_current_file.value:
-            self.mp_conf_file.save_to_file(self.txt_current_file.value)
+            self.mp_conf_file.save_to_file(
+                self.txt_current_file.value, backup=self.cb_backup.value
+            )
 
     def _validate_config(self, btn):
         del btn

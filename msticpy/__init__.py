@@ -37,7 +37,7 @@ from .common.check_version import check_version
 from . import sectools
 from . import nbtools
 from . import data
-
+from .config.mp_config_edit import MpConfigEdit, MpConfigFile
 from ._version import VERSION
 
 __version__ = VERSION
