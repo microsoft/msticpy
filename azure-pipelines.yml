@@ -241,7 +241,7 @@ stages:
         testResultsFiles: '**/*-results.xml'
         testRunTitle: 'Python $(python.version)'
 - stage: CreatePythonPackage
-  displayName: Create msticpnb distribution package and publish msticnb artifact
+  displayName: Create msticpy distribution package and publish msticpy artifact
   variables:
     # This is run explicity so does not need to be auto-injected
     skipComponentGovernanceDetection: true
