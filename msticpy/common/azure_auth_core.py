@@ -100,7 +100,7 @@ def az_connect_core(
     logging.basicConfig(level=logging.WARNING, handlers=[handler])
 
     # Create credentials and connect to the subscription client to validate
-    creds = ChainedTokenCredential(*auths)
+    creds = ChainedTokenCredential(*auths)  # type: ignore
     legacy_creds = CredentialWrapper(creds)
     if not creds:
         raise CloudError("Could not obtain credentials.")
