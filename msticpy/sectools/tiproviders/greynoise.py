@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-Greynoise Provider.
+GreyNoise Provider.
 
 Input can be a single IoC observable or a pandas DataFrame containing
 multiple observables. Processing may require a an API key and
@@ -22,8 +22,8 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-class Greynoise(HttpProvider):
-    """Greynoise Lookup."""
+class GreyNoise(HttpProvider):
+    """GreyNoise Lookup."""
 
     _BASE_URL = "https://api.greynoise.io"
 

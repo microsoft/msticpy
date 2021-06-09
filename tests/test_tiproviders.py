@@ -291,7 +291,7 @@ class TestTIProviders(unittest.TestCase):
         self.exercise_provider("VirusTotal")
 
     def test_greynoise(self):
-        self.exercise_provider("Greynoise")
+        self.exercise_provider("GreyNoise")
 
     def exercise_provider(self, provider_name):
         ti_lookup = self.ti_lookup
@@ -333,7 +333,7 @@ class TestTIProviders(unittest.TestCase):
     def verify_result(self, result):
         self.assertIsNotNone(result)
         for prov, lu_result in result[1]:
-            self.assertIn(prov, ["OTX", "XForce", "VirusTotal", "Greynoise"])
+            self.assertIn(prov, ["OTX", "XForce", "VirusTotal", "GreyNoise"])
             self.assertIsNotNone(lu_result.ioc)
             self.assertIsNotNone(lu_result.ioc_type)
             if lu_result.result:
