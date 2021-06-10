@@ -463,6 +463,20 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._auto_update = auto_update
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(self._dbfolder)
+        #############################
+        # DEBUG
+        print("DBFolder setting", self.settings.args.get("DBFolder"))
+        db_folder = self.settings.args.get("DBFolder")
+        if db_folder:
+            print("Valid path", Path(db_folder).resolve(), Path(db_folder).exists())
+        print("_dbpath", self._dbpath)
+        if self._dbpath:
+            print("Valid path", Path(self._dbpath).exists())
+        print("API Key", self._api_key)
+        print("MSTICPYCONFIG", os.environ.get("MSTICPYCONFIG"))
+        print("MAXMIND_AUTH", os.environ.get("MAXMIND_AUTH"))
+        # end DEBUG #################
+
         if not self._dbpath:
             raise MsticpyUserConfigError(
                 "No usable GeoIP Database could be found.",
