@@ -164,9 +164,9 @@ stages:
         vmImage: windows-latest
       variables:
         python.version: '$(python.version)'
-        dependsOn:
-        - Linters_pylint
-        - Linters_others
+      dependsOn:
+      - Linters_pylint
+      - Linters_others
       steps:
       - task: PublishTestResults@2
         displayName: 'Publish Test Results'
