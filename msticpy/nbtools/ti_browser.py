@@ -51,8 +51,8 @@ def browse_results(
     disp_func = ti_details_display(ti_data=data)
     if not opts and not data.empty:
         print("No results at TI Severities 'warning' or 'high'")
-        print("To display 'information' category results call with the parameter:")
-        print("severities=['information', 'warning' or 'high']")
+        print("Displaying only 'information' severity items.")
+        opts = get_ti_select_options(ti_data=data, severities="all")
 
     return SelectItem(item_dict=opts, action=disp_func, **kwargs)
 
