@@ -49,7 +49,7 @@ def aml_file_sys(tmpdir_factory):
     """Create fake aml file system."""
     mp_text = Path("tests").joinpath(_MP_CONFIG).read_text()
     root = tmpdir_factory.mktemp("aml-test")
-    users = root.mkdir("users")
+    users = root.mkdir("Users")
     user_dir = users.mkdir("aml_user")
     user_dir.mkdir("utils")
     user_dir.mkdir("subdir")

@@ -248,10 +248,10 @@ def _disp_html(text: str):
 def get_aml_user_folder() -> Optional[Path]:
     """Return the root of the user folder."""
     path_parts = Path(".").absolute().parts
-    if "users" not in path_parts:
+    if "Users" not in path_parts:
         return None
     # find the index of the last occurence of "users"
-    users_idx = len(path_parts) - path_parts[::-1].index("users")
+    users_idx = len(path_parts) - path_parts[::-1].index("Users")
     # the user folder is one item below this
     if len(path_parts) < users_idx + 1:
         return None
