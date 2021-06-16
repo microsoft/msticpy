@@ -454,7 +454,7 @@ class VTLookup:
                 obs_batch = []
 
     # pylint: disable=too-many-arguments, too-many-branches
-    def _parse_vt_results(  # noqa: C901
+    def _parse_vt_results(  # noqa: C901 MC0001
         self,
         vt_results: Any,
         observable: str,
@@ -508,7 +508,7 @@ class VTLookup:
             observables = [observable]
 
         # pylint: disable=locally-disabled, consider-using-enumerate
-        for result_idx in range(0, len(results_to_parse)):
+        for result_idx in range(len(results_to_parse)):
             df_dict_vtresults = self._parse_single_result(
                 results_to_parse[result_idx], ioc_type
             )
@@ -524,25 +524,24 @@ class VTLookup:
             ):
                 df_dict_vtresults["Observable"] = observable
                 df_dict_vtresults["SourceIndex"] = source_idx
-            else:
+            elif "resource" in results_to_parse[result_idx]:
                 # If we submitted multiple values in a batch
                 # we assume (hope) that the ordering of the response is the same
-                # as in the request. We try our best to remarry the observable
+                # as in the request. We try our best to re-marry the observable
                 # and source index
-                if "resource" in results_to_parse[result_idx]:
-                    vt_resource = results_to_parse[result_idx]["resource"]
-                    df_dict_vtresults["Observable"] = vt_resource
-                    if vt_resource in source_row_index:
-                        df_dict_vtresults["SourceIndex"] = source_row_index[vt_resource]
-                    else:
-                        df_dict_vtresults["SourceIndex"] = source_row_index[
-                            observables[result_idx]
-                        ]
+                vt_resource = results_to_parse[result_idx]["resource"]
+                df_dict_vtresults["Observable"] = vt_resource
+                if vt_resource in source_row_index:
+                    df_dict_vtresults["SourceIndex"] = source_row_index[vt_resource]
                 else:
-                    df_dict_vtresults["Observable"] = observables[result_idx]
                     df_dict_vtresults["SourceIndex"] = source_row_index[
                         observables[result_idx]
                     ]
+            else:
+                df_dict_vtresults["Observable"] = observables[result_idx]
+                df_dict_vtresults["SourceIndex"] = source_row_index[
+                    observables[result_idx]
+                ]
 
             new_results = pd.concat(
                 objs=[self.results, df_dict_vtresults], ignore_index=True, axis=0
