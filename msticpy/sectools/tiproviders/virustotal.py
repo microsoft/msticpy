@@ -66,6 +66,12 @@ class VirusTotal(HttpProvider):
 
     _REQUIRED_PARAMS = ["API_KEY"]
 
+    _VT_DETECT_RESULTS = {
+        "detected_urls": ("url", "scan_date"),
+        "detected_downloaded_samples": ("sha256", "date"),
+        "detected_communicating_samples": ("sha256", "date"),
+    }
+
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
@@ -86,9 +92,11 @@ class VirusTotal(HttpProvider):
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, TISeverity.information, "Not found."
 
-        result_dict = {}
-        result_dict["verbose_msg"] = response.raw_result.get("verbose_msg", None)
-        result_dict["response_code"] = response.raw_result.get("response_code", None)
+        result_dict = {
+            "verbose_msg": response.raw_result.get("verbose_msg", None),
+            "response_code": response.raw_result.get("response_code", None),
+            "positives": 0,
+        }
 
         if response.ioc_type in [
             "url",
@@ -102,23 +110,15 @@ class VirusTotal(HttpProvider):
             result_dict["positives"] = response.raw_result.get("positives", 0)
 
         else:
-            if "detected_urls" in response.raw_result:
-                self._extract_url_results(
-                    response=response,
-                    result_dict=result_dict,
-                    hit_type="detected_urls",
-                    item_type="url",
-                    date_name="scan_date",
-                )
-
-            if "detected_downloaded_samples" in response.raw_result:
-                self._extract_url_results(
-                    response=response,
-                    result_dict=result_dict,
-                    hit_type="detected_downloaded_samples",
-                    item_type="sha256",
-                    date_name="date",
-                )
+            for hit_type, params in self._VT_DETECT_RESULTS.items():
+                if hit_type in response.raw_result:
+                    self._extract_url_results(
+                        response=response,
+                        result_dict=result_dict,
+                        hit_type=hit_type,
+                        item_type=params[0],
+                        date_name=params[1],
+                    )
 
         if "positives" in result_dict:
             if result_dict["positives"] > 1:
@@ -154,12 +154,9 @@ class VirusTotal(HttpProvider):
         # positives are listed per detected_url so we need to
         # pull those our and sum them.
         positives = sum(
-            [
-                item["positives"]
-                for item in response.raw_result[hit_type]
-                if "positives" in item
-                and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S")
-                > time_scope
-            ]
+            item["positives"]
+            for item in response.raw_result[hit_type]
+            if "positives" in item
+            and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
         )
-        result_dict["positives"] = positives
+        result_dict["positives"] += positives

@@ -11,8 +11,14 @@ from typing import Any, Dict, Optional, Tuple, Union
 import ipywidgets as widgets
 
 from .._version import VERSION
-from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
-from ..common.secret_settings import SecretsClient
+
+try:
+    from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
+    from ..common.secret_settings import SecretsClient
+
+    _KEYVAULT = True
+except ImportError:
+    _KEYVAULT = False
 from .ce_common import print_debug, py_to_widget, widget_to_py
 from .comp_edit import CompEditDisplayMixin, CompEditStatusMixin, SettingsControl
 from .mp_config_control import MpConfigControls
@@ -189,12 +195,16 @@ class ArgControl(SettingsControl, CompEditStatusMixin):
             self.set_status("No secret value to store.")
             return
         kv_client = self.kv_client
-        result, status, kv_client = _set_kv_secret_value(
-            setting_path=self.setting_path,
-            item_name=self.name,
-            value=sec_value,
-            kv_client=kv_client,
-        )
+        if _KEYVAULT:
+            result, status, kv_client = _set_kv_secret_value(
+                setting_path=self.setting_path,
+                item_name=self.name,
+                value=sec_value,
+                kv_client=kv_client,
+            )
+        else:
+            self.set_status("Azure keyvault support is not installed.")
+            return
         if result:
             self.set_status(status)
             self.kv_client = kv_client
@@ -237,44 +247,59 @@ def get_arg_ctrl(setting_path, var_name, mp_controls):
     return arg_ctrl
 
 
-def _set_kv_secret_value(
-    setting_path: str,
-    item_name: str,
-    value: str,
-    kv_client: Optional[BHKeyVaultClient] = None,
-) -> Tuple[bool, str, Optional[BHKeyVaultClient]]:
-    """
-    Set the Key Vault secret to `value`.
+if _KEYVAULT:
 
-    Parameters
-    ----------
-    setting_path : str
-        The setting path (parent path)
-    item_name : str
-        The setting name
-    value : str
-        The value to store
-    kv_client : Optional[BHKeyVaultClient], optional
-        Cached Key Vault secrets client if one is already
-        attached to the ArgControl, by default None
+    def _set_kv_secret_value(
+        setting_path: str,
+        item_name: str,
+        value: str,
+        kv_client: Any = None,
+    ) -> Tuple[bool, str, Any]:
+        """
+        Set the Key Vault secret to `value`.
 
-    Returns
-    -------
-    Tuple[bool, str, Optional[BHKeyVaultClient]]
-        True - if success
-        Status - status string
-        KeyVault secrets client (used to cache the client)
+        Parameters
+        ----------
+        setting_path : str
+            The setting path (parent path)
+        item_name : str
+            The setting name
+        value : str
+            The value to store
+        kv_client : Optional[BHKeyVaultClient], optional
+            Cached Key Vault secrets client if one is already
+            attached to the ArgControl, by default None
 
-    """
-    try:
-        secret_name = SecretsClient.format_kv_name(f"{setting_path}.{item_name}")
-        kv_client = kv_client or BHKeyVaultClient()
-        kv_client.set_secret(secret_name, value)
-        return True, f"Saved as {secret_name}", kv_client
-    except MsticpyKeyVaultConfigError:
-        return False, "Missing or invalid Key Vault configuration", None
-    except Exception as err:  # pylint: disable=broad-except
-        return False, str(err), None
+        Returns
+        -------
+        Tuple[bool, str, Optional[BHKeyVaultClient]]
+            True - if success
+            Status - status string
+            KeyVault secrets client (used to cache the client)
+
+        """
+        try:
+            secret_name = SecretsClient.format_kv_name(f"{setting_path}.{item_name}")
+            kv_client = kv_client or BHKeyVaultClient()
+            kv_client.set_secret(secret_name, value)
+            return True, f"Saved as {secret_name}", kv_client
+        except MsticpyKeyVaultConfigError:
+            return False, "Missing or invalid Key Vault configuration", None
+        except Exception as err:  # pylint: disable=broad-except
+            return False, str(err), None
+
+
+else:
+
+    def _set_kv_secret_value(
+        setting_path: str,
+        item_name: str,
+        value: str,
+        kv_client: Any = None,
+    ) -> Tuple[bool, str, Any]:
+        """Return empty response function if Key Vault cannot be initialized."""
+        del setting_path, item_name, value, kv_client
+        return False, "Azure keyvault libraries are not installed", None
 
 
 class UserDefQryProvCtrl(SettingsControl):

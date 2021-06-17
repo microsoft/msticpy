@@ -247,7 +247,7 @@ def _default_max_buffer(max_default, default, unit) -> int:
     if unit == TimeUnit.day:
         return max(28, mag_default)
     if unit == TimeUnit.hour:
-        return max(48, mag_default)
+        return max(72, mag_default)
     if unit == TimeUnit.week:
         return max(20, mag_default)
     return max(240, mag_default)
@@ -295,6 +295,15 @@ class QueryTime(RegisteredWidget):
     ]
 
     _label_style = {"description_width": "initial"}
+
+    IDS_ATTRIBS = [
+        "origin_time",
+        "before",
+        "after",
+        "_query_start",
+        "_query_end",
+        "_label",
+    ]
 
     def __init__(
         self,
@@ -350,8 +359,8 @@ class QueryTime(RegisteredWidget):
         self._query_start = self._query_end = self.origin_time = datetime.utcnow
         self._get_time_parameters(**kwargs)
 
-        self.max_before = kwargs.pop("max_before", 0)
-        self.max_after = kwargs.pop("max_after", 0)
+        self.max_before = kwargs.pop("max_before", None)
+        self.max_after = kwargs.pop("max_after", None)
         self._adjust_max_before_after(self.max_before, self.max_after)
 
         # Call superclass to register
@@ -364,15 +373,8 @@ class QueryTime(RegisteredWidget):
             self._label,
             self._time_unit,
         ]
-        ids_attribs = [
-            "origin_time",
-            "before",
-            "after",
-            "_query_start",
-            "_query_end",
-            "_label",
-        ]
-        super().__init__(id_vals=ids_params, val_attrs=ids_attribs, **kwargs)
+
+        super().__init__(id_vals=ids_params, val_attrs=self.IDS_ATTRIBS, **kwargs)
 
         # Create widgets
         self._w_origin_dt = widgets.DatePicker(
@@ -1613,6 +1615,7 @@ class OptionButtons:
         self._debug = debug
         if self._debug:
             self._out = widgets.Output()
+        self._create_button_callbacks(self._buttons)
 
     @property
     def layout(self):

@@ -474,7 +474,8 @@ def _populate_config_to_mp_config(mp_path, config_json):
     if def_azs_settings:
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
-        ] = def_azs_settings
+        ] = def_azs_settings.copy()
+    mssg = f"Created '{mp_path}'' with Azure Sentinel settings."
     if Path(mp_path).exists():
         # If there is an existing file read it in
         mp_config_text = Path(mp_path).read_text()
@@ -483,8 +484,10 @@ def _populate_config_to_mp_config(mp_path, config_json):
         mp_config_settings.update(mp_config_convert.settings)
         # update MpConfigFile with the merged settings
         mp_config_convert.settings = mp_config_settings
+        mssg = f"Updated '{mp_path}'' with Azure Sentinel settings."
     # Save the file
     mp_config_convert.save_to_file(mp_path, backup=True)
+    _pr_output(mssg)
 
 
 def _set_nb_options(namespace):
