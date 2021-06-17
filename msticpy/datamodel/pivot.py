@@ -22,7 +22,7 @@ from .pivot_browser import PivotBrowser
 from .pivot_data_queries import add_data_queries_to_entities
 from .pivot_register import PivotRegistration
 from .pivot_register_reader import add_unbound_pivot_function, register_pivots
-from .pivot_ti_provider import add_ioc_queries_to_entities
+from .pivot_ti_provider import add_ioc_queries_to_entities, register_ti_pivot_providers
 from . import entities
 
 __version__ = VERSION
@@ -115,6 +115,9 @@ class Pivot:
 
         # load TI functions
         add_ioc_queries_to_entities(self.get_provider("TILookup"), container="ti")
+
+        # Add pivots from Pivot-capable TI providers
+        register_ti_pivot_providers(self.get_provider("TILookup"), self)
 
         # Add pivots from config registry
         register_pivots(

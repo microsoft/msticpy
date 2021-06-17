@@ -10,6 +10,7 @@
 from .iocextract import IoCExtract
 from .geoip import GeoLiteLookup, IPStackLookup, geo_distance
 from .tilookup import TILookup
+from .tiproviders.ti_provider_base import TIPivotProvider
 from .vtlookup import VTLookup
 from . import base64unpack as base64
 from . import process_tree_utils as ptree

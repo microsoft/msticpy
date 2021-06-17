@@ -12,9 +12,17 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Tuple, Iterable, Dict, Any
+from functools import partialmethod, partial
+from typing import Tuple, Any
 
-from .ti_provider_base import TIProvider, LookupResult, TISeverity, TILookupStatus
+from .ti_provider_base import (
+    TIProvider,
+    LookupResult,
+    TISeverity,
+    TILookupStatus,
+    TIPivotProvider,
+)
+from ...datamodel.entities import Dns, IpAddress
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -25,7 +33,7 @@ __author__ = "Mark Kendrick"
 
 
 @export
-class RiskIQ(TIProvider):
+class RiskIQ(TIProvider, TIPivotProvider):
     """RiskIQ Threat Intelligence Lookup."""
 
     _IOC_QUERIES: dict = {
@@ -77,23 +85,43 @@ class RiskIQ(TIProvider):
     _IOC_QUERIES["dns-rep"] = _IOC_QUERIES["hostname-rep"]
     _IOC_QUERIES["dns-summary"] = _IOC_QUERIES["hostname-summary"]
     _IOC_QUERIES["dns-trackers"] = _IOC_QUERIES["hostname-trackers"]
-    _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["hostname-whois"] 
+    _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["hostname-whois"]
+
+    _PIVOT_ENTITIES = {
+        prop: {"Dns": "DomainName", "IpAddress": "Address", "Host": "fqdn"}
+        for prop in [
+            "articles",
+            "artifacts",
+            "certificates",
+            "components",
+            "cookies",
+            "hostpair_children",
+            "hostpair_parents",
+            "resolutions",
+            "projects",
+            "malware",
+            "reputation",
+            "summary",
+            "trackers",
+            "whois",
+        ]
+    }
+    _PIVOT_ENTITIES["services"] = {"IpAddress": "Address"}
 
     def __init__(self, **kwargs):
         """Instantiate RiskIQ class."""
         super().__init__(**kwargs)
         ptanalyzer.init(
-            api_username=kwargs.get('ApiUsername'), 
-            api_key=kwargs.get('AuthKey')
+            api_username=kwargs.get("ApiUsername"), api_key=kwargs.get("AuthKey")
         )
-    
+
     def _severity_rep(self, classification):
         """Get the severity level for a reputation score classification."""
         return {
             "MALICIOUS": TISeverity.high,
             "SUSPICIOUS": TISeverity.warning,
             "UNKNOWN": TISeverity.information,
-            "GOOD": TISeverity.information
+            "GOOD": TISeverity.information,
         }.get(classification, TISeverity.information)
 
     def lookup_ioc(
@@ -127,23 +155,27 @@ class RiskIQ(TIProvider):
             return result
 
         result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        
+
         if query_type is None:
             prop = "ALL"
-        elif query_type not in [q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES]:
+        elif query_type not in [
+            q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
+        ]:
             result.result = False
             result.status = TILookupStatus.query_failed.value
-            result.details = 'ERROR: unsupported query type {}'.format(query_type)
+            result.details = "ERROR: unsupported query type {}".format(query_type)
             return result
         else:
-            prop = self._IOC_QUERIES.get("{0}-{1}".format(result.ioc_type, query_type),"ALL")
-        
+            prop = self._IOC_QUERIES.get(
+                "{0}-{1}".format(result.ioc_type, query_type), "ALL"
+            )
+
         try:
             obj = ptanalyzer.get_object(ioc)
             if prop == "ALL":
                 details = {
                     "summary": obj.summary.as_dict,
-                    "reputation": obj.reputation.as_dict
+                    "reputation": obj.reputation.as_dict,
                 }
                 if obj.summary.total == 0 and obj.reputation.score == 0:
                     result.result = False
@@ -151,15 +183,21 @@ class RiskIQ(TIProvider):
                     result.result = True
                 rep_severity = self._severity_rep(obj.reputation.classification)
                 result.set_severity(rep_severity)
-                #if 'articles' in obj.summary.available:
-                #    result.set_severity(max(rep_severity, TISeverity.high))
-                #elif 'projects' in obj.summary.available:
-                #    result.set_severity(max(rep_severity, TISeverity.warning))
-                #
-                # TODO: available prop is broken, fix in core lib, then re-enable
-                #
+                if (
+                    "malware_hashes" in obj.summary.available
+                    or "articles" in obj.summary.available
+                ):
+                    result.set_severity(max(rep_severity, TISeverity.high))
+                elif "projects" in obj.summary.available:
+                    result.set_severity(max(rep_severity, TISeverity.warning))
             else:
                 attr = getattr(obj, prop)
+                if prop == "reputation":
+                    result.set_severity(self._severity_rep(attr.classification))
+                elif prop == "malware_hashes" and len(attr) > 0:
+                    result.set_severity(TISeverity.high)
+                else:
+                    result.set_severity(TISeverity.information)
                 details = attr.as_dict
                 result.result = True
             result.details = details
@@ -170,7 +208,7 @@ class RiskIQ(TIProvider):
             result.details = "ERROR: {}".format(e.message)
             result.raw_result = e
             result.set_severeity(TISeverity.unknown)
-            
+
         return result
 
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
@@ -192,3 +230,57 @@ class RiskIQ(TIProvider):
         """
         # TODO why is this here? do I need it?
         return (True, TISeverity.information, None)
+
+    def _set_pivot_timespan(self, **kwargs):
+        """Set the pivot timespan and track whether it has changed.
+
+        :retval bool: whether the timespan changed.
+        """
+        changed = False
+        start = kwargs.pop(
+            "start",
+            self._pivot_get_timespan().start if self._pivot_get_timespan else None,
+        )
+        end = kwargs.pop(
+            "end", self._pivot_get_timespan().end if self._pivot_get_timespan else None
+        )
+        if start and end:
+            if start != self._pivot_timespan_start or end != self._pivot_timespan_end:
+                changed = True
+                self._pivot_timespan_start = start
+                self._pivot_timespan_end = end
+                ptanalyzer.set_date_range(start_date=start, end_date=end)
+        return changed
+
+    def pivot_value(self, prop, host, **kwargs):
+        """Perform a pivot on a single value."""
+        ts_changed = self._set_pivot_timespan(**kwargs)
+        obj = ptanalyzer.get_object(host)
+        if ts_changed and prop not in ["reputation", "summary", "whois"]:
+            obj.reset(prop)
+        return getattr(obj, prop).to_dataframe(**kwargs)
+
+    def register_pivots(self, pivot_reg: "PivotRegistration", pivot: "Pivot"):
+        self._pivot_get_timespan = pivot.get_timespan
+        self._pivot_timespan_start = None
+        self._pivot_timespan_end = None
+        base_reg = {
+            "entity_container_name": "RiskIQ",
+            "func_df_param_name": "data",
+            "func_df_col_param_name": "host",
+            "func_input_value_arg": "host",
+            "func_out_column_name": "query",
+        }
+        for prop, entity_map in self._PIVOT_ENTITIES.items():
+            reg = pivot_reg(
+                func_new_name=prop,
+                func_static_params={"prop": prop},
+                input_type="value",
+                entity_map=entity_map,
+                **base_reg
+            )
+            fun = partial(self.pivot_value)
+            fun.__doc__ = getattr(
+                ptanalyzer.Hostname, prop, getattr(ptanalyzer.IPAddress, prop)
+            ).__doc__
+            pivot.add_pivot_function(fun, pivot_reg=reg, container="RiskIQ")

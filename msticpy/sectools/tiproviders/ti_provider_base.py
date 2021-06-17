@@ -13,7 +13,7 @@ requests per minute for the account type that you have.
 
 """
 import abc
-from abc import ABC
+from abc import ABC, abstractmethod
 import collections
 import math  # noqa
 import pprint
@@ -475,6 +475,15 @@ class TIProvider(ABC):
             result.status = TILookupStatus.bad_format.value
 
         return result
+
+
+class TIPivotProvider(ABC):
+
+    """A class which provides pivot functions and a means of registering them."""
+
+    @abstractmethod
+    def register_pivots(self, pivot_reg: "PivotRegistration", pivotcls: "Pivot"):
+        pass
 
 
 # slightly stricter than normal URL regex to exclude '() from host string
