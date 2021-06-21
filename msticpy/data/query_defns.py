@@ -34,6 +34,8 @@ class DataFamily(Enum):
     AzureNetwork = 6
     MDATP = 7
     Splunk = 8
+    ResourceGraph = 9
+    Sumologic = 10
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
@@ -55,10 +57,12 @@ class DataFamily(Enum):
                 parsed_enum = cls[value]
             except KeyError:
                 # match to value if case is incorrect
+                # pylint: disable=no-member
                 for e_name, e_val in cls.__members__.items():
                     if e_name.upper() == value.upper():
                         return e_val
                 return cls.Unknown
+                # pylint: enable=no-member
         if isinstance(value, int):
             try:
                 parsed_enum = cls(value)
@@ -87,6 +91,8 @@ class DataEnvironment(Enum):
     LocalData = 6
     Splunk = 7
     Mordor = 8
+    ResourceGraph = 9
+    Sumologic = 10
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

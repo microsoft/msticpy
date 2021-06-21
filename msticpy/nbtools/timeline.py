@@ -292,12 +292,12 @@ def display_timeline_values(
     hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     # Create the Plot figure
-    title = title if title else "Timeline"
+    title = title or "Timeline"
     min_time = graph_df[time_column].min()
     max_time = graph_df[time_column].max()
     start_range = min_time - ((max_time - min_time) * 0.1)
     end_range = max_time + ((max_time - min_time) * 0.1)
-    height = height if height else _calc_auto_plot_height(series_count)
+    height = height or _calc_auto_plot_height(series_count)
 
     plot = figure(
         x_range=(start_range, end_range),
@@ -600,10 +600,6 @@ def _unpack_data_series_dict(data, **kwargs):
     time_column: str = kwargs.pop("time_column", "TimeGenerated")
     source_columns: list = kwargs.pop("source_columns", None)
 
-    if not source_columns:
-        source_columns = ["NewProcessName", "EventID", "CommandLine"]
-    def_source_columns = set(source_columns) if source_columns else set()
-
     # Process the input dictionary
     # Take each item that is passed and fill in blanks and add a y_index
     tool_tip_columns: Set[str] = set()
@@ -629,8 +625,10 @@ def _unpack_data_series_dict(data, **kwargs):
             continue
 
         # if the series has source columns, use those
-        src_cols = series_def.get("source_columns", def_source_columns)
-        data_columns.update(src_cols or def_source_columns)
+        # or fall back to global source cols or defaults
+        series_def_src_cols = _get_def_source_cols(series_data, source_columns)
+        src_cols = series_def.get("source_columns", series_def_src_cols)
+        data_columns.update(src_cols or series_def_src_cols)
 
         time_col = series_def.get("time_column", None)
         if not time_col:
@@ -667,11 +665,20 @@ def _unpack_data_series_dict(data, **kwargs):
 # pylint: enable=too-many-locals
 
 
-def _create_data_grouping(data, source_columns, time_column, group_by, color):
+def _get_def_source_cols(data, source_columns):
     if not source_columns:
-        data_columns = set(["NewProcessName", "EventID", "CommandLine"])
+        data_columns = set()
+        if all(
+            col in data.columns for col in ["NewProcessName", "EventID", "CommandLine"]
+        ):
+            data_columns = set(["NewProcessName", "EventID", "CommandLine"])
     else:
         data_columns = set(source_columns)
+    return data_columns
+
+
+def _create_data_grouping(data, source_columns, time_column, group_by, color):
+    data_columns = _get_def_source_cols(data, source_columns)
     # If the time column not explicity specified in source_columns, add it
     data_columns.add(time_column)
     tool_tip_columns = data_columns.copy()
@@ -709,14 +716,7 @@ def _create_data_grouping(data, source_columns, time_column, group_by, color):
 
 
 def _create_dict_from_grouping(data, source_columns, time_column, group_by, color):
-    if not source_columns:
-        data_columns = set()
-        if all(
-            col in data.columns for col in ["NewProcessName", "EventID", "CommandLine"]
-        ):
-            data_columns = set(["NewProcessName", "EventID", "CommandLine"])
-    else:
-        data_columns = set(source_columns)
+    data_columns = _get_def_source_cols(data, source_columns)
     # If the time column not explicitly specified in source_columns, add it
     data_columns.add(time_column)
 

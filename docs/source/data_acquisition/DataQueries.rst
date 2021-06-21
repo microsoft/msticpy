@@ -140,7 +140,7 @@ MDATPHunting  cve_2018_1111               Looks for CVE-2018-1111 exploitation  
 MDATPHunting  cve_2018_4878               This query checks for specific processes and domain TLD used in the CVE-2018-4878                                                                                    -
 MDATPHunting  doc_with_link               Looks for a Word document attachment, from which a link was clicked, and after which there was a browser download.                                                   -
 MDATPHunting  dropbox_link                Looks for user content downloads from dropbox that originate from a link/redirect from a 3rd party site.                                                             -
-MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                    -
+MDATPHunting  email_link                  Look for links opened from mail apps – if a detection occurred right afterwards                                                                                      -
 MDATPHunting  email_smartscreen           Look for links opened from outlook.exe, followed by a browser download and then a SmartScreen app warning                                                            -
 MDATPHunting  malware_recycle             Finding attackers hiding malware in the recycle bin.                                                                                                                 -
 MDATPHunting  network_scans               Looking for high volume queries against a given RemoteIP, per ComputerName, RemotePort and Process                                                                   -
@@ -152,6 +152,20 @@ MDATPHunting  tor                         Looks for Tor client, or for a common 
 MDATPHunting  uncommon_powershell         Find which uncommon Powershell Cmdlets were executed on that machine in a certain time period.                                      hostname (str), timestamp (str)  -
 MDATPHunting  user_enumeration            The query finds attempts to list users or groups using Net commands                                                                                                  -
 ============  ==========================  ==================================================================================================================================  ===============================  ==========================
+
+Queries for ResourceGraph
+-------------------------
+
+=============  ==============================  =====================================================  ============  =========
+QueryGroup     Query                           Description                                            ReqdParams    Table
+=============  ==============================  =====================================================  ============  =========
+ResourceGraph  list_detailed_virtual_machines  Retrieves list of VMs with network details                           resources
+ResourceGraph  list_public_ips                 Retrieves list of resources with public IP addresses                 resources
+ResourceGraph  list_resources                  Retrieves list of resources                                          resources
+ResourceGraph  list_resources_by_api_version   Retrieves list of resources for each API version                     resources
+ResourceGraph  list_resources_by_type          Retrieves list of resources by type                                  resources
+ResourceGraph  list_virtual_machines           Retrieves list of VM resources                                       resources
+=============  ==============================  =====================================================  ============  =========
 
 Queries for SecurityGraph
 -------------------------

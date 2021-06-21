@@ -365,7 +365,7 @@ class Pivot:
     def add_pivot_function(
         func: Callable[[Any], Any],
         pivot_reg: "PivotRegistration" = None,
-        container: str = "other",
+        container: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -394,6 +394,11 @@ class Pivot:
         PivotRegistration
 
         """
+        container = container or (
+            pivot_reg.entity_container_name
+            if pivot_reg and pivot_reg.entity_container_name
+            else "other"
+        )
         add_unbound_pivot_function(
             func=func, pivot_reg=pivot_reg, container=container, **kwargs
         )

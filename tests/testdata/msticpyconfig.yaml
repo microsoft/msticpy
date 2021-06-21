@@ -32,11 +32,11 @@ TIProviders:
         EnvironmentVar: "XFORCE_KEY"
     Primary: False
     Provider: "XForce"
-  Greynoise:
+  GreyNoise:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   AzureSentinel:
     Args:
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"

@@ -17,7 +17,13 @@ import yaml
 from IPython.display import display
 
 from .._version import VERSION
-from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
+
+try:
+    from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
+
+    _KEYVAULT = True
+except ImportError:
+    _KEYVAULT = False
 from ..common.pkg_config import refresh_config, validate_config
 from .comp_edit import CompEditStatusMixin, CompEditDisplayMixin
 from .file_browser import FileBrowser
@@ -64,7 +70,8 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
         """
         self.settings = settings or {}
-        self.kv_client: Optional[BHKeyVaultClient] = None
+
+        self.kv_client: Any = None
         self.mp_config_def_path = os.environ.get("MSTICPYCONFIG", "")
         self._current_file = None
 
@@ -176,12 +183,24 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         """
         if backup and Path(file).is_file():
             Path(file).replace(f"{file}.save_{datetime.now().strftime('%H%M%S')}")
-        with open(file, "w+") as mp_hdl:
+        with open(file, "w") as mp_hdl:
             yaml.safe_dump(self.settings, mp_hdl)
 
     def show_kv_secrets(self, show: bool = True):
         """Show secrets from currently configured Key Vault."""
         view_text = []
+        if not _KEYVAULT:
+            self.txt_viewer.value = "\n".join(
+                [
+                    "Azure keyvault libraries not found.",
+                    "Please install 'azure_keyvault_secrets' and",
+                    "'azure_mgmt_keyvault'",
+                ]
+            )
+            self.viewer.children = [self.txt_viewer, self.btn_close]
+            if show:
+                display(self.viewer)
+            return
         if self.kv_client is None:
             try:
                 self.kv_client = BHKeyVaultClient()

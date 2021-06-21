@@ -32,7 +32,7 @@ TIProviders:
         EnvironmentVar: "XFORCE_AUTH"
     Primary: False
     Provider: "XForce"
-  Greynoise:
+  GreyNoise:
     Args:
       AuthKey: ""
     Primary: True

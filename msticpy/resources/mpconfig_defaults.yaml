@@ -68,12 +68,12 @@ TIProviders:
   TorExitNodes:
     Primary: bool(default=True)
     Provider: "Tor"
-  Greynoise:
+  GreyNoise:
     Args:
     # Leave AuthKey empty to use the community API or populate if you want to use the Enterprise API features.
-      AuthKey: str(default="")
+      AuthKey: *cred_key
     Primary: bool(default=True)
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
 OtherProviders:
   GeoIPLite:
     Args:
@@ -114,6 +114,9 @@ DataProviders:
   Mordor:
     save_folder: str(required=False)
     use_cached: bool(required=False, default=True)
+  Browshot:
+    Args:
+      AuthKey: *cred_key
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

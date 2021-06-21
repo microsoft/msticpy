@@ -15,6 +15,7 @@ import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from platform import python_version
 
 import pkg_resources
 from deprecated.sphinx import deprecated
@@ -662,3 +663,24 @@ def _merge_dicts(dict1: Dict[Any, Any], dict2: Dict[Any, Any]):
             d_val = dict1[key]
         out_dict[key] = d_val
     return out_dict
+
+
+def _get_mp_ua():
+    """Build a MSTICPy specific User Agent string."""
+    return f"MSTICPy{VERSION}-Python{python_version()}"
+
+
+# User Agent string for MSTICPy
+_MSTICPY_USER_AGENT = _get_mp_ua()
+
+
+def search_for_file(
+    pattern: str, paths: List[Union[str, Path]] = None
+) -> Optional[str]:
+    """Search `paths` for file `pattern`."""
+    paths = paths or [".", ".."]
+    for start_path in paths:
+        found_files = list(Path(start_path).glob(pattern))
+        if found_files:
+            return str(found_files[0])
+    return None

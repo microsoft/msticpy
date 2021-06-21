@@ -1,0 +1,112 @@
+metadata:
+  version: 1
+  description: Resource Graph Queries
+  data_environments: [ResourceGraph]
+  data_families: [ResourceGraph]
+  tags: ['iaas', 'paas']
+defaults:
+  metadata:
+    data_source: 'resource_graph'
+    top: 1000
+  parameters:
+      table:
+        description: Table name
+        type: str
+        default: 'resources'
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+sources:
+  list_resources:
+    description: Retrieves list of resources
+    metadata:
+    args:
+      query: '
+        {table}
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_resources_by_type:
+      description: Retrieves list of resources by type
+      metadata:
+      args:
+        query: '
+          {table}
+          | where type =~ "{resource_type}"
+          | order by name desc
+          {add_query_items}'
+        uri: None
+      parameters:
+        resource_type:
+          description: Azure resource provider
+          type: str
+  list_virtual_machines:
+    description: Retrieves list of VM resources
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type =~ "Microsoft.Compute/virtualMachines"
+        | order by name desc
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_public_ips:
+    description: Retrieves list of resources with public IP addresses
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type contains "publicIPAddresses" and isnotempty(properties.ipAddress)
+        | project properties.ipAddress
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_resources_by_api_version:
+    description: Retrieves list of resources for each API version
+    metadata:
+    args:
+      query: '
+        {table}
+        | distinct type, apiVersion
+        | where isnotnull(apiVersion)
+        | order by type asc
+        {add_query_items}'
+      uri: None
+    parameters:
+  list_detailed_virtual_machines:
+    description: Retrieves list of VMs with network details
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type =~ "microsoft.compute/virtualmachines"
+        | where name contains "{host_name}"
+        | extend nics=array_length(properties.networkProfile.networkInterfaces)
+        | mv-expand nic=properties.networkProfile.networkInterfaces
+        | where nics == 1 or nic.properties.primary =~ "true" or isempty(nic)
+        | project vmId = id, vmName = name, vmSize=tostring(properties.hardwareProfile.vmSize), nicId = tostring(nic.id)
+        | join kind=leftouter (
+            Resources
+            | where type =~ "microsoft.network/networkinterfaces"
+            | extend ipConfigsCount=array_length(properties.ipConfigurations)
+            | mv-expand ipconfig=properties.ipConfigurations
+            | where ipConfigsCount == 1 or ipconfig.properties.primary =~ "true"
+            | project nicId = id, publicIpId = tostring(ipconfig.properties.publicIPAddress.id))
+        on nicId
+        | project-away nicId1
+        | summarize by vmId, vmName, vmSize, nicId, publicIpId
+        | join kind=leftouter (
+            Resources
+            | where type =~ "microsoft.network/publicipaddresses"
+            | project publicIpId = id, publicIpAddress = properties.ipAddress)
+        on publicIpId
+        | project-away publicIpId1
+        {add_query_items}'
+      uri: None
+    parameters:
+      host_name:
+        description: A hostname to filter on
+        type: str
+        default: ''

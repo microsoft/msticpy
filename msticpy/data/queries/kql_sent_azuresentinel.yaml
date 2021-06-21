@@ -60,12 +60,12 @@ sources:
     args:
       query: '
         let entity_str = case(
-          {host_name} != "na", {host_name},
-          {account_name} != "na", {account_name},
-          {ip_address} != "na", {ip_address},
-          {domain} != "na", {domain},
-          {url} != "na", {url},
-          {entity_id} != "na", {entity_id},
+          "{host_name}" != "na", "{host_name}",
+          "{account_name}" != "na", "{account_name}",
+          "{ip_address}" != "na", "{ip_address}",
+          "{domain}" != "na", "{domain}",
+          "{url}" != "na", "{url}",
+          "{entity_id}" != "na", "{entity_id}",
           "no_entity_id"
         );
         {table}

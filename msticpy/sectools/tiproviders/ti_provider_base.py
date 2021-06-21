@@ -54,6 +54,7 @@ class TISeverity(Enum):
 
     # pylint: enable=invalid-name
 
+    # pylint: disable=unsupported-membership-test, no-member
     @classmethod
     def parse(cls, value) -> "TISeverity":
         """
@@ -79,6 +80,8 @@ class TISeverity(Enum):
         ]:
             return cls(value)
         return TISeverity.unknown
+
+    # pylint: enable=unsupported-membership-test, no-member
 
     # pylint: disable=comparison-with-callable
     def __eq__(self, other) -> bool:
@@ -195,7 +198,7 @@ class LookupResult:
         """Return a dictionary that maps fields to DF Names."""
         col_mapping = {}
         for name in attr.fields_dict(cls):
-            out_name = "".join([part.capitalize() for part in name.split("_")])
+            out_name = "".join(part.capitalize() for part in name.split("_"))
             col_mapping[name] = out_name
         return col_mapping
 
@@ -203,7 +206,7 @@ class LookupResult:
 # pylint: enable=too-many-instance-attributes
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, invalid-name
 class TILookupStatus(Enum):
     """Threat intelligence lookup status."""
 
@@ -214,7 +217,7 @@ class TILookupStatus(Enum):
     other = 10
 
 
-# pylint: enable=too-few-public-methods
+# pylint: enable=too-few-public-methods, invalid-name
 
 
 _IOC_EXTRACT = IoCExtract()

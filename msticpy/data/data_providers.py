@@ -17,6 +17,7 @@ from tqdm.auto import tqdm
 from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.utility import export, valid_pyname
+from ..nbtools.nbwidgets import QueryTime
 from .browsers.query_browser import browse_queries
 from .drivers import import_driver, DriverBase
 from .param_extractor import extract_query_params
@@ -100,6 +101,7 @@ class QueryProvider:
             self.environment, QueryStore(self.environment)
         )
         self._add_query_functions()
+        self._query_time = QueryTime(units="day")
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -208,7 +210,9 @@ class QueryProvider:
             List of current data environments
 
         """
+        # pylint: disable=not-an-iterable
         return [env for env in DataEnvironment.__members__ if env != "Unknown"]
+        # pylint: enable=not-an-iterable
 
     def list_queries(self) -> List[str]:
         """
@@ -253,11 +257,6 @@ class QueryProvider:
         """
         Return QueryProvider query browser.
 
-        Parameters
-        ----------
-        query_provider : QueryProvider
-            Initialized query provider.
-
         Other Parameters
         ----------------
         kwargs :
@@ -270,6 +269,14 @@ class QueryProvider:
 
         """
         return browse_queries(self, **kwargs)
+
+    # alias for browse_queries
+    browse = browse_queries
+
+    @property
+    def query_time(self):
+        """Return the default QueryTime control for queries."""
+        return self._query_time
 
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
@@ -290,6 +297,7 @@ class QueryProvider:
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
+        self._check_for_time_params(params, missing)
         if missing:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
@@ -318,6 +326,15 @@ class QueryProvider:
         # Handle any query options passed
         query_options = self._get_query_options(params, kwargs)
         return self._query_provider.query(query_str, query_source, **query_options)
+
+    def _check_for_time_params(self, params, missing):
+        """Fall back on builtin query time if no time parameters were supplied."""
+        if "start" in missing:
+            missing.pop("start", None)
+            params["start"] = self._query_time.start
+        if "end" in missing:
+            missing.pop("end", None)
+            params["end"] = self._query_time.end
 
     @staticmethod
     def _get_query_options(
@@ -495,7 +512,7 @@ class QueryProvider:
     def _resolve_path(cls, config_path: str) -> Optional[str]:
         """Resolve path."""
         if not Path(config_path).is_absolute():
-            config_path = str(Path(config_path).resolve())
+            config_path = str(Path(config_path).expanduser().resolve())
         if not Path(config_path).is_dir():
             warnings.warn(f"Custom query definitions path {config_path} not found")
             return None
