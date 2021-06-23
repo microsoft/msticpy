@@ -35,17 +35,24 @@ parameters:
   which shows the values of these columns as a tooltip, when you hover
   over each point with a mouse.
 
-This code shows an example of createing a simple plot, with a single
+This code shows an example of creating a simple plot, with a single
 time series.
 
 .. code:: ipython3
 
-    processes_on_host = pd.read_csv('data/processes_on_host.csv',
-                                    parse_dates=["TimeGenerated"],
-                                    infer_datetime_format=True)
+   from msticpy.nbtools.timeline import display_timeline
 
-    # At a minimum we need to pass a dataframe with data
-    nbdisplay.display_timeline(processes_on_host)
+   # load some data
+   processes_on_host = pd.read_csv(
+      "data/processes_on_host.csv",
+      parse_dates=["TimeGenerated"],
+      infer_datetime_format=True,
+      index_col=0
+   );
+
+   # At a minimum we need to pass a dataframe with timestamp column
+   # (defaults to TimeGenerated)
+   display_timeline(processes_on_host)
 
 
 .. figure:: _static/Timeline-01.png
@@ -96,29 +103,30 @@ Grouping Series From a Single DataFrame
 
 .. code:: ipython3
 
-    nbdisplay.display_timeline(processes_on_host,
-                               group_by="Account",
-                               source_columns=["NewProcessName",
-                                               "ParentProcessName"],
-                               legend="inline");
+   display_timeline(
+      processes_on_host,
+      group_by="Account",
+      source_columns=["NewProcessName", "ParentProcessName"],
+      legend="inline"
+   );
 
 
 .. figure:: _static/Timeline-02.png
    :alt: Grouped timeline chart
 
 
-We can use the group_by parameter to specify a column on which to split
+We can use the ``group_by`` parameter to specify a column on which to split
 individually plotted series.
 
 Specifying a legend, we can see the value of each series group. The
 legend is interactive - click on a series name to hide/show the data.
-The legend can also be placed outside of the graph specifying “left” or
-“right”.
+The legend can also be placed outside of the graph specifying 'left' or
+'right'.
 
 Specifying a legend, we can see the value of each series group.
 The legend is interactive - click on a series name to
 hide/show the data. The legend can be placed inside of the chart
-(`legend="inline"`) or to the left or right.
+(``legend="inline"``) or to the left or right.
 
 
 
@@ -126,43 +134,63 @@ hide/show the data. The legend can be placed inside of the chart
    value from the function. It isn’t mandatory.
 
 
-Alternatively we can enable the yaxis - although this is not guaranteed
+Alternatively we can enable the ``yaxis`` - although this is not guaranteed
 to show all values of the groups.
 
 .. code:: ipython3
 
-    nbdisplay.display_timeline(processes_on_host,
-                               group_by="Account",
-                               source_columns=["NewProcessName", "ParentProcessName"],
-                               yaxis=True);
+   display_timeline(
+      processes_on_host,
+      group_by="Account",
+      source_columns=["NewProcessName", "ParentProcessName"],
+      yaxis=True
+   );
 
 .. figure:: _static/Timeline-03.png
    :alt: Grouped timeline chart with yaxis
 
 
-Two other examples using logon events.
+Plotting directly from a DataFrame
+----------------------------------
 
+We’ve implemented the timeline plotting functions as pandas accessors so
+you can plot directly from the DataFrame using ``mp_timeline.plot()``.
+
+All of the parameters used in the standalone function are available in
+the pandas accessor functions.
+
+.. note: you still need to import ``msticpy.nbtools.timeline`` to
+   activate this.
 
 .. code:: ipython3
 
-    nbdisplay.display_timeline(host_logons,
-                               title="Logons by Account name",
-                               group_by="Account",
-                               source_columns=["Account",
-                                               "TargetLogonId",
-                                               "LogonType"],
-                               legend="left",
-                               height=200);
+   # load some data
+   host_logons = pd.read_csv(
+      "data/host_logons.csv",
+      parse_dates=["TimeGenerated"],
+      infer_datetime_format=True,
+      index_col=0,
+   )
 
-    nbdisplay.display_timeline(host_logons,
-                               title="Logons by logon type",
-                               group_by="LogonType",
-                               source_columns=["Account",
-                                               "TargetLogonId",
-                                               "LogonType"],
-                               legend="left",
-                               height=200,
-                               range_tool=False);
+
+   host_logons.mp_timeline.plot(
+      title="Logons by Account name",
+      group_by="Account",
+      source_columns=["Account", "TargetLogonId", "LogonType"],
+      legend="left",
+      height=200,
+   )
+
+
+   host_logons.mp_timeline.plot(
+      title="Logons by logon type",
+      group_by="LogonType",
+      source_columns=["Account", "TargetLogonId", "LogonType"],
+      legend="left",
+      height=200,
+      range_tool=False,
+      ygrid=True,
+   );
 
 
 .. figure:: _static/Timeline-04.png
@@ -170,28 +198,55 @@ Two other examples using logon events.
 
 
 
-Displaying a reference line
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Displaying Reference lines
+--------------------------
 
-If you have a single item (e.g. an alert) that you want to show as a
-reference point on the graph you can pass a datetime value, or any
-object that has a TimeGenerated or StartTimeUtc property.
+You can annotate your timeline with one or more reference markers. These
+can be supplied as timestamped events in a DataFrame or a list of
+datetime/label pairs.
 
-If the object doesn’t have one of these, just pass the property as the
-ref_time parameter.
+To use a DataFrame, pass this as the ``ref_events``:
+
+-  You can specify the column to use as a label with the ``ref_col``
+   parameter
+-  If the time_column is not the same name as the time column in the
+   main DataFrame, specify this as ``ref_time_col``
+
+To use a list of times, use the ``ref_times`` parameter. This should be
+a list of tuples of
+
+-  datetime
+-  label (string)
+
+E.g. ``ref_times=[(date1, "item1"), (date2, "item2")...]``
+
+You can use either ``ref_events`` or ``ref_times`` with a single row or
+list entry.
 
 .. code:: ipython3
 
     # pull out a sample row to use as a reference marker
-    fake_alert = processes_on_host.sample().iloc[0]
+    alerts = processes_on_host.sample(3)
 
-    nbdisplay.display_timeline(host_logons,
-                               title="Processes with marker",
-                               group_by="LogonType",
-                               source_columns=["Account", "TargetLogonId", "LogonType"],
-                               ref_event=fake_alert,
-                               legend="left");
+    display_timeline(
+        host_logons,
+        title="Processes with marker",
+        group_by="Account",
+        source_columns=["Account", "TargetLogonId", "LogonType"],
+        ref_events=alerts,
+        ref_col="SubjectUserName",
+        legend="left",
+        ygrid=True,
+    );
 
+.. figure:: _static/Timeline_markers-02.png
+   :alt: Timeline with multiple reference markers
+
+For a single reference point you can also use ``alert``, ``ref_event``
+or ``ref_time`` although these are now deprecated in favor of
+``ref_events`` and ``ref_times``.
+
+Use ``ref_event`` (note: this is different from ``ref_events``)
 
 .. figure:: _static/Timeline-05.png
    :alt: Timeline with reference marker
@@ -200,7 +255,7 @@ ref_time parameter.
 .. _plot_diff_data_sets:
 
 Plotting series from different data sets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 When you want to plot data sets with different schema on the same plot
 it is difficult to put them in a single DataFrame. To do this we need to
@@ -228,14 +283,22 @@ names.
 
 .. code:: ipython3
 
-    procs_and_logons = {
-        "Processes" : {"data": processes_on_host, "source_columns": ["NewProcessName", "Account"]},
-        "Logons": {"data": host_logons, "source_columns": ["Account", "TargetLogonId", "LogonType"]}
-    }
+   procs_and_logons = {
+      "Processes" : {
+         "data": processes_on_host,
+         "source_columns": ["NewProcessName", "Account"]
+      },
+      "Logons": {
+         "data": host_logons,
+         "source_columns": ["Account", "TargetLogonId", "LogonType"]
+      }
+   }
 
-    nbdisplay.display_timeline(data=procs_and_logons,
-                               title="Logons and Processes",
-                               legend="left");
+   nbdisplay.display_timeline(
+      data=procs_and_logons,
+      title="Logons and Processes",
+      legend="left"
+   );
 
 
 .. figure:: _static/Timeline-06.png
@@ -260,21 +323,28 @@ for a description of all of the parameters.
 
 .. code:: ipython3
 
-    az_net_flows_df = pd.read_csv('data/az_net_flows.csv',
-                              parse_dates=["TimeGenerated", "FlowStartTime", "FlowEndTime"],
-                              infer_datetime_format=True)
+   az_net_flows_df = pd.read_csv(
+      'data/az_net_flows.csv',
+      parse_dates=["TimeGenerated", "FlowStartTime", "FlowEndTime"],
+      infer_datetime_format=True,
+      index_col=0,
+   )
 
-    flow_plot = nbdisplay.display_timeline_values(data=az_net_flows_df,
-                                      group_by="L7Protocol",
-                                      source_columns=["FlowType",
-                                                      "AllExtIPs",
-                                                      "L7Protocol",
-                                                      "FlowDirection",
-                                                      "TotalAllowedFlows"],
-                                      time_column="FlowStartTime",
-                                      y="TotalAllowedFlows",
-                                      legend="right",
-                                      height=500);
+   flow_plot = nbdisplay.display_timeline_values(
+      data=az_net_flows_df,
+      group_by="L7Protocol",
+      source_columns=[
+         "FlowType",
+         "AllExtIPs",
+         "L7Protocol",
+         "FlowDirection",
+         "TotalAllowedFlows"
+      ],
+      time_column="FlowStartTime",
+      y="TotalAllowedFlows",
+      legend="right",
+      height=500
+   );
 
 
 .. figure:: _static/Timeline-07.png
@@ -282,7 +352,7 @@ for a description of all of the parameters.
 
 
 By default the plot uses vertical bars show the values but you can use
-any combination of vbar, circle and line, using the ``kind`` parameter.
+any combination of 'vbar', 'circle' and 'line', using the ``kind`` parameter.
 You specify the plot types as a list of strings (all lowercase).
 
 
@@ -292,19 +362,22 @@ the hover value.
 
 .. code:: ipython3
 
-    flow_plot = nbdisplay.display_timeline_values(data=az_net_flows_df,
-                                                  group_by="L7Protocol",
-                                                  source_columns=["FlowType",
-                                                                  "AllExtIPs",
-                                                                  "L7Protocol",
-                                                                  "FlowDirection",
-                                                                  "TotalAllowedFlows"],
-                                                  time_column="FlowStartTime",
-                                                  y="TotalAllowedFlows",
-                                                  legend="right",
-                                                  height=500,
-                                                  kind=["vbar", "circle"]
-                                                );
+    flow_plot = nbdisplay.display_timeline_values(
+      data=az_net_flows_df,
+      group_by="L7Protocol",
+      source_columns=[
+         "FlowType",
+         "AllExtIPs",
+         "L7Protocol",
+         "FlowDirection",
+         "TotalAllowedFlows"
+      ],
+      time_column="FlowStartTime",
+      y="TotalAllowedFlows",
+      legend="right",
+      height=500,
+      kind=["vbar", "circle"]
+   );
 
 
 
@@ -325,6 +398,45 @@ two plots.
    :alt: Comparing line and vbar plots.
 
 
+Timeline Durations
+------------------
+
+Sometimes it’s useful to be able to group data and see the start and
+ending activity over a period. The timeline durations plot gives you
+that option. It creates bands for the start and ending duration of each
+group, as well as the locations of the individual events.
+
+Note, that unlike other timeline controls you *must* specify a
+``group_by`` parameter. This defines the way that the data is grouped
+before calculating the start and end of the events within that group.
+``group_by`` can be a single column or a list of columns.
+
+Durations are shown using boxes with individual events superimposed (as
+diamonds).
+
+.. code:: ipython3
+
+   from msticpy.nbtools.timeline_duration import display_timeline_duration
+
+   display_timeline_duration(
+      host_logons,
+      group_by="Account",
+      ref_events=host_logons.sample(3),
+      ref_col="TargetUserName",
+   );
+
+.. figure:: _static/Timeline_duration-01.png
+   :alt: Timeline duration showing bands for start and end of event groups.
+
+.. code:: ipython3
+
+   az_net_flows_df.mp_timeline.plot_duration(
+       group_by=["SrcIP", "DestIP", "L7Protocol"]
+   )
+
+.. figure:: _static/Timeline_duration-02.png
+   :alt: Timeline duration for IP addresses showing bands for
+      start and end of event groups.
 
 Exporting Plots as PNGs
 -----------------------

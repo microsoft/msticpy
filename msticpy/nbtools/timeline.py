@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 from datetime import datetime
-from typing import Any, Union, Set, Dict, Tuple, List
+from typing import Any, Dict, Optional, List, Tuple, Set, Union
 
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
@@ -17,6 +17,7 @@ from bokeh.models import (
     DatetimeTickFormatter,
     HoverTool,
     Label,
+    LayoutDOM,
     Legend,
     RangeTool,
     Title,
@@ -32,6 +33,12 @@ from bokeh.layouts import column
 
 from .._version import VERSION
 from ..common.utility import export, check_kwargs
+
+# pylint: disable=unused-import
+# Importing to activate pandas accessors
+from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
+
+# pylint: enable=unused-import
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -54,6 +61,10 @@ _DEFAULT_KWARGS = [
     "title",
     "width",
     "yaxis",
+    "ref_events",
+    "ref_time_col",
+    "ref_col",
+    "ref_times",
 ]
 
 _TL_KWARGS = [
@@ -73,7 +84,7 @@ def display_timeline(
     time_column: str = "TimeGenerated",
     source_columns: list = None,
     **kwargs,
-) -> figure:
+) -> LayoutDOM:
     """
     Display a timeline of events.
 
@@ -137,10 +148,26 @@ def display_timeline(
         Default series color (default is "navy")
     overlay_color : str
         Overlay series color (default is "green")
+    hide : bool, optional
+        If True, create but do not display the plot.
+        By default, False.
+    ref_events : pd.DataFrame, optional
+        Add references line/label using the event times in the dataframe.
+        (the default is None)
+    ref_time_col : str, optional
+        Add references line/label using the this column in `ref_events`
+        for the time value (x-axis).
+        (this defaults the value of the `time_column` parameter or 'TimeGenerated'
+        `time_column` is None)
+    ref_col : str, optional
+        The column name to use for the label from `ref_events`
+        (the default is None)
+    ref_times : List[Tuple[datetime, str]], optional
+        Add one or more reference line/label using (the default is None)
 
     Returns
     -------
-    figure
+    LayoutDOM
         The bokeh plot figure.
 
     """
@@ -196,11 +223,11 @@ _TL_VALUE_KWARGS = ["kind", "y", "x"]
 @export  # noqa: C901, MC0001
 def display_timeline_values(
     data: pd.DataFrame,
-    y: str,
+    value_col: str = None,
     time_column: str = "TimeGenerated",
     source_columns: list = None,
     **kwargs,
-) -> figure:
+) -> LayoutDOM:
     """
     Display a timeline of events.
 
@@ -212,7 +239,7 @@ def display_timeline_values(
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
-    y : str
+    value_col : str
         The column name holding the value to plot vertically
     source_columns : list, optional
         List of default source columns to use in tooltips
@@ -222,12 +249,16 @@ def display_timeline_values(
     ----------------
     x : str, optional
         alias of `time_column`
+    y : str
+        an alias for `value_col`
     title : str, optional
         Title to display (the default is None)
     ref_event : Any, optional
         Add a reference line/label using the alert time (the default is None)
     ref_time : datetime, optional
         Add a reference line/label using `ref_time` (the default is None)
+    ref_label : str, optional
+        A label for the `ref_event` or `ref_time` reference item
     group_by : str
         (where `data` is a DataFrame)
         The column to group timelines on
@@ -250,14 +281,30 @@ def display_timeline_values(
     kind : Union[str, List[str]]
         one or more glyph types to plot., optional
         Supported types are "circle", "line" and "vbar" (default is "vbar")
+    hide : bool, optional
+        If True, create but do not display the plot.
+        By default, False.
+    ref_events : pd.DataFrame, optional
+        Add references line/label using the event times in the dataframe.
+        (the default is None)
+    ref_time_col : str, optional
+        Add references line/label using the this column in `ref_events`
+        for the time value (x-axis).
+        (this defaults the value of the `time_column` parameter or 'TimeGenerated'
+        `time_column` is None)
+    ref_col : str, optional
+        The column name to use for the label from `ref_events`
+        (the default is None)
+    ref_times : List[Tuple[datetime, str]], optional
+        Add one or more reference line/label using (the default is None)
 
     Returns
     -------
-    figure
+    LayoutDOM
         The bokeh plot figure.
 
     """
-    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + ["y"])
 
     if data is None or not isinstance(data, pd.DataFrame) or data.empty:
         print("No data to plot.")
@@ -277,13 +324,20 @@ def display_timeline_values(
     kind: Any = kwargs.pop("kind", ["vbar"])
     plot_kinds = kind if isinstance(kind, list) else [kind]
     hide: bool = kwargs.pop("hide", False)
+    ref_events: pd.DataFrame = kwargs.pop("ref_events", None)
+    ref_time_col: str = kwargs.pop("ref_time_col", time_column or "TimeGenerated")
+    ref_col: str = kwargs.pop("ref_col", None)
+    ref_times: List[Tuple[datetime, str]] = kwargs.pop("ref_times", None)
+    value_col = value_col or kwargs.pop("y", None)
+    if not value_col:
+        raise ValueError("Must supply either `value_col` or `y` parameter.")
 
     ref_time, ref_label = _get_ref_event_time(**kwargs)
 
     if source_columns is None:
-        source_columns = [y]
-    if y not in source_columns:
-        source_columns.append(y)
+        source_columns = [value_col]
+    if value_col not in source_columns:
+        source_columns.append(value_col)
     graph_df, group_count_df, tool_tip_columns, series_count = _create_data_grouping(
         data, source_columns, time_column, group_by, color
     )
@@ -307,7 +361,7 @@ def display_timeline_values(
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
-        y_axis_label=y,
+        y_axis_label=value_col,
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         toolbar_location="above",
         title=title,
@@ -343,12 +397,18 @@ def display_timeline_values(
                 plot_args["legend_label"] = str(inline_legend)
 
             if "vbar" in plot_kinds:
-                p_series.append(plot.vbar(top=y, width=4, color="color", **plot_args))
+                p_series.append(
+                    plot.vbar(top=value_col, width=4, color="color", **plot_args)
+                )
             if "circle" in plot_kinds:
-                p_series.append(plot.circle(y=y, size=4, color="color", **plot_args))
+                p_series.append(
+                    plot.circle(y=value_col, size=4, color="color", **plot_args)
+                )
             if "line" in plot_kinds:
                 p_series.append(
-                    plot.line(y=y, line_width=2, line_color=group_color, **plot_args)
+                    plot.line(
+                        y=value_col, line_width=2, line_color=group_color, **plot_args
+                    )
                 )
             if not inline_legend:
                 legend_items.append((legend_label, p_series))
@@ -357,7 +417,7 @@ def display_timeline_values(
             # Position the inline legend
             plot.legend.location = "top_left"
             plot.legend.click_policy = "hide"
-        elif legend_pos in ["left", "right"]:
+        elif legend_pos in {"left", "right"}:
             # Create the legend box outside of the plot area
             ext_legend = Legend(
                 items=legend_items,
@@ -371,15 +431,24 @@ def display_timeline_values(
             x=time_column, color=color, alpha=0.7, source=ColumnDataSource(graph_df)
         )
         if "vbar" in plot_kinds:
-            plot.vbar(top=y, width=4, **plot_args)
+            plot.vbar(top=value_col, width=4, **plot_args)
         if "circle" in plot_kinds:
-            plot.circle(y=y, size=4, **plot_args)
+            plot.circle(y=value_col, size=4, **plot_args)
         if "line" in plot_kinds:
-            plot.line(y=y, line_width=2, **plot_args)
+            plot.line(y=value_col, line_width=2, **plot_args)
 
     # if we have a reference, plot the time as a line
     if ref_time is not None:
-        _add_ref_line(plot, ref_time, ref_label, data[y].max())
+        _add_ref_line(plot, ref_time, ref_label, data[value_col].max())
+    elif ref_events is not None or ref_times is not None:
+        _plot_ref_events(
+            plot=plot,
+            ref_events=ref_events,
+            time_col=ref_time_col,
+            group_count=series_count,
+            ref_col=ref_col,
+            ref_times=ref_times,
+        )
 
     if show_range:
         rng_select = _create_range_tool(
@@ -447,6 +516,19 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
         (the default is auto-calculated height)
     width : int, optional
         The width of the plot figure (the default is 900)
+    ref_events : pd.DataFrame, optional
+        Add references line/label using the event times in the dataframe.
+        (the default is None)
+    ref_time_col : str, optional
+        Add references line/label using the this column in `ref_events`
+        for the time value (x-axis).
+        (this defaults the value of the `time_column` parameter or 'TimeGenerated'
+        `time_column` is None)
+    ref_col : str, optional
+        The column name to use for the label from `ref_events`
+        (the default is None)
+    ref_times : List[Tuple[datetime, str]], optional
+        Add one or more reference line/label using (the default is None)
 
     Returns
     -------
@@ -468,6 +550,12 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     xgrid: bool = kwargs.pop("xgrid", True)
     ygrid: bool = kwargs.pop("ygrid", False)
     hide: bool = kwargs.pop("hide", False)
+    ref_events: pd.DataFrame = kwargs.pop("ref_events", None)
+    ref_col: str = kwargs.pop("ref_col", None)
+    ref_time_col: str = kwargs.pop(
+        "ref_time_col", kwargs.get("time_column", "TimeGenerated")
+    )
+    ref_times: List[Tuple[datetime, str]] = kwargs.pop("ref_times", None)
 
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
     series_count = len(data)
@@ -476,15 +564,9 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     title = f"Timeline: {title}" if title else "Event Timeline"
-    try:
-        start_range = min_time - ((max_time - min_time) * 0.1)
-        end_range = max_time + ((max_time - min_time) * 0.1)
-    except OutOfBoundsDatetime:
-        min_time = min_time.to_pydatetime()
-        max_time = max_time.to_pydatetime()
-        start_range = min_time - ((max_time - min_time) * 0.1)
-        end_range = max_time + ((max_time - min_time) * 0.1)
-    height = height if height else _calc_auto_plot_height(len(data))
+
+    start_range, end_range, min_time, max_time = _get_time_bounds(min_time, max_time)
+    height = height or _calc_auto_plot_height(len(data))
     y_range = ((-1 / series_count), series_count - 1 + (1 / series_count))
     plot = figure(
         x_range=(start_range, end_range),
@@ -498,23 +580,8 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         title=title,
     )
-    plot.yaxis.visible = show_yaxis
-    if show_yaxis:
-        if data:
-            y_labels = {ser_def["y_index"]: str(lbl) for lbl, ser_def in data.items()}
-            plot.yaxis.major_label_overrides = y_labels
-    if ygrid:
-        plot.ygrid.minor_grid_line_color = "navy"
-        plot.ygrid.minor_grid_line_alpha = 0.1
-        plot.ygrid.grid_line_color = "navy"
-        plot.ygrid.grid_line_alpha = 0.3
-    else:
-        plot.ygrid.grid_line_color = None
-    if xgrid:
-        plot.xgrid.minor_grid_line_color = "navy"
-        plot.xgrid.minor_grid_line_alpha = 0.3
-    else:
-        plot.xgrid.grid_line_color = None
+
+    _set_axes_and_grids(data, plot, show_yaxis, ygrid, xgrid)
 
     # Create plot bar to act as as range selector
     rng_select = _create_range_tool(
@@ -528,13 +595,38 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
 
     # set the tick datetime formatter
     plot.xaxis[0].formatter = _get_tick_formatter()
+    # plot the data
+    _plot_series(data, plot, legend_pos)
 
-    if series_count > 1 and not legend_pos:
-        legend_pos = "left"
+    if ref_time is not None:
+        _add_ref_line(plot, ref_time, ref_label, len(data))
+    elif ref_events is not None or ref_times is not None:
+        _plot_ref_events(
+            plot=plot,
+            ref_events=ref_events,
+            time_col=ref_time_col,
+            group_count=series_count,
+            ref_col=ref_col,
+            ref_times=ref_times,
+        )
 
+    plot_layout = column(plot, rng_select) if show_range else plot
+    if not hide:
+        show(plot_layout)
+
+    return plot_layout
+
+
+# pylint: enable=too-many-locals, too-many-statements, too-many-branches
+
+
+def _plot_series(data, plot, legend_pos):
+    """Plot data series and add legend."""
     # plot groups individually so that we can create an interactive legend
     # if legend_pos is "inline", we add add the normal legend inside the plot
     # if legend_pos is "left" or "right", we add the legend to the side
+    if len(data) > 1 and not legend_pos:
+        legend_pos = "left"
     legend_items = []
     for ser_name, series_def in data.items():
         if legend_pos == "inline":
@@ -578,21 +670,38 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
         )
         plot.add_layout(ext_legend, legend_pos)
 
-    if ref_time is not None:
-        _add_ref_line(plot, ref_time, ref_label, len(data))
 
-    if show_range:
-        plot_layout = column(plot, rng_select)
+def _set_axes_and_grids(data, plot, show_yaxis, ygrid, xgrid):
+    """Set the axes visibility and grids according to parameters."""
+    plot.yaxis.visible = show_yaxis
+    if show_yaxis and data:
+        y_labels = {ser_def["y_index"]: str(lbl) for lbl, ser_def in data.items()}
+        plot.yaxis.major_label_overrides = y_labels
+    if ygrid:
+        plot.ygrid.minor_grid_line_color = "navy"
+        plot.ygrid.minor_grid_line_alpha = 0.1
+        plot.ygrid.grid_line_color = "navy"
+        plot.ygrid.grid_line_alpha = 0.3
     else:
-        plot_layout = plot
+        plot.ygrid.grid_line_color = None
+    if xgrid:
+        plot.xgrid.minor_grid_line_color = "navy"
+        plot.xgrid.minor_grid_line_alpha = 0.3
+    else:
+        plot.xgrid.grid_line_color = None
 
-    if not hide:
-        show(plot_layout)
 
-    return plot_layout
-
-
-# pylint: enable=too-many-locals, too-many-statements, too-many-branches
+def _get_time_bounds(min_time, max_time):
+    """Return start and end range, coping with out-of-bounds error."""
+    try:
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
+    except OutOfBoundsDatetime:
+        min_time = min_time.to_pydatetime()
+        max_time = max_time.to_pydatetime()
+        start_range = min_time - ((max_time - min_time) * 0.1)
+        end_range = max_time + ((max_time - min_time) * 0.1)
+    return start_range, end_range, min_time, max_time
 
 
 # pylint: disable=too-many-locals
@@ -758,6 +867,8 @@ def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
         ref_label = "Event time"
 
     if ref_event is not None:
+        if isinstance(ref_event, pd.DataFrame):
+            ref_event = ref_event.iloc[0]
         ref_time = getattr(ref_event, "StartTimeUtc", None)
         if not ref_time:
             ref_time = getattr(ref_event, "TimeGenerated", None)
@@ -813,50 +924,6 @@ def _create_tool_tips(
 def _get_color_palette(series_count):
     palette_size = min(256, series_count + int(series_count / 5))
     return viridis(palette_size), palette_size
-
-
-def _plot_dict_series(data, plot, legend_pos):
-    """Plot series from dict."""
-    # If legend_pos is outside the graph we need to create the legend
-    # seperately.
-    # We plot groups individually so that we can create an interactive legend.
-    legend_items = []
-    for ser_name, series_def in data.items():
-        if legend_pos == "inline":
-            p_series = plot.diamond(
-                x=series_def["time_column"],
-                y="y_index",
-                color=series_def["color"],
-                alpha=0.5,
-                size=10,
-                source=series_def["source"],
-                legend_label=str(ser_name),
-            )
-        else:
-            p_series = plot.diamond(
-                x=series_def["time_column"],
-                y="y_index",
-                color=series_def["color"],
-                alpha=0.5,
-                size=10,
-                source=series_def["source"],
-            )
-        if legend_pos in ["left", "right"]:
-            legend_items.append((ser_name, [p_series]))
-
-    if legend_pos == "inline":
-        # Position the inline legend
-        plot.legend.location = "top_left"
-        plot.legend.click_policy = "hide"
-    elif legend_pos in ["left", "right"]:
-        # Create the legend box outside of the plot area
-        ext_legend = Legend(
-            items=legend_items,
-            location="center",
-            click_policy="hide",
-            label_text_font_size="8pt",
-        )
-        plot.add_layout(ext_legend, legend_pos)
 
 
 def _wrap_df_columns(data: pd.DataFrame, wrap_len: int = 50):
@@ -945,151 +1012,68 @@ def _create_range_tool(
 # pylint: enable=too-many-arguments
 
 
-def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1):
+def _add_ref_line(plot, ref_time, ref_text="Ref time", series_count=1, index=0):
     """Add a reference marker line and label at `ref_time`."""
     ref_label_tm = pd.Timestamp(ref_time)
+    index = min(index, series_count)
     plot.line(
         x=[ref_label_tm, ref_label_tm],
         y=[0, series_count],
-        line_width=2,
+        line_width=1,
         line_color="red",
         line_dash="dashed",
+        line_alpha=0.5,
     )
     ref_label = Label(
         x=ref_label_tm,
         y=0,
-        y_offset=10,
+        y_offset=10 + (10 * index),
         x_units="data",
         y_units="data",
         text=f"< {ref_text}",
         text_font_size="8pt",
+        text_alpha=0.5,
         render_mode="css",
         border_line_color="red",
-        border_line_alpha=1.0,
+        border_line_alpha=0.3,
         background_fill_color="white",
-        background_fill_alpha=0.5,
+        background_fill_alpha=0.3,
     )
 
     plot.add_layout(ref_label)
 
 
-@pd.api.extensions.register_dataframe_accessor("mp_timeline")
-class TimeLineAccessor:
-    """Pandas api extension for Timeline."""
-
-    def __init__(self, pandas_obj):
-        """Instantiate pandas extension class."""
-        self._df = pandas_obj
-
-    def plot(self, **kwargs) -> figure:
-        """
-        Display a timeline of events.
-
-        Parameters
-        ----------
-        time_column : str, optional
-            Name of the timestamp column
-            (the default is 'TimeGenerated')
-        source_columns : list, optional
-            List of default source columns to use in tooltips
-            (the default is None)
-
-        Other Parameters
-        ----------------
-        title : str, optional
-            Title to display (the default is None)
-        alert : SecurityAlert, optional
-            Add a reference line/label using the alert time (the default is None)
-        ref_event : Any, optional
-            Add a reference line/label using the alert time (the default is None)
-        ref_time : datetime, optional
-            Add a reference line/label using `ref_time` (the default is None)
-        group_by : str
-            (where `data` is a DataFrame)
-            The column to group timelines on
-        legend: str, optional
-            "left", "right", "inline" or "none"
-            (the default is to show a legend when plotting multiple series
-            and not to show one when plotting a single series)
-        yaxis : bool, optional
-            Whether to show the yaxis and labels (default is False)
-        ygrid : bool, optional
-            Whether to show the yaxis grid (default is False)
-        xgrid : bool, optional
-            Whether to show the xaxis grid (default is True)
-        range_tool : bool, optional
-            Show the the range slider tool (default is True)
-        height : int, optional
-            The height of the plot figure
-            (the default is auto-calculated height)
-        width : int, optional
-            The width of the plot figure (the default is 900)
-        color : str
-            Default series color (default is "navy")
-        overlay_color : str
-            Overlay series color (default is "green")
-
-        Returns
-        -------
-        figure
-            The bokeh plot figure.
-
-        """
-        return display_timeline(data=self._df, **kwargs)
-
-    # pylint: disable=invalid-name
-    def plot_values(self, y: str, **kwargs) -> figure:
-        """
-        Display a timeline of events.
-
-        Parameters
-        ----------
-        time_column : str, optional
-            Name of the timestamp column
-            (the default is 'TimeGenerated')
-        y : str
-            The column name holding the value to plot vertically
-        source_columns : list, optional
-            List of default source columns to use in tooltips
-            (the default is None)
-
-        Other Parameters
-        ----------------
-        x : str, optional
-            alias of `time_column`
-        title : str, optional
-            Title to display (the default is None)
-        ref_event : Any, optional
-            Add a reference line/label using the alert time (the default is None)
-        ref_time : datetime, optional
-            Add a reference line/label using `ref_time` (the default is None)
-        group_by : str
-            (where `data` is a DataFrame)
-            The column to group timelines on
-        legend: str, optional
-            "left", "right", "inline" or "none"
-            (the default is to show a legend when plotting multiple series
-            and not to show one when plotting a single series)
-        yaxis : bool, optional
-            Whether to show the yaxis and labels
-        range_tool : bool, optional
-            Show the the range slider tool (default is True)
-        height : int, optional
-            The height of the plot figure
-            (the default is auto-calculated height)
-        width : int, optional
-            The width of the plot figure (the default is 900)
-        color : str
-            Default series color (default is "navy"). This is overridden by
-            automatic color assignments if plotting a grouped chart
-        kind : Union[str, List[str]]
-            one or more glyph types to plot., optional
-            Supported types are "circle", "line" and "vbar" (default is "vbar")
-
-        Returns
-        -------
-        figure
-            The bokeh plot figure.
-
-        """
-        return display_timeline_values(data=self._df, y=y, **kwargs)
+def _plot_ref_events(
+    plot: figure,
+    time_col: str,
+    group_count: int,
+    ref_events: Optional[pd.DataFrame] = None,
+    ref_col: Optional[str] = None,
+    ref_times: Optional[List[Tuple[datetime, str]]] = None,
+):
+    """Plot reference lines/labels."""
+    if ref_events is not None:
+        if isinstance(ref_events, pd.Series):
+            ref_events = pd.DataFrame(ref_events)
+        for idx, event in enumerate(ref_events.itertuples()):
+            evt_time = event._asdict()[time_col]
+            evt_label = (
+                event._asdict()[ref_col] if ref_col else f"reference {event.Index}"
+            )
+            _add_ref_line(
+                plot=plot,
+                ref_time=evt_time,
+                ref_text=evt_label,
+                series_count=group_count,
+                index=idx,
+            )
+    elif ref_times:
+        for idx, (evt_time, evt_label) in enumerate(ref_times):
+            evt_label = evt_label or f"reference {idx}"
+            _add_ref_line(
+                plot=plot,
+                ref_time=evt_time,
+                ref_text=evt_label,
+                series_count=group_count,
+                index=idx,
+            )
