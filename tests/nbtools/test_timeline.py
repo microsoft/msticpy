@@ -89,7 +89,7 @@ TIMELINE_COMMON_ARGS: List[Tuple[Dict[str, List[Any]], List[Any]]] = [
     ({"color": ["green", "navy"]}, [True, True]),
     ({"group_by": [None, "Account"]}, [True, True]),
     ({"height": [None, 500, 1000]}, [True, True, True]),
-    ({"legend": ["inline", "left", "right"]}, [True, True, True]),
+    ({"legend": ["inline", "left", "right", "none"]}, [True, True, True, True]),
     ({"range_tool": [True, False]}, [True, True]),
     ({"time_column": ["TimeGenerated", "TimeCreatedUtc"]}, [True, True]),
     ({"title": [None, "Test timeline"]}, [True, True]),
@@ -188,7 +188,7 @@ def test_timeline_dict(data_dict):
 TL_VALUES_ARGS: List[Tuple[Dict[str, List[Any]], List[Any]]] = [
     ({"kind": ["circle", ["circle", "line", "vbar"]]}, [True, True]),
     ({"kind_grp": ["circle", ["circle", "line", "vbar"]]}, [True, True]),
-    ({"leg_grp": ["inline", "left", "right"]}, [True, True, True]),
+    ({"leg_grp": ["inline", "left", "right", "none"]}, [True, True, True, True]),
 ]
 
 TIMELINE_VALUES = TIMELINE_COMMON_ARGS + TL_SRC_COLS + TL_VALUES_ARGS

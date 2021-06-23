@@ -128,7 +128,7 @@ def display_timeline(
         (where `data` is a DataFrame)
         The column to group timelines on
     legend: str, optional
-        "left", "right", "inline" or "none"[data]
+        "left", "right", "inline" or "none"
         (the default is to show a legend when plotting multiple series
         and not to show one when plotting a single series)
     yaxis : bool, optional
@@ -146,6 +146,8 @@ def display_timeline(
         The width of the plot figure (the default is 900)
     color : str
         Default series color (default is "navy")
+    overlay_data : pd.DataFrame:
+        A second dataframe to plot as a different series.
     overlay_color : str
         Overlay series color (default is "green")
     hide : bool, optional

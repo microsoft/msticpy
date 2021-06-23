@@ -55,8 +55,7 @@ class TimeLineAccessor:
         ref_time : datetime, optional
             Add a reference line/label using `ref_time` (the default is None)
         group_by : str
-            (where `data` is a DataFrame)
-            The column to group timelines on
+            The column to group timelines on.
         legend: str, optional
             "left", "right", "inline" or "none"
             (the default is to show a legend when plotting multiple series
@@ -76,6 +75,8 @@ class TimeLineAccessor:
             The width of the plot figure (the default is 900)
         color : str
             Default series color (default is "navy")
+        overlay_data : pd.DataFrame:
+            A second dataframe to plot as a different series.
         overlay_color : str
             Overlay series color (default is "green")
         ref_events : pd.DataFrame, optional
@@ -128,6 +129,8 @@ class TimeLineAccessor:
             Add a reference line/label using the alert time (the default is None)
         ref_time : datetime, optional
             Add a reference line/label using `ref_time` (the default is None)
+        ref_label : str, optional
+            A label for the `ref_event` or `ref_time` reference item
         group_by : str
             (where `data` is a DataFrame)
             The column to group timelines on
@@ -186,8 +189,6 @@ class TimeLineAccessor:
 
         Parameters
         ----------
-        data : pd.DataFrame
-            Data to plot
         group_by : Union[Iterable[str], str]
             The column name or iterable of column names to group the data by.
         time_column : str
