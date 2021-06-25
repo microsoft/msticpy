@@ -330,10 +330,10 @@ class QueryProvider:
     def _check_for_time_params(self, params, missing):
         """Fall back on builtin query time if no time parameters were supplied."""
         if "start" in missing:
-            missing.pop("start", None)
+            missing.remove("start")
             params["start"] = self._query_time.start
         if "end" in missing:
-            missing.pop("end", None)
+            missing.remove("end")
             params["end"] = self._query_time.end
 
     @staticmethod
