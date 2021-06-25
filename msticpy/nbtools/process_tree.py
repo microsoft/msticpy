@@ -346,11 +346,10 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
         console.log(py_str);
         IPython.notebook.kernel.execute(py_str);
     """
-    get_selected = CustomJS(
+    return CustomJS(
         args=dict(source=source, itemkey="proc_key", output_var=result_var),
         code=ret_var_js,
     )
-    return get_selected
 
 
 def _create_fill_map(
@@ -457,10 +456,7 @@ def _create_data_table(
         if col in source.column_names
     ]
 
-    data_table = DataTable(
-        source=source, columns=columns + columns2, width=950, height=150
-    )
-    return data_table
+    return DataTable(source=source, columns=columns + columns2, width=950, height=150)
 
 
 def _check_proc_tree_schema(data):

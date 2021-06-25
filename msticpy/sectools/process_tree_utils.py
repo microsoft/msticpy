@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import attr
 import pandas as pd
@@ -23,7 +23,17 @@ class ProcessTreeSchemaException(MsticpyException):
 
 @attr.s(auto_attribs=True)
 class ProcSchema:
-    """Property name lookup for Process event schema."""
+    """
+    Property name lookup for Process event schema.
+
+    Each property maps a generic column name on to the
+    schema of the input data. Most of these are mandatory,
+    some are optional - not supplying them may result in
+    a less complete tree.
+    The `time_stamp` column should be supplied although
+    defaults to 'TimeGenerated'.
+
+    """
 
     process_name: str
     process_id: str
@@ -32,20 +42,35 @@ class ProcSchema:
     cmd_line: str
     user_name: str
     path_separator: str
+    host_name_column: str
     time_stamp: str = "TimeGenerated"
     parent_name: Optional[str] = None
     target_logon_id: Optional[str] = None
     user_id: Optional[str] = None
+    event_id_column: Optional[str] = None
+    event_id_identifier: Optional[Any] = None
 
     @property
     def column_map(self) -> Dict[str, str]:
         """Return a dictionary that maps fields to schema names."""
-        return {key: str(val) for key, val in attr.asdict(self).items()}
+        return {
+            prop: str(col)
+            for prop, col in attr.asdict(self).items()
+            if prop not in {"path_separator", "event_id_identifier"}
+        }
 
     @property
-    def columns(self) -> Iterable[str]:
-        """Return an interable of target column names."""
-        return [str(val) for val in attr.asdict(self).values() if val]
+    def columns(self):
+        """Return list of columns in schema data source."""
+        return [
+            col
+            for prop, col in attr.asdict(self).items()
+            if prop not in {"path_separator", "event_id_identifier"}
+        ]
+
+    def get_df_cols(self, data: pd.DataFrame):
+        """Return the subset of columns that are present in `data`."""
+        return [col for col in self.columns if col in data.columns]
 
     @property
     def event_type_col(self) -> str:
@@ -63,10 +88,8 @@ class ProcSchema:
             If the schema is not known.
 
         """
-        if self.process_name == "NewProcessName":
-            return "EventID"
-        if self.process_name == "exe":
-            return "EventType"
+        if self.event_id_column:
+            return self.event_id_column
         raise ProcessTreeSchemaException("Unknown schema.")
 
     @property
@@ -85,10 +108,8 @@ class ProcSchema:
             If the schema is not known.
 
         """
-        if self.process_name == "NewProcessName":
-            return 4688
-        if self.process_name == "exe":
-            return "SYSCALL_EXECVE"
+        if self.event_id_identifier:
+            return self.event_id_identifier
         raise ProcessTreeSchemaException("Unknown schema.")
 
 
@@ -104,6 +125,9 @@ WIN_EVENT_SCH = ProcSchema(
     user_name="SubjectUserName",
     path_separator="\\",
     user_id="SubjectUserSid",
+    event_id_column="EventID",
+    event_id_identifier=4688,
+    host_name_column="Computer",
 )
 
 LX_EVENT_SCH = ProcSchema(
@@ -118,6 +142,9 @@ LX_EVENT_SCH = ProcSchema(
     user_name="acct",
     path_separator="/",
     user_id="uid",
+    event_id_column="EventType",
+    event_id_identifier="SYSCALL_EXECVE",
+    host_name_column="Computer",
 )
 
 LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "uid"]
@@ -128,7 +155,7 @@ TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
 def build_process_tree(
     procs: pd.DataFrame,
-    schema: ProcSchema = None,
+    schema: Union[ProcSchema, Dict[str, Any]] = None,
     show_progress: bool = False,
     debug: bool = False,
 ) -> pd.DataFrame:
@@ -139,8 +166,10 @@ def build_process_tree(
     ----------
     procs : pd.DataFrame
         Process events (Windows 4688 or Linux Auditd)
-    schema : ProcSchema, optional
-        The column schema to use, by default None
+    schema : Union[ProcSchema, Dict[str, Any]], optional
+        The column schema to use, by default None.
+        If supplied as a dict it must include definitions for the
+        required fields in the ProcSchema class
         If None, then the schema is inferred
     show_progress : bool
         Shows the progress of the process (helpful for
@@ -154,10 +183,16 @@ def build_process_tree(
     pd.DataFrame
         Process tree dataframe.
 
+    See Also
+    --------
+    ProcSchema
+
     """
     # If schema is none, infer schema from columns
     if not schema:
         schema = infer_schema(procs)
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
 
     data_len = len(procs)
     section_len = int(data_len / 4)
@@ -221,19 +256,22 @@ def _clean_proc_data(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFrame:
     )
 
     # Filter out any non-process events
-    event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
-    procs_cln = procs_cln[event_type_filter]
+    if schema.event_type_col and schema.event_id_identifier:
+        event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
+        procs_cln = procs_cln[event_type_filter]
+    # Remove unneeded columns
+    procs_cln = procs_cln[schema.get_df_cols(procs_cln)]
 
     # Change Linux int cols to force int then to string types
-    type_chng_int_dict = {col: "int" for col in LX_INT_TYPES if col in procs.columns}
+    type_chng_int_dict = {
+        col: "int" for col in LX_INT_TYPES if col in procs_cln.columns
+    }
     if type_chng_int_dict:
         procs_cln = procs_cln.astype(type_chng_int_dict)
         type_chng_str_dict = {
-            col: "str" for col in LX_INT_TYPES if col in procs.columns
+            col: "str" for col in LX_INT_TYPES if col in procs_cln.columns
         }
         procs_cln = procs_cln.astype(type_chng_str_dict)
-    if "EventID" not in procs_cln.columns and "EventType" in procs_cln.columns:
-        procs_cln = procs_cln.rename(columns={"EventType": "EventID"})
 
     procs_cln["EffectiveLogonId"] = procs_cln[schema.logon_id]
     # Create effective logon Id for Windows, if the TargetLogonId is not 0x0
@@ -324,9 +362,8 @@ def _extract_inferred_parents(
     inferred_parents = (
         merged_procs[root_procs_crit][
             [
-                "TenantId",
-                "EventID",
-                "Computer",
+                schema.event_id_column,
+                schema.host_name_column,
                 schema.parent_id,
                 "EffectiveLogonId_par",
                 "ParentProcessName",
@@ -785,7 +822,7 @@ def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
     return summary
 
 
-# Diagnostic functions
+# Diagnostic/debug functions
 def _check_merge_status(procs, merged_procs, schema):
     """Diagnostic for _merge_parent_by_time."""
     orig_cols = [col for col in merged_procs.columns if not col.endswith("_par")]
@@ -842,7 +879,7 @@ def _check_proc_keys(merged_procs_par, schema):
     crit6 = merged_procs_par["parent_key"].isna()
     print("has parent time", len(merged_procs_par[crit1]))
     print("effectivelogonId in subjectlogonId", len(merged_procs_par[crit2]))
-    if schema.target_logon_id and c2a:
+    if schema.target_logon_id and c2a is not None:
         print("effectivelogonId in targetlogonId", len(merged_procs_par[c2a]))
     print("parent_proc_lc in procs", len(merged_procs_par[crit3]))
     print("ProcessId in ParentProcessId", len(merged_procs_par[crit4]))

@@ -13,6 +13,7 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
 
+from msticpy.nbtools.process_tree import build_and_show_process_tree
 from msticpy.sectools import process_tree_utils as ptutil
 
 _test_data_folders = [
@@ -28,7 +29,7 @@ testdf_lx = pd.read_pickle(Path(_TEST_DATA).joinpath("linux_proc_test.pkl"))
 
 
 def test_build_win_tree():
-    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True)
+    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True, debug=True)
     assert ptutil.get_summary_info(p_tree) == {
         "Processes": 1010,
         "RootProcesses": 10,
@@ -40,7 +41,7 @@ def test_build_win_tree():
 
 
 def test_build_lx_tree():
-    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False)
+    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False, debug=True)
     assert ptutil.get_summary_info(p_tree_l) == {
         "Processes": 1029,
         "RootProcesses": 29,
@@ -51,8 +52,38 @@ def test_build_lx_tree():
     }
 
 
+def test_build_win_tree_dict_schema():
+    schema = dict(
+        time_stamp="TimeGenerated",
+        process_name="NewProcessName",
+        process_id="NewProcessId",
+        parent_name="ParentProcessName",
+        parent_id="ProcessId",
+        logon_id="SubjectLogonId",
+        target_logon_id="TargetLogonId",
+        cmd_line="CommandLine",
+        user_name="SubjectUserName",
+        path_separator="\\",
+        user_id="SubjectUserSid",
+        event_id_column="EventID",
+        event_id_identifier=4688,
+        host_name_column="Computer",
+    )
+    p_tree = ptutil.build_process_tree(
+        testdf_win, schema=schema, show_progress=True, debug=True
+    )
+    assert ptutil.get_summary_info(p_tree) == {
+        "Processes": 1010,
+        "RootProcesses": 10,
+        "LeafProcesses": 815,
+        "BranchProcesses": 185,
+        "IsolatedProcesses": 0,
+        "LargestTreeDepth": 7,
+    }
+
+
 def test_tree_utils_win():
-    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True)
+    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True, debug=True)
 
     assert len(ptutil.get_roots(p_tree)) == 10
     t_root = ptutil.get_roots(p_tree).iloc[4]
@@ -97,7 +128,7 @@ def test_tree_utils_win():
 
 
 def test_tree_utils_lx():
-    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False)
+    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False, debug=True)
     assert len(ptutil.get_roots(p_tree_l)) == 29
     t_root = ptutil.get_roots(p_tree_l).iloc[0]
     full_tree = ptutil.get_descendents(p_tree_l, t_root)
@@ -138,6 +169,11 @@ def test_tree_utils_lx():
     }
 
     assert ptutil.infer_schema(p_tree_l) == ptutil.LX_EVENT_SCH
+
+
+def test_build_process_tree():
+    build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
 
 
 _NB_FOLDER = "docs/notebooks"
