@@ -389,7 +389,7 @@ def _check_kql_prereqs():
 
 
 # pylint: disable=broad-except
-def _check_nb_check_ver():
+def _check_nb_check_ver():  # noqa: MC0001
     """Check the version of nb_check and optionally update."""
     nb_check_path = "utils/nb_check.py"
     gh_file = ""
