@@ -259,8 +259,6 @@ def _clean_proc_data(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFrame:
     if schema.event_type_col and schema.event_id_identifier:
         event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
         procs_cln = procs_cln[event_type_filter]
-    # Remove unneeded columns
-    procs_cln = procs_cln[schema.get_df_cols(procs_cln)]
 
     # Change Linux int cols to force int then to string types
     type_chng_int_dict = {
