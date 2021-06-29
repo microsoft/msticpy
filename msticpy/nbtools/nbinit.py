@@ -227,7 +227,7 @@ def init_notebook(
     verbose : bool, optional
         Display more verbose status, by default False
     no_config_check : bool, optional
-        Skip the check for valid configuration.
+        Skip the check for valid configuration. Default is False.
 
     Returns
     -------
@@ -250,6 +250,7 @@ def init_notebook(
     user_install: bool = kwargs.pop("user_install", False)
     friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
+
     verbose: bool = kwargs.pop("verbose", False)
 
     _VERBOSE(verbose)
@@ -432,7 +433,7 @@ def _get_or_create_config() -> bool:
     if mp_path and not Path(mp_path).is_file():
         display(HTML(_MISSING_MPCONFIG_ENV_ERR))
     if not mp_path or not Path(mp_path).is_file():
-        mp_path = search_for_file("msticpyconfig,yaml", paths=[".", ".."])
+        mp_path = search_for_file("msticpyconfig.yaml", paths=[".", ".."])
 
     if mp_path:
         try:
