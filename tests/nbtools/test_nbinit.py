@@ -124,7 +124,7 @@ _CONFIG_TESTS = [
     ),
     (
         ("msticpyconfig.yaml", None, TestSubdir.SEARCH),
-        False,
+        True,
     ),
     (
         ("msticpyconfig-no-settings.yaml", None, TestSubdir.SEARCH),
@@ -175,11 +175,15 @@ _test_ids = [
 
 
 @pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
-def test_check_config(conf_file, expected, tmpdir):
+def test_check_config(conf_file, expected, tmp_path):
     """Test config check."""
     mpconf_file, conf_json, mp_location = conf_file
     init_cwd = str(Path(".").absolute())
     settings_file = "missing_file"
+    for file in tmp_path.parent.glob("config.json"):
+        file.unlink()
+    for file in tmp_path.parent.glob("msticpyconfig.yaml"):
+        file.unlink()
     try:
         # If we want to test against config files in isolated directory
         if mp_location != TestSubdir.NONE:
@@ -196,17 +200,20 @@ def test_check_config(conf_file, expected, tmpdir):
                     else "msticpyconfig.yaml"
                 )
                 # write the file to the folder
-                tmpdir.join(dest_file).write(file_txt)
-            cwd_path = tmpdir
+                tmp_path.joinpath(dest_file).write_text(file_txt)
+            cwd_path = str(tmp_path)
             # If sub-dir, change to the directory, so WorkspaceConfig has to search.
             if mp_location in (TestSubdir.MAIN_ENV_PTR, TestSubdir.SEARCH):
-                cwd_path = tmpdir.mkdir("sub_folder")
-            os.chdir(cwd_path)
+                cwd_path = tmp_path.joinpath("sub_folder")
+                cwd_path.mkdir(parents=True, exist_ok=True)
+            os.chdir(str(cwd_path))
             if mp_location == TestSubdir.SEARCH or mpconf_file is None:
                 # Pass non-existing file to custom_mp_config to bypass default settings
                 settings_file = "missing_file"
             else:
-                settings_file = Path(str(tmpdir)).joinpath(mpconf_file)
+                settings_file = tmp_path.joinpath(mpconf_file)
+        else:
+            os.chdir(str(tmp_path))
 
         with custom_mp_config(settings_file, path_check=False):
             result = _get_or_create_config()
