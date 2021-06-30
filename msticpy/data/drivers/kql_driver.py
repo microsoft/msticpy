@@ -324,13 +324,13 @@ class KqlDriver(DriverBase):
     @staticmethod
     def _raise_adal_error(ex):
         """Adal error - usually wrong tenant ID."""
-        if ex.args[0] == "Unexpected polling state code_expired":
+        if ex.args and ex.args[0] == "Unexpected polling state code_expired":
             raise MsticpyKqlConnectionError(
                 "Authentication request was not completed.",
                 title="authentication timed out",
             )
 
-        err_response = getattr(ex, "error_response")
+        err_response = getattr(ex, "error_response", None)
         if err_response and "error_description" in ex.error_response:
             ex_mssgs = ex.error_response["error_description"].split("\r\n")
         else:

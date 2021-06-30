@@ -100,6 +100,22 @@ msticpy.nbtools.timeline module
     :undoc-members:
     :show-inheritance:
 
+msticpy.nbtools.timeline\_duration module
+-----------------------------------------
+
+.. automodule:: msticpy.nbtools.timeline_duration
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msticpy.nbtools.timeline\_pd\_accessor module
+---------------------------------------------
+
+.. automodule:: msticpy.nbtools.timeline_pd_accessor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.nbtools.user\_config module
 -----------------------------------
 

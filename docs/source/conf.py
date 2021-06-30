@@ -229,6 +229,7 @@ autodoc_mock_imports = [
     "azure.mgmt.monitor",
     "azure.mgmt.network",
     "azure.mgmt.resource",
+    "azure.mgmt.resourcegraph",
     "azure.mgmt.subscription",
     "azure.storage.blob",
     "keyring",
