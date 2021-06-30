@@ -389,7 +389,7 @@ def _check_kql_prereqs():
 
 
 # pylint: disable=broad-except
-def _check_nb_check_ver():
+def _check_nb_check_ver():  # noqa: MC0001
     """Check the version of nb_check and optionally update."""
     nb_check_path = "utils/nb_check.py"
     gh_file = ""
@@ -407,11 +407,13 @@ def _check_nb_check_ver():
             curr_file = nbc_path.read_text()
         except Exception:
             _disp_html(f"Warning could not check version local {nb_check_path}")
-
+            return True
     if _get_file_ver(gh_file) == _get_file_ver(curr_file):
         return True
 
     _disp_html("Updating local {nb_check_path}...")
+    if not get_aml_user_folder().joinpath("/utils").is_dir():
+        get_aml_user_folder().joinpath("/utils").mkdir(exist_ok=True)
     bk_up = get_aml_user_folder().joinpath(f"{nb_check_path}._save_")
     if bk_up.is_file():
         bk_up.unlink()
@@ -425,7 +427,7 @@ def _check_nb_check_ver():
     _disp_html(
         "<h4><font color='orange'>"
         f"Important: The version of {nb_check_path} has been updated.<br>"
-        "Please re-run this cell to run the new version."
+        "Please restart the kernel and re-run this cell to run the new version."
         "</font></h4>"
     )
     return False
