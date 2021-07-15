@@ -71,7 +71,7 @@ class RegisteredWidget(ABC):
     initialization parameters. If an instance of the same widget class is
     created with the same parameters, its previous value will be repopulated
     from the registry.
-    This is especially useful in notebooks where people accidently re-run
+    This is especially useful in notebooks where people accidentally re-run
     the same cell after entering values.
     """
 
