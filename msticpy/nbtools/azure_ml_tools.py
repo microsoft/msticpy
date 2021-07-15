@@ -6,13 +6,11 @@
 """Checker functions for Azure ML notebooks."""
 import json
 import os
-import re
 import socket
 import sys
 import urllib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
-from urllib import request
 
 from IPython import get_ipython
 from IPython.display import HTML, display
@@ -104,9 +102,6 @@ def check_versions(
         min_py_ver = _get_pkg_version(min_py_ver).release
     check_python_ver(min_py_ver=min_py_ver)
 
-    if is_in_aml() and not _check_nb_check_ver():
-        _disp_html("Check stopped because nb_check has been updated.")
-        return
     _check_mp_install(min_mp_ver, mp_release, extras)
     _check_kql_prereqs()
     _set_kql_env_vars(extras)
@@ -381,60 +376,6 @@ def _check_kql_prereqs():
             )
             _disp_html(
                 "To prevent warnings when loading the Kqlmagic data provider,"
-                " Please run the following commands:<br>"
-                f"<pre>!sudo apt-get --yes install {' '.join(missing_lx_pkg)}</pre><br>"
-                "<pre>!pip uninstall -y enum34</pre><br>"
-                "<pre>!pip install PyGObject</pre>"
+                " Please run the following command:<br>"
+                "!conda install --yes -c conda-forge pygobject<br>"
             )
-
-
-# pylint: disable=broad-except
-def _check_nb_check_ver():
-    """Check the version of nb_check and optionally update."""
-    nb_check_path = "utils/nb_check.py"
-    gh_file = ""
-    curr_file = ""
-    try:
-        # Bandit warning - fixed https URL
-        with request.urlopen(NB_CHECK_URI) as gh_fh:  # nosec
-            gh_file = gh_fh.read().decode("utf-8")
-    except Exception:
-        _disp_html(f"Warning could not check version of {NB_CHECK_URI}")
-        return True
-    nbc_path = get_aml_user_folder().joinpath(nb_check_path)
-    if nbc_path.is_file():
-        try:
-            curr_file = nbc_path.read_text()
-        except Exception:
-            _disp_html(f"Warning could not check version local {nb_check_path}")
-
-    if _get_file_ver(gh_file) == _get_file_ver(curr_file):
-        return True
-
-    _disp_html("Updating local {nb_check_path}...")
-    bk_up = get_aml_user_folder().joinpath(f"{nb_check_path}._save_")
-    if bk_up.is_file():
-        bk_up.unlink()
-    nbc_path.replace(bk_up)
-    try:
-        with open(nbc_path, "w") as repl_fh:
-            repl_fh.write(gh_file)
-    except Exception:
-        bk_up.replace(nbc_path)
-
-    _disp_html(
-        "<h4><font color='orange'>"
-        f"Important: The version of {nb_check_path} has been updated.<br>"
-        "Please re-run this cell to run the new version."
-        "</font></h4>"
-    )
-    return False
-
-
-def _get_file_ver(file_text) -> Optional[str]:
-    if not file_text:
-        return None
-    f_match = re.search(r"__version__\s*=\s*\"([\d.]+)\"", file_text)
-    if f_match:
-        return f_match.groups()[0]
-    return None

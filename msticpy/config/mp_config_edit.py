@@ -88,7 +88,7 @@ class MpConfigEdit(CompEditDisplayMixin):
         vbox = widgets.VBox(
             [
                 self.txt_current_file,
-                widgets.HBox([self.btn_save, self.btn_validate]),
+                widgets.HBox([self.btn_save, self.cb_backup, self.btn_validate]),
                 self.mp_conf_file.viewer,
             ]
         )
