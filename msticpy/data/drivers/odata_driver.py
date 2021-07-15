@@ -15,7 +15,7 @@ import pandas as pd
 
 from .driver_base import DriverBase, QuerySource
 from ...common import pkg_config as config
-from ...common.exceptions import MsticpyException
+from ...common.exceptions import MsticpyException, MsticpyConnectionError
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -122,7 +122,9 @@ class OData(DriverBase):
         json_response = response.json()
         self.aad_token = json_response.get("access_token", None)
         if not self.aad_token:
-            raise ConnectionError("Could not obtain access token")
+            raise MsticpyConnectionError(
+                f"Could not obtain access token - {json_response['error_description']}"
+            )
 
         self.req_headers["Authorization"] = "Bearer " + self.aad_token
         self.api_root = cs_dict.get(  # type: ignore
@@ -205,7 +207,7 @@ class OData(DriverBase):
         if not result:
             print("Warning - query did not return any results.")
             return None, json_response
-        return pd.io.json.json_normalize(result), result
+        return pd.json_normalize(result), result
 
     # pylint: enable=too-many-branches
 

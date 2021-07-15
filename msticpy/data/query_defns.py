@@ -86,7 +86,7 @@ class DataEnvironment(Enum):
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
-    MDE = 5
+    MDE = 5  # alias of MDATP
     MDATP = 5
     LocalData = 6
     Splunk = 7

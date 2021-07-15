@@ -26,9 +26,9 @@ sources:
     metadata:
     args:
       query: '
-        LogonEvents
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        DeviceLogonEvents
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
       uri: None
@@ -41,9 +41,9 @@ sources:
     metadata:
     args:
       query: '
-        ProcessCreationEvents
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        DeviceProcessEvents
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
     parameters:
@@ -55,9 +55,9 @@ sources:
     metadata:
     args:
       query: '
-        FileCreationEvents
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        DeviceFileEvents
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
@@ -69,9 +69,9 @@ sources:
     metadata:
     args:
       query: '
-        NetworkCommunicationEvents
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        DeviceNetworkEvents
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
