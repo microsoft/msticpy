@@ -11,7 +11,7 @@ defaults:
       table:
         description: Table name
         type: str
-        default: 'AlertEvents'
+        default: 'DeviceAlertEvents'
       start:
         description: Query start time
         type: datetime
@@ -31,8 +31,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         {add_query_items}'
       uri: None
     parameters:
@@ -42,9 +42,9 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
-        | where ComputerName has "{host_name}"
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where DeviceName has "{host_name}"
         {add_query_items}'
     parameters:
       host_name:
@@ -56,8 +56,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where RemoteIP has "{ip_address}"
         {add_query_items}'
     parameters:
@@ -70,8 +70,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where RemoteUrl has "{url}"
         {add_query_items}'
     parameters:
@@ -84,8 +84,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where SHA1 has "{file_hash}"
         {add_query_items}'
     parameters:
