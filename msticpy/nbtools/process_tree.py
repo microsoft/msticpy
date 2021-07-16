@@ -341,8 +341,8 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
         for (var i = 0; i < inds.length; i++) {
             output.push(source.data[itemkey][inds[i]])
         }
-        out_str = JSON.stringify(output);
-        py_str = `${output_var} = ${out_str}`;
+        var out_str = JSON.stringify(output);
+        var py_str = `${output_var} = ${out_str}`;
         console.log(py_str);
         IPython.notebook.kernel.execute(py_str);
     """
