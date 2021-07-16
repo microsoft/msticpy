@@ -11,7 +11,7 @@ defaults:
       table:
         description: Table name
         type: str
-        default: 'NetworkCommunicationEvents  '
+        default: 'DeviceNetworkEvents'
       start:
         description: Query start time
         type: datetime
@@ -31,8 +31,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         {add_query_items}'
       uri: None
     parameters:
@@ -42,9 +42,9 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
-        | where ComputerName has "{hostname}"
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where DeviceName has "{hostname}"
         {add_query_items}'
     parameters:
       hostname:
@@ -56,8 +56,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where RemoteIP has "{ip_address}" or where LocalIP has "{ip_address}"
         {add_query_items}'
     parameters:
@@ -70,8 +70,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where RemoteUrl has "{url}"
         {add_query_items}'
     parameters:
@@ -84,8 +84,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where RemotePort == {protocol}
         {add_query_items}'
     parameters:

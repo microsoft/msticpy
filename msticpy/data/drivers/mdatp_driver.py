@@ -34,10 +34,10 @@ class MDATPDriver(OData):
             "client_id": None,
             "client_secret": None,
             "grant_type": "client_credentials",
-            "resource": "https://api.securitycenter.windows.com",
+            "resource": "https://api.securitycenter.microsoft.com",
         }
         self.oauth_url = "https://login.windows.net/{tenantId}/oauth2/token"
-        self.api_root = "https://api.securitycenter.windows.com/"
+        self.api_root = "https://api.securitycenter.microsoft.com/"
         self.api_ver = "api"
 
         if connection_str:
