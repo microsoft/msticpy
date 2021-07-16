@@ -412,7 +412,7 @@ def _to_datetime(date_val) -> datetime:
         return datetime.min
 
 
-DS_PREFIX = "https://raw.githubusercontent.com/OTRF/mordor/master/datasets/"
+DS_PREFIX = "https://raw.githubusercontent.com/OTRF/Security-Datasets/master/datasets/"
 
 
 # pylint: disable=not-an-iterable, no-member
