@@ -1633,7 +1633,7 @@ class OptionButtons:
 
         def getvalue(change):
             """Button on_click handler."""
-            self.value = change.description.casefold()
+            self.value = change.description
             for btn in btns:
                 btn.on_click(getvalue, remove=True)
 
