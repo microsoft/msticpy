@@ -155,7 +155,7 @@ def test_mordor_query_provider(qry_provider):
     check.is_in("Mitre Techniques:", output.getvalue())
 
     f_path = q_func("print")
-    check.is_in("https://raw.githubusercontent.com/OTRF/mordor", f_path)
+    check.is_in("https://raw.githubusercontent.com/OTRF/Security-Datasets", f_path)
 
     d_frame = q_func()
     check.is_instance(d_frame, pd.DataFrame)
