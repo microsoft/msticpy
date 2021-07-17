@@ -35,11 +35,15 @@ class AzureSentinel(AzureData):
     def connect(
         self,
         auth_methods: List = None,
+        token: str = None,
         silent: bool = False,
     ):
         """Authenticate with the SDK & API."""
         super().connect(auth_methods=auth_methods, silent=silent)
-        self.token = _get_token(self.credentials)
+        if not token:
+            self.token = _get_token(self.credentials)
+        else:
+            self.token = token
         self.res_group_url = None
         self.prov_path = None
 
@@ -325,6 +329,7 @@ class AzureSentinel(AzureData):
         sub_id: str = None,
         res_grp: str = None,
         ws_name: str = None,
+        entities: bool = False,
     ) -> pd.DataFrame:
         """
         Get details on a specific incident.
@@ -341,7 +346,8 @@ class AzureSentinel(AzureData):
             Resource Group name of the workspace, to be used if not providing Resource ID.
         ws_name : str, optional
             Workspace name of the workspace, to be used if not providing Resource ID.
-
+        entities : bool, optional
+            If True, include all entities in the response. Default is False.
 
         Returns
         -------
@@ -378,6 +384,20 @@ class AzureSentinel(AzureData):
             incident_df = _azs_api_result_to_df(response)
         else:
             raise CloudError(response=response)
+
+        if entities:
+            entities_url = incident_url + "/entities"
+            ent_parameters = {"api-version": "2019-01-01-preview"}
+            ents = requests.post(
+                entities_url,
+                headers=_get_api_headers(self.token),
+                params=ent_parameters,
+            )
+            if ents.status_code == 200:
+                unique_entities = [
+                    (ent["kind"], ent["properties"]) for ent in ents.json()["entities"]
+                ]
+                incident_df["Entities"] = [unique_entities]
 
         return incident_df
 
