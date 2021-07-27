@@ -29,18 +29,21 @@ class AzureSentinel(AzureData):
     """Class for returning key Azure Sentinel elements."""
 
     def __init__(self, connect: bool = False):
-        """Initialize connector for Azure APIs.
+        """
+        Initialize connector for Azure APIs.
 
         Parameters
         ----------
         connect : bool, optional
             Set true if you want to connect to API on initalization, by default False
+
         """
         super().__init__()
         self.config = None
 
     def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
-        """Authenticate with the SDK & API.
+        """
+        Authenticate with the SDK & API.
 
         Parameters
         ----------
@@ -48,12 +51,13 @@ class AzureSentinel(AzureData):
             list of prefered authentication methods to use, by default None
         silent : bool, optional
             Set true to prevent output during auth process, by default False
+
         """
         super().connect(auth_methods=auth_methods, silent=silent)
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:
-            self.token = _get_token(self.credentials)
+            self.token = _get_token(self.credentials)  # type: ignore
 
         self.res_group_url = None
         self.prov_path = None
@@ -333,7 +337,7 @@ class AzureSentinel(AzureData):
 
         return incidents_df
 
-    def get_incident(
+    def get_incident(  # pylint: disable=too-many-locals
         self,
         incident_id: str,
         res_id: str = None,
@@ -571,7 +575,8 @@ class AzureSentinel(AzureData):
 
 
 def _build_paths(resid: str) -> str:
-    """Build a API URL from an Azure resource ID.
+    """
+    Build an API URL from an Azure resource ID.
 
     Parameters
     ----------
@@ -582,6 +587,7 @@ def _build_paths(resid: str) -> str:
     -------
     str
         A URI to that resource.
+
     """
     res_info = {
         "subscription_id": resid.split("/")[2],
@@ -599,7 +605,8 @@ def _build_paths(resid: str) -> str:
 
 
 def _get_token(credential: AzCredentials) -> str:
-    """Extract token from a azure.identity object.
+    """
+    Extract token from a azure.identity object.
 
     Parameters
     ----------
@@ -610,13 +617,15 @@ def _get_token(credential: AzCredentials) -> str:
     -------
     str
         A token to be used in API calls.
+
     """
     token = credential.modern.get_token("https://management.azure.com/.default")
     return token.token
 
 
 def _get_api_headers(token: str) -> Dict:
-    """Return authorization header with current token.
+    """
+    Return authorization header with current token.
 
     Parameters
     ----------
@@ -627,6 +636,7 @@ def _get_api_headers(token: str) -> Dict:
     -------
     Dict
         A dictionary of headers to be used in API calls.
+
     """
     return {
         "Authorization": f"Bearer {token}",
@@ -635,7 +645,8 @@ def _get_api_headers(token: str) -> Dict:
 
 
 def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
-    """Convert API response to a Pandas dataframe.
+    """
+    Convert API response to a Pandas dataframe.
 
     Parameters
     ----------
@@ -651,6 +662,7 @@ def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
     ------
     ValueError
         If the response is not valid JSON.
+
     """
     j_resp = response.json()
     if response.status_code != 200 or not j_resp:
@@ -661,7 +673,8 @@ def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
 
 
 def _build_data(items: dict, **kwargs) -> dict:
-    """Build request data body from items.
+    """
+    Build request data body from items.
 
     Parameters
     ----------
@@ -672,6 +685,7 @@ def _build_data(items: dict, **kwargs) -> dict:
     -------
     dict
         The request body formatted for the API.
+
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key in items.keys():

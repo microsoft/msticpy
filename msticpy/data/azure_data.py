@@ -122,7 +122,8 @@ class AzureData:
             self.connect()
 
     def connect(self, auth_methods: List = None, silent: bool = False):
-        """Authenticate to the Azure SDK.
+        """
+        Authenticate to the Azure SDK.
 
         Parameters
         ----------
@@ -135,6 +136,7 @@ class AzureData:
         ------
         CloudError
             If no valid credentials are found or if subscription client can't be created
+
         """
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
@@ -146,7 +148,8 @@ class AzureData:
         self.connected = True
 
     def get_subscriptions(self) -> pd.DataFrame:
-        """Get details of all subscriptions within the tenant.
+        """
+        Get details of all subscriptions within the tenant.
 
         Returns
         -------
@@ -157,6 +160,7 @@ class AzureData:
         ------
         MsticpyNotConnectedError
             If .connect() has not been called
+
         """
         if self.connected is False:
             raise MsticpyNotConnectedError(
@@ -193,7 +197,8 @@ class AzureData:
         )
 
     def get_subscription_info(self, sub_id: str) -> dict:
-        """Get information on a specific subscription.
+        """
+        Get information on a specific subscription.
 
         Parameters
         ----------
@@ -209,6 +214,7 @@ class AzureData:
         ------
         MsticpyNotConnectedError
             If .connect() has not been called.
+
         """
         if self.connected is False:
             raise MsticpyNotConnectedError(
