@@ -108,12 +108,24 @@ class RiskIQ(TIProvider, TIPivotProvider):
     }
     _PIVOT_ENTITIES["services"] = {"IpAddress": "Address"}
 
+    _REFERNCE = "https://community.riskiq.com"
+
     def __init__(self, **kwargs):
         """Instantiate RiskIQ class."""
         super().__init__(**kwargs)
         ptanalyzer.init(
-            api_username=kwargs.get("ApiUsername"), api_key=kwargs.get("AuthKey")
+            username=kwargs.get("ApiUsername"), api_key=kwargs.get("AuthKey")
         )
+    
+    @property
+    def _requests_session(self):
+        return ptanalyzer.api_clients['Cards'].session
+    
+    @_requests_session.setter
+    def _requests_session(self, session):
+        for name in ptanalyzer.api_clients:
+            ptanalyzer.api_clients[name].session = session
+
 
     def _severity_rep(self, classification):
         """Get the severity level for a reputation score classification."""
@@ -155,6 +167,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             return result
 
         result.provider = kwargs.get("provider_name", self.__class__.__name__)
+        result.reference = self._REFERNCE
 
         if query_type is None:
             prop = "ALL"
@@ -171,6 +184,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             )
 
         try:
+            ptanalyzer.set_context('msticpy','ti',VERSION, prop)
             obj = ptanalyzer.get_object(ioc)
             if prop == "ALL":
                 details = {
@@ -207,7 +221,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             result.status = TILookupStatus.query_failed.value
             result.details = "ERROR: {}".format(e.message)
             result.raw_result = e
-            result.set_severeity(TISeverity.unknown)
+            result.set_severity(TISeverity.unknown)
 
         return result
 
@@ -255,6 +269,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
     def pivot_value(self, prop, host, **kwargs):
         """Perform a pivot on a single value."""
         ts_changed = self._set_pivot_timespan(**kwargs)
+        ptanalyzer.set_context('msticpy','pivot',VERSION, prop)
         obj = ptanalyzer.get_object(host)
         if ts_changed and prop not in ["reputation", "summary", "whois"]:
             obj.reset(prop)
