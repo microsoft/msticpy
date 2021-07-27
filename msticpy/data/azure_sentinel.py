@@ -12,6 +12,7 @@ import requests
 from azure.common.exceptions import CloudError
 
 from .azure_data import AzureData
+from ..common.azure_auth_core import AzCredentials
 from ..common.exceptions import MsticpyAzureConfigError
 from ..common.wsconfig import WorkspaceConfig
 
@@ -28,22 +29,32 @@ class AzureSentinel(AzureData):
     """Class for returning key Azure Sentinel elements."""
 
     def __init__(self, connect: bool = False):
-        """Initialize connector for Azure APIs."""
+        """Initialize connector for Azure APIs.
+
+        Parameters
+        ----------
+        connect : bool, optional
+            Set true if you want to connect to API on initalization, by default False
+        """
         super().__init__()
         self.config = None
 
-    def connect(
-        self,
-        auth_methods: List = None,
-        token: str = None,
-        silent: bool = False,
-    ):
-        """Authenticate with the SDK & API."""
+    def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
+        """Authenticate with the SDK & API.
+
+        Parameters
+        ----------
+        auth_methods : List, optional
+            list of prefered authentication methods to use, by default None
+        silent : bool, optional
+            Set true to prevent output during auth process, by default False
+        """
         super().connect(auth_methods=auth_methods, silent=silent)
-        if not token:
-            self.token = _get_token(self.credentials)
+        if "token" in kwargs:
+            self.token = kwargs["token"]
         else:
-            self.token = token
+            self.token = _get_token(self.credentials)
+
         self.res_group_url = None
         self.prov_path = None
 
@@ -559,8 +570,19 @@ class AzureSentinel(AzureData):
         return config_items
 
 
-def _build_paths(resid) -> str:
-    """Build a API URL from an Azure resource ID."""
+def _build_paths(resid: str) -> str:
+    """Build a API URL from an Azure resource ID.
+
+    Parameters
+    ----------
+    resid : str
+        An Azure resource ID.
+
+    Returns
+    -------
+    str
+        A URI to that resource.
+    """
     res_info = {
         "subscription_id": resid.split("/")[2],
         "resource_group": resid.split("/")[4],
@@ -576,22 +598,60 @@ def _build_paths(resid) -> str:
     return url_part1 + url_part2 + url_part3
 
 
-def _get_token(credential) -> str:
-    """Extract token from a azure.identity object."""
+def _get_token(credential: AzCredentials) -> str:
+    """Extract token from a azure.identity object.
+
+    Parameters
+    ----------
+    credential : AzCredentials
+        Azure OAuth credentials.
+
+    Returns
+    -------
+    str
+        A token to be used in API calls.
+    """
     token = credential.modern.get_token("https://management.azure.com/.default")
     return token.token
 
 
-def _get_api_headers(token):
-    """Return authorization header with current token."""
+def _get_api_headers(token: str) -> Dict:
+    """Return authorization header with current token.
+
+    Parameters
+    ----------
+    token : str
+        Auzre auth token.
+
+    Returns
+    -------
+    Dict
+        A dictionary of headers to be used in API calls.
+    """
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 
 
-def _azs_api_result_to_df(response) -> pd.DataFrame:
-    """Convert API response to a Pandas dataframe."""
+def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
+    """Convert API response to a Pandas dataframe.
+
+    Parameters
+    ----------
+    response : requests.Response
+        A response object from an Azure REST API call.
+
+    Returns
+    -------
+    pd.DataFrame
+        The API response as a Pandas dataframe.
+
+    Raises
+    ------
+    ValueError
+        If the response is not valid JSON.
+    """
     j_resp = response.json()
     if response.status_code != 200 or not j_resp:
         raise ValueError("No valid JSON result in response")
@@ -601,7 +661,18 @@ def _azs_api_result_to_df(response) -> pd.DataFrame:
 
 
 def _build_data(items: dict, **kwargs) -> dict:
-    """Build request data body from items."""
+    """Build request data body from items.
+
+    Parameters
+    ----------
+    items : dict
+        A set pf items to be formated in the request body.
+
+    Returns
+    -------
+    dict
+        The request body formatted for the API.
+    """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key in items.keys():
         if key in ["severity", "status", "title", "message"]:
