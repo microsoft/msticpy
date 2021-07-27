@@ -40,6 +40,7 @@ python-dateutil>=2.8.1  # pandas
 pytz>=2019.2  # pandas
 pyyaml>=3.13
 requests>=2.21.1
+seaborn>=0.11.1
 scikit-learn>=0.20.2
 scipy>=1.1.0
 setuptools>=40.6.3
