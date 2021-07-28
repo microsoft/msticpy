@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 import pytest
 
-from msticpy.common.exceptions import MsticpyException
+from msticpy.common.exceptions import MsticpyException, MsticpyConnectionError
 from msticpy.data import DataEnvironment
 from msticpy.data.drivers import import_driver
 
@@ -36,7 +36,7 @@ def test_MDATP():
     driver_cls = import_driver(DataEnvironment.MDATP)
     mdatp = driver_cls()
     assert isinstance(mdatp, MDATPDriver)
-    with pytest.raises(ConnectionError):
+    with pytest.raises(MsticpyConnectionError):
         mdatp.connect(
             connection_str="tenant_id=Test;client_id=Test;client_secret=Test;apiRoot=Test;apiVersion=Test"
         )

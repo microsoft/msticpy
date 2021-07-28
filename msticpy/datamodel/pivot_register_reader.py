@@ -11,7 +11,11 @@ import warnings
 import yaml
 
 from .._version import VERSION
-from ..common.exceptions import MsticpyUserConfigError
+from ..common.exceptions import (
+    MsticpyUserConfigError,
+    MsticpyException,
+    MsticpyUserError,
+)
 from ..data.query_container import QueryContainer
 from . import entities
 from .pivot_register import PivotRegistration, create_pivot_func
@@ -20,7 +24,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def register_pivots(
+def register_pivots(  # noqa: MC0001
     file_path: str,
     namespace: Dict[str, Any] = None,
     container: str = "other",
@@ -60,11 +64,25 @@ def register_pivots(
             )
 
         # try to import the module and retrieve the function
-        src_module = importlib.import_module(piv_reg.src_module)
+        try:
+            src_module = importlib.import_module(piv_reg.src_module)
+        except ImportError:
+            print(
+                f"Unable to add pivot functions from module '{piv_reg.src_module}'. Skipping"
+            )
+            continue
         if piv_reg.src_class:
             # if we need to get this from a class/object we need
             # to find or create one.
-            func = _get_func_from_class(src_module, namespace, piv_reg)
+            func = None
+            # Suppress Msticpy exception display when instantiating classes.
+            with MsticpyUserError.no_display_exceptions():
+                try:
+                    func = _get_func_from_class(src_module, namespace, piv_reg)
+                except MsticpyException:
+                    print(
+                        f"Unable to add pivot functions from class '{piv_reg.src_class}'. Skipping"
+                    )
             if not func:
                 continue
         else:

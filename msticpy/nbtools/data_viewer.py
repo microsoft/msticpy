@@ -55,6 +55,8 @@ class DataViewer:
         """
         if data.empty:
             raise ValueError("No data available in 'data'")
+
+        output_notebook(hide_banner=True)
         # Drop empty columns
         data = data.dropna(axis="columns", how="all")
         self.cds = ColumnDataSource(data)
@@ -91,7 +93,6 @@ class DataViewer:
         self.accordion.selected_index = None
 
         self.layout = self.accordion
-        output_notebook(hide_banner=True)
 
     @property
     def filtered_data(self) -> pd.DataFrame:
@@ -134,7 +135,8 @@ class DataViewer:
             print(self.data_filter.filters)
             print(len(self.filtered_data))
             print(self.filtered_data.iloc[:2])
-        push_notebook(handle=self.nb_handle)
+        if self.nb_handle:
+            push_notebook(handle=self.nb_handle)
 
     def display(self):
         """Display the widget."""
