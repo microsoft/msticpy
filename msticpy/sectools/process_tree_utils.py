@@ -51,6 +51,21 @@ class ProcSchema:
     event_id_identifier: Optional[Any] = None
 
     @property
+    def required_columns(self):
+        """Return columns required for Init."""
+        return [
+            "process_name",
+            "process_id",
+            "parent_id",
+            "logon_id",
+            "cmd_line",
+            "user_name",
+            "path_separator",
+            "host_name_column",
+            "time_stamp",
+        ]
+
+    @property
     def column_map(self) -> Dict[str, str]:
         """Return a dictionary that maps fields to schema names."""
         return {
@@ -149,6 +164,22 @@ LX_EVENT_SCH = ProcSchema(
 
 LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "uid"]
 
+MDE_EVENT_SCH = ProcSchema(
+    time_stamp="CreatedProcessCreationTime",
+    process_name="CreatedProcessName",
+    process_id="CreatedProcessId",
+    parent_name="ParentProcessName",
+    parent_id="CreatedProcessParentId",
+    logon_id="InitiatingProcessLogonId",
+    target_logon_id="LogonId",
+    cmd_line="CreatedProcessCommandLine",
+    user_name="CreatedProcessAccountName",
+    path_separator="\\",
+    user_id="CreatedProcessAccountSid",
+    host_name_column="ComputerDnsName",
+)
+
+SUPPORTED_SCHEMAS = (WIN_EVENT_SCH, LX_EVENT_SCH, MDE_EVENT_SCH)
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -194,6 +225,12 @@ def build_process_tree(
     if isinstance(schema, dict):
         schema = ProcSchema(**schema)
 
+    if not schema:
+        raise TypeError(
+            "No matching schema for input data found.",
+            "Please create a schema definition for the process data and",
+            "pass it as the 'schema' parameter to this function.",
+        )
     data_len = len(procs)
     section_len = int(data_len / 4)
     progress_ui = Progress(completed_len=data_len * 2, visible=show_progress)
@@ -228,7 +265,7 @@ def build_process_tree(
     return proc_tree
 
 
-def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
+def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
     """
     Infer the correct schema to use for this data set.
 
@@ -244,9 +281,13 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> ProcSchema:
 
     """
     src_cols = data.columns if isinstance(data, pd.DataFrame) else data.index
-    lx_match = set(src_cols) & set(LX_EVENT_SCH.columns)
-    win_match = set(src_cols) & set(WIN_EVENT_SCH.columns)
-    return LX_EVENT_SCH if len(lx_match) > len(win_match) else WIN_EVENT_SCH
+    schema_matches = {}
+    for schema in SUPPORTED_SCHEMAS:
+        matching_cols = set(src_cols) & set(schema.columns)
+        schema_matches[len(matching_cols)] = schema
+    if max(schema_matches) > 5:
+        return schema_matches[max(schema_matches)]
+    return None
 
 
 def _clean_proc_data(procs: pd.DataFrame, schema: ProcSchema) -> pd.DataFrame:

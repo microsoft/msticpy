@@ -461,14 +461,10 @@ def _create_data_table(
 
 def _check_proc_tree_schema(data):
     """Return true if expected process tree columns are present."""
-    input_cols = set(data.columns)
+    if data.index.name != "proc_key":
+        return {"proc_key"}
     expected_cols = set(
         [
-            "new_process_lc",
-            "parent_proc_lc",
-            "source_index",
-            "new_process_lc_par",
-            "source_index_par",
             "parent_key",
             "IsRoot",
             "IsLeaf",
@@ -477,7 +473,7 @@ def _check_proc_tree_schema(data):
             "parent_index",
         ]
     )
-    return expected_cols - input_cols
+    return expected_cols - set(data.columns)
 
 
 # pylint: disable=too-few-public-methods
