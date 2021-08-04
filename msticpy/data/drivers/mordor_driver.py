@@ -30,7 +30,7 @@ __author__ = "Ian Hellen"
 
 
 _MORDOR_TREE_URI = (
-    "https://api.github.com/repos/OTRF/mordor/git/trees/master?recursive=1"
+    "https://api.github.com/repos/OTRF/Security-Datasets/git/trees/master?recursive=1"
 )
 
 _MITRE_JSON_URL = (
