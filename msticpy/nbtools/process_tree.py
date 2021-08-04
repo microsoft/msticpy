@@ -32,7 +32,7 @@ from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
 import numpy as np
 import pandas as pd
 
-from ..sectools.process_tree_utils import (
+from ..sectools.proc_tree_builder import (
     build_process_tree,
     ProcSchema,
     infer_schema,
@@ -45,7 +45,7 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_DEFAULT_KWARGS = ["height", "title", "width"]
+_DEFAULT_KWARGS = ["height", "title", "width", "hide_legend"]
 
 
 def build_and_show_process_tree(
@@ -94,7 +94,7 @@ def build_and_show_process_tree(
     )
 
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-statements
 def plot_process_tree(
     data: pd.DataFrame,
     schema: ProcSchema = None,
@@ -130,6 +130,8 @@ def plot_process_tree(
         The width of the plot figure (the default is 900)
     title : str, optional
         Title to display (the default is None)
+    hide_legend : bool, optional
+        Hide the legend box, even if legend_col is specified.
 
     Returns
     -------
@@ -154,7 +156,7 @@ def plot_process_tree(
 
     data, schema, levels, n_rows = _pre_process_tree(data, schema)
     if schema is None:
-        raise ProcessTreeSchemaException("Could not infer schema from data set.")
+        raise ProcessTreeSchemaException("Could not infer data schema from data set.")
 
     source = ColumnDataSource(data=data)
     # Get legend/color bar map
@@ -165,6 +167,7 @@ def plot_process_tree(
     plot_height: int = kwargs.pop("height", 700)
     plot_width: int = kwargs.pop("width", 900)
     title: str = kwargs.pop("title", "ProcessTree")
+    hide_legend = kwargs.pop("hide_legend", False)
 
     if color_bar:
         title += " (color bar = {legend_col})"
@@ -198,6 +201,9 @@ def plot_process_tree(
     rect_plot = b_plot.rect(x=rect_x, y="Row", **rect_plot_params)
     if legend_col and not color_bar:
         b_plot.legend.title = legend_col
+        b_plot.legend.label_text_font_size = "7pt"
+    if hide_legend:
+        b_plot.legend.visible = False
 
     text_props = {"source": source, "text_align": "left", "text_baseline": "middle"}
 
@@ -249,7 +255,7 @@ def plot_process_tree(
     return b_plot, plot_elems
 
 
-# pylint: enable=too-many-locals
+# pylint: enable=too-many-locals, too-many-statements
 
 
 TreeResult = namedtuple("TreeResult", "proc_tree, schema, levels, n_rows")
@@ -259,6 +265,9 @@ def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
     """Extract dimensions and formatted values from proc_tree."""
     if schema is None:
         schema = infer_schema(proc_tree)
+    if schema is None:
+        return TreeResult(None, None, None, None)
+
     _validate_plot_schema(proc_tree, schema)
 
     proc_tree = proc_tree.sort_values("path", ascending="True").reset_index()
@@ -280,13 +289,12 @@ def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
     proc_tree["Exe"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
-    pid_fmt = (
-        lambda x: f"PID: {x} ({int(x, base=16)})"
-        if str(x).startswith("0x")
-        else f"PID: 0x{int(x):x} ({int(x)})"
-    )
-    proc_tree["PID"] = proc_tree[schema.process_id].apply(pid_fmt)
+    proc_tree["PID"] = proc_tree[schema.process_id].apply(_pid_fmt)
     return TreeResult(proc_tree=proc_tree, schema=schema, levels=levels, n_rows=n_rows)
+
+
+def _pid_fmt(pid):
+    return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
 
 
 def _validate_plot_schema(proc_tree: pd.DataFrame, schema):
