@@ -6,10 +6,8 @@
 """Mordor data driver test."""
 import contextlib
 from datetime import datetime
-import glob
 import io
 import os
-from pathlib import Path
 
 import pytest
 import pytest_check as check
@@ -110,7 +108,6 @@ def test_mordor_download(mdr_driver: MordorDriver, save_folder):
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]
-    save_folder = m
     d_frame = download_mdr_file(file_path, save_folder=save_folder)
 
     check.is_instance(d_frame, pd.DataFrame)
