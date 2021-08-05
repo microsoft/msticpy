@@ -26,39 +26,23 @@ from msticpy.data.drivers.mordor_driver import (
 __author__ = "Ian Hellen"
 
 _SAVE_FOLDER = "mordor_test"
-_SAVE_FOLDER2 = "mordor_test2"
-
-
-@pytest.fixture(scope="session")
-def qry_provider():
-    """Query Provider fixture."""
-    Path(_SAVE_FOLDER).mkdir(exist_ok=True)
-    abs_path = Path(".").absolute()
-
-    qry_prov = QueryProvider("Mordor", save_folder=f"./{_SAVE_FOLDER}")
-    qry_prov.connect()
-    yield qry_prov
-    # remove downloaded file on cleanup
-    _cleanup_temp_files(_SAVE_FOLDER)
-    _cleanup_temp_files(abs_path.joinpath("mordor"))
-
-
-def _cleanup_temp_files(path):
-    # pylint: disable=broad-except
-    for file in Path(path).glob("*"):
-        if file.exists():
-            try:
-                file.unlink()
-            except Exception:  # nosec
-                pass
-    if Path(path).is_dir():
-        try:
-            Path(path).rmdir()
-        except Exception:  # nosec
-            pass
 
 
 # pylint: disable=redefined-outer-name, protected-access, global-statement
+
+
+@pytest.fixture(scope="session")
+def save_folder(tmp_path_factory):
+    """Query Provider fixture."""
+    return str(tmp_path_factory.mktemp(_SAVE_FOLDER))
+
+
+@pytest.fixture(scope="session")
+def qry_provider(save_folder):
+    """Query Provider fixture."""
+    qry_prov = QueryProvider("Mordor", save_folder=save_folder)
+    qry_prov.connect()
+    return qry_prov
 
 
 @pytest.fixture(scope="session")
@@ -84,7 +68,7 @@ def test_mordor_load(mdr_driver: MordorDriver):
     _, first_item = next(iter(mdr_driver.mordor_data.items()))
     check.is_instance(first_item.title, str)
     check.is_instance(first_item.id, str)
-    check.is_instance(first_item.author, str)
+    check.is_instance(first_item.contributors, list)
     check.is_instance(first_item.creation_date, datetime)
     check.is_instance(first_item.files, list)
     check.is_true(len(first_item.files) > 0)
@@ -113,24 +97,24 @@ def test_mordor_search(mdr_driver: MordorDriver):
 
     result_set = mdr_driver.search_queries("AWS")
     check.greater_equal(len(list(result_set)), 1)
-    check.is_true(any(hit for hit in result_set if "small.aws.collection" in hit))
+    check.is_true(any(hit for hit in result_set if "atomic.aws.collection" in hit))
 
 
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
-def test_mordor_download(mdr_driver: MordorDriver):
+def test_mordor_download(mdr_driver: MordorDriver, save_folder):
     """Test file download."""
     entry_id = "SDWIN-190319021158"
     entry = mdr_driver.mordor_data[entry_id]
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]
-    d_frame = download_mdr_file(file_path, save_folder=_SAVE_FOLDER2)
+    save_folder = m
+    d_frame = download_mdr_file(file_path, save_folder=save_folder)
 
     check.is_instance(d_frame, pd.DataFrame)
     check.greater_equal(len(d_frame), 10)
-    _cleanup_temp_files(_SAVE_FOLDER2)
 
 
 @pytest.mark.skipif(
@@ -141,10 +125,10 @@ def test_mordor_query_provider(qry_provider):
     queries = qry_provider.list_queries()
     check.greater_equal(len(queries), 50)
 
-    check.is_true(hasattr(qry_provider, "small"))
+    check.is_true(hasattr(qry_provider, "atomic"))
     check.is_true(hasattr(qry_provider, queries[0]))
 
-    test_query = "small.windows.credential_access.host.empire_mimikatz_logonpasswords"
+    test_query = "atomic.windows.credential_access.host.empire_mimikatz_logonpasswords"
     q_func = getattr(qry_provider, test_query)
     output = io.StringIO()
     with contextlib.redirect_stdout(output):
