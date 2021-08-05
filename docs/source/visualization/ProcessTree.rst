@@ -2,8 +2,9 @@ ProcessTree
 ===========
 
 This describes the use of the process tree data and
-visualization modules. These modules can be used with either Windows
-process creation events (ID 4688) or Linux auditd logs. The
+visualization modules. These modules can be used with Windows
+process creation events (ID 4688), Linux auditd logs or Microsoft Defender
+for Endpoint (MDE) logs. The
 ProcessTree visualization is built
 using the `Bokeh library <https://bokeh.pydata.org>`__.
 
@@ -34,22 +35,63 @@ The process tree functionality has two main components:
          ``EXECVE``, ``CWD``, etc.) - the combined ``SYSCALL_EXECVE``
          created by ``auditextract`` is the only type currently supported.
 
-Support for other formats such as Sysmon, Microsoft Defender is
-planned but not yet included.
+Support for other formats such as Sysmon is planned but not yet included.
+
+Plotting process trees
+----------------------
+
+Plotting process trees from process event data involves two stages:
+
+- Converting the linear event data into an hierarchical tree data
+  structure
+- Plotting the visualization
+
+In most cases you don't need to worry about these two processes - the
+standard :py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
+function and the pandas accessor function
+:py:meth:`mp_process_tree.plot<msticpy.nbtools.process_tree.ProcessTreeAccessor.plot>`
+will try to detect if the input data is in the correct format. If it is
+not, the process tree builder is automatically applied to the data.
+
+This should work for Windows events, Linux auditd events and MDE process events.
+
+The easiest way to plot data as a process tree is to use the pandas mp_process_tree
+accessor.
+
+.. code:: IPython
+
+   from msticpy.nbtools import process_tree
+
+   my_proc_df.mp_process_tree.plot()
+
+.. figure:: _static/process_tree1.png
+   :alt: Process tree plot
+   :width: 5in
+   :height: 5in
+
+You can do the same thing using the plot_process_tree function.
+
+.. code:: IPython
+
+   from msticpy.nbtools import process_tree as ptree
+
+   ptree.plot_process_tree(my_proc_df)
+
+See the later section `Process tree plotting parameters`_
+
 
 Extracting process trees from logs
 ----------------------------------
 
-The input can be either Windows 4688 events or Linux audit events
-(with the above caveats).
+You can build a process tree without plotting it.
 
 build_process_tree syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-See :py:func:`build_process_tree<msticpy.sectools.process_tree_utils.build_process_tree>`
+See :py:func:`build_process_tree<msticpy.sectools.proc_tree_builder.build_process_tree>`
 
 .. code:: python
 
-   from mstipy.sectools import *
+   from msticpy.sectools import process_tree as ptree
    ptree.build_process_tree(procs, schema=None, show_progress=False, debug=False)
 
 Parameters
@@ -80,8 +122,7 @@ between processes.
 
       from IPython.display import display
       import pandas as pd
-      from msticpy.nbtools import *
-      from msticpy.sectools import *
+      from msticpy.sectools import process_tree as ptree
 
       win_procs = pd.read_pickle("../demos/data/win_proc_test.pkl")
       p_tree_win = ptree.build_process_tree(win_procs, show_progress=True)
@@ -96,20 +137,22 @@ The default output returns some statistics about the processed data.
       {'Processes': 1010, 'RootProcesses': 10, 'LeafProcesses': 815, 'BranchProcesses': 185, 'IsolatedProcesses': 0, 'LargestTreeDepth': 7}
 
 
-Process Tree utils module
--------------------------
+Process Tree Builder and Process Tree Utils modules
+---------------------------------------------------
 
-The module is imported as follows:
+This section looks separately at the process tree builder
+and process tree plotter.
+
+The first of these modules (:py:mod:`proc_tree_builder<msticpy.sectools.proc_tree_builder>`)
+handles creating a hierarchical process
+trees from event log data.
+The utils module (:py:mod:`process_tree_utils<msticpy.sectools.process_tree_utils>`)
+contains a set of functions to extract data from and analyze the
+process tree.
 
 ::
 
-   from msticpy.sectools import *
-
-or explicitly
-
-::
-
-   from msticpy.sectools import process_tree_utils as ptree
+   from msticpy.nbtools import process_tree as ptree
 
 The module contains functions for building the parent-child relations
 as well as a number of utility functions for manipulating and
@@ -127,7 +170,7 @@ functions <#Process-Tree-utility-functions>`__.
    .. code:: python
 
       proc_tree = ptree.get_descendents(p_tree_win, ptree.get_roots(p_tree_win).iloc[2])
-      nbdisplay.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
+      ptree.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
 
 
 .. figure:: _static/process_tree1.png
@@ -146,11 +189,13 @@ and
 
 .. code:: python
 
-   nbdisplay.plot_process_tree( data, schema=None, output_var=None,
-   legend_colNone, show_table=False, )
+   ptree.plot_process_tree(
+       data, schema=None, output_var=None,
+       legend_colNone, show_table=False,
+   )
 
-Parameter descriptions
-^^^^^^^^^^^^^^^^^^^^^^
+Process tree plotting parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 data (pd.DataFrame)
    DataFrame containing one or more Process Trees. This should be the
@@ -185,12 +230,29 @@ show_table (bool)
    Set to True to show the data table, by default False. Shows the
    source values as a data table beneath the process tree.
 
+height (int, optional)
+   The height of the plot figure
+   (the default is 700)
+
+width (int, optional)
+   The width of the plot figure (the default is 900)
+
+title (str, optional)
+   Title to display (the default is None)
+
+hide_legend (bool, optional)
+   Hide the legend box, even if legend_col is specified.
+
+pid_fmt (str, optional)
+   Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
+   default is 'hex'.
+
 
 .. warning:: **Large data sets** (more than a few hundred processses)
 
    These will normally be handled well by the Bokeh plot (up to multiple
    tens of thousands or more) but it will make navigation of the tree
-   difficult. In particular, the range tool (on the right of the main
+   more difficult. In particular, the range tool (on the right of the main
    plot) will be difficult to manipulate. Split the input data into
    smaller chunks before plotting.
 
@@ -273,7 +335,7 @@ See :doc: `../data_acquisition/CollectingLinuxAuditLogs.rst` for more details.
 
    .. code:: python
 
-      nbdisplay.plot_process_tree(data=full_tree[:1000], legend_col="cwd")
+      ptree.plot_process_tree(data=full_tree[:1000], legend_col="cwd")
 
 .. figure:: _static/process_tree2.png
    :alt: Process tree plot
@@ -342,7 +404,7 @@ Plotting Using a color gradient
 
       # Plot the tree using the Rarity column as the legend_col parameter.
       svcs_tree = ptree.get_descendents(proc_rarity_tree, prar_roots.iloc[22])
-      nbdisplay.plot_process_tree(svcs_tree, legend_col="Rarity", show_table=True)
+      ptree.plot_process_tree(svcs_tree, legend_col="Rarity", show_table=True)
 
 .. figure:: _static/process_tree3.png
    :alt: Process tree plot
@@ -548,16 +610,9 @@ True returns the source process with the result set.
 
 :py:func:`~msticpy.sectools.process_tree_utils.get_process`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-:py:func:`~msticpy.sectools.process_tree_utils.build_process_key`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-get_process retrieves a process record by its key.
-build_process_key creates and returns a process key from a process object.
-The latter may be useful if have a process record from another data set that
-you want to find in the process tree data.
-
-In both cases the process returned is a single row - a pandas Series.
+get_process retrieves a process record by its key. The process returned
+is a single row - a pandas Series.
 
 .. container:: cell code
 

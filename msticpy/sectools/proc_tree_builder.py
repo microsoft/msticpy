@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Process Tree Visualization."""
+"""Process Tree Builder module for Process Tree Visualization."""
 from typing import Any, Dict, Optional, Union
 
 import attr

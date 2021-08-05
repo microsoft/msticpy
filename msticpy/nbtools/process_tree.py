@@ -39,13 +39,31 @@ from ..sectools.proc_tree_builder import (
     ProcessTreeSchemaException,
 )
 
+# pylint: disable=unused-import
+from ..sectools.process_tree_utils import (  # noqa F401
+    get_process_key,
+    get_roots,
+    get_process,
+    get_parent,
+    get_root,
+    get_root_tree,
+    get_tree_depth,
+    get_children,
+    get_descendents,
+    get_ancestors,
+    get_siblings,
+    get_summary_info,
+)
+
+# pylint: enable=unused-import
+
 from ..common.utility import check_kwargs
 from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_DEFAULT_KWARGS = ["height", "title", "width", "hide_legend"]
+_DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
 
 
 def build_and_show_process_tree(
@@ -78,6 +96,11 @@ def build_and_show_process_tree(
     Tuple[figure, LayoutDOM]:
         figure - The main bokeh.plotting.figure
         Layout - Bokeh layout structure.
+
+    Notes
+    -----
+    For full parameter set for process tree display see the
+    help for plot_process_tree.
 
     See Also
     --------
@@ -132,6 +155,9 @@ def plot_process_tree(
         Title to display (the default is None)
     hide_legend : bool, optional
         Hide the legend box, even if legend_col is specified.
+    pid_fmt : str, optional
+        Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
+        default is 'hex'.
 
     Returns
     -------
@@ -154,7 +180,13 @@ def plot_process_tree(
     reset_output()
     output_notebook()
 
-    data, schema, levels, n_rows = _pre_process_tree(data, schema)
+    plot_height: int = kwargs.pop("height", 700)
+    plot_width: int = kwargs.pop("width", 900)
+    title: str = kwargs.pop("title", "ProcessTree")
+    hide_legend = kwargs.pop("hide_legend", False)
+    pid_fmt = kwargs.pop("pid_fmt", "hex")
+
+    data, schema, levels, n_rows = _pre_process_tree(data, schema, pid_fmt=pid_fmt)
     if schema is None:
         raise ProcessTreeSchemaException("Could not infer data schema from data set.")
 
@@ -164,10 +196,6 @@ def plot_process_tree(
 
     max_level = max(levels) + 3
     min_level = min(levels)
-    plot_height: int = kwargs.pop("height", 700)
-    plot_width: int = kwargs.pop("width", 900)
-    title: str = kwargs.pop("title", "ProcessTree")
-    hide_legend = kwargs.pop("hide_legend", False)
 
     if color_bar:
         title += " (color bar = {legend_col})"
@@ -179,8 +207,9 @@ def plot_process_tree(
         plot_height=plot_height,
         x_range=(min_level, max_level),
         y_range=y_start_range,
-        tools=["ypan", "reset", "save", "tap"],
+        tools=["reset", "save", "tap", "ywheel_pan"],
         toolbar_location="above",
+        active_scroll="ywheel_pan",
     )
 
     hover = HoverTool(
@@ -220,7 +249,7 @@ def plot_process_tree(
         x=x_dodge(0.1), y=y_dodge(0.25), text="Exe", text_font_size="8pt", **text_props
     )
     b_plot.text(
-        x=x_dodge(1.8), y=y_dodge(0.25), text="PID", text_font_size="8pt", **text_props
+        x=x_dodge(2.2), y=y_dodge(0.25), text="PID", text_font_size="8pt", **text_props
     )
 
     # Plot options
@@ -261,8 +290,15 @@ def plot_process_tree(
 TreeResult = namedtuple("TreeResult", "proc_tree, schema, levels, n_rows")
 
 
-def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
+def _pre_process_tree(
+    proc_tree: pd.DataFrame, schema: ProcSchema = None, pid_fmt: str = "hex"
+):
     """Extract dimensions and formatted values from proc_tree."""
+    # Check if this table already seems to have the proc_tree metadata
+    missing_cols = _check_proc_tree_schema(proc_tree)
+    if missing_cols:
+        proc_tree = build_process_tree(procs=proc_tree, schema=schema)
+
     if schema is None:
         schema = infer_schema(proc_tree)
     if schema is None:
@@ -278,7 +314,7 @@ def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
 
     levels = proc_tree["Level"].unique()
 
-    max_cmd_len = int(350 / len(levels))
+    max_cmd_len = int(600 / len(levels))
     long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
     proc_tree.loc[long_cmd, "cmd"] = (
         proc_tree[schema.cmd_line].str[:max_cmd_len] + "..."
@@ -289,12 +325,16 @@ def _pre_process_tree(proc_tree: pd.DataFrame, schema: ProcSchema = None):
     proc_tree["Exe"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
-    proc_tree["PID"] = proc_tree[schema.process_id].apply(_pid_fmt)
+    proc_tree["PID"] = proc_tree[schema.process_id].apply(_pid_fmt, args=(pid_fmt,))
     return TreeResult(proc_tree=proc_tree, schema=schema, levels=levels, n_rows=n_rows)
 
 
-def _pid_fmt(pid):
-    return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
+def _pid_fmt(pid, pid_fmt):
+    if pid_fmt == "hex":
+        return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
+    return (
+        f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
+    )
 
 
 def _validate_plot_schema(proc_tree: pd.DataFrame, schema):
@@ -519,6 +559,11 @@ class ProcessTreeAccessor:
             The width of the plot figure (the default is 900)
         title : str, optional
             Title to display (the default is None)
+        hide_legend : bool, optional
+            Hide the legend box, even if legend_col is specified.
+        pid_fmt : str, optional
+            Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
+            default is 'hex'.
 
         Returns
         -------
