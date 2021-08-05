@@ -372,7 +372,8 @@ def _format_queries(mdr_entry):
 MORDOR_FIELDS = {
     "title": {"type": "text", "widget": widgets.Text},
     "id": {"type": "text", "widget": widgets.Text},
-    "author": {"type": "text", "widget": widgets.Text},
+    "type": {"type": "text", "widget": widgets.Text},
+    "contributors": {"type": "list", "widget": widgets.Text},
     "creation_date": {"type": "text", "widget": widgets.Text},
     "modification_date": {"type": "text", "widget": widgets.Text},
     "platform": {"type": "text", "widget": widgets.Text},
