@@ -585,9 +585,8 @@ class ProcessTreeAccessor:
         schema : ProcSchema, optional
             The column schema to use, by default None
             If None, then the schema is inferred
-        show_progress : bool
-            Shows the progress of the process (helpful for
-            very large data sets)
+        show_summary : bool
+            Shows summary of the built tree, default is False. : bool
         debug : bool
             If True produces extra debugging output,
             by default False
@@ -607,6 +606,6 @@ class ProcessTreeAccessor:
         return build_process_tree(
             procs=self._df,
             schema=schema,
-            show_progress=kwargs.get("show_progress", False),
+            show_summary=kwargs.get("show_summary", kwargs.get("show_progress", False)),
             debug=kwargs.get("debug", False),
         )

@@ -204,7 +204,7 @@ SUPPORTED_SCHEMAS = (WIN_EVENT_SCH, LX_EVENT_SCH, MDE_EVENT_SCH)
 def build_process_tree(
     procs: pd.DataFrame,
     schema: Union[ProcSchema, Dict[str, Any]] = None,
-    show_progress: bool = False,
+    show_summary: bool = False,
     debug: bool = False,
 ) -> pd.DataFrame:
     """
@@ -219,9 +219,8 @@ def build_process_tree(
         If supplied as a dict it must include definitions for the
         required fields in the ProcSchema class
         If None, then the schema is inferred
-    show_progress : bool
-        Shows the progress of the process (helpful for
-        very large data sets)
+    show_summary : bool
+        Shows summary of the built tree, default is False.
     debug : bool
         If True produces extra debugging output,
         by default False
@@ -258,7 +257,7 @@ def build_process_tree(
     # Build process paths
     proc_tree = _build_proc_tree(merged_procs_keys)
 
-    if show_progress:
+    if show_summary:
         print(get_summary_info(proc_tree))
     return proc_tree
 

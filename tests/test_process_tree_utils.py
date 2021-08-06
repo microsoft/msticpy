@@ -151,7 +151,7 @@ testdf_win_mde = pd.read_csv(
 
 
 def test_build_win_tree():
-    p_tree = pt_build.build_process_tree(testdf_win, show_progress=True, debug=True)
+    p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
     assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1010,
         "RootProcesses": 10,
@@ -163,7 +163,7 @@ def test_build_win_tree():
 
 
 def test_build_lx_tree():
-    p_tree_l = pt_build.build_process_tree(testdf_lx, show_progress=False, debug=True)
+    p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
     assert pt_util.get_summary_info(p_tree_l) == {
         "Processes": 1029,
         "RootProcesses": 29,
@@ -192,7 +192,7 @@ def test_build_win_tree_dict_schema():
         host_name_column="Computer",
     )
     p_tree = pt_build.build_process_tree(
-        testdf_win, schema=schema, show_progress=True, debug=True
+        testdf_win, schema=schema, show_summary=True, debug=True
     )
     assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1010,
@@ -205,7 +205,7 @@ def test_build_win_tree_dict_schema():
 
 
 def test_tree_utils_win():
-    p_tree = pt_build.build_process_tree(testdf_win, show_progress=True, debug=True)
+    p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
 
     assert len(pt_util.get_roots(p_tree)) == 10
     t_root = pt_util.get_roots(p_tree).iloc[4]
@@ -250,7 +250,7 @@ def test_tree_utils_win():
 
 
 def test_tree_utils_lx():
-    p_tree_l = pt_build.build_process_tree(testdf_lx, show_progress=False, debug=True)
+    p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
     assert len(pt_util.get_roots(p_tree_l)) == 29
     t_root = pt_util.get_roots(p_tree_l).iloc[0]
     full_tree = pt_util.get_descendents(p_tree_l, t_root)
@@ -316,7 +316,7 @@ def test_build_mde_win_tree_dict_schema():
         host_name_column="ComputerDnsName",
     )
     p_tree = pt_build.build_process_tree(
-        testdf_win_mde, schema=schema, show_progress=True, debug=True
+        testdf_win_mde, schema=schema, show_summary=True, debug=True
     )
     assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1642,
