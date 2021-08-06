@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """KQL Driver class."""
 import json
+import os
 import re
 import warnings
 from datetime import datetime
@@ -21,6 +22,7 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
 )
 from ...common.wsconfig import WorkspaceConfig
+from ...common import pkg_config as config
 from .driver_base import DriverBase, QuerySource
 
 try:
@@ -41,6 +43,14 @@ from ...common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+_KQL_CLOUD_MAP = {
+    "global": "public",
+    "cn": "china",
+    "usgov": "government",
+    "de": "germany",
+}
 
 
 @export
@@ -68,6 +78,8 @@ class KqlDriver(DriverBase):
             self._load_kql_magic()
 
         self._schema: Dict[str, Any] = {}
+
+        self._set_kql_cloud()
 
         if connection_str:
             self.current_connection = connection_str
@@ -270,6 +282,20 @@ class KqlDriver(DriverBase):
         """Set a Kqlmagic notebook option."""
         opt_val = f"'{value}'" if isinstance(value, str) else value
         return kql_exec(f"--config {option}={opt_val}")
+
+    def _set_kql_cloud(self):
+        """If cloud is set in Azure Settings override default."""
+        # Check that there isn't a cloud setting in the KQLMAGIC env var
+        kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
+        if "cloud" in kql_config:
+            # Set by user - we don't want to override this
+            return
+        az_settings = config.get_config("Azure")
+        kql_cloud = "public"
+        if az_settings and "cloud" in az_settings:
+            kql_cloud = _KQL_CLOUD_MAP.get(az_settings["cloud"], "public")
+        if kql_cloud != self._get_kql_option("cloud"):
+            self._set_kql_option("cloud", kql_cloud)
 
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
