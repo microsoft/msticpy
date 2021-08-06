@@ -55,8 +55,8 @@ not, the process tree builder is automatically applied to the data.
 
 This should work for Windows events, Linux auditd events and MDE process events.
 
-The easiest way to plot data as a process tree is to use the pandas mp_process_tree
-accessor.
+The easiest way to plot process data as a process tree is to use the pandas
+``mp_process_tree`` accessor.
 
 .. code:: IPython
 
@@ -69,21 +69,27 @@ accessor.
    :width: 5in
    :height: 5in
 
-You can do the same thing using the plot_process_tree function.
+Here is the same thing using the ``plot_process_tree`` function.
 
 .. code:: IPython
 
    from msticpy.nbtools import process_tree as ptree
 
-   ptree.plot_process_tree(my_proc_df)
+   ptree.plot_process_tree(procs_df)
 
-See the later section `Process tree plotting parameters`_
+For full usage, see the later section `Process tree plotting parameters`_
 
 
 Extracting process trees from logs
 ----------------------------------
 
 You can build a process tree without plotting it.
+You might want to do this if you want the intermediate data for
+analysis or if you want to extract a sub-tree for display.
+
+The later section `Process Tree utility functions`_ describes
+some process tree analysis and manipulation functions that you can
+use on the built process trees.
 
 build_process_tree syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,7 +98,7 @@ See :py:func:`build_process_tree<msticpy.sectools.proc_tree_builder.build_proces
 .. code:: python
 
    from msticpy.sectools import process_tree as ptree
-   ptree.build_process_tree(procs, schema=None, show_progress=False, debug=False)
+   ptree.build_process_tree(procs)
 
 Parameters
 ^^^^^^^^^^
@@ -102,9 +108,8 @@ procs (pd.DataFrame)
 schema (ProcSchema, optional)
     The column schema to use, by default None
     If None, then the schema is inferred
-show_progress (bool, optional)
-    Shows the progress of the process (helpful for
-    very large data sets)
+show_summary (bool, optional)
+    Shows summary of the built tree, default is False.
 debug (bool, optional)
     If True produces extra debugging output,
     by default False
@@ -125,10 +130,21 @@ between processes.
       from msticpy.sectools import process_tree as ptree
 
       win_procs = pd.read_pickle("../demos/data/win_proc_test.pkl")
-      p_tree_win = ptree.build_process_tree(win_procs, show_progress=True)
+      p_tree_win = ptree.build_process_tree(win_procs, show_summary=True)
 
 
-The default output returns some statistics about the processed data.
+The tree builder process, tries to infer the schema (you can override this
+with the *schema* parameter) and assembles process parent-child relationships.
+It creates unique keys (the ``proc_key`` column) for each process, based on
+the imagepath + process id + timecreated. It then tries to find the parent
+process in the same dataset or infer the parent from the data in the created
+process event. How it does this differs slightly between input data formats.
+It then adds a ``parent_key`` field to each child record for the parent
+record (found or inferred).
+
+This modified dataframe is returned from ``build_process_tree``. If you
+supply ``show_summary=True`` parameter it will also output some statistics
+about the created tree.
 
 .. container:: output stream stdout
 
@@ -137,40 +153,23 @@ The default output returns some statistics about the processed data.
       {'Processes': 1010, 'RootProcesses': 10, 'LeafProcesses': 815, 'BranchProcesses': 185, 'IsolatedProcesses': 0, 'LargestTreeDepth': 7}
 
 
-Process Tree Builder and Process Tree Utils modules
----------------------------------------------------
+The example below shows using two of the process tree utility functions
+to extract the descendants (children, grandchildren, etc) of one of the
+root process rows and then display the subtree.
 
-This section looks separately at the process tree builder
-and process tree plotter.
+.. note:: "root" process, in this context means any process whose parent
+   could not be determined. This is not necessarily the actual root
+   process for this tree. A typical data set will have more than one
+   "root" process - this might be better thought of as "earliest discovered
+   ancestor process" but that's a bit of a mouthful.
 
-The first of these modules (:py:mod:`proc_tree_builder<msticpy.sectools.proc_tree_builder>`)
-handles creating a hierarchical process
-trees from event log data.
-The utils module (:py:mod:`process_tree_utils<msticpy.sectools.process_tree_utils>`)
-contains a set of functions to extract data from and analyze the
-process tree.
+   "Root" processes are flagged in the data by an ``IsRoot`` column with the
+   value True.
 
-::
+.. code:: ipython
 
-   from msticpy.nbtools import process_tree as ptree
-
-The module contains functions for building the parent-child relations
-as well as a number of utility functions for manipulating and
-extracting the trees. Most of these are described in the later
-section `Process Tree utility
-functions <#Process-Tree-utility-functions>`__.
-
-.. container:: cell markdown
-
-   .. rubric:: Plotting a Process Tree
-      :name: plotting-a-process-tree
-
-.. container:: cell code
-
-   .. code:: python
-
-      proc_tree = ptree.get_descendents(p_tree_win, ptree.get_roots(p_tree_win).iloc[2])
-      ptree.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
+   proc_tree = ptree.get_descendents(p_tree_win, ptree.get_roots(p_tree_win).iloc[2])
+   ptree.plot_process_tree(data=proc_tree, legend_col="SubjectUserName", show_table=True)
 
 
 .. figure:: _static/process_tree1.png
@@ -179,8 +178,8 @@ functions <#Process-Tree-utility-functions>`__.
    :height: 5in
 
 
-Plotting Syntax
----------------
+Process Tree Plotting Syntax
+----------------------------
 
 See
 :py:func:`plot_process_tree<msticpy.nbtools.process_tree.plot_process_tree>`
@@ -271,18 +270,19 @@ Linux Process Tree
 The process for visualizing Linux process trees is almost identical to
 visualizing Windows processes.
 
-**Note** This assumes that the Linux audit log has been read from a
-file using
-:py:func:`read_from_file<msticpy.sectools.auditdextract.read_from_file>`
-or read from Azure Sentinel/Log Analytics using the
-LinuxAudit.auditd_all query and processed using
-:py:func:`extract_events_to_df<msticpy.sectools.auditdextract.extract_events_to_df>`
-function.
+.. note:: This assumes that the Linux audit log has been read from a
+   file using
+   :py:func:`read_from_file<msticpy.sectools.auditdextract.read_from_file>`
+   or read from Azure Sentinel/Log Analytics using the
+   LinuxAudit.auditd_all query and processed using
+   :py:func:`extract_events_to_df<msticpy.sectools.auditdextract.extract_events_to_df>`
+   function. Using either of these, the audit messages events related to a single
+   process start are merged into a single row.
 
-Using either of these, the audit messages events related to a single
-process start are merged into a single row.
+   See :doc: `../data_acquisition/CollectingLinuxAuditLogs.rst` for more details.
 
-See :doc: `../data_acquisition/CollectingLinuxAuditLogs.rst` for more details.
+   Also, see the section `Adapting the input schema of your data`_ for details
+   about using different input schemas.
 
 
 .. container:: cell code
@@ -700,3 +700,99 @@ Create a network from a Tree using Networkx
    :alt: Networkx plot of process tree
    :width: 4in
    :height: 4in
+
+
+Adapting the input schema of your data
+--------------------------------------
+
+The process tree builder uses generic names to map common event
+properties such as process name and process ID between different
+input schemas.
+
+The built-in schemas for Windows 4688, Linux Auditd and Microsoft Defender
+for Endpoint (MDE) are shown below.
+
+===================  =====================  =====================  ===========================
+Generic name         Win 4688 schema        Linux auditd schema    MDE schema
+===================  =====================  =====================  ===========================
+time_stamp           TimeGenerated          TimeGenerated          CreatedProcessCreationTime
+process_name         NewProcessName         exe                    CreatedProcessName
+process_id           NewProcessId           pid                    CreatedProcessId
+parent_name          ParentProcessName      *(not used)*           ParentProcessName
+parent_id            ProcessId              ppid                   CreatedProcessParentId
+logon_id             SubjectLogonId         ses                    InitiatingProcessLogonId
+target_logon_id      TargetLogonId          *(not used)*           LogonId
+cmd_line             CommandLine            cmdline                CreatedProcessCommandLine
+user_name            SubjectUserName        acct                   CreatedProcessAccountName
+user_id              SubjectUserSid         uid                    CreatedProcessAccountSid
+host_name_column     Computer               Computer               ComputerDnsName
+event_id_column      EventID                EventType              *(not used)*
+===================  =====================  =====================  ===========================
+
+
+If your schema differs from, but is similar to one of the built-in
+schema mappings you can adapt one of these or supply a custom schema
+when you build and display the process tree.
+
+There are also two schema properties that you might need to
+add to the schema.
+
+===================  =====================  =====================  =====================
+Mapping property     Win 4688 schema        Linux auditd schema    MDE schema
+===================  =====================  =====================  =====================
+path_separator       ``\\``                 ``/``                  ``\\``
+event_id_identifier  4688*                  SYSCALL_EXECVE         *(not used)*
+===================  =====================  =====================  =====================
+
+\*The event_id_identifier for Windows 4688 schema must be an integer.
+
+The path_separator value is used to extract the process file name (minus
+the path) in the process tree view.
+
+The ``event_id_column`` and ``event_id_identifier`` work together and are useful if your
+input data contains mixed event types. Using these together will tell
+the process tree builder to filter on events where event_id_column == event_id_identifier.
+E.g. ``data[data["EventID"] == 4688]``
+
+The example below
+shows how to adapt an existing Linux schema for different column
+names in the source schema.
+
+.. code:: ipython
+
+   from msticpy.sectools.proc_tree_builder import LX_EVENT_SCH
+   # also WIN_EVENT_SCH and MDE_EVENT_SCH are available
+   from copy import copy
+   cust_lx_schema = copy(LX_EVENT_SCH)
+
+   cust_lx_schema.time_stamp = "TimeStamp"
+   cust_lx_schema.host_name_column = "host"
+   # Note these are used to filter events if you have a data
+   # set that contains mixed event types.
+   cust_lx_schema.event_id_column = None
+   cust_lx_schema.event_id_identifier = None
+
+   # now supply the schema as the schema parameter
+   ptree.build_process_tree(auditd_df, schema=cust_lx_schema)
+
+You can also supply a schema as a Python ``dict``, with the keys
+being the generic internal name and the values, the names of the columns
+in the input data. Both keys and values are strings except where
+otherwise indicated above.
+
+The ``time_stamp`` column **must** be a pandas Timestamp (Python datetime)
+type. If your data is in another format (e.g. Unix timestamp or date string)
+you should
+convert this before trying to use the process tree tools. The example
+below shows extracting the timestamp from the auditd ``mssg_id`` field.
+
+
+.. code:: ipython
+
+   linux_proc["ts"] = pd.to_numeric(linux_proc["mssg_id"].apply(lambda x: x.split(":")[0]))
+   # the "ts" column is now a fixed-point number
+   # Convert to a pandas timestamp.
+   linux_proc["time_stamp"] = pd.to_datetime(linux_proc.ts, utc=True)
+
+   # set the converted column as your time_stamp column.
+   cust_lx_schema.time_stamp = "time_stamp"
