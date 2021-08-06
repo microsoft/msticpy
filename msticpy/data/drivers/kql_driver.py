@@ -49,7 +49,7 @@ class KqlDriver(DriverBase):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite KqlDriver and optionally connect.
+        Instantiate KqlDriver and optionally connect.
 
         Parameters
         ----------
@@ -242,12 +242,13 @@ class KqlDriver(DriverBase):
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
         # KqlMagic
-        print("Please wait. Loading Kqlmagic extension...")
+        print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore")
                 self._ip.run_line_magic("reload_ext", "Kqlmagic")
-            self._loaded = True
+        self._loaded = True
+        print("done")
 
     def _is_kqlmagic_loaded(self) -> bool:
         """Return true if kql magic is loaded."""
