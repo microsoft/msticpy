@@ -103,8 +103,7 @@ def test_mordor_search(mdr_driver: MordorDriver):
 )
 def test_mordor_download(mdr_driver: MordorDriver, save_folder):
     """Test file download."""
-    entry_id = "SDWIN-190319021158"
-    entry = mdr_driver.mordor_data[entry_id]
+    entry = next(iter(mdr_driver.mordor_data.values()))
     files = entry.get_file_paths()
 
     file_path = files[0]["file_path"]

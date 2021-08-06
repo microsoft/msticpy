@@ -6,7 +6,7 @@
 """Keyvault client settings."""
 
 import warnings
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from .._version import VERSION
 from . import pkg_config as config
@@ -41,7 +41,7 @@ class KeyVaultSettings:
     used when creating new vaults.
     `UseKeyring` instructs the `SecretsClient` to cache Keyvault
     secrets locally using Python keyring.
-    `Authority` is one of 'global', 'usgov', 'de', 'chi'
+    `Authority` is one of 'global', 'usgov', 'de', 'cn'
     Alternatively, you can specify `AuthorityURI` with the value
     pointing to the URI for logon requests.
 
@@ -51,21 +51,21 @@ class KeyVaultSettings:
         "global": "https://login.microsoftonline.com/",
         "usgov": "https://login.microsoftonline.us",
         "de": "https://login.microsoftonline.de",
-        "chi": "https://login.chinacloudapi.cn",
+        "cn": "https://login.chinacloudapi.cn",
     }
 
     KV_URIS = {
         "global": "https://{vault}.vault.azure.net/",
         "usgov": "https://{vault}.vault.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
+        "de": "https://{vault}.vault.microsoftazure.de/",
+        "cn": "https://{vault}.vault.chinacloudapi.cn/",
     }
 
     MGMT_URIS = {
         "global": "https://management.azure.com/",
         "usgov": "https://management.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
+        "de": "https://management.microsoftazure.de/",
+        "cn": "https://management.chinacloudapi.cn/",
     }
 
     # Azure CLI Client ID
@@ -73,6 +73,8 @@ class KeyVaultSettings:
 
     def __init__(self):
         """Initialize new instance of KeyVault Settings."""
+        self.authority: Optional[str] = None
+        self.auth_methods: List[str] = []
         try:
             kv_config = config.get_config("KeyVault")
         except KeyError as err:
@@ -83,19 +85,41 @@ class KeyVaultSettings:
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
 
-        try:
-            az_cli = config.get_config("DataProviders.AzureCLI")
-        except KeyError:
-            az_cli = {}
-        self.auth_methods = az_cli.get("Args", {}).get(
-            "auth_methods", default_auth_methods()
-        )
+        self._get_auth_methods_from_settings()
+        self._get_authority_from_settings()
 
+    def _get_auth_methods_from_settings(self):
+        try:
+            self.auth_methods = (
+                config.get_config("DataProviders.AzureCLI")
+                .get("Args", {})
+                .get("auth_methods", [])
+            )
+        except KeyError:
+            pass
+        if not self.auth_methods:
+            try:
+                self.auth_methods = config.get_config("Azure").get(
+                    "auth_methods", default_auth_methods
+                )
+            except KeyError:
+                pass
+        if not self.auth_methods:
+            self.auth_methods = default_auth_methods
+
+    def _get_authority_from_settings(self):
         if "authority_uri" in self:
             rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
-            self.__dict__["authority"] = rev_lookup.get(
+            self.authority = rev_lookup.get(
                 self["authorityuri"].casefold(), "global"
             ).casefold()
+        elif not self.authority:
+            try:
+                az_settings = config.get_config("Azure")
+                if az_settings:
+                    self.authority = az_settings.get("cloud")
+            except KeyError:
+                self.authority = "global"
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
