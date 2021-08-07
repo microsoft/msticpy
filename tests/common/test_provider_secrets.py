@@ -226,7 +226,7 @@ class TestSecretsConfig(unittest.TestCase):
         kv_settings.authority = "de"
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.de")
 
-        kv_settings.authority = "chi"
+        kv_settings.authority = "cn"
         self.assertEqual(kv_settings.authority_uri, "https://login.chinacloudapi.cn")
 
     @patch(sec_client_patch)
