@@ -30,7 +30,7 @@ __author__ = "Ian Hellen"
 
 
 _MORDOR_TREE_URI = (
-    "https://api.github.com/repos/OTRF/mordor/git/trees/master?recursive=1"
+    "https://api.github.com/repos/OTRF/Security-Datasets/git/trees/master?recursive=1"
 )
 
 _MITRE_JSON_URL = (
@@ -424,9 +424,11 @@ class MordorEntry:
 
     title: str
     id: str
-    author: str
+    type: str
     creation_date: datetime = attr.ib(converter=_to_datetime)
     modification_date: datetime = attr.ib(converter=_to_datetime)
+    contributors: List[str] = attr.Factory(list)
+    author: Optional[str] = None
     platform: Optional[str] = None
     description: Optional[str] = None
     tags: List[str] = attr.Factory(list)
@@ -520,11 +522,12 @@ def get_mdr_data_paths(item_type="metadata") -> Generator[str, None, None]:
 
     """
     md_tree = _GET_MORDOR_TREE(_MORDOR_TREE_URI)
-    prefix = f"datasets/{item_type}"
     yield from (
         t_item["path"]
         for t_item in md_tree.get("tree")
-        if t_item["type"] == "blob" and t_item["path"].startswith(prefix)
+        if t_item["type"] == "blob"
+        and t_item["path"].startswith("datasets")
+        and item_type in t_item["path"]
     )
 
 
@@ -548,7 +551,9 @@ _GET_MORDOR_TREE = _get_mdr_github_tree()
 
 def _get_mdr_file(gh_file):
     """Fetch a file from Mordor repo."""
-    file_blob_uri = f"https://raw.githubusercontent.com/OTRF/mordor/master/{gh_file}"
+    file_blob_uri = (
+        f"https://raw.githubusercontent.com/OTRF/Security-Datasets/master/{gh_file}"
+    )
     file_resp = requests.get(file_blob_uri)
     return file_resp.content
 
