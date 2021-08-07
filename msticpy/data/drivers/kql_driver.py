@@ -290,10 +290,13 @@ class KqlDriver(DriverBase):
         if "cloud" in kql_config:
             # Set by user - we don't want to override this
             return
-        az_settings = config.get_config("Azure")
         kql_cloud = "public"
-        if az_settings and "cloud" in az_settings:
-            kql_cloud = _KQL_CLOUD_MAP.get(az_settings["cloud"], "public")
+        try:
+            az_settings = config.get_config("Azure")
+            if az_settings and "cloud" in az_settings:
+                kql_cloud = _KQL_CLOUD_MAP.get(az_settings["cloud"], "public")
+        except KeyError:
+            pass  # no Azure section in config
         if kql_cloud != self._get_kql_option("cloud"):
             self._set_kql_option("cloud", kql_cloud)
 

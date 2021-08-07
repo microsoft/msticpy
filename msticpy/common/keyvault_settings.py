@@ -98,14 +98,7 @@ class KeyVaultSettings:
         except KeyError:
             pass
         if not self.auth_methods:
-            try:
-                self.auth_methods = config.get_config("Azure").get(
-                    "auth_methods", default_auth_methods
-                )
-            except KeyError:
-                pass
-        if not self.auth_methods:
-            self.auth_methods = default_auth_methods
+            self.auth_methods = default_auth_methods()
 
     def _get_authority_from_settings(self):
         if "authority_uri" in self:

@@ -21,6 +21,7 @@ from azure.identity import (
 from .._version import VERSION
 from .cred_wrapper import CredentialWrapper
 from .exceptions import MsticpyAzureConnectionError
+from ..common import pkg_config as config
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -138,4 +139,10 @@ def _filter_all_warnings(record) -> bool:
 
 def default_auth_methods() -> List[str]:
     """Get the default (all) authentication options."""
+    try:
+        az_settings = config.get_config("Azure")
+        if az_settings and "auth_methods" in az_settings:
+            return az_settings["auth_methods"]
+    except KeyError:
+        pass  # no Azure section in config
     return list(_AUTH_OPTIONS)
