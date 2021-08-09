@@ -40,6 +40,8 @@ def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFram
     ----------
     data : pd.DataFrame
         DataFrame of process events.
+    debug: bool, optional
+        Turn on additional debugging output, by default False.
 
     Returns
     -------
@@ -166,13 +168,15 @@ def _extract_missing_parents(
         mpar_uniq_test = (
             missing_parents.drop(columns="src_index").groupby("proc_key").nunique()
         )
-        assert mpar_uniq_test[mpar_uniq_test > 1].dropna(how="all").empty
+        if not mpar_uniq_test[mpar_uniq_test > 1].dropna(how="all").empty:
+            print("Error - some extracted parents have duplicate keys")
+            print(mpar_uniq_test[mpar_uniq_test > 1].dropna(how="all"))
     return missing_parents
 
 
 # Get unique parents and add the parent key
 def _get_unique_parents(data, debug=False):
-    """Returns uniq set of processes."""
+    """Return unique set of processes."""
     if "src_index" in data.columns:
         data = data.drop(columns="src_index")
     missing_par_uniq = data.drop_duplicates().copy()
@@ -197,7 +201,7 @@ def _split_file_path(
     file_col: str = "CreatedProcessName",
     separator: str = "\\",
 ):
-    """Splits file path in to folder/stem."""
+    """Split file path in to folder/stem."""
     f_path = f_stem = np.nan
     try:
         f_path, _, f_stem = input_path.rpartition(separator)
@@ -207,7 +211,7 @@ def _split_file_path(
 
 
 def _extract_missing_gparents(data):
-    """Returns grandparent processes for any procs not in Createdprocesses."""
+    """Return grandparent processes for any procs not in Createdprocesses."""
     missing_gps = (
         data[~data.parent_key.isin(data.proc_key)]
         .filter(regex=".*Parent.*")
@@ -247,7 +251,7 @@ def _extract_missing_gparents(data):
 
 
 def _get_par_child_col_mapping(data: pd.DataFrame) -> Dict[str, str]:
-    """Returns a mapping between parent and child column names."""
+    """Return a mapping between parent and child column names."""
     created_proc_cols = _remove_col_prefix(data, "Created")
     init_proc_cols = _remove_col_prefix(data, "Initiating")
     init_proc_col_mapping, _ = _map_columns(created_proc_cols, init_proc_cols)
@@ -255,7 +259,7 @@ def _get_par_child_col_mapping(data: pd.DataFrame) -> Dict[str, str]:
 
 
 def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
-    """Returns a mapping of column stems and columns with `prefix`."""
+    """Return a mapping of column stems and columns with `prefix`."""
     return {
         col.replace(prefix, ""): col for col in data.columns if col.startswith(prefix)
     }
@@ -264,7 +268,7 @@ def _remove_col_prefix(data: pd.DataFrame, prefix: str) -> Dict[str, str]:
 def _map_columns(
     created_cols: Dict[str, str], init_cols: Dict[str, str]
 ) -> Tuple[Dict[str, str], Dict[str, str]]:
-    """Returns Initiating -> Created column mapping."""
+    """Return Initiating -> Created column mapping."""
     col_mapping = {}
     unmapped = {}
     for col_stem, col in init_cols.items():

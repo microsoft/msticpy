@@ -58,6 +58,7 @@ class ProcSchema:
     event_id_identifier: Optional[Any] = None
 
     def __eq__(self, other):
+        """Return False if any non-blank field values are unequal."""
         if not isinstance(other, ProcSchema):
             return False
         self_dict = attr.asdict(self)

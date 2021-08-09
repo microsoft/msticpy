@@ -180,6 +180,8 @@ class MsticpyUserError(MsticpyException):
         for line in self._output:
             if isinstance(line, tuple):
                 l_content, l_type = line
+                if isinstance(l_content, tuple):
+                    l_content = l_content[0]
                 if l_type == "title":
                     out_lines.append("-" * len(l_content))
                     out_lines.append(l_content)
