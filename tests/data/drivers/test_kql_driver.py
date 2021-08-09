@@ -16,7 +16,9 @@ from adal.adal_error import AdalError
 from Kqlmagic.kql_response import KqlError
 from Kqlmagic.kql_engine import KqlEngineError
 from Kqlmagic.my_aad_helper import AuthenticationError
+from Kqlmagic import kql as kql_exec
 
+from msticpy.data.drivers import kql_driver
 from msticpy.common.exceptions import (
     MsticpyKqlConnectionError,
     MsticpyNotConnectedError,
@@ -27,6 +29,7 @@ from msticpy.data.drivers import import_driver
 from msticpy.data.query_defns import DataEnvironment
 
 KqlDriver = import_driver(DataEnvironment.AzureSentinel)
+
 # from msticpy.data.drivers.kql_driver import KqlDriver
 GET_IPYTHON_PATCH = KqlDriver.__module__ + ".get_ipython"
 
@@ -76,42 +79,58 @@ class _MockIPython:
             return True
 
         check.equal(magic, "kql")
-        if "KqlErrorUnk" in content:
-            resp = '{"error": {"code": "UnknownError"}}'
-            raise KqlError(http_response=resp, message=resp)
-        if "KqlErrorWS" in content:
-            resp = '{"error": {"code": "WorkspaceNotFoundError"}}'
-            raise KqlError(http_response=resp, message=resp)
-        if "KqlEngineError" in content:
-            raise KqlEngineError("Test Error")
-        if "AdalErrorUnk" in content:
-            resp = {"error_description": "unknown error"}
-            raise AdalError("Test Error", error_response=resp)
-        if "AdalErrorNR" in content:
-            raise AdalError("Test Error")
-        if "AdalErrorPoll" in content:
-            raise AdalError("Unexpected polling state code_expired")
-        if "AuthenticationError" in content:
-            raise AuthenticationError("Test Error")
+        return kql_exec(content)
 
-        if content == "--schema":
-            return {
-                "table1": {"field1": int, "field2": str},
-                "table2": {"field1": int, "field2": str},
-            }
 
-        if "query_partial" in content:
-            return KqlResultTest(code=0, partial=True, status="partial")
-        if "query_failed" in content:
-            return KqlResultTest(code=1, partial=False, status="failed")
+def kql_exec(content):
+    if "--config" in content:
+        if "=" in content:
+            conf_item, conf_value = content.replace("--config", "").strip().split("=")
+            return {conf_item: conf_value}
+        _, conf_item = content.split()
+        return {conf_item: True}
 
-        return KqlResultTest(code=0, partial=False, status="success")
+    if "KqlErrorUnk" in content:
+        resp = '{"error": {"code": "UnknownError"}}'
+        raise KqlError(http_response=resp, message=resp)
+    if "KqlErrorWS" in content:
+        resp = '{"error": {"code": "WorkspaceNotFoundError"}}'
+        raise KqlError(http_response=resp, message=resp)
+    if "KqlEngineError" in content:
+        raise KqlEngineError("Test Error")
+    if "AdalErrorUnk" in content:
+        resp = {"error_description": "unknown error"}
+        raise AdalError("Test Error", error_response=resp)
+    if "AdalErrorNR" in content:
+        raise AdalError("Test Error")
+    if "AdalErrorPoll" in content:
+        raise AdalError("Unexpected polling state code_expired")
+    if "AuthenticationError" in content:
+        raise AuthenticationError("Test Error")
+
+    if content == "--schema":
+        return {
+            "table1": {"field1": int, "field2": str},
+            "table2": {"field1": int, "field2": str},
+        }
+
+    if "query_partial" in content:
+        return KqlResultTest(code=0, partial=True, status="partial")
+    if "query_failed" in content:
+        return KqlResultTest(code=1, partial=False, status="failed")
+
+    return KqlResultTest(code=0, partial=False, status="success")
+
+
+KQL_EXEC_PATCH = (kql_driver, "kql_exec", kql_exec)
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_load(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
+
     kql_driver = KqlDriver()
     check.is_true(kql_driver.loaded)
 
@@ -121,6 +140,7 @@ def test_kql_load(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_connect(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -132,6 +152,7 @@ def test_kql_connect(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_connect_no_cs(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -143,6 +164,7 @@ def test_kql_connect_no_cs(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_connect_kql_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -169,6 +191,7 @@ def test_kql_connect_kql_exceptions(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_connect_adal_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -192,6 +215,7 @@ def test_kql_connect_adal_exceptions(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_connect_authn_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -204,6 +228,7 @@ def test_kql_connect_authn_exceptions(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_schema(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -216,6 +241,7 @@ def test_kql_schema(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_query_not_connected(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -228,6 +254,7 @@ def test_kql_query_not_connected(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_query_failed(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -236,7 +263,7 @@ def test_kql_query_failed(get_ipython):
 
     with pytest.raises(MsticpyDataQueryError) as mp_ex:
         kql_driver.query("test query_failed")
-    arg_str = "\n".join([str(arg) for arg in mp_ex.value.args])
+    arg_str = "\n".join(str(arg) for arg in mp_ex.value.args)
     check.is_in("Query:", arg_str)
     check.is_in("test query_failed", arg_str)
     check.is_in("Query failed", arg_str)
@@ -246,6 +273,7 @@ def test_kql_query_failed(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_query_success(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -257,6 +285,7 @@ def test_kql_query_success(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_query_partial(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -271,6 +300,7 @@ def test_kql_query_partial(get_ipython):
 
 
 @patch(GET_IPYTHON_PATCH)
+@patch.object(*KQL_EXEC_PATCH)
 def test_kql_query_no_table(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
