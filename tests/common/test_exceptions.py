@@ -4,9 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Exception test class."""
-
-from contextlib import redirect_stdout
-import io
 from typing import List, Any, Tuple
 
 import pytest
@@ -56,13 +53,12 @@ for case in USER_EX_CASES:
 
 # pylint: disable=protected-access
 def _create_and_capture_exception(ex_cls, *args, html_repr=True, **kwargs):
-    f_stream = io.StringIO()
     ex_inst = None
     ex_html = None
-    with redirect_stdout(f_stream):
-        ex_inst = ex_cls(*args, **kwargs)
-        ex_html = ex_inst._repr_html_() if html_repr else ""
-    return ex_inst, str(f_stream.getvalue()), ex_html
+    ex_inst = ex_cls(*args, **kwargs)
+    ex_text = ex_inst._get_exception_text()
+    ex_html = ex_inst._repr_html_() if html_repr else ""
+    return ex_inst, ex_text, ex_html
 
 
 @pytest.fixture(params=_TEST_EX_CASES, ids=lambda t: t[0].__name__)
@@ -75,19 +71,19 @@ def test_user_exceptions(get_except_cases):
     """Test user exceptions with messages to std out."""
     ex_cls, ex_args, ex_kwargs = get_except_cases
     with raises(ex_cls):
-        ex, stdout_txt, html = _create_and_capture_exception(
+        ex, ex_text, ex_html = _create_and_capture_exception(
             ex_cls, *ex_args, **ex_kwargs
         )
         for expected_item in [_TEST_URI, _TEST_TITLE, _TEST_ARG, _OTHER_URI]:
-            check.is_not_none(stdout_txt)
-            check.is_in(expected_item, html)
+            check.is_in(expected_item, ex_text)
+            check.is_in(expected_item, ex_html)
         raise ex
 
 
 @pytest.mark.parametrize("test_ex", BASE_EX_CASES)
 def test_base_exceptions(test_ex):
     """Test simple MP Exceptions."""
-    with raises(test_ex) as ctxt:
+    with raises(test_ex):
         raise test_ex(_TEST_ARG)
 
 
