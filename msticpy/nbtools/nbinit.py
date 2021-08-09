@@ -511,10 +511,9 @@ def _set_nb_options(namespace):
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
     # Kqlmagic config will use AZ CLI login if available
     kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
-    if kql_config:
-        kql_config = f"{kql_config};"
-    kql_config = f"{kql_config}try_azcli_login=True"
-    os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
+    if "try_azcli_login" not in kql_config:
+        kql_config = ";".join([kql_config, "try_azcli_login=True"])
+        os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
