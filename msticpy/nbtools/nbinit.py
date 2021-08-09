@@ -141,6 +141,7 @@ _NB_IMPORTS = [
     dict(pkg="numpy", alias="np"),
 ]
 _MP_IMPORTS = [
+    dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
     dict(pkg="msticpy.common.utility", tgt="md"),
@@ -509,7 +510,10 @@ def _set_nb_options(namespace):
 
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
     # Kqlmagic config will use AZ CLI login if available
-    os.environ["KQLMAGIC_CONFIGURATION"] = "try_azcli_login=True"
+    kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
+    if "try_azcli_login" not in kql_config:
+        kql_config = ";".join([kql_config, "try_azcli_login=True"])
+        os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
