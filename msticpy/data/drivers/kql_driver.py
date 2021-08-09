@@ -121,7 +121,7 @@ class KqlDriver(DriverBase):
                 print(f"Could not connect to kql query provider for {connection_str}")
             return self._connected
         finally:
-            self._set_kql_option("Kqlmagic.short_errors", kql_err_setting)
+            self._set_kql_option("short_errors", kql_err_setting)
 
     # pylint: disable=too-many-branches
 
@@ -210,7 +210,7 @@ class KqlDriver(DriverBase):
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
         auto_dataframe = self._get_kql_option(option="auto_dataframe")
-        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=False)
+        self._set_kql_option(option="auto_dataframe", value=False)
         # run the query (append semicolon to prevent default output)
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
