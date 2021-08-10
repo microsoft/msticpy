@@ -29,23 +29,22 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
-_AUTH_OPTIONS = {
-    "env": EnvironmentCredential(),
-    "cli": AzureCliCredential(),
-    "msi": ManagedIdentityCredential(),
-    "interactive": InteractiveBrowserCredential(),
+_AUTHORITIES = {
+    "global": "login.microsoftonline.com",
+    "usgov": "login.microsoftonline.us",
+    "cn": "login.chinacloudapi.cn",
+    "de": "login.microsoftonline.de",
 }
 
 
 def az_connect_core(
-    auth_methods: List[str] = None, silent: bool = False
+    auth_methods: List[str] = None, region: str = None, silent: bool = False
 ) -> AzCredentials:
-    """
-    Authenticate using multiple authentication sources.
+    """Authenticate using multiple authentication sources.
 
     Parameters
     ----------
-    auth_methods
+    auth_methods : List[str], optional
         List of authentication methods to try
         Possible options are:
         - "env" - to get authentication details from environment varibales
@@ -53,23 +52,25 @@ def az_connect_core(
         - "msi" - to user Managed Service Indenity details
         - "interactive" - to prompt for interactive login
         Default is ["env", "cli", "msi", "interactive"]
-
-    silent
+    region : str, optional
+        What Azure region to connect to
+        Default will attempt to use the region from the config file or Azure Public Cloud
+    silent : bool, optional
         Whether to display any output during auth process. Default is False.
 
     Returns
     -------
     AzCredentials
-        Named tuple of:
+                Named tuple of:
         - legacy (ADAL) credentials
         - modern (MSAL) credentials
 
     Raises
     ------
-    CloudError
-        If chained token credential creation fails.
     MsticpyAzureConnectionError
         If invalid auth options are presented.
+    CloudError
+        If chained token credential creation fails.
 
     Notes
     -----
@@ -83,10 +84,12 @@ def az_connect_core(
     MSAL (modern) credential types are returned.
 
     """
+    # Create the auth methods with the specified cloud region
+    auth_options = create_auth_options(region)
     if not auth_methods:
         auth_methods = default_auth_methods()
     try:
-        auths = [_AUTH_OPTIONS[meth] for meth in auth_methods]
+        auths = [auth_options[meth] for meth in auth_methods]
     except KeyError as err:
         raise MsticpyAzureConnectionError(
             "Unknown authentication option, valid options are; env, cli, msi, interactive"
@@ -145,4 +148,24 @@ def default_auth_methods() -> List[str]:
             return az_settings["auth_methods"]
     except KeyError:
         pass  # no Azure section in config
-    return list(_AUTH_OPTIONS)
+    return ["env", "cli", "msi", "interactive"]
+
+
+def create_auth_options(region: str = None) -> dict:
+    """Create auth options dict with correct region set."""
+    if region:
+        authority = region
+    else:
+        try:
+            az_settings = config.get_config("Azure")
+            if az_settings and "cloud" in az_settings:
+                authority = _AUTHORITIES[az_settings["cloud"]]
+        except KeyError:
+            authority = "login.microsoftonline.com"  # no Azure section in config
+
+    return {
+        "env": EnvironmentCredential(),
+        "cli": AzureCliCredential(),
+        "msi": ManagedIdentityCredential(),
+        "interactive": InteractiveBrowserCredential(authority=authority),
+    }
