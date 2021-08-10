@@ -193,9 +193,7 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertIn("TenantId", kv_settings)
         self.assertIsNone(kv_settings.get("NotATenantId"))
 
-        self.assertEqual(
-            kv_settings.authority_uri, "https://login.microsoftonline.com/"
-        )
+        self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.com")
         self.assertEqual(
             kv_settings.get_tenant_authority_uri(),
             "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47",
@@ -219,7 +217,7 @@ class TestSecretsConfig(unittest.TestCase):
         kv_settings.authority = "usgov"
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.us")
         self.assertEqual(
-            kv_settings.keyvault_uri, "https://{vault}.vault.usgovcloudapi.net/"
+            kv_settings.keyvault_uri, "https://{vault}.vault.usgovcloudapi.net"
         )
         self.assertEqual(kv_settings.mgmt_uri, "https://management.usgovcloudapi.net/")
 

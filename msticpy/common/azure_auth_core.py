@@ -40,16 +40,17 @@ _AUTHORITIES = {
 def az_connect_core(
     auth_methods: List[str] = None, region: str = None, silent: bool = False
 ) -> AzCredentials:
-    """Authenticate using multiple authentication sources.
+    """
+    Authenticate using multiple authentication sources.
 
     Parameters
     ----------
     auth_methods : List[str], optional
         List of authentication methods to try
         Possible options are:
-        - "env" - to get authentication details from environment varibales
+        - "env" - to get authentication details from environment variables
         - "cli" - to use Azure CLI authentication details
-        - "msi" - to user Managed Service Indenity details
+        - "msi" - to user Managed Service Identity details
         - "interactive" - to prompt for interactive login
         Default is ["env", "cli", "msi", "interactive"]
     region : str, optional
