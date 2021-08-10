@@ -481,12 +481,25 @@ class TIProvider(ABC):
 
 
 class TIPivotProvider(ABC):
-
     """A class which provides pivot functions and a means of registering them."""
 
     @abstractmethod
-    def register_pivots(self, pivot_reg: "PivotRegistration", pivotcls: "Pivot"):
-        pass
+    def register_pivots(
+        self,
+        pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
+        pivot: "Pivot",  # type: ignore # noqa: F821
+    ):
+        """
+        Register pivot functions for the TI Provider.
+
+        Parameters
+        ----------
+        pivot_reg : PivotRegistration
+            Pivot registration settings.
+        pivot : Pivot
+            Pivot library instance
+
+        """
 
 
 # slightly stricter than normal URL regex to exclude '() from host string

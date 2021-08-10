@@ -300,19 +300,26 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
 
 def _print_validation_report(mp_errors, mp_warn):
     if mp_errors:
-        title = "\nThe following configuration errors were found:"
-        print(title, "\n", "-" * len(title))
-        for err in mp_errors:
-            print(err)
+        _print_validation_item(
+            "\nThe following configuration errors were found:", mp_errors
+        )
+
     else:
         print("No errors found.")
     if mp_warn:
-        title = "\nThe following configuration warnings were found:"
-        print(title, "\n", "-" * len(title))
-        for err in mp_warn:
-            print(err)
+        _print_validation_item(
+            "\nThe following configuration warnings were found:", mp_warn
+        )
+
     else:
         print("No warnings found.")
+
+
+def _print_validation_item(arg0, arg1):
+    title = arg0
+    print(title, "\n", "-" * len(title))
+    for err in arg1:
+        print(err)
 
 
 def _validate_azure_sentinel(mp_config):
@@ -389,8 +396,8 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
         errs.append(_check_required_key(sec_args, "tenantId", sec_path))
         errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
     if p_name == "RiskIQ":
-        errs.append(_check_required_key(sec_args, "ApiUsername", sec_path))
-        errs.append(_check_required_package(sec_args, "passivetotal", sec_path))
+        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
+        errs.append(_check_required_package("passivetotal", sec_path))
     return [err for err in errs if err]
 
 
@@ -400,7 +407,7 @@ def _check_required_key(conf_section, key, sec_path):
     return None
 
 
-def _check_required_package(conf_section, package, sec_path):
+def _check_required_package(package, sec_path):
     if find_spec(package) is None:
         return f"{sec_path}: Required package '{package}' is not installed."
     return None

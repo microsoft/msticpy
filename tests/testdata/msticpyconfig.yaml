@@ -56,7 +56,7 @@ TIProviders:
     Primary: True
     Provider: "RiskIQ"
     Args:
-      ApiUsername: "user@host.com"
+      ApiID: "user@host.com"
       AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
 OtherProviders:
   GeoIPLite:

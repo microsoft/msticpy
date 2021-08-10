@@ -12,8 +12,12 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from functools import partialmethod, partial
-from typing import Tuple, Any
+from datetime import datetime
+from functools import partial
+from typing import Any, Tuple, Optional
+
+
+from passivetotal import analyzer as ptanalyzer
 
 from .ti_provider_base import (
     TIProvider,
@@ -22,11 +26,8 @@ from .ti_provider_base import (
     TILookupStatus,
     TIPivotProvider,
 )
-from ...datamodel.entities import Dns, IpAddress
 from ...common.utility import export
 from ..._version import VERSION
-
-from passivetotal import analyzer as ptanalyzer
 
 __version__ = VERSION
 __author__ = "Mark Kendrick"
@@ -108,26 +109,32 @@ class RiskIQ(TIProvider, TIPivotProvider):
     }
     _PIVOT_ENTITIES["services"] = {"IpAddress": "Address"}
 
-    _REFERNCE = "https://community.riskiq.com"
+    _REFERENCE = "https://community.riskiq.com"
 
     def __init__(self, **kwargs):
         """Instantiate RiskIQ class."""
         super().__init__(**kwargs)
-        ptanalyzer.init(
-            username=kwargs.get("ApiUsername"), api_key=kwargs.get("AuthKey")
-        )
-    
+        ptanalyzer.init(username=kwargs.get("ApiID"), api_key=kwargs.get("AuthKey"))
+        self._pivot_timespan_start: Optional[datetime] = None
+        self._pivot_timespan_end: Optional[datetime] = None
+        self._pivot_get_timespan: Any = None
+
+    # pylint: disable=no-self-use
     @property
     def _requests_session(self):
-        return ptanalyzer.api_clients['Cards'].session
-    
+        """Return the PT Analyzer session."""
+        return ptanalyzer.api_clients["Cards"].session
+
     @_requests_session.setter
     def _requests_session(self, session):
+        """Set the PT Analyzer session."""
         for name in ptanalyzer.api_clients:
             ptanalyzer.api_clients[name].session = session
 
+    # pylint: enable=no-self-use
 
-    def _severity_rep(self, classification):
+    @staticmethod
+    def _severity_rep(classification):
         """Get the severity level for a reputation score classification."""
         return {
             "MALICIOUS": TISeverity.high,
@@ -167,7 +174,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             return result
 
         result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        result.reference = self._REFERNCE
+        result.reference = self._REFERENCE
 
         if query_type is None:
             prop = "ALL"
@@ -184,46 +191,55 @@ class RiskIQ(TIProvider, TIPivotProvider):
             )
 
         try:
-            ptanalyzer.set_context('msticpy','ti',VERSION, prop)
-            obj = ptanalyzer.get_object(ioc)
+            ptanalyzer.set_context("msticpy", "ti", VERSION, prop)
+            pt_obj = ptanalyzer.get_object(ioc)
             if prop == "ALL":
-                details = {
-                    "summary": obj.summary.as_dict,
-                    "reputation": obj.reputation.as_dict,
-                }
-                if obj.summary.total == 0 and obj.reputation.score == 0:
-                    result.result = False
-                else:
-                    result.result = True
-                rep_severity = self._severity_rep(obj.reputation.classification)
-                result.set_severity(rep_severity)
-                if (
-                    "malware_hashes" in obj.summary.available
-                    or "articles" in obj.summary.available
-                ):
-                    result.set_severity(max(rep_severity, TISeverity.high))
-                elif "projects" in obj.summary.available:
-                    result.set_severity(max(rep_severity, TISeverity.warning))
+                result = self._parse_result_all_props(pt_obj, result)
             else:
-                attr = getattr(obj, prop)
-                if prop == "reputation":
-                    result.set_severity(self._severity_rep(attr.classification))
-                elif prop == "malware_hashes" and len(attr) > 0:
-                    result.set_severity(TISeverity.high)
-                else:
-                    result.set_severity(TISeverity.information)
-                details = attr.as_dict
-                result.result = True
-            result.details = details
-            result.raw_result = details
-        except ptanalyzer.AnalyzerError as e:
+                result = self._parse_result_prop(pt_obj, prop, result)
+        except ptanalyzer.AnalyzerError as err:
             result.result = False
             result.status = TILookupStatus.query_failed.value
-            result.details = "ERROR: {}".format(e.message)
-            result.raw_result = e
+            result.details = f"ERROR: {', '.join(err.args)}"
+            result.raw_result = err
             result.set_severity(TISeverity.unknown)
 
         return result
+
+    def _parse_result_all_props(self, pt_result, ti_result):
+        """Parse results for ALL properties."""
+        ti_result.details = {
+            "summary": pt_result.summary.as_dict,
+            "reputation": pt_result.reputation.as_dict,
+        }
+        ti_result.raw_result = ti_result.details
+        if pt_result.summary.total == 0 and pt_result.reputation.score == 0:
+            ti_result.result = False
+        else:
+            ti_result.result = True
+        rep_severity = self._severity_rep(pt_result.reputation.classification)
+        ti_result.set_severity(rep_severity)
+        if (
+            "malware_hashes" in pt_result.summary.available
+            or "articles" in pt_result.summary.available
+        ):
+            ti_result.set_severity(max(rep_severity, TISeverity.high))
+        elif "projects" in pt_result.summary.available:
+            ti_result.set_severity(max(rep_severity, TISeverity.warning))
+        return ti_result
+
+    def _parse_result_prop(self, pt_result, pt_prop, ti_result):
+        """Parse result for a specific property."""
+        attr = getattr(pt_result, pt_prop)
+        if pt_prop == "reputation":
+            ti_result.set_severity(self._severity_rep(attr.classification))
+        elif pt_prop == "malware_hashes" and len(attr) > 0:
+            ti_result.set_severity(TISeverity.high)
+        else:
+            ti_result.set_severity(TISeverity.information)
+        ti_result.details = ti_result.raw_result = attr.as_dict
+        ti_result.result = True
+        return ti_result
 
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
@@ -242,13 +258,24 @@ class RiskIQ(TIProvider, TIPivotProvider):
             Object with match details
 
         """
-        # TODO why is this here? do I need it?
+        # Mark: why is this here? do I need it?
+        # IanH - If you want to do additional parsing/processing on
+        # the returned results you can implement a method to do that
+        # e.g. to assign a severity level other than "information"
+        # - similar to what you are doing above.
+        # It's mainly for HTTP providers but not called automatically
+        # for classes derived directly from TI Provider
         return (True, TISeverity.information, None)
 
     def _set_pivot_timespan(self, **kwargs):
-        """Set the pivot timespan and track whether it has changed.
+        """
+        Set the pivot timespan and track whether it has changed.
 
-        :retval bool: whether the timespan changed.
+        Returns
+        -------
+        bool
+            whether the timespan changed.
+
         """
         changed = False
         start = kwargs.pop(
@@ -258,24 +285,42 @@ class RiskIQ(TIProvider, TIPivotProvider):
         end = kwargs.pop(
             "end", self._pivot_get_timespan().end if self._pivot_get_timespan else None
         )
-        if start and end:
-            if start != self._pivot_timespan_start or end != self._pivot_timespan_end:
-                changed = True
-                self._pivot_timespan_start = start
-                self._pivot_timespan_end = end
-                ptanalyzer.set_date_range(start_date=start, end_date=end)
+        if (
+            start
+            and end
+            and (start != self._pivot_timespan_start or end != self._pivot_timespan_end)
+        ):
+            changed = True
+            self._pivot_timespan_start = start
+            self._pivot_timespan_end = end
+            ptanalyzer.set_date_range(start_date=start, end_date=end)
         return changed
 
     def pivot_value(self, prop, host, **kwargs):
         """Perform a pivot on a single value."""
         ts_changed = self._set_pivot_timespan(**kwargs)
-        ptanalyzer.set_context('msticpy','pivot',VERSION, prop)
+        ptanalyzer.set_context("msticpy", "pivot", VERSION, prop)
         obj = ptanalyzer.get_object(host)
         if ts_changed and prop not in ["reputation", "summary", "whois"]:
             obj.reset(prop)
         return getattr(obj, prop).to_dataframe(**kwargs)
 
-    def register_pivots(self, pivot_reg: "PivotRegistration", pivot: "Pivot"):
+    def register_pivots(
+        self,
+        pivot_reg: "PivotRegistration",  # type: ignore # noqa: F821
+        pivot: "Pivot",  # type: ignore # noqa: F821
+    ):
+        """
+        Register pivot functions for the TI Provider.
+
+        Parameters
+        ----------
+        pivot_reg : PivotRegistration
+            Pivot registration settings.
+        pivot : Pivot
+            Pivot library instance
+
+        """
         self._pivot_get_timespan = pivot.get_timespan
         self._pivot_timespan_start = None
         self._pivot_timespan_end = None
@@ -292,7 +337,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
                 func_static_params={"prop": prop},
                 input_type="value",
                 entity_map=entity_map,
-                **base_reg
+                **base_reg,
             )
             fun = partial(self.pivot_value)
             fun.__doc__ = getattr(

@@ -60,6 +60,7 @@ class _KeyringTestBackend(keyring.backend.KeyringBackend):
     def __init__(self):  # noqa
         self._secrets = {}
         self._secrets.update(KV_SECRETS)
+        super().__init__()
 
     def get_password(self, service, username):
 
@@ -357,7 +358,7 @@ class TestSecretsConfig(unittest.TestCase):
 
     def _check_provider_settings(self, sec_settings):
         prov_settings = get_provider_settings()
-        for p_name, p_settings in prov_settings.items():
+        for p_name in prov_settings:
             args = prov_settings[p_name].args
             if p_name == "OTX":
                 sec_value = sec_settings.read_secret(args["AuthKey"])

@@ -244,24 +244,63 @@ class mock_req_session:
                 "organization": "ISP Solutions",
                 "asn": "AS11234 - ISPSOL",
                 "hosting_provider": "SuperHosters",
-                "data_summary": {"resolutions": {"count": 21,
-                "link": "https://community.riskiq.com/search/{}/resolutions".format(query)},
-                "certificates": {"count": 34,
-                "link": "https://community.riskiq.com/search/{}/domaincertificates".format(query)},
-                "hashes": {"count": 1,
-                "link": "https://community.riskiq.com/search/{}/hashes".format(query)},
-                "projects": {"count": 1,
-                "link": "https://community.riskiq.com/search/{}/projects".format(query)},
-                "articles": {"count": 5,
-                "link": "https://community.riskiq.com/research/{}".format(query)},
-                "trackers": {"count": 15,
-                "link": "https://community.riskiq.com/search/{}/trackers".format(query)},
-                "components": {"count": 7,
-                "link": "https://community.riskiq.com/search/{}/components".format(query)},
-                "host_pairs": {"count": 9,
-                "link": "https://community.riskiq.com/search/{}/hostpairs".format(query)},
-                "cookies": {"count": 25,
-                "link": "https://community.riskiq.com/search/{}/cookies".format(query)}}}
+                "data_summary": {
+                    "resolutions": {
+                        "count": 21,
+                        "link": "https://community.riskiq.com/search/{}/resolutions".format(
+                            query
+                        ),
+                    },
+                    "certificates": {
+                        "count": 34,
+                        "link": "https://community.riskiq.com/search/{}/domaincertificates".format(
+                            query
+                        ),
+                    },
+                    "hashes": {
+                        "count": 1,
+                        "link": "https://community.riskiq.com/search/{}/hashes".format(
+                            query
+                        ),
+                    },
+                    "projects": {
+                        "count": 1,
+                        "link": "https://community.riskiq.com/search/{}/projects".format(
+                            query
+                        ),
+                    },
+                    "articles": {
+                        "count": 5,
+                        "link": "https://community.riskiq.com/research/{}".format(
+                            query
+                        ),
+                    },
+                    "trackers": {
+                        "count": 15,
+                        "link": "https://community.riskiq.com/search/{}/trackers".format(
+                            query
+                        ),
+                    },
+                    "components": {
+                        "count": 7,
+                        "link": "https://community.riskiq.com/search/{}/components".format(
+                            query
+                        ),
+                    },
+                    "host_pairs": {
+                        "count": 9,
+                        "link": "https://community.riskiq.com/search/{}/hostpairs".format(
+                            query
+                        ),
+                    },
+                    "cookies": {
+                        "count": 25,
+                        "link": "https://community.riskiq.com/search/{}/cookies".format(
+                            query
+                        ),
+                    },
+                },
+            }
             return MockResponse(mocked_result, 200)
         elif kwargs["url"].startswith("https://api.passivetotal.org/v2/reputation"):
             query = kwargs["params"]["query"]
@@ -274,38 +313,59 @@ class mock_req_session:
                 classification = "SUSPICIOUS"
             else:
                 classification = "UNKNOWN"
-            mocked_result = {"score": score,
+            mocked_result = {
+                "score": score,
                 "classification": classification,
-                "rules": [{"name": "Blocklist Malware",
-                "description": "Observed malware on this entity",
-                "severity": 5,
-                "link": None},
-                {"name": "Name server",
-                "description": "Domain is using a name server that is more likely to be used by malicious infrastructure",
-                "severity": 4,
-                "link": None},
-                {"name": "ASN",
-                "description": "Infrastructure hosted by this ASN are more likely to be malicious",
-                "severity": 4,
-                "link": None},
-                {"name": "TLD",
-                "description": "Domains in this TLD are more likely to be malicious",
-                "severity": 3,
-                "link": None}]}
+                "rules": [
+                    {
+                        "name": "Blocklist Malware",
+                        "description": "Observed malware on this entity",
+                        "severity": 5,
+                        "link": None,
+                    },
+                    {
+                        "name": "Name server",
+                        "description": "Domain is using a name server that is more likely to be used by malicious infrastructure",
+                        "severity": 4,
+                        "link": None,
+                    },
+                    {
+                        "name": "ASN",
+                        "description": "Infrastructure hosted by this ASN are more likely to be malicious",
+                        "severity": 4,
+                        "link": None,
+                    },
+                    {
+                        "name": "TLD",
+                        "description": "Domains in this TLD are more likely to be malicious",
+                        "severity": 3,
+                        "link": None,
+                    },
+                ],
+            }
             return MockResponse(mocked_result, 200)
-        elif kwargs["url"].startswith("https://api.passivetotal.org/v2/enrichment/malware"):
+        elif kwargs["url"].startswith(
+            "https://api.passivetotal.org/v2/enrichment/malware"
+        ):
             query = kwargs["params"]["query"]
             if is_benign_ioc(query):
                 return MockResponse(None, 404)
-            mocked_result = {"success": True,
-                "results": [{"collectionDate": "2021-01-01",
-                "sample": "36190e9c66c801bc393b8189a5aeaf22",
-                "source": "Malsource Info",
-                "sourceUrl": "https://mocked.url/md5/36190e9c66c801bc393b8189a5aeaf22"},
-                {"collectionDate": "2020-09-25",
-                "sample": "1c1033f184cc33c87cb6aa54a955d034",
-                "source": "Malsource Info",
-                "sourceUrl": "https://mocked.url/md5/1c1033f184cc33c87cb6aa54a955d034"}]
+            mocked_result = {
+                "success": True,
+                "results": [
+                    {
+                        "collectionDate": "2021-01-01",
+                        "sample": "36190e9c66c801bc393b8189a5aeaf22",
+                        "source": "Malsource Info",
+                        "sourceUrl": "https://mocked.url/md5/36190e9c66c801bc393b8189a5aeaf22",
+                    },
+                    {
+                        "collectionDate": "2020-09-25",
+                        "sample": "1c1033f184cc33c87cb6aa54a955d034",
+                        "source": "Malsource Info",
+                        "sourceUrl": "https://mocked.url/md5/1c1033f184cc33c87cb6aa54a955d034",
+                    },
+                ],
             }
             return MockResponse(mocked_result, 200)
         return MockResponse(None, 404)
@@ -369,7 +429,7 @@ class TestTIProviders(unittest.TestCase):
 
     def test_greynoise(self):
         self.exercise_provider("GreyNoise")
-    
+
     def test_riskiq(self):
         self.exercise_provider("RiskIQ")
 

@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot TI Provider helper functions."""
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Callable, Dict, Optional, Set, Tuple, Type
 
@@ -12,7 +11,8 @@ import pandas as pd
 
 from .._version import VERSION
 from ..data.query_container import QueryContainer
-from ..sectools import TILookup, TIPivotProvider
+from ..sectools.tilookup import TILookup
+from ..sectools.tiproviders.ti_provider_base import TIPivotProvider
 from . import entities
 from .pivot_register import PivotRegistration, create_pivot_func
 
@@ -89,12 +89,12 @@ def create_ti_pivot_funcs(ti_lookup: TILookup):
     return ioc_queries
 
 
-def register_ti_pivot_providers(ti_lookup: TILookup, pivotcls: "Pivot"):
+def register_ti_pivot_providers(ti_lookup: TILookup, pivot: "Pivot"):  # type: ignore # noqa: F821
     """Register pivot functions from TI providers."""
     for _, ti_prov in ti_lookup.loaded_providers.items():
         if isinstance(ti_prov, TIPivotProvider):
-            ti_prov.register_pivots(PivotRegistration, pivotcls)
-            
+            ti_prov.register_pivots(PivotRegistration, pivot)
+
 
 def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
     return {

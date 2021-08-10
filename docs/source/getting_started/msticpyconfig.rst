@@ -636,7 +636,7 @@ Commented configuration file sample
         Provider: "Tor"
       RiskIQ:
         Args:
-          ApiUsername: "user@host.com"
+          ApiID: "user@host.com"
           AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
         Provider: "RiskIQ"
         Primary: True
