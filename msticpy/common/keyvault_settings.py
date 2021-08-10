@@ -8,6 +8,8 @@
 import warnings
 from typing import Any, List, Optional
 
+from msrestazure import azure_cloud
+
 from .._version import VERSION
 from . import pkg_config as config
 from .azure_auth_core import default_auth_methods
@@ -16,6 +18,22 @@ from .utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+_CLOUD_MAPPING = {
+    "global": azure_cloud.AZURE_PUBLIC_CLOUD,
+    "usgov": azure_cloud.AZURE_US_GOV_CLOUD,
+    "de": azure_cloud.AZURE_GERMAN_CLOUD,
+    "cn": azure_cloud.AZURE_CHINA_CLOUD,
+}
+
+
+def _create_cloud_ep_dict(endpoint):
+    """Return lookup dict for cloud endpoints."""
+    return {
+        cloud: getattr(msr_cloud.endpoints, endpoint)
+        for cloud, msr_cloud in _CLOUD_MAPPING.items()
+    }
 
 
 @export
@@ -47,32 +65,27 @@ class KeyVaultSettings:
 
     """
 
-    AAD_AUTHORITIES = {
-        "global": "https://login.microsoftonline.com/",
-        "usgov": "https://login.microsoftonline.us",
-        "de": "https://login.microsoftonline.de",
-        "cn": "https://login.chinacloudapi.cn",
-    }
-
+    AAD_AUTHORITIES = _create_cloud_ep_dict("active_directory")
+    RES_MGMT_URIS = _create_cloud_ep_dict("resource_manager")
     KV_URIS = {
-        "global": "https://{vault}.vault.azure.net/",
-        "usgov": "https://{vault}.vault.usgovcloudapi.net/",
-        "de": "https://{vault}.vault.microsoftazure.de/",
-        "cn": "https://{vault}.vault.chinacloudapi.cn/",
-    }
-
-    MGMT_URIS = {
-        "global": "https://management.azure.com/",
-        "usgov": "https://management.usgovcloudapi.net/",
-        "de": "https://management.microsoftazure.de/",
-        "cn": "https://management.chinacloudapi.cn/",
+        cloud: f"https://{{vault}}{msr_cloud.suffixes.keyvault_dns}"
+        for cloud, msr_cloud in _CLOUD_MAPPING.items()
     }
 
     # Azure CLI Client ID
     CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"  # xplat
 
     def __init__(self):
-        """Initialize new instance of KeyVault Settings."""
+        """
+        Initialize new instance of KeyVault Settings.
+
+        Raises
+        ------
+        MsticpyKeyVaultConfigError
+            If no Key Vault settings are found in
+            msticpyconfig.yaml.
+
+        """
         self.authority: Optional[str] = None
         self.auth_methods: List[str] = []
         try:
@@ -89,6 +102,7 @@ class KeyVaultSettings:
         self._get_authority_from_settings()
 
     def _get_auth_methods_from_settings(self):
+        """Retrieve authentication methods from settings."""
         try:
             self.auth_methods = (
                 config.get_config("DataProviders.AzureCLI")
@@ -101,7 +115,10 @@ class KeyVaultSettings:
             self.auth_methods = default_auth_methods()
 
     def _get_authority_from_settings(self):
-        if "authority_uri" in self:
+        """Get the authority (AAD) URI from settings."""
+        if "authorityuri" in self:
+            # For BlueHound compat - the "authority_uri" can be set directly
+            # as a property of the object
             rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
             self.authority = rev_lookup.get(
                 self["authorityuri"].casefold(), "global"
@@ -110,7 +127,7 @@ class KeyVaultSettings:
             try:
                 az_settings = config.get_config("Azure")
                 if az_settings:
-                    self.authority = az_settings.get("cloud")
+                    self.authority = az_settings.get("cloud", "global")
             except KeyError:
                 self.authority = "global"
 
@@ -166,7 +183,7 @@ class KeyVaultSettings:
     @property
     def mgmt_uri(self) -> Optional[str]:
         """Return Azure management URI template for current cloud."""
-        mgmt_uri = self.MGMT_URIS.get(self.cloud)
+        mgmt_uri = self.RES_MGMT_URIS.get(self.cloud)
         if not mgmt_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
             warnings.warn(mssg)
