@@ -258,13 +258,6 @@ class RiskIQ(TIProvider, TIPivotProvider):
             Object with match details
 
         """
-        # Mark: why is this here? do I need it?
-        # IanH - If you want to do additional parsing/processing on
-        # the returned results you can implement a method to do that
-        # e.g. to assign a severity level other than "information"
-        # - similar to what you are doing above.
-        # It's mainly for HTTP providers but not called automatically
-        # for classes derived directly from TI Provider
         return (True, TISeverity.information, None)
 
     def _set_pivot_timespan(self, **kwargs):
