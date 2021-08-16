@@ -22,19 +22,13 @@ from .._version import VERSION
 from .cred_wrapper import CredentialWrapper
 from .exceptions import MsticpyAzureConnectionError
 from ..common import pkg_config as config
+from .cloud_mappings import get_all_endpoints
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
-
-_AUTHORITIES = {
-    "global": "login.microsoftonline.com",
-    "usgov": "login.microsoftonline.us",
-    "cn": "login.chinacloudapi.cn",
-    "de": "login.microsoftonline.de",
-}
 
 
 def az_connect_core(
@@ -154,19 +148,19 @@ def default_auth_methods() -> List[str]:
 
 def create_auth_options(region: str = None) -> dict:
     """Create auth options dict with correct region set."""
-    if region:
-        authority = region
-    else:
+    if not region:
         try:
             az_settings = config.get_config("Azure")
             if az_settings and "cloud" in az_settings:
-                authority = _AUTHORITIES[az_settings["cloud"]]
+                region = az_settings["cloud"]
         except KeyError:
-            authority = "login.microsoftonline.com"  # no Azure section in config
+            region = "global"  # no Azure section in config
+
+    aad_uri = get_all_endpoints(region)["active_directory"]  # type: ignore
 
     return {
         "env": EnvironmentCredential(),
         "cli": AzureCliCredential(),
         "msi": ManagedIdentityCredential(),
-        "interactive": InteractiveBrowserCredential(authority=authority),
+        "interactive": InteractiveBrowserCredential(authority=aad_uri),
     }

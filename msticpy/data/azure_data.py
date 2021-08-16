@@ -16,6 +16,7 @@ from azure.common.exceptions import CloudError
 
 from ..common.azure_auth import az_connect
 from ..common.azure_auth_core import AzCredentials
+from ..common.cloud_mappings import get_all_endpoints
 
 from ..common.exceptions import (
     MsticpyAzureConfigError,
@@ -109,7 +110,7 @@ class InterfaceItems:
 class AzureData:
     """Class for returning data on an Azure tenant."""
 
-    def __init__(self, connect: bool = False):
+    def __init__(self, connect: bool = False, cloud: str = None):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
         self.credentials: Optional[AzCredentials] = None
@@ -120,6 +121,7 @@ class AzureData:
         self.compute_client: Optional[ComputeManagementClient] = None
         if connect:
             self.connect()
+        self.endpoints = get_all_endpoints(cloud)  # type: ignore
 
     def connect(self, auth_methods: List = None, silent: bool = False):
         """
@@ -142,7 +144,9 @@ class AzureData:
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
-        self.sub_client = SubscriptionClient(self.credentials.legacy)
+        self.sub_client = SubscriptionClient(
+            self.credentials.legacy, base_url=self.endpoints["resource_manager"]
+        )
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
         self.connected = True
@@ -757,9 +761,24 @@ class AzureData:
         if getattr(self, client_name) is None:
             client = _CLIENT_MAPPING[client_name]
             if sub_id is None:
-                setattr(self, client_name, client(self.credentials.modern))  # type: ignore
+                setattr(
+                    self,
+                    client_name,
+                    client(
+                        self.credentials.modern,  # type: ignore
+                        base_url=self.endpoints["resource_manager"],
+                    ),
+                )
             else:
-                setattr(self, client_name, client(self.credentials.modern, sub_id))  # type: ignore
+                setattr(
+                    self,
+                    client_name,
+                    client(
+                        self.credentials.modern,  # type: ignore
+                        sub_id,
+                        base_url=self.endpoints["resource_manager"],
+                    ),
+                )
 
         if getattr(self, client_name) is None:
             raise CloudError("Could not create client")
@@ -778,6 +797,21 @@ class AzureData:
         """
         client = _CLIENT_MAPPING[client_name]
         if sub_id is None:
-            setattr(self, client_name, client(self.credentials.legacy))  # type: ignore
+            setattr(
+                self,
+                client_name,
+                client(
+                    self.credentials.legacy,  # type: ignore
+                    base_url=self.endpoints["resource_manager"],
+                ),
+            )
         else:
-            setattr(self, client_name, client(self.credentials.legacy, sub_id))  # type: ignore
+            setattr(
+                self,
+                client_name,
+                client(
+                    self.credentials.legacy,  # type: ignore
+                    sub_id,
+                    base_url=self.endpoints["resource_manager"],
+                ),
+            )

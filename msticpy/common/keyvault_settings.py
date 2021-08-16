@@ -8,32 +8,15 @@
 import warnings
 from typing import Any, List, Optional
 
-from msrestazure import azure_cloud
-
 from .._version import VERSION
 from . import pkg_config as config
 from .azure_auth_core import default_auth_methods
 from .exceptions import MsticpyKeyVaultConfigError
 from .utility import export
+from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-
-
-_CLOUD_MAPPING = {
-    "global": azure_cloud.AZURE_PUBLIC_CLOUD,
-    "usgov": azure_cloud.AZURE_US_GOV_CLOUD,
-    "de": azure_cloud.AZURE_GERMAN_CLOUD,
-    "cn": azure_cloud.AZURE_CHINA_CLOUD,
-}
-
-
-def _create_cloud_ep_dict(endpoint):
-    """Return lookup dict for cloud endpoints."""
-    return {
-        cloud: getattr(msr_cloud.endpoints, endpoint)
-        for cloud, msr_cloud in _CLOUD_MAPPING.items()
-    }
 
 
 @export
@@ -65,11 +48,11 @@ class KeyVaultSettings:
 
     """
 
-    AAD_AUTHORITIES = _create_cloud_ep_dict("active_directory")
-    RES_MGMT_URIS = _create_cloud_ep_dict("resource_manager")
+    AAD_AUTHORITIES = create_cloud_ep_dict("active_directory")
+    RES_MGMT_URIS = create_cloud_ep_dict("resource_manager")
+    KV_SUFFIXES = create_cloud_suf_dict("keyvault_dns")
     KV_URIS = {
-        cloud: f"https://{{vault}}{msr_cloud.suffixes.keyvault_dns}"
-        for cloud, msr_cloud in _CLOUD_MAPPING.items()
+        cloud: f"https://{{vault}}{suffix}" for cloud, suffix in KV_SUFFIXES.items()
     }
 
     # Azure CLI Client ID
