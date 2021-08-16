@@ -24,6 +24,8 @@ _PATH_MAPPING = {
     "incidents": "/providers/Microsoft.SecurityInsights/incidents",
 }
 
+_BASE_URL = "https://management.azure.com/"
+
 
 class AzureSentinel(AzureData):
     """Class for returning key Azure Sentinel elements."""
@@ -40,6 +42,7 @@ class AzureSentinel(AzureData):
         """
         super().__init__()
         self.config = None
+        self.base_url = self.endpoints["resource_manager"]
 
     def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
         """
@@ -137,20 +140,9 @@ class AzureSentinel(AzureData):
         """
         # If res_id isn't provided try and get them from config
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = _build_paths(res_id, self.base_url)
         saved_searches_url = url + _PATH_MAPPING["ss_path"]
         params = {"api-version": "2017-04-26-preview"}
 
@@ -192,20 +184,9 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = _build_paths(res_id, self.base_url)
         alert_rules_url = url + _PATH_MAPPING["alert_rules"]
         params = {"api-version": "2020-01-01"}
 
@@ -252,20 +233,9 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = _build_paths(res_id, self.base_url)
         bookmarks_url = url + _PATH_MAPPING["bookmarks"]
         params = {"api-version": "2020-01-01"}
 
@@ -312,19 +282,9 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = _build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         params = {"api-version": "2020-01-01"}
         response = requests.get(
@@ -376,19 +336,9 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = _build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         incident_url = incidents_url + f"/{incident_id}"
         params = {"api-version": "2020-01-01"}
@@ -451,21 +401,10 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
         incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
-        url = _build_paths(res_id)
+        url = _build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         incident_url = incidents_url + f"/{incident_id}"
         params = {"api-version": "2020-01-01"}
@@ -519,19 +458,9 @@ class AzureSentinel(AzureData):
 
         """
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = _build_paths(res_id, self.base_url)
         incident_url = url + _PATH_MAPPING["incidents"]
         comment_url = incident_url + f"/{incident_id}/comments/{str(uuid4())}"
         params = {"api-version": "2020-01-01"}
@@ -573,8 +502,38 @@ class AzureSentinel(AzureData):
 
         return config_items
 
+    def _build_res_id(
+        self, sub_id: str = None, res_grp: str = None, ws_name: str = None
+    ) -> str:
+        """
+        Builds a resource ID.
 
-def _build_paths(resid: str) -> str:
+        Parameters
+        ----------
+        sub_id : str, optional
+            Subscription ID to use, by default None
+        res_grp : str, optional
+            Resource Group name to use, by default None
+        ws_name : str, optional
+            Workspace name to user, by default None
+
+        Returns
+        -------
+        str
+            The formatted resource ID.
+        """
+        if not sub_id or not res_grp or not ws_name:
+            config = self._check_config(
+                ["subscription_id", "resource_group", "workspace_name"]
+            )
+            sub_id = config["subscription_id"]
+            res_grp = config["resource_group"]
+            ws_name = config["workspace_name"]
+        res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
+        return res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+
+
+def _build_paths(resid: str, base_url: str = None) -> str:
     """
     Build an API URL from an Azure resource ID.
 
@@ -582,6 +541,9 @@ def _build_paths(resid: str) -> str:
     ----------
     resid : str
         An Azure resource ID.
+    base_url : str, optional
+        The base URL of the Azure cloud to connect to.
+        Defaults to "https://management.azure.com/"
 
     Returns
     -------
@@ -589,15 +551,15 @@ def _build_paths(resid: str) -> str:
         A URI to that resource.
 
     """
+    if not base_url:
+        base_url = _BASE_URL
     res_info = {
         "subscription_id": resid.split("/")[2],
         "resource_group": resid.split("/")[4],
         "workspace_name": resid.split("/")[-1],
     }
 
-    url_part1 = (
-        f"https://management.azure.com/subscriptions/{res_info['subscription_id']}"
-    )
+    url_part1 = f"{base_url}/subscriptions/{res_info['subscription_id']}"
     url_part2 = f"/resourceGroups/{res_info['resource_group']}"
     url_part3 = f"/providers/Microsoft.OperationalInsights/workspaces/{res_info['workspace_name']}"
 
@@ -688,7 +650,7 @@ def _build_data(items: dict, **kwargs) -> dict:
 
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
-    for key in items.keys():
+    for key, _ in items.items():
         if key in ["severity", "status", "title", "message"]:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
