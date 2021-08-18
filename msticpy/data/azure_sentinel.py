@@ -42,7 +42,7 @@ class AzureSentinel(AzureData):
         """
         super().__init__()
         self.config = None
-        self.base_url = self.endpoints["resource_manager"]
+        self.base_url = self.endpoints.resource_manager
 
     def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
         """

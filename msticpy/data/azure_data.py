@@ -17,6 +17,7 @@ from azure.common.exceptions import CloudError
 from ..common.azure_auth import az_connect
 from ..common.azure_auth_core import AzCredentials
 from ..common.cloud_mappings import get_all_endpoints
+from ..common import pkg_config as config
 
 from ..common.exceptions import (
     MsticpyAzureConfigError,
@@ -119,9 +120,16 @@ class AzureData:
         self.network_client: Optional[NetworkManagementClient] = None
         self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
+        if not cloud:
+            try:
+                az_settings = config.get_config("Azure")
+                if az_settings:
+                    cloud = az_settings.get("cloud", "global")
+            except KeyError:
+                cloud = "global"
+        self.endpoints = get_all_endpoints(cloud)  # type: ignore
         if connect:
             self.connect()
-        self.endpoints = get_all_endpoints(cloud)  # type: ignore
 
     def connect(self, auth_methods: List = None, silent: bool = False):
         """
@@ -145,7 +153,7 @@ class AzureData:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
         self.sub_client = SubscriptionClient(
-            self.credentials.legacy, base_url=self.endpoints["resource_manager"]
+            self.credentials.legacy, base_url=self.endpoints.resource_manager
         )
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
@@ -766,7 +774,7 @@ class AzureData:
                     client_name,
                     client(
                         self.credentials.modern,  # type: ignore
-                        base_url=self.endpoints["resource_manager"],
+                        base_url=self.endpoints.resource_manager,
                     ),
                 )
             else:
@@ -776,7 +784,7 @@ class AzureData:
                     client(
                         self.credentials.modern,  # type: ignore
                         sub_id,
-                        base_url=self.endpoints["resource_manager"],
+                        base_url=self.endpoints.resource_manager,
                     ),
                 )
 
@@ -802,7 +810,7 @@ class AzureData:
                 client_name,
                 client(
                     self.credentials.legacy,  # type: ignore
-                    base_url=self.endpoints["resource_manager"],
+                    base_url=self.endpoints.resource_manager,
                 ),
             )
         else:
@@ -812,6 +820,6 @@ class AzureData:
                 client(
                     self.credentials.legacy,  # type: ignore
                     sub_id,
-                    base_url=self.endpoints["resource_manager"],
+                    base_url=self.endpoints.resource_manager,
                 ),
             )

@@ -156,7 +156,7 @@ def create_auth_options(region: str = None) -> dict:
         except KeyError:
             region = "global"  # no Azure section in config
 
-    aad_uri = get_all_endpoints(region)["active_directory"]  # type: ignore
+    aad_uri = get_all_endpoints(region).active_directory  # type: ignore
 
     return {
         "env": EnvironmentCredential(),
