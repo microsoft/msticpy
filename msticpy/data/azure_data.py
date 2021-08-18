@@ -121,23 +121,47 @@ class AzureData:
         if connect:
             self.connect()
 
-    def connect(
-        self,
-        auth_methods: List = None,
-        silent: bool = False,
-    ):
-        """Authenticate with the SDK."""
+    def connect(self, auth_methods: List = None, silent: bool = False):
+        """
+        Authenticate to the Azure SDK.
+
+        Parameters
+        ----------
+        auth_methods : List, optional
+            list of prefered authentication methods to use, by default None
+        silent : bool, optional
+            Set true to prevent output during auth process, by default False
+
+        Raises
+        ------
+        CloudError
+            If no valid credentials are found or if subscription client can't be created
+
+        """
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
-        self.sub_client = SubscriptionClient(self.credentials.legacy)
+        self.sub_client = SubscriptionClient(self.credentials.modern)
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
         self.connected = True
 
     def get_subscriptions(self) -> pd.DataFrame:
-        """Get details of all subscriptions within the tenant."""
+        """
+        Get details of all subscriptions within the tenant.
+
+        Returns
+        -------
+        pd.DataFrame
+            Details of the subscriptions present in the users tentant.
+
+        Raises
+        ------
+        MsticpyNotConnectedError
+            If .connect() has not been called
+
+        """
         if self.connected is False:
             raise MsticpyNotConnectedError(
                 "You need to connect to the service before using this function.",
@@ -180,6 +204,16 @@ class AzureData:
         ----------
         sub_id : str
             The ID of the subscription to return details on.
+
+        Returns
+        -------
+        dict
+            Details on the selected subscription.
+
+        Raises
+        ------
+        MsticpyNotConnectedError
+            If .connect() has not been called.
 
         """
         if self.connected is False:
@@ -233,6 +267,7 @@ class AzureData:
                 title="Please call connect() before continuing.",
             )
 
+        # self.resource_client = ResourceManagementClient(self.credentials.modern, sub_id)
         self._check_client("resource_client", sub_id)
 
         resources = []  # type: List
@@ -720,11 +755,19 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
+        client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
-            client = _CLIENT_MAPPING[client_name]
             if sub_id is None:
                 setattr(self, client_name, client(self.credentials.modern))  # type: ignore
             else:
+                setattr(self, client_name, client(self.credentials.modern, sub_id))  # type: ignore
+        else:
+            ex_client = getattr(self, client_name)
+            if (
+                sub_id
+                and ex_client._config.subscription_id  # pylint: disable=protected-access
+                != sub_id
+            ):
                 setattr(self, client_name, client(self.credentials.modern, sub_id))  # type: ignore
 
         if getattr(self, client_name) is None:
