@@ -506,7 +506,7 @@ class AzureSentinel(AzureData):
         self, sub_id: str = None, res_grp: str = None, ws_name: str = None
     ) -> str:
         """
-        Builds a resource ID.
+        Build a resource ID.
 
         Parameters
         ----------
@@ -521,6 +521,7 @@ class AzureSentinel(AzureData):
         -------
         str
             The formatted resource ID.
+
         """
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(

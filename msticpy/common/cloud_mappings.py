@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Azure Cloud Mappings"""
+"""Azure Cloud Mappings."""
 from msrestazure import azure_cloud
 
 from .._version import VERSION
@@ -35,6 +35,7 @@ def create_cloud_suf_dict(suffix: str) -> dict:
     -------
     dict
         A dictionary of cloud names and suffixes.
+
     """
     return {
         cloud: getattr(msr_cloud.suffixes, suffix)
@@ -87,11 +88,11 @@ def get_all_endpoints(cloud: str) -> dict:
         cloud = _CLOUD_ALIASES[cloud]
     try:
         endpoints = _CLOUD_MAPPING[cloud].endpoints
-    except KeyError:
+    except KeyError as cloud_err:
         raise MsticpyAzureConfigError(
             f"""{cloud} is not a valid Azure cloud name.
         Valid names are 'global', 'usgov', 'de', 'cn'"""
-        )
+        ) from cloud_err
     return endpoints
 
 
@@ -119,9 +120,9 @@ def get_all_suffixes(cloud: str) -> dict:
         cloud = _CLOUD_ALIASES[cloud]
     try:
         endpoints = _CLOUD_MAPPING[cloud].suffixes
-    except KeyError:
+    except KeyError as cloud_err:
         raise MsticpyAzureConfigError(
             f"""{cloud} is not a valid Azure cloud name.
         Valid names are 'global', 'usgov', 'de', 'cn'"""
-        )
+        ) from cloud_err
     return endpoints
