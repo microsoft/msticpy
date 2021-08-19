@@ -64,7 +64,7 @@ def create_cloud_ep_dict(endpoint: str) -> dict:
     }
 
 
-def get_all_endpoints(cloud: str) -> dict:
+def get_all_endpoints(cloud: str) -> azure_cloud.CloudEndpoints:
     """
     Get a list of all the endpoints for an Azure cloud.
 
@@ -96,7 +96,7 @@ def get_all_endpoints(cloud: str) -> dict:
     return endpoints
 
 
-def get_all_suffixes(cloud: str) -> dict:
+def get_all_suffixes(cloud: str) -> azure_cloud.CloudSuffixes:
     """
     Get a list of all the suffixes for an Azure cloud.
 
