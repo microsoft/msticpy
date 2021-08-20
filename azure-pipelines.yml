@@ -24,7 +24,7 @@ resources:
   repositories:
   - repository: self
     type: git
-    ref: master
+    ref: main
 stages:
 - stage: PythonTests
   displayName: Python build and tests
