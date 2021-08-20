@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
+import contextlib
 from typing import List, Tuple, Union
 
 from IPython.display import display
@@ -44,6 +45,8 @@ class MsticpyResourceException(MsticpyException):
 # "Exception" suffix
 class MsticpyUserError(MsticpyException):
     """Msticpy User exception displaying friendly message."""
+
+    _display_exceptions = True
 
     DEF_HELP_URI = ("msticpy documentation", "https://msticpy.readthedocs.org")
 
@@ -115,12 +118,22 @@ class MsticpyUserError(MsticpyException):
         ex_args = [title, *args, help_uri, *help_args]
         super().__init__(*ex_args)
 
+    @classmethod
+    @contextlib.contextmanager
+    def no_display_exceptions(cls):
+        """Context manager to block exception display to IPython/stdout."""
+        cls._display_exceptions = False
+        yield
+        cls._display_exceptions = True
+
     @property
     def help_uri(self) -> Union[Tuple[str, str], str]:
         """Get the default help URI."""
         return self.DEF_HELP_URI
 
     def _display_exception(self):
+        if not self._display_exceptions:
+            return
         if is_ipython():
             display(self)
         else:

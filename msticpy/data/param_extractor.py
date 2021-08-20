@@ -96,11 +96,10 @@ def _get_object_params(
             if isinstance(arg_object, QueryParamProvider):
                 if param in arg_object.query_params:
                     req_params[param] = arg_object.query_params[param]
-            else:
-                if isinstance(arg_object, dict) and param in arg_object:
-                    req_params[param] = arg_object.get(param, None)
-                elif hasattr(arg_object, param):
-                    req_params[param] = getattr(arg_object, param)
+            elif isinstance(arg_object, dict) and param in arg_object:
+                req_params[param] = arg_object.get(param, None)
+            elif hasattr(arg_object, param):
+                req_params[param] = getattr(arg_object, param)
         remaining_params = [
             p_name for p_name, p_value in req_params.items() if p_value is not None
         ]

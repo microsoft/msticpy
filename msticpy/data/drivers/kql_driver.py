@@ -27,6 +27,7 @@ try:
     from Kqlmagic.kql_engine import KqlEngineError
     from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
+    from Kqlmagic import kql as kql_exec
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Kqlmagic installed",
@@ -48,7 +49,7 @@ class KqlDriver(DriverBase):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite KqlDriver and optionally connect.
+        Instantiate KqlDriver and optionally connect.
 
         Parameters
         ----------
@@ -99,13 +100,13 @@ class KqlDriver(DriverBase):
             namespace = kwargs["msi"]
             connection_str = _build_auth_cnt_str(namespace, connection_str, ["msi"])
         self.current_connection = connection_str
-        kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
+        kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
         try:
-            self._set_kql_option("Kqlmagic.short_errors", False)
+            self._set_kql_option("short_errors", False)
             if self._ip is not None:
                 try:
-                    self._ip.run_cell_magic("kql", line="", cell=connection_str)
+                    kql_exec(connection_str)
                 except KqlError as ex:
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
@@ -120,7 +121,7 @@ class KqlDriver(DriverBase):
                 print(f"Could not connect to kql query provider for {connection_str}")
             return self._connected
         finally:
-            self._set_kql_option("Kqlmagic.short_errors", kql_err_setting)
+            self._set_kql_option("short_errors", kql_err_setting)
 
     # pylint: disable=too-many-branches
 
@@ -208,14 +209,14 @@ class KqlDriver(DriverBase):
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
-        auto_dataframe = self._get_kql_option(option="Kqlmagic.auto_dataframe")
-        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=False)
+        auto_dataframe = self._get_kql_option(option="auto_dataframe")
+        self._set_kql_option(option="auto_dataframe", value=False)
         # run the query (append semicolon to prevent default output)
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = self._ip.run_cell_magic("kql", line="", cell=query)
-        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=auto_dataframe)
+        result = kql_exec(query)
+        self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
@@ -241,34 +242,34 @@ class KqlDriver(DriverBase):
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
         # KqlMagic
-        print("Please wait. Loading Kqlmagic extension...")
+        print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore")
                 self._ip.run_line_magic("reload_ext", "Kqlmagic")
-            self._loaded = True
+        self._loaded = True
+        print("done")
 
     def _is_kqlmagic_loaded(self) -> bool:
         """Return true if kql magic is loaded."""
         if self._ip is not None:
             return self._ip.find_magic("kql") is not None
-        return False
+        return bool(kql_exec("--version"))
 
-    def _get_schema(self) -> Dict[str, Dict]:
-        return self._ip.run_line_magic("kql", line="--schema")
+    @staticmethod
+    def _get_schema() -> Dict[str, Dict]:
+        return kql_exec("--schema")
 
-    def _get_kql_option(self, option):
+    @staticmethod
+    def _get_kql_option(option):
         """Retrieve a current Kqlmagic notebook option."""
-        if self._ip is None:
-            return None
-        return self._ip.run_line_magic("config", line=option)
+        return kql_exec(f"--config {option}").get(option)
 
-    def _set_kql_option(self, option, value):
+    @staticmethod
+    def _set_kql_option(option, value):
         """Set a Kqlmagic notebook option."""
-        if self._ip is None:
-            return None
-        set_txt = f"{option}={value}"
-        return self._ip.run_line_magic("config", line=set_txt)
+        opt_val = f"'{value}'" if isinstance(value, str) else value
+        return kql_exec(f"--config {option}={opt_val}")
 
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
@@ -324,13 +325,13 @@ class KqlDriver(DriverBase):
     @staticmethod
     def _raise_adal_error(ex):
         """Adal error - usually wrong tenant ID."""
-        if ex.args[0] == "Unexpected polling state code_expired":
+        if ex.args and ex.args[0] == "Unexpected polling state code_expired":
             raise MsticpyKqlConnectionError(
                 "Authentication request was not completed.",
                 title="authentication timed out",
             )
 
-        err_response = getattr(ex, "error_response")
+        err_response = getattr(ex, "error_response", None)
         if err_response and "error_description" in ex.error_response:
             ex_mssgs = ex.error_response["error_description"].split("\r\n")
         else:

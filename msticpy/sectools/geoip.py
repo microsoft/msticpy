@@ -219,10 +219,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         super().__init__()
 
         self.settings = _get_geoip_provider_settings("IPStack")
-        if api_key:
-            self._api_key = api_key
-        else:
-            self._api_key = self.settings.args.get("AuthKey")  # type: ignore
+        self._api_key = api_key or self.settings.args.get("AuthKey")
         if not self._api_key:
             raise MsticpyUserConfigError(
                 self._NO_API_KEY_MSSG,
@@ -360,18 +357,15 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
                 response = session.get(submit_url)
                 if response.status_code == 200:
                     ip_loc_results.append((response.json(), response.status_code))
+                elif response:
+                    try:
+                        ip_loc_results.append((response.json(), response.status_code))
+                        continue
+                    except JSONDecodeError:
+                        ip_loc_results.append((None, response.status_code))
                 else:
-                    if response:
-                        try:
-                            ip_loc_results.append(
-                                (response.json(), response.status_code)
-                            )
-                            continue
-                        except JSONDecodeError:
-                            ip_loc_results.append((None, response.status_code))
-                    else:
-                        print("Unknown response from IPStack request.")
-                        ip_loc_results.append((None, -1))
+                    print("Unknown response from IPStack request.")
+                    ip_loc_results.append((None, -1))
         return ip_loc_results
 
 

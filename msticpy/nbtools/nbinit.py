@@ -141,6 +141,7 @@ _NB_IMPORTS = [
     dict(pkg="numpy", alias="np"),
 ]
 _MP_IMPORTS = [
+    dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
     dict(pkg="msticpy.common.utility", tgt="md"),
@@ -227,7 +228,7 @@ def init_notebook(
     verbose : bool, optional
         Display more verbose status, by default False
     no_config_check : bool, optional
-        Skip the check for valid configuration.
+        Skip the check for valid configuration. Default is False.
 
     Returns
     -------
@@ -250,6 +251,7 @@ def init_notebook(
     user_install: bool = kwargs.pop("user_install", False)
     friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
+
     verbose: bool = kwargs.pop("verbose", False)
 
     _VERBOSE(verbose)
@@ -432,7 +434,7 @@ def _get_or_create_config() -> bool:
     if mp_path and not Path(mp_path).is_file():
         display(HTML(_MISSING_MPCONFIG_ENV_ERR))
     if not mp_path or not Path(mp_path).is_file():
-        mp_path = search_for_file("msticpyconfig,yaml", paths=[".", ".."])
+        mp_path = search_for_file("msticpyconfig.yaml", paths=[".", ".."])
 
     if mp_path:
         try:
@@ -474,7 +476,8 @@ def _populate_config_to_mp_config(mp_path, config_json):
     if def_azs_settings:
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
-        ] = def_azs_settings
+        ] = def_azs_settings.copy()
+    mssg = f"Created '{mp_path}'' with Azure Sentinel settings."
     if Path(mp_path).exists():
         # If there is an existing file read it in
         mp_config_text = Path(mp_path).read_text()
@@ -483,8 +486,10 @@ def _populate_config_to_mp_config(mp_path, config_json):
         mp_config_settings.update(mp_config_convert.settings)
         # update MpConfigFile with the merged settings
         mp_config_convert.settings = mp_config_settings
+        mssg = f"Updated '{mp_path}'' with Azure Sentinel settings."
     # Save the file
     mp_config_convert.save_to_file(mp_path, backup=True)
+    _pr_output(mssg)
 
 
 def _set_nb_options(namespace):
@@ -502,12 +507,13 @@ def _set_nb_options(namespace):
     pd.set_option("display.max_rows", 100)
     pd.set_option("display.max_columns", 50)
     pd.set_option("display.max_colwidth", 100)
-    # Set option on AML to display DataFrames with Schema
-    if os.environ.get("APPSETTING_WEBSITE_SITE_NAME") == "AMLComputeInstance":
-        pd.set_option("display.html.table_schema", True)
+
     os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
     # Kqlmagic config will use AZ CLI login if available
-    os.environ["KQLMAGIC_CONFIGURATION"] = "try_azcli_login=True"
+    kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
+    if "try_azcli_login" not in kql_config:
+        kql_config = ";".join([kql_config, "try_azcli_login=True"])
+        os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):

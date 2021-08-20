@@ -49,7 +49,7 @@ def aml_file_sys(tmpdir_factory):
     """Create fake aml file system."""
     mp_text = Path("tests").joinpath(_MP_CONFIG).read_text()
     root = tmpdir_factory.mktemp("aml-test")
-    users = root.mkdir("users")
+    users = root.mkdir("Users")
     user_dir = users.mkdir("aml_user")
     user_dir.mkdir("utils")
     user_dir.mkdir("subdir")
@@ -195,38 +195,6 @@ def test_check_versions_mpconfig(monkeypatch, aml_file_sys, test_case):
         check.is_in(env, _os.environ)
         check.is_true(mp_path.samefile(_os.environ.get(env)))
     mp_backup.copy(mp_path)
-
-
-# pylint: disable=protected-access
-def test_check_versions_nbcheck(monkeypatch, aml_file_sys):
-    """Test nb_check update."""
-    _, user_dir = aml_file_sys
-
-    # monkeypatch for various test cases
-    _os = _PyOs()
-    monkeypatch.setattr(aml, "os", _os)
-    monkeypatch.setattr(aml, "_get_vm_fqdn", lambda: "myhost")
-
-    # Set an env var to emulate AML
-    _os.environ["APPSETTING_WEBSITE_SITE_NAME"] = "AMLComputeInstance"
-
-    # Create an old version of nb_check
-    nb_check = user_dir.join("utils").join("nb_check.py")
-    nb_check_save = user_dir.join("utils").join("nb_check.save")
-    nb_check.copy(nb_check_save)
-    nb_check.write_text(
-        _NB_CHECK_TXT.replace('__version__ = "1.5.0"', '__version__ = "1.0.0"'),
-        encoding="utf-8",
-    )
-
-    with change_directory(str(user_dir)):
-        aml.check_versions(min_py_ver=_MIN_PY_VER, min_mp_ver=_MIN_MP_VER)
-
-    nb_check_txt = nb_check.read_text(encoding="utf-8")
-    file_ver = aml._get_file_ver(nb_check_txt)
-    check.not_equal(file_ver, "1.0.0")
-    env = "KQLMAGIC_EXTRAS_REQUIRE"
-    check.is_not_in(env, _os.environ)
 
 
 def test_check_versions_nbuser_settings(monkeypatch, aml_file_sys):

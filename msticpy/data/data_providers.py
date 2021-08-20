@@ -17,6 +17,7 @@ from tqdm.auto import tqdm
 from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.utility import export, valid_pyname
+from ..nbtools.nbwidgets import QueryTime
 from .browsers.query_browser import browse_queries
 from .drivers import import_driver, DriverBase
 from .param_extractor import extract_query_params
@@ -100,6 +101,7 @@ class QueryProvider:
             self.environment, QueryStore(self.environment)
         )
         self._add_query_functions()
+        self._query_time = QueryTime(units="day")
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -271,6 +273,11 @@ class QueryProvider:
     # alias for browse_queries
     browse = browse_queries
 
+    @property
+    def query_time(self):
+        """Return the default QueryTime control for queries."""
+        return self._query_time
+
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
             raise ValueError("Provider is not loaded.")
@@ -290,6 +297,7 @@ class QueryProvider:
             return None
 
         params, missing = extract_query_params(query_source, *args, **kwargs)
+        self._check_for_time_params(params, missing)
         if missing:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
@@ -318,6 +326,15 @@ class QueryProvider:
         # Handle any query options passed
         query_options = self._get_query_options(params, kwargs)
         return self._query_provider.query(query_str, query_source, **query_options)
+
+    def _check_for_time_params(self, params, missing):
+        """Fall back on builtin query time if no time parameters were supplied."""
+        if "start" in missing:
+            missing.remove("start")
+            params["start"] = self._query_time.start
+        if "end" in missing:
+            missing.remove("end")
+            params["end"] = self._query_time.end
 
     @staticmethod
     def _get_query_options(

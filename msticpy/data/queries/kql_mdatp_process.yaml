@@ -11,7 +11,7 @@ defaults:
       table:
         description: Table name
         type: str
-        default: 'ProcessCreationEvents'
+        default: 'DeviceProcessEvents'
       start:
         description: Query start time
         type: datetime
@@ -31,9 +31,9 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
-        | where ComputerName has "{host_name}"
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where DeviceName has "{host_name}"
         {add_query_items}'
       uri: None
     parameters:
@@ -46,8 +46,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where FileName contains "{process_identifier}" or SHA1 has "{process_identifier}" or SHA256 has "{process_identifier}" or MD5 has "{process_identifier}"
         {add_query_items}'
     parameters:
@@ -60,8 +60,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where FileName contains "{file_path}"
         {add_query_items}'
     parameters:
@@ -74,8 +74,8 @@ sources:
     args:
       query: '
         {table}
-        | where EventTime >= datetime({start})
-        | where EventTime <= datetime({end})
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
         | where ProcessCommandLine contains "{cmd_line}"
         {add_query_items}'
     parameters:

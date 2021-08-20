@@ -5,6 +5,7 @@ azure-keyvault-secrets>=4.0.0
 azure-mgmt-compute>=4.6.2
 azure-mgmt-keyvault>=2.0.0
 azure-mgmt-monitor>=2.0.0
+azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-subscription>=0.2.0
 azure-storage-blob>=12.5.0
 geoip2>=2.9.0

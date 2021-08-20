@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 from tqdm.notebook import tqdm
 import pandas as pd
-from pandas.io.parsers import ParserError
+from pandas.errors import ParserError
 
 from .uploader_base import UploaderBase
 from ..._version import VERSION

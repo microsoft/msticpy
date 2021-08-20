@@ -156,6 +156,13 @@ msticpy.data.drivers.odata\_driver module
     :undoc-members:
     :show-inheritance:
 
+msticpy.data.drivers.resource\_graph\_driver module
+---------------------------------------------------
+.. automodule:: msticpy.data.drivers.resource_graph_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msticpy.data.drivers.security\_graph\_driver module
 ---------------------------------------------------
 .. automodule:: msticpy.data.drivers.security_graph_driver

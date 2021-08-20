@@ -79,7 +79,7 @@ msticpy.sectools.tiproviders.ti\_provider\_base module
 msticpy.sectools.tiproviders.greynoise module
 ------------------------------------------------------
 
-.. automodule:: msticpy.sectools.tiproviders.greynoise
+.. automodule:: msticpy.sectools.tiproviders.GreyNoise
     :members:
     :undoc-members:
     :show-inheritance:
