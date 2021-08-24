@@ -118,7 +118,7 @@ def build_and_show_process_tree(
 
 
 # pylint: disable=too-many-locals, too-many-statements
-def plot_process_tree(
+def plot_process_tree(  # noqa: MC0001
     data: pd.DataFrame,
     schema: ProcSchema = None,
     output_var: str = None,

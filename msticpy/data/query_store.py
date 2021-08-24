@@ -131,7 +131,7 @@ class QueryStore:
             if not valid:
                 raise MsticpyUserConfigError(
                     source.name,
-                    failures,
+                    *failures,
                     title="Error importing query definition file",
                     help_uri=(
                         "https://msticpy.readthedocs.io/en/latest/"
