@@ -9,10 +9,9 @@ import json
 import os
 import random
 from abc import ABC
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from enum import IntEnum
 from json import JSONDecodeError
-from re import I
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union, Iterable
 from weakref import WeakValueDictionary
 
@@ -632,7 +631,6 @@ class SelectAlert:
 
         if not columns:
             columns = [
-                "StartTimeUtc",
                 "AlertName",
                 "CompromisedEntity",
             ]
@@ -710,7 +708,8 @@ class SelectAlert:
         ):
             self.selected_alert = None
         else:
-            self.alert_id = selection["new"]
+            self.alert_id = selection["new"].split("- ")[-1]
+
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
                 self._run_action()
@@ -719,7 +718,6 @@ class SelectAlert:
         """Get the alert by alert_id."""
         self.alert_id = alert_id
         selected_alerts = self.alerts[self.alerts[self.id_col] == alert_id]
-
         if selected_alerts.shape[0] > 0:
             alert = pd.Series(selected_alerts.iloc[0])
             if "ExtendedProperties" in alert.index and isinstance(
@@ -761,9 +759,9 @@ class SelectAlert:
                 self._disp_elems.append(
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
+            elif idx == len(self._disp_elems):
+                break
             else:
-                if idx == len(self._disp_elems):
-                    break
                 self._disp_elems[idx].update(out_obj)
 
     def _ipython_display_(self):
@@ -1424,20 +1422,17 @@ class SelectSubset:
         # save the current index
         cur_index = max(self._select_list.index)
         if selected_set:
-            if self._src_dict:
-                # if we're working with tuples, we need to specify the tuple to remove
-                for selected in self._select_list.value:
+            for selected in self._select_list.value:
+                if self._src_dict:
                     selected_set.remove(self._src_dict[selected])
-            else:
-                # else just delete the value
-                for selected in self._select_list.value:
+                else:
                     selected_set.remove(selected)
             self._select_list.options = sorted(list(selected_set))
         if not self._select_list.options:
             return
         # try to set the index to the next item in the list
         if cur_index < len(self._select_list.options):
-            next_item = cur_index if cur_index else 0
+            next_item = cur_index or 0
             self._select_list.index = tuple([next_item])
         else:
             last_item = max(len(self._select_list.options) - 1, 0)

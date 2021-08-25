@@ -375,6 +375,12 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
+        if "/" in incident_id:
+            splt_char = "/"
+            temp = incident_id.split(splt_char)
+            res_id = splt_char.join(temp[:9]), splt_char.join(temp[9:])[0]
+            res_id = res_id[0]
+            incident_id = temp[-1]
         if not res_id:
             if not sub_id or not res_grp or not ws_name:
                 config = self._check_config(
