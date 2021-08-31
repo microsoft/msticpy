@@ -11,6 +11,9 @@ QueryDefinitions:
     - 'queries'
   Custom:
     - 'testdata'
+Azure:
+  cloud: "global"
+  auth_methods: ["env", "cli", "msi", "interactive"]
 TIProviders:
   OTX:
     Args:
