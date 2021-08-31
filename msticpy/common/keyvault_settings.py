@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 
 from .._version import VERSION
 from . import pkg_config as config
-from .azure_auth_core import default_auth_methods
+from .azure_auth_core import AzureCloudConfig
 from .exceptions import MsticpyKeyVaultConfigError
 from .utility import export
 from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
@@ -86,16 +86,7 @@ class KeyVaultSettings:
 
     def _get_auth_methods_from_settings(self):
         """Retrieve authentication methods from settings."""
-        try:
-            self.auth_methods = (
-                config.get_config("DataProviders.AzureCLI")
-                .get("Args", {})
-                .get("auth_methods", [])
-            )
-        except KeyError:
-            pass
-        if not self.auth_methods:
-            self.auth_methods = default_auth_methods()
+        self.auth_methods = AzureCloudConfig().auth_methods
 
     def _get_authority_from_settings(self):
         """Get the authority (AAD) URI from settings."""
@@ -107,12 +98,7 @@ class KeyVaultSettings:
                 self["authorityuri"].casefold(), "global"
             ).casefold()
         elif not self.authority:
-            try:
-                az_settings = config.get_config("Azure")
-                if az_settings:
-                    self.authority = az_settings.get("cloud", "global")
-            except KeyError:
-                self.authority = "global"
+            self.authority = AzureCloudConfig().cloud
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""

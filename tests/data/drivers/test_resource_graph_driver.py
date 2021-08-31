@@ -9,6 +9,13 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from azure.identity import InteractiveBrowserCredential
+
+from msticpy.common.azure_auth_core import (
+    ChainedTokenCredential,
+    CredentialWrapper,
+    AzCredentials,
+)
 from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
 
 
@@ -75,15 +82,20 @@ class _MockResponse:
         ]
 
 
+_AZ_CREDENTIALS = AzCredentials(
+    legacy=CredentialWrapper("credential"),
+    modern=ChainedTokenCredential(InteractiveBrowserCredential()),
+)
+
+
 @pytest.fixture(scope="module")
 @patch(ResourceGraphDriver.__module__ + ".SubscriptionClient")
 @patch(ResourceGraphDriver.__module__ + ".az_connect")
 @patch(ResourceGraphDriver.__module__ + ".ResourceGraphClient")
 def rgd(mock_res_client, mock_creds, mock_sub_client):
     """Pytest fixture to create ResourceGraphDriver for other tests."""
-    AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
     mock_sub_client.return_value = _MockSubClient()
-    mock_creds.return_value = AzCredentials("cred", "cred")
+    mock_creds.return_value = _AZ_CREDENTIALS
     mock_res_client.return_value = _MockResourceGraphClient()
     rgd = ResourceGraphDriver()
     rgd.connect()

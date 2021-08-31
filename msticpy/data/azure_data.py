@@ -14,10 +14,13 @@ import numpy as np
 from azure.mgmt.subscription import SubscriptionClient
 from azure.common.exceptions import CloudError
 
-from ..common.azure_auth import az_connect
-from ..common.azure_auth_core import AzCredentials
+from ..common.azure_auth import (
+    az_connect,
+    AzCredentials,
+    AzureCloudConfig,
+    only_interactive_cred,
+)
 from ..common.cloud_mappings import get_all_endpoints
-from ..common import pkg_config as config
 
 from ..common.exceptions import (
     MsticpyAzureConfigError,
@@ -113,6 +116,7 @@ class AzureData:
 
     def __init__(self, connect: bool = False, cloud: str = None):
         """Initialize connector for Azure Python SDK."""
+        self.az_cloud_config = AzureCloudConfig(cloud)
         self.connected = False
         self.credentials: Optional[AzCredentials] = None
         self.sub_client: Optional[SubscriptionClient] = None
@@ -120,14 +124,8 @@ class AzureData:
         self.network_client: Optional[NetworkManagementClient] = None
         self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
-        if not cloud:
-            try:
-                az_settings = config.get_config("Azure")
-                if az_settings:
-                    cloud = az_settings.get("cloud", "global")
-            except KeyError:
-                cloud = "global"
-        self.endpoints = get_all_endpoints(cloud)  # type: ignore
+        self.cloud = cloud or AzureCloudConfig().cloud
+        self.endpoints = get_all_endpoints(self.cloud)  # type: ignore
         if connect:
             self.connect()
 
@@ -138,7 +136,7 @@ class AzureData:
         Parameters
         ----------
         auth_methods : List, optional
-            list of prefered authentication methods to use, by default None
+            list of preferred authentication methods to use, by default None
         silent : bool, optional
             Set true to prevent output during auth process, by default False
 
@@ -148,12 +146,18 @@ class AzureData:
             If no valid credentials are found or if subscription client can't be created
 
         """
+        auth_methods = auth_methods or self.az_cloud_config.auth_methods
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
+        if only_interactive_cred(self.credentials.modern) and not silent:
+            print("Check your default browser for interactive sign-in prompt.")
+
         self.sub_client = SubscriptionClient(
-            self.credentials.legacy, base_url=self.endpoints.resource_manager
+            credential=self.credentials.modern,
+            base_url=self.endpoints.resource_manager,
+            credential_scopes=[self.az_cloud_config.token_uri],
         )
         if not self.sub_client:
             raise CloudError("Could not create a Subscription client.")
@@ -166,7 +170,7 @@ class AzureData:
         Returns
         -------
         pd.DataFrame
-            Details of the subscriptions present in the users tentant.
+            Details of the subscriptions present in the users tenant.
 
         Raises
         ------
@@ -253,7 +257,7 @@ class AzureData:
         self, sub_id: str, rgroup: str = None, get_props: bool = False
     ) -> pd.DataFrame:
         """
-        Return details on all resources in a subscription or Resoruce Group.
+        Return details on all resources in a subscription or Resource Group.
 
         Parameters
         ----------
@@ -267,7 +271,7 @@ class AzureData:
 
         Returns
         -------
-        resrouce_df: pd.DataFrame
+        pd.DataFrame
             A dataframe of resource details
 
         """
@@ -297,7 +301,7 @@ class AzureData:
 
         resource_items = []
 
-        # Get properites for each resource
+        # Get properties for each resource
         for resource in resources:
             if get_props:
                 if resource.type == "Microsoft.Compute/virtualMachines":
@@ -362,7 +366,7 @@ class AzureData:
 
         Returns
         -------
-        resource_deatils: dict
+        resource_details: dict
             The details of the requested resource
 
         """
@@ -480,7 +484,7 @@ class AzureData:
 
         self._check_client("resource_client", sub_id)  # type: ignore
 
-        # Normalise elements depending on user input type
+        # Normalize elements depending on user input type
         if resource_id is not None:
             try:
                 namespace = resource_id.split("/")[6]
@@ -775,6 +779,7 @@ class AzureData:
                     client(
                         self.credentials.modern,  # type: ignore
                         base_url=self.endpoints.resource_manager,
+                        credential_scopes=[self.az_cloud_config.token_uri],
                     ),
                 )
             else:
@@ -785,6 +790,7 @@ class AzureData:
                         self.credentials.modern,  # type: ignore
                         sub_id,
                         base_url=self.endpoints.resource_manager,
+                        credential_scopes=[self.az_cloud_config.token_uri],
                     ),
                 )
 
@@ -811,6 +817,7 @@ class AzureData:
                 client(
                     self.credentials.legacy,  # type: ignore
                     base_url=self.endpoints.resource_manager,
+                    credential_scopes=[self.az_cloud_config.token_uri],
                 ),
             )
         else:
@@ -821,5 +828,6 @@ class AzureData:
                     self.credentials.legacy,  # type: ignore
                     sub_id,
                     base_url=self.endpoints.resource_manager,
+                    credential_scopes=[self.az_cloud_config.token_uri],
                 ),
             )
