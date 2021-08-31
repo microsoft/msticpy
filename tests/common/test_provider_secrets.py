@@ -38,7 +38,7 @@ _TEST_DATA = get_test_data_path()
 set_unit_testing(True)
 
 # pylint: disable=invalid-name, no-member, attribute-defined-outside-init
-# pylint: disable=protected-access, unused-argument
+# pylint: disable=protected-access, unused-argument, super-init-not-called
 # flake8: noqa
 
 # Unit test mock patches
@@ -228,8 +228,10 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual(kv_settings.authority_uri, "https://login.chinacloudapi.cn")
 
     @patch(sec_client_patch)
+    @patch(az_connect_core_patch)
     def test_keyvault_client(
         self,
+        az_connect_core,
         sec_client,
     ):
         kv_sec_client = _SecretClientTest()
@@ -356,7 +358,7 @@ class TestSecretsConfig(unittest.TestCase):
     def _check_provider_settings(self, sec_settings):
         prov_settings = get_provider_settings()
         for p_name, p_settings in prov_settings.items():
-            args = prov_settings[p_name].args
+            args = p_settings.args
             if p_name == "OTX":
                 sec_value = sec_settings.read_secret(args["AuthKey"])
                 self.assertEqual(KV_SECRETS["OTX-AuthKey"], sec_value)
