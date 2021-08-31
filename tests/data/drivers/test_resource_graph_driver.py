@@ -18,6 +18,8 @@ from msticpy.common.azure_auth_core import (
 )
 from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
 
+# pylint: disable=redefined-outer-name
+
 
 class _MockSub:
     """Mock of Subscription Class."""
@@ -40,6 +42,7 @@ class _MockResourceGraphClient:
 
     def resources(self, query):
         """Mock response to query."""
+        del query
         return _MockResponse()
 
 
