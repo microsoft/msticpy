@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """KQL Driver class."""
 import json
+import os
 import re
 import warnings
 from datetime import datetime
@@ -13,6 +14,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple, Union
 import pandas as pd
 from IPython import get_ipython
 
+from ...common.azure_auth import AzureCloudConfig, only_interactive_cred, az_connect
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
@@ -21,9 +23,11 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
 )
 from ...common.wsconfig import WorkspaceConfig
+from ...common.utility import export
 from .driver_base import DriverBase, QuerySource
 
 try:
+    from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
     from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
@@ -35,11 +39,26 @@ except ImportError as imp_err:
     ) from imp_err
 
 from ..._version import VERSION
-from ...common.azure_auth_core import az_connect_core
-from ...common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+
+_KQL_CLOUD_MAP = {
+    "global": "public",
+    "cn": "china",
+    "usgov": "government",
+    "de": "germany",
+}
+
+_AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
+
+_LOGANALYTICS_URL_BY_CLOUD = {
+    "global": "https://api.loganalytics.io/",
+    "cn": "https://api.loganalytics.azure.cn/",
+    "usgov": "https://api.loganalytics.us/",
+    "de": "https://api.loganalytics.de/",
+}
 
 
 @export
@@ -48,12 +67,17 @@ class KqlDriver(DriverBase):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite KqlDriver and optionally connect.
+        Instantiate KqlDriver and optionally connect.
 
         Parameters
         ----------
         connection_str : str, optional
             Connection string
+
+        Other Parameters
+        ----------------
+        debug : bool
+            print out additional diagnostic information.
 
         """
         self._ip = get_ipython()
@@ -63,10 +87,13 @@ class KqlDriver(DriverBase):
         self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
         self._loaded = self._is_kqlmagic_loaded()
 
+        os.environ["KQLMAGIC_LOAD_MODE"] = "silent"
         if not self._loaded:
             self._load_kql_magic()
 
         self._schema: Dict[str, Any] = {}
+
+        self.kql_cloud, self.az_cloud = self._set_kql_cloud()
 
         if connection_str:
             self.current_connection = connection_str
@@ -82,6 +109,18 @@ class KqlDriver(DriverBase):
         connection_str : str
             Connect to a data source
 
+        Other Parameters
+        ----------------
+        kqlmagic_args : str, optional
+            Additional string of parameters to be passed to KqlMagic
+        mp_az_auth : Union[bool, str, list, None], optional
+            Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
+            Values can be:
+            - True or "default": use the settings in msticpyconfig.yaml 'Azure' section
+            - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
+            - auth_methods: list of acceptable auth methods from ('msi', 'cli',
+              'env' or 'interactive')
+
         """
         if isinstance(connection_str, WorkspaceConfig):
             connection_str = connection_str.code_connect_str
@@ -92,20 +131,16 @@ class KqlDriver(DriverBase):
             )
         if "kqlmagic_args" in kwargs:
             connection_str = connection_str + " " + kwargs["kqlmagic_args"]
-        elif "cli" in kwargs:
-            namespace = kwargs["cli"]
-            connection_str = _build_auth_cnt_str(namespace, connection_str, ["cli"])
-        elif "msi" in kwargs:
-            namespace = kwargs["msi"]
-            connection_str = _build_auth_cnt_str(namespace, connection_str, ["msi"])
+        if "mp_az_auth" in kwargs and "try_token" not in kwargs:
+            self._set_az_auth_option(kwargs["mp_az_auth"])
         self.current_connection = connection_str
-        kql_err_setting = self._get_kql_option("Kqlmagic.short_errors")
+        kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
         try:
-            self._set_kql_option("Kqlmagic.short_errors", False)
+            self._set_kql_option("short_errors", False)
             if self._ip is not None:
                 try:
-                    self._ip.run_cell_magic("kql", line="", cell=connection_str)
+                    kql_exec(connection_str)
                 except KqlError as ex:
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
@@ -120,7 +155,7 @@ class KqlDriver(DriverBase):
                 print(f"Could not connect to kql query provider for {connection_str}")
             return self._connected
         finally:
-            self._set_kql_option("Kqlmagic.short_errors", kql_err_setting)
+            self._set_kql_option("short_errors", kql_err_setting)
 
     # pylint: disable=too-many-branches
 
@@ -208,14 +243,15 @@ class KqlDriver(DriverBase):
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
-        auto_dataframe = self._get_kql_option(option="Kqlmagic.auto_dataframe")
-        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=False)
+        auto_dataframe = self._get_kql_option(option="auto_dataframe")
+        self._set_kql_option(option="auto_dataframe", value=False)
+
         # run the query (append semicolon to prevent default output)
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = self._ip.run_cell_magic("kql", line="", cell=query)
-        self._set_kql_option(option="Kqlmagic.auto_dataframe", value=auto_dataframe)
+        result = kql_exec(query)
+        self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
@@ -241,34 +277,49 @@ class KqlDriver(DriverBase):
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
         # KqlMagic
-        print("Please wait. Loading Kqlmagic extension...")
+        print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore")
                 self._ip.run_line_magic("reload_ext", "Kqlmagic")
-            self._loaded = True
+        self._loaded = True
+        print("done")
 
     def _is_kqlmagic_loaded(self) -> bool:
         """Return true if kql magic is loaded."""
         if self._ip is not None:
             return self._ip.find_magic("kql") is not None
-        return False
+        return bool(kql_exec("--version"))
 
-    def _get_schema(self) -> Dict[str, Dict]:
-        return self._ip.run_line_magic("kql", line="--schema")
+    @staticmethod
+    def _get_schema() -> Dict[str, Dict]:
+        return kql_exec("--schema")
 
-    def _get_kql_option(self, option):
+    @staticmethod
+    def _get_kql_option(option):
         """Retrieve a current Kqlmagic notebook option."""
-        if self._ip is None:
-            return None
-        return self._ip.run_line_magic("config", line=option)
+        return kql_exec(f"--config {option}").get(option)
 
-    def _set_kql_option(self, option, value):
+    @staticmethod
+    def _set_kql_option(option, value):
         """Set a Kqlmagic notebook option."""
-        if self._ip is None:
-            return None
-        set_txt = f"{option}={value}"
-        return self._ip.run_line_magic("config", line=set_txt)
+        opt_val = f"'{value}'" if isinstance(value, str) else value
+        return kql_exec(f"--config {option}={opt_val}")
+
+    def _set_kql_cloud(self):
+        """If cloud is set in Azure Settings override default."""
+        # Check that there isn't a cloud setting in the KQLMAGIC env var
+        kql_config = os.environ.get("KQLMAGIC_CONFIGURATION", "")
+        if "cloud" in kql_config:
+            # Set by user - we don't want to override this
+            kql_cloud = self._get_kql_option("cloud")
+            az_cloud = _AZ_CLOUD_MAP.get(kql_cloud, "public")
+            return kql_cloud, az_cloud
+        az_cloud = AzureCloudConfig().cloud
+        kql_cloud = _KQL_CLOUD_MAP.get(az_cloud, "public")
+        if kql_cloud != self._get_kql_option("cloud"):
+            self._set_kql_option("cloud", kql_cloud)
+        return kql_cloud, az_cloud
 
     @staticmethod
     def _format_datetime(date_time: datetime) -> str:
@@ -359,35 +410,45 @@ class KqlDriver(DriverBase):
             title="connection failed",
         )
 
+    def _set_az_auth_option(
+        self,
+        mp_az_auth: Union[bool, str, list, None],
+    ):
+        """
+        Build connection string with auth elements.
 
-def _build_auth_cnt_str(
-    namespace: dict, connection_str: str, auth_types: list = None
-) -> str:
-    """
-    Build connection string with auth elements.
+        Parameters
+        ----------
+        mp_az_auth : Union[bool, str, list, None], optional
+            Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
+            Values can be:
+            - True or "default": use the settings in msticpyconfig.yaml 'Azure' section
+            - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
+            - auth_methods: list of acceptable auth methods from ('msi', 'cli',
+                'env' or 'interactive')
 
-    Parameters
-    ----------
-    namespace : dict
-        locals namespace from notebook environment
-    connection_str : str
-        current connection string to append auth elements to
-    auth_types : list, optional
-        preferred authentication types, by default ['cli', 'msi']
+        """
+        # default to default auth methods
+        az_config = AzureCloudConfig()
+        auth_types = az_config.auth_methods
+        # override if user-supplied methods on command line
+        if isinstance(mp_az_auth, str) and mp_az_auth != "default":
+            auth_types = [mp_az_auth]
+        elif isinstance(mp_az_auth, list):
+            auth_types = mp_az_auth
+        # get current credentials
+        creds = az_connect(auth_methods=auth_types)
+        la_uri = _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]
+        la_token_uri = f"{la_uri}.default"
+        # obtain token for Log Analytics
+        token = creds.modern.get_token(la_token_uri)
+        # set the token values in the namespace
 
-    Returns
-    -------
-    str
-        completed connection string
-
-    """
-    if not auth_types:
-        auth_types = ["cli", "msi"]
-    creds = az_connect_core(auth_methods=auth_types)
-    token = creds.modern.get_token("https://api.loganalytics.io/.default")
-    namespace["token_dict"] = {
-        "access_token": token.token,
-        "token_type": "Bearer",
-        "resource": "https://api.loganalytics.io/",
-    }
-    return connection_str + " " + "-try_token=locals()['token_dict']"
+        la_token = {
+            "access_token": token.token,
+            "token_type": "Bearer",
+            "resource": la_uri,
+        }
+        self._set_kql_option("try_token", la_token)
+        if only_interactive_cred(creds.modern):
+            print("Check your default browser for interactive sign-in prompt.")

@@ -231,7 +231,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-bleach 3.3.0 - Apache-2.0
+bleach 4.0.0 - Apache-2.0
 
 
 Copyright (c) 2014-2017, Mozilla Foundation
@@ -448,10 +448,9 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-importlib-metadata 4.6.0 - Apache-2.0
+importlib-metadata 3.10.1 - Apache-2.0
 
 
-Copyright 2017-2019 Jason R. Coombs, Barry Warsaw
 
 Apache License
 
@@ -988,7 +987,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-python-dateutil 2.8.1 - Apache-2.0
+python-dateutil 2.8.2 - Apache-2.0
 
 
 Copyright 2017
@@ -1102,7 +1101,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-requests 2.25.1 - Apache-2.0
+requests 2.26.0 - Apache-2.0
 
 
 Copyright 2019 Kenneth Reitz
@@ -1545,7 +1544,7 @@ Apache-2.0 AND BSD-3-Clause AND Python-2.0
 
 ---------------------------------------------------------
 
-packaging 20.9 - Apache-2.0 OR (Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause)
+packaging 21.0 - Apache-2.0 OR (Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause)
 
 
 copyright 2014-2019
@@ -1595,7 +1594,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-decorator 4.4.2 - BSD-2-Clause
+decorator 5.0.9 - BSD-2-Clause
 
 
 Copyright (c) 2005-2018, Michele Simionato
@@ -1652,13 +1651,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-ipykernel 5.5.5 - BSD-2-Clause
+ipykernel 6.0.3 - BSD-2-Clause
 
 
 Copyright (c) IPython Development Team.
 copyright 2015, IPython Development Team
 Copyright (c) 2015, IPython Development Team
-Copyright (c) 2011 The IPython Development Team
 Copyright (c) 2012 The IPython Development Team
 Copyright (c) 2008-2011 The IPython Development Team
 Copyright (c) 2010-2011 The IPython Development Team.
@@ -1961,14 +1959,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-networkx 2.5.1 - BSD-2-Clause
+numpy 1.21.1 - BSD-2-Clause
 
 
-Copyright (c) 2015 - Thomson Licensing, SAS
-Copyright 2011 Alex Levenson <alex@isnotinvain.com>
-Copyright 2011 Reya Group <http://www.reyagroup.com>
-copyright f'2004- date.today().year, NetworkX Developers
-Copyright 2011 Diederik van Liere <diederik.vanliere@rotman.utoronto.ca>
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -1984,7 +1977,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-numpy 1.21.0 - BSD-2-Clause
+pandas 1.3.1 - BSD-2-Clause
 
 
 
@@ -2149,6 +2142,24 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
+pyzmq 22.2.1 - BSD-2-Clause
+
+
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
 scandir 1.10.0 - BSD-2-Clause
 
 
@@ -2250,7 +2261,7 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-ipython 7.25.0 - BSD-2-Clause AND BSD-3-Clause
+ipython 7.26.0 - BSD-2-Clause AND BSD-3-Clause
 
 
 (c) Python and NumPy
@@ -2348,10 +2359,26 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-notebook 6.4.0 - BSD-2-Clause AND BSD-3-Clause
+networkx 2.6.2 - BSD-2-Clause AND BSD-3-Clause
+
+
+Copyright (c) 2015 - Thomson Licensing, SAS
+Copyright 2011 Alex Levenson <alex@isnotinvain.com>
+Copyright 2011 Reya Group <http://www.reyagroup.com>
+copyright f'2004- date.today().year, NetworkX Developers
+Copyright 2011 Diederik van Liere <diederik.vanliere@rotman.utoronto.ca>
+
+BSD-2-Clause AND BSD-3-Clause
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+notebook 6.4.2 - BSD-2-Clause AND BSD-3-Clause
 
 
 Copyright (c) 2014
+copro Coproduc cop COP
 Copyright Dave Gandy 2016.
 Copyright (c) 2012 Google Inc.
 copyright (c) by Lennart Ochel
@@ -2371,6 +2398,7 @@ copyright (c) HicknHack Software Gmbh
 Copyright (c) IPython Development Team.
 Copyright (c) Jupyter Development Team.
 (c) JS Foundation and other contributors
+Copyright (c) 2014-2017, Jon Schlinkert.
 Copyright (c) 2013-present, Facebook, Inc.
 Copyright (c) 2011 by MarkLogic Corporation
 copyright (c) 2015 by Grzegorz Mazur Loosely
@@ -2483,53 +2511,6 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-pyzmq 22.1.0 - BSD-2-Clause AND BSD-3-Clause AND GPL-2.0-or-later AND LGPL-3.0-only AND NOASSERTION
-
-
-Copyright (c) 2016
-Copyright (c) 2018
-Copyright (c) 2019
-(c) PyZMQ Developers
-Copyright (c) 2007-2016
-Copyright (c) 2007-2017
-Copyright (c) 2007-2018
-Copyright (c) 2007-2019
-Copyright (c) 2016-2017
-Copyright 2009 Facebook
-Copyright 2010 Facebook
-Copyright 2011 Facebook
-Copyright (c) 2010 Justin Riley
-Copyright (c) PyZMQ Developers.
-Copyright (c) 2010 Brian Granger
-Copyright (c) 2010 Lisandro Dalcin
-Copyright (c) 2010 The IPython Team
-Copyright (c) Stef van der Struijk.
-Copyright (c) 2011- PyZMQ Developers
-Copyright (c) 2011-2012 Travis Cline
-Copyright (c) 2012 Godefroid Chapelle
-Copyright (c) PyZMQ Development Team.
-Copyright (c) 2010 Andrew Gwozdziewycz
-Copyright (c) 2012 The ZeroMQ Authors.
-Copyright (c) 2007-2010 iMatix Corporation
-Copyright (c) 2010 Brian Granger, Fernando Perez
-Copyright (c) 2010-2011 IPython Development Team
-Copyright (c) 2010 Brian Granger, Min Ragan-Kelley
-Copyright (c) 2010 Min Ragan-Kelley, Brian Granger
-copyright u'Brian E. Granger & Min Ragan-Kelley. OMQ
-Copyright (c) 2010 Brian E. Granger & Min Ragan-Kelley
-Copyright (c) 2013 Brian E. Granger & Min Ragan-Kelley
-Copyright (c) 2010-2012 Brian Granger, Min Ragan-Kelley
-Copyright (c) 2009-2012, Brian Granger, Min Ragan-Kelley
-Copyright (c) 2010-2011 Brian E. Granger & Min Ragan-Kelley
-Copyright (c) 2003-2007 Robey Pointer <robeypointer@gmail.com>
-Copyright (c) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-
-BSD-2-Clause AND BSD-3-Clause AND GPL-2.0-or-later AND LGPL-3.0-only AND NOASSERTION
-
----------------------------------------------------------
-
----------------------------------------------------------
-
 requests-oauthlib 1.3.0 - BSD-2-Clause AND ISC
 
 
@@ -2542,7 +2523,7 @@ BSD-2-Clause AND ISC
 
 ---------------------------------------------------------
 
-bokeh 2.3.2 - BSD-3-Clause
+bokeh 2.3.3 - BSD-3-Clause
 
 
 (c) P. name Color
@@ -2671,238 +2652,105 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-pandas 1.2.5 - BSD-3-Clause
+debugpy 1.4.1 - EPL-1.0
 
 
-Copyright 2017
-Copyright 2014-2019
-Appender Copyright (c) 2009
-Copyright (c) 2012 Google Inc.
-Copyright (c) 2015 Jared Hobbs
-Copyright (c) 1994 David Burren.
-Copyright (c) 2011 Szabolcs Nagy
-Copyright (c) 2011 Valentin Ochs
-Copyright (c) 2007 Nick Galbreath
-Copyright (c) 2005-2014 Rich Felker
-Copyright (c) 2010, Albert Sweigart
-Copyright (c) 2002 Michael Ringgaard.
-Copyright (c) 2003-2011 David Schultz
-Copyright (c) 2006 Alexander Chemeris
-Copyright (c) 2008 Stephen L. Moshier
-Copyright (c) 2011 by Enthought, Inc.
-Copyright (c) 2003-2009 Bruce D. Evans
-Copyright (c) 2001-2008 Ville Laurikari
-Copyright (c) 2003-2009 Steven G. Kargl
-Copyright (c) 1993,2004 Sun Microsystems
-Copyright (c) 2001, 2002 Enthought, Inc.
-Copyright (c) 2012, Lambda Foundry, Inc.
-Copyright (c) 1994 Sun Microsystems, Inc.
-Copyright (c) 2003-2012 SciPy Developers.
-Copyright (c) 2005-2011, NumPy Developers.
-Copyright (c) 2006-2008 Alexander Chemeris
-Copyright (c) 2017 - dateutil contributors
-Copyright (c) 2015- - dateutil contributors
-Copyright (c) 2016, PyData Development Team
-Copyright 2017- Paul Ganssle <paul@ganssle.io>
-Copyright (c) 2008 The Android Open Source Project
-Copyright (c) 2015- - Paul Ganssle <paul@ganssle.io>
-Copyright (c) 2010-2012 Archipel Asset Management AB.
-Copyright (c) 2014-2016 - Yaron de Leeuw <me@jarondl.net>
-Copyright (c) 2019 Hadley Wickham RStudio and Evan Miller
-Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
-copyright f'2008- datetime.now().year, the pandas development team
-Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam
-Copyright (c) 2011-2013, ESN Social Software AB and Jonas Tarnstrom
-Copyright (c) 1988-1993 The Regents of the University of California.
-Copyright (c) 2012-2014 - Tomi Pievilainen <tomi.pievilainen@iki.fi>
-Copyright (c) 1995-2001 Corporation for National Research Initiatives
-Copyright (c) 2008, 2009, 2011 by Attractive Chaos <attractor@live.co.uk>
-Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Python Software Foundation
-Copyright (c) 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team
 
-Copyright (c) <year> <owner> . All rights reserved.
+Eclipse Public License - v 1.0
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.
 
-   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+   1. DEFINITIONS
 
-   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+   "Contribution" means:
 
-   3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+      a) in the case of the initial Contributor, the initial code and documentation distributed under this Agreement, and
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+      b) in the case of each subsequent Contributor:
+
+         i) changes to the Program, and
+
+         ii) additions to the Program;
+
+         where such changes and/or additions to the Program originate from and are distributed by that particular Contributor. A Contribution 'originates' from a Contributor if it was added to the Program by such Contributor itself or anyone acting on such Contributor's behalf. Contributions do not include additions to the Program which: (i) are separate modules of software distributed in conjunction with the Program under their own license agreement, and (ii) are not derivative works of the Program.
+
+   "Contributor" means any person or entity that distributes the Program.
+
+   "Licensed Patents" mean patent claims licensable by a Contributor which are necessarily infringed by the use or sale of its Contribution alone or when combined with the Program.
+
+   "Program" means the Contributions distributed in accordance with this Agreement.
+
+   "Recipient" means anyone who receives the Program under this Agreement, including all Contributors.
+
+   2. GRANT OF RIGHTS
+
+      a) Subject to the terms of this Agreement, each Contributor hereby grants Recipient a non-exclusive, worldwide, royalty-free copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, distribute and sublicense the Contribution of such Contributor, if any, and such derivative works, in source code and object code form.
+
+      b) Subject to the terms of this Agreement, each Contributor hereby grants Recipient a non-exclusive, worldwide, royalty-free patent license under Licensed Patents to make, use, sell, offer to sell, import and otherwise transfer the Contribution of such Contributor, if any, in source code and object code form. This patent license shall apply to the combination of the Contribution and the Program if, at the time the Contribution is added by the Contributor, such addition of the Contribution causes such combination to be covered by the Licensed Patents. The patent license shall not apply to any other combinations which include the Contribution. No hardware per se is licensed hereunder.
+
+      c) Recipient understands that although each Contributor grants the licenses to its Contributions set forth herein, no assurances are provided by any Contributor that the Program does not infringe the patent or other intellectual property rights of any other entity. Each Contributor disclaims any liability to Recipient for claims brought by any other entity based on infringement of intellectual property rights or otherwise. As a condition to exercising the rights and licenses granted hereunder, each Recipient hereby assumes sole responsibility to secure any other intellectual property rights needed, if any. For example, if a third party patent license is required to allow Recipient to distribute the Program, it is Recipient's responsibility to acquire that license before distributing the Program.
+
+      d) Each Contributor represents that to its knowledge it has sufficient copyright rights in its Contribution, if any, to grant the copyright license set forth in this Agreement.
+
+   3. REQUIREMENTS
+
+   A Contributor may choose to distribute the Program in object code form under its own license agreement, provided that:
+
+      a) it complies with the terms and conditions of this Agreement; and
+
+      b) its license agreement:
+
+         i) effectively disclaims on behalf of all Contributors all warranties and conditions, express and implied, including warranties or conditions of title and non-infringement, and implied warranties or conditions of merchantability and fitness for a particular purpose;
+
+         ii) effectively excludes on behalf of all Contributors all liability for damages, including direct, indirect, special, incidental and consequential damages, such as lost profits;
+
+         iii) states that any provisions which differ from this Agreement are offered by that Contributor alone and not by any other party; and
+
+         iv) states that source code for the Program is available from such Contributor, and informs licensees how to obtain it in a reasonable manner on or through a medium customarily used for software exchange.
+
+   When the Program is made available in source code form:
+
+      a) it must be made available under this Agreement; and
+
+      b) a copy of this Agreement must be included with each copy of the Program.
+
+      Contributors may not remove or alter any copyright notices contained within the Program.
+
+   Each Contributor must identify itself as the originator of its Contribution, if any, in a manner that reasonably allows subsequent Recipients to identify the originator of the Contribution.
+
+   4. COMMERCIAL DISTRIBUTION
+
+   Commercial distributors of software may accept certain responsibilities with respect to end users, business partners and the like. While this license is intended to facilitate the commercial use of the Program, the Contributor who includes the Program in a commercial product offering should do so in a manner which does not create potential liability for other Contributors. Therefore, if a Contributor includes the Program in a commercial product offering, such Contributor ("Commercial Contributor") hereby agrees to defend and indemnify every other Contributor ("Indemnified Contributor") against any losses, damages and costs (collectively "Losses") arising from claims, lawsuits and other legal actions brought by a third party against the Indemnified Contributor to the extent caused by the acts or omissions of such Commercial Contributor in connection with its distribution of the Program in a commercial product offering. The obligations in this section do not apply to any claims or Losses relating to any actual or alleged intellectual property infringement. In order to qualify, an Indemnified Contributor must: a) promptly notify the Commercial Contributor in writing of such claim, and b) allow the Commercial Contributor to control, and cooperate with the Commercial Contributor in, the defense and any related settlement negotiations. The Indemnified Contributor may participate in any such claim at its own expense.
+
+   For example, a Contributor might include the Program in a commercial product offering, Product X. That Contributor is then a Commercial Contributor. If that Commercial Contributor then makes performance claims, or offers warranties related to Product X, those performance claims and warranties are such Commercial Contributor's responsibility alone. Under this section, the Commercial Contributor would have to defend claims against the other Contributors related to those performance claims and warranties, and if a court requires any other Contributor to pay any damages as a result, the Commercial Contributor must pay those damages.
+
+   5. NO WARRANTY
+
+   EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is solely responsible for determining the appropriateness of using and distributing the Program and assumes all risks associated with its exercise of rights under this Agreement, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and unavailability or interruption of operations.
+
+   6. DISCLAIMER OF LIABILITY
+
+   EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+   7. GENERAL
+
+   If any provision of this Agreement is invalid or unenforceable under applicable law, it shall not affect the validity or enforceability of the remainder of the terms of this Agreement, and without further action by the parties hereto, such provision shall be reformed to the minimum extent necessary to make such provision valid and enforceable.
+
+   If Recipient institutes patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Program itself (excluding combinations of the Program with other software or hardware) infringes such Recipient's patent(s), then such Recipient's rights granted under Section 2(b) shall terminate as of the date such litigation is filed.
+
+   All Recipient's rights under this Agreement shall terminate if it fails to comply with any of the material terms or conditions of this Agreement and does not cure such failure in a reasonable period of time after becoming aware of such noncompliance. If all Recipient's rights under this Agreement terminate, Recipient agrees to cease use and distribution of the Program as soon as reasonably practicable. However, Recipient's obligations under this Agreement and any licenses granted by Recipient relating to the Program shall continue and survive.
+
+   Everyone is permitted to copy and distribute copies of this Agreement, but in order to avoid inconsistency the Agreement is copyrighted and may only be modified in the following manner. The Agreement Steward reserves the right to publish new versions (including revisions) of this Agreement from time to time. No one other than the Agreement Steward has the right to modify this Agreement. The Eclipse Foundation is the initial Agreement Steward. The Eclipse Foundation may assign the responsibility to serve as the Agreement Steward to a suitable separate entity. Each new version of the Agreement will be given a distinguishing version number. The Program (including Contributions) may always be distributed subject to the version of the Agreement under which it was received. In addition, after a new version of the Agreement is published, Contributor may elect to distribute the Program (including its Contributions) under the new version. Except as expressly stated in Sections 2(a) and 2(b) above, Recipient receives no rights or licenses to the intellectual property of any Contributor under this Agreement, whether expressly, by implication, estoppel or otherwise. All rights in the Program not expressly granted under this Agreement are reserved.
+
+   This Agreement is governed by the laws of the State of New York and the intellectual property laws of the United States of America. No party to this Agreement will bring a legal action under this Agreement more than one year after the cause of action arose. Each party waives its rights to a jury trial in any resulting litigation.
 
 ---------------------------------------------------------
 
 ---------------------------------------------------------
 
-Pillow 8.2.0 - HPND
+Pillow 8.3.1 - HPND
 
 
-(c) Tavmjung Bah
-Fonts are (c) Bitstream
-Copyright 2014 Google Inc.
-Copyright 2016 Google Inc.
-nCopyright 2015 Google Inc.
-Copyright (c) 2018 Google LLC
-Copyright (c) 2013 Eric Soroos
-Copyright (c) 2011 Google, Inc.
-Copyright (c) Eric Soroos 2016.
-Copyright (c) Eric Soroos 2017.
-Copyright (c) 2002-2017, and GNU
-Copyright (c) 2009 Fredrik Lundh
-Copyright (c) 2013 by Eric Soroos
-Copyright (c) Fredrik Lundh 1994.
-Copyright (c) Fredrik Lundh 1995.
-Copyright (c) Fredrik Lundh 1996.
-Copyright (c) Fredrik Lundh 1997.
-Copyright (c) Fredrik Lundh 1999.
-Copyright (c) Fredrik Lundh 2009.
-Copyright (c) Secret Labs AB 1998
-Copyright 2008 The Bungee Project
-copyright 1995-2011 Fredrik Lundh
-Copyright (c) 2004 by Secret Labs.
-Copyright (c) Secret Labs AB 1997.
-Copyright (c) Secret Labs AB 1999.
-Copyright (c) Secret Labs AB 2002.
-Copyright (c) Secret Labs AB 2008.
-Copyright (c) 1998-2001 Marti Maria
-Copyright (c) 2002 by Fredrik Lundh
-Copyright (c) 2004 by Bob Ippolito.
-Copyright (c) 2005 by Fredrik Lundh
-Copyright (c) 2006 by Tavmjong Bah.
-Copyright (c) 2009 by Fredrik Lundh
-Copyright (c) 2012 by Brian Crowell
-Copyright (c) Mickael Bonfill 2017.
-Copyright (c) 1995 by Fredrik Lundh.
-Copyright (c) 1996 by Fredrik Lundh.
-Copyright (c) 1997 by Fredrik Lundh.
-Copyright (c) 1998 by Secret Labs AB
-Copyright (c) 2002 by Secret Labs AB
-Copyright (c) 2003 by Fredrik Lundh.
-Copyright (c) 2003 by Secret Labs AB
-Copyright (c) 2004 by Fredrik Lundh.
-Copyright (c) 2006 by Fredrik Lundh.
-Copyright (c) 2014 Alastair Houghton
-Copyright (c) Fredrik Lundh 1995-96.
-Copyright (c) Fredrik Lundh 1995-97.
-Copyright (c) Fredrik Lundh 1996-97.
-Copyright (c) 1996-2000 Fredrik Lundh
-Copyright (c) 1997 by Secret Labs AB.
-Copyright (c) 1998 by Toby J Sargeant
-Copyright (c) 1999 by Secret Labs AB.
-Copyright (c) 2002 by Kevin B. Kenny.
-Copyright (c) 2002-2003 Kevin Cazabon
-Copyright (c) 2003 by Bitstream, Inc.
-Copyright (c) 2004 by Secret Labs AB.
-Copyright (c) 2004 by William Baxter.
-Copyright (c) 2006 by Secret Labs AB.
-Copyright (c) Secret Labs AB 1997-98.
-Copyright (c) Secret Labs AB 1997-99.
-Portions copyright 2015, Khaled Hosny
-Copyright (c) 1987 Adobe Systems, Inc.
-Copyright (c) 1998-2000 Secret Labs AB
-Copyright (c) 2016 by Mickael Bonfill.
-Copyright (c) Fredrik Lundh 1995-1997.
-Copyright (c) Fredrik Lundh 1995-2003.
-Copyright (c) Fredrik Lundh 1996-2001.
-Copyright (c) Fredrik Lundh 1996-2003.
-Copyright (c) Fredrik Lundh 1997-2004.
-Copyright (c) 1995-96 by Fredrik Lundh.
-Copyright (c) Secret Labs AB 1997-2001.
-Copyright (c) Secret Labs AB 1997-2002.
-Copyright (c) Secret Labs AB 1997-2003.
-Copyright (c) Secret Labs AB 1997-2004.
-Copyright (c) Secret Labs AB 1997-2005.
-Copyright (c) Secret Labs AB 2002-2004.
-Copyright (c) 1995-2005 by Fredrik Lundh
-Copyright (c) 1995-2006 by Fredrik Lundh
-Copyright (c) 1995-2011 by Fredrik Lundh
-Copyright (c) 1996-2000 by Fredrik Lundh
-Copyright (c) 1996-2003 by Fredrik Lundh
-Copyright (c) 1996-2006 by Fredrik Lundh
-Copyright (c) 1997-1998 by Fredrik Lundh
-Copyright (c) 1997-2005 by Fredrik Lundh
-Copyright (c) 1997-98 by Secret Labs AB.
-Copyright (c) 1997-99 by Secret Labs AB.
-Copyright (c) 1998-2003 by Fredrik Lundh
-Copyright (c) 2000-2003 by Fredrik Lundh
-Copyright (c) 2001-2002 by Fredrik Lundh
-Copyright (c) 2001-2004 by Fredrik Lundh
-Copyright (c) 2002-2004 by Fredrik Lundh
-Copyright (c) 2003-2005 by Fredrik Lundh
-Copyright (c) 2008 by Karsten Hiddemann.
-Copyright (c) 2014 by Alastair Houghton.
-Copyright 1984, 1987 Adobe Systems, Inc.
-copyright (c) 1991-1995, Thomas G. Lane.
-Copyright (c) 1995-1996 by Fredrik Lundh.
-Copyright (c) 1995-1997 by Fredrik Lundh.
-Copyright (c) 1995-2001 by Fredrik Lundh.
-Copyright (c) 1995-2001 by Secret Labs AB
-Copyright (c) 1995-2002 by Fredrik Lundh.
-Copyright (c) 1995-2003 by Fredrik Lundh.
-Copyright (c) 1995-2004 by Fredrik Lundh.
-Copyright (c) 1995-2009 by Fredrik Lundh.
-Copyright (c) 1996-1997 by Fredrik Lundh.
-Copyright (c) 1996-2004 by Fredrik Lundh.
-Copyright (c) 1997-1998 by Secret Labs AB
-Copyright (c) 1997-1999 by Secret Labs AB
-Copyright (c) 1997-2000 by Secret Labs AB
-Copyright (c) 1997-2003 by Fredrik Lundh.
-Copyright (c) 1997-2011 by Secret Labs AB
-Copyright (c) 1998-2005 by Secret Labs AB
-Copyright (c) 1998-2007 by Secret Labs AB
-Copyright (c) 1999-2005 by Secret Labs AB
-Copyright (c) 2001-2002 by Secret Labs AB
-Copyright (c) 2001-2004 by Secret Labs AB
-Copyright (c) 2002-2004 by Secret Labs AB
-Copyright (c) 2003-2005 by Secret Labs AB
-Copyright (c) 2015 Information Technology
-Copyright (c) 2018 Dimitar Toshkov Zhekov
-Copyright 2018 by Jack Halten Fahnestock.
-Copyright (c) 1997-2001 by Secret Labs AB.
-Copyright (c) 1997-2002 by Secret Labs AB.
-Copyright (c) 1997-2003 by Secret Labs AB.
-Copyright (c) 1997-2004 by Secret Labs AB.
-Copyright (c) 1997-2005 by Secret Labs AB.
-Copyright (c) 1997-2006 by Secret Labs AB.
-Copyright (c) 1997-2009 by Secret Labs AB.
-Copyright (c) 1998 Hewlett-Packard Company
-Copyright (c) 1998-2003 by Secret Labs AB.
-Copyright (c) 1998-2004 by Secret Labs AB.
-Copyright (c) 2004 by Health Research Inc.
-Copyright (c) 1997-2007 Adobe Systems, Inc.
-Copyright (c) 2000-2006 Adobe Systems, Inc.
-Copyright (c) 2014 Coriolis Systems Limited
-Copyright (c) 1993-1996 Lucent Technologies.
-Copyright 2007 International Color Consortium
-Copyright (c) 1994-1998 Sun Microsystems, Inc.
-Copyright (c) 2014 by Coriolis Systems Limited
-Copyright International Color Consortium, 2009
-Copyright 1987-2001 Adobe Systems Incorporated.
-Copyright 1987-2004 Adobe Systems Incorporated.
-Copyright 1987-2006 Adobe Systems Incorporated.
-Copyright 1997-2006 Adobe Systems Incorporated.
-Portions Copyright 1988 Digital Equipment Corp.
-Copyright (c) 1998-2000 by Scriptics Corporation.
-Copyright (c) 2016 Marcin Kurczewski <rr-@sakuya.pl>
-Portions Copyright 1988 Digital Equipment Corporation
-Copyright (c) 2010 Oliver Tonnhofer <olt@bogosoft.com>
-Copyright (c) 2016 Khaled Hosny <khaledhosny@eglug.org>
-Copyright (c) 2014 Dov Grobgeld <dov.grobgeld@gmail.com>
-Copyright 2013 Google Inc.Noto Color EmojiRegularVersion
-Copyright (c) 2018 Roel Nieskens, https://pixelambacht.nl
-copyright 2003 kevin_cazabon@hotmail.com kevin@cazabon.com
-copyright 2010-2011, Google Corporation.Open Sans Condensed
-Copyright (c) 1987-1994 The Regents of the University of California.
-Copyright, DateTime, ResolutionUnit, Software, XResolution and YResolution
-Copyright 2002, 2003, 2005, 2008, 2009, 2010, 2012 GNU Freefont contributors.
-Copyright (c) 2002-2003 Kevin Cazabon kevin@cazabon.com http://www.cazabon.com
-Portions copyright 1997, 2009, 2011 American Mathematical Society <http://www.ams.org>
-Copyright 2002, 2003, 2005, 2008, 2009, 2010, 2012 GNU Freefont contributors. FreeMono FreeMono
-copyrighted by the Regents of the University of California, Sun Microsystems, Inc., Scriptics Corporation
-Copyright 2016 Adobe (http://www.adobe.com/).Adobe Variable Font PrototypeRegular1.004 ADBO AdobeVFPrototype-Default ADOBEVersion
-Copyright 2014, 2015 Adobe Systems Incorporated (http://www.adobe.com/).Noto Sans JP RegularRegular1.004 GOOG NotoSansJP-Regular ADOBEVersion
 
 Historical Permission Notice and Disclaimer
 
@@ -3624,7 +3472,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-core 1.15.0 - MIT
+azure-core 1.17.0 - MIT
 
 
 
@@ -3660,7 +3508,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-mgmt-core 1.2.2 - MIT
+azure-mgmt-core 1.3.0 - MIT
 
 
 
@@ -3735,6 +3583,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 backports.functools-lru-cache 1.6.4 - MIT
 
 
+Copyright Jason R. Coombs
 
 MIT License
 
@@ -3769,9 +3618,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-cffi 1.14.5 - MIT
+cffi 1.14.6 - MIT
 
 
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+charset-normalizer 2.0.4 - MIT
+
+
+Copyright (c) 2019 TAHRI Ahmed R.
+(c) 2012 Denny Vrandecic (http://denny.vrandecic.de)
+Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret).
+Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret). This project
+(c) https://stackoverflow.com/questions/3041986/apt-command-line-interface-like-yes-no-input
 
 MIT License
 
@@ -3928,7 +3800,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-msal 1.12.0 - MIT
+msal 1.13.0 - MIT
 
 
 Copyright (c) Microsoft Corporation.
@@ -3984,9 +3856,1025 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-msticpy 1.2.3 - MIT
+msticpy 1.3.0 - MIT
 
 
+(c) Bv
+(c) CO
+(c) BvA
+(c) coB
+(c) H U3
+(c) Hp X
+(c) I3 Y
+(c) M2 Y
+(c) O3 Y
+(c) Va Y
+(c) Wa Y
+(c) EY Ij
+(c) Ca U3a
+(c) CaA CO
+(c) EHI Ee
+(c) C/ 2006
+(c) CD Land
+(c) Hx SSea
+(c) MY LIao
+(c) Take IT
+(c) (c) AAEE
+(c) Eac Aaef
+(c) e (c) SS
+(c) u (c) OY
+(c) (c) O1981
+(c) AAeAE WEd
+(c) AU Ass CN
+(c) AUueAo AI
+(c) ET. Where
+(c) OAAnPaE I
+(c) OY H-aaoY
+(c) OY HAySSU
+(c) aa (c) PS
+(c) o, (c) MY
+(c) sY (c) OY
+(c) !eI (c) FE
+(c) AEB AdegeP
+(c) L FWaIoaXs
+(c) M1960~1980
+(c) uAe (c) PY
+(c) uu?i 2003A
+Copyright 2004
+Copyright 2005
+Copyright 2006
+Copyright 2017
+copyright 2019
+(c) CaAU Audegi
+(c) lEEe (c) AE
+(c) w'Au AASSQY
+(c) AEAAIAo AaAI
+(c) Access Token
+(c) nEJW (c) EHI
+(c) pAh (c) ASSU
+Copyright (c) AB
+copyright u'2001
+(c) 2014 (c) FSF.
+(c) Sindre Sorhus
+(c) aA'AE (c) 1AE
+(c) aAua$? (c) HH
+(c) A1/2cC/ (c) EB
+(c) Ao2- AIdegPSAo
+(c) EDiETCgDi Hiro
+(c) F!ASSUI (c) IY
+Copyright (c) 2005
+Copyright (c) 2006
+Copyright (c) 2016
+Copyright (c) 2018
+Copyright 2013 Ray
+(c) Au IUAEnCIeAEai
+(c) Laurent LAPORTE
+(c) OY H2 (c), 1998
+(c) Redirection URI
+Copyright 2013-2018
+(c) 2011 Gary Court.
+(c) ESSO!A (c) ESSOY
+(c) Python and NumPy
+(c) aEaIAua$? (c) EH
+(c) (r)IE bvAbvAi'u'I
+(c) AUueAI PEdegdegAo
+(c) AUueAo PEdegdegAo
+(c) http://flickr.com
+copyright Ian Bicking
+(c) 2006 Entrust, Inc.
+(c) 2007 GeoTrust Inc.
+(c) I3 3QPAZP-'PSY Xao
+(c) aueU1nB 2006-01-02
+Copyright 2007 Pallets
+Copyright 2010 Pallets
+EAEvAACAEe (c) ,!C2001
+copyright 2007 Pallets
+copyright 2010 Pallets
+copyright 2017 Project
+(c) 2004 - 2005, Efendi
+(c) 2008 VeriSign, Inc.
+(c) U. John Battelledeg
+(c) V End (c) 2000-2003
+(c) aueU1nEB 2006-01-03
+Copyright (c) 2004-2005
+Copyright (c) 2005-2006
+Copyright (c) 2007-2016
+Copyright (c) 2007-2017
+Copyright (c) 2007-2018
+Copyright (c) 2007-2019
+Copyright (c) 2008-2016
+Copyright 2010 Facebook
+Copyright 2011 Facebook
+Copyright 2013-2014 Ray
+(c) 2004 Foo Corporation
+(c) lPi$?JotAAdege!A1962
+(c) uu?i 1/41o 2003 CN1o
+Copyright (c) 2006, AND0
+Copyright (c) 2015 CERN.
+Copyright 2013 Wikimedia
+Copyright Fedor Indutny.
+copyright 2006. Uploaded
+(c) 2015 Andreas Rossberg
+(c) EREaC/-eAEC/$? (c) RL
+(c) Justin Fletcher, 1998
+Copyright (c) 2006, Manni
+Copyright (c) 2013 Min RK
+Copyright (c) 2014 Dan Le
+Copyright Jason R. Coombs
+(c) uu?i 1/41o 2003A Intel
+AOdegi Copyright 2003-2006
+Copyright (c) 1998 Comment
+Copyright (c) 2004 Infrae.
+Copyright (c) ISO/IEC 2015
+Copyright (c) Rich Hickey.
+Copyright (c) SecureWorks.
+Copyright 2007 Google Inc.
+Copyright 2008 Google Inc.
+Copyright 2011 Gary Court.
+Copyright 2015 Google Inc.
+Copyright 2019 Google LLC.
+copyright BBCHungarian.com
+(c) ,oua http://sosa0sa.com
+(c) AUueAo AoY I PEdegdegAo
+(c) BJoel on SoftwareICgEaA
+(c) CIAEdeg MSAC Classified
+Copyright (c) 2005 Carshops
+Copyright (c) INRIA - Serge
+Copyright 2005 Brian Alliet
+Copyright 2018 Mike Bostock
+copyright 2014, Al Sweigart
+copyright 2019 Plotly, Inc.
+(c) ,SSCI'A http://kysky.com
+(c) -deg!Ao ?PoAI degOAOA CO
+(c) 1999 Entrust.net Limited
+(c) 2009 Entrust, Inc. - for
+(c) 2012 Entrust, Inc. - for
+(c) 2015 Entrust, Inc. - for
+(c) Justin Fletcher, 1998 40
+(c) a http://konkurs.susu.ru
+Copyright (c) 2006, Grebeweb
+Copyright (c) 2012, Ben Hoyt
+Copyright (c) 2017 Microsoft
+Copyright (c) 2018 Microsoft
+Copyright (c) Frederick Dean
+Copyright 2006, Paul McGuire
+Copyright 2008, Paul McGuire
+Copyright 2009, Gerhard Weis
+Copyright 2010, Paul McGuire
+Copyright 2011, Paul McGuire
+Copyright 2015 Red Hat, Inc.
+Copyright 2015 Ruben De Smet
+Copyright 2015, Paul McGuire
+Copyright 2016, Paul McGuire
+Copyright 2017 Virgil Dupras
+Copyright 2018, Paul McGuire
+Copyright 2019 Kenneth Reitz
+Copyright 2019 Mike Bostock.
+Copyright 2019, Paul McGuire
+Copyright Paul McGuire, 2019
+copyright 2006, Paul McGuire
+(c) $?cAAAzEnPaEC/I (c) HAASS
+(c) 2009-2016 Michael Leibman
+Copyright (c) 1991, 1992, Jos
+Copyright (c) 2008 Silken Web
+Copyright (c) 2013 Aaron Iles
+Copyright (c) 2014 Adam Krebs
+Copyright (c) 2017 Spyder IDE
+Copyright (c) 2018 Isaac Muse
+Copyright 2008 Chris Lambrou.
+Copyright 2009 Brian Quinlan.
+Copyright 2012 by Simon Sapin
+Copyright 2017, Thomas Moreau
+Copyright, 2010, Paul McGuire
+(c) Lionhard Technologies 2003
+(c) g(r)R'Nn?o$?F!I!v!A (c) OY
+(c) o a http://www.pots.com.tw
+Copyright (c) 2011 Google Inc.
+Copyright (c) 2012 Google Inc.
+Copyright 2005 (c) B Pool Game
+Copyright 2007 by Paul McGuire
+Copyright 2010, Gael Varoquaux
+Copyright 2012, Olivier Grisel
+Copyright, 2007 - Paul McGuire
+Copyright, 2012 - Paul McGuire
+copyright (c) by Lennart Ochel
+copyright 2015, Thomas Kluyver
+copyright 2017, Thomas Kluyver
+copyright AtomicPages LLC 2014
+(c) http://blog.mlmaster.com/?p
+(c) http://susu.ac.ru/gerb2.gif
+(c) self.assertEqual http://ns1
+Copyright (c) 1994 X Consortium
+Copyright (c) 2004 Ian Bicking.
+Copyright (c) 2005 Movable Type
+Copyright (c) 2008 Slava Pestov
+Copyright (c) 2010 Justin Riley
+Copyright (c) 2014, Al Sweigart
+Copyright (c) 2015 Georg Brandl
+Copyright (c) 2015 Jose Padilla
+Copyright (c) 2016 Ville Vainio
+Copyright (c) 2017 ORGANIZATION
+Copyright (c) PyZMQ Developers.
+Copyright 2006, by Paul McGuire
+Copyright 2008, 280 North, Inc.
+Copyright 2008, by Paul McGuire
+Copyright 2012, Paul T. McGuire
+copyright 2018, Paul T. McGuire
+copyright u'2014, Kenneth Reitz
+copyright u'2015, Enthought Ltd
+(c) ?idegE http://klutzy.x-y.net
+(c) Copyright 1999, Artran, Inc.
+(c) http://ch.kitaguni.tv/u/8280
+Copyright (c) 2000 Thomas Heller
+Copyright (c) 2003, Paul McGuire
+Copyright (c) 2004, Paul McGuire
+Copyright (c) 2005 AmbitUSA Inc.
+Copyright (c) 2006, Paul McGuire
+Copyright (c) 2008 Rick Jelliffe
+Copyright (c) 2009 PiCloud, Inc.
+Copyright (c) 2009 Zarko Zivanov
+Copyright (c) 2009-2010, Gary L.
+Copyright (c) 2010 Brian Granger
+Copyright (c) 2012 Julian Berman
+Copyright (c) 2013 Donald Stufft
+Copyright (c) 2014 Fullstack.io.
+Copyright (c) 2015 Thomas Pornin
+Copyright (c) 2016, Paul McGuire
+Copyright 2004 Manfred Stienstra
+Copyright 2010,2019 Paul McGuire
+Copyright 2010-2015 Mike Bostock
+Copyright 2011-2015 Splunk, Inc.
+Copyright 2013 Alexander Peslyak
+Copyright 2014-2019 Volker Sorge
+Copyright 2015-2018 Jose Padilla
+Copyright, 2006, by Paul McGuire
+copyright (c) 2015 Thomas Pornin
+copyright u'2014, Thomas Kluyver
+(c) Copyright 2005, Sharks.co.il.
+(c) o1/4!Y http://artifact-jp.com
+Copyright (c) 2008 Gael Varoquaux
+Copyright (c) 2009 Gael Varoquaux
+Copyright (c) 2010 Damien Miller.
+Copyright (c) 2010 Doug Hellmann.
+Copyright (c) 2010 Gael Varoquaux
+Copyright (c) 2013, Ethan Furman.
+Copyright (c) 2014 Jameson Little
+Copyright (c) 2014 Kenneth Reitz.
+Copyright (c) 2017 Thomas Kluyver
+Copyright (c) 2017, Virgil Dupras
+Copyright (c) Jean-Paul Calderone
+Copyright 2002-2018, Paul McGuire
+Copyright 2005-2006, Paul McGuire
+Copyright 2009, 2011 Paul McGuire
+Copyright 2011-2016 Twitter, Inc.
+Copyright 2011-2019 Twitter, Inc.
+Copyright 2012-2013 Ulrich Sossou
+Portions (c) 2009 by Robert Kern.
+copyright (c) 2004 by Andre Simon
+copyright 2007 by Armin Ronacher.
+copyright u'2015, Hynek Schlawack
+(c) B OEo1/2, L-IEzIaAUCUe Ch bvEm
+Copyright (c) 2010 Lisandro Dalcin
+Copyright (c) 2010 Three Dub Media
+Copyright (c) 2011 Fabrice Bellard
+Copyright (c) 2012 Alexei Boronine
+Copyright (c) 2013 Matthew Rocklin
+Copyright (c) 2014, Thomas Kluyver
+Copyright (c) 2015 Hynek Schlawack
+Copyright (c) 2016 Jorik Tangelder
+Copyright (c) 2017 Johannes Holzl.
+Copyright (c) 2017 Laurent LAPORTE
+Copyright (c) 2018 Paul T. McGuire
+Copyright (c) Alexandru Marasteanu
+Copyright 2007-2012 LassoSoft Inc.
+Copyright Ellis & Grant, Inc. 2005
+copyright (c) 2015 by Calin Barbat
+copyright Shuttleworth Foundation.
+copyright u'2009-2013, Tres Seaver
+(c) a'C/Y aa'aY a http://susu.ac.ru
+(c) o1998 ~07$?eP!?iY Hx wCnE$?iaeU
+Copyright (c) 2001. Addison-Wesley.
+Copyright (c) 2010 The IPython Team
+Copyright (c) 2011 Andrei Mackenzie
+Copyright (c) 2013 Amazon.com, Inc.
+Copyright (c) 2013, Martin Journois
+Copyright (c) 2013-2019 Frank Denis
+Copyright (c) 2014, Enthought, Inc.
+Copyright (c) 2014-2017, PhosphorJS
+Copyright (c) 2015, Enthought, Inc.
+Copyright (c) 2016-2018 Plotly, Inc
+Copyright (c) 2017-2019 Philip Hane
+Copyright (c) 2019 RunningCoder.org
+Copyright (c) Stef van der Struijk.
+Copyright 1999-2011 Comment Comment
+Copyright 2003-2009 by Paul McGuire
+Copyright 2005 Brian Alliet Comment
+Copyright 2007-2012 Steven Levithan
+Copyright 2011 The Closure Compiler
+Copyright 2011,2015 Paul T. McGuire
+(c) ,oua 1/2o+-o KM http://pm2.ww.to
+Copyright (c) 2003,2019 Paul McGuire
+Copyright (c) 2004-2010 Rick Jellife
+Copyright (c) 2005-2007 Terence Parr
+Copyright (c) 2006,2016 Paul McGuire
+Copyright (c) 2007 Cybozu Labs, Inc.
+Copyright (c) 2009 Raymond Hettinger
+Copyright (c) 2011- PyZMQ Developers
+Copyright (c) 2011-2012 Travis Cline
+Copyright (c) 2011-2015 Splunk, Inc.
+Copyright (c) 2013, Min Ragan-Kelley
+Copyright (c) 2019 Tobias Gustafsson
+Copyright (c) Microsoft Corporation.
+Copyright 2003, 2019 by Paul McGuire
+Copyright 2003-2005 A Muvelodes Haza
+Copyright 2004-2016, by Paul McGuire
+Copyright 2007-2011, by Paul McGuire
+Copyright 2010, 2019 by Paul McGuire
+Copyright 2012-2018 Manas Technology
+copyright (c) 2012 by Kenneth Reitz.
+copyright (c) 2017 by Kenneth Reitz.
+copyright International Organization
+copyright u'2009-2011, Brian Quinlan
+copyright u'2012, Leonard Richardson
+(c) ,oua http://jungti1234.netcci.net
+(c) AU+-a 1/4?i?! ?APodeg! oA3/4ss CO
+Copyright (c) 2003,2016, Paul McGuire
+Copyright (c) 2004, 2006 Paul McGuire
+Copyright (c) 2004-2016, Paul McGuire
+Copyright (c) 2006-2016, Paul McGuire
+Copyright (c) 2010 by Armin Ronacher.
+Copyright (c) 2012 Godefroid Chapelle
+Copyright (c) 2014, Jonathan Slenders
+Copyright (c) 2015, Jonathan Slenders
+Copyright (c) 2015-2019 Martin Hensel
+Copyright (c) 2017, Intel Corporation
+Copyright (c) PyZMQ Development Team.
+Copyright 2012,2013 Alexander Peslyak
+Copyright The Python Markdown Project
+copyright (c) 2014 by Armin Ronacher.
+copyright (c) HicknHack Software Gmbh
+copyright (c) Samuel Neves, 2013-2015
+(c) Name.Entity Copyright 2006 by Text
+(c) cao http://www.daihung.com/blog/?p
+Copyright (c) 2004, 2005, 2006 Aelitis
+Copyright (c) 2006, 2016, Paul McGuire
+Copyright (c) 2006-2016 Kirill Simonov
+Copyright (c) 2008-2017, Eli Bendersky
+Copyright (c) 2010 Andrew Gwozdziewycz
+Copyright (c) 2010-2011 Gael Varoquaux
+Copyright (c) 2012 The ZeroMQ Authors.
+Copyright (c) 2015 DH electronics GmbH
+Copyright (c) 2017-2018 Spyder Project
+Copyright (c) Individual contributors.
+Copyright 1997 University of Cambridge
+Copyright 2007-2013 by the Sphinx team
+Copyright copy 2003-2013 Paul McGuire.
+copyright 2008-2018, Joblib developers
+copyright The IPython Development Team
+(Copyright (c) 2017, Intel Corporation)
+(c) 2015 Adam Krebs, Jimmy Yuen Ho Wong
+(c) Holger Krekel and others, 2004-2014
+Copyright (c) 2003-2019 Paul T. McGuire
+Copyright (c) 2006 Herczeg Jozsef Tamas
+Copyright (c) 2008 Slava Pestov Comment
+Copyright (c) 2009-2010, Gary L. Cutler
+Copyright (c) 2010 by the Pallets team.
+Copyright (c) 2010, Gary L. Cutler, GPL
+Copyright (c) 2019 (c) PyZMQ Developers
+Copyright (c) IPython Development Team.
+Copyright (c) Jupyter Development Team.
+Copyright 2005 url http://wordpress.org
+Copyright 2005,2007,2009 Colin Percival
+Copyright David Halter and Contributors
+Portions (c) International Organization
+(c) JS Foundation and other contributors
+(c) R1B!n!@The Nature and Destiny of Man
+Copyright (c) 1997 Borland International
+Copyright (c) 1999-2003 by Fredrik Lundh
+Copyright (c) 1999-2004 by Fredrik Lundh
+Copyright (c) 1999-2009 by Fredrik Lundh
+Copyright (c) 2001-2015 by Michael Shell
+Copyright (c) 2003, 04 by Johannes Barre
+Copyright (c) 2004-2011 Paul T. McGuire.
+Copyright (c) 2012-2013 Nenad Rakocevic.
+Copyright (c) 2014-2015, Jon Schlinkert.
+Copyright (c) 2014-2016, Jon Schlinkert.
+Copyright (c) 2014-2017, Jon Schlinkert.
+Copyright 2003, Greenline, Kazan, Russia
+Copyright 2005 Dow Jones & Company, Inc.
+Copyright 2006-2009 by the Pygments team
+copyright 2015, IPython Development Team
+copyright 2015, Jupyter Development Team
+Copyright (c) 1998 the Initial Developer.
+Copyright (c) 1999-2003 by Secret Labs AB
+Copyright (c) 1999-2007 by Fredrik Lundh.
+Copyright (c) 2000-2001, Aaron D. Gifford
+Copyright (c) 2001 by Andrei Alexandrescu
+Copyright (c) 2001 the Initial Developer.
+Copyright (c) 2003 Sun Microsystems, Inc.
+Copyright (c) 2003-2004 by Fredrik Lundh.
+Copyright (c) 2003-2009 by Fredrik Lundh.
+Copyright (c) 2005 the Initial Developer.
+Copyright (c) 2010-2019 Benjamin Peterson
+Copyright (c) 2012 - 2018, Anaconda, Inc.
+Copyright (c) 2013 (c) Noam Yorav-Raphael
+Copyright (c) 2014 - 2015, Hsiaoming Yang
+Copyright (c) 2019 The OAuthlib Community
+Copyright 2004, 2005, 2006 Yuri Takhteyev
+Copyright 2012 Nokia Siemens Networks Oyj
+copyright u'2004-2015, Leonard Richardson
+copyright u'2011-2015, Nathaniel J. Smith
+(c) eEue1/2 http://px.a8.net/svt/ejp?a8mat
+(http://www.dabeaz.com) Copyright (c) 2017
+Copyright (c) 1993-2003 Yukihiro Matsumoto
+Copyright (c) 2003 Shuttleworth Foundation
+Copyright (c) 2004-2017 Leonard Richardson
+Copyright (c) 2004-2019 Leonard Richardson
+Copyright (c) 2005-2016, Michele Simionato
+Copyright (c) 2005-2018, Michele Simionato
+Copyright (c) 2006-2013 Alexander Chemeris
+Copyright (c) 2007-2010 iMatix Corporation
+Copyright (c) 2011-2012, Patsy Developers.
+Copyright (c) 2013-present, Facebook, Inc.
+Copyright (c) The Jupyter Development Team
+Copyright (c) Twisted Matrix Laboratories.
+(c) !E http://blog.livedoor.jp/facilitators
+(c) ae ol li a http://www.tipilp.susu.ac.ru
+(c) oW3Ooo W3Ooo http://www.coolloud.org.tw
+Copyright (c) 2011 by MarkLogic Corporation
+Copyright (c) 2013-2017 by Christian Heimes
+Copyright (c) 2014-2017, Mozilla Foundation
+Copyright (c) 2015 - Thomson Licensing, SAS
+Copyright (c) 2015- - dateutil contributors
+copyright 2015- s, Jupyter Development Team
+copyrighted by the Free Software Foundation
+(c) 1/21... REBOOTED http://andore.com/money
+(c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
+(c) aae http://money.rin.ru/content/news/?id
+(c) http://kapranoff.ru/archives/003650.html
+(c) opyright 2003, MetaQuotes Software Corp.
+Copyright (c) 2006, Estrate, the Netherlands
+Copyright (c) 2009-2010, Gary L. Cutler, GPL
+Copyright (c) 2011, IPython Development Team
+Copyright (c) 2012 IPython Development Team.
+Copyright (c) 2015, IPython Development Team
+Copyright 1989 by Carnegie Mellon University
+Copyright 2001, Nikolay Hristov Movable Type
+Copyright 2004-2005 Elemental Security, Inc.
+Copyright 2006-'+date (c) openEHR Foundation
+Copyright 2014 David Halter and Contributors
+copyright (c) 2014 - 2018 by Hsiaoming Yang.
+copyright (c) 2015 by Grzegorz Mazur Loosely
+copyright (c) 2016 Jared Dean, SAS Institute
+copyright (c) 2019 by The OAuthlib Community
+copyright (c) by Marijn Haverbeke and others
+(c) B http://sasuga.biz/pages/index.php?refid
+(c) C/AEd http://cosoft.org.cn/projects/webpm
+(c) http://azoz.org/archives/200512031633.php
+Copyright (c) 1998-2009, Modelica Association
+Copyright (c) 2008, IPython Development Team.
+Copyright (c) 2012, IPython Development Team.
+Copyright (c) 2013, Nucleic Development Team.
+Copyright (c) 2014 Copyright Dave Gandy 2016.
+Copyright (c) 2014-, Jupyter development team
+Copyright (c) 2017, Jupyter Development Team.
+Copyright (c) 2020-, Jupyter Development Team
+Copyright (c) Thomas Kluyver and contributors
+(c) (c) AA+-C/IAtBGCg http://www.1affliate.com
+(c) +-,degO AIu?Ca http://deholexp.mizc.com/wp
+(c) <a href https://cartodb.com/attributions'>
+(c) Copyright 2014 Enthought, Inc., Austin, TX
+(c) Copyright 2015 Enthought, Inc., Austin, TX
+(c) Copyright 2017 Enthought, Inc., Austin, TX
+(c) Copyright 2018 Enthought, Inc., Austin, TX
+(c) EEEEBU1/2V1/2ENEu-1/2u'~XgvAaie$? (c) EAEB
+Copyright (c) 2008 Pauli Virtanen <pav@iki.fi>
+Copyright (c) 2008, Brian Frank and Andy Frank
+Copyright (c) 2009 Agendaless Consulting, Inc.
+Copyright (c) 2009-2018 The MathJax Consortium
+Copyright (c) 2010-2018 The MathJax Consortium
+Copyright (c) 2011-2015 The MathJax Consortium
+Copyright (c) 2015-, Jupyter Development Team.
+Copyright (c) 2018 Marek Vasut <marex@denx.de>
+Copyright (c) 2019, threadpoolctl contributors
+Copyright 1997 University of Cambridge Comment
+Copyright 2001-2016 Python Software Foundation
+Copyright 2006-2014, 2016 by the Pygments team
+Copyright 2006-2014, MetaQuotes Software Corp.
+Copyright 2009-2013, MetaQuotes Software Corp.
+Copyright 2017- Paul Ganssle <paul@ganssle.io>
+Copyright JS Foundation and other contributors
+copyright 2006-2014, MetaQuotes Software Corp.
+(c) !PS ODE$?uAECPS!Google 1OuODgooglesucks.com
+(c) 3/4ss CN'U... http://kina.egloos.com/655614
+(c) C/AE'PeBOExI http://px.a8.net/svt/ejp?a8mat
+(c) Name.Entity 1998-2009, Modelica Association
+(c) cIpibx http://www.mag2.com/m/0000103697.htm
+(c) http://www.acnnewswire.net/Article.Asp?lang
+Copyright (c) 2008 The IPython Development Team
+Copyright (c) 2010 Sofian Brabez <sbz@6dev.net>
+Copyright (c) 2010, Gary L. Cutler, GPL Comment
+Copyright (c) 2011 The IPython Development Team
+Copyright (c) 2012 Olle Lundberg <geek@nerd.sh>
+Copyright (c) 2013 The IPython Development Team
+Copyright (c) 2014 The IPython Development Team
+Copyright (c) 2014-2017 Matthias C. M. Troffaes
+Copyright (c) 2015 Project Jupyter Contributors
+Copyright (c) 2016-2017 Copyright 2009 Facebook
+Copyright (c) 2017, Battelle Memorial Institute
+Copyright 2007-2018 The Python Markdown Project
+Copyright 2007-2019 The Python Markdown Project
+Copyright 2008-2014 The Python Markdown Project
+Copyright 2011-2014 The Python Markdown Project
+Copyright 2013-2014 The Python Markdown Project
+Copyright 2015-2018 The Python Markdown Project
+(c) 1/2A'U http://chisato.info/blog/index.php?pl
+(c) cC$?1/4 SRC http://inkase.net/if/docomo.html
+(c) cC$?1/4o http://www.motionlink.jp/clk.php?pt
+(c) http://andore.com/money/archives/003398.html
+Copyright (c) 1995-2004 Functional Objects, Inc.
+Copyright (c) 2010 Brian Granger, Fernando Perez
+Copyright (c) 2010-2011 IPython Development Team
+Copyright (c) 2012 The IPython Development Team.
+Copyright (c) 2012 Yipit, Inc <coders@yipit.com>
+Copyright (c) 2012- The IPython Development Team
+Copyright (c) 2013 Julian Berman u'Julian Berman
+Copyright (c) 2015, The Jupyter Development Team
+Copyright (c) 2018 The IPython Development Team.
+Copyright 2004-2008 Jean Privat <jean@pryen.org>
+Copyright 2004-2010 Copyright 2004, Paul McGuire
+Copyright 2007, 2008 The Python Markdown Project
+copyright 2017, Marcos CARDOSO & Laurent LAPORTE
+copyright u'2013, Noah Spurrier and contributors
+(c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+(c) Copyright 2014-18 Enthought, Inc., Austin, TX
+(c) Copyright 2015-18 Enthought, Inc., Austin, TX
+(c) aIuOOINat < http://webryblog.biglobe.ne.jp/'>
+Copyright (c) 2001-2015, IPython Development Team
+Copyright (c) 2005 Free Software Foundation, Inc.
+Copyright (c) 2005, CigarMinds Kft. 2006. 01. 04.
+Copyright (c) 2006 Tim Cera timcera@earthlink.net
+Copyright (c) 2009 Thomas Robinson <280north.com>
+Copyright (c) 2011 Free Software Foundation, Inc.
+Copyright (c) 2011, the IPython Development Team.
+Copyright (c) 2012 Free Software Foundation, Inc.
+Copyright (c) 2012, Noah Spurrier <noah@noah.org>
+Copyright (c) 2012, the IPython Development Team.
+Copyright (c) 2013 Ted Unangst <tedu@openbsd.org>
+Copyright (c) 2013, the IPython Development Team.
+Copyright (c) 2013-2014, Pexpect development team
+Copyright (c) 2013-2016, Pexpect development team
+Copyright (c) 2014 Free Software Foundation, Inc.
+Copyright (c) 2014 Ted Unangst <tedu@openbsd.org>
+Copyright (c) 2016, the IPython Development Team.
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright 2005 rdf:resource http://blog.empas.com
+Copyright 2008 Jack Miller (https://codezen.org/)
+Copyright 2014 Lucas Bajolet <r4pass@hotmail.com>
+Copyright 2017-2019 Jason R. Coombs, Barry Warsaw
+copyright 2015, Jupyter Team, https://jupyter.org
+copyright 2016 Copyright 2016-2017 Andrew Svetlov
+(c) -deg!Ao http://jowchung.oolim.net/index.php?pl
+(c) A$?AE+-eEnA aAu http://px.a8.net/svt/ejp?a8mat
+(c) Oa,o thInuAIoO3/4EC http://www.messagecast.net
+Copyright (c) 1997 Niels Provos <provos@umich.edu>
+Copyright (c) 2001-2016 Python Software Foundation
+Copyright (c) 2008-2011, IPython Development Team.
+Copyright (c) 2008-2015, IPython Development Team.
+Copyright (c) 2010 Brian Granger, Min Ragan-Kelley
+Copyright (c) 2010 Min Ragan-Kelley, Brian Granger
+Copyright (c) 2010-2011, IPython Development Team.
+Copyright (c) 2011 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2012 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2013 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2013-2017, Nucleic Development Team.
+Copyright (c) 2013-2019, Nucleic Development Team.
+Copyright (c) 2014 Ivan Nikulin <ifaaan@gmail.com>
+Copyright (c) 2014-2016, Jupyter Development Team.
+Copyright (c) 2014-2017, Jupyter Development Team.
+Copyright (c) 2014-2018, Nucleic Development Team.
+Copyright (c) 2015 Thomas Kluyver and contributors
+Copyright (c) 2015-2016 Will Bond <will@wbond.net>
+Copyright (c) <2013> Copyright (c) Maxim Kurnikov.
+Copyright 1992-2019 Free Software Foundation, Inc.
+Copyright 2011 Mozilla Foundation and contributors
+Copyright 2014 Mozilla Foundation and contributors
+Copyright 2015-present Palantir Technologies, Inc.
+Copyright 2017-present Palantir Technologies, Inc.
+Copyright Waylan Limberg (http://achinghead.com/).
+(c) Copyright 2014-2018 Enthought, Inc., Austin, TX
+(c) a(r)$?Y aa http://money.rin.ru/content/news/?id
+(c) http://nanana.moo.jp/archives/000922.html Y ThY
+Copyright (c) 2001 Janko Hauser <jhauser@zscout.de>
+Copyright (c) 2008 Alan Woodland <ajw05@aber.ac.uk>
+Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
+Copyright (c) 2014 GDF Suez, http://www.gdfsuez.com
+Copyright (c) 2015 Copyright (c) 2015 Thomas Pornin
+Copyright (c) 2015 Jukka Lehtosalo and contributors
+Copyright (c) 2018 Isaac Muse <isaacmuse@gmail.com>
+Copyright 2007, 2008 Chris Wanstrath chris@ozmm.org
+Copyright 2011 Alex Levenson <alex@isnotinvain.com>
+Copyright Joyent, Inc. and other Node contributors.
+Copyright jQuery Foundation and other contributors.
+copyright (c) 2015 Daniel Dinu, Dmitry Khovratovich
+(c) a http://www.greek.ru/ru/news/news_detail.php?ID
+(c) cC$?1/4I http://sasuga.biz/pages/index.php?refid
+(c) http://www.newsru.com/crime/03jan2006/minsk.html
+Copyright (c) 1998,1999,2000,2001,2002 Tal Davidson.
+Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
+Copyright (c) 2008-2011 The IPython Development Team
+Copyright (c) 2008-2012 The IPython Development Team
+Copyright (c) 2008-Present, IPython Development Team
+Copyright (c) 2009-2010, Gary L. Cutler, GPL Comment
+Copyright (c) 2009-2011 The IPython Development Team
+Copyright (c) 2012 - 2020, Anaconda, Inc., and Bokeh
+Copyright (c) 2015- - Paul Ganssle <paul@ganssle.io>
+Copyright (c) 2018, Andrea Giammarchi, WebReflection
+Copyright 2011 Reya Group <http://www.reyagroup.com>
+copyright https://docs.python.org/2.7/copyright.html
+copyright u'Brian E. Granger & Min Ragan-Kelley. OMQ
+(c) <a href https://www.openstreetmap.org/copyright'>
+(c) a? http://andore.com/inami/mtarchives/003381.html
+(c) eaOOc, a'o'O http://money.rin.ru/content/news/?id
+(c) u2oAuIa http://club.h14m.org/kenji/diary/?200512b
+Copyright (c) 2009-2011 Copyright 2009 Brian Quinlan.
+Copyright (c) 2010-2011 The IPython Development Team.
+Copyright (c) 2013-2019 Copyright 2009 Colin Percival
+Copyright (c) 2014 Jeff Quast <contact@jeffquast.com>
+Copyright (c) <2013-2017> Copyright 2006 Google, Inc.
+Copyright (c) Zope Corporation (tm) and Contributors.
+Copyright 2000, 2004, 2005Adobe Systems Incorporated.
+Copyright 2009 Waylan Limberg (http://achinghead.com)
+Copyright 2011 Waylan Limberg (http://achinghead.com)
+Copyright 2016-2018, Andrew Svetlov and aio-libs team
+copyright 2016-2018, Andrew Svetlov and aio-libs team
+(c) Copyright 2008 by <a href http://domain.invalid/'>
+(c) Copyright 2010 by <a href http://domain.invalid/'>
+(c) a http://www.newsru.com/russia/03jan2006/gruz.html
+(c) http://www.newsru.com/crime/03jan2006/germanz.html
+Copyright (c) 1991, Jos van der Woude, jvdwoude@hut.nl
+Copyright (c) 1994-2018 Free Software Foundation, Inc.
+Copyright (c) 1996-2013 Free Software Foundation, Inc.
+Copyright (c) 1996-2015 Free Software Foundation, Inc.
+Copyright (c) 1996-2018 Free Software Foundation, Inc.
+Copyright (c) 1997-2018 Free Software Foundation, Inc.
+Copyright (c) 1999-2013 Free Software Foundation, Inc.
+Copyright (c) 1999-2018 Free Software Foundation, Inc.
+Copyright (c) 2001 Nathaniel Gray <n8gray@caltech.edu>
+Copyright (c) 2001-2017 David M. Beazley David Beazley
+Copyright (c) 2001-2018 Free Software Foundation, Inc.
+Copyright (c) 2002-2018 Free Software Foundation, Inc.
+Copyright (c) 2003-2018 Free Software Foundation, Inc.
+Copyright (c) 2004-2015 Free Software Foundation, Inc.
+Copyright (c) 2004-2018 Free Software Foundation, Inc.
+Copyright (c) 2006-2018 Free Software Foundation, Inc.
+Copyright (c) 2008-2013 Free Software Foundation, Inc.
+Copyright (c) 2009-2018 Free Software Foundation, Inc.
+Copyright (c) 2010 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2010-2015 Free Software Foundation, Inc.
+Copyright (c) 2010-2015 Jeremy Ashkenas, DocumentCloud
+Copyright (c) 2011-2018 Free Software Foundation, Inc.
+Copyright (c) 2012-2017 Kirollos Risk (http://kiro.me)
+Copyright (c) 2013 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2014-2016 Ian Lee <IanLee1521@gmail.com>
+Copyright Petri Savolainen <firstname.lastname@iki.fi>
+copyright u'2010 (c) Ronny Pfannschmidt, Holger Krekel
+(c) 2006 Entrust, Inc. Label Entrust Root Certification
+(c) uA1/2IAd uaC/eBgp^CI http://px.a8.net/svt/ejp?a8mat
+Copyright (c) 1989, 1991 Free Software Foundation, Inc.
+Copyright (c) 1991, 1999 Free Software Foundation, Inc.
+Copyright (c) 1995-2003 by Internet Software Consortium
+Copyright (c) 2001 Fernando Perez <fperez@colorado.edu>
+Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
+Copyright (c) 2010-2012 Brian Granger, Min Ragan-Kelley
+Copyright (c) 2011 Daniel Richard G. <skunk@iSKUNK.ORG>
+Copyright (c) 2011-2012 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2011-2013 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2011-2014 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2011-2015 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2012-2013 Nathaniel Smith <njs@pobox.com>
+Copyright (c) 2012-2014 Antoine Pitrou and contributors
+Copyright 2009-2011 Mozilla Foundation and contributors
+Copyright 2010 by Armin Ronacher. :license Flask Design
+Copyright 2011 Waylan Limberg (http://achinghead.com/).
+Copyright 2012-2018 Dmitry Shachnev <mitya57@gmail.com>
+Copyright 2013 Alexis Laferriere <alexis.laf@xymus.net>
+Copyright 2013 Matthieu Lucas <lucasmatthieu@gmail.com>
+Copyright 2014 Alexis Laferriere <alexis.laf@xymus.net>
+Portions Copyright (c) 2009 David Jones <drj@pobox.com>
+copyright 2006. (c) Justin Fletcher Copyright 1999-2011
+(c) $?AE http://mimizun.com:81/blog/archives/000314.html
+(c) c http://www.topre.co.jp/products/comp/key_list.html
+(c) deg! i3/4u3/4i?? http://zangsalang.egloos.com/594634
+(c) e http://webryblog.biglobe.ne.jp/2/d/2d5396c6b9.html
+(c) e http://webryblog.biglobe.ne.jp/7/5/75575704c2.html
+Copyright (c) 2005 Fernando Perez. <fperez@colorado.edu>
+Copyright (c) 2009-2012, Brian Granger, Min Ragan-Kelley
+Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
+Copyright (c) 2012 Senko Rasic <senko.rasic@dobarkod.hr>
+Copyright (c) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2014 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright 2011 Brian Neal (https://deathofagremmie.com/)
+Copyright 2013 Donald Stufft and individual contributors
+Copyright 2014 Donald Stufft and individual contributors
+Copyright 2016 Donald Stufft and individual contributors
+Copyright 2017 Donald Stufft and individual contributors
+Copyright 2018 Donald Stufft and individual contributors
+Copyright Tiago Serafim (https://www.tiagoserafim.com/).
+copyright f'2004- date.today().year, NetworkX Developers
+(c) EIC/~UcEC/B http://andore.com/mt/archives/003192.html
+(c) c http://itpro.nikkeibp.co.jp/free/NT/NEWS/20050225/1
+(c) cC$?1/4@ < /> http://www.accesstrade.net/at/c.html?rk
+(c) oSS http://music.peeps.ru/news/s/2003/03/12/1366.html
+Copyright (c) 2008 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2009 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2009-2014 Luke Maurits <luke@maurits.id.au>
+Copyright (c) 2014-2016 - Yaron de Leeuw <me@jarondl.net>
+Copyright 2014, 2015, 2016 Ori Livneh <ori@wikimedia.org>
+copyright 2013, Donald Stufft and Individual Contributors
+copyright 2015, Mark Pilgrim, Dan Blanchard, Ian Cordasco
+Copyright (c) 2009-2014, Luke Maurits <luke@maurits.id.au>
+Copyright (c) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+Copyright (c) 2013 Torsten Landschoff <torsten@debian.org>
+Copyright (c) 2018 - 2020 Isaac Muse <isaacmuse@gmail.com>
+copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+(c) !x!O http://www.aozora.gr.jp/cards/000050/card1174.html
+(c) $?A3/4a$?2$?e http://club.h14m.org/kenji/diary/?200512b
+(c) 2019 Josh Johnson https://github.com/jshjohnson/Choices
+Copyright (c) 2004, 2007 Chad Miller <http://web.chad.org/>
+Copyright (c) 2006-2013 James Graham and other contributors
+Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
+Copyright (c) 2010 Diego Elio Petteno <flameeyes@gmail.com>
+Copyright (c) 2010-2011 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2016 The IPython Team <ipython-dev@scipy.org>
+Copyright 1997 Niels Provos <provos@physnet.uni-hamburg.de>
+Copyright 2007-2008 Waylan Limberg (http://achinghead.com).
+copyright u'2013 Copyright (c) Twisted Matrix Laboratories.
+(c) AEnT~I..... http://andore.com/money/archives/003302.html
+(c) a http://www.amefoot.net/archives/2005/05/13_000876.html
+(c) aae (r)aY aa(r)C/ea http://money.rin.ru/content/news/?id
+(c) ae O!o!SS http://www.greek.ru/ru/news/news_detail.php?ID
+(c) eAEAu http://fudemame-guide.com/fude15/faq/fmF15106.html
+(c) http://www.bphrs.net/mesi/archives/2005/04/post_110.html
+(c) http://www.bphrs.net/mesi/archives/2005/07/post_116.html
+Copyright (c) 2001-2004 Fernando Perez <fperez@colorado.edu>
+Copyright (c) 2001-2005 Fernando Perez <fperez@colorado.edu>
+Copyright (c) 2001-2006 Fernando Perez <fperez@colorado.edu>
+Copyright (c) 2003 John Gruber <https://daringfireball.net/>
+Copyright (c) 2003-2007 John Rochester <john@jrochester.org>
+Copyright (c) 2004, 2011-2015 Free Software Foundation, Inc.
+Copyright (c) 2004-2010 by Internet Systems Consortium, Inc.
+Copyright (c) 2005-2006 Fernando Perez <fperez@colorado.edu>
+Copyright (c) 2012, Regents of the University of California.
+Copyright (c) 2014, Ramalingam Saravanan <sarava@sarava.net>
+Copyright (c) 2019 Edgar Sousa <https://github.com/edgsousa>
+Copyright 2006-2008 Waylan Limberg (http://achinghead.com/).
+Copyright 2007-2008 Waylan Limberg (http://achinghead.com/).
+Copyright 2012-2013 Alexis Laferriere <alexis.laf@xymus.net>
+Copyright 2013 Hardcoded Software (http://www.hardcoded.net)
+copyright Rick Jelliffe and Academia Sinica Computing Center
+(c) N3/4-CAZNV GvdaIuAeAC/e http://ore-1gpy.cocolog-nifty.com
+(c) http://www.pinkupa.com/cgi-bin/weblog/archives/000611.php
+(c) http://www.pinkupa.com/cgi-bin/weblog/archives/000616.php
+Copyright (c) 2001 Python Software Foundation, www.python.org
+Copyright (c) 2001-2007 Fernando Perez. <fperez@colorado.edu>
+Copyright (c) 2002-2006 Fernando Perez. <fperez@colorado.edu>
+Copyright (c) 2005-2006 Fernando Perez. <fperez@colorado.edu>
+Copyright (c) 2009 The R Foundation for Statistical Computing
+Copyright (c) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2013 by Christian Heimes <christian@python.org>
+Copyright (c) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2017-???? Dave Halter <davidhalter88@gmail.com>
+Copyright 1996 Institut National de Recherche en Informatique
+Copyright 2013-2017 Donald Stufft and individual contributors
+Copyright 2013-2018 Donald Stufft and individual contributors
+Copyright 2013-2019 Donald Stufft and individual contributors
+Copyright 2016-2019 Donald Stufft and individual contributors
+(c) +-,AC 3/4o+-1/4AIdeg!? http://zangsalang.egloos.com/592609
+(c) ,(r)1/2oA A-'O http://www.acnnewswire.net/Article.Asp?lang
+(c) 13/4!O http://www.aozora.gr.jp/cards/000275/card45513.html
+(c) 13/4!O http://www.aozora.gr.jp/cards/000275/card45514.html
+(c) 2000-2003 by cYcnus visit www.cYcnus.de licenser@cYcnus.de
+(c) PSC/ a$? http://www.aviaport.ru/news/2006/01/02/99276.html
+(c) cC$?1/4@ < /> http://click.linksynergy.com/fs-bin/click?id
+(c) http://contents-factory.com/blog/archives/200511301334.php
+(c) http://furusatonoeki.cutegirl.jp/main/archives/001172.html
+(c) l+-u'u3o W http://www.ebao.us/portal/showcontent.asp?INDEX
+(c) uAc 05/12/26@ http://blog.inkase.net/2005/12/html_404.html
+Copyright (c) 2003-2006 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2003-2007 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2003-2008 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2003-2009 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2003-2011 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2005 John Arbash-Meinel <john@arbash-meinel.com>
+Copyright (c) 2006 Johann C. Rocholl <johann@browsershots.org>
+Copyright (c) 2006-2007 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2006-2009 Johann C. Rocholl <johann@rocholl.net>
+Copyright (c) 2010-2013 Arthur Clemens, arthur@visiblearea.com
+Copyright (c) 2013-2014 Copyright 2007-2018 by the Sphinx team
+(c) 1OOUWikiuAIoA?PS!xOE http://ccca.nctu.edu.tw/~hlb/tavi/WiKi
+(c) AAw http://affiliate-school.com/products/letter.html target
+(c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+(c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+(c) albgAaeEEA1/2eauAecuC/Bu+-$?IEl3na!RAaiAAenPaEC/I (c) EEEEB
+Copyright (c) 2003-2019 Stuart Bishop <stuart@stuartbishop.net>
+Copyright (c) 2008 The Regents of the University of California.
+Copyright 2014, 2015, 2016, 2017 Ori Livneh <ori@wikimedia.org>
+Punctuation (c) Copyright 2006 by <a href http://mydomain.tld'>
+portions Copyright (c) 2006 Nicko van Someren <nicko@nicko.org>
+(c) !E http://www.pinkupa.com/cgi-bin/weblog/archives/000612.php
+(c) EH http://tamuyou.haun.org/mt/archives/2006/01/post_383.html
+(c) O'1N!3/4N21O I?uiaCAia http://www.opentle.org/modules.php?op
+Copyright (c) 2001, Fernando Perez <fernando.perez@colorado.edu>
+Copyright (c) 2006 Kashia Buch (kashia@vfemail.net), Fabian Buch
+copyright u'2012-2015, James Socol 2015-2017, Mozilla Foundation
+(c) !a http://furusatonoeki.cutegirl.jp/main/archives/001177.html
+(c) IA3!C U!O 31/2i!C http://www.upsaid.com/isis/index.php?action
+(c) Lionhardt Technologies 2003, www.lionhardt.com/bb Wed, 04 Jan
+Copyright (c) 1985-1986, 1992, 1994-1995, 1999-2015 Free Software
+Copyright (c) 1992-1996, 1998-2012 Free Software Foundation, Inc.
+Copyright (c) 1996-2001, 2003-2015 Free Software Foundation, Inc.
+Copyright (c) 2000 Information-technology Promotion Agency, Japan
+Copyright (c) 2000 Network Applied Communication Laboratory, Inc.
+Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
+Copyright (c) 2011 Nokia Corporation and/or its subsidiary(-ies).
+Copyright (c) 2016, Martin Packman <martin.packman@canonical.com>
+(c) 1/4ONuE1/2 http://www.w3cn.org/article/translate/2005/115.html
+(c) Ac?I $?E$?I!C/ http://iriz.hanazono.ac.jp/frame/k_room_f1.html
+(c) Casper da Costa-Luis casperdcl (https://github.com/casperdcl).
+(c) Ivan Sagalaev <Maniac@SoftwareManiacs.Org> Adapted from GitHub
+Copyright (c) 2005 Jorgen Stenarson <jorgen.stenarson@bostream.nu>
+Copyright (c) 2013-2017 by Christian Heimes <christian@python.org>
+Copyright 2009-2013, MetaQuotes Software Corp. http://www.mql4.com
+(c) (c) AA+-C/IAtBGCgxI j AaaAAEIieUu1/2B http://www.1affilaite.com
+(c) 3U!A http://furusatonoeki.cutegirl.jp/main/archives/001182.html
+Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam
+Copyright (c) 1996-2016 by the PostgreSQL Global Development Group.
+Copyright (c) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+Copyright (c) 2009-2014 Florent Xicluna <florent.xicluna@gmail.com>
+(c) IoA3/4!E !C/ http://www.aozora.gr.jp/cards/001154/card44333.html
+(c) M http://www.literature.org/authors/carroll-lewis/ Lewis Carroll
+(c) cEEEEE http://tamuyou.haun.org/mt/archives/2005/12/post_379.html
+(c) uAA!EINuE1/2AD+-i http://www.w3cn.org/article/tips/2005/116.html
+Copyright (c) 1994-5 by the Regents of the University of California.
+Copyright (c) 2008-2011 The Regents of the University of California.
+Copyright (c) 2012-2014 - Tomi Pievilainen <tomi.pievilainen@iki.fi>
+Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+(c) -deg!Ao 1/4on1/2o, AC/COo,'I title http://xenix.egloos.com/189169
+(c) aueEC/a http://tamuyou.haun.org/mt/archives/2005/12/post_377.html
+(c) http://forum.template-toolkit.ru/view_topic/topic_id-115.html?rss
+Copyright (c) 1995-2001 Corporation for National Research Initiatives
+Copyright (c) 2001-2007, Fernando Perez <fernando.perez@colorado.edu>
+Copyright (c) 2005-2006 Fernando Perez. <Fernando.Perez@colorado.edu>
+Copyright 2004, by Alberto Santini http://www.albertosantini.it/chess
+Copyright JS Foundation and other contributors, https://js.foundation
+(c) deg!uE+-i? http://jely.pe.kr/archives/2004/10/20041021_000236.html
+Copyright (c) Jean-Paul Calderone 2008-2015 u'The pyOpenSSL developers
+Copyright jQuery Foundation and other contributors, https://jquery.org
+Copyright (c) 1984, 1985, 1988, 2010 Howard Trickey and Oren Patashnik.
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+(c) 1Uua$?B src http://www.beginnersrack.com/mt/images/20050429_soba.jpg
+(c) C/eC/eEiTha eY1/2C/A aAGGIEI http://nefdesfous.free.fr/sculpture.htm
+(c) cC$?1/4@ < /> http://ck.jp.ap.valuecommerce.com/servlet/referral?sid
+(c) uA1OOUGoogleOA -uADAIC/ http://www.coverer.com/archives/000832.shtml
+Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors
+Copyright 2006-2014, MetaQuotes Software Corp. http://www.metaquotes.net
+Copyright 2011 Diederik van Liere <diederik.vanliere@rotman.utoronto.ca>
+(c) <a href http://downloads.esri.com/ArcGISOnline/docs/tou_summary.pdf'>
+(c) A1/2 http://www.cycle-yoshida.com/trek/nike/shoes/mtb/5kato3_page.htm
+(c) Ca http://blog.bd-lab.com/blog/archives/000130.html Ao3 +-Y?aAI Au3a.
+(c) Ca!ae,N Yxaae!iC, !o! O! eCa!,Oe http://money.rin.ru/content/news/?id
+Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+(c) PS+-PSuoD3/4-1/2/E'$?-$?E$?e http://azoz.org/archives/200511260855.php
+Copyright (c) 2000,2001 Rick Jelliffe and Academia Sinica Computing Center
+Copyright (c) 2000-2008 Rick Jelliffe and Academia Sinica Computing Center
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006 Python Software Foundation
+Copyright (c) 2001, 2006 Rick Jelliffe and Academia Sinica Computing Center
+Copyright (c) 2009 Benjamin Kowarsch. Leaf Corcoran (leafot@gmail.com) 2011
+(c) O$?E2n$?A$?AE$?$?Th$? $?? http://akaname.main.jp/mt/archives/000127.html
+Copyright (c) 2004-2005, 2007-2008, 2011-2015 Free Software Foundation, Inc.
+Copyright (c) 2004-2005, 2007-2009, 2011-2015 Free Software Foundation, Inc.
+Copyright 1999-2004, Slavei Karadjov slaff@linux-bg.org support@linux-bg.org
+copyright 2014-2019 Copyright (c) Donald Stufft and individual contributors.
+(c) Copyright 2006 Salvatore Filippone University of Rome Tor Vergata Comment
+(c) u http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+Copyright (c) 2004-2005, 2007, 2009, 2011-2015 Free Software Foundation, Inc.
+Copyright (c) 2010-2017 Copyright 2008 Waylan Limberg (http://achinghead.com)
+(c) Ae,A !x!C/Y EY $?Y e!O http://www.aozora.gr.jp/cards/000009/card45340.html
+Copyright (c) 2006-2013 James Graham, Geoffrey Sneddon, and other contributors
+Copyright (c) 2018 - 2020 <a href https://github.com/facelessuser'> Isaac Muse
+Copyright 2005, ACN Newswire corp@asiacorpnet.com tim.mckinnon@asiacorpnet.com
+Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+(c) ,oua'O http://archmond.mizc.com/tt target blank http://archmond.mizc.com/tt
+(c) C/3/4aAOoI http://www.y-moto.com/bd-1/archives/2005/12/post_267.html'target
+(c) I'IauAWi http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
+(c) ID1UA1/2 http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
+Copyright (c) 2018 Isaac Muse <isaacmuse@gmail.com> The Python-Markdown Project
+Copyright (c) 2014, 2015, 2016 Philip Withnall <philip.withnall@collabora.co.uk>
+Copyright 1996 Institut National de Recherche en Informatique et Comment Comment
+copyright 2006-2014, MetaQuotes Software Corp. property link http://www.mql4.com
+(c) degi3/4uI PS!u < > NUe$?!PS!P http://www.blogchina.com/new/display/57469.html
+(c) o3C/ OaoY I$?eAO1IY i'PS a http://fudesign.blogspot.com/2005/08/august-8.html
+Copyright (c) 1984, 1985, 1988, 2010 Howard Trickey and Oren Patashnik. Unlimited
+(c) !(r)E3o$?a3/4C1/4u3o3/4E$?a3/4C1/4u!A a http://ilyagram.org/archives/1683.html
+(c) o$?@$?e$?@$?e$?W$?E$?Q(r)EA ae http://www.ebao.us/portal/showcontent.asp?INDEX
+Copyright (c) 1985-1986, 1992, 1994-1995, 1999-2015 Free Software Foundation, Inc.
+(c) 1999 Entrust.net Limited Label Entrust.net Premium 2048 Secure Server CA Serial
+(c) ?IPSoODEIOu1/4UOuIThO-AuAPSE1/2 http://blog.westca.com/blog_a/p_full/44725.html
+(c) o aSS1I http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+(c) oC/wC/w http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+(c) <a href https://foundation.wikimedia.org/wiki/Maps_Terms_of_Use'> Wikimedia Maps
+(c) c@ http://www.teizouteiki.jp/contact.html http://www.teizouteiki.jp/contact.html
+(c) idegPS W3O1/2x3/4 2005-12-30T18:40:48+08:00 domain http://www.technorati.com/tag
+(c) AU+-a ?i?iCss3/4udego..'U1/2A AC o A1/4AIAa.. .... http://oroll.egloos.com/986804
+(c) HTML-$?(r)aa!Y a http://forum.template-toolkit.ru/view_topic/topic_id-88.html?rss
+(c) I1/4OCAAE(r)deg! http://research.microsoft.com/barc/mediapresence/MyLifeBits.aspx
+(c) $?E x$? $?-$?e$?$?!C/1P1/4e$?E$?aC/II$?C$? $??!PS src http://ch.kitaguni.tv/u/8280
+(c) o2O'aoaA Y http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Python Software Foundation
+Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+(c) nPAB 3/4u(11/24)aCxgaAAeIAiC/1/2C/uIC$?1/4BBB http://orf.sfc.keio.ac.jp/index.html...
+Copyright (c) 2006 Kashia Buch (kashia@vfemail.net), Fabian Buch (fabian@fabian-buch.de).
+Copyright 2015 Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
+Copyright content Knut Muller, Alexander Wolf, Uwe Ritzschke, Paul-Robert Achcenich, 2006
+Copyright (c) 2012-2013, Christopher Jeffrey (MIT License) https://github.com/chjj/term.js
+(c) 2010-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Backbone
+Copyright (c) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright (c) 2008 Stefan van der Walt <stefan@mentat.za.net> , Pauli Virtanen <pav@iki.fi>
+(c) iC/C/ISSvAEvAAYAC/1/2n3/4aA http://www.nisshin.com/life/cm/tvcm_mama0915.html u't YIAfeB
+(c) iO http://10e.org/mt/archives/200512/280341.php http://anime.livedoor.com/theater/2.html
+(c) ieE ssStAEC/$?+-AEAAmeC/AEctOStEsA1/2BsA1/2II http://wa2.e-golf.co.jp/gp/nh/cb/cb133.htm
+(c) w+-uoTh1/4OY I!C http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+Copyright (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
+(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
+(c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
+(c) 2uA http://10e.org/mt/archives/200512/280410.php http://10e.org/samcimg3/nekonekoneko.jpg
+(c) OeI'uO o1/2th1yEEIauAPS!Oa2AECIOEuO,IyO,IAuA!PS zh rdf:resource http://b2evolution.net/?v
+Copyright 2006, C IAOOAIDINEEC - D. AEAIAOEAACO OEA A.A. webmaster@naftemporiki.gr Wed, 4 Jan
+(c) IAE~(r)uY ~?aAD1qPx http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID
+Copyright (c) 2011-2018, Christopher Jeffrey. (MIT Licensed) https://github.com/markedjs/marked
+(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
+(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
+(c) $?oE1/21/4'$? $??$?$?3/4i1c$?I http://msdn.microsoft.com/workshop/author/VML/ref/appendix.asp
+(c) cC$?1/4o < http://www.cycle-surf.com/?ref 11'> SRC http://inkase.net/images/traffic/cycle.gif
+Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright Paul Johnston 2000 - 2002. Other contributors Greg Holt, Andrew Kepert, Ydnar, Lostinet
+(c) IAOAiPS!O ODEyAaEu iOU?-uAED1/2o OeuAACAEa!P http://blogbus.com/blogbus/blog/diary.php?diaryid
+(c) c@ http://www.businessnetwork.co.jp/HTM/i-4.html http://www.businessnetwork.co.jp/HTM/i-4.html
+(c) PS CUP3O?'OssuAOOuUO IOUEO+-3/4IiEUE1OAATMIocuAE'Au http://www.acnnewswire.net/Article.Asp?lang
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Python Software Foundation
+(c) cAFeedBurnerdgA1/2RSSzMEI AYUu1/2BSubscribe3eAeuI http://feeds.feedburner.com/BragZakatoHeadline
+(c) ?A$?I1/4Pedegi$?I EAI,oEaY iY $?Y o http://www.aivy.co.jp/BLOG_TEST/kobakoba/archives/003047.html
+(c) uAAa NAEoOuOE1/4th thInAEPS!?EOOE1OAxO1/4oOoAuIaooxo http://www.coverer.com/archives/000835.shtml
+Copyright (c) 1993-2000 by Gerry Murray, Silvano Balemi, Jon Dixon, Peter N'uchter, Juergen von Hagen
+(c) ?IuAAE1/2aPS!Eu3/4I2 auA3oOaNuuA1/2aUAE!PS ?? http://www.blogbus.com/blogbus/blog/index.php?blogid
+Copyright (c) 2006-2009 Hampton Catlin, Natalie Weizenbaum, and Chris Eppstein // http://sass-lang.com
+Copyright (c) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+Copyright 2007-2008 Waylan Limberg (http://achinghead.com/) and Seemant Kulleen (http://www.kulleen.org/)
+copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
+(c) EAE$?a$?AE,'$?1/2P H http://www.coolloud.org.tw/news/database/interface/detailstander.asp?ID 108673 2005
+(c) aB!xIa$??aAAElA1/2C/E YNid eAEC/$?IA$??I1/4eAA1/4eIFlaWUeAEC/$? IXOBsA1/2II http://r.gnavi.co.jp/g002234
+(c) authors@template-toolkit.ru http://forum.template-toolkit.ru/view_topic/topic_id-93.html Template Toolkit
+(c) authors@template-toolkit.ru http://forum.template-toolkit.ru/view_topic/topic_id-99.html Template Toolkit
+(c) OA1au$?yaoSSU u!nEr redete mit dem Vieh, den Vogeln und den Fischen King Solomon's Ring ^AP King Solomon's
+Copyright Angel Marin, Paul Johnston 2000 - 2009. Other contributors Greg Holt, Andrew Kepert, Ydnar, Lostinet
+(c) MSSUao$?ssAEFSSe(r)g!CSanwenji !O'2$?aPdegao'P3q,U /u1/4gak(3o,I!U$?FAn1/2O)!C http://sanwenji.blogspot.com
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Python Software Foundation
+(c) PaOOOON-APSE1/2!PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/304.htm
+(c) !x$?E$?$?$?A$??$?I$? <$?a$? $?i$?E$?$?!PS /> http://www.city.kyoto.jp/somu/rekishi/fm/ishibumi/html/sa043.html
+(c) ,, 1/43/4AI(Berkman Center for Internet & Society)?!1/4 AO+-U title http://cyber.law.harvard.edu/home/home?func
+(c) OAAauAblogPS!u < > ECEuODa-AAOssP1/4P(r)uAE1 http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
+copyright rules http://www.bbc.co.uk/go/wsy/pub/rss/1.0/-/hungarian/learningenglish/witn/2005/05/050527_google.shtml
+(c) Copyright 2006 Salvatore Filippone University of Rome Tor Vergata $ Alfredo Buttari University of Rome Tor Vergata
+Copyright 2012 by Luis Majano and Ortus Solutions, Corp www.gocontentbox.org www.luismajano.com www.ortussolutions.com
+(c) PS!OaeEae th!PSxoIi?aE1/43oAA1/4uAoONPS! 1/2nIiEY +-+-'o!PS http://www.blogcn.com/User3/luciferwang/blog/27037020.html
+(c) PSoOD http://wiki.planetoid.info/index.php/WikiWiki WikiWiki IoA?oI http://wiki.planetoid.info/index.php/WikiWatchList
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Python Software Foundation
+(c) cou1/2t erIYeJnBaeI Y^ae@ThIeOfW^ uAEC/AEC/$?+-AEAEA http://www.amazon.co.jp/exec/obidos/ASIN/B000B4NMUA/tamuyoudiary-22/ref
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015 Python Software Foundation
+Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005 Copyright (c) 2009 The R Foundation for Statistical Computing ISBN
+Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+Copyright (c) 2005 Fernando Perez <fperez@colorado.edu> Brian E Granger <ellisonbg@gmail.com> Benjamin Ragan-Kelley <benjaminrk@gmail.com>
+(c) 1/2cEC/uA http://ann.269ch.jp/archives/2005/12/google_20.html n$?cLAiDuO B http://ken2-jp.cocolog-nifty.com/kenken/2005/12/google_cb13.html
+(c) AE!PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/306.htm 1/2cAae1$?3/4ss /a a http://www.softsea.net/cat/30602.htm
+(c) 1/2oDDOth2OIO br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/305.htm IuI31UAi /a a http://www.softsea.net/cat/30514.htm
+(c) assAAaaE AoI~AEEeUu1/2B http://www.moon-light.ne.jp/weblog/archives/2005/12/post_133.html http://www.moon-light.ne.jp/weblog/archives/2005/12/post_133.html
+(c) c AgI(r) I135.4A242.9Au1/2B http://www.moon-light.ne.jp/weblog/archives/2006/01/2005_2.html http://www.moon-light.ne.jp/weblog/archives/2006/01/2005_2.html
+(c) PS!+-iIO3oE !PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/303.htm IuI3OoC? /a a http://www.softsea.net/cat/30390.htm
+(c) 1n2n?Th1/2n'U$?E$?A$?$?$?AE !C/ http://www.aozora.gr.jp/cards/001166/card43728.html ?Th1/2n'UE!3U2degIA !C/ http://www.aozora.gr.jp/cards/001166/card43729.html
+(c) xi'ouA+-PS $?,uEuEuEuE... br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/303.htm IuI3OoC? /a a http://www.softsea.net/cat/30305.htm
+(c) PaOOxa2EEi1/4thIOOEOOA!PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/309.htm 1/4OIY DYID /a a http://www.softsea.net/cat/30912.htm
+(c) 3PS1ae1/4AEEa u2Ux/xOP- -1/2oDDIaA?uAuA3IDo br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/305.htm IuI31UAi /a a http://www.softsea.net/cat/30506.htm
+(c) AaAaEC/EC/uAPIIAPS!OaAiAaeN A1/4+-ouA!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php Wiki 1/4o1/2e ! ?EOO2I?1/4!PSOU!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php
+<https://web.archive.org/web/20140626004012/http://www.picloud.com/> Nathaniel Gray <n8gray@caltech.edu> Fernando Perez <fperez@colorado.edu> Copyright 2010, Gael Varoquaux 2001-2004, Fernando Perez 2001 Nathaniel Gray
+(c) !C/ http://www.aozora.gr.jp/cards/001166/card43723.html !OE21/2n tha!x$?I1/2D,1/2 !C/ http://www.aozora.gr.jp/cards/001166/card43724.html A,$?Th$?iEN$?A$??AOoaIY uU !C/ http://www.aozora.gr.jp/cards/001166/card43726.html
+(c) Ae,A !x$?I!C/E!oI!uE$?E$?e$?eEYIo$?C$?C/$?e!PSY EY $?Y e!O http://www.aozora.gr.jp/cards/000009/card45340.html degA1aeEnAESS?I$?IAEae !x$?IEYIo1/4O$?I!C/ deg3/4a+-/ANuE!E http://www.aozora.gr.jp/index_pages/person726.html
+(c) 13/4!O http://www.aozora.gr.jp/cards/000275/card4715.html ,D,/Ac+-AE !x!C/IU21/4IYAIo!O http://www.aozora.gr.jp/cards/000120/card4702.html uthoaE1, <I? !x!C/IU21/4Io,1/4!O http://www.aozora.gr.jp/cards/000526/card4702.html'>
+(c) !E$?a$?A$?i$?odegaAA OAE$?ss'1$?'$?aIae$?A$?+-$?E!E $?E$?a!C/$?a$?A$?i$?o CoU$?u$?i$?AE$?$?$?e1/4I??$?IAae$?C$?a2 o1/2$?E'O$?1$?e$?a$?I$?I$?a$?A$?i$?o+-oA/$?C$?I$?E$?$?!PSCdeg$?I$??$?a!PS... http://blog.livedoor.jp/safe_food_of_asia
+(c) 2E$?I OP! !E!C/AIEO21$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000020/card44722.html E1/4 I$?E1/2/IY !E!C/E!AA+-N O$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000057/card43276.html 3/4a$?IE3/4A,3P !E!C/,PI+-'i$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000293/card4680.html
+(c) !C/ http://www.aozora.gr.jp/cards/000160/card3344.html AEEEUAU3/4aI oiAi !C/ http://www.aozora.gr.jp/cards/000160/card3342.html $?I$?i$?I$?iE$?AAE$?IPAdegU !C/ http://www.aozora.gr.jp/cards/000160/card3345.html oPSAI$?D$?E$? Eu1cE1/4AA !C/ http://www.aozora.gr.jp/cards/000160/card3347.html Ai thI11O3o !C/ http://www.aozora.gr.jp/cards/000160/card3346.html
+(c) !x!C/!O http://www.aozora.gr.jp/cards/000160/card3344.html AEEEUAU3/4aI oiAi !x!C/!O http://www.aozora.gr.jp/cards/000160/card3342.html $?I$?i$?I$?iE$?AAE$?IPAdegU !x!C/!O http://www.aozora.gr.jp/cards/000160/card3345.html oPSAI$?D$?E$? Eu1cE1/4AA !x!C/!O http://www.aozora.gr.jp/cards/000160/card3347.html Ai thI11O3o !x!C/!O http://www.aozora.gr.jp/cards/000160/card3346.html
 
 MIT License
 
@@ -4032,7 +4920,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-pathlib2 2.3.5 - MIT
+pathlib2 2.3.6 - MIT
 
 
 Copyright (c) 2014-2017 Matthias C. M. Troffaes
@@ -4261,7 +5149,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-tqdm 4.61.1 - MIT
+tqdm 4.62.0 - MIT
 
 
 Copyright (c) 2013
@@ -4322,7 +5210,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-zipp 3.4.1 - MIT
+zipp 3.5.0 - MIT
 
 
 Copyright Jason R. Coombs
