@@ -13,8 +13,6 @@ import pytest_check as check
 from msticpy.common.timespan import TimeSpan
 from msticpy.nbtools import nbwidgets as nbw
 
-from ..unit_test_lib import TEST_DATA_PATH
-
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, protected-access

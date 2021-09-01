@@ -18,7 +18,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from platform import python_version
 
 import pkg_resources
-from deprecated.sphinx import deprecated
 from IPython import get_ipython
 from IPython.core.display import HTML, display, DisplayHandle
 from tqdm import tqdm, tqdm_notebook
@@ -60,39 +59,6 @@ def is_not_empty(test_object: Any) -> bool:
     return False
 
 
-# Toggle Code Cell Contents
-_TOGGLE_CODE_STR = """
-<form action="javascript:code_toggle()">
-    <input type="submit" id="toggleButton" value="Show/Hide Code">
-</form>
-"""
-
-_TOGGLE_CODE_PREPARE_STR = """
-    <script>
-    function code_toggle() {
-        if ($('div.cell.code_cell.rendered.selected div.input').css('display')!='none'){
-            $('div.cell.code_cell.rendered.selected div.input').hide();
-        } else {
-            $('div.cell.code_cell.rendered.selected div.input').show();
-        }
-    }
-    </script>
-
-"""
-
-
-@export
-def enable_toggle_code():
-    """Load JS Function to enable code toggle button."""
-    display(HTML(_TOGGLE_CODE_PREPARE_STR))
-
-
-@export
-def toggle_code():
-    """Display a toggle button to hide/reveal code cell."""
-    display(HTML(_TOGGLE_CODE_STR))
-
-
 # String escapes
 @export
 def escape_windows_path(str_path: str) -> str:
@@ -108,72 +74,6 @@ def unescape_windows_path(str_path: str) -> str:
     if is_not_empty(str_path):
         return str_path.replace("\\\\", "\\")
     return str_path
-
-
-@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
-@export
-def get_nb_query_param(nb_url_search: str, param: str) -> Optional[str]:
-    """
-    Get a url query parameter from the search string.
-
-    Parameters
-    ----------
-    nb_url_search: str
-        The URL search string
-    param: str
-        The parameter name to search for
-
-    Returns
-    -------
-    Optional[str]
-        value of the query string parameter or None if not found.
-
-    """
-    qs_regex = r"[\\?&]{param}=(?P<val>[^&#]*)".format(param=param)
-    query_string_match = re.search(qs_regex, nb_url_search)
-    if query_string_match:
-        return query_string_match["val"]
-    return None
-
-
-@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
-@export
-def get_nb_query_params(nb_url_search: str) -> dict:
-    """
-    Get the url query parameters from the search string.
-
-    Parameters
-    ----------
-    nb_url_search : str
-        The URL search string
-
-    Returns
-    -------
-    dict
-        dictionary of the query string parameters.
-
-    """
-    nb_params = {}
-    query_string_match = re.search(r"\?(?P<qs>[^#]+)#?", nb_url_search)
-    if query_string_match:
-        for param in query_string_match["qs"].split("&"):
-            if "=" in param:
-                nb_params[param.split("=")[0]] = param.split("=")[1]
-    return nb_params
-
-
-@deprecated(reason="Inline Javascript no longer supported", version="0.3.2")
-@export
-def get_notebook_query_string():
-    """Execute javascript to publish notebook query string as python variable."""
-    HTML(
-        """
-    <script type="text/javascript">
-        IPython.notebook.kernel.execute(
-            "nb_query_string='".concat(window.location.search).concat("'"));
-    </script>
-    """
-    )
 
 
 @export
