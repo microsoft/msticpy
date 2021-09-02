@@ -8,12 +8,11 @@ import warnings
 from pathlib import Path
 
 import nbformat
-import notebook
 import pytest
 import pytest_check as check
 
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-from msticpy.sectools.geoip import GeoLiteLookup, IPStackLookup
+from nbconvert.preprocessors import CellExecutionError
+from msticpy.sectools.geoip import GeoLiteLookup
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "GeoIPLookups.ipynb"
@@ -24,7 +23,6 @@ _NB_NAME = "GeoIPLookups.ipynb"
 )
 def test_geoip_notebook():
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-    abs_path = Path(_NB_FOLDER).absolute()
 
     warnings.warn(
         "Test needs to be renabled after IPStack intermittent problems resolved"

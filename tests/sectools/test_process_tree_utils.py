@@ -4,27 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """process tree utils test class."""
-import ast
 import os
 from pathlib import Path
 
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
-
 from msticpy.sectools import process_tree_utils as ptutil
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from ..unit_test_lib import TEST_DATA_PATH
 
-testdf_win = pd.read_pickle(Path(_TEST_DATA).joinpath("win_proc_test.pkl"))
-testdf_lx = pd.read_pickle(Path(_TEST_DATA).joinpath("linux_proc_test.pkl"))
+testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
+testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
 
 
 def test_build_win_tree():

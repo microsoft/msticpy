@@ -4,35 +4,32 @@
 # license information.
 # --------------------------------------------------------------------------
 """Event cluster test class."""
-import unittest
-import json
 import os
+import unittest
 
 import pandas as pd
-
-from msticpy.analysis.eventcluster import *
 from msticpy.analysis.eventcluster import (
-    token_count_df,
-    delim_count_df,
+    add_process_features,
+    char_ord_score,
     char_ord_score_df,
+    crc32_hash,
     crc32_hash_df,
+    dbcluster_events,
+    delim_count,
+    delim_count_df,
+    delim_hash,
+    token_count,
+    token_count_df,
 )
 
-
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from ..unit_test_lib import TEST_DATA_PATH
 
 
 class TestEventCluster(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
-        input_file = os.path.join(_TEST_DATA, "processes_on_host.csv")
+        input_file = os.path.join(TEST_DATA_PATH, "processes_on_host.csv")
         self.input_df = pd.read_csv(input_file, parse_dates=["TimeGenerated"])
 
     def test_cluster_features(self):
@@ -101,7 +98,7 @@ class TestEventCluster(unittest.TestCase):
             max_cluster_distance=0.0001,
             min_cluster_samples=2,
         )
-        out_df2, dbscan, model = output
+        out_df2, _, _ = output
 
         self.assertIsNotNone(out_df2)
         self.assertEqual(len(out_df2), 62)
@@ -117,7 +114,7 @@ class TestEventCluster(unittest.TestCase):
             max_cluster_distance=0.001,
             min_cluster_samples=2,
         )
-        out_df3, dbscan, model = output
+        out_df3, _, _ = output
 
         self.assertIsNotNone(out_df3)
         self.assertEqual(len(out_df3), 121)

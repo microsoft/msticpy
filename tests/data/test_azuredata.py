@@ -6,14 +6,15 @@
 from collections import namedtuple
 from pathlib import Path
 from unittest.mock import patch
-from collections import namedtuple
 
 import pytest
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.data.azure_data import AzureData
 
-from .unit_test_lib import custom_mp_config, get_test_data_path
+from ..unit_test_lib import custom_mp_config, get_test_data_path
+
+# pylint: disable=protected-access
 
 _TEST_DATA = get_test_data_path()
 
