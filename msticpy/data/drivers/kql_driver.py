@@ -122,6 +122,7 @@ class KqlDriver(DriverBase):
               'env' or 'interactive')
 
         """
+        print("Connecting...", end=" ")
         if isinstance(connection_str, WorkspaceConfig):
             connection_str = connection_str.code_connect_str
         if not connection_str:
@@ -141,6 +142,7 @@ class KqlDriver(DriverBase):
             if self._ip is not None:
                 try:
                     kql_exec(connection_str)
+                    print("connected")
                 except KqlError as ex:
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
@@ -428,6 +430,7 @@ class KqlDriver(DriverBase):
                 'env' or 'interactive')
 
         """
+        print("Authenticating to Azure.")
         # default to default auth methods
         az_config = AzureCloudConfig()
         auth_types = az_config.auth_methods
@@ -438,6 +441,9 @@ class KqlDriver(DriverBase):
             auth_types = mp_az_auth
         # get current credentials
         creds = az_connect(auth_methods=auth_types)
+        if only_interactive_cred(creds.modern):
+            print("Check your default browser for interactive sign-in prompt.")
+
         la_uri = _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]
         la_token_uri = f"{la_uri}.default"
         # obtain token for Log Analytics
@@ -450,5 +456,3 @@ class KqlDriver(DriverBase):
             "resource": la_uri,
         }
         self._set_kql_option("try_token", la_token)
-        if only_interactive_cred(creds.modern):
-            print("Check your default browser for interactive sign-in prompt.")
