@@ -4,18 +4,22 @@
 # license information.
 # --------------------------------------------------------------------------
 import os
-import warnings
 from pathlib import Path
+import socket
 
 import nbformat
 import pytest
 import pytest_check as check
 
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-from msticpy.sectools.geoip import GeoLiteLookup
+
+from msticpy.sectools.geoip import GeoLiteLookup, IPStackLookup
+
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "GeoIPLookups.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 @pytest.mark.skipif(
@@ -32,8 +36,9 @@ def test_geoip_notebook():
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        ep.preprocess(nb, {"metadata": {"path": abs_path}})
-        print("GeoIP NB test skipped")
+        with custom_mp_config(_MP_CONFIG_PATH):
+            ep.preprocess(nb, {"metadata": {"path": abs_path}})
+
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
         msg = f"Error executing the notebook '{nb_path}'.\n"
@@ -54,13 +59,43 @@ def test_geoiplite_download(tmp_path):
     try:
         tgt_folder.mkdir(exist_ok=True)
         with pytest.warns(None) as warning_record:
-            iplocation = GeoLiteLookup(
-                db_folder=str(tgt_folder), force_update=True, debug=True
-            )
-            iplocation.close()
+            with custom_mp_config(_MP_CONFIG_PATH):
+                ip_location = GeoLiteLookup(
+                    db_folder=str(tgt_folder), force_update=True, debug=True
+                )
+                ip_location.close()
         check.equal(len(warning_record), 0)
     finally:
         if tgt_folder.exists():
             for file in tgt_folder.glob("*"):
                 file.unlink()
             tgt_folder.rmdir()
+
+
+def test_geoiplite_lookup():
+    """Test GeoLite lookups."""
+    socket_info = socket.getaddrinfo("pypi.org", 0, 0, 0, 0)
+
+    ips = [res[4][0] for res in socket_info]
+    with custom_mp_config(_MP_CONFIG_PATH):
+        ip_location = GeoLiteLookup()
+
+        loc_result, ip_entities = ip_location.lookup_ip(ip_addr_list=ips)
+        check.equal(len(ip_entities), 4)
+        check.equal(len(loc_result), 4)
+        for ip_entity in ip_entities:
+            check.is_not_none(ip_entity.Location)
+
+
+def test_ipstack_lookup():
+    """Test IPStack lookups."""
+    socket_info = socket.getaddrinfo("pypi.org", 0, 0, 0, 0)
+
+    ips = [res[4][0] for res in socket_info]
+    with custom_mp_config(_MP_CONFIG_PATH):
+        ip_location = IPStackLookup()
+        loc_result, ip_entities = ip_location.lookup_ip(ip_addr_list=ips)
+        check.equal(len(ip_entities), 4)
+        check.equal(len(loc_result), 4)
+        for ip_entity in ip_entities:
+            check.is_not_none(ip_entity.Location)
