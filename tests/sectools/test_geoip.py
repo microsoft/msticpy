@@ -11,7 +11,7 @@ import nbformat
 import pytest
 import pytest_check as check
 
-from nbconvert.preprocessors import CellExecutionError
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 from msticpy.sectools.geoip import GeoLiteLookup
 
 _NB_FOLDER = "docs/notebooks"
@@ -23,7 +23,7 @@ _NB_NAME = "GeoIPLookups.ipynb"
 )
 def test_geoip_notebook():
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-
+    abs_path = Path(_NB_FOLDER).absolute()
     warnings.warn(
         "Test needs to be renabled after IPStack intermittent problems resolved"
     )
@@ -32,10 +32,10 @@ def test_geoip_notebook():
         nb_bytes = f.read()
     nb_text = nb_bytes.decode("utf-8")
     nb = nbformat.reads(nb_text, as_version=4)
-    # ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        # ep.preprocess(nb, {"metadata": {"path": abs_path}})
+        ep.preprocess(nb, {"metadata": {"path": abs_path}})
         print("GeoIP NB test skipped")
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
@@ -50,9 +50,9 @@ def test_geoip_notebook():
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
-def test_geoiplite_download():
+def test_geoiplite_download(tmp_path):
     """Test forced download of GeoIPLite DB."""
-    test_folder = "test_geolite_data"
+    test_folder = tmp_path / "test_geolite_data"
     tgt_folder = Path(test_folder).resolve()
     try:
         tgt_folder.mkdir(exist_ok=True)

@@ -466,7 +466,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 ),
                 (
                     "If you are using a custom DBFolder setting in your config, "
-                    + "check that this is a valid path."
+                    + f"check that this is a valid path: {self._dbfolder}."
                 ),
                 (
                     "If you edit your msticpyconfig to change this setting run the "
