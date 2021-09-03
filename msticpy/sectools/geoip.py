@@ -417,6 +417,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         db_folder: Optional[str] = None,
         force_update: bool = False,
         auto_update: bool = True,
+        debug: bool = False,
     ):
         r"""
         Return new instance of GeoLiteLookup class.
@@ -442,12 +443,22 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         auto_update: bool, optional
             Auto update can be set to true or false. depending on it,
             new download request will be initiated if age criteria is matched.
+        debug : bool, optional
+            Print additional debugging information, default is False.
 
         """
         super().__init__()
 
+        self._debug = debug
+        if self._debug:
+            dbg_api_key = "None" if api_key is None else "*" * len(api_key)
+            self._pr_debug(f"__init__ params: api_key={dbg_api_key}")
+            self._pr_debug(f"    db_folder={db_folder}")
+            self._pr_debug(f"    force_update={force_update}")
+            self._pr_debug(f"    auto_update={auto_update}")
         self.settings = _get_geoip_provider_settings("GeoIPLite")
         self._api_key = api_key or self.settings.args.get("AuthKey")
+
         self._dbfolder = db_folder
         if self._dbfolder is None:
             self._dbfolder = self.settings.args.get("DBFolder", self._DB_HOME)
@@ -457,6 +468,14 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._auto_update = auto_update
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(self._dbfolder)
+        if self._debug:
+            dbg_api_key = "None" if self._api_key is None else "*" * len(self._api_key)
+            self._pr_debug(f"__init__ values (inc settings): api_key={dbg_api_key}")
+            self._pr_debug(f"    db_folder={self._dbfolder}")
+            self._pr_debug(f"    force_update={self._force_update}")
+            self._pr_debug(f"    auto_update={self._auto_update}")
+            self._pr_debug(f"    dbpath={self._dbpath}")
+
         if not self._dbpath:
             raise MsticpyUserConfigError(
                 "No usable GeoIP Database could be found.",
@@ -520,7 +539,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         """
         geoip_db_path = self._get_geoip_dbpath(db_folder)
         url = self._MAXMIND_DOWNLOAD.format(license_key=self._api_key)
-
+        self._pr_debug(f"Checking geoip DB {geoip_db_path}")
+        self._pr_debug(f"Download URL is {self._MAXMIND_DOWNLOAD}")
         if geoip_db_path is None:
             print(
                 "No local Maxmind City Database found. ",
@@ -542,6 +562,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     f"Attempting to download new database to {db_folder}",
                 )
                 if not self._download_and_extract_archive(url, db_folder):
+                    self._pr_debug("DB download failed")
                     warnings.warn("DB download failed")
                     db_updated = False
             elif force_update:
@@ -550,9 +571,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     f"Attempting to download new database to {db_folder}",
                 )
                 if not self._download_and_extract_archive(url, db_folder):
+                    self._pr_debug("DB download failed")
                     warnings.warn("DB download failed")
                     db_updated = False
             if not db_updated:
+                self._pr_debug("Continuing with cached database.")
                 warnings.warn(
                     "Continuing with cached database. Results may inaccurate."
                 )
@@ -595,8 +618,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         db_archive_path = Path(db_folder).joinpath(
             self._DB_ARCHIVE.format(rand=rand_int)
         )
-        db_file_path = Path(db_folder).joinpath(self._DB_FILE)
-
+        self._pr_debug(f"Downloading GeoLite DB: {db_archive_path}")
         try:
             # wait a small rand amount of time in case multiple procs try
             # to download simultaneously
@@ -612,44 +634,58 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     for chunk in response.iter_content(chunk_size=10000):
                         file_hdl.write(chunk)
                         file_hdl.flush()
+            self._pr_debug(f"Downloaded GeoLite DB: {db_archive_path}")
         except HTTPError as http_err:
+            self._pr_debug(
+                f"HTTP error occurred trying to download GeoLite DB: {http_err}"
+            )
             warnings.warn(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
         # pylint: disable=broad-except
         except Exception as err:
+            self._pr_debug(f"Other error occurred trying to download GeoLite DB: {err}")
             warnings.warn(f"Other error occurred trying to download GeoLite DB: {err}")
         # pylint: enable=broad-except
         else:
             try:
                 self._extract_to_folder(db_archive_path, db_folder)
-                print("Extraction complete. Local Maxmind city DB:", f"{db_file_path}")
+                print(
+                    "Extraction complete. Local Maxmind city DB:", f"{db_archive_path}"
+                )
                 return True
             except PermissionError as err:
+                self._pr_debug(
+                    f"Error writing GeoIP DB file: {db_archive_path} - {err}"
+                )
                 warnings.warn(
-                    f"Cannot overwrite GeoIP DB file: {db_file_path}."
+                    f"Cannot overwrite GeoIP DB file: {db_archive_path}."
                     + " The file may be in use or you do not have"
                     + f" permission to overwrite.\n - {err}"
                 )
             except Exception as err:  # pylint: disable=broad-except
                 # There are several exception types that might come from
                 # unpacking a tar.gz
-                warnings.warn(f"Error writing GeoIP DB file: {db_file_path} - {err}")
+                self._pr_debug(
+                    f"Error writing GeoIP DB file: {db_archive_path} - {err}"
+                )
+                warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
         finally:
             if db_archive_path.is_file():
+                self._pr_debug(f"Removing temp file {db_archive_path}")
                 db_archive_path.unlink()
         return False
 
     # pylint: enable=too-many-branches
 
-    @staticmethod
-    def _extract_to_folder(db_archive_path, db_folder):
+    def _extract_to_folder(self, db_archive_path, db_folder):
+        self._pr_debug(f"Extracting tarfile {db_archive_path}")
         with tarfile.open(db_archive_path) as tar_archive:
             for member in tar_archive.getmembers():
                 if not member.isreg():
                     continue
                 # Will skip the dirs to extract only file objects
-
+                self._pr_debug(f"extracting {member} to {db_folder}")
                 tar_archive.extract(member, db_folder)
                 # The files are extract to a subfolder (with a date in the name)
                 # We want to move these into the main folder above this.
@@ -658,6 +694,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                     curr_file = Path(db_folder).joinpath(member.name)
                     extr_folder = Path(db_folder).joinpath(member.name).parent
                     curr_file.replace(Path(db_folder).joinpath(targetname))
+                    self._pr_debug(f"Moving to {Path(db_folder).joinpath(targetname)}")
                     # if the folder is empty, remove it
                     if not list(extr_folder.glob("*")):
                         extr_folder.rmdir()
@@ -767,6 +804,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
         ip_entity.Location = geo_entity
         return ip_entity
+
+    def _pr_debug(self, *args):
+        """Print out debug info."""
+        if self._debug:
+            print(*args)
 
 
 def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:

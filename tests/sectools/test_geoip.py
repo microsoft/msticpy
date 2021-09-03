@@ -24,9 +24,6 @@ _NB_NAME = "GeoIPLookups.ipynb"
 def test_geoip_notebook():
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
-    warnings.warn(
-        "Test needs to be renabled after IPStack intermittent problems resolved"
-    )
 
     with open(nb_path, "rb") as f:
         nb_bytes = f.read()
@@ -57,7 +54,9 @@ def test_geoiplite_download(tmp_path):
     try:
         tgt_folder.mkdir(exist_ok=True)
         with pytest.warns(None) as warning_record:
-            iplocation = GeoLiteLookup(db_folder=str(tgt_folder), force_update=True)
+            iplocation = GeoLiteLookup(
+                db_folder=str(tgt_folder), force_update=True, debug=True
+            )
             iplocation.close()
         check.equal(len(warning_record), 0)
     finally:
