@@ -117,6 +117,12 @@ class TestPkgConfig(unittest.TestCase):
         with custom_mp_config(test_config1):
             results = pkg_config.validate_config()
             self.assertGreater(len(results[0]), 1)
+            # save env vars
+            vt_auth_save = os.environ.get("VTAUTHKEY", "")
+            xf_id__save = os.environ.get("XFORCE_ID", "")
+            xf_auth_save = os.environ.get("XFORCE_KEY", "")
+            xf_auth_save = os.environ.get("MAXMIND_AUTH", "")
+            # set to some value
             os.environ["VTAUTHKEY"] = "myXfId"
             os.environ["XFORCE_ID"] = "myXfId"
             os.environ["XFORCE_KEY"] = "myXfId"
@@ -124,3 +130,9 @@ class TestPkgConfig(unittest.TestCase):
             pkg_config.refresh_config()
             results = pkg_config.validate_config()
             self.assertEqual(results, ([], []))
+
+            # restore env vars to original
+            os.environ["VTAUTHKEY"] = vt_auth_save
+            os.environ["XFORCE_ID"] = xf_id__save
+            os.environ["XFORCE_KEY"] = xf_auth_save
+            os.environ["MAXMIND_AUTH"] = xf_auth_save
