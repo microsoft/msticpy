@@ -43,6 +43,7 @@ from requests.exceptions import HTTPError
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.provider_settings import ProviderSettings, get_provider_settings
+from ..common.pkg_config import current_config_path
 from ..common.utility import export
 from ..datamodel.entities import GeoLocation, IpAddress
 
@@ -451,7 +452,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         self._debug = debug
         if self._debug:
-            dbg_api_key = "None" if api_key is None else "*" * len(api_key)
+            dbg_api_key = (
+                "None" if api_key is None else api_key[:4] + "*" * len(api_key) - 4
+            )
             self._pr_debug(f"__init__ params: api_key={dbg_api_key}")
             self._pr_debug(f"    db_folder={db_folder}")
             self._pr_debug(f"    force_update={force_update}")
@@ -469,12 +472,17 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(self._dbfolder)
         if self._debug:
-            dbg_api_key = "None" if self._api_key is None else "*" * len(self._api_key)
+            dbg_api_key = (
+                "None"
+                if self._api_key is None
+                else api_key[:4] + "*" * len(api_key) - 4
+            )
             self._pr_debug(f"__init__ values (inc settings): api_key={dbg_api_key}")
             self._pr_debug(f"    db_folder={self._dbfolder}")
             self._pr_debug(f"    force_update={self._force_update}")
             self._pr_debug(f"    auto_update={self._auto_update}")
             self._pr_debug(f"    dbpath={self._dbpath}")
+            self._pr_debug(f"Using config file: {current_config_path()}")
 
         if not self._dbpath:
             raise MsticpyUserConfigError(
