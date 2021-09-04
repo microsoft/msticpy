@@ -453,7 +453,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._debug = debug
         if self._debug:
             dbg_api_key = (
-                "None" if api_key is None else api_key[:4] + "*" * len(api_key) - 4
+                "None" if api_key is None else api_key[:4] + "*" * (len(api_key) - 4)
             )
             self._pr_debug(f"__init__ params: api_key={dbg_api_key}")
             self._pr_debug(f"    db_folder={db_folder}")
@@ -475,7 +475,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             dbg_api_key = (
                 "None"
                 if self._api_key is None
-                else self._api_key[:4] + "*" * len(self._api_key) - 4
+                else self._api_key[:4] + "*" * (len(self._api_key) - 4)
             )
             self._pr_debug(f"__init__ values (inc settings): api_key={dbg_api_key}")
             self._pr_debug(f"    db_folder={self._dbfolder}")
