@@ -61,6 +61,11 @@ class RegistryKey(Entity):
         """Return Entity Description."""
         return f"{self.Hive}\\{self.Key}"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
+
     _entity_schema = {
         # Hive (type System.Nullable`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.RegistryHive])

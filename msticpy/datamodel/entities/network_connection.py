@@ -82,6 +82,11 @@ class NetworkConnection(Entity):
             self.DestinationPort,
         )
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
+
     _entity_schema = {
         # SourceAddress (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)

@@ -37,4 +37,9 @@ class UnknownEntity(Entity):
         """Return Entity Description."""
         return "OtherEntity"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
+
     _entity_schema: Dict[str, Any] = {}

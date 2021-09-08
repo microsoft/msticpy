@@ -68,6 +68,11 @@ class RegistryValue(Entity):
         """Return Entity Description."""
         return f"{self.Name}[{self.ValueType}]:{repr(self.Value)}"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Name or self.__class__.__name__
+
     _entity_schema = {
         # Key (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.RegistryKey)

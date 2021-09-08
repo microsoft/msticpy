@@ -38,6 +38,7 @@ from .submission_mail import SubmissionMail
 from .threat_intelligence import Threatintelligence
 from .unknown_entity import UnknownEntity
 from .url import Url
+from ..soc.incident import Incident
 
 # Dictionary to map text names of types to the class.
 Entity.ENTITY_NAME_MAP.update(
@@ -55,7 +56,9 @@ Entity.ENTITY_NAME_MAP.update(
         "networkconnection": NetworkConnection,
         "mailbox": Mailbox,
         "mail-message": MailMessage,
+        "mailmessage": MailMessage,
         "mail-cluster": MailCluster,
+        "mailcluster": MailCluster,
         "malware": Malware,
         "registry-key": RegistryKey,
         "registrykey": RegistryKey,
@@ -73,6 +76,7 @@ Entity.ENTITY_NAME_MAP.update(
         "url": Url,
         "unknown": UnknownEntity,
         "geolocation": GeoLocation,
+        "incident": Incident,
     }
 )
 

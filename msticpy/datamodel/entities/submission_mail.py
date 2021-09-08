@@ -85,6 +85,11 @@ class SubmissionMail(Entity):
         """Return Entity Description."""
         return self.SubmissionId or self.__class__.__name__
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
+
     _entity_schema = {
         "SubmissionId": None,
         "SubmissionDate": None,

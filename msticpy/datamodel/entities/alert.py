@@ -91,6 +91,11 @@ class Alert(Entity):
         """Return Entity Description."""
         return f"{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.DisplayName or self.__class__.__name__
+
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""
         entity_props = set(self.__dict__.keys()) | {"AlertDisplayName", "SystemAlertId"}

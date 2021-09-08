@@ -70,6 +70,11 @@ class Mailbox(Entity):
         """Return Entity Description."""
         return self.MailboxPrimaryAddress or self.__class__.__name__
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.DisplayName or self.__class__.__name__
+
     _entity_schema = {
         "MailboxPrimaryAddress": None,
         "DisplayName": None,

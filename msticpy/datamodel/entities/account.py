@@ -111,6 +111,11 @@ class Account(Entity):
         return self.qualified_name
 
     @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Name or self.__class__.__name__
+
+    @property
     def qualified_name(self) -> str:
         """Windows qualified account name."""
         if "Name" not in self:
@@ -155,12 +160,24 @@ class Account(Entity):
         self.AadTenantId = (
             src_event["AadTenantId"] if "AadTenantId" in src_event else None
         )
+        self.Sid = src_event["Sid"] if "Sid" in src_event else None
+        self.NTDomain = src_event["NtDomain"] if "NtDomain" in src_event else None
         self.AadUserId = src_event["AadUserId"] if "AadUserId" in src_event else None
         self.PUID = src_event["PUID"] if "PUID" in src_event else None
-        self.DisplayName = (
-            src_event["DisplayName"] if "DisplayName" in src_event else None
-        )
-        self.UPNSuffix = src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
+        if "DisplayName" in src_event:
+            self.DisplayName = src_event["DisplayName"]
+        elif "AccountName" in src_event:
+            self.DisplayName = src_event["AccountName"]
+        else:
+            self.DisplayName = None
+
+        if "UPNSuffix" in src_event:
+            self.UPNSuffix = src_event["UPNSuffix"]
+        elif "UpnSuffix" in src_event:
+            self.UPNSuffix = src_event["UpnSuffix"]
+        else:
+            self.UPNSuffix = None
+
 
     _entity_schema = {
         # Name (type System.String)

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailMessage Entity class."""
+from re import S
 from typing import Any, List, Mapping, Optional
 
 from ..._version import VERSION
@@ -81,7 +82,7 @@ class MailMessage(Entity):
 
     ID_PROPERTIES = ["NetworkMessageId", "Recipient"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
@@ -90,6 +91,9 @@ class MailMessage(Entity):
         src_entity : Mapping[str, Any], optional
             Create entity from existing entity or
             other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
             (the default is None)
 
         Other Parameters
@@ -127,11 +131,39 @@ class MailMessage(Entity):
         self.ThreatDetectionMethods: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.Recipient = src_event["Recipient"] if "Recipient" in src_event else None
+        self.Files = src_event["FileEntityIds"] if "FileEntityIds" in src_event else None
+        self.Urls = src_event["Urls"] if "Urls" in src_event else None
+        self.Threats = src_event["Threats"] if "Threats" in src_event else None
+        self.SenderIP = src_event["SenderIP"] if "SenderIP" in src_event else None
+        self.P1Sender = src_event["P1Sender"] if "P1Sender" in src_event else None
+        self.P1SenderDisplayName = src_event["P1SenderDisplayName"] if "P1SenderDisplayName" in src_event else None
+        self.P1SenderDomain = src_event["P1SenderDomain"] if "P1SenderDomain" in src_event else None
+        self.P2Sender = src_event["P2Sender"] if "P2Sender" in src_event else None
+        self.P2SenderDisplayName = src_event["P2SenderDisplayName"] if "P2SenderDisplayName" in src_event else None
+        self.P2SenderDomain = src_event["P2SenderDomain"] if "P2SenderDomain" in src_event else None
+        self.ReceivedDate = src_event["ReceiveDate"] if "ReceiveDate" in src_event else None
+        self.NetworkMessageId = src_event["NetworkMessageId"] if "NetworkMessageId" in src_event else None
+        self.InternetMessageId = src_event["InternetMessageId"] if "InternetMessageId" in src_event else None
+        self.Subject = src_event["Subject"] if "Subject" in src_event else None
+        self.AntispamDirection = src_event["AntispamDirection"] if "AntispamDirection" in src_event else None
+        self.DeliveryAction = src_event["DeliveryAction"] if "DeliveryAction" in src_event else None
+        self.Language = src_event["Language"] if "Language" in src_event else None
+
 
     @property
     def description_str(self):
         """Return Entity Description."""
         return self.NetworkMessageId or self.__class__.__name__
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Subject or self.__class__.__name__
 
     _entity_schema = {
         "Recipient": None,
