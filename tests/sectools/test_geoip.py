@@ -64,6 +64,10 @@ def test_geoiplite_download(tmp_path):
                     db_folder=str(tgt_folder), force_update=True, debug=True
                 )
                 ip_location.close()
+        if warning_record:
+            print(f"{len(warning_record)} warnings recorded")
+        for warning_item in warning_record:
+            print(vars(warning_item))
         check.equal(len(warning_record), 0)
     finally:
         if tgt_folder.exists():

@@ -93,5 +93,6 @@ sources:
       resource_id:
         description: OfficeObjectId or substring
         type: str
-        aliases: resource
+        aliases:
+          - resource
 
