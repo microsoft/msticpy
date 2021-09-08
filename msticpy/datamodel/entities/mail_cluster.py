@@ -100,6 +100,12 @@ class MailCluster(Entity):
         """Return Entity Description."""
         return self.Query or self.__class__.__name__
 
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
+
     _entity_schema = {
         "NetworkMessageIds": None,
         "CountByDeliveryStatus": None,

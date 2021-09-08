@@ -23,72 +23,88 @@ def create_incident_graph(incident: pd.Series):
     """Create a networkx graph from the alert and contained entities."""
     alertentity_graph = nx.Graph(id="IncidentGraph")
 
+    incident_name = "Incident: " + incident.DisplayName
     alertentity_graph.add_node(
-        incident["properties.title"],
-        name=incident["properties.title"],
-        time=str(incident["properties.createdTimeUtc"]),
-        description="Incident: " + incident["properties.title"],
+        incident_name,
+        name=incident.DisplayName,
+        time=str(incident.TimeGenerated),
+        description=incident_name,
         color="red",
         node_type="incident",
     )
 
-    # Cycle through entities
-    for entity in incident["Entities"]:
-        (e_name, e_desc) = _get_name_and_description(entity)
+    # Cyle through alerts
+    if incident.Alerts:
+        for alert in incident.Alerts:
+            alert_name = "Alert: " + alert[1]
+            alertentity_graph.add_node(
+                alert_name,
+                name=alert[1],
+                description=alert[0],
+                color="orange",
+                node_type="alert",
+                source=str(alert),
+            )
 
-        alertentity_graph.add_node(
-            e_name,
-            entitytype=entity[0],
-            name=e_name,
-            description=e_desc,
-            color="green",
-            node_type="entity",
-            source=str(entity),
-        )
+            alertentity_graph.add_edge(incident_name, alert_name)
 
-        # add an edge by default to the alert
-        alertentity_graph.add_edge(incident["properties.title"], e_name)
+            if incident.Entities:
+                for entity in incident.Entities:
+                    e_name = entity.name_str
+                    e_desc = entity.description_str
+                    #(e_name, e_desc) = _get_name_and_description(entity)
 
-        # Rather than just add edges to the alert, we want to follow the 'natural'
-        # relationships between entities and child entities
-        # So if this entity has a property that is an entity, we add an edge to it
-        # and prune any edge that it might have to the alert
-        if isinstance(entity, Entity):
-            ent_props = entity.properties
-        elif isinstance(entity, dict):
-            ent_props = entity
-        else:
-            continue
-        for prop, rel_entity in [
-            (p, v) for (p, v) in ent_props.items() if isinstance(v, Entity)
-        ]:
-            if rel_entity["Type"] == "host":
-                # don't add a new edge to the host
-                continue
+                    alertentity_graph.add_node(
+                        e_name,
+                        entitytype=entity.Type,
+                        name=e_name,
+                        description=e_desc,
+                        color="green",
+                        node_type="entity",
+                        source=str(entity),
+                    )
 
-            # get the node id of the related entity and add an edge if it
-            # doesn't already exist
-            (related_entity, _) = _get_name_and_description(rel_entity)
-            if not alertentity_graph.has_edge(related_entity, e_name):
-                alertentity_graph.add_edge(
-                    e_name,
-                    related_entity,
-                    description=prop,
-                    color="green",
-                    weight=1,
-                    line_type="SHORT_DASH",
-                )
+                    # add an edge by default to the alert
+                    alertentity_graph.add_edge(alert_name, e_name)
 
-            # if we have a previously created an edge to the alert, remove it
-            if alertentity_graph.has_edge(incident["properties.title"], related_entity):
-                alertentity_graph.remove_edge(
-                    incident["properties.title"], related_entity
-                )
+                    # Rather than just add edges to the alert, we want to follow the 'natural'
+                    # relationships between entities and child entities
+                    # So if this entity has a property that is an entity, we add an edge to it
+                    # and prune any edge that it might have to the alert
+                    if isinstance(entity, Entity):
+                        ent_props = entity.properties
+                    elif isinstance(entity, dict):
+                        ent_props = entity
+                    else:
+                        continue
+                    for prop, rel_entity in [
+                        (p, v) for (p, v) in ent_props.items() if isinstance(v, Entity)
+                    ]:
+                        if rel_entity["Type"] == "host":
+                            # don't add a new edge to the host
+                            continue
 
-        # if we haven't added an edge to this entity from anything else,
-        # add one to the alert
-        if not alertentity_graph.neighbors(e_name):
-            alertentity_graph.add_edge(incident["properties.title"], e_name)
+                        # get the node id of the related entity and add an edge if it
+                        # doesn't already exist
+                        (related_entity, _) = _get_name_and_description(rel_entity)
+                        if not alertentity_graph.has_edge(related_entity, e_name):
+                            alertentity_graph.add_edge(
+                                e_name,
+                                related_entity,
+                                description=prop,
+                                color="green",
+                                weight=1,
+                                line_type="SHORT_DASH",
+                            )
+
+                        # if we have a previously created an edge to the alert, remove it
+                        if alertentity_graph.has_edge(alert_name, related_entity):
+                            alertentity_graph.remove_edge(alert_name, related_entity)
+
+                    # if w`e haven't added an edge to this entity from anything else,
+                    # add one to the alert
+                    if not alertentity_graph.neighbors(e_name):
+                        alertentity_graph.add_edge(alert_name, e_name)
 
     return alertentity_graph
 
@@ -194,30 +210,31 @@ def _get_name_and_description(entity):
     e_name = None
     e_description = None
 
-    if entity[0] == "Host":
-        e_name, e_description = _get_host_name_desc(entity[1])
-    elif entity[0] == "Account":
-        e_name, e_description = _get_account_name_desc(entity[1])
-    elif entity[0] == "Process":
-        e_name, e_description = _get_process_name_desc(entity[1])
-    elif entity[0] == "File":
-        e_name, e_description = _get_file_name_desc(entity[1])
-    elif entity[0] == "FileHash":
+    if entity["Type"] == "host":
+        e_name, e_description = _get_host_name_desc(entity)
+    elif entity["Type"] == "account":
+        e_name, e_description = _get_account_name_desc(entity)
+    elif entity["Type"] == "process":
+        e_name, e_description = _get_process_name_desc(entity)
+    elif entity["Type"] == "file":
+        e_name, e_description = _get_file_name_desc(entity)
+    elif entity["Type"] == "fileHash":
         e_name = entity[1]["hashValue"]
-        e_description = f"{e_name}\n(algorithm: {entity[1]['algorithm']})"
-    elif entity[0] == "Ip":
-        e_name = entity[1]["address"]
+        e_description = f"{e_name}\n(algorithm: {entity['algorithm']})"
+    elif entity["Type"] == "ip":
+        e_name = entity["address"]
         e_description = e_name
-    elif entity[0] == "Url":
-        e_name, e_description = _get_url_name_desc(entity[1])
+    elif entity["Type"] == "url":
+        e_name, e_description = _get_url_name_desc(entity)
     else:
         # Any other type of entity
-        e_name, e_description = _get_other_name_desc(entity[1])
-    e_name = f"{entity[0]}: {e_name}"
+        e_name, e_description = _get_other_name_desc(entity)
+    e_name = f"{entity}: {e_name}"
 
     return e_name, e_description
 
 
+"""
 # Methods to construct name and description
 def _get_other_name_desc(entity):
     e_name = entity["name"] if "name" in entity.keys() else ""
@@ -258,7 +275,7 @@ def _get_process_name_desc(entity):
 
 
 def _get_account_name_desc(entity):
-    e_dom = entity["ntDomain"] if "ntDomain" in entity.keys() else None
+    e_dom = entity["MDomain"] if "ntDomain" in entity.keys() else None
     e_dom = e_dom + "\\" if e_dom else ""
     if "accountName" in entity.keys():
         e_name = e_dom + (entity["accountName"])
@@ -306,5 +323,112 @@ def _get_url_name_desc(entity):
         )
     else:
         e_description = e_name
+
+    return e_name, e_description
+    """
+# Methods to construct name and description
+def _get_other_name_desc(entity):
+    if "Name" in entity:
+        e_name = entity["Name"]
+        e_name = "{}: {}".format(entity["Type"], e_name)
+    else:
+        e_name = entity["Type"]
+
+    if isinstance(entity, Entity):
+        ent_props = entity["properties"]
+    elif isinstance(entity, dict):
+        ent_props = entity
+    else:
+        ent_props = {"unknown": None}
+
+    # Nasty dict comprehension to join all other items in the
+    # dictionary into a string
+    e_properties = "\n".join(
+        {
+            "{}:{}".format(k, v)
+            for (k, v) in ent_props.items()
+            if (k not in ("Type", "Name") and isinstance(v, str))
+        }
+    )
+    e_description = "{}\n{})".format(e_name, e_properties)
+    return e_name, e_description
+
+
+def _get_ip_name_desc(entity):
+    e_name = entity["Address"]
+    e_name = "{}: {}".format(entity["Type"], e_name)
+    if "Location" in entity and entity["Location"]:
+        e_description = "{}\nc={}, st={}, city={}".format(
+            e_name,
+            entity["Location"]["CountryCode"],
+            entity["Location"]["State"],
+            entity["Location"]["City"],
+        )
+    else:
+        e_description = e_name
+    return e_name, e_description
+
+
+def _get_file_name_desc(entity):
+    e_name = entity["FullPath"]
+    e_name = "{}: {}".format(entity["Type"], e_name)
+    return e_name, e_name
+
+
+def _get_process_name_desc(entity):
+    if "ProcessFilePath" in entity:
+        path = entity["ProcessFilePath"]
+    elif (
+        "ImageFile" in entity
+        and entity["ImageFile"]
+        and "FullPath" in entity["ImageFile"]
+    ):
+        path = entity["ImageFile"]["FullPath"]
+    else:
+        path = "unknown"
+    pid = entity["ProcessId"] or "PID unknown"
+    e_name = path + " [" + pid + "]"
+    e_name = "{}: {}".format(entity["Type"], e_name)
+    e_description = "{}\n(cmdline: '{}')".format(e_name, entity["CommandLine"])
+    return e_name, e_description
+
+
+def _get_account_name_desc(entity):
+    e_dom = entity["NTDomain"]
+    e_dom = e_dom + "\\" if e_dom else ""
+    e_name = e_dom + (
+        entity["Name"] or entity["AadUserId"] or entity["DisplayName"] or "unknown"
+    )
+    e_name = "{}: {}".format(entity["Type"], e_name)
+    if "IsDomainJoined" in entity:
+        domain_joined = entity["IsDomainJoined"]
+    else:
+        domain_joined = "false"
+    if "LogonId" in entity:
+        e_description = f"{e_name}\n(LogonId: {entity['LogonId']},"
+        e_description = e_description + f" Domain-joined: {domain_joined})"
+    else:
+        e_description = "{}\n(Domain-joined: {})".format(e_name, domain_joined)
+    return e_name, e_description
+
+
+def _get_host_name_desc(entity, os_family="Windows"):
+    if "DnsDomain" in entity and is_not_empty(entity["DnsDomain"]):
+        e_name = "{}.{}".format(entity["HostName"], entity["DnsDomain"])
+    elif "NTDomain" in entity and is_not_empty(entity["NTDomain"]):
+        e_name = "{}/{}".format(entity["NTDomain"], entity["HostName"])
+    else:
+        e_name = entity["HostName"]
+    e_name = "{}: {}".format(entity["Type"], e_name)
+
+    if "IsDomainJoined" in entity:
+        domain_joined = entity["IsDomainJoined"]
+    else:
+        domain_joined = "false"
+    if "OSFamily" in entity:
+        os_family = entity["OSFamily"]
+    e_description = "{}\n({}, Domain-joined: {})".format(
+        e_name, os_family, domain_joined
+    )
 
     return e_name, e_description
