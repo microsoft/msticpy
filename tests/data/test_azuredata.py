@@ -7,12 +7,20 @@ from collections import namedtuple
 from pathlib import Path
 from unittest.mock import patch
 
+from azure.identity import InteractiveBrowserCredential
 import pytest
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.data.azure_data import AzureData
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path
+from msticpy.common.azure_auth_core import (
+    ChainedTokenCredential,
+    CredentialWrapper,
+    AzCredentials,
+)
+
+from .unit_test_lib import custom_mp_config, get_test_data_path
+
 
 # pylint: disable=protected-access
 
@@ -31,12 +39,17 @@ def test_azure_connect_exp():
         az.connect()
 
 
+_AZ_CREDENTIALS = AzCredentials(
+    legacy=CredentialWrapper("credential"),
+    modern=ChainedTokenCredential(InteractiveBrowserCredential()),
+)
+
+
 @patch(AzureData.__module__ + ".SubscriptionClient")
 @patch(AzureData.__module__ + ".az_connect")
 def test_azure_connect(mock_creds, mock_sub_client):
-    AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
     mock_sub_client.return_value = "Client"
-    mock_creds.return_value = AzCredentials("cred", "cred")
+    mock_creds.return_value = _AZ_CREDENTIALS
     az = AzureData()
     az.connect()
     assert az.connected is True

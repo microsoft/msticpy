@@ -262,34 +262,6 @@ class CEItemsBase(CompEditItems, ABC):
         self.controls = {}
 
 
-class CESimpleBase(CompEditSimple):
-    """Base class for components containing no item list."""
-
-    _DESCRIPTION = "No description"
-    _COMP_PATH = ""
-    _HELP_TEXT = """"""
-    _HELP_URI = {
-        "MSTICPy Configuration": (
-            "https://msticpy.readthedocs.io/en/latest/"
-            + "getting_started/msticpyconfig.html"
-        )
-    }
-
-    def __init__(self, mp_controls):
-        """Initialize the class. Set the controls and retrieve settings."""
-        super().__init__(description=self._DESCRIPTION)
-
-        self.mp_controls = mp_controls
-        self.comp_defn = self._get_settings_path(
-            mp_controls.config_defn, self._COMP_PATH
-        )
-        self.settings = self._get_settings_path(mp_controls.mp_config, self._COMP_PATH)
-
-        self.help.set_help(self._HELP_TEXT, self._HELP_URI)
-
-        self.controls = {}
-
-
 class SettingsControl(ABC):
     """Abstract base class for settings controls."""
 

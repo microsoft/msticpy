@@ -6,13 +6,14 @@
 """Keyvault client settings."""
 
 import warnings
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from .._version import VERSION
 from . import pkg_config as config
-from .azure_auth_core import default_auth_methods
+from .azure_auth_core import AzureCloudConfig
 from .exceptions import MsticpyKeyVaultConfigError
 from .utility import export
+from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -41,38 +42,35 @@ class KeyVaultSettings:
     used when creating new vaults.
     `UseKeyring` instructs the `SecretsClient` to cache Keyvault
     secrets locally using Python keyring.
-    `Authority` is one of 'global', 'usgov', 'de', 'chi'
+    `Authority` is one of 'global', 'usgov', 'de', 'cn'
     Alternatively, you can specify `AuthorityURI` with the value
     pointing to the URI for logon requests.
 
     """
 
-    AAD_AUTHORITIES = {
-        "global": "https://login.microsoftonline.com/",
-        "usgov": "https://login.microsoftonline.us",
-        "de": "https://login.microsoftonline.de",
-        "chi": "https://login.chinacloudapi.cn",
-    }
-
+    AAD_AUTHORITIES = create_cloud_ep_dict("active_directory")
+    RES_MGMT_URIS = create_cloud_ep_dict("resource_manager")
+    KV_SUFFIXES = create_cloud_suf_dict("keyvault_dns")
     KV_URIS = {
-        "global": "https://{vault}.vault.azure.net/",
-        "usgov": "https://{vault}.vault.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
-    }
-
-    MGMT_URIS = {
-        "global": "https://management.azure.com/",
-        "usgov": "https://management.usgovcloudapi.net/",
-        "de": None,
-        "chi": None,
+        cloud: f"https://{{vault}}{suffix}" for cloud, suffix in KV_SUFFIXES.items()
     }
 
     # Azure CLI Client ID
     CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"  # xplat
 
     def __init__(self):
-        """Initialize new instance of KeyVault Settings."""
+        """
+        Initialize new instance of KeyVault Settings.
+
+        Raises
+        ------
+        MsticpyKeyVaultConfigError
+            If no Key Vault settings are found in
+            msticpyconfig.yaml.
+
+        """
+        self.authority: Optional[str] = None
+        self.auth_methods: List[str] = []
         try:
             kv_config = config.get_config("KeyVault")
         except KeyError as err:
@@ -83,19 +81,24 @@ class KeyVaultSettings:
         norm_settings = {key.casefold(): val for key, val in kv_config.items()}
         self.__dict__.update(norm_settings)
 
-        try:
-            az_cli = config.get_config("DataProviders.AzureCLI")
-        except KeyError:
-            az_cli = {}
-        self.auth_methods = az_cli.get("Args", {}).get(
-            "auth_methods", default_auth_methods()
-        )
+        self._get_auth_methods_from_settings()
+        self._get_authority_from_settings()
 
-        if "authority_uri" in self:
+    def _get_auth_methods_from_settings(self):
+        """Retrieve authentication methods from settings."""
+        self.auth_methods = AzureCloudConfig().auth_methods
+
+    def _get_authority_from_settings(self):
+        """Get the authority (AAD) URI from settings."""
+        if "authorityuri" in self:
+            # For BlueHound compat - the "authority_uri" can be set directly
+            # as a property of the object
             rev_lookup = {uri.casefold(): code for code, uri in self.AAD_AUTHORITIES}
-            self.__dict__["authority"] = rev_lookup.get(
+            self.authority = rev_lookup.get(
                 self["authorityuri"].casefold(), "global"
             ).casefold()
+        elif not self.authority:
+            self.authority = AzureCloudConfig().cloud
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -149,7 +152,7 @@ class KeyVaultSettings:
     @property
     def mgmt_uri(self) -> Optional[str]:
         """Return Azure management URI template for current cloud."""
-        mgmt_uri = self.MGMT_URIS.get(self.cloud)
+        mgmt_uri = self.RES_MGMT_URIS.get(self.cloud)
         if not mgmt_uri:
             mssg = f"Could not find a valid KeyVault endpoint for {self.cloud}"
             warnings.warn(mssg)

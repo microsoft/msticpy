@@ -17,7 +17,7 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
     MsticpyImportExtraError,
 )
-from ...common.azure_auth import az_connect
+from ...common.azure_auth import az_connect, AzureCloudConfig, only_interactive_cred
 
 # pylint: disable=wrong-import-order
 from azure.mgmt.subscription import SubscriptionClient
@@ -55,6 +55,7 @@ class ResourceGraphDriver(DriverBase):
         self.subscription_ids = None
         self._connected = False
         self._debug = kwargs.get("debug", False)
+        self.az_cloud_config = AzureCloudConfig(cloud=kwargs.get("cloud"))
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -77,13 +78,22 @@ class ResourceGraphDriver(DriverBase):
 
         """
         auth_methods = kwargs.get("auth_methods")
-        if not auth_methods:
-            auth_methods = ["env", "cli"]
+        auth_methods = auth_methods or self.az_cloud_config.auth_methods
         silent = kwargs.get("silent", True)
 
         credentials = az_connect(auth_methods=auth_methods, silent=silent)
-        self.client = ResourceGraphClient(credentials.modern)
-        self.sub_client = SubscriptionClient(credentials.modern)
+        if only_interactive_cred(credentials.modern):
+            print("Check your default browser for interactive sign-in prompt.")
+        self.client = ResourceGraphClient(
+            credential=credentials.modern,
+            base_url=self.az_cloud_config.endpoints.resource_manager,
+            credential_scopes=[self.az_cloud_config.token_uri],
+        )
+        self.sub_client = SubscriptionClient(
+            credential=credentials.modern,
+            base_url=self.az_cloud_config.endpoints.resource_manager,
+            credential_scopes=[self.az_cloud_config.token_uri],
+        )
         self.subscription_ids = [
             sub.subscription_id
             for sub in self.sub_client.subscriptions.list()  # type: ignore
