@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
 import pandas as pd
 
-from .process_tree_utils import build_process_tree
+from .proc_tree_builder import build_process_tree
 
 try:
     # pylint: disable=unused-import

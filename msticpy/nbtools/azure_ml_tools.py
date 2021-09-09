@@ -292,11 +292,11 @@ def _set_mpconfig_var():
 def _get_vm_metadata() -> Mapping[str, Any]:
     """Use local request to get VM metadata."""
     vm_uri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01"
-    req = urllib.request.Request(vm_uri)
+    req = urllib.request.Request(vm_uri)  # type: ignore
     req.add_header("Metadata", "true")
 
     # Bandit warning on urlopen - Fixed private URL
-    with urllib.request.urlopen(req) as resp:  # nosec
+    with urllib.request.urlopen(req) as resp:  # type: ignore  # nosec
         metadata = json.loads(resp.read())
     return metadata if isinstance(metadata, dict) else {}
 

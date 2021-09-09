@@ -13,7 +13,9 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
 
-from msticpy.sectools import process_tree_utils as ptutil
+from msticpy.nbtools.process_tree import build_and_show_process_tree
+from msticpy.sectools import process_tree_utils as pt_util
+from msticpy.sectools import proc_tree_builder as pt_build
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
@@ -25,11 +27,132 @@ else:
 
 testdf_win = pd.read_pickle(Path(_TEST_DATA).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(_TEST_DATA).joinpath("linux_proc_test.pkl"))
+testdf_win_mde = pd.read_csv(
+    Path(_TEST_DATA).joinpath("mde_proc_cs1.csv"),
+    parse_dates=[
+        "CreatedProcessCreationTime",
+        "CreatedProcessFileCreationTime",
+        "InitiatingProcessCreationTime",
+        "InitiatingProcessParentCreationTime",
+        "CreatedProcessParentCreationTimeUtc",
+        "ReportTime",
+        "ReportArrivalTimeUtc",
+        "CreatedProcessReparentingProcessCreationTimeUtc",
+        "CreatedProcessParentCreationTimeUtc",
+        "InitiatingProcessImagePeTimestampUtc",
+        "InitiatingProcessImageLastWriteTimeUtc",
+        "InitiatingProcessImageLastAccessTimeUtc",
+        "InitiatingProcessImageCreationTimeUtc",
+    ],
+)
+
+# MDE Schema
+# CreatedProcessIsElevated,
+# CreatedProcessIntegrityLevel,
+# CreatedProcessAccountSid,
+# CreatedProcessAccountName,
+# CreatedProcessAccountDomainName,
+# CreatedProcessTokenElevationType,
+# CreatedProcessFileMarkOfTheWeb,
+# CreatedProcessCreationTime,
+# CreatedProcessId,
+# CreatedProcessName,
+# CreatedProcessCommandLine,
+# CreatedProcessFileType,
+# CreatedProcessFileCreationTime,
+# CreatedProcessFilePath,
+# CreatedProcessFileSize,
+# CreatedProcessFileMd5,
+# CreatedProcessFileSha256,
+# CreatedProcessFileSha1,
+# InitiatingProcessImageMd5,
+# InitiatingProcessImageSha256,
+# InitiatingProcessImageSha1,
+# InitiatingProcessAccountSid,
+# InitiatingProcessAccountDomainName,
+# InitiatingProcessAccountName,
+# InitiatingProcessCreationTime,
+# InitiatingProcessId,
+# InitiatingProcessName,
+# Process_CommandLine,
+# IsElevatedProcess,
+# InitiatingProcessParentCreationTime,
+# InitiatingProcessParentProcessId,
+# InitiatingProcessParentProcessName,
+# InitiatingProcessIntegrityLevel,
+# InitiatingProcessTokenElevationType,
+# WcdMachineId,
+# SenseMachineGuid,
+# ReportTime,
+# ReportArrivalTimeUtc,
+# ReportGuid,
+# ComputerDnsName,
+# ReportIndex,
+# IsLastInQuota,
+# ClientVersion,
+# IsTestOrg,
+# InitiatingProcessStartKey,
+# ContainerId,
+# CreatedProcessStartKey,
+# CreatedProcessReparentingProcessCreationTimeUtc,
+# CreatedProcessReparentingProcessId,
+# CreatedProcessParentCreationTimeUtc,
+# CreatedProcessParentName,
+# CreatedProcessParentId,
+# CreatedProcessAttributes,
+# InitiatingProcessSource,
+# InitiatingProcessImageFilePath,
+# InitiatingProcessImageFileSizeInBytes,
+# InitiatingProcessImagePeTimestampUtc,
+# InitiatingProcessImageLastWriteTimeUtc,
+# InitiatingProcessImageLastAccessTimeUtc,
+# InitiatingProcessImageCreationTimeUtc,
+# InitiatingProcessAttributes,
+# TruncationPolicy,
+# RbacGroupId,
+# OsVersionK,
+# OsVersion,
+# IsMalformed,
+# InitiatingProcessAccountUpn,
+# InitiatingProcessAccountAzureADId,
+# CreatedProcessAccountUpn,
+# CreatedProcessAccountAzureADId,
+# IsMtpEnabled,
+# TenantId,
+# InitiatingProcessLogonId,
+# LogonId,
+# FirstSeen,
+# InitiatingProcessShowWindow,
+# InitiatingProcessStartupFlags,
+# CreatedProcessShowWindow,
+# CreatedProcessStartupFlags,
+# InitiatingProcessCurrentWorkingDirectory,
+# InitiatingProcessPosixProcessGroupId,
+# InitiatingProcessPosixSessionId,
+# InitiatingProcessPosixEffectiveUser,
+# InitiatingProcessPosixEffectiveGroup,
+# InitiatingProcessPosixAttachedTerminal,
+# InitiatingProcessSignatureStatus,
+# InitiatingProcessSignerType,
+# CreatedProcessSignatureStatus,
+# CreatedProcessSignerType,
+# InitiatingProcessVersionInfoCompanyName,
+# InitiatingProcessVersionInfoProductName,
+# InitiatingProcessVersionInfoProductVersion,
+# InitiatingProcessVersionInfoInternalFileName,
+# InitiatingProcessVersionInfoOriginalFileName,
+# InitiatingProcessVersionInfoFileDescription,
+# CreatedProcessVersionInfoCompanyName,
+# CreatedProcessVersionInfoProductName,
+# CreatedProcessVersionInfoProductVersion,
+# CreatedProcessVersionInfoInternalFileName,
+# CreatedProcessVersionInfoOriginalFileName,
+# CreatedProcessVersionInfoFileDescription
 
 
 def test_build_win_tree():
-    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True)
-    assert ptutil.get_summary_info(p_tree) == {
+    p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
+    assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1010,
         "RootProcesses": 10,
         "LeafProcesses": 815,
@@ -40,8 +163,8 @@ def test_build_win_tree():
 
 
 def test_build_lx_tree():
-    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False)
-    assert ptutil.get_summary_info(p_tree_l) == {
+    p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
+    assert pt_util.get_summary_info(p_tree_l) == {
         "Processes": 1029,
         "RootProcesses": 29,
         "LeafProcesses": 497,
@@ -51,40 +174,27 @@ def test_build_lx_tree():
     }
 
 
-def test_tree_utils_win():
-    p_tree = ptutil.build_process_tree(testdf_win, show_progress=True)
-
-    assert len(ptutil.get_roots(p_tree)) == 10
-    t_root = ptutil.get_roots(p_tree).iloc[4]
-    full_tree = ptutil.get_descendents(p_tree, t_root)
-    assert len(full_tree) == 25
-    children = ptutil.get_children(p_tree, t_root)
-    assert len(children) == 13
-
-    depth = full_tree["path"].str.count("/").max() + 1
-    bottom_desc = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[0]
-
-    assert len(ptutil.get_ancestors(p_tree, bottom_desc)) == 3
-
-    assert isinstance(ptutil.get_parent(p_tree, bottom_desc), pd.Series)
-    assert (
-        ptutil.get_process(p_tree, bottom_desc.name).dropna() == bottom_desc.dropna()
-    ).all()
-    assert (
-        ptutil.get_process(p_tree, bottom_desc).dropna() == bottom_desc.dropna()
-    ).all()
-    assert ptutil.build_process_key(bottom_desc) == bottom_desc.name
-
-    assert (ptutil.get_root(p_tree, bottom_desc).dropna() == t_root.dropna()).all()
-
-    children2 = ptutil.get_children(p_tree, t_root, include_source=False)
-    assert len(children2) == len(
-        ptutil.get_siblings(p_tree, children2.iloc[0], include_source=True)
+def test_build_win_tree_dict_schema():
+    schema = dict(
+        time_stamp="TimeGenerated",
+        process_name="NewProcessName",
+        process_id="NewProcessId",
+        parent_name="ParentProcessName",
+        parent_id="ProcessId",
+        logon_id="SubjectLogonId",
+        target_logon_id="TargetLogonId",
+        cmd_line="CommandLine",
+        user_name="SubjectUserName",
+        path_separator="\\",
+        user_id="SubjectUserSid",
+        event_id_column="EventID",
+        event_id_identifier=4688,
+        host_name_column="Computer",
     )
-    assert len(children2) == (
-        len(ptutil.get_siblings(p_tree, children2.iloc[0], include_source=False)) + 1
+    p_tree = pt_build.build_process_tree(
+        testdf_win, schema=schema, show_summary=True, debug=True
     )
-    assert ptutil.get_summary_info(p_tree) == {
+    assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1010,
         "RootProcesses": 10,
         "LeafProcesses": 815,
@@ -93,42 +203,85 @@ def test_tree_utils_win():
         "LargestTreeDepth": 7,
     }
 
-    assert ptutil.infer_schema(p_tree) == ptutil.WIN_EVENT_SCH
+
+def test_tree_utils_win():
+    p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
+
+    assert len(pt_util.get_roots(p_tree)) == 10
+    t_root = pt_util.get_roots(p_tree).iloc[4]
+    full_tree = pt_util.get_descendents(p_tree, t_root)
+    assert len(full_tree) == 25
+    children = pt_util.get_children(p_tree, t_root)
+    assert len(children) == 13
+
+    depth = full_tree["path"].str.count("/").max() + 1
+    bottom_desc = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[0]
+
+    assert len(pt_util.get_ancestors(p_tree, bottom_desc)) == 3
+
+    assert isinstance(pt_util.get_parent(p_tree, bottom_desc), pd.Series)
+    assert (
+        pt_util.get_process(p_tree, bottom_desc.name).dropna() == bottom_desc.dropna()
+    ).all()
+    assert (
+        pt_util.get_process(p_tree, bottom_desc).dropna() == bottom_desc.dropna()
+    ).all()
+    # assert ptutil.build_process_key(bottom_desc) == bottom_desc.name
+
+    assert (pt_util.get_root(p_tree, bottom_desc).dropna() == t_root.dropna()).all()
+
+    children2 = pt_util.get_children(p_tree, t_root, include_source=False)
+    assert len(children2) == len(
+        pt_util.get_siblings(p_tree, children2.iloc[0], include_source=True)
+    )
+    assert len(children2) == (
+        len(pt_util.get_siblings(p_tree, children2.iloc[0], include_source=False)) + 1
+    )
+    assert pt_util.get_summary_info(p_tree) == {
+        "Processes": 1010,
+        "RootProcesses": 10,
+        "LeafProcesses": 815,
+        "BranchProcesses": 185,
+        "IsolatedProcesses": 0,
+        "LargestTreeDepth": 7,
+    }
+
+    assert pt_build.infer_schema(p_tree) == pt_build.WIN_EVENT_SCH
 
 
 def test_tree_utils_lx():
-    p_tree_l = ptutil.build_process_tree(testdf_lx, show_progress=False)
-    assert len(ptutil.get_roots(p_tree_l)) == 29
-    t_root = ptutil.get_roots(p_tree_l).iloc[0]
-    full_tree = ptutil.get_descendents(p_tree_l, t_root)
+    p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
+    assert len(pt_util.get_roots(p_tree_l)) == 29
+    t_root = pt_util.get_roots(p_tree_l).iloc[0]
+    full_tree = pt_util.get_descendents(p_tree_l, t_root)
     assert len(full_tree) == 901
-    children = ptutil.get_children(p_tree_l, t_root)
+    children = pt_util.get_children(p_tree_l, t_root)
     assert len(children) == 452
 
     depth = full_tree["path"].str.count("/").max() + 1
     bottom_desc = full_tree[full_tree["path"].str.count("/") == depth - 1].iloc[0]
 
-    assert len(ptutil.get_ancestors(p_tree_l, bottom_desc)) == 3
+    assert len(pt_util.get_ancestors(p_tree_l, bottom_desc)) == 3
 
-    assert isinstance(ptutil.get_parent(p_tree_l, bottom_desc), pd.Series)
+    assert isinstance(pt_util.get_parent(p_tree_l, bottom_desc), pd.Series)
     assert (
-        ptutil.get_process(p_tree_l, bottom_desc.name).dropna() == bottom_desc.dropna()
+        pt_util.get_process(p_tree_l, bottom_desc.name).dropna() == bottom_desc.dropna()
     ).all()
     assert (
-        ptutil.get_process(p_tree_l, bottom_desc).dropna() == bottom_desc.dropna()
+        pt_util.get_process(p_tree_l, bottom_desc).dropna() == bottom_desc.dropna()
     ).all()
-    assert ptutil.build_process_key(bottom_desc) == bottom_desc.name
+    # assert ptutil.build_process_key(bottom_desc) == bottom_desc.name
 
-    assert (ptutil.get_root(p_tree_l, bottom_desc).dropna() == t_root.dropna()).all()
+    assert (pt_util.get_root(p_tree_l, bottom_desc).dropna() == t_root.dropna()).all()
 
-    children2 = ptutil.get_children(p_tree_l, t_root, include_source=False)
+    children2 = pt_util.get_children(p_tree_l, t_root, include_source=False)
     assert len(children2) == len(
-        ptutil.get_siblings(p_tree_l, children2.iloc[0], include_source=True)
+        pt_util.get_siblings(p_tree_l, children2.iloc[0], include_source=True)
     )
     assert len(children2) == (
-        len(ptutil.get_siblings(p_tree_l, children2.iloc[0], include_source=False)) + 1
+        len(pt_util.get_siblings(p_tree_l, children2.iloc[0], include_source=False)) + 1
     )
-    assert ptutil.get_summary_info(p_tree_l) == {
+    assert pt_util.get_summary_info(p_tree_l) == {
         "Processes": 1029,
         "RootProcesses": 29,
         "LeafProcesses": 497,
@@ -137,7 +290,42 @@ def test_tree_utils_lx():
         "LargestTreeDepth": 5,
     }
 
-    assert ptutil.infer_schema(p_tree_l) == ptutil.LX_EVENT_SCH
+    assert pt_build.infer_schema(p_tree_l) == pt_build.LX_EVENT_SCH
+
+
+def test_build_process_tree():
+    build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
+
+
+def test_build_mde_win_tree_dict_schema():
+    schema = dict(
+        time_stamp="CreatedProcessCreationTime",
+        process_name="CreatedProcessName",
+        process_id="CreatedProcessId",
+        parent_name="ParentProcessName",
+        parent_id="CreatedProcessParentId",
+        logon_id="InitiatingProcessLogonId",
+        target_logon_id="LogonId",
+        cmd_line="CreatedProcessCommandLine",
+        user_name="CreatedProcessAccountName",
+        path_separator="\\",
+        user_id="CreatedProcessAccountSid",
+        # event_id_column="EventID",
+        # event_id_identifier=4688,
+        host_name_column="ComputerDnsName",
+    )
+    p_tree = pt_build.build_process_tree(
+        testdf_win_mde, schema=schema, show_summary=True, debug=True
+    )
+    assert pt_util.get_summary_info(p_tree) == {
+        "Processes": 1642,
+        "RootProcesses": 9,
+        "LeafProcesses": 1177,
+        "BranchProcesses": 456,
+        "IsolatedProcesses": 0,
+        "LargestTreeDepth": 16,
+    }
 
 
 _NB_FOLDER = "docs/notebooks"
