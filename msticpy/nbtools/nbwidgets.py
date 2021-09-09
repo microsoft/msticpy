@@ -1476,8 +1476,10 @@ class Progress:
             orientation="horizontal",
         )
         self._done_label = widgets.Label(value="0%")
-        self._progress.visible = visible
-        self._done_label.visible = visible
+        if visible:
+            self.show()
+        else:
+            self.hide()
         self.layout = widgets.HBox([self._progress, self._done_label])
         self.display()
 
@@ -1529,13 +1531,16 @@ class Progress:
 
     def show(self):
         """Make the controls visible."""
-        self._progress.visible = True
-        self._done_label.visible = True
+        self._hide_show("visible")
 
     def hide(self):
         """Hide the controls."""
-        self._progress.visible = True
-        self._done_label.visible = True
+        self._hide_show("hidden")
+
+    def _hide_show(self, visibility):
+        vis_layout = widgets.Layout(visibility=visibility)
+        self._progress.layout = vis_layout
+        self._done_label.layout = vis_layout
 
     def display(self):
         """Display the control."""

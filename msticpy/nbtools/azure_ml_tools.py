@@ -296,7 +296,7 @@ def _get_vm_metadata() -> Mapping[str, Any]:
     req.add_header("Metadata", "true")
 
     # Bandit warning on urlopen - Fixed private URL
-    with urllib.request.urlopen(req) as resp:  # type:ignore  # nosec
+    with urllib.request.urlopen(req) as resp:  # type: ignore  # nosec
         metadata = json.loads(resp.read())
     return metadata if isinstance(metadata, dict) else {}
 
