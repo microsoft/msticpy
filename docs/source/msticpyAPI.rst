@@ -12,3 +12,4 @@ msticpy API
     msticpy.sectools
     msticpy.common
     msticpy.config
+    msticpy.vis
