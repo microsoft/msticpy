@@ -11,7 +11,17 @@ from azure.common.exceptions import CloudError
 from azure.mgmt.subscription import SubscriptionClient
 
 from .._version import VERSION
-from .azure_auth_core import AzCredentials, az_connect_core, default_auth_methods
+
+# importing only_interactive_cred for client use.
+# pylint: disable=unused-import
+from .azure_auth_core import (  # noqa: F401
+    AzCredentials,
+    az_connect_core,
+    AzureCloudConfig,
+    only_interactive_cred,
+)
+
+# pylint: enable=unused-import
 from .provider_settings import get_provider_settings
 
 __version__ = VERSION
@@ -30,9 +40,9 @@ def az_connect(
     auth_methods : List[str], optional
         List of authentication methods to try
         Possible options are:
-        - "env" - to get authentication details from environment varibales
+        - "env" - to get authentication details from environment variables
         - "cli" - to use Azure CLI authentication details
-        - "msi" - to user Managed Service Indenity details
+        - "msi" - to user Managed Service Identity details
         - "interactive" - to prompt for interactive login
         Default is ["env", "cli", "msi", "interactive"]
     silent : bool, optional
@@ -52,10 +62,11 @@ def az_connect(
         If chained token credential creation fails.
 
     """
+    az_cloud_config = AzureCloudConfig()
     # If using env options try to load from msticpy
     data_provs = get_provider_settings(config_section="DataProviders")
     az_cli_config = data_provs.get("AzureCLI")
-    auth_methods = auth_methods or default_auth_methods()
+    auth_methods = auth_methods or az_cloud_config.auth_methods
     if az_cli_config and az_cli_config.args:
         if "auth_methods" in az_cli_config.args:
             auth_methods = az_cli_config.args.get("auth_methods")
@@ -66,7 +77,11 @@ def az_connect(
                 az_cli_config.args.get("clientSecret") or ""
             )
     credentials = az_connect_core(auth_methods=auth_methods, silent=silent)
-    sub_client = SubscriptionClient(credentials.modern)  # type: ignore
+    sub_client = SubscriptionClient(
+        credential=credentials.modern,
+        base_url=az_cloud_config.endpoints.resource_manager,
+        credential_scopes=[az_cloud_config.token_uri],
+    )
     if not sub_client:
         raise CloudError("Could not create a Subscription client.")
 
@@ -75,7 +90,7 @@ def az_connect(
 
 def az_user_connect(silent: bool = False) -> AzCredentials:
     """
-    Authenticate to the SDK using user based authenticaiton methods, Azure CLI or interactive logon.
+    Authenticate to the SDK using user based authentication methods, Azure CLI or interactive logon.
 
     Parameters
     ----------

@@ -12,6 +12,7 @@ from .._version import VERSION
 from .ce_azure_sentinel import CEAzureSentinel
 from .ce_data_providers import CEDataProviders
 from .ce_keyvault import CEKeyVault
+from .ce_azure import CEAzure
 from .ce_other_providers import CEOtherProviders
 from .ce_ti_providers import CETIProviders
 from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
@@ -134,6 +135,7 @@ class MpConfigEdit(CompEditDisplayMixin):
             "Data Providers": CEDataProviders(mp_controls),
             "GeoIP Providers": CEOtherProviders(mp_controls),
             "Key Vault": CEKeyVault(mp_controls),
+            "Azure": CEAzure(mp_controls),
             "Autoload QueryProvs": CEAutoLoadQProvs(mp_controls),
             "Autoload Components": CEAutoLoadComps(mp_controls),
         }
