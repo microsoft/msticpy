@@ -20,7 +20,7 @@ from ..unit_test_lib import TEST_DATA_PATH
 testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
 testdf_win_mde = pd.read_csv(
-    Path(_TEST_DATA).joinpath("mde_proc_cs1.csv"),
+    Path(TEST_DATA_PATH).joinpath("mde_proc_cs1.csv"),
     parse_dates=[
         "CreatedProcessCreationTime",
         "CreatedProcessFileCreationTime",

@@ -9,6 +9,7 @@ import re
 import sys
 from importlib import import_module
 from typing import Dict, List, Optional, Set
+import warnings
 
 import networkx as nx
 
@@ -148,7 +149,10 @@ def get_extras_from_setup(
     finally:
         try:
             if neut_setup_py.is_file():
-                neut_setup_py.unlink()
+                try:
+                    neut_setup_py.unlink()
+                except (FileNotFoundError, PermissionError) as err:
+                    warnings.warn(f"Unable to remove {neut_setup_py}. Error {err}")
         except PermissionError:
             print(f"could not remove temp file {neut_setup_py}")
 

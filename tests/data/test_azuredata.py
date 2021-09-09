@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from collections import namedtuple
 from pathlib import Path
 from unittest.mock import patch
 
@@ -19,7 +18,7 @@ from msticpy.common.azure_auth_core import (
     AzCredentials,
 )
 
-from .unit_test_lib import custom_mp_config, get_test_data_path
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 
 # pylint: disable=protected-access

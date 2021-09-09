@@ -16,14 +16,14 @@ from msticpy.common.pkg_config import settings
 
 # pylint: disable=redefined-outer-name, unused-import, ungrouped-imports
 try:
-    import msticnb
+    import msticnb  # noqa: F401
 
     _NOTEBOOKLETS = True
 except ImportError:
     _NOTEBOOKLETS = False
 
 try:
-    from msticpy.datamodel.pivot import Pivot
+    from msticpy.datamodel.pivot import Pivot  # noqa: F401
 
     _PIVOT = True
 except ImportError:

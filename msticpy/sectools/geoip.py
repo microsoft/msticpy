@@ -571,7 +571,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 )
                 if not self._download_and_extract_archive(url, db_folder):
                     self._pr_debug("DB download failed")
-                    warnings.warn("DB download failed")
+                    self._geolite_warn("DB download failed")
                     db_updated = False
             elif force_update:
                 print(
@@ -580,11 +580,11 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 )
                 if not self._download_and_extract_archive(url, db_folder):
                     self._pr_debug("DB download failed")
-                    warnings.warn("DB download failed")
+                    self._geolite_warn("DB download failed")
                     db_updated = False
             if not db_updated:
                 self._pr_debug("Continuing with cached database.")
-                warnings.warn(
+                self._geolite_warn(
                     "Continuing with cached database. Results may inaccurate."
                 )
 
@@ -647,13 +647,15 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             self._pr_debug(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
-            warnings.warn(
+            self._geolite_warn(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
         # pylint: disable=broad-except
         except Exception as err:
             self._pr_debug(f"Other error occurred trying to download GeoLite DB: {err}")
-            warnings.warn(f"Other error occurred trying to download GeoLite DB: {err}")
+            self._geolite_warn(
+                f"Other error occurred trying to download GeoLite DB: {err}"
+            )
         # pylint: enable=broad-except
         else:
             try:
@@ -666,7 +668,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._pr_debug(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}"
                 )
-                warnings.warn(
+                self._geolite_warn(
                     f"Cannot overwrite GeoIP DB file: {db_archive_path}."
                     + " The file may be in use or you do not have"
                     + f" permission to overwrite.\n - {err}"
@@ -677,7 +679,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._pr_debug(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}"
                 )
-                warnings.warn(f"Error writing GeoIP DB file: {db_archive_path} - {err}")
+                self._geolite_warn(
+                    f"Error writing GeoIP DB file: {db_archive_path} - {err}"
+                )
         finally:
             if db_archive_path.is_file():
                 self._pr_debug(f"Removing temp file {db_archive_path}")
@@ -817,6 +821,13 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         """Print out debug info."""
         if self._debug:
             print(*args)
+
+    @staticmethod
+    def _geolite_warn(mssg):
+        warnings.warn(
+            f"GeoIpLookup: {mssg}",
+            UserWarning,
+        )
 
 
 def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
