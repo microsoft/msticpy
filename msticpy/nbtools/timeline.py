@@ -790,7 +790,7 @@ def _get_def_source_cols(data, source_columns):
 
 def _create_data_grouping(data, source_columns, time_column, group_by, color):
     data_columns = _get_def_source_cols(data, source_columns)
-    # If the time column not explicity specified in source_columns, add it
+    # If the time column not explicitly specified in source_columns, add it
     data_columns.add(time_column)
     tool_tip_columns = data_columns.copy()
     # create group frame so that we can color each group separately
