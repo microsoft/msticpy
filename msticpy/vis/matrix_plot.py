@@ -51,12 +51,12 @@ class PlotParams:
 
     @property
     def x_column(self) -> Optional[str]:
-        """Return the current x column value"""
+        """Return the current x column value."""
         return self.x or self.x_col
 
     @property
     def y_column(self) -> Optional[str]:
-        """Return the current y column value"""
+        """Return the current y column value."""
         return self.y or self.y_col
 
     @classmethod
