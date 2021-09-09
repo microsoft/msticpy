@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 from uuid import uuid4
 
 import pandas as pd
@@ -12,7 +12,7 @@ import requests
 from azure.common.exceptions import CloudError
 
 from .azure_data import AzureData
-from ..common.azure_auth_core import AzCredentials
+from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
 from ..common.exceptions import MsticpyAzureConfigError
 from ..common.wsconfig import WorkspaceConfig
 
@@ -28,18 +28,25 @@ _PATH_MAPPING = {
 class AzureSentinel(AzureData):
     """Class for returning key Azure Sentinel elements."""
 
-    def __init__(self, connect: bool = False):
+    def __init__(self, connect: bool = False, cloud: Optional[str] = None):
         """
         Initialize connector for Azure APIs.
 
         Parameters
         ----------
         connect : bool, optional
-            Set true if you want to connect to API on initalization, by default False
+            Set true if you want to connect to API on initialization, by default False
+        cloud : str, optional
+            Specify cloud to use, overriding any configuration value.
+            Default is to use configuration setting or public cloud if no
+            configuration setting is available.
 
         """
-        super().__init__()
+        super().__init__(connect=connect, cloud=cloud)
         self.config = None
+        self.base_url = self.endpoints.resource_manager
+        self.default_subscription: Optional[str] = None
+        self.default_workspace: Optional[Tuple[str, str]] = None
 
     def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
         """
@@ -48,7 +55,7 @@ class AzureSentinel(AzureData):
         Parameters
         ----------
         auth_methods : List, optional
-            list of prefered authentication methods to use, by default None
+            list of preferred authentication methods to use, by default None
         silent : bool, optional
             Set true to prevent output during auth process, by default False
 
@@ -62,7 +69,18 @@ class AzureSentinel(AzureData):
         self.res_group_url = None
         self.prov_path = None
 
-    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict:
+    def set_default_subscription(self, subscription_id: str):
+        """Set the default subscription to use to `subscription_id`."""
+        subs_df = self.get_subscriptions()
+        if subscription_id in subs_df["Subscription ID"].values:
+            self.default_subscription = subscription_id
+        else:
+            print(f"Subscription ID {subscription_id} not found.")
+            print(
+                f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}"
+            )
+
+    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
         """
         Return a list of Azure Sentinel workspaces in a Subscription.
 
@@ -79,6 +97,7 @@ class AzureSentinel(AzureData):
 
         """
         # If a subscription ID isn't provided try and get one from config files.
+        sub_id = sub_id or self.default_subscription
         if not sub_id:
             config = self._check_config(["subscription_id"])
             sub_id = config["subscription_id"]
@@ -108,6 +127,37 @@ class AzureSentinel(AzureData):
         print(f"No Azure Sentinel workspaces in {sub_id}")
         return {}
 
+    def set_default_workspace(
+        self, sub_id: Optional[str], workspace: Optional[str] = None
+    ):
+        """
+        Set the default workspace.
+
+        Parameters
+        ----------
+        sub_id : Optional[str], optional
+            Subscription ID containing the workspace. If not specified,
+            the subscription will be taken from the `default_subscription`
+            or from configuration.
+        workspace : Optional[str], optional
+            Name of the workspace, by default None.
+            If not specified and there is only one workspace in the
+            subscription, this will be set as the default.
+
+        """
+        sub_id = sub_id or self.default_subscription
+        workspaces = self.get_sentinel_workspaces(sub_id=sub_id)
+        if len(workspaces) == 1:
+            self.default_workspace = next(iter(workspaces.items()))
+        elif workspace in workspaces:
+            self.default_workspace = workspace, workspaces[workspace]
+
+    def _get_default_workspace(self):
+        """Return the default workspace ResourceID."""
+        if self.default_workspace:
+            return self.default_workspace[0]
+        return None
+
     def get_hunting_queries(
         self,
         res_id: str = None,
@@ -136,21 +186,11 @@ class AzureSentinel(AzureData):
 
         """
         # If res_id isn't provided try and get them from config
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = self._build_paths(res_id, self.base_url)
         saved_searches_url = url + _PATH_MAPPING["ss_path"]
         params = {"api-version": "2017-04-26-preview"}
 
@@ -191,21 +231,11 @@ class AzureSentinel(AzureData):
             A table of the workspace's alert rules.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = self._build_paths(res_id, self.base_url)
         alert_rules_url = url + _PATH_MAPPING["alert_rules"]
         params = {"api-version": "2020-01-01"}
 
@@ -251,21 +281,11 @@ class AzureSentinel(AzureData):
             If bookmark collection fails.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
-        url = _build_paths(res_id)
+        url = self._build_paths(res_id, self.base_url)
         bookmarks_url = url + _PATH_MAPPING["bookmarks"]
         params = {"api-version": "2020-01-01"}
 
@@ -308,23 +328,14 @@ class AzureSentinel(AzureData):
         Raises
         ------
         CloudError
-            If incidents could not be retreived.
+            If incidents could not be retrieved.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = self._build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         params = {"api-version": "2020-01-01"}
         response = requests.get(
@@ -375,20 +386,11 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = self._build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         incident_url = incidents_url + f"/{incident_id}"
         params = {"api-version": "2020-01-01"}
@@ -450,22 +452,12 @@ class AzureSentinel(AzureData):
             If incident could not be updated.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
 
         incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
-        url = _build_paths(res_id)
+        url = self._build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         incident_url = incidents_url + f"/{incident_id}"
         params = {"api-version": "2020-01-01"}
@@ -518,20 +510,11 @@ class AzureSentinel(AzureData):
             If message could not be posted.
 
         """
+        res_id = res_id or self._get_default_workspace()
         if not res_id:
-            if not sub_id or not res_grp or not ws_name:
-                config = self._check_config(
-                    ["subscription_id", "resource_group", "workspace_name"]
-                )
-                sub_id = config["subscription_id"]
-                res_grp = config["resource_group"]
-                ws_name = config["workspace_name"]
-            res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-            res_id = (
-                res_id
-                + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
-            )
-        url = _build_paths(res_id)
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+
+        url = self._build_paths(res_id, self.base_url)
         incident_url = url + _PATH_MAPPING["incidents"]
         comment_url = incident_url + f"/{incident_id}/comments/{str(uuid4())}"
         params = {"api-version": "2020-01-01"}
@@ -573,35 +556,77 @@ class AzureSentinel(AzureData):
 
         return config_items
 
+    def _build_res_id(
+        self, sub_id: str = None, res_grp: str = None, ws_name: str = None
+    ) -> str:
+        """
+        Build a resource ID.
 
-def _build_paths(resid: str) -> str:
-    """
-    Build an API URL from an Azure resource ID.
+        Parameters
+        ----------
+        sub_id : str, optional
+            Subscription ID to use, by default None
+        res_grp : str, optional
+            Resource Group name to use, by default None
+        ws_name : str, optional
+            Workspace name to user, by default None
 
-    Parameters
-    ----------
-    resid : str
-        An Azure resource ID.
+        Returns
+        -------
+        str
+            The formatted resource ID.
 
-    Returns
-    -------
-    str
-        A URI to that resource.
+        """
+        if not sub_id or not res_grp or not ws_name:
+            config = self._check_config(
+                ["subscription_id", "resource_group", "workspace_name"]
+            )
+            sub_id = config["subscription_id"]
+            res_grp = config["resource_group"]
+            ws_name = config["workspace_name"]
+        return "".join(
+            [
+                f"/subscriptions/{sub_id}/resourcegroups/{res_grp}",
+                f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}",
+            ]
+        )
 
-    """
-    res_info = {
-        "subscription_id": resid.split("/")[2],
-        "resource_group": resid.split("/")[4],
-        "workspace_name": resid.split("/")[-1],
-    }
+    def _build_paths(self, res_id: str, base_url: str = None) -> str:
+        """
+        Build an API URL from an Azure resource ID.
 
-    url_part1 = (
-        f"https://management.azure.com/subscriptions/{res_info['subscription_id']}"
-    )
-    url_part2 = f"/resourceGroups/{res_info['resource_group']}"
-    url_part3 = f"/providers/Microsoft.OperationalInsights/workspaces/{res_info['workspace_name']}"
+        Parameters
+        ----------
+        res_id : str
+            An Azure resource ID.
+        base_url : str, optional
+            The base URL of the Azure cloud to connect to.
+            Defaults to resource manager for configured cloud.
+            If no cloud configuration, defaults to resource manager
+            endpoint for public cloud.
 
-    return url_part1 + url_part2 + url_part3
+        Returns
+        -------
+        str
+            A URI to that resource.
+
+        """
+        if not base_url:
+            base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager
+        res_info = {
+            "subscription_id": res_id.split("/")[2],
+            "resource_group": res_id.split("/")[4],
+            "workspace_name": res_id.split("/")[-1],
+        }
+
+        return "".join(
+            [
+                f"{base_url}/subscriptions/{res_info['subscription_id']}",
+                f"/resourceGroups/{res_info['resource_group']}",
+                "/providers/Microsoft.OperationalInsights/workspaces"
+                f"/{res_info['workspace_name']}",
+            ]
+        )
 
 
 def _get_token(credential: AzCredentials) -> str:
@@ -619,7 +644,7 @@ def _get_token(credential: AzCredentials) -> str:
         A token to be used in API calls.
 
     """
-    token = credential.modern.get_token("https://management.azure.com/.default")
+    token = credential.modern.get_token(AzureCloudConfig().token_uri)
     return token.token
 
 
@@ -630,7 +655,7 @@ def _get_api_headers(token: str) -> Dict:
     Parameters
     ----------
     token : str
-        Auzre auth token.
+        Azure auth token.
 
     Returns
     -------
@@ -688,7 +713,7 @@ def _build_data(items: dict, **kwargs) -> dict:
 
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
-    for key in items.keys():
+    for key, _ in items.items():
         if key in ["severity", "status", "title", "message"]:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:

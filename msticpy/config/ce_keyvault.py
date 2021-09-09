@@ -4,31 +4,38 @@
 # license information.
 # --------------------------------------------------------------------------
 """Key Vault component edit."""
-import ipywidgets as widgets
-
 from .._version import VERSION
-from .comp_edit import CESimpleBase
-from .ce_common import get_wgt_ctrl, get_or_create_mpc_section
-from .mp_config_control import MpConfigControls
+from .ce_simple_settings import CESimpleSettings
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-class CEKeyVault(CESimpleBase):
+class CEKeyVault(CESimpleSettings):
     """Key Vault settings edit component."""
 
     _DESCRIPTION = "Key Vault Setup"
     _COMP_PATH = "KeyVault"
     _HELP_TEXT = """
-    Supply the parameters for your Key Vault here to store secret
+    Set the parameters for your Key Vault here to store secret
     values such as API Keys.<br>
 
-    Check "UseKeyring" if you have Keyring installed and want to be
-    able to cache the secrets locally.<br>
+    Check <b>UseKeyring</b> if you have Keyring installed and want to be
+    able to cache the secrets locally. (Note: keyring is not supported
+    by default on many Linux distributions)<br>
 
-    The first five items are mandatory. If you are not using a regional
-    or private cloud the value for "Authority" should be global.
+    The first five items are mandatory.<br>
+
+    The value for <b>Authority</b> should be set to the Azure Cloud that you use.<br>
+    Options are:
+    <ul>
+    <li>global (Commercial Azure cloud)</li>
+    <li>usgov (US Government cloud)</li>
+    <li>cn (China national cloud)</li>
+    <li>de (German national cloud)</li>
+    </ul>
+    The default is "global".<br>
     """
     _HELP_URI = {
         "Key Vault Settings": (
@@ -36,38 +43,3 @@ class CEKeyVault(CESimpleBase):
             + "msticpyconfig.html#specifying-secrets-as-key-vault-secrets"
         )
     }
-
-    def __init__(self, mp_controls: MpConfigControls):
-        """
-        Instantiate the CEKeyVault class.
-
-        Parameters
-        ----------
-        mp_controls : MpConfigControls
-            The config/controls/settings database
-
-        """
-        super().__init__(mp_controls)
-
-        get_or_create_mpc_section(self.mp_controls, self._COMP_PATH)
-        prov_defn = mp_controls.get_defn(self._COMP_PATH)
-
-        w_style = {
-            "style": {"description_width": "100px"},
-            "layout": widgets.Layout(width="80%"),
-        }
-        self.controls = {
-            setting: get_wgt_ctrl(self._COMP_PATH, setting, mp_controls, w_style)
-            for setting in prov_defn
-        }
-        self.edit_frame.children = list(self.controls.values())
-        self.btn_save.on_click(self._save_settings)
-
-    def _save_settings(self, btn):
-        del btn
-        prov_path = f"{self._COMP_PATH}"
-        self.mp_controls.save_ctrl_values(prov_path)
-        val_results = self.mp_controls.validate_setting(prov_path)
-        status = "  ".join(res[1] for res in val_results if not res[0])
-        if status:
-            self.set_status(status)

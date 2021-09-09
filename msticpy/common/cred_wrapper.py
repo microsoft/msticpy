@@ -25,8 +25,8 @@ class CredentialWrapper(BasicTokenAuthentication):
 
     def __init__(
         self,
-        credential=None,
-        resource_id="https://management.azure.com/.default",
+        credential: Any = None,
+        resource_id: str = "https://management.azure.com/.default",
         **kwargs,
     ):
         """
@@ -34,17 +34,18 @@ class CredentialWrapper(BasicTokenAuthentication):
 
         Parameters
         ----------
-        credential : [type], optional
+        credential : Any, optional
             Any azure-identity credential, by default DefaultAzureCredential
         resource_id : str, optional
-            The scope to use to get the token, by default
+            The scope used to get the token, by default
             "https://management.azure.com/.default"
 
         """
-        super().__init__(None)
+        super().__init__(None)  # type: ignore
         self.token: Dict[str, Any] = {}
         if credential is None:
             credential = DefaultAzureCredential()
+
         self._policy = BearerTokenCredentialPolicy(credential, resource_id, **kwargs)
 
     def set_token(self):

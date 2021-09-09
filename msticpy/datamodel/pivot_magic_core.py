@@ -6,7 +6,9 @@
 """Txt2df core code."""
 import argparse
 import io
+from typing import Dict, Union
 
+from pkg_resources import parse_version
 import pandas as pd
 from pandas.errors import ParserError
 
@@ -14,6 +16,8 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_PD_VER = parse_version(pd.__version__)
 
 
 def _add_parser_args():
@@ -69,6 +73,11 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
     if not cell:
         return pd.DataFrame()
     cell_text = io.StringIO(cell)
+    warn_args: Dict[str, Union[str, bool]]
+    if _PD_VER < parse_version("1.3.0"):
+        warn_args = {"warn_bad_lines": True}
+    else:
+        warn_args = {"on_bad_lines": "warn"}
     try:
         parsed_df = pd.read_csv(
             cell_text,
@@ -76,9 +85,9 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
             prefix=None if args.headers else "column_",
             sep=args.sep,
             skipinitialspace=True,
-            warn_bad_lines=True,
             skip_blank_lines=True,
             engine="python",
+            **warn_args,
         )
     except ParserError:
         # try again without headers
@@ -87,10 +96,9 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
             cell_text,
             sep=args.sep,
             skipinitialspace=True,
-            warn_bad_lines=True,
             skip_blank_lines=True,
-            error_bad_lines=False,
             engine="python",
+            **warn_args,
         )
         print(
             "One or more rows had more columns than specified in first row.",
