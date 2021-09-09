@@ -5,7 +5,7 @@ The matrix plot is designed to show interactions between two sets of items
 (columns in a pandas DataFrame) in a x-y grid.
 
 For example, if you have a DataFrame with source and destination
-IP addresses (a firewall log), you can plot the source IPs
+IP addresses (such as a firewall log), you can plot the source IPs
 on the y axis and destination IPs on the x axis. Where there is an event
 (row) that links a given source and destination the matrix plot will
 plot a circle.

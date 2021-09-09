@@ -344,6 +344,10 @@ class MsticpyPlotAccessor:
         hide : bool, optional
             Creates and returns but does not display the plot, default
             is False.
+        font_size : int, optional
+            Manually specify the font size for axis labels, the
+            default is to automatically calculate a size based on the
+            number of items in each axis.
         max_label_font_size : int, optional
             The maximum size, in points, of the X and Y labels, default is 11.
 

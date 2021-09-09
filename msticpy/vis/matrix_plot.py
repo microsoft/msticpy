@@ -24,26 +24,6 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_LEGAL_KWARGS = [
-    "x",
-    "x_col",
-    "y",
-    "y_col",
-    "title",
-    "intersect",
-    "height",
-    "width",
-    "color",
-    "value_col",
-    "dist_count",
-    "log_size",
-    "invert",
-    "sort",
-    "sort_x",
-    "sort_y",
-    "hide",
-]
-
 
 @attr.s(auto_attribs=True)
 class PlotParams:
@@ -66,6 +46,7 @@ class PlotParams:
     sort_x: Optional[Union[str, bool]] = None
     sort_y: Optional[Union[str, bool]] = None
     hide: bool = False
+    font_size: Optional[int] = None
     max_label_font_size: int = 11
 
     @property
@@ -152,6 +133,10 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     hide : bool, optional
         Creates and returns but does not display the plot, default
         is False.
+    font_size : int, optional
+        Manually specify the font size for axis labels, in points,
+        the default is to automatically calculate a size based on the
+        number of items in each axis.
     max_label_font_size : int, optional
         The maximum size, in points, of the X and Y labels, default is 11.
 
@@ -222,14 +207,14 @@ def plot_matrix(data: pd.DataFrame, **kwargs) -> LayoutDOM:
     _set_plot_params(plot)
 
     # Calculate appropriate font size for labels
-    x_label_pt_size = max(
+    x_label_pt_size = param.font_size or max(
         5,
         min(
             param.max_label_font_size,
             int(param.width * 0.6 / plot_data[param.x_column].nunique()),
         ),
     )
-    y_label_pt_size = max(
+    y_label_pt_size = param.font_size or max(
         5,
         min(
             param.max_label_font_size,
