@@ -14,6 +14,8 @@ from azure.core.exceptions import ClientAuthenticationError
 from msticpy.data.azure_data import AzureData
 from msticpy.data.azure_sentinel import AzureSentinel
 
+# pylint: disable=redefined-outer-name
+
 _RESOURCES = pd.DataFrame(
     {
         "resource_type": [

@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import ipywidgets as widgets
 import requests
 
+from ..common.azure_auth_core import AzureCloudConfig
 from .comp_edit import SettingsControl
 from .._version import VERSION
 
@@ -174,9 +175,9 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
     authorization via Azure Lighthouse.
 
     """
+    res_mgmt_uri = AzureCloudConfig().endpoints.resource_manager
     get_tenant_url = (
-        "https://management.azure.com/subscriptions/{subscriptionid}"
-        + "?api-version=2015-01-01"
+        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
     )
     resp = requests.get(get_tenant_url.format(subscriptionid=sub_id))
     # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
