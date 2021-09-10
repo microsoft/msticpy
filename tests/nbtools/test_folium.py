@@ -22,14 +22,7 @@ from msticpy.nbtools.foliummap import (
     get_map_center,
 )
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
-
+from ..unit_test_lib import TEST_DATA_PATH
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "FoliumMap.ipynb"
@@ -41,7 +34,7 @@ class TestFoliumMap(unittest.TestCase):
     def test_folium_map(self):
 
         # Read in some data
-        ip_locs_file = Path(_TEST_DATA).joinpath("ip_locs.csv")
+        ip_locs_file = Path(TEST_DATA_PATH).joinpath("ip_locs.csv")
         geo_loc_df = pd.read_csv(ip_locs_file, index_col=0)
 
         # Create IP and GeoLocation Entities from the dataframe

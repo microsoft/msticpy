@@ -5,27 +5,17 @@
 # --------------------------------------------------------------------------
 """TIProviders test class."""
 import unittest
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Any, Tuple, Dict
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
-
 from msticpy.data import QueryProvider
 from msticpy.data.data_providers import DriverBase
-from msticpy.common import pkg_config
-from msticpy.sectools.iocextract import IoCExtract
 from msticpy.sectools.tilookup import TILookup
-from msticpy.sectools.tiproviders import (
-    ProviderSettings,
-    get_provider_settings,
-    preprocess_observable,
-    LookupResult,
-    AzSTI,
-)
+from msticpy.sectools.tiproviders import get_provider_settings, AzSTI
 
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -38,6 +28,7 @@ class KqlTestDriver(DriverBase):
     """KqlTestDriver class to execute kql queries."""
 
     def __init__(self, connection_str: str = None, **kwargs):
+        del connection_str
         super().__init__()
 
         self._loaded = True
@@ -51,7 +42,7 @@ class KqlTestDriver(DriverBase):
         self.url_df = self.test_df[self.test_df["Url"].str.len() > 0].copy()
         self.url_df["IoC"] = self.url_df["Url"].str.lower()
 
-    def connect(self, connection_str: str, **kwargs):
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
         self._connected = True
         return None
 
@@ -59,7 +50,9 @@ class KqlTestDriver(DriverBase):
     def schema(self) -> Dict[str, Dict]:
         return self._schema
 
-    def query(self, query: str, query_source, **kwargs) -> Union[pd.DataFrame, Any]:
+    def query(
+        self, query: str, query_source: Any = None, **kwargs
+    ) -> Union[pd.DataFrame, Any]:
         del query_source, kwargs
 
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
@@ -76,26 +69,30 @@ class KqlTestDriver(DriverBase):
 
         if "failed_query" in query:
             query_result = Kql_Result()
-            query_result.completion_query_info = {"StatusCode": 0}
-            query_result.records_count = 0
+            # pylint: disable=attribute-defined-outside-init
+            query_result.completion_query_info = {"StatusCode": 0}  # type: ignore
+            query_result.records_count = 0  # type: ignore
             return query_result
 
         if "no_dataframe" in query:
             return Kql_Result()
+        return None
 
-    def query_with_results(self, query: str) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         pass
 
 
 class mock_ip:
     def run_cell_magic(self, *args, **kwargs):
-        pass
+        del args, kwargs
 
     def run_line_magic(self, *args, **kwargs):
+        del args
         if kwargs.get("line") == "--schema":
             return {}
 
     def find_magic(self, *args, **kwargs):
+        del args, kwargs
         return True
 
 
@@ -200,7 +197,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         results = ti_lookup.lookup_iocs(data=ioc_urls, start=start, end=end)
         self.assertIsNotNone(results)
         self.assertEqual(10, len(ioc_urls))
-        self.assertEqual(7, len(results[results["Result"] == True]))
+        self.assertEqual(7, len(results[results["Result"]]))
 
         # IP Lookups
         result = ti_lookup.lookup_ioc(observable=ioc_ip, start=start, end=end)
@@ -221,7 +218,7 @@ class TestASKqlTIProvider(unittest.TestCase):
         results = ti_lookup.lookup_iocs(data=ioc_ips, start=start, end=end)
         self.assertIsNotNone(results)
         self.assertEqual(20, len(ioc_ips))
-        self.assertEqual(15, len(results[results["Result"] == True]))
+        self.assertEqual(15, len(results[results["Result"]]))
 
         # Fail Lookups
         results = ti_lookup.lookup_iocs(data={"c:\\empty_result.txt": "windows_path"})

@@ -538,6 +538,8 @@ class QueryTime(RegisteredWidget):
         )
         self._w_start_time_txt.value = self._query_start.isoformat(sep=" ")
         self._w_end_time_txt.value = self._query_end.isoformat(sep=" ")
+        self.before = abs(self._w_tm_range.value[0])
+        self.after = abs(self._w_tm_range.value[1])
 
     @property
     def start(self):
@@ -558,6 +560,11 @@ class QueryTime(RegisteredWidget):
     def timespan(self):
         """Return the timespan as a TimeSpan object."""
         return TimeSpan(start=self.start, end=self.end)
+
+    @property
+    def value(self):
+        """Return the timespan as a TimeSpan object."""
+        return self.timespan
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -1007,7 +1014,7 @@ class GetText(RegisteredWidget):
     @property
     def value(self):
         """Get the current value of the key."""
-        return self._value.strip()
+        return self._value.strip() if self._value else None
 
     def display(self):
         """Display the interactive widgets."""
