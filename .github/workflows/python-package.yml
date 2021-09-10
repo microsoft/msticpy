@@ -44,7 +44,7 @@ jobs:
         python -m pip install -e .
     - name: Install test dependencies
       run: |
-        python -m pip install flake8 black bandit mypy lxml pylint
+        python -m pip install flake8 black bandit mypy lxml pylint types-attrs
         python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install Pygments responses markdown beautifulsoup4
     - name: Pytest
