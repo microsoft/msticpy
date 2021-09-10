@@ -34,7 +34,12 @@ class Url(Entity):
 
     ID_PROPERTIES = ["Url"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs
+    ):
         """
         Create a new instance of the entity type.
 
@@ -73,7 +78,7 @@ class Url(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.__class__.__name__
+        return self.Url or self.__class__.__name__
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -94,5 +99,5 @@ class Url(Entity):
     _entity_schema: Dict[str, Any] = {
         # Url (type System.String)
         "Url": None,
-        "DetonationVerdict": None
+        "DetonationVerdict": None,
     }
