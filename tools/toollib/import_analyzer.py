@@ -9,6 +9,7 @@ import re
 import sys
 from importlib import import_module
 from typing import Dict, List, Optional, Set
+import warnings
 
 import networkx as nx
 
@@ -135,8 +136,7 @@ def get_extras_from_setup(
 
     neut_setup_py = Path(package_root) / "neut_setup.py"
     try:
-        with open(neut_setup_py, "w") as f_handle:
-            f_handle.writelines(setup_txt)
+        neut_setup_py.write_text(setup_txt)
 
         setup_mod = import_module("neut_setup")
         extras = getattr(setup_mod, "EXTRAS").get(extra)
@@ -147,7 +147,14 @@ def get_extras_from_setup(
             )
         return sorted(list(set(extras)), key=str.casefold)
     finally:
-        neut_setup_py.unlink()
+        try:
+            if neut_setup_py.is_file():
+                try:
+                    neut_setup_py.unlink()
+                except (FileNotFoundError, PermissionError) as err:
+                    warnings.warn(f"Unable to remove {neut_setup_py}. Error {err}")
+        except PermissionError:
+            print(f"could not remove temp file {neut_setup_py}")
 
 
 def _extract_pkg_specs(pkg_specs: List[str]):

@@ -3,18 +3,15 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""datq query test class."""
-import io
+"""Pkg_config test class."""
 import unittest
 import os
-from contextlib import redirect_stdout
 from pathlib import Path
 import warnings
 
 import yaml
 
 from msticpy.common import pkg_config
-from msticpy.common.wsconfig import WorkspaceConfig
 from msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
 
 from ..unit_test_lib import get_test_data_path, custom_mp_config
@@ -85,72 +82,6 @@ class TestPkgConfig(unittest.TestCase):
                             or "KeyVaultURI" in arg_val
                         )
 
-    def test_wsconfig(self):
-        """Test WorkspaceConfig."""
-        test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
-        with custom_mp_config(test_config1):
-            # Default workspace
-            _DEF_WS = {
-                "WorkspaceId": "52b1ab41-869e-4138-9e40-2a4457f09bf3",
-                "TenantId": "72f988bf-86f1-41af-91ab-2d7cd011db49",
-            }
-            ws_config = WorkspaceConfig()
-            self.assertIn("workspace_id", ws_config)
-            self.assertEqual(ws_config["workspace_id"], _DEF_WS["WorkspaceId"])
-            self.assertIn("tenant_id", ws_config)
-            self.assertEqual(ws_config["tenant_id"], _DEF_WS["TenantId"])
-            self.assertIsNotNone(ws_config.code_connect_str)
-            self.assertTrue(
-                ws_config.code_connect_str.startswith("loganalytics://code().tenant(")
-                and _DEF_WS["WorkspaceId"] in ws_config.code_connect_str
-                and _DEF_WS["TenantId"] in ws_config.code_connect_str
-            )
-
-            # Named workspace
-            _NAMED_WS = {
-                "WorkspaceId": "a927809c-8142-43e1-96b3-4ad87cfe95a3",
-                "TenantId": "69d28fd7-42a5-48bc-a619-af56397b9f28",
-            }
-            wstest_config = WorkspaceConfig(workspace="MyTestWS")
-            self.assertIn("workspace_id", wstest_config)
-            self.assertIsNotNone(wstest_config["workspace_id"])
-            self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
-            self.assertIn("tenant_id", wstest_config)
-            self.assertEqual(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
-            self.assertIsNotNone(wstest_config.code_connect_str)
-            self.assertTrue(
-                wstest_config.code_connect_str.startswith(
-                    "loganalytics://code().tenant("
-                )
-                and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
-                and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
-            )
-
-        # Fallback to config.json
-        test_config2 = Path(_TEST_DATA).joinpath("msticpyconfig-noAzSentSettings.yaml")
-        with custom_mp_config(test_config2):
-            _NAMED_WS = {
-                "WorkspaceId": "9997809c-8142-43e1-96b3-4ad87cfe95a3",
-                "TenantId": "99928fd7-42a5-48bc-a619-af56397b9f28",
-            }
-            wrn_mssg = io.StringIO()
-            with redirect_stdout(wrn_mssg):
-                wstest_config = WorkspaceConfig()
-            self.assertIn("Could not find Azure Sentinel settings", wrn_mssg.getvalue())
-            self.assertIn("workspace_id", wstest_config)
-            self.assertIsNotNone(wstest_config["workspace_id"])
-            self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
-            self.assertIn("tenant_id", wstest_config)
-            self.assertEqual(wstest_config["tenant_id"], _NAMED_WS["TenantId"])
-            self.assertIsNotNone(wstest_config.code_connect_str)
-            self.assertTrue(
-                wstest_config.code_connect_str.startswith(
-                    "loganalytics://code().tenant("
-                )
-                and _NAMED_WS["WorkspaceId"] in wstest_config.code_connect_str
-                and _NAMED_WS["TenantId"] in wstest_config.code_connect_str
-            )
-
     def test_geo_ip_settings(self):
         """Test get geo_ip_settings."""
         if "MAXMIND_AUTH" not in os.environ:
@@ -186,6 +117,12 @@ class TestPkgConfig(unittest.TestCase):
         with custom_mp_config(test_config1):
             results = pkg_config.validate_config()
             self.assertGreater(len(results[0]), 1)
+            # save env vars
+            vt_auth_save = os.environ.get("VTAUTHKEY", "")
+            xf_id__save = os.environ.get("XFORCE_ID", "")
+            xf_auth_save = os.environ.get("XFORCE_KEY", "")
+            xf_auth_save = os.environ.get("MAXMIND_AUTH", "")
+            # set to some value
             os.environ["VTAUTHKEY"] = "myXfId"
             os.environ["XFORCE_ID"] = "myXfId"
             os.environ["XFORCE_KEY"] = "myXfId"
@@ -193,3 +130,9 @@ class TestPkgConfig(unittest.TestCase):
             pkg_config.refresh_config()
             results = pkg_config.validate_config()
             self.assertEqual(results, ([], []))
+
+            # restore env vars to original
+            os.environ["VTAUTHKEY"] = vt_auth_save
+            os.environ["XFORCE_ID"] = xf_id__save
+            os.environ["XFORCE_KEY"] = xf_auth_save
+            os.environ["MAXMIND_AUTH"] = xf_auth_save

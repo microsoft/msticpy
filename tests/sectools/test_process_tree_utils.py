@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """process tree utils test class."""
-import ast
 import os
 from pathlib import Path
 
@@ -12,23 +11,16 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
-
 from msticpy.nbtools.process_tree import build_and_show_process_tree
 from msticpy.sectools import process_tree_utils as pt_util
 from msticpy.sectools import proc_tree_builder as pt_build
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from ..unit_test_lib import TEST_DATA_PATH
 
-testdf_win = pd.read_pickle(Path(_TEST_DATA).joinpath("win_proc_test.pkl"))
-testdf_lx = pd.read_pickle(Path(_TEST_DATA).joinpath("linux_proc_test.pkl"))
+testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
+testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
 testdf_win_mde = pd.read_csv(
-    Path(_TEST_DATA).joinpath("mde_proc_cs1.csv"),
+    Path(TEST_DATA_PATH).joinpath("mde_proc_cs1.csv"),
     parse_dates=[
         "CreatedProcessCreationTime",
         "CreatedProcessFileCreationTime",

@@ -454,7 +454,10 @@ class QuerySource:
             if def_value:
                 param_block.append(f"    (default value is: {def_value})")
             if "aliases" in p_props:
-                alias_list = ", ".join(f"'{alias}'" for alias in p_props["aliases"])
+                aliases = p_props["aliases"]
+                if isinstance(aliases, str):
+                    aliases = [aliases]
+                alias_list = ", ".join(f"'{alias}'" for alias in aliases)
                 param_block.append(f"    Aliases: {alias_list}")
         doc_string = [f"{self.description}", ""]
         return "\n".join(doc_string + param_block)
