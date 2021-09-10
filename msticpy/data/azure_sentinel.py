@@ -435,10 +435,10 @@ class AzureSentinel(AzureData):
             if alerts_resp.status_code == 200:
                 for alrts in alerts_resp.json()["value"]:
                     unique_alerts = [
-                        (
-                            alrts["properties"]["systemAlertId"],
-                            alrts["properties"]["alertDisplayName"],
-                        )
+                        {
+                            "ID": alrts["properties"]["systemAlertId"],
+                            "Name": alrts["properties"]["alertDisplayName"],
+                        }
                         for alrts in alerts_resp.json()["value"]
                     ]
                     incident_df["Alerts"] = [unique_alerts]

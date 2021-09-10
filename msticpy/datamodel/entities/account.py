@@ -178,7 +178,6 @@ class Account(Entity):
         else:
             self.UPNSuffix = None
 
-
     _entity_schema = {
         # Name (type System.String)
         "Name": None,

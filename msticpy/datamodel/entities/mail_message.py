@@ -82,7 +82,12 @@ class MailMessage(Entity):
 
     ID_PROPERTIES = ["NetworkMessageId", "Recipient"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs
+    ):
         """
         Create a new instance of the entity type.
 
@@ -135,25 +140,24 @@ class MailMessage(Entity):
             self._create_from_event(src_event)
 
     def _create_from_event(self, src_event):
-        self.Recipient = src_event["Recipient"] if "Recipient" in src_event else None
-        self.Files = src_event["FileEntityIds"] if "FileEntityIds" in src_event else None
-        self.Urls = src_event["Urls"] if "Urls" in src_event else None
-        self.Threats = src_event["Threats"] if "Threats" in src_event else None
-        self.SenderIP = src_event["SenderIP"] if "SenderIP" in src_event else None
-        self.P1Sender = src_event["P1Sender"] if "P1Sender" in src_event else None
-        self.P1SenderDisplayName = src_event["P1SenderDisplayName"] if "P1SenderDisplayName" in src_event else None
-        self.P1SenderDomain = src_event["P1SenderDomain"] if "P1SenderDomain" in src_event else None
-        self.P2Sender = src_event["P2Sender"] if "P2Sender" in src_event else None
-        self.P2SenderDisplayName = src_event["P2SenderDisplayName"] if "P2SenderDisplayName" in src_event else None
-        self.P2SenderDomain = src_event["P2SenderDomain"] if "P2SenderDomain" in src_event else None
-        self.ReceivedDate = src_event["ReceiveDate"] if "ReceiveDate" in src_event else None
-        self.NetworkMessageId = src_event["NetworkMessageId"] if "NetworkMessageId" in src_event else None
-        self.InternetMessageId = src_event["InternetMessageId"] if "InternetMessageId" in src_event else None
-        self.Subject = src_event["Subject"] if "Subject" in src_event else None
-        self.AntispamDirection = src_event["AntispamDirection"] if "AntispamDirection" in src_event else None
-        self.DeliveryAction = src_event["DeliveryAction"] if "DeliveryAction" in src_event else None
-        self.Language = src_event["Language"] if "Language" in src_event else None
-
+        self.Recipient = src_event.get("Recipient")
+        self.Files = src_event.get("FileEntityIds")
+        self.Urls = src_event.get("Urls")
+        self.Threats = src_event.get("Threats")
+        self.SenderIP = src_event.get("SenderIP")
+        self.P1Sender = src_event.get("P1Sender")
+        self.P1SenderDisplayName = src_event.get("P1SenderDisplayName")
+        self.P1SenderDomain = src_event.get("P1SenderDomain")
+        self.P2Sender = src_event.get("P2Sender")
+        self.P2SenderDisplayName = src_event.get("P2SenderDisplayName")
+        self.P2SenderDomain = src_event.get("P2SenderDomain")
+        self.ReceivedDate = src_event.get("ReceiveDate")
+        self.NetworkMessageId = src_event.get("NetworkMessageId")
+        self.InternetMessageId = src_event.get("InternetMessageId")
+        self.Subject = src_event.get("Subject")
+        self.AntispamDirection = src_event.get("AntispamDirection")
+        self.DeliveryAction = src_event.get("DeliveryAction")
+        self.Language = src_event.get("Language")
 
     @property
     def description_str(self):

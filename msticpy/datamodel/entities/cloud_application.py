@@ -68,7 +68,6 @@ class CloudApplication(Entity):
         """Return Entity Name."""
         return self.Name or self.__class__.__name__
 
-
     _entity_schema = {
         # Name (type System.String)
         "Name": None,

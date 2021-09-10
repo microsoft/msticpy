@@ -92,7 +92,6 @@ class IpAddress(Entity):
         """Return Entity Name."""
         return self.Address or self.__class__.__name__
 
-
     _entity_schema = {
         # Address (type System.String)
         "Address": None,
