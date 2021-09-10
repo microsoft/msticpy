@@ -6,26 +6,18 @@
 """TIProviders test class."""
 import datetime as dt
 import io
-import os
-import pdb
 import random
 import string
 import unittest
 import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
-from typing import Any, Tuple, Union
-from unittest import mock
 
 import pandas as pd
 
 from msticpy.common import pkg_config
-from msticpy.sectools.iocextract import IoCExtract
 from msticpy.sectools.tilookup import TILookup
 from msticpy.sectools.tiproviders import (
-    HttpProvider,
-    LookupResult,
-    ProviderSettings,
     get_provider_settings,
     preprocess_observable,
 )
@@ -34,10 +26,12 @@ from msticpy.sectools.tiproviders.ti_provider_base import (
     _clean_url,
     generate_items,
 )
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import get_test_data_path, custom_mp_config
 
 _TEST_DATA = get_test_data_path()
 
+
+# pylint: disable=protected-access
 
 ioc_ips = [
     "185.92.220.35",
@@ -70,6 +64,7 @@ def is_benign_ioc(request_item):
 
 
 def mocked_session(*args, **kwargs):
+    del args, kwargs
     return mock_req_session()
 
 
@@ -252,7 +247,7 @@ class TestTIProviders(unittest.TestCase):
 
     def test_ti_config_and_load(self):
         config_path = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")
-        with custom_mp_config(self.config_path):
+        with custom_mp_config(config_path):
             with warnings.catch_warnings():
                 # We want to ignore warnings from missing config
                 warnings.simplefilter("ignore", category=UserWarning)
@@ -326,10 +321,11 @@ class TestTIProviders(unittest.TestCase):
             data=(ioc_ips + ioc_benign_iocs), providers=[provider_name]
         )
         self.assertEqual(20, len(results_df))
-        self.assertEqual(17, len(results_df[results_df["Result"] == True]))
+        self.assertEqual(17, len(results_df[results_df["Result"]]))
 
         ti_provider._requests_session = saved_session
 
+    # pylint: disable=pointless-statement
     def verify_result(self, result):
         self.assertIsNotNone(result)
         for prov, lu_result in result[1]:
@@ -354,7 +350,6 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        saved_session = ti_provider._requests_session
         ti_provider._requests_session = mock_req_session()
         iocs = {
             "google.com": ("dns", None),
@@ -371,7 +366,7 @@ class TestTIProviders(unittest.TestCase):
                 providers=["OPR"],
             )
             self.assertIsNotNone(result)
-            for prov, lu_result in result[1]:
+            for _, lu_result in result[1]:
                 self.assertIsNotNone(lu_result.ioc)
                 self.assertIsNotNone(lu_result.ioc_type)
                 if lu_result.severity in ["warning", "high"]:
@@ -399,7 +394,6 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        saved_session = ti_provider._requests_session
         ti_provider._requests_session = mock_req_session()
 
         n_requests = 250
@@ -410,14 +404,14 @@ class TestTIProviders(unittest.TestCase):
             len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]),
             n_requests / 3,
         )
-        self.assertEqual(n_requests, len(results_df[results_df["Result"] == True]))
+        self.assertEqual(n_requests, len(results_df[results_df["Result"]]))
 
     def _generate_rand_domain(self):
         dom_suffixes = ["com", "org", "net", "biz"]
         letters = string.ascii_letters
         str_length = random.randint(4, 20)
         dom = ""
-        for i in range(0, 2):
+        for _ in range(0, 2):
             dom_part = "".join(random.choice(letters) for i in range(str_length))
             dom = dom + "." + dom_part if dom else dom_part
         suffix = random.choice(dom_suffixes)
@@ -491,7 +485,6 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(sev_warn2, TISeverity.warning)
 
         sev_unknown = TISeverity.unknown
-        sev_high = TISeverity.high
         self.assertTrue(sev_inf == TISeverity.information)
         self.assertTrue(sev_inf <= "information")
         self.assertTrue(sev_inf < 1)

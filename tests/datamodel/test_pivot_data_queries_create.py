@@ -33,6 +33,8 @@ except ImportError:
 
 __author__ = "Ian Hellen"
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture(scope="module")
 def azure_sentinel():
@@ -204,7 +206,7 @@ _WRAP_TEST_CASES_DF = [
 
 
 @pytest.mark.parametrize("test_input, expected", _WRAP_TEST_CASES_DF)
-def test_create_pivot_func(test_input, expected):
+def test_create_pivot_func_df(test_input, expected):
     """Test wrapper creation for data queries."""
     attrib_map = {"p1": "p1", "p2": "p2", "p3": "p3", "p4": "p4"}
 

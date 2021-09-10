@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module docstring."""
+import json
+
 import pytest
 import pytest_check as check
 
@@ -12,9 +14,11 @@ from msticpy.datamodel import entities
 from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress
 from msticpy.datamodel.pivot import Pivot
 
+from ...unit_test_lib import get_test_data_path
+
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, broad-except
 
 
 @pytest.fixture(scope="module")
@@ -115,3 +119,43 @@ def test_entity_instantiation():
             # Check that we can access properties without incident
             for attr in (attr for attr in dir(ent_obj) if not attr.startswith("_")):
                 getattr(ent_obj, attr)
+
+
+def test_entity_creation():
+    """Test creating entities from raw data."""
+
+    input_file = get_test_data_path().joinpath("entities.json")
+    with open(input_file, "r") as file_handle:
+        txt = file_handle.read()
+        entity_dict = json.loads(txt)
+
+    parsed_entities = []
+    for _, entity in entity_dict.items():
+        entity = entities.Entity.instantiate_entity(entity)
+
+        check.is_instance(entity, entities.Entity)
+
+        if entity["Type"] == "account":
+            check.is_instance(entity, entities.Account)
+            check.is_true("Name" in entity)
+            check.greater(len(entity.Name), 0)
+        elif entity["Type"] == "host":
+            check.is_instance(entity, entities.Host)
+            check.is_true("HostName" in entity)
+            check.greater(len(entity.HostName), 0)
+        elif entity["Type"] == "process":
+            check.is_instance(entity, entities.Process)
+            check.is_true("ProcessId" in entity)
+            check.greater(len(entity.ProcessId), 0)
+        elif entity["Type"] == "file":
+            check.is_instance(entity, entities.File)
+            check.is_true("Name" in entity)
+            check.greater(len(entity.Name), 0)
+        elif entity["Type"] == "ipaddress":
+            check.is_instance(entity, entities.IpAddress)
+            check.is_true("Address" in entity)
+            check.greater(len(entity.Address), 0)
+
+        parsed_entities.append(entity)
+
+    check.greater_equal(len(parsed_entities), 7)

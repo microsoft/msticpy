@@ -4,22 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """IP Utils test class."""
-import unittest
-import json
 import os
+import unittest
 
 import pandas as pd
+from msticpy.sectools.ip_utils import get_ip_type, get_whois_df, get_whois_info
 
-from msticpy.sectools.ip_utils import get_whois_info, get_whois_df, get_ip_type
-
-
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+from ..unit_test_lib import TEST_DATA_PATH
 
 
 class TestIpUtils(unittest.TestCase):
@@ -45,7 +36,7 @@ class TestIpUtils(unittest.TestCase):
     }
 
     def setUp(self):
-        input_file = os.path.join(_TEST_DATA, "az_net_flows.csv")
+        input_file = os.path.join(TEST_DATA_PATH, "az_net_flows.csv")
         self.input_df = pd.read_csv(input_file).sample(10)
 
     def test_get_ip_type(self):
@@ -66,10 +57,10 @@ class TestIpUtils(unittest.TestCase):
     def test_get_whois(self):
         ms_ip = "13.107.4.50"
         ms_asn = "MICROSOFT-CORP"
-        asn, whois = get_whois_info(ms_ip)
+        asn, _ = get_whois_info(ms_ip)
         self.assertIn(ms_asn, asn)
 
-        asn, whois = get_whois_info(self.IPV4["Private"][0])
+        asn, _ = get_whois_info(self.IPV4["Private"][0])
         invalid_type = "No ASN Information for IP type: Private"
         self.assertEqual(asn, invalid_type)
 
