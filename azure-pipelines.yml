@@ -111,7 +111,7 @@ stages:
     # This is run explicitly, so does not need to be auto-injected
     skipComponentGovernanceDetection: true
   jobs:
-    - job: Python-Linters
+    - job: PythonLintersJob
       pool:
         vmImage: windows-latest
       variables:
