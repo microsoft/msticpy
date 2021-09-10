@@ -153,26 +153,26 @@ def dbcluster_events(
 
 
 def _merge_clustered_items(
-    cluster_set: np.array,
-    labels: np.array,
-    data: Union[pd.DataFrame, np.array],
+    cluster_set: np.ndarray,
+    labels: np.ndarray,
+    data: Union[pd.DataFrame, np.ndarray],
     time_column: str,
-    counts: np.array,
+    counts: np.ndarray,
 ) -> pd.DataFrame:
     """
     Merge outliers and core clusters into single DataFrame.
 
     Parameters
     ----------
-    cluster_set : np.array
+    cluster_set : np.ndarray
         The set of clusters
-    labels : np.array
+    labels : np.ndarray
         The cluster labels
-    data : Union[pd.DataFrame, np.array]
+    data : Union[pd.DataFrame, np.ndarray]
         The source data
     time_column : str
         Name of the Time column
-    counts : np.array
+    counts : np.ndarray
         The counts of members in each cluster
 
     Returns

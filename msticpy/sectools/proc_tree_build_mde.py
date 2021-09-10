@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process tree builder routines for MDE process data."""
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -200,9 +200,10 @@ def _split_file_path(
     path_col: str = "CreatedProcessFilePath",
     file_col: str = "CreatedProcessName",
     separator: str = "\\",
-):
+) -> Dict[str, Union[str, float]]:
     """Split file path in to folder/stem."""
-    f_path = f_stem = np.nan
+    f_path: Union[str, float] = np.nan
+    f_stem: Union[str, float] = np.nan
     try:
         f_path, _, f_stem = input_path.rpartition(separator)
     except AttributeError:
