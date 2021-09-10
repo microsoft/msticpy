@@ -61,13 +61,13 @@ to do this.
    image.png
 
 If you see nothing but a pair of curly braces in the settings view above it means that you
-should set up a `msticpyconfig.yaml`.
+should set up a ``msticpyconfig.yaml``.
 
 .. figure:: _static/mp_config_file_no_settings.png
    :alt: MSTICPy empty settings showing in MpConfigFile viewer
 
 
-.. note:: If you know that you have configured a `msticpyconfig` file
+.. note:: If you know that you have configured a ``msticpyconfig`` file
    you can search for this file using MpConfigFile. Click on **Load file**
    and browse to or search for the file.
    Once you’ve done that go to the `Setting the path to your
@@ -132,7 +132,7 @@ is probably faster if you know where your config file is.
     mpconfig.settings
 
 
-.. parsed-literal::
+.. code:: ipython3
 
     {'AzureSentinel': {'Workspaces': {'ASWorkspace': {'ResourceGroup': 'ASWorkspaceRG',
         'SubscriptionId': '2c1bc08d-6a9e-43f0-aa55-a84f383b1a6b',
@@ -154,12 +154,12 @@ It uses a tabbed interface to show different settings sections.
    :alt: Configuration editor Interface.
 
 As well as showing settings, there is text box to input a file name to
-save the settings to - with a corresponding **Save File** button.
+save the settings to - with a corresponding **Save Settings** button.
 
 .. note:: Each settings tab has a **Save** button. This saves changes on
    the current editor screen to an in-memory copy of your settings. They
    are not saved to a file until you enter a file name and click on
-   **Save File**.
+   **Save Settings**.
 
 The **Validate Settings** also lets you check on the status of the settings.
 It does a logical check (for sections/settings that you probably need) as
@@ -379,7 +379,7 @@ See `Key Vault`_ later in this document.
 *MSTICPy* will generate a default name for the secret based on the path
 of the setting (e.g. "TIProviders-VirusTotal-Args-AuthKey"). If the value
 is successfully uploaded the **Value** field in the settings dialog will
-be deleted and the underlying setting replaced with a `{ "KeyVault": null }`
+be deleted and the underlying setting replaced with a ``{ "KeyVault": null }``
 value. *MSTICPy* will use this to indicate that it should generate the path
 automatically when trying to retrieve the key.
 
@@ -413,7 +413,7 @@ the API for the following steps.
 - Click **Add**
 - Paste your Maxmind key into the **Value** field
 
-Set the maxmind data folder: - This defaults to ``~/.msticpy``
+Set the Maxmind data folder: - this defaults to ``~/.msticpy``
 - On Windows this translates to the foldername ``%USERPROFILE%/.msticpy``.
 - On Linux/Mac this translates to the folder ``.msticpy`` in your home folder.
 
@@ -458,6 +458,7 @@ Test that the GeoIP settings work
     &nbsp;&nbsp;'Type':&nbsp;'ipaddress',<br>
     &nbsp;&nbsp;'edges':&nbsp;set()}
 
+|
 
 This is the equivalent for Maxmind *GeoLite*.
 
@@ -488,6 +489,110 @@ This is the equivalent for Maxmind *GeoLite*.
 
 |
 
+Azure Cloud and Authentication Settings
+---------------------------------------
+
+Azure Cloud Settings
+~~~~~~~~~~~~~~~~~~~~
+
+From version 1.4.0 MSTICPy supports multiple sovereign clouds in addition
+to the Azure global cloud.
+
+The Azure clouds supported are:
+
+- **cn** - China
+- **de** - Germany
+- **usgov** - US Government
+
+Configuring MSTICPy to use one of these clouds will cause the following
+components to use the Authority and API endpoint URLs specific to that cloud.
+
+These components include:
+
+- Azure Sentinel data provider
+- Azure Sentinel API
+- Azure Data (Azure resource API) provider
+- Azure Resource graph provider
+- Azure Key Vault
+
+To set the cloud run the following code in a Jupyter notebook:
+
+.. code:: ipython3
+
+   mpedit = MpConfigEdit()
+   mpedit
+
+.. figure:: _static/settings_azure_cloud.png
+   :alt: Azure cloud and authentication settings.
+
+Select the **Azure** tab and choose the required cloud identifier from
+the list. Click **Save** and then **Save Settings** to update and
+write the changed settings to your configuration file.
+
+
+Default Azure authentication methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the Azure settings tab you can also specify the default authentication
+methods that you want to use. The available methods are:
+
+- **env** - Use credentials set in environment variables
+- **cli** - Using credentials available in an local AzureCLI logon
+- **msi** - Using the Managed Service Identity (MSI) credentials of the
+  machine you are running the notebook kernel on
+- **interactive** - Interactive browser logon
+
+You can select one or more of these. When attempting to authenticate,
+MSTICPy will try each of the selected methods in turn until one
+succeeds (or they all fail). This uses a mechanism known as a
+*ChainedCredential*. This does give you flexibility and a useful
+fallback, if your preferred authentication method does not work.
+However, it does take additional time to cycle through multiple
+methods. If you know, for example, that you always want to use *interactive*
+browser logon (with device code authorization), select this one
+and leave the others unselected.
+
+.. note:: If you are using a remote Jupyter notebook service such as
+   Azure Machine Learning, the first three methods refer to things
+   running on the Jupyter server (the Azure ML Compute). For example,
+   if you want to use AzureCLI credentials you must run ``az login`` on
+   the compute (you may need to install Azure CLI to do this).
+   Similarly, with MSI credentials, these are the credentials of the
+   Jupyter hub server, not the machine that your browser is running
+   on. For environment variables, these must be set on the
+   Jupyter server.
+
+   MSI authentication is not currently support on AML compute.
+
+Using Azure CLI as your default login method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Due to its ability to cache credentials, we strongly
+recommend using Azure CLI logon. This allows all MSTICPy
+Azure functions to try to obtain current credentials from Azure
+CLI rather than initiate an interactive authentication.
+This is especially helpful when using multiple Azure components
+or when using multiple notebooks.
+
+If the host running your notebook kernel does not have Azure CLI
+installed you can install it from
+`here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`__.
+
+To log in using Azure CLI enter the following:
+
+From a terminal:
+
+.. code:: bash
+
+   az login
+
+From a notebook
+
+.. code:: ipython3
+
+   !az login
+
+
 Optional Settings
 -----------------
 
@@ -496,6 +601,14 @@ Other data providers - Splunk, Azure CLI, LocalData, Mordor
 
 Azure API and Azure Sentinel API
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have set your preferences for Azure authentication methods
+in the **Azure** tab you do not need to add the **AzureCLI**
+data provider unless you want to explicitly use something other
+that the defaults for Azure and Azure Sentinel APIs. If you are
+happy to use the defaults, you can skip the remainder of this section.
+
+See `Default Azure authentication methods`_ for details about this.
 
 To access Azure APIs (such as the Sentinel APIs or Azure resource APIs)
 you need to be able to use Azure Authentication. The setting is named
@@ -506,22 +619,8 @@ We currently support two ways of authenticating:
 1. Chained chained authentication (recommended)
 2. With a client app ID and secret
 
-Chained authentication lets you try up to four methods of authentication:
-
-- Using credentials set in environment variables
-- Using credentials available in an local AzureCLI logon
-- Using the Managed Service Identity (MSI) credentials of the
-  machine you are running the notebook kernel on
-- Interactive browser logon
-
-.. note:: If you are using a remote Jupyter notebook service such as
-   Azure Machine Learning, the first three methods refer to things
-   running on the Jupyter server (the Azure ML Compute). For example,
-   if you want to use AzureCLI credentials you must run ``az login`` on
-   the compute (you may need to install Azure CLI to do this).
-   Similarly, with MSI credentials, these are the credentials of the
-   Jupyter hub server, not the machine that your browser is running
-   on.
+Chained authentication lets you try up to four methods of authentication
+as described in `Default Azure authentication methods`_.
 
 To use chained authentication methods select the methods to want to use
 and leave the clientId/tenantId/clientSecret fields empty.
@@ -554,7 +653,9 @@ can have multiple values:
 Mordor
 ^^^^^^
 
-The mordor provider has two options:
+.. note:: The Mordor GitHub repo has been renamed to "SecurityDatasets".
+
+The Mordor provider has two options:
 
 - The path to save temporary downloaded files (default is the current directory)
 - Whether to cache files or delete them immediately after download.
@@ -589,11 +690,17 @@ Only **VaultName**, **TenantId** and **Authority** are required to
 retrieve secrets from the the Vault. The other values are needed if you
 opt to create a vault from MSTICPy. See
 
-.. note:: Currently we’ve only implemented and tested the Azure "global"
-   cloud fully
-   but if you are using a regional or national cloud and this isn’t
-   working please let us know msticpy@microsoft.com and we’ll get it
-   fixed.
+.. note:: If you have set values for the Authority in the Azure Settings
+   section (see `Azure Cloud and Authentication Settings`_),
+   you do not need to specify it here. Due to limitations of
+   the configuration editor, you cannot empty an empty value in this
+   tab. If you are using a cloud other than the Azure global cloud, make sure
+   that you either
+
+   - set the **Authority** value to the same value as you have set in the
+     **Azure** settings section
+   - manually delete the KeyVault\\Authority value from your msticpyconfig.yaml
+
 
 For more details see
 :ref:`Specifying secrets as Key Vault secrets <getting_started/msticpyconfig:Specifying secrets as Key Vault secrets>`
@@ -737,13 +844,13 @@ either “GeoLiteLookup” or “IPStack”
 
 **Notebooklets**
 
-This has a single parameter block **AzureSentinel**. At minumum you
+This has a single parameter block **AzureSentinel**. At minimum you
 should specify the workspace name. This needs to be in the following
 format:
 
-::
+.. code::
 
-       workspace:WORKSPACENAME
+   workspace:WORKSPACENAME
 
 *WORKSPACENAME* must be one of the workspaces defined in the Azure
 Sentinel tab.
@@ -752,13 +859,13 @@ You can also add addition parameters to send to the notebooklets init
 function: Specify these as addition key:value pairs, separated by
 newlines.
 
-::
+.. code::
 
-       workspace:WORKSPACENAME
-       providers=["LocalData","geolitelookup"]
+   workspace:WORKSPACENAME
+   providers=["LocalData","geolitelookup"]
 
-See the `msticnb init
-documentation <https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__
+See the `msticnb init documentation
+<https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__
 for more details
 
 
