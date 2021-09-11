@@ -37,9 +37,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip==20.2.4 wheel setuptools
         if [ -f requirements-all.txt ]; then
-          pip install -r requirements-all.txt
+          python -m pip install -r requirements-all.txt
         elif [ -f requirements.txt ]; then
-          pip install -r requirements.txt;
+          python -m pip install -r requirements.txt;
         fi
         python -m pip install -e .
     - name: Install test dependencies
@@ -71,7 +71,7 @@ jobs:
     - name: prospector
       run: |
         # install this separately since it uses older versions of pylint/isort
-        pip install --upgrade prospector
+        python -m pip install --upgrade prospector
         prospector --ignore-paths tests --without-tool pylint
     - name: mypy
       run: |

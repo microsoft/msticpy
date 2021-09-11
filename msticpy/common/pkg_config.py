@@ -351,8 +351,11 @@ def _check_provider_settings(mp_config, section, key_provs):
         if "Args" not in p_setting:
             continue
         sec_args = p_setting.get("Args")
-        if not sec_args:
-            mp_errors.append(f"'{section}/{p_name}/{sec_args}' key has no settings.")
+        if not sec_args or not isinstance(sec_args, dict):
+            mp_errors.append(
+                f"'{section}/{p_name}/{sec_args}' key has no settings or "
+                + "is not a valid format."
+            )
             continue
         sec_path = f"{section}/{p_name}" if section else f"{p_name}"
         mp_errors.extend(
