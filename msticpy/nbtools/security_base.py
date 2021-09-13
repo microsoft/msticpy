@@ -53,7 +53,7 @@ class SecurityBase(QueryParamProvider):
         self._entities: List[Entity] = []
 
         # Extract and cache alert ID properties
-        self._ids: Dict[str, str] = dict()
+        self._ids: Dict[str, str] = {}
         if self._source_data is not None:
             for id_property in _ID_PROPERTIES:
                 if id_property in self._source_data:

@@ -231,7 +231,7 @@ class QueryStore:
             a source file.
 
         """
-        env_stores: Dict[str, QueryStore] = dict()
+        env_stores: Dict[str, QueryStore] = {}
         for query_dir in source_path:
             if not path.isdir(query_dir):
                 raise FileNotFoundError(f"{query_dir} is not a directory")

@@ -33,7 +33,7 @@ class SecurityAlert(SecurityBase):
         super().__init__(src_row=src_row)
 
         # add entities to dictionary to remove dups
-        self._src_entities: Dict[int, Entity] = dict()
+        self._src_entities: Dict[int, Entity] = {}
 
         self.extended_properties: Dict[str, Any] = {}
         if src_row is not None:

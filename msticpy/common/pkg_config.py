@@ -149,7 +149,7 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
 
     """
     if Path(config_file).is_file():
-        with open(config_file) as f_handle:
+        with open(config_file, "r", encoding="utf-8") as f_handle:
             # use safe_load instead of load
             try:
                 return yaml.safe_load(f_handle)

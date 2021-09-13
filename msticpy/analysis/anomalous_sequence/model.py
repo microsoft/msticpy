@@ -105,16 +105,16 @@ class Model:
         self.value_probs = None
         self.value_cond_param_probs = None
 
-        self.set_params_cond_cmd_probs = dict()  # type: Dict[str, Dict[str, float]]
+        self.set_params_cond_cmd_probs = {}  # type: Dict[str, Dict[str, float]]
 
         self.session_likelihoods = None
         self.session_geomean_likelihoods = None
 
-        self.rare_windows = dict()  # type: Dict[int, list]
-        self.rare_window_likelihoods = dict()  # type: Dict[int, list]
+        self.rare_windows = {}  # type: Dict[int, list]
+        self.rare_window_likelihoods = {}  # type: Dict[int, list]
 
-        self.rare_windows_geo = dict()  # type: Dict[int, list]
-        self.rare_window_likelihoods_geo = dict()  # type: Dict[int, list]
+        self.rare_windows_geo = {}  # type: Dict[int, list]
+        self.rare_window_likelihoods_geo = {}  # type: Dict[int, list]
 
     def train(self):
         """
@@ -507,11 +507,10 @@ class Model:
         """
         if self.session_likelihoods is None:
             self.compute_likelihoods_of_sessions()
-        result = []
-        for i in range(len(self.sessions)):
-            lik = self.session_likelihoods[i]
-            k = len(self.sessions[i])
-            result.append(lik ** (1 / k))
+        result = [
+            self.session_likelihoods[idx] ** (1 / len(session))
+            for idx, session in enumerate(self.sessions)
+        ]
 
         self.session_geomean_likelihoods = result
 

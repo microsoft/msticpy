@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Component Edit base and mixin classes."""
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 from time import sleep
 from typing import Dict, Optional, Union
 
@@ -265,7 +265,8 @@ class CEItemsBase(CompEditItems, ABC):
 class SettingsControl(ABC):
     """Abstract base class for settings controls."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def value(self) -> Union[str, Dict[str, Optional[str]]]:
         """Return the current value of the control."""
 

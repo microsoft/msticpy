@@ -184,7 +184,7 @@ stages:
     # This is run explicitly, so does not need to be auto-injected
     skipComponentGovernanceDetection: true
   jobs:
-  - job: SecurityTests1
+  - job: SecurityTests
     # Credscan must be run on Windows
     pool:
       vmImage: windows-latest
