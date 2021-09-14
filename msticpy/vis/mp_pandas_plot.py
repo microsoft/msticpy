@@ -266,6 +266,11 @@ class MsticpyPlotAccessor:
             The width of the plot figure (the default is 900)
         title : str, optional
             Title to display (the default is None)
+        hide_legend : bool, optional
+            Hide the legend box, even if legend_col is specified.
+        pid_fmt : str, optional
+            Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
+            default is 'hex'.
 
         Returns
         -------
