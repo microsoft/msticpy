@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree builder for Windows security and Linux auditd events."""
+import attr
 import pandas as pd
 
 from .._version import VERSION
@@ -14,7 +15,6 @@ __author__ = "Ian Hellen"
 
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
-LX_INT_TYPES = ["argc", "egid", "euid", "gid", "auid", "ppid", "pid", "ses", "uid"]
 
 
 def extract_process_tree(
@@ -92,17 +92,8 @@ def _clean_proc_data(
     if schema.event_type_col and schema.event_id_identifier:
         event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
         procs_cln = procs_cln[event_type_filter]
-
-    # Change Linux int cols to force int then to string types
-    type_chng_int_dict = {
-        col: "int" for col in LX_INT_TYPES if col in procs_cln.columns
-    }
-    if type_chng_int_dict:
-        procs_cln = procs_cln.astype(type_chng_int_dict)
-        type_chng_str_dict = {
-            col: "str" for col in LX_INT_TYPES if col in procs_cln.columns
-        }
-        procs_cln = procs_cln.astype(type_chng_str_dict)
+    # Convert any numeric schema cols to str types
+    procs_cln = _num_cols_to_str(procs_cln, schema)
 
     procs_cln["EffectiveLogonId"] = procs_cln[schema.logon_id]
     # Create effective logon Id for Windows, if the TargetLogonId is not 0x0
@@ -120,6 +111,39 @@ def _clean_proc_data(
         procs_cln["parent_proc_lc"] = procs_cln[schema.parent_name].str.lower()
     procs_cln["source_index"] = procs_cln.index
     return procs_cln
+
+
+def _num_cols_to_str(
+    procs_cln: pd.DataFrame,
+    schema: "ProcSchema",  # type: ignore  # noqa: F821
+) -> pd.DataFrame:
+    """
+    Change any numeric columns in our core schema to strings.
+
+    Some columns like PID arrive as float or int types.
+    We need to convert the floats to ints (since we want to get rid of the ".0")
+    and then convert the int columns to str. We need to do this since
+    we build parent/child keys by concatenating some of these value
+    into a single string.
+    """
+    # Change float/int cols in our core schema to force int
+    schema_cols = [
+        col for col in attr.asdict(schema).values() if col and col in procs_cln.columns
+    ]
+    force_int_cols = {
+        col: "int"
+        for col, col_type in procs_cln[schema_cols].dtypes.to_dict().items()
+        if pd.api.types.is_float_dtype(col_type)
+    }
+    procs_cln = procs_cln.astype(force_int_cols)
+    # then change any int types in to string types
+    # note: we need the prev
+    int_to_str_cols = {
+        col: "str"
+        for col, col_type in procs_cln[schema_cols].dtypes.to_dict().items()
+        if pd.api.types.is_integer_dtype(col_type)
+    }
+    return procs_cln.astype(int_to_str_cols)
 
 
 def _merge_parent_by_time(
