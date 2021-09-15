@@ -69,7 +69,6 @@ EXTRAS = {
         "azure-keyvault-secrets>=4.0.0",
         "azure-mgmt-keyvault>=2.0.0",
         "keyring>=13.2.1",  # needed by Key Vault package
-        "msrestazure>=0.6.0",
     ],
     "ml": ["scikit-learn>=0.20.2", "scipy>=1.1.0", "statsmodels>=0.11.1"],
     "sql2kql": ["moz_sql_parser>=4.5.0,<=4.11.21016"],

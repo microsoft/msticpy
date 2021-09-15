@@ -238,6 +238,7 @@ autodoc_mock_imports = [
     "matplotlib.pyplot",
     "moz_sql_parser",
     "msrest.authentication",
+    "msrestazure",
     "statsmodels",
     "scipy",
     "sklearn",
