@@ -181,6 +181,13 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             by default True
 
         """
+        # remove empty settings sections before saving
+        self.settings = {
+            sect: settings
+            for sect, settings in self.settings.items()
+            if sect and settings
+        }
+        # create a backup, if required
         if backup and Path(file).is_file():
             Path(file).replace(f"{file}.save_{datetime.now().strftime('%H%M%S')}")
         with open(file, "w") as mp_hdl:
