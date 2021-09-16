@@ -14,7 +14,7 @@ requests per minute for the account type that you have.
 """
 from datetime import datetime
 from functools import partial
-from typing import Any, Tuple, Optional
+from typing import Any, Tuple, Optional, Union
 
 
 from passivetotal import analyzer as ptanalyzer
@@ -27,6 +27,7 @@ from .ti_provider_base import (
     TIPivotProvider,
 )
 from ...common.utility import export
+from ...common.exceptions import MsticpyUserError
 from ..._version import VERSION
 
 __version__ = VERSION
@@ -200,7 +201,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
         except ptanalyzer.AnalyzerError as err:
             result.result = False
             result.status = TILookupStatus.query_failed.value
-            result.details = f"ERROR: {', '.join(err.args)}"
+            result.details = f"ERROR: {err}"
             result.raw_result = err
             result.set_severity(TISeverity.unknown)
 
@@ -296,7 +297,13 @@ class RiskIQ(TIProvider, TIPivotProvider):
         obj = ptanalyzer.get_object(host)
         if ts_changed and prop not in ["reputation", "summary", "whois"]:
             obj.reset(prop)
-        return getattr(obj, prop).to_dataframe(**kwargs)
+        try:
+            attrib = getattr(obj, prop)
+        except ptanalyzer.AnalyzerAPIError as e:
+            raise RiskIQAPIUserError(e)
+        except ptanalyzer.AnalyzerError as e:
+            raise RiskIQUserError(e.message)
+        return attrib.to_dataframe(**kwargs)
 
     def register_pivots(
         self,
@@ -337,3 +344,49 @@ class RiskIQ(TIProvider, TIPivotProvider):
                 ptanalyzer.Hostname, prop, getattr(ptanalyzer.IPAddress, prop)
             ).__doc__
             pivot.add_pivot_function(fun, pivot_reg=reg, container="RiskIQ")
+
+
+class RiskIQUserError(MsticpyUserError):
+    """Generic RiskIQ provider exception."""
+
+    def __init__(
+        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
+    ):
+        """
+        Create RiskIQ provider exception.
+
+        Parameters
+        ----------
+        help_uri : Union[Tuple[str, str], str, None], optional
+            Override the default help URI.
+
+        """
+        kwargs.update(title="error using RiskIQ python library")
+        kwargs.update(
+            ptlib_uri=(
+                "RiskIQ PassiveTotal Python Library",
+                "https://passivetotal.readthedocs.io",
+            )
+        )
+        kwargs.update(
+            riqinfo_uri=("RiskIQ Support", "https://www.riskiq.com/resources/support/")
+        )
+        uri = help_uri or self.DEF_HELP_URI
+        super().__init__(*args, help_uri=uri, **kwargs)
+
+
+class RiskIQAPIUserError(RiskIQUserError):
+    """RiskIQ API provider exception."""
+
+    def __init__(self, api_exception: ptanalyzer.AnalyzerAPIError):
+        """
+        Create RiskIQ API exception.
+
+        Parameters
+        ----------
+        api_exception : ptanalyzer.AnalyzerAPIError
+            Underlying API exception.
+
+        """
+        title = f"{api_exception.status_code} {api_exception.message}"
+        super().__init__(title, str(api_exception))
