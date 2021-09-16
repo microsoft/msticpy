@@ -4,12 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test timeline."""
-from datetime import datetime, timedelta
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
+
 import pandas as pd
 import pytest
-import pytest_check as check
+import nbformat
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
+
 
 from ..unit_test_lib import TEST_DATA_PATH
 
@@ -252,3 +255,29 @@ def test_timeline_duration(data, param, expected):
                 with pytest.raises(expect_result):
                     display_timeline_duration(data, value_col="Account", **params)
                     data.mp_timeline.plot_duration(group_by="Account", **params)
+
+
+_NB_FOLDER = "docs/notebooks"
+_NB_NAME = "EventTimeline.ipynb"
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
+def test_timeline_controls():
+    nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
+    abs_path = Path(_NB_FOLDER).absolute()
+    with open(nb_path) as f:
+        nb = nbformat.read(f, as_version=4)
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+
+    try:
+        ep.preprocess(nb, {"metadata": {"path": abs_path}})
+    except CellExecutionError:
+        nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
+        msg = f"Error executing the notebook '{nb_path}'.\n"
+        msg += f"See notebook '{nb_err}' for the traceback."
+        print(msg)
+        with open(nb_err, mode="w", encoding="utf-8") as f:
+            nbformat.write(nb, f)
+        raise

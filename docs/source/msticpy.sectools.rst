@@ -43,6 +43,33 @@ msticpy.sectools.iocextract module
     :show-inheritance:
 
 
+msticpy.sectools.proc\_tree\_builder module
+--------------------------------------------
+
+.. automodule:: msticpy.sectools.proc_tree_builder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+msticpy.sectools.proc\_tree\_build\_winlx module
+------------------------------------------------
+
+.. automodule:: msticpy.sectools.proc_tree_build_winlx
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+msticpy.sectools.proc\_tree\_build\_mde module
+----------------------------------------------
+
+.. automodule:: msticpy.sectools.proc_tree_build_mde
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 msticpy.sectools.process\_tree\_utils module
 --------------------------------------------
 

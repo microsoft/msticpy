@@ -4,11 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """."""
-import json
 import zipfile
 from collections import defaultdict
 from datetime import datetime
-from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, Union
 from zipfile import BadZipFile, ZipFile
@@ -736,28 +734,6 @@ def _extract_zip_file_to_df(  # noqa: MC0001
         print(f"Cannot process files of type {file_path.suffix.lower()}")
     if not use_cached:
         Path(file_name).unlink()
-    return out_df
-
-
-def _json_to_df(file_path, silent):
-    errs = []
-    with open(str(file_path), "r") as j_file:
-        j_text = j_file.read()
-    df_list = []
-    if silent:
-        line_gen = enumerate(j_text.split("\n"))
-    else:
-        line_gen = tqdm(enumerate(j_text.split("\n")), "lines")
-    for line_num, line in line_gen:
-        if not line:
-            continue
-        try:
-            df_list.append(json.loads(line))
-        except JSONDecodeError:
-            errs.append(f"Could not parse #{line_num}: '{line}'")
-    out_df = pd.DataFrame(df_list)
-    if errs:
-        print(f"{len(errs)} errors detected", errs)
     return out_df
 
 

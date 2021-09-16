@@ -173,20 +173,27 @@ class MsticpyUserError(MsticpyException):
 
     def _display_txt_exception(self):
         """Display text-only version of the exception text."""
+        print(self._get_exception_text())
+
+    def _get_exception_text(self) -> str:
+        out_lines = []
         for line in self._output:
             if isinstance(line, tuple):
                 l_content, l_type = line
+                if isinstance(l_content, tuple):
+                    l_content = l_content[0]
                 if l_type == "title":
-                    print("-" * len(l_content))
-                    print(l_content)
-                    print("-" * len(l_content))
+                    out_lines.append("-" * len(l_content))
+                    out_lines.append(l_content)
+                    out_lines.append("-" * len(l_content))
                 elif l_type == "uri":
                     if isinstance(l_content, tuple):
-                        print(f" - {': '.join(l_content)}")
+                        out_lines.append(f" - {': '.join(l_content)}")
                     else:
-                        print(f" - {l_content}")
+                        out_lines.append(f" - {l_content}")
             else:
-                print(line)
+                out_lines.append(line)
+        return "\n".join(out_lines)
 
 
 class MsticpyUserConfigError(MsticpyUserError):

@@ -12,3 +12,4 @@ Displaying/Visualizing Data
    visualization/TimeSeriesAnomalies
    visualization/MorphCharts
    visualization/DataViewer
+   visualization/MatrixPlot

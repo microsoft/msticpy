@@ -312,15 +312,12 @@ class Entity(ABC, Node):
             return True
         if not isinstance(other, Entity):
             return False
-        for prop in self.properties:
-            if (
-                self.properties[prop] == other.properties[prop]
-                or not self.properties[prop]
-                or not other.properties[prop]
-            ):
-                continue
-            return False
-        return True
+        return not any(
+            self.properties[prop] != other.properties[prop]
+            and self.properties[prop]
+            and other.properties[prop]
+            for prop in self.properties
+        )
 
     def merge(self, other: Any) -> "Entity":
         """

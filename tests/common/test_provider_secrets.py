@@ -38,7 +38,7 @@ _TEST_DATA = get_test_data_path()
 set_unit_testing(True)
 
 # pylint: disable=invalid-name, no-member, attribute-defined-outside-init
-# pylint: disable=protected-access, unused-argument
+# pylint: disable=protected-access, unused-argument, super-init-not-called
 # flake8: noqa
 
 # Unit test mock patches
@@ -194,9 +194,7 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertIn("TenantId", kv_settings)
         self.assertIsNone(kv_settings.get("NotATenantId"))
 
-        self.assertEqual(
-            kv_settings.authority_uri, "https://login.microsoftonline.com/"
-        )
+        self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.com")
         self.assertEqual(
             kv_settings.get_tenant_authority_uri(),
             "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47",
@@ -220,19 +218,21 @@ class TestSecretsConfig(unittest.TestCase):
         kv_settings.authority = "usgov"
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.us")
         self.assertEqual(
-            kv_settings.keyvault_uri, "https://{vault}.vault.usgovcloudapi.net/"
+            kv_settings.keyvault_uri, "https://{vault}.vault.usgovcloudapi.net"
         )
         self.assertEqual(kv_settings.mgmt_uri, "https://management.usgovcloudapi.net/")
 
         kv_settings.authority = "de"
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.de")
 
-        kv_settings.authority = "chi"
+        kv_settings.authority = "cn"
         self.assertEqual(kv_settings.authority_uri, "https://login.chinacloudapi.cn")
 
     @patch(sec_client_patch)
+    @patch(az_connect_core_patch)
     def test_keyvault_client(
         self,
+        az_connect_core,
         sec_client,
     ):
         kv_sec_client = _SecretClientTest()
@@ -358,8 +358,8 @@ class TestSecretsConfig(unittest.TestCase):
 
     def _check_provider_settings(self, sec_settings):
         prov_settings = get_provider_settings()
-        for p_name in prov_settings:
-            args = prov_settings[p_name].args
+        for p_name, p_settings in prov_settings.items():
+            args = p_settings.args
             if p_name == "OTX":
                 sec_value = sec_settings.read_secret(args["AuthKey"])
                 self.assertEqual(KV_SECRETS["OTX-AuthKey"], sec_value)

@@ -13,10 +13,10 @@ import pytest_check as check
 import yaml
 from msticpy.config.comp_edit import (
     CEItemsBase,
-    CESimpleBase,
     CompEditItems,
     CompEditStatusMixin,
 )
+from msticpy.config.ce_simple_settings import CESimpleSettings
 from msticpy.config.mp_config_edit import MpConfigEdit
 from msticpy.config.mp_config_file import MpConfigFile
 
@@ -40,7 +40,7 @@ def test_mp_edit_load(mp_edit):
 
         check.equal(mp_edit.tab_ctrl.tab.get_title(idx), title)
 
-        check.is_instance(tab, (CEItemsBase, CESimpleBase))
+        check.is_instance(tab, (CEItemsBase, CESimpleSettings))
 
         check.is_true(hasattr(tab, "layout"))
         check.is_true(hasattr(tab, "help"))
