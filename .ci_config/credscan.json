@@ -32,6 +32,10 @@
         {
             "file": "UploadData.rst.txt",
             "_justification": "This is a code usage example and does not contain a secret."
+        },
+        {
+            "file": "test_pkg_config.py",
+            "_justification": "This is a test case and does not contain a secret."
         }
 
     ]

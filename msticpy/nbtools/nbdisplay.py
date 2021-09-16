@@ -237,9 +237,9 @@ def plot_entity_graph(
     graph_renderer.node_renderer.glyph = Circle(
         size=node_size, fill_color="node_color", fill_alpha=0.5
     )
+    # pylint: disable=no-member
     plot.renderers.append(graph_renderer)
 
-    # pylint: disable=no-member
     # Create labels
     for name, pos in graph_renderer.layout_provider.graph_layout.items():
         label = Label(

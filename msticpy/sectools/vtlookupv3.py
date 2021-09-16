@@ -72,6 +72,9 @@ def _make_sync(future):
     return event_loop.run_until_complete(future)
 
 
+_VT_API_NOT_FOUND = "NotFoundError"
+
+
 class VTLookupV3:
     """VTLookupV3: VirusTotal lookup of IoC reports."""
 
@@ -204,17 +207,21 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
+            # pylint: disable=no-member
             raise KeyError(
                 f"Property type {vt_type} not supported",
                 "Valid types are",
                 ", ".join(x.value for x in VTEntityType.__members__.values()),
             )
+            # pylint: enable=no-member
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
             response = self._vt_client.get_object(f"/{endpoint_name}/{observable}")
             return self._parse_vt_object(response)
         except vt.APIError as err:
+            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+                return self._item_not_found_df(vt_type, observable)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
@@ -406,6 +413,8 @@ class VTLookupV3:
                     [ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True
                 )
         except vt.APIError as err:
+            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+                return self._relation_not_found_df(vt_type, observable, relationship)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
@@ -694,11 +703,13 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
+            # pylint: disable=no-member
             raise KeyError(
                 f"Property type {vt_type} not supported",
                 "Valid types are",
                 ", ".join(x.value for x in VTEntityType.__members__.values()),
             )
+            # pylint: enable=no-member
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
@@ -709,11 +720,39 @@ class VTLookupV3:
                 pd.DataFrame(data=response.to_dict()).drop(columns=["id", "type"])
             )
         except vt.APIError as err:
+            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+                return self._item_not_found_df(vt_type, vt_id)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
             ) from err
         finally:
             self._vt_client.close()
+
+    @classmethod
+    def _item_not_found_df(cls, vt_type: str, observable: str):
+        not_found_dict = {
+            ColumnNames.ID.value: observable,
+            ColumnNames.TYPE.value: vt_type,
+        }
+        vte_type = VTEntityType(vt_type)
+        if vte_type not in cls._SUPPORTED_VT_TYPES:
+            not_found_dict["status"] = "Unsupported type"
+        else:
+            not_found_dict.update(
+                {key: "Not found" for key in cls._BASIC_PROPERTIES_PER_TYPE[vte_type]}
+            )
+        return pd.DataFrame([not_found_dict])
+
+    @classmethod
+    def _relation_not_found_df(cls, vt_type: str, observable: str, relationship: str):
+        not_found_dict = {
+            ColumnNames.SOURCE.value: observable,
+            ColumnNames.SOURCE_TYPE.value: vt_type,
+            ColumnNames.RELATIONSHIP_TYPE.value: relationship,
+            ColumnNames.TARGET.value: "Not found",
+            ColumnNames.TARGET_TYPE.value: "Not found",
+        }
+        return pd.DataFrame([not_found_dict])
 
 
 def _ts_to_pydate(data):

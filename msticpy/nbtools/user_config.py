@@ -79,7 +79,8 @@ def load_user_defaults() -> Dict[str, object]:
 
 def _load_query_providers(user_defaults):
     prov_dict = {}
-    if "QueryProviders" in user_defaults:
+    query_provs = user_defaults.get("QueryProviders", {})
+    if query_provs and isinstance(query_provs, dict):
         for prov_name, qry_prov_entry in user_defaults.get("QueryProviders").items():
             if prov_name == "AzureSentinel":
                 provs = _load_az_workspaces(prov_name, qry_prov_entry)
