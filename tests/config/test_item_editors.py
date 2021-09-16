@@ -12,6 +12,7 @@ import pytest
 import pytest_check as check
 import yaml
 from msticpy.config.comp_edit import CompEditStatusMixin
+from msticpy.config.ce_azure import CEAzure
 from msticpy.config.ce_azure_sentinel import CEAzureSentinel, _validate_ws
 from msticpy.config.ce_common import get_def_tenant_id
 from msticpy.config.ce_data_providers import CEDataProviders
@@ -237,8 +238,8 @@ KV_SEC_CLIENT_PATCH = ArgControl.__module__ + ".BHKeyVaultClient"
 
 
 @patch(KV_SEC_CLIENT_PATCH)
-def test_arg_controls_kv(kv_sec, mp_conf_ctrl):
-    """Argcontrol is a sub-component for editing Args."""
+def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
+    """TI Providers item editor."""
     edit_comp = CETIProviders(mp_controls=mp_conf_ctrl)
     edit_comp.select_item.label = "VirusTotal"
     provider = edit_comp.select_item.label
@@ -285,7 +286,7 @@ def test_get_tenant_id():
 
 
 def test_azure_sentinel_editor(mp_conf_ctrl):
-    """Items edit controls."""
+    """Azure Sentinel edit controls."""
     edit_comp = CEAzureSentinel(mp_controls=mp_conf_ctrl)
 
     n_opts = len(edit_comp.select_item.options)
@@ -317,7 +318,7 @@ def test_azure_sentinel_editor(mp_conf_ctrl):
 
 
 def test_key_vault_editor(mp_conf_ctrl):
-    """Items edit controls."""
+    """KeyVault edit controls."""
     edit_comp = CEKeyVault(mp_controls=mp_conf_ctrl)
 
     check.is_not_none(edit_comp.help.html_help.value)
@@ -345,3 +346,69 @@ def test_key_vault_editor(mp_conf_ctrl):
 
     results = mp_conf_ctrl.validate_setting(f"{edit_comp._COMP_PATH}")
     check.equal(len(results), 0)
+
+
+def test_azure_editor(mp_conf_ctrl):
+    """Azure settings editor."""
+    edit_comp = CEAzure(mp_controls=mp_conf_ctrl)
+
+    check.is_not_none(edit_comp.help.html_help.value)
+    check.is_not_none(edit_comp._DESCRIPTION)
+    check.is_not_none(edit_comp._COMP_PATH)
+    check.greater_equal(len(edit_comp._HELP_URI), 1)
+
+    with pytest.raises(Exception) as err:
+        edit_comp.controls["cloud"].value = ["no-cloud"]  # invalid item
+    check.equal(err.typename, "TraitError")
+    with pytest.raises(Exception) as err:
+        edit_comp.controls["auth_methods"].value = ["invalid"]  # invalid item
+    check.equal(err.typename, "TraitError")
+    edit_comp.btn_save.click()
+
+    results = mp_conf_ctrl.validate_setting(f"{edit_comp._COMP_PATH}")
+    check.equal(len(results), 0)
+
+    edit_comp.controls["cloud"].value = "usgov"
+    edit_comp.controls["auth_methods"].value = ["cli", "interactive"]
+    edit_comp.btn_save.click()
+
+    results = mp_conf_ctrl.validate_setting(f"{edit_comp._COMP_PATH}")
+    check.equal(len(results), 0)
+
+    new_settings = edit_comp.mp_controls.get_value("Azure")
+    check.equal(new_settings["cloud"], "usgov")
+    check.equal(new_settings["auth_methods"], ["cli", "interactive"])
+
+
+@patch(KV_SEC_CLIENT_PATCH)
+def test_otherproviders_editor(kv_sec, mp_conf_ctrl):
+    """Other providers item edit."""
+    edit_comp = CEOtherProviders(mp_controls=mp_conf_ctrl)
+    edit_comp.select_item.label = "GeoIPLite"
+    provider = edit_comp.select_item.label
+    # get the control for this provider
+    ctrl_path = f"OtherProviders.{provider}.Args.AuthKey"
+    arg_ctrl = mp_conf_ctrl.get_control(ctrl_path)
+
+    arg_ctrl.rb_store_type.value = STORE_ENV_VAR
+    arg_ctrl.txt_val.value = "test_var"
+    os.environ["test_var"] = "test_value"
+
+    edit_comp.edit_buttons.btn_save.click()
+    args_settings = edit_comp.settings["GeoIPLite"]["Args"]["AuthKey"]
+    check.is_in("EnvironmentVar", args_settings)
+    check.equal("test_var", args_settings["EnvironmentVar"])
+
+    arg_ctrl.btn_add_kv_secret.click()
+    check.is_true(arg_ctrl.txt_val.disabled)
+    check.equal(arg_ctrl.txt_val.value, "")
+    set_secret, ss_args, _ = kv_sec.mock_calls[1]
+    check.equal(set_secret, "().set_secret")
+    check.equal(ss_args[0], f"OtherProviders-{provider}-Args-AuthKey")
+    check.equal(ss_args[1], "test_value")
+    check.equal(arg_ctrl.rb_store_type.value, STORE_KEYVAULT)
+
+    edit_comp.edit_buttons.btn_save.click()
+    args_settings = edit_comp.settings["GeoIPLite"]["Args"]["AuthKey"]
+    check.is_in("KeyVault", args_settings)
+    check.is_none(args_settings["KeyVault"])
