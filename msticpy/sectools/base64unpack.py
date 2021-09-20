@@ -557,7 +557,7 @@ def _print_bytes(bytes_array: bytes):
 
 
 def _as_byte_string(bytes_array) -> str:
-    return " ".join(["{0:02x}".format(b) for b in bytes_array])
+    return " ".join(f"{b:02x}" for b in bytes_array)
 
 
 def _empty_binary_rec() -> BinaryRecord:

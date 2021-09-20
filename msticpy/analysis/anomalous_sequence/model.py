@@ -61,7 +61,7 @@ class Model:
         """
         if not isinstance(sessions, list):
             raise MsticpyException("`sessions` should be a list")
-        if len(sessions) == 0:
+        if not sessions:
             raise MsticpyException("`sessions` should not be an empty list")
         for i, ses in enumerate(sessions):
             if not isinstance(ses, list):
@@ -406,7 +406,7 @@ class Model:
                     key = set()
                     for par in pars:
                         if par in intersection_pars:
-                            key.add("{} --- {}".format(par, params[par]))
+                            key.add(f"{par} --- {params[par]}")
                         else:
                             key.add(par)
                     prob = cmds_params_values.compute_prob_setofparams_given_cmd(

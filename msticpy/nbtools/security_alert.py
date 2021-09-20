@@ -79,22 +79,20 @@ class SecurityAlert(SecurityBase):
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
         if self.properties:
-            title = """
+            start = self.properties.get(
+                "StartTimeUtc", self.properties.get("StartTime", "no timestamp")
+            )
+            name = self.properties.get(
+                "AlertDisplayName",
+                self.properties.get("DisplayName", "no alert name"),
+            )
+            entity = self.properties.get("CompromisedEntity", "unknown")
+            title = f"""
             <h3>Alert: '{name}'</h3>
             <b>Alert_time:</b> {start},
             <b>Compr_entity:</b> {entity},
-            <b>Alert_id:</b> {id}
-            """.format(
-                start=self.properties.get(
-                    "StartTimeUtc", self.properties.get("StartTime", "no timestamp")
-                ),
-                name=self.properties.get(
-                    "AlertDisplayName",
-                    self.properties.get("DisplayName", "no alert name"),
-                ),
-                entity=self.properties.get("CompromisedEntity", "unknown"),
-                id=self.properties["SystemAlertId"],
-            )
+            <b>Alert_id:</b> self.properties['SystemAlertId']
+            """
         else:
             title = "Alert has no data."
         return title + super().to_html(show_entities)

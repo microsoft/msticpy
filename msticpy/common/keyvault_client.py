@@ -221,7 +221,7 @@ class BHKeyVaultClient:
 
         """
         if self.debug:
-            print("Storing %s in %s" % (secret_name, self.vault_uri))
+            print(f"Storing {secret_name} in {self.vault_uri}")
         return self.kv_client.set_secret(name=secret_name, value=value)
 
 

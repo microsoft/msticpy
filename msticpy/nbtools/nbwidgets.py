@@ -437,7 +437,7 @@ class QueryTime(RegisteredWidget):
     def _create_layout(self):
         return widgets.VBox(
             [
-                widgets.HTML("<h4>{}</h4>".format(self._label)),
+                widgets.HTML(f"<h4>{self._label}</h4>"),
                 widgets.HBox([self._w_origin_dt, self._w_origin_tm]),
                 widgets.VBox(
                     [

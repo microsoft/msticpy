@@ -742,7 +742,7 @@ class VTLookup:
             )
             self.results = new_results
 
-            return DuplicateStatus(True, "Duplicates of {}".format(original_indices))
+            return DuplicateStatus(True, f"Duplicates of {original_indices}")
 
         return DuplicateStatus(False, "ok")
 

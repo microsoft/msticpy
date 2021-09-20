@@ -87,7 +87,7 @@ jobs:
       run: |
         # install this separately since it uses older versions of pylint/isort
         # chain running to installation since this sometimes fails
-        python -m pip install prospector==${{ env.PROSPECTOR_VER }} && prospector --ignore-paths tests --without-tool pylint
+        python -m pip install prospector[with_pyroma]==${{ env.PROSPECTOR_VER }} && prospector --ignore-paths tests --without-tool pylint
       if: ${{ always() }}
     - name: Upload pytest test results
       uses: actions/upload-artifact@v2
