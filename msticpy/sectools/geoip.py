@@ -334,9 +334,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
             if "success" in results and not results["success"]:
                 raise PermissionError(
-                    "Service unable to complete request. Error: {}".format(
-                        results["error"]
-                    )
+                    f"Service unable to complete request. Error: {results['error']}"
                 )
             return [(item, response.status_code) for item in results]
 

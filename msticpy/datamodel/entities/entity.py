@@ -279,9 +279,7 @@ class Entity(ABC, Node):
         """Return the hash of the entity based on non-empty property values."""
         return hash(
             " ".join(
-                f"{prop}:{str(val)}"
-                for prop, val in self.properties.items()
-                if str(val)
+                f"{prop}:{val}" for prop, val in self.properties.items() if str(val)
             )
         )
 
@@ -446,7 +444,7 @@ class Entity(ABC, Node):
         if entity_type_name in cls.ENTITY_NAME_MAP:
             return cls.ENTITY_NAME_MAP[entity_type_name](raw_entity)
 
-        raise TypeError("Could not find a suitable type for {}".format(entity_type))
+        raise TypeError(f"Could not find a suitable type for {entity_type}")
 
     @classmethod
     def _get_entity_type_name(cls, entity_type: Type) -> str:

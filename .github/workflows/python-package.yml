@@ -77,7 +77,7 @@ jobs:
       if: ${{ always() }}
     - name: bandit
       run: |
-        bandit -x tests -r -s B303,B404,B603,B607 msticpy
+        bandit -x tests -r -s B303,B404,B603,B607,B608 msticpy
       if: ${{ always() }}
     - name: flake8
       run: |

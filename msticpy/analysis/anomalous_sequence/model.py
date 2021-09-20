@@ -68,8 +68,8 @@ class Model:
                 raise MsticpyException("each session in `sessions` should be a list")
             if len(ses) == 0:
                 raise MsticpyException(
-                    "session at index {} of `sessions` is empty. Each session "
-                    "should contain at least one command".format(i)
+                    f"session at index {i} of `sessions` is empty. Each session "
+                    "should contain at least one command"
                 )
 
         self.start_token = "##START##"

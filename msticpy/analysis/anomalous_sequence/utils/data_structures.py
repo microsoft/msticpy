@@ -101,8 +101,7 @@ class Cmd:
         New string representation of the object
 
         """
-        rep = "Cmd(name='{}', params={})".format(self.name, self.params)
-        return rep
+        return f"Cmd(name='{self.name}', params={self.params})"
 
     def __repr__(self):
         """
