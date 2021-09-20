@@ -619,7 +619,7 @@ def crc32_hash_df(data: pd.DataFrame, column: str) -> pd.Series:
 
 # pylint: disable=too-many-arguments, too-many-statements
 @export  # noqa: C901, MC0001
-def plot_cluster(
+def plot_cluster(  # noqa: C901, MC0001
     db_cluster: DBSCAN,
     data: pd.DataFrame,
     x_predict: np.ndarray,

@@ -204,7 +204,7 @@ class QueryStore:
             self.add_data_source(new_source)
 
     @classmethod  # noqa: MC0001
-    def import_files(
+    def import_files(  # noqa: MC0001
         cls, source_path: list, recursive: bool = False
     ) -> Dict[str, "QueryStore"]:
         """

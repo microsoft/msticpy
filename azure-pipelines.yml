@@ -44,8 +44,8 @@ stages:
         windows-py36:
           imageName: "windows-latest"
           python.version: '3.6'
-        windows-py38:
-          imageName: "windows-latest"
+        linux-py38:
+          imageName: "ubuntu-latest"
           python.version: '3.8'
       maxParallel: 4
     pool:
@@ -66,7 +66,7 @@ stages:
         path: $(PIP_CACHE_DIR)
         restoreKeys: python
     - script: |
-        python -m pip install --upgrade pip==20.2.4 wheel setuptools
+        python -m pip install --upgrade pip wheel setuptools
         python -m pip install -r requirements-all.txt
         python -m pip install -e .
       displayName: 'Install package and dependencies'
@@ -162,7 +162,7 @@ stages:
         env:
           tools_dir: ${AGENT_TOOLSDIRECTORY}
       - script: |
-          python -m pip install prospector
+          python -m pip install prospector[with_pyroma]
           prospector --ignore-paths tests --without-tool pylint
         displayName: prospector
         continueOnError: true

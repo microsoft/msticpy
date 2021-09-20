@@ -126,7 +126,7 @@ def resolve_pkg_path(part_path: str):
 
 # pylint: disable=not-an-iterable, too-many-branches
 @export  # noqa: MC0001
-def check_and_install_missing_packages(
+def check_and_install_missing_packages(  # noqa: MC0001
     required_packages: List[str],
     force_notebook: bool = False,
     user: bool = False,
