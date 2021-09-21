@@ -249,10 +249,10 @@ def build_process_tree(
             "pass it as the 'schema' parameter to this function.",
         )
 
-    if schema in (WIN_EVENT_SCH, LX_EVENT_SCH):
-        extr_proc_tree = winlx.extract_process_tree(procs, schema=schema, debug=debug)
-    elif schema == MDE_EVENT_SCH:
+    if schema == MDE_EVENT_SCH:
         extr_proc_tree = mde.extract_process_tree(procs, debug=debug)
+    else:
+        extr_proc_tree = winlx.extract_process_tree(procs, schema=schema, debug=debug)
     merged_procs_keys = _add_tree_properties(extr_proc_tree)
 
     # Build process paths

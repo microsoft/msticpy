@@ -389,7 +389,8 @@ class MpConfigControls:
             if default_val.strip().startswith("["):
                 # This is a default list - so we need to parse it
                 val_params["default"] = [
-                    val.strip("'\"") for val in default_val.strip()[1:-1].split("; ")
+                    val.strip("'\"")
+                    for val in re.split(r"\s*;\s*|\s*,\s*", default_val.strip()[1:-1])
                 ]
             else:
                 val_params["default"] = default_val.strip("'\"")

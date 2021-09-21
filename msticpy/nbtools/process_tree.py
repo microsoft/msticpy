@@ -91,6 +91,21 @@ def build_and_show_process_tree(
     kwargs : Dict[str, Any]
         Additional arguments passed to plot_process_tree
 
+    Other Parameters
+    ----------------
+    height : int, optional
+        The height of the plot figure
+        (the default is 700)
+    width : int, optional
+        The width of the plot figure (the default is 900)
+    title : str, optional
+        Title to display (the default is None)
+    hide_legend : bool, optional
+        Hide the legend box, even if legend_col is specified.
+    pid_fmt : str, optional
+        Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
+        default is 'hex'.
+
     Returns
     -------
     Tuple[figure, LayoutDOM]:
@@ -186,11 +201,11 @@ def plot_process_tree(  # noqa: MC0001
     hide_legend = kwargs.pop("hide_legend", False)
     pid_fmt = kwargs.pop("pid_fmt", "hex")
 
-    data, schema, levels, n_rows = _pre_process_tree(data, schema, pid_fmt=pid_fmt)
+    proc_data, schema, levels, n_rows = _pre_process_tree(data, schema, pid_fmt=pid_fmt)
     if schema is None:
         raise ProcessTreeSchemaException("Could not infer data schema from data set.")
 
-    source = ColumnDataSource(data=data)
+    source = ColumnDataSource(data=proc_data)
     # Get legend/color bar map
     fill_map, color_bar = _create_fill_map(source, legend_col)
 
@@ -213,7 +228,8 @@ def plot_process_tree(  # noqa: MC0001
     )
 
     hover = HoverTool(
-        tooltips=_get_tool_tips(schema), formatters={"TimeGenerated": "datetime"}
+        tooltips=_get_tool_tips(schema),
+        formatters={f"@{schema.time_stamp}": "datetime"},
     )
     b_plot.add_tools(hover)
 
@@ -243,13 +259,25 @@ def plot_process_tree(  # noqa: MC0001
         return dodge("Row", y_offset, range=b_plot.y_range)
 
     b_plot.text(
-        x=x_dodge(0.1), y=y_dodge(-0.2), text="cmd", text_font_size="7pt", **text_props
+        x=x_dodge(0.1),
+        y=y_dodge(-0.2),
+        text="__cmd_line$$",
+        text_font_size="7pt",
+        **text_props,
     )
     b_plot.text(
-        x=x_dodge(0.1), y=y_dodge(0.25), text="Exe", text_font_size="8pt", **text_props
+        x=x_dodge(0.1),
+        y=y_dodge(0.25),
+        text="__proc_name$$",
+        text_font_size="8pt",
+        **text_props,
     )
     b_plot.text(
-        x=x_dodge(2.2), y=y_dodge(0.25), text="PID", text_font_size="8pt", **text_props
+        x=x_dodge(2.2),
+        y=y_dodge(0.25),
+        text="__proc_id$$",
+        text_font_size="8pt",
+        **text_props,
     )
 
     # Plot options
@@ -314,18 +342,23 @@ def _pre_process_tree(
 
     levels = proc_tree["Level"].unique()
 
-    max_cmd_len = int(600 / len(levels))
-    long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
-    proc_tree.loc[long_cmd, "cmd"] = (
-        proc_tree[schema.cmd_line].str[:max_cmd_len] + "..."
-    )
-    proc_tree.loc[~long_cmd, "cmd"] = proc_tree[schema.cmd_line].fillna(
-        "cmdline unknown"
-    )
-    proc_tree["Exe"] = proc_tree.apply(
+    proc_tree["__proc_name$$"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
-    proc_tree["PID"] = proc_tree[schema.process_id].apply(_pid_fmt, args=(pid_fmt,))
+    proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(
+        _pid_fmt, args=(pid_fmt,)
+    )
+
+    # trim long commandlines
+    max_cmd_len = int(500 / len(levels))
+    long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
+    proc_tree.loc[long_cmd, "__cmd_line$$"] = (
+        proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."
+    )
+    # replace missing cmdlines
+    proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][
+        schema.cmd_line
+    ].fillna("cmdline unknown")
     return TreeResult(proc_tree=proc_tree, schema=schema, levels=levels, n_rows=n_rows)
 
 
@@ -371,12 +404,12 @@ def _get_tool_tips(schema: ProcSchema):
     """Return tool tip formatter."""
     return [
         ("Process", f"@{schema.process_name}"),
-        ("PID", "@PID"),
+        ("PID", f"@{schema.process_id}"),
         ("CmdLine", f"@{schema.cmd_line}"),
         ("SubjUser", f"@{schema.user_name}"),
         ("SubjLgnId", f"@{schema.logon_id}"),
-        ("TargLgnId", f"@{schema.target_logon_id}"),
-        ("Time", f"@{schema.time_stamp}{{%F %T}}"),
+        ("TgtLgnId", f"@{schema.target_logon_id}"),
+        ("Time", f"@{schema.time_stamp}{{%F %T.%3N}}"),
     ]
 
 

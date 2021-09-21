@@ -62,21 +62,20 @@ class AzureCloudConfig:
         if cloud:
             self.cloud = cloud
         else:
+            self.cloud = "global"
             try:
                 az_settings = config.get_config("Azure")
                 if az_settings and "cloud" in az_settings:
                     self.cloud = az_settings["cloud"]
             except KeyError:
-                self.cloud = "global"  # no Azure section in config
-        self.auth_methods = []
+                pass  # no Azure section in config
+        self.auth_methods = default_auth_methods()
         try:
-            self.auth_methods = (
-                config.get_config("Azure").get("Args", {}).get("auth_methods", [])
+            self.auth_methods = config.get_config("Azure").get(
+                "auth_methods", default_auth_methods()
             )
         except KeyError:
-            pass
-        if not self.auth_methods:
-            self.auth_methods = default_auth_methods()
+            pass  # no Azure section in config
 
     @property
     def endpoints(self) -> azure_cloud.CloudEndpoints:
