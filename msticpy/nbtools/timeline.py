@@ -686,7 +686,7 @@ def check_df_columns(
     data: pd.DataFrame, req_columns: List[str], help_uri: str, plot_type: str
 ):
     """
-    Check that specified columns are in the DataFrame
+    Check that specified columns are in the DataFrame.
 
     Parameters
     ----------
