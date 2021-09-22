@@ -1,5 +1,3 @@
-# Welcome to the msticpy wiki!
-
 Contributions of improvements, fixes and new features are welcomed.
 We use a continuous integration pipeline that enforces unit tests and code style. We aim to keep
 the code clear, testable and well-documented.
