@@ -4,20 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """Initialization for Jupyter Notebooks."""
-from contextlib import redirect_stdout
 import importlib
 import io
 import os
 import sys
 import traceback
 import warnings
+from contextlib import redirect_stdout
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
-import yaml
 
 import ipywidgets as widgets
 import pandas as pd
+import yaml
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
 from matplotlib import MatplotlibDeprecationWarning
@@ -28,19 +28,21 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
+from ..common.azure_auth_core import check_cli_credentials, AzureCliStatus
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
 from ..common.pkg_config import get_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
-    md,
-    unit_testing,
     is_ipython,
+    md,
     search_for_file,
+    unit_testing,
 )
 from ..config import MpConfigFile
-from .azure_ml_tools import check_versions as check_versions_aml, is_in_aml
+from .azure_ml_tools import check_versions as check_versions_aml
+from .azure_ml_tools import is_in_aml
 from .user_config import load_user_defaults
 
 __version__ = VERSION
@@ -164,6 +166,17 @@ _AZNB_GUIDE = (
     "Please run the <i>Getting Started Guide for Azure Sentinel "
     + "ML Notebooks</i> notebook."
 )
+_AZ_CLI_WIKI_URI = (
+    "https://github.com/Azure/Azure-Sentinel-Notebooks/wiki/"
+    "Caching-credentials-with-Azure-CLI"
+)
+_CLI_WIKI_MSSG_GEN = (
+    f"For more information see <a href='{_AZ_CLI_WIKI_URI}'>"
+    "Caching credentials with Azure CLI</>"
+)
+_CLI_WIKI_MSSG_SHORT = (
+    f"see <a href='{_AZ_CLI_WIKI_URI}'>Caching credentials with Azure CLI</>"
+)
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 
@@ -258,28 +271,35 @@ def init_notebook(
     _VERBOSE(verbose)
 
     display(HTML("<hr><h4>Starting Notebook initialization...</h4>"))
+    # Check Azure ML environment
     if is_in_aml():
         check_versions_aml(*_get_aml_globals(namespace))
+    else:
+        # If not in AML check and print version status
+        stdout_cap = io.StringIO()
+        with redirect_stdout(stdout_cap):
+            check_version()
+            _pr_output(stdout_cap.getvalue())
 
-    stdout_cap = io.StringIO()
-    with redirect_stdout(stdout_cap):
-        check_version()
-        _pr_output(stdout_cap.getvalue())
-
+    # Handle required packages and imports
     _pr_output("Processing imports....")
     imp_ok = _global_imports(
         namespace, additional_packages, user_install, extra_imports, def_imports
     )
 
+    # Configuration check
     if no_config_check:
         conf_ok = True
     else:
         _pr_output("Checking configuration....")
         conf_ok = _get_or_create_config()
+        _check_azure_cli_status()
 
+    # Notebook options
     _pr_output("Setting notebook options....")
     _set_nb_options(namespace)
 
+    # Set friendly exceptions
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions")
     if friendly_exceptions:
@@ -289,6 +309,7 @@ def init_notebook(
             InteractiveShell.showtraceback
         )
 
+    # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
         prov_dict = load_user_defaults()
@@ -299,21 +320,27 @@ def init_notebook(
         current_providers = prov_dict
         _pr_output("Autoloaded components:", ", ".join(prov_dict.keys()))
 
-    if not imp_ok or not conf_ok:
-        md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
-        if not imp_ok:
-            md("One or more libraries did not import successfully.")
-            md(_AZNB_GUIDE)
-        if not conf_ok:
-            md("One or more configuration items were missing or set incorrectly.")
-            md(
-                _AZNB_GUIDE
-                + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>."
-            )
-        md("This notebook may still run but with reduced functionality.")
-        return False
+    # show any warnings
+    init_status = _show_init_warnings(imp_ok, conf_ok)
     display(HTML("<h4>Notebook initialization complete</h4>"))
-    return True
+    return init_status
+
+
+def _show_init_warnings(imp_ok, conf_ok):
+    if imp_ok and conf_ok:
+        return True
+    md("<font color='orange'><h3>Notebook setup completed with some warnings.</h3>")
+    if not imp_ok:
+        md("One or more libraries did not import successfully.")
+        md(_AZNB_GUIDE)
+    if not conf_ok:
+        md("One or more configuration items were missing or set incorrectly.")
+        md(
+            _AZNB_GUIDE
+            + f" and the <a href='{_CONF_URI}'>msticpy configuration guide</a>."
+        )
+    md("This notebook may still run but with reduced functionality.")
+    return False
 
 
 def list_default_imports():
@@ -605,13 +632,12 @@ def _check_and_reload_pkg(
     pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
     if pkg_version < req_version:
         display(HTML(_MISSING_PKG_WARN.format(package=pkg_name)))
-        if not unit_testing():
-            resp = input("Install the package now? (y/n)")  # nosec
-        else:
-            resp = "y"
+        resp = (
+            input("Install the package now? (y/n)") if not unit_testing() else "y"
+        )  # nosec
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
-            pip_ver = ".".join([str(elem) for elem in req_version])
+            pip_ver = ".".join(str(elem) for elem in req_version)
             pkg_spec = f"{pkg_name}>={pip_ver}"
             check_and_install_missing_packages(required_packages=[pkg_spec], user=True)
 
@@ -635,7 +661,21 @@ def _hook_ipython_exceptions(func):
         if e_type is not None and issubclass(e_type, MsticpyUserError):
             return None
         # otherwise run the original hook
-        value = func(*args, **kwargs)
-        return value
+        return func(*args, **kwargs)
 
     return showtraceback
+
+
+def _check_azure_cli_status():
+    """Check for Azure CLI credentials."""
+    if not unit_testing():
+        status, message = check_cli_credentials()
+        if status == AzureCliStatus.CLI_OK:
+            _pr_output(message)
+        elif status == AzureCliStatus.CLI_NOT_INSTALLED:
+            _pr_output(
+                "Azure CLI not detected. AzCLI single sign-on disabled"
+                " ({_CLI_WIKI_MSSG_SHORT})"
+            )
+        elif message:
+            _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))
