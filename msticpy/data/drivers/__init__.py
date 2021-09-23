@@ -27,6 +27,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Mordor: ("mordor_driver", "MordorDriver"),
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
     DataEnvironment.ResourceGraph: ("resource_graph_driver", "ResourceGraphDriver"),
+    DataEnvironment.Kusto: ("kql_driver", "KqlDriver"),
 }
 
 

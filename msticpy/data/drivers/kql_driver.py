@@ -9,7 +9,7 @@ import os
 import re
 import warnings
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 from IPython import get_ipython
@@ -195,7 +195,6 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        del kwargs
         if query_source:
             try:
                 table = query_source["args.table"]
@@ -210,7 +209,7 @@ class KqlDriver(DriverBase):
                         " schema. Please check your workspace",
                         title=f"{table} not found.",
                     )
-        data, result = self.query_with_results(query)
+        data, result = self.query_with_results(query, **kwargs)
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
@@ -230,6 +229,7 @@ class KqlDriver(DriverBase):
             Kql ResultSet.
 
         """
+        debug = kwargs.pop("debug", self._debug)
         # connect or switch the connection if our connection string
         # is not the current KqlMagic connection.
         if not self.connected and self.current_connection:
@@ -241,7 +241,7 @@ class KqlDriver(DriverBase):
                 help_uri=MsticpyKqlConnectionError.DEF_HELP_URI,
             )
 
-        if self._debug:
+        if debug:
             print(query)
 
         # save current auto_dataframe setting so that we can set to false
@@ -258,24 +258,27 @@ class KqlDriver(DriverBase):
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
-            if (
-                hasattr(result, "completion_query_info")
-                and result.completion_query_info["StatusCode"] == 0
+            if hasattr(result, "completion_query_info") and (
+                result.completion_query_info["StatusCode"] == 0
+                or result.completion_query_info["Text"]
+                == "Query completed successfully"
             ):
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:
                     print("Warning - query returned partial results.")
+                if debug:
+                    print("Query status:\n", "\n".join(self._get_query_status(result)))
                 return data_frame, result
 
         # Query failed
-        err_args = []
-        if hasattr(result, "completion_query_info"):
-            err_desc = result.completion_query_info.get("StatusDescription")
-            err_desc = f"StatusDescription {err_desc}"
-            err_code = f"(err_code: {result.completion_query_info.get('StatusCode')})"
-            err_args = [err_desc, err_code]
+        err_args = ["Query failed"]
+        err_args += self._get_query_status(result)
         err_args.append(f"Query:\n{query}")
         raise MsticpyDataQueryError(*err_args)
+
+    @staticmethod
+    def _get_query_status(result) -> List[str]:
+        return [f"{key}: '{value}'" for key, value in result.completion_query_info]
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""

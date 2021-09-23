@@ -17,7 +17,7 @@ from azure.core.exceptions import (
 from azure.storage.blob import BlobServiceClient, generate_blob_sas
 
 from ..common.azure_auth import az_connect
-from ..common.azure_auth_core import AzCredentials
+from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
 
 
 class AzureBlobStorage:
@@ -240,8 +240,8 @@ class AzureBlobStorage:
             expiry=end,
             start=start,
         )
-        full_path = f"https://{abs_name}.blob.core.windows.net/{container_name}/{blob_name}?{sast}"
-        return full_path
+        suffix = AzureCloudConfig().suffixes.storage_endpoint
+        return f"https://{abs_name}.blob.{suffix}/{container_name}/{blob_name}?{sast}"
 
 
 def _parse_returned_items(items, remove_list: list = None) -> pd.DataFrame:

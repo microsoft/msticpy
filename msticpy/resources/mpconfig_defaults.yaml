@@ -138,6 +138,12 @@ DataProviders:
   Browshot:
     Args:
       AuthKey: *cred_key
+  Sumologic:
+    Args:
+      connection_str: str()
+      accessid: str()
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      accesskey: *cred_key
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

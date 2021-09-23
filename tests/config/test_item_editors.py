@@ -56,7 +56,7 @@ def mp_conf_ctrl():
 _EDITORS = [
     pytest.param((CEAzureSentinel, ["Placeholder"]), id="CEAzureSentinel"),
     pytest.param(
-        (CEDataProviders, ["Splunk", "AzureCLI", "LocalData", "Mordor"]),
+        (CEDataProviders, ["Splunk", "AzureCLI", "LocalData", "Mordor", "Sumologic"]),
         id="CEDataProviders",
     ),
     pytest.param(
@@ -412,3 +412,71 @@ def test_otherproviders_editor(kv_sec, mp_conf_ctrl):
     args_settings = edit_comp.settings["GeoIPLite"]["Args"]["AuthKey"]
     check.is_in("KeyVault", args_settings)
     check.is_none(args_settings["KeyVault"])
+
+
+_DATA_PROVIDER_PARAMS = [
+    "Splunk-prod",
+    "Splunk-preprod",
+    "Sumologic",
+    "Sumologic-europe",
+    "Sumologic-northamerica",
+]
+
+
+@pytest.mark.parametrize("test_opt", _DATA_PROVIDER_PARAMS)
+def test_dataprov_instances(test_opt, mp_conf_ctrl):
+    edit_comp = CEDataProviders(mp_controls=mp_conf_ctrl)
+
+    print(f"Testing {edit_comp.__class__.__name__}, {test_opt}")
+    opts = edit_comp.select_item.options
+    n_opts = len(opts)
+
+    # If this control has an options list - select the first of these
+    instance_case = "-" in test_opt
+    prov_name, instance = test_opt.split("-") if instance_case else (test_opt, None)
+    select_item = f"{prov_name}-{instance}" if instance_case else prov_name
+
+    prov_opts = getattr(edit_comp, "prov_options", None)
+    if prov_opts and prov_opts.options:
+        edit_comp.prov_options.value = prov_name
+
+    # If there is an existing item, delete this
+    if _is_current_option(prov_name, edit_comp.select_item):
+        edit_comp.select_item.label = prov_name
+        edit_comp.edit_buttons.btn_del.click()
+        n_opts -= 1
+
+    # Add a new one
+    edit_comp.edit_buttons.btn_add.click()
+    # add the instance name
+    if instance_case:
+        edit_comp.text_prov_instance.value = instance
+    # Save the current item
+    edit_comp.edit_buttons.btn_save.click()
+    check.equal(len(edit_comp.select_item.options), n_opts + 1, "Item added")
+    if instance_case:
+        check.equal(
+            edit_comp.text_prov_instance.value, instance, "Instance name populated"
+        )
+    check.is_in(
+        edit_comp.select_item.label, select_item, "Instance name populated in select"
+    )
+
+    if prov_opts and prov_opts.options:
+        edit_comp.prov_options.value = prov_name
+        edit_comp.edit_buttons.btn_add.click()
+        if instance_case:
+            # duplicates OK for instances because path renamed
+            check.equal(
+                len(edit_comp.select_item.options), n_opts + 2, "Dup item not added"
+            )
+        else:
+            # check that we didn't add a duplicate
+            check.equal(
+                len(edit_comp.select_item.options), n_opts + 1, "Dup item not added"
+            )
+
+    # delete whatever we've just added
+    edit_comp.edit_buttons.btn_del.click()
+    expected_opts = n_opts + 1 if instance_case else n_opts
+    check.equal(len(edit_comp.select_item.options), expected_opts, "New item deleted")
