@@ -38,6 +38,7 @@ from .submission_mail import SubmissionMail
 from .threat_intelligence import Threatintelligence
 from .unknown_entity import UnknownEntity
 from .url import Url
+from .cloud_logon_session import CloudLogonSession
 from ..soc.incident import Incident
 
 # Dictionary to map text names of types to the class.
@@ -77,6 +78,7 @@ Entity.ENTITY_NAME_MAP.update(
         "unknown": UnknownEntity,
         "geolocation": GeoLocation,
         "incident": Incident,
+        "cloud-logon-session": CloudLogonSession,
     }
 )
 

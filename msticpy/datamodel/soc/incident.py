@@ -3,18 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Alert Entity class."""
+"""Incident Entity class."""
 from datetime import datetime
 from typing import Any, List, Mapping, Optional, Dict, Tuple
 
 from ..._version import VERSION
 from ...common.utility import export
-from ..entities.entity import Entity
-
-# from ..entities.account import Account
-# from ..entities.host import Host
-# from ..entities.ip_address import IpAddress
-# from ..entities.
+from ..entities.entity import Entity, ent_camel
+from ..entities.alert import Alert
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -93,7 +89,8 @@ class Incident(Entity):
         self.IncidentID = src_event["id"].split("/")[-1]
         self.Severity = src_event["properties.severity"]
         self.Status = src_event["properties.status"]
-        self.Classification = src_event["properties.classification"]
+        if "properties.classification" in src_event:
+            self.Classification = src_event["properties.classification"]
         self.Labels = src_event["properties.labels"]
         owner = {
             "Name": src_event["properties.owner.assignedTo"],
@@ -122,12 +119,7 @@ class Incident(Entity):
         """Add alerts to incident."""
         new_alerts = []
         for alrt in src_event["Alerts"]:
-            if alrt["entities"]:
-                alrt["entities"] = self._create_entities(alrt["entities"])
-                print(alrt)
-                new_alerts.append(alrt)
-            else:
-                new_alerts = src_event["Alerts"]
+            new_alerts.append(Alert(src_entity=alrt))
         self.Alerts = new_alerts
 
     def _create_entities(self, entities):
@@ -140,7 +132,7 @@ class Incident(Entity):
             if isinstance(ent, Dict):
                 ent_details = ent
                 ent_type = ent["Type"]
-            new_ent = _ent_camel(ent_details)
+            new_ent = ent_camel(ent_details)
             ent_obj = Entity.ENTITY_NAME_MAP[ent_type.lower()](src_event=new_ent)
             new_ents.append(ent_obj)
         return new_ents
@@ -169,11 +161,3 @@ class Incident(Entity):
         # Dynamic bag of other items
         "AdditionalData ": None,
     }
-
-
-def _ent_camel(input_ent: dict):
-    """Convert Azure Sentinel API entities to camel case naming."""
-    output = {}
-    for key in input_ent.keys():
-        output[key[0].upper() + key[1:]] = input_ent[key]
-    return output

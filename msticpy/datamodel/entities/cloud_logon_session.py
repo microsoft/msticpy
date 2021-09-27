@@ -3,43 +3,40 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""FileHash Entity class."""
-from typing import Any, Mapping
+"""CloudApplication Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
-from .entity_enums import Algorithm
 
 __version__ = VERSION
-__author__ = "Ian Hellen"
+__author__ = "Pete Bryan"
 
 
 # pylint: disable=invalid-name
 
 
 @export
-class FileHash(Entity):
+class CloudLogonSession(Entity):
     """
-    File Hash class.
+    CloudLogonSession Entity class.
 
     Attributes
     ----------
-    Algorithm : Algorithm
-        FileHash Algorithm
-    Value : str
-        FileHash Value
-
+    SessionId : str
+        The loggon session ID
+    Account : str
+        The Account
+    UserAgent : str
+        The UserAgent
+    StartTime: str
+        The time the session started
     """
 
-    ID_PROPERTIES = ["Value"]
+    ID_PROPERTIES = ["Name"]
 
-    def __init__(
-        self,
-        src_entity: Mapping[str, Any] = None,
-        src_event: Mapping[str, Any] = None,
-        **kwargs,
-    ):
+    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
         """
         Create a new instance of the entity type.
 
@@ -49,9 +46,6 @@ class FileHash(Entity):
             Create entity from existing entity or
             other mapping object that implements entity properties.
             (the default is None)
-        src_event : Mapping[str, Any], optional
-            Create entity from event properties
-            (the default is None)
 
         Other Parameters
         ----------------
@@ -60,29 +54,34 @@ class FileHash(Entity):
             kw arguments.
 
         """
-        self.Algorithm: Algorithm = Algorithm.Unknown
-        self.Value: str = ""
+        self.SessionId: Optional[str] = None
+        self.Account: Optional[str] = None
+        self.UserAgent: Optional[str] = None
+        self.StartTime: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
-        if src_event is not None:
+        if src_event:
             self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.SessionId = src_event.get("SessionId")
+        self.Account = src_event.get("Account")
+        self.UserAgent = src_event.get("UserAgent")
+        self.StartTime = src_event.get("StartTimeUtc")
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Algorithm}: {self.Value}"
+        return self.Account or self.__class__.__name__
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.Value
-
-    def _create_from_event(self, src_event):
-        self.Algorithm = src_event["Algorithm"]
-        self.Value = src_event["HashValue"]
+        desc = f"{self.StartTime} - {self.Account} - {self.UserAgent}"
+        return desc or self.__class__.__name__
 
     _entity_schema = {
-        # The hash algorithm (type System.String)
-        "Algorithm": "Algorithm",
-        # Value (type System.String)
-        "Value": None,
+        # Name (type System.String)
+        "SessionId": None,
+        "Account": None,
+        "UserAgent": None,
     }

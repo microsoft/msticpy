@@ -641,3 +641,10 @@ class Entity(ABC, Node):
                 "This is not a pivot function.",
             )
         delattr(cls, func_name)
+
+def ent_camel(input_ent: dict):
+    """Convert Azure Sentinel API entities to camel case naming."""
+    output = {}
+    for key in input_ent.keys():
+        output[key[0].upper() + key[1:]] = input_ent[key]
+    return output

@@ -68,7 +68,8 @@ class Url(Entity):
 
     def _create_from_event(self, src_event):
         self.Url = src_event["Url"]
-        self.DetonationVerdict = src_event["AdditionalData"]["DetonationVerdict"]
+        if "AdditionalData" in src_event:
+            self.DetonationVerdict = src_event["AdditionalData"]["DetonationVerdict"]
 
     @property
     def description_str(self) -> str:

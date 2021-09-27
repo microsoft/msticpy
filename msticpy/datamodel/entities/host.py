@@ -130,7 +130,8 @@ class Host(Entity):
                 self.HostName = src_event["Computer"]
         elif "HostName" in src_event:
             self.HostName = src_event["HostName"]
-            self.DnsDomain = src_event["DnsDomain"]
+            if "DnsDomain" in src_event:
+                self.DnsDomain = src_event["DnsDomain"]
         self.NetBiosName = self.HostName
 
     _entity_schema = {
