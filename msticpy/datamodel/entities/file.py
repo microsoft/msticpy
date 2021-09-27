@@ -119,7 +119,7 @@ class File(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.Name or self.__class__.__name__
+        return self.Name or self.FullPath or self.__class__.__name__
 
     def _create_from_event(self, src_event, role):
         if role == "new" and "NewProcessName" in src_event:

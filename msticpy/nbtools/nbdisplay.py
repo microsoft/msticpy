@@ -227,6 +227,7 @@ def plot_entity_graph(
                 ("node_type", "@node_type"),
                 ("name", "@name"),
                 ("description", "@description"),
+                ("entitytype", "@entitytype")
             ]
         )
     )

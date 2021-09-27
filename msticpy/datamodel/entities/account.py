@@ -113,7 +113,7 @@ class Account(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.Name or self.__class__.__name__
+        return self.Name or self.DisplayName or "Unknown Account"
 
     @property
     def qualified_name(self) -> str:
