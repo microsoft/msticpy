@@ -350,7 +350,7 @@ class AzureSentinel(AzureData):
 
         return incidents_df
 
-    def get_incident(  # pylint: disable=too-many-locals
+    def get_incident(  # pylint: disable=too-many-locals, too-many-arguments
         self,
         incident_id: str,
         res_id: str = None,
@@ -391,9 +391,6 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
-        if "/" in incident_id and not res_id:
-            res_id = "/".join(incident_id.split("/")[:9])
-            incident_id = incident_id.split("/")[-1]
         res_id = res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
@@ -611,8 +608,12 @@ class AzureSentinel(AzureData):
             sub_id = config["subscription_id"]
             res_grp = config["resource_group"]
             ws_name = config["workspace_name"]
-        res_id = f"/subscriptions/{sub_id}/resourcegroups/{res_grp}"
-        return res_id + f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}"
+        return "".join(
+            [
+                f"/subscriptions/{sub_id}/resourcegroups/{res_grp}",
+                f"/providers/Microsoft.OperationalInsights/workspaces/{ws_name}",
+            ]
+        )
 
     def _build_paths(self, res_id: str, base_url: str = None) -> str:
         """

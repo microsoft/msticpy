@@ -8,9 +8,11 @@ import logging
 import sys
 from collections import namedtuple
 from datetime import datetime
-from typing import List, Optional
+from enum import Enum
+from typing import List, Optional, Tuple
 
 from azure.common.exceptions import CloudError
+from azure.common.credentials import get_cli_profile
 from azure.identity import (
     AzureCliCredential,
     ChainedTokenCredential,
@@ -18,6 +20,7 @@ from azure.identity import (
     InteractiveBrowserCredential,
     ManagedIdentityCredential,
 )
+from dateutil import parser
 from msrestazure import azure_cloud
 
 from .._version import VERSION
@@ -62,21 +65,20 @@ class AzureCloudConfig:
         if cloud:
             self.cloud = cloud
         else:
+            self.cloud = "global"
             try:
                 az_settings = config.get_config("Azure")
                 if az_settings and "cloud" in az_settings:
                     self.cloud = az_settings["cloud"]
             except KeyError:
-                self.cloud = "global"  # no Azure section in config
-        self.auth_methods = []
+                pass  # no Azure section in config
+        self.auth_methods = default_auth_methods()
         try:
-            self.auth_methods = (
-                config.get_config("Azure").get("Args", {}).get("auth_methods", [])
+            self.auth_methods = config.get_config("Azure").get(
+                "auth_methods", default_auth_methods()
             )
         except KeyError:
-            pass
-        if not self.auth_methods:
-            self.auth_methods = default_auth_methods()
+            pass  # no Azure section in config
 
     @property
     def endpoints(self) -> azure_cloud.CloudEndpoints:
@@ -298,3 +300,51 @@ def _create_auth_options(cloud: str = None) -> dict:
         "msi": ManagedIdentityCredential(),
         "interactive": InteractiveBrowserCredential(authority=aad_uri),
     }
+
+
+class AzureCliStatus(Enum):
+    """Enumeration for _check_cli_credentials return values."""
+
+    CLI_OK = 0
+    CLI_NOT_INSTALLED = 1
+    CLI_NEEDS_SIGN_IN = 2
+    CLI_TOKEN_EXPIRED = 3
+    CLI_UNKNOWN_ERROR = 4
+
+
+def check_cli_credentials() -> Tuple[AzureCliStatus, Optional[str]]:
+    """Check to see if there is a CLI session with a valid AAD token."""
+    try:
+        cli_profile = get_cli_profile()
+        raw_token = cli_profile.get_raw_token()
+        bearer_token = None
+        if (
+            isinstance(raw_token, tuple)
+            and len(raw_token) == 3
+            and len(raw_token[0]) == 3
+        ):
+            bearer_token = raw_token[0][2]
+            if (
+                parser.parse(bearer_token.get("expiresOn", datetime.min))
+                < datetime.now()
+            ):
+                raise ValueError("AADSTS70043: The refresh token has expired")
+
+        return AzureCliStatus.CLI_OK, "Azure CLI credentials available."
+    except ImportError:
+        # Azure CLI not installed
+        return AzureCliStatus.CLI_NOT_INSTALLED, None
+    except Exception as ex:  # pylint: disable=broad-except
+        if "AADSTS70043: The refresh token has expired" in str(ex):
+            message = (
+                "Azure CLI was detected but the token has expired. "
+                "For Azure CLI single sign-on, please sign in using '!az login'."
+            )
+            return AzureCliStatus.CLI_TOKEN_EXPIRED, message
+        if "Please run 'az login' to setup account" in str(ex):
+            message = (
+                "Azure CLI was detected but no token is available. "
+                "For Azure CLI single sign-on, please sign in using '!az login'."
+            )
+            return AzureCliStatus.CLI_NEEDS_SIGN_IN, message
+        return AzureCliStatus.CLI_UNKNOWN_ERROR, None

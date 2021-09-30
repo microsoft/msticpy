@@ -15,14 +15,9 @@ import pandas as pd
 from msticpy.common.exceptions import MsticpyException
 from msticpy.nbtools.morph_charts import MorphCharts
 
+from ..unit_test_lib import get_test_data_path
 
-_test_data_folders = [
-    d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")
-]
-if len(_test_data_folders) == 1:
-    _TEST_DATA = _test_data_folders[0]
-else:
-    _TEST_DATA = "./tests/testdata"
+_TEST_DATA = get_test_data_path()
 
 test_morph = MorphCharts()
 

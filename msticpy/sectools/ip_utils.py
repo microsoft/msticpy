@@ -17,18 +17,19 @@ from functools import lru_cache
 from typing import Callable, List, Optional, Set, Tuple
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 from ipwhois import (
+    ASNRegistryError,
     HostLookupError,
     HTTPLookupError,
     HTTPRateLimitError,
     IPWhois,
     WhoisLookupError,
     WhoisRateLimitError,
-    ASNRegistryError,
 )
 
 from .._version import VERSION
-from ..common.utility import export, arg_to_list
+from ..common.utility import arg_to_list, export
 from ..datamodel.entities import GeoLocation, IpAddress
 from .geoip import GeoLiteLookup
 
@@ -324,7 +325,7 @@ class IpWhoisAccessor:
         return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
 
 
-@export
+@deprecated("Will be removed in a future version", version="1.4.0")
 def create_ip_record(
     heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
 ) -> IpAddress:
