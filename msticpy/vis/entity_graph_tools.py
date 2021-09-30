@@ -194,6 +194,13 @@ class EntityGraph:
         else:
             raise MsticpyUserError(f"Node named {name} not found")
 
+    def to_df(self) -> pd.DataFrame:
+        """Generate a dataframe of nodes in the graph."""
+        names = [node[1]['name'] for node in self.alertentity_graph.nodes.items()]
+        descs = [node[1]['description'] for node in self.alertentity_graph.nodes.items()]
+        types = [node[1]['node_type'] for node in self.alertentity_graph.nodes.items()]
+        return pd.DataFrame({"Name":names, "Description":descs, "Type":types})
+
     def _check_type_create(self, incident: Union[Incident, Alert, None]):
         """Checks what type of entity is passed in and creates relevent graph."""
         if isinstance(incident, Incident):
