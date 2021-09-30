@@ -43,7 +43,7 @@ class Mailbox(Entity):
         self,
         src_entity: Mapping[str, Any] = None,
         src_event: Mapping[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Create a new instance of the entity type.
@@ -83,7 +83,10 @@ class Mailbox(Entity):
     @property
     def description_str(self):
         """Return Entity Description."""
-        return f"{self.MailboxPrimaryAddress} - {self.RiskLevel}" or self.__class__.__name__
+        return (
+            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
+            or self.__class__.__name__
+        )
 
     @property
     def name_str(self) -> str:

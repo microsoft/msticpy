@@ -279,9 +279,7 @@ class Entity(ABC, Node):
         """Return the hash of the entity based on non-empty property values."""
         return hash(
             " ".join(
-                f"{prop}:{str(val)}"
-                for prop, val in self.properties.items()
-                if str(val)
+                f"{prop}:{val}" for prop, val in self.properties.items() if str(val)
             )
         )
 
@@ -312,15 +310,12 @@ class Entity(ABC, Node):
             return True
         if not isinstance(other, Entity):
             return False
-        for prop in self.properties:
-            if (
-                self.properties[prop] == other.properties[prop]
-                or not self.properties[prop]
-                or not other.properties[prop]
-            ):
-                continue
-            return False
-        return True
+        return not any(
+            self.properties[prop] != other.properties[prop]
+            and self.properties[prop]
+            and other.properties[prop]
+            for prop in self.properties
+        )
 
     def merge(self, other: Any) -> "Entity":
         """
@@ -438,18 +433,19 @@ class Entity(ABC, Node):
 
         """
         if "Type" not in raw_entity and entity_type is None:
-            return raw_entity
+            entity_type_name = "unknown"
+        else:
+            entity_type_name = raw_entity.get("Type")  # type: ignore
 
-        entity_type_name = raw_entity.get("Type")
         if not entity_type_name and entity_type:
             entity_type_name = cls._get_entity_type_name(entity_type)
 
         if entity_type:
             return entity_type(raw_entity)
-        if entity_type_name in cls.ENTITY_NAME_MAP:
-            return cls.ENTITY_NAME_MAP[entity_type_name](raw_entity)
+        if entity_type_name.lower() in cls.ENTITY_NAME_MAP:
+            return cls.ENTITY_NAME_MAP[entity_type_name.lower()](raw_entity)
 
-        raise TypeError("Could not find a suitable type for {}".format(entity_type))
+        raise TypeError(f"Could not find a suitable type for {entity_type}")
 
     @classmethod
     def _get_entity_type_name(cls, entity_type: Type) -> str:
@@ -642,9 +638,7 @@ class Entity(ABC, Node):
             )
         delattr(cls, func_name)
 
+
 def ent_camel(input_ent: dict):
     """Convert Azure Sentinel API entities to camel case naming."""
-    output = {}
-    for key in input_ent.keys():
-        output[key[0].upper() + key[1:]] = input_ent[key]
-    return output
+    return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}
