@@ -143,7 +143,8 @@ sources:
       resource_id:
         description: ResourceId or substring
         type: str
-        aliases: resource
+        aliases:
+          - resource
   list_all_signins_geo:
     description: Gets Signin data used by morph charts
     metadata:

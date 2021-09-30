@@ -5,12 +5,11 @@
 # --------------------------------------------------------------------------
 import os
 from pathlib import Path
-import pandas as pd
 import warnings
 
+import pandas as pd
 from pytest import raises
 
-from msticpy.common import pkg_config
 from msticpy.datamodel.entities import Host
 from msticpy.sectools import syslog_utils as ls
 from msticpy.common.exceptions import MsticpyException
@@ -18,7 +17,7 @@ from msticpy.sectools import cmd_line as cl
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.sectools.geoip import GeoIPDatabaseException
 
-from .unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import get_test_data_path, custom_mp_config
 
 _TEST_DATA = get_test_data_path()
 
@@ -64,8 +63,8 @@ def test_host_data():
                     warnings.resetwarnings()
                     warnings.warn(
                         message=(
-                            "No configuration value found for GeoLite key. ",
-                            +"Test test_host_data skipped.",
+                            "No configuration value found for GeoLite key. "
+                            + "Test test_host_data skipped.",
                         )
                     )
                     return

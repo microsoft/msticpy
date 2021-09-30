@@ -82,7 +82,8 @@ sources:
       ip_address_list:
         description: Ip Address to query for
         type: list
-        aliases: observables
+        aliases:
+          - observables
   list_indicators_by_hash:
     description: Retrieves list of indicators by file hash
     metadata:
@@ -100,7 +101,8 @@ sources:
       file_hash_list:
         description: File hash(es) to query for
         type: list
-        aliases: observables
+        aliases:
+          - observables
   list_indicators_by_filepath:
     description: Retrieves list of indicators by file path
     metadata:
@@ -140,7 +142,8 @@ sources:
       domain_list:
         description: Domain(s) to query for
         type: list
-        aliases: observables
+        aliases:
+          - observables
   list_indicators_by_email:
     description: Retrieves list of indicators by email address
     metadata:
@@ -180,4 +183,5 @@ sources:
       url_list:
         description: URL(s) to query for
         type: list
-        aliases: observables
+        aliases:
+          - observables
