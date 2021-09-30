@@ -46,10 +46,13 @@ Entity.ENTITY_NAME_MAP.update(
     {
         "account": Account,
         "azureresource": AzureResource,
+        "azure-resource": AzureResource,
         "host": Host,
         "process": Process,
         "file": File,
         "cloudapplication": CloudApplication,
+        "cloud-application": CloudApplication,
+        "dns": Dns,
         "dnsresolve": Dns,
         "ipaddress": IpAddress,
         "iotdevice": IoTDevice,
@@ -77,6 +80,7 @@ Entity.ENTITY_NAME_MAP.update(
         "url": Url,
         "unknown": UnknownEntity,
         "geolocation": GeoLocation,
+        "location": GeoLocation,
         "incident": Incident,
         "cloud-logon-session": CloudLogonSession,
     }

@@ -63,7 +63,7 @@ class MailCluster(Entity):
         self,
         src_entity: Mapping[str, Any] = None,
         src_event: Mapping[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Create a new instance of the entity type.
@@ -122,7 +122,8 @@ class MailCluster(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.__class__.__name__
+        hash_val = hash(str(self.NetworkMessageIds))
+        return f"{self.__class__.__name__} - {hash_val}"
 
     _entity_schema = {
         "NetworkMessageIds": None,

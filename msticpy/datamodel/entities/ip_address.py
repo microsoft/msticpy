@@ -69,6 +69,8 @@ class IpAddress(Entity):
         self.ThreatIntelligence: List[Threatintelligence] = []
         super().__init__(src_entity=src_entity, **kwargs)
 
+        if src_event is not None and "Location" in src_event:
+            self.Location = GeoLocation(src_event["Location"])
         if src_event is not None and "IpAddress" in src_event:
             self.Address = src_event["IpAddress"]
         elif src_event is not None and "Address" in src_event:
@@ -85,7 +87,11 @@ class IpAddress(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.Address
+        if self.Location:
+            desc = f"{self.Address} - {self.Location.CountryCode}"
+        else:
+            desc = self.Address
+        return desc
 
     @property
     def name_str(self) -> str:

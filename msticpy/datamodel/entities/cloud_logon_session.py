@@ -36,7 +36,12 @@ class CloudLogonSession(Entity):
 
     ID_PROPERTIES = ["Name"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 

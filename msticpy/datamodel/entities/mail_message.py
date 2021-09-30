@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """MailMessage Entity class."""
-from re import S
 from typing import Any, List, Mapping, Optional
 
 from ..._version import VERSION
@@ -86,7 +85,7 @@ class MailMessage(Entity):
         self,
         src_entity: Mapping[str, Any] = None,
         src_event: Mapping[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Create a new instance of the entity type.
@@ -167,7 +166,11 @@ class MailMessage(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.Subject or self.__class__.__name__
+        return (
+            self.Subject
+            or f"MailMessage to: {self.Recipient}"
+            or self.__class__.__name__
+        )
 
     _entity_schema = {
         "Recipient": None,

@@ -51,7 +51,12 @@ class Alert(Entity):
 
     ID_PROPERTIES = ["SystemAlertIds"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, src_event: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
@@ -90,11 +95,16 @@ class Alert(Entity):
                 self.DisplayName = src_entity["AlertDisplayName"]
             if "SystemAlertId" in src_entity:
                 self.SystemAlertIds.append(src_entity["SystemAlertId"])
+            elif "ID" in src_entity:
+                self.SystemAlertIds.append(src_entity["ID"])
             if "Name" in src_entity:
                 self.DisplayName = src_entity["Name"]
             if "Entities" in src_entity and src_entity["Entities"]:
                 if isinstance(src_entity["Entities"], str):
-                    ents = _extract_entities(src_entity["Entities"])
+                    try:
+                        ents = _extract_entities(json.loads(src_entity["Entities"]))
+                    except json.JSONDecodeError:
+                        ents = []
                 else:
                     ents = src_entity["Entities"]
                 self.Entities = self._create_entities(ents)
@@ -103,10 +113,35 @@ class Alert(Entity):
         if src_event is not None:
             self._create_from_event(src_event)
 
+    def _extract_entities(self, src_row):  # noqa: MC0001
+        input_entities = []
+        if isinstance(src_row.Entities, str):
+            try:
+                ext_props = json.loads(src_row["Entities"])
+                for item in ext_props:
+                    for k, v in item.items():
+                        if isinstance(v, dict) and "$ref" in v.keys():
+                            item[k] = [x for x in ext_props if x["$id"] == v["$ref"]][0]
+                    input_entities.append(item)
+            except json.JSONDecodeError:
+                pass
+        if isinstance(src_row.ExtendedProperties, str):
+            try:
+                ext_props = json.loads(src_row["ExtendedProperties"])
+                for ent, val in ext_props.items():
+                    if ent in ["IpAddress", "Username"]:
+                        input_entities.append({"Entity": val, "Type": ent})
+            except json.JSONDecodeError:
+                pass
+        return input_entities
+
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}"
+        if self.StartTimeUtc and self.CompromisedEntity:
+            return f"{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}"
+        else:
+            return f"{self.DisplayName} - {self.SystemAlertIds}"
 
     @property
     def name_str(self) -> str:
@@ -143,7 +178,10 @@ class Alert(Entity):
         self.VendorName = src_event.get("VendorName")
         self.ProviderName = src_event.get("ProviderName")
         if isinstance(src_event["Entities"], str):
-            ents = _extract_entities(src_event["Entities"])
+            try:
+                ents = _extract_entities(json.loads(src_event["Entities"]))
+            except json.JSONDecodeError:
+                ents = []
         else:
             ents = src_event["Entities"]
         self.Entities = self._create_entities(ents)
@@ -162,7 +200,9 @@ class Alert(Entity):
                 ent_details = ent
                 ent_type = "Unknown"
             new_ent = ent_camel(ent_details)
-            ent_obj = Entity.ENTITY_NAME_MAP[ent_type.lower()](src_event=new_ent)
+            ent_obj = Entity.instantiate_entity(
+                new_ent, entity_type=Entity.ENTITY_NAME_MAP[ent_type.lower()]
+            )
             new_ents.append(ent_obj)
         return new_ents
 
@@ -194,31 +234,77 @@ class Alert(Entity):
 
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
-        if self.properties:
-            title = """
+        return (
+            """
             <h3>Alert: '{name}'</h3>
             <b>Alert_time:</b> {start},
             <b>Compr_entity:</b> {entity},
             <b>Alert_id:</b> {id}
             """.format(
                 start=self.properties.get(
-                    "StartTimeUtc", self.properties.get("StartTime", "no timestamp")
+                    "StartTimeUtc",
+                    self.properties.get("StartTime", "no timestamp"),
                 ),
                 name=self.properties.get(
                     "AlertDisplayName",
                     self.properties.get("DisplayName", "no alert name"),
                 ),
                 entity=self.properties.get("CompromisedEntity", "unknown"),
-                id=self.properties["SystemAlertId"],
+                id=self.properties.get("SystemAlertId", "unknown"),
             )
-        else:
-            title = "Alert has no data."
-        return title + super().to_html(show_entities)
+            if self.properties
+            else "Alert has no data."
+        )
 
-def _extract_entities(src_entities):
-    input_entities = []
-    try:
-        input_entities += json.loads(src_entities)
-    except json.JSONDecodeError:
-        pass
-    return input_entities
+
+def _extract_entities(ents: list):
+    """Extract all entities from a set and replace $ref elements."""
+    base_ents = _generate_base_ents(ents)
+    out_ents = []
+    for entity in ents:
+        if isinstance(entity, dict) and "$ref" in entity:
+            out_ents.append(_find_og_ent(entity, base_ents))
+        else:
+            for k, val in entity.items():
+                if isinstance(val, (list, dict)):
+                    if isinstance(val, list):
+                        nested_ents = []
+                        for item in val:
+                            if isinstance(item, dict) and "$ref" in item:
+                                nested_ents.append(_find_og_ent(item, base_ents))
+                                entity[k] = nested_ents
+                    elif isinstance(val, dict) and "$ref" in val:
+                        entity[k] = _find_og_ent(val, base_ents)
+            out_ents.append(entity)
+    return out_ents
+
+
+def _find_og_ent(ent, base_ents):
+    """Find the original entity referenced by $ref entity."""
+    id = ent["$ref"]
+    return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
+
+
+def _generate_base_ents(ents: list) -> list:
+    """Generate a list of all enties form a set of nested entities."""
+    base_ents = []
+    for ent in ents:
+        base_ents.append(ent)
+        for _, item in ent.items():
+            if isinstance(item, list):
+                for prop in item:
+                    if isinstance(prop, dict) and "$id" in prop.keys():
+                        base_ents.append(prop)
+                        for val in prop:
+                            if isinstance(prop[val], list):
+                                for p in prop[val]:
+                                    if isinstance(p, dict) and "$id" in p.keys():
+                                        base_ents.append(p)
+                            elif (
+                                isinstance(prop[val], dict)
+                                and "$id" in prop[val].keys()
+                            ):
+                                base_ents.append(val)
+            elif isinstance(item, dict) and "$id" in item.keys():
+                base_ents.append(item)
+    return base_ents

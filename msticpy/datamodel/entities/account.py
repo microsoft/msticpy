@@ -130,6 +130,8 @@ class Account(Entity):
         return name
 
     def _create_from_event(self, src_event, role):
+        if "Name" in src_event:
+            self.Name = src_event["Name"]
         if role == "subject" and "SubjectUserName" in src_event:
             self.Name = src_event["SubjectUserName"]
             self.NTDomain = (
