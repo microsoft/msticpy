@@ -448,9 +448,9 @@ class Entity(ABC, Node):
 
         """
         if "Type" not in raw_entity and entity_type is None:
-            entity_type_name = "unknown"
-        else:
-            entity_type_name = raw_entity.get("Type")  # type: ignore
+            return raw_entity
+
+        entity_type_name = raw_entity.get("Type")
 
         if not entity_type_name and entity_type:
             entity_type_name = cls._get_entity_type_name(entity_type)
