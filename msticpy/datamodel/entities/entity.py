@@ -411,6 +411,21 @@ class Entity(ABC, Node):
         """
         return self.Type
 
+    @property
+    def name_str(self) -> str:
+        """
+        Return Name Description.
+
+        Returns
+        -------
+        str
+            Entity Name (optional). If not overridden
+            by the Entity instance type, it will return the
+            class name string.
+
+        """
+        return self.__class__.__name__
+
     @classmethod
     def instantiate_entity(
         cls, raw_entity: Mapping[str, Any], entity_type: Optional[Type] = None

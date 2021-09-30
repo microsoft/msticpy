@@ -107,7 +107,6 @@ class Process(Entity):
                 self.CreationTimeUtc = src_event["TimeCreatedUtc"]
             elif "TimeGenerated" in src_event:
                 self.CreationTimeUtc = src_event["TimeGenerated"]
-            self.ProcessId = src_event.get("NewProcessId")
             self.ImageFile = File(src_event=src_event, role="new")
             self.Account = Account(src_event=src_event, role="subject")
 
