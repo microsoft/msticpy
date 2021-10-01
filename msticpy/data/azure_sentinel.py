@@ -391,6 +391,9 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
+        if "/" in incident_id and not res_id:
+            res_id = "/".join(incident_id.split("/")[:9])
+            incident_id = incident_id.split("/")[-1]
         res_id = res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)

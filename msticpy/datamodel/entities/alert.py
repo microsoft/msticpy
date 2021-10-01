@@ -106,7 +106,7 @@ class Alert(Entity):
                     except json.JSONDecodeError:
                         ents = []
                 else:
-                    ents = src_entity["Entities"]
+                    ents = _extract_entities(src_entity["Entities"])
                 self.Entities = self._create_entities(ents)
             self._add_additional_data(src_entity)
 
@@ -183,7 +183,7 @@ class Alert(Entity):
             except json.JSONDecodeError:
                 ents = []
         else:
-            ents = src_event["Entities"]
+            ents = _extract_entities(src_event["Entities"])
         self.Entities = self._create_entities(ents)
 
     def _create_entities(self, entities):

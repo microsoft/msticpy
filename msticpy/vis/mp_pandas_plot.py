@@ -7,16 +7,16 @@
 from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
-
 from bokeh.models import LayoutDOM
 from bokeh.plotting import figure
 
+from .._version import VERSION
+from ..common.exceptions import MsticpyUserError
+from ..nbtools.process_tree import build_and_show_process_tree
 from ..nbtools.timeline import display_timeline, display_timeline_values
 from ..nbtools.timeline_duration import display_timeline_duration
-from ..nbtools.process_tree import build_and_show_process_tree
+from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .matrix_plot import plot_matrix
-
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -364,3 +364,20 @@ class MsticpyPlotAccessor:
 
         """
         return plot_matrix(data=self._df, **kwargs)
+
+    def inc_graph(self):
+        """
+        Plot an incident graph if the dataframe contains incidents or alerts.
+
+        Raises
+        ------
+        MsticpyUserError
+            Raised if the dataframe does not contain incidents or alerts.
+
+        """
+        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+            elem not in self._df.columns for elem in req_inc_cols
+        ):
+            raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
+        graph = EntityGraph(self._df)
+        graph.plot()
