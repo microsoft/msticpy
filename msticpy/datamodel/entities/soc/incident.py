@@ -5,27 +5,22 @@
 # --------------------------------------------------------------------------
 """Incident Entity class."""
 from datetime import datetime
-from typing import Any, List, Mapping, Optional, Dict, Tuple
+from typing import Any, List, Mapping, Optional, Dict
+import pandas as pd
 
-from ..._version import VERSION
-from ...common.utility import export
-from ..entities.entity import Entity, ent_camel
-from ..entities.alert import Alert
+from ...._version import VERSION
+from ....common.utility import export
+from ...entities.entity import Entity, ent_camel
+from ...entities.alert import Alert
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
+# pylint: disable=invalid-name, too-many-instance-attributes
 @export
 class Incident(Entity):
-    """
-    Incident Entity class.
-
-    Attributes
-    ----------
-
-
-    """
+    """Incident Entity class."""
 
     ID_PROPERTIES = ["IncidentID"]
 
@@ -69,9 +64,12 @@ class Incident(Entity):
         self.AdditionalData: Optional[Dict] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
-        if src_event is not None:
-            if src_event_type == "Sentinel":
-                self._create_from_sent_event(src_event)
+
+        if src_entity:
+            self._create_from_sent_event(src_entity)
+
+        if isinstance(src_event, pd.Series) and src_event_type == "Sentinel":
+            self._create_from_sent_event(src_event)
 
     @property
     def description_str(self) -> str:
@@ -113,29 +111,13 @@ class Incident(Entity):
             self._add_alerts(src_event)
 
         if "Entities" in src_event:
-            self.Entities = self._create_entities(src_event["Entities"])
+            self.Entities = _create_entities(src_event["Entities"])
 
     def _add_alerts(self, src_event):
         """Add alerts to incident."""
-        new_alerts = []
-        for alrt in src_event["Alerts"]:
-            new_alerts.append(Alert(src_entity=alrt))
-        self.Alerts = new_alerts
-
-    def _create_entities(self, entities):
-        """Create incident entities from API returned dicts."""
-        new_ents = []
-        for ent in entities:
-            if isinstance(ent, Tuple):
-                ent_details = ent[1]
-                ent_type = ent[0]
-            if isinstance(ent, Dict):
-                ent_details = ent
-                ent_type = ent["Type"]
-            new_ent = ent_camel(ent_details)
-            ent_obj = Entity.ENTITY_NAME_MAP[ent_type.lower()](src_event=new_ent)
-            new_ents.append(ent_obj)
-        return new_ents
+        if src_event["Alerts"] and isinstance(src_event["Alerts"], list):
+            new_alerts = [Alert(src_entity=alrt) for alrt in src_event["Alerts"]]
+            self.Alerts = new_alerts
 
     _entity_schema = {
         # Time the Incident was Generated
@@ -161,3 +143,22 @@ class Incident(Entity):
         # Dynamic bag of other items
         "AdditionalData ": None,
     }
+
+
+def _create_entities(entities):
+    """Create incident entities from API returned dicts."""
+    new_ents = []
+    for ent in entities:
+        if isinstance(ent, tuple):
+            ent_details = ent[1]
+            ent_type = ent[0]
+        elif isinstance(ent, dict):
+            ent_details = ent
+            ent_type = ent["Type"]
+        else:
+            ent_details = ent
+            ent_type = "unknown"
+        new_ent = ent_camel(ent_details)
+        ent_obj = Entity.ENTITY_NAME_MAP[ent_type.lower()](src_event=new_ent)
+        new_ents.append(ent_obj)
+    return new_ents

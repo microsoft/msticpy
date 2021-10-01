@@ -15,12 +15,15 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
-from ..datamodel.soc.incident import Incident
+from ..datamodel.entities.soc.incident import Incident
 from ..nbtools.nbdisplay import draw_alert_entity_graph
 from ..nbtools.security_alert import SecurityAlert
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+req_alert_cols = ["DisplayName", "Severity", "AlertType"]
+req_inc_cols = ["id", "name", "properties.severity"]
 
 
 class EntityGraph:
@@ -315,3 +318,34 @@ def _dedupe_entities(alerts, ents) -> list:
         if ent.__hash__() in alrt_ents:
             ents.remove(ent)
     return ents
+
+
+@pd.api.extensions.register_dataframe_accessor("mp_incident_graph")
+class EntityGraphAccessor:
+    """Pandas api extension for Entinty Graph."""
+
+    def __init__(self, pandas_obj):
+        """Instantiate pandas extension class."""
+        self._df = pandas_obj
+
+    def plot(self):
+        """
+        Plot an incident graph if the dataframe contains incidents or alerts.
+
+        Raises
+        ------
+        MsticpyUserError
+            Raised if the dataframe does not contain incidents or alerts.
+
+        """
+        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+            elem not in self._df.columns for elem in req_inc_cols
+        ):
+            raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
+
+        graph = EntityGraph(self._df)
+        graph.plot()
+
+    def build(self) -> EntityGraph:
+        """Generate an incident graph from the dataframe but without plotting it."""
+        return EntityGraph(self._df)
