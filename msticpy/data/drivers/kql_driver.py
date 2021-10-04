@@ -30,6 +30,7 @@ try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
     from Kqlmagic.kql_response import KqlError
+    from Kqlmagic.kql_proxy import KqlResponse
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -213,7 +214,9 @@ class KqlDriver(DriverBase):
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(
+        self, query: str, **kwargs
+    ) -> Tuple[pd.DataFrame, KqlResponse]:
         """
         Execute query string and return DataFrame of results.
 
@@ -259,8 +262,8 @@ class KqlDriver(DriverBase):
             if isinstance(result, pd.DataFrame):
                 return result, None
             if hasattr(result, "completion_query_info") and (
-                result.completion_query_info["StatusCode"] == 0
-                or result.completion_query_info["Text"]
+                int(result.completion_query_info.get("StatusCode", 1)) == 0
+                or result.completion_query_info.get("Text")
                 == "Query completed successfully"
             ):
                 data_frame = result.to_dataframe()
@@ -278,7 +281,11 @@ class KqlDriver(DriverBase):
 
     @staticmethod
     def _get_query_status(result) -> List[str]:
-        return [f"{key}: '{value}'" for key, value in result.completion_query_info]
+        if not isinstance(result, KqlResponse):
+            return [str(result)]
+        return [
+            f"{key}: '{value}'" for key, value in result.completion_query_info.items()
+        ]
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
