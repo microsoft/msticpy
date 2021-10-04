@@ -1,5 +1,3 @@
-# YAML 1.2
----
 abstract: |
     "Microsoft Threat Intelligence Python Security Tools - MSTICPy
     
@@ -10,24 +8,20 @@ abstract: |
     - analyze for anomalous sessions and  events
     - visualize data using interactive timelines, process trees and multi-dimensional Morph Charts"
 authors: 
-  -
-    given-names: Ian
-    family-names: Hellen
-    affiliation: "Microsoft Corp"
-    alias: ianhelle
-  -
-    given-names: Pete
-    family-names: Bryan
-    affiliation: "Microsoft Corp."
-    alias: petebryan
-  -
-    given-names: Ashwin
-    family-names: Patil
-    affiliation: "Microsoft Corp"
-    alias: ashwinpatil
-cff-version: "1.0.0"
+- given-names: Ian
+  family-names: Hellen
+  affiliation: "Microsoft Corp."
+  alias: ianhelle
+- given-names: Pete
+  family-names: Bryan
+  affiliation: "Microsoft Corp."
+  alias: petebryan
+- given-names: Ashwin
+  family-names: Patil
+  affiliation: "Microsoft Corp."
+  alias: ashwinpatil
+cff-version: "1.2.0"
 date-released: 2021-04-14
-identifiers: 
 keywords: 
   - CyberSecurity
   - Jupyter
