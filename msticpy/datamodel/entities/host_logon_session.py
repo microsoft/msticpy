@@ -111,4 +111,7 @@ class HostLogonSession(Entity):
         "Host": "Host",
         # SessionId (type System.String)
         "SessionId": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

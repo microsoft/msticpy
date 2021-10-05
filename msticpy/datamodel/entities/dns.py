@@ -84,4 +84,7 @@ class Dns(Entity):
         # HostIpAddress (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
         "HostIpAddress": "IpAddress",
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

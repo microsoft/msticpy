@@ -42,4 +42,8 @@ class UnknownEntity(Entity):
         """Return Entity Name."""
         return self.__class__.__name__
 
-    _entity_schema: Dict[str, Any] = {}
+    _entity_schema: Dict[str, Any] = {
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
+    }

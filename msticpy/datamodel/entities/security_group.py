@@ -75,4 +75,7 @@ class SecurityGroup(Entity):
         "SID": None,
         # ObjectGuid (type System.String)
         "ObjectGuid": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

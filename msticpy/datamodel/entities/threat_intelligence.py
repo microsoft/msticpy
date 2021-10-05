@@ -75,4 +75,7 @@ class Threatintelligence(Entity):
         "Confidence": None,
         "ReportLink": None,
         "ThreatDescription": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

@@ -180,4 +180,7 @@ class Process(Entity):
         # Host (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.HostLogonSession)
         "LogonSession": "HostLogonSession",
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

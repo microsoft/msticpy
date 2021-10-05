@@ -107,6 +107,8 @@ class Incident(Entity):
             "Incident Number": src_event["properties.incidentNumber"],
         }
         self.AdditionalData = additionaldata
+        self.StartTime = src_event["properties.firstActivityTimeUtc"]
+        self.EndTime = src_event["properties.lastActivityTimeUtc"]
         if "Alerts" in src_event:
             self._add_alerts(src_event)
 
@@ -142,6 +144,8 @@ class Incident(Entity):
         "Entities": None,
         # Dynamic bag of other items
         "AdditionalData ": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
 

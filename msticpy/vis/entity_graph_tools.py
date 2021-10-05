@@ -6,18 +6,24 @@
 """
 Creates an entity graph for an Azure Sentinel Incident
 """
+from datetime import datetime
 from typing import List, Optional, Union
 
 import networkx as nx
 import pandas as pd
+from bokeh.io import output_notebook, show
+from bokeh.layouts import column
+from bokeh.models import LayoutDOM
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
 from ..datamodel.entities.soc.incident import Incident
-from ..nbtools.nbdisplay import draw_alert_entity_graph
+from ..nbtools.nbdisplay import plot_entity_graph
 from ..nbtools.security_alert import SecurityAlert
+from ..nbtools.timeline_duration import display_timeline_duration
+from ..nbtools.timeline import display_timeline
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -33,6 +39,7 @@ class EntityGraph:
         self,
         entity: Union[Incident, Alert, pd.DataFrame, pd.Series, Entity, SecurityAlert],
     ):
+        output_notebook()
         self.alertentity_graph = nx.Graph(id="IncidentGraph")
         if isinstance(entity, (Incident, Alert)):
             self._check_type_create(entity)
@@ -46,9 +53,78 @@ class EntityGraph:
             entity = Alert(entity)  # type: ignore
             self._check_type_create(entity)
 
-    def plot(self):
-        """Plot the entity graph using Bokeh."""
-        draw_alert_entity_graph(self.alertentity_graph)
+    def plot(self, hide: bool = False) -> LayoutDOM:
+        """
+        Plot a graph of entities.
+
+        Parameters
+        ----------
+        hide : bool, optional
+            Set true to not display the graphic, by default False
+
+        Returns
+        -------
+        LayoutDOM
+            A Bokeh figure object
+
+        """
+        return plot_entity_graph(self.alertentity_graph, hide=hide)
+
+    def plot_with_timeline(self, hide: bool = False) -> LayoutDOM:
+        """
+        Plot the entity graph with a timeline.
+
+        Parameters
+        ----------
+        hide : bool, optional
+            Set true to not display the graphic, by default False
+
+        Returns
+        -------
+        LayoutDOM
+            A Bokeh figure object
+
+        """
+        timeline = None
+        tl_df = self.to_df()
+        tl_type = "duration"
+        if len(tl_df["EndTime"].unique()) == 1 and not tl_df["EndTime"].unique()[0]:
+            tl_type = "discreet"
+            if (
+                len(tl_df["TimeGenerated"].unique()) == 1
+                and not tl_df["TimeGenerated"].unique()[0]
+            ):
+                print("No timestamps avalaible to create timeline")
+                return self.plot()
+        tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
+        tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
+        tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
+        graph = self.plot(hide=True)
+        if tl_type == "duration":
+            timeline = display_timeline_duration(
+                tl_df.dropna(subset=["TimeGenerated"]),
+                group_by="Name",
+                title="Entity Timeline",
+                time_column="StartTime",
+                end_time_column="EndTime",
+                source_columns=["Name", "Description", "Type", "TimeGenerated"],
+                hide=True,
+                width=800,
+            )
+        elif tl_type == "discreet":
+            timeline = display_timeline(
+                tl_df.dropna(subset=["TimeGenerated"]),
+                group_by="Type",
+                title="Entity Timeline",
+                time_column="TimeGenerated",
+                source_columns=["Name", "Description", "Type", "TimeGenerated"],
+                hide=True,
+                width=800,
+            )
+        plot_layout = column(graph, timeline) if timeline else graph
+        if not hide:
+            show(plot_layout)
+        return plot_layout
 
     def add_entity(self, ent: Entity, attached_to: str = None):
         """
@@ -113,7 +189,8 @@ class EntityGraph:
             description=description,
             color=color,
             node_type="analystnote",
-            entitytype=user,
+            user=user,
+            time_generated=datetime.now(),
         )
         if attached_to:
             if isinstance(attached_to, str):
@@ -204,7 +281,28 @@ class EntityGraph:
             node[1]["description"] for node in self.alertentity_graph.nodes.items()
         ]
         types = [node[1]["node_type"] for node in self.alertentity_graph.nodes.items()]
-        return pd.DataFrame({"Name": names, "Description": descs, "Type": types})
+        times = [
+            node[1]["time_generated"] if "time_generated" in node[1] else None
+            for node in self.alertentity_graph.nodes.items()
+        ]
+        starttimes = [
+            node[1]["start_time"] if "start_time" in node[1] else None
+            for node in self.alertentity_graph.nodes.items()
+        ]
+        endtimes = [
+            node[1]["end_time"] if "end_time" in node[1] else None
+            for node in self.alertentity_graph.nodes.items()
+        ]
+        return pd.DataFrame(
+            {
+                "Name": names,
+                "Description": descs,
+                "Type": types,
+                "TimeGenerated": times,
+                "EndTime": endtimes,
+                "StartTime": starttimes,
+            }
+        )
 
     def _check_type_create(self, incident: Union[Incident, Alert, None]):
         """Checks what type of entity is passed in and creates relevent graph."""
@@ -243,6 +341,7 @@ class EntityGraph:
         """Add an Entity to the graph."""
         e_name = ent.name_str
         e_desc = ent.description_str
+        e_startime = ent.StartTime or ent.TimeGenerated
         self.alertentity_graph.add_node(
             e_name,
             entitytype=ent.Type,
@@ -251,6 +350,8 @@ class EntityGraph:
             color="green",
             node_type="entity",
             source=str(ent),
+            start_time=e_startime,
+            end_time=ent.EndTime,
         )
         if attached_to:
             self.add_link(e_name, attached_to)
@@ -269,6 +370,9 @@ class EntityGraph:
             node_type="alert",
             source=str(alert),
             entitytype="alert",
+            time_generated=alert.TimeGenerated,
+            start_time=alert.StartTimeUtc,
+            end_time=alert.EndTimeUtc,
         )
         if incident_name:
             self.add_link(incident_name, alert_name)
@@ -281,11 +385,13 @@ class EntityGraph:
         self.alertentity_graph.add_node(
             incident_name,
             name=incident.name_str,
-            time=str(incident.TimeGenerated),
+            time_generated=incident.TimeGenerated,
             description=incident.description_str,
             color="red",
             node_type="incident",
             entitytype="incident",
+            start_time=incident.StartTime,
+            end_time=incident.EndTime,
         )
         if incident.has_edge:
             self._add_entity_edges(incident.edges, incident_name)
@@ -328,7 +434,7 @@ class EntityGraphAccessor:
         """Instantiate pandas extension class."""
         self._df = pandas_obj
 
-    def plot(self):
+    def plot(self) -> LayoutDOM:
         """
         Plot an incident graph if the dataframe contains incidents or alerts.
 
@@ -345,6 +451,23 @@ class EntityGraphAccessor:
 
         graph = EntityGraph(self._df)
         graph.plot()
+
+    def plot_with_timeline(self) -> LayoutDOM:
+        """
+        Plot an incident graph & timeline if the dataframe contains incidents or alerts.
+
+        Raises
+        ------
+        MsticpyUserError
+            Raised if the dataframe does not contain incidents or alerts.
+
+        """
+        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+            elem not in self._df.columns for elem in req_inc_cols
+        ):
+            raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
+        graph = EntityGraph(self._df)
+        graph.plot_with_timeline()
 
     def build(self) -> EntityGraph:
         """Generate an incident graph from the dataframe but without plotting it."""

@@ -90,6 +90,9 @@ class AzureResource(Entity):
         # ResourceIdParts (type System.Collections.Generic.IReadOnlyDictionary`2
         # [System.String,System.String])
         "ResourceIdParts": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
     def _extract_resource_parts(self):
