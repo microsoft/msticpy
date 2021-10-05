@@ -81,8 +81,8 @@ class Alert(Entity):
         self.DisplayName: Optional[str] = None
         self.CompromisedEntity: Optional[str] = None
         self.Count: Any = None
-        self.StartTimeUtc: datetime = datetime.min
-        self.EndTimeUtc: datetime = datetime.min
+        self.StartTimeUtc: datetime = None
+        self.EndTimeUtc: datetime = None
         self.Severity: Any = None
         self.SystemAlertIds: List[str] = []
         self.AlertType: Optional[str] = None
@@ -91,6 +91,10 @@ class Alert(Entity):
         self.Entities: Optional[List] = None
         super().__init__(src_entity=src_entity, **kwargs)
         if src_entity is not None:
+            if "StartTime" in src_entity or "TimeGenerated" in src_entity:
+                self.TimeGenerated = (
+                    src_entity["StartTime"] or src_entity["TimeGenerated"]
+                )
             if "AlertDisplayName" in src_entity:
                 self.DisplayName = src_entity["AlertDisplayName"]
             if "SystemAlertId" in src_entity:
@@ -168,6 +172,7 @@ class Alert(Entity):
 
     def _create_from_event(self, src_event):
         """Create Alert from an alert event."""
+        self.TimeGenerated = src_event.get("StartTime", src_event.get("TimeGenerated"))
         self.DisplayName = src_event.get("DisplayName", src_event.get("Name"))
         self.CompromisedEntity = src_event.get("CompromisedEntity")
         self.StartTimeUtc = src_event.get("StartTime")
@@ -230,6 +235,8 @@ class Alert(Entity):
         "ProviderName": None,
         # List of associated entities
         "Entities": None,
+        # Time the alert was generated.
+        "TimeGenerated": None,
     }
 
     def to_html(self, show_entities=False) -> str:

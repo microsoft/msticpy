@@ -148,6 +148,9 @@ class File(Entity):
         # Sha256Ac (type System.String)
         "Sha256Ac": None,
         "FileHashes": (list, "FileHash"),
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
     def _add_paths(self, full_path, file_name=None):

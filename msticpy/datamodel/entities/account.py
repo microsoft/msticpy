@@ -205,4 +205,7 @@ class Account(Entity):
         # DisplayName (type System.String)
         "DisplayName": None,
         "ObjectGuid": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

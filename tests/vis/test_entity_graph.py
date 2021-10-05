@@ -3,11 +3,13 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Test module for matrix_plot."""
+"""Test module for EntityGraph."""
 import pandas as pd
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
 from msticpy.vis.entity_graph_tools import EntityGraph
+from bokeh.plotting.figure import Figure
+from bokeh.models.layouts import Column
 
 from ..nbtools.test_security_alert import sample_alert
 from ..unit_test_lib import get_test_data_path
@@ -192,3 +194,12 @@ def test_to_df():
     assert len(df.index) == 4
     assert "demo" in df["Name"].values
     assert "User Added to Priviledged Group in CONTOSO Domain" in df["Name"].values
+
+
+def test_plot():
+    """Test plotting produces Bokeh objects."""
+    graph = EntityGraph(incident)
+    plot = graph.plot(hide=True)
+    tl_plot = graph.plot_with_timeline(hide=True)
+    assert isinstance(plot, Figure)
+    assert isinstance(tl_plot, Column)

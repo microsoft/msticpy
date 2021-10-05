@@ -83,4 +83,7 @@ class RegistryValue(Entity):
         "Value": None,
         # ValueType (type System.Nullable`1[Microsoft.Win32.RegistryValueKind])
         "ValueType": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

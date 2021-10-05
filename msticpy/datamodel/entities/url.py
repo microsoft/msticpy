@@ -38,7 +38,7 @@ class Url(Entity):
         self,
         src_entity: Mapping[str, Any] = None,
         src_event: Mapping[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Create a new instance of the entity type.
@@ -101,4 +101,7 @@ class Url(Entity):
         # Url (type System.String)
         "Url": None,
         "DetonationVerdict": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

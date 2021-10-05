@@ -89,4 +89,7 @@ class CloudLogonSession(Entity):
         "SessionId": None,
         "Account": None,
         "UserAgent": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

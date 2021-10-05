@@ -101,4 +101,7 @@ class SubmissionMail(Entity):
         "SenderIp": None,
         "Subject": None,
         "ReportType": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

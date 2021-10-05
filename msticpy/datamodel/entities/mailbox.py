@@ -99,4 +99,7 @@ class Mailbox(Entity):
         "Upn": None,
         "ExternalDirectoryObjectId": None,
         "RiskLevel": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

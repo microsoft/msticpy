@@ -85,4 +85,7 @@ class FileHash(Entity):
         "Algorithm": "Algorithm",
         # Value (type System.String)
         "Value": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

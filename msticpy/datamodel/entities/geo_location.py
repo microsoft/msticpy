@@ -95,4 +95,7 @@ class GeoLocation(Entity, ContextObject):
         "Latitude": None,
         # int
         "Asn": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

@@ -82,6 +82,8 @@ class Entity(ABC, Node):
             # add AdditionalData dictionary if it's populated
             if "AdditionalData" in src_entity:
                 self.AdditionalData = src_entity["AdditionalData"]
+            if "TimeGenerated" in src_entity:
+                self.TimeGenerated = src_entity["TimeGenerated"]
 
         if kwargs:
             self.__dict__.update(kwargs)
@@ -195,7 +197,8 @@ class Entity(ABC, Node):
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
-        if name in self._entity_schema:
+        props = ["name_str", "description_str"]
+        if name in self._entity_schema or name in props:
             return None
         raise AttributeError(f"{name} is not a valid attribute.")
 

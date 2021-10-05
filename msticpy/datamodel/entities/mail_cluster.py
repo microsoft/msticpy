@@ -141,4 +141,7 @@ class MailCluster(Entity):
         "ClusterQueryStartTime": None,
         "ClusterQueryEndTime": None,
         "ClusterGroup": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

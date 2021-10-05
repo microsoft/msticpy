@@ -117,4 +117,7 @@ class IoTDevice(Entity):
         "MacAddress": None,
         "Protocols": None,
         "SerialNumber": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

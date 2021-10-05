@@ -199,4 +199,7 @@ class MailMessage(Entity):
         "DeliveryLocation": None,
         "Language": None,
         "ThreatDetectionMethods": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

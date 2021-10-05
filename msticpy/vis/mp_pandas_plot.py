@@ -365,9 +365,16 @@ class MsticpyPlotAccessor:
         """
         return plot_matrix(data=self._df, **kwargs)
 
-    def inc_graph(self):
+    def inc_graph(self, timeline: bool = False, hide: bool = False) -> LayoutDOM:
         """
         Plot an incident graph if the dataframe contains incidents or alerts.
+
+        Parameters
+        ----------
+        timeline : bool, optional
+            True to plot the entity timeline, by default False
+        hide : bool, optional
+            True to hide the plot, by default False
 
         Raises
         ------
@@ -380,4 +387,6 @@ class MsticpyPlotAccessor:
         ):
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
         graph = EntityGraph(self._df)
-        graph.plot()
+        if timeline:
+            return graph.plot_with_timeline(hide=hide)
+        return graph.plot(hide=hide)

@@ -72,4 +72,7 @@ class RegistryKey(Entity):
         "Hive": "RegistryHive",
         # Key (type System.String)
         "Key": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

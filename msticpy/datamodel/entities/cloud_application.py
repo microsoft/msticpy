@@ -73,4 +73,7 @@ class CloudApplication(Entity):
         "Name": None,
         "AppId": None,
         "InstanceName": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

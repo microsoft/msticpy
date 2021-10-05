@@ -100,4 +100,7 @@ class NetworkConnection(Entity):
         "DestinationPort": None,
         # Protocol (type System.Nullable`1[System.Net.Sockets.ProtocolType])
         "Protocol": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

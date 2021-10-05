@@ -152,4 +152,7 @@ class Host(Entity):
         "OSFamily": "OSFamily",
         # IsDomainJoined (type System.Nullable`1[System.Boolean])
         "IsDomainJoined": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
