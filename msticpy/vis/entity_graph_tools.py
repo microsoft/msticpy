@@ -286,7 +286,9 @@ class EntityGraph:
             for node in self.alertentity_graph.nodes.items()
         ]
         starttimes = [
-            node[1]["start_time"] if "start_time" in node[1] else None
+            node[1]["start_time"]
+            if "start_time" in node[1]
+            else node[1]["time_generated"]
             for node in self.alertentity_graph.nodes.items()
         ]
         endtimes = [
@@ -371,8 +373,8 @@ class EntityGraph:
             source=str(alert),
             entitytype="alert",
             time_generated=alert.TimeGenerated,
-            start_time=alert.StartTimeUtc,
-            end_time=alert.EndTimeUtc,
+            start_time=alert.StartTime,
+            end_time=alert.EndTime,
         )
         if incident_name:
             self.add_link(incident_name, alert_name)

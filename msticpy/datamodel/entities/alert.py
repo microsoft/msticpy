@@ -32,10 +32,10 @@ class Alert(Entity):
         Alert CompromisedEntity
     Count : int
         Alert Count
-    StartTimeUtc : datetime
-        Alert StartTimeUtc
-    EndTimeUtc : datetime
-        Alert EndTimeUtc
+    StartTime : datetime
+        Alert StartTime
+    EndTime : datetime
+        Alert EndTime
     Severity : str
         Alert Severity
     SystemAlertIds : List[str]
@@ -81,8 +81,8 @@ class Alert(Entity):
         self.DisplayName: Optional[str] = None
         self.CompromisedEntity: Optional[str] = None
         self.Count: Any = None
-        self.StartTimeUtc: datetime = None
-        self.EndTimeUtc: datetime = None
+        self.StartTime: datetime = None
+        self.EndTime: datetime = None
         self.Severity: Any = None
         self.SystemAlertIds: List[str] = []
         self.AlertType: Optional[str] = None
@@ -95,6 +95,10 @@ class Alert(Entity):
                 self.TimeGenerated = (
                     src_entity["StartTime"] or src_entity["TimeGenerated"]
                 )
+            if "EndTime" in src_entity:
+                self.EndTime = src_entity["EndTime"]
+            if "StartTime" in src_entity:
+                self.StartTime = src_entity["StartTime"]
             if "AlertDisplayName" in src_entity:
                 self.DisplayName = src_entity["AlertDisplayName"]
             if "SystemAlertId" in src_entity:
@@ -175,8 +179,8 @@ class Alert(Entity):
         self.TimeGenerated = src_event.get("StartTime", src_event.get("TimeGenerated"))
         self.DisplayName = src_event.get("DisplayName", src_event.get("Name"))
         self.CompromisedEntity = src_event.get("CompromisedEntity")
-        self.StartTimeUtc = src_event.get("StartTime")
-        self.EndTimeUtc = src_event.get("EndTime")
+        self.StartTime = src_event.get("StartTime")
+        self.EndTime = src_event.get("EndTime")
         self.Severity = src_event.get("AlertSeverity")
         self.SystemAlertIds = src_event.get("SystemAlertId", src_event.get("ID"))
         self.AlertType = src_event.get("AlertType")
@@ -219,9 +223,9 @@ class Alert(Entity):
         # Count (type System.Nullable`1[System.Int32])
         "Count": None,
         # StartTimeUtc (type System.Nullable`1[System.DateTime])
-        "StartTimeUtc": None,
+        "StartTime": None,
         # EndTimeUtc (type System.Nullable`1[System.DateTime])
-        "EndTimeUtc": None,
+        "EndTime": None,
         # Severity (type System.Nullable`1
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Severity])
         "Severity": None,
