@@ -43,6 +43,8 @@ class Incident(Entity):
         src_event : Mapping[str, Any], optional
             Create entity from event properties
             (the default is None)
+        src_event_type: str
+            The type of src_event, by default "Sentinel".
 
         Other Parameters
         ----------------

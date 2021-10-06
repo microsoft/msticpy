@@ -90,36 +90,37 @@ class Alert(Entity):
         self.ProviderName: Optional[str] = None
         self.Entities: Optional[List] = None
         super().__init__(src_entity=src_entity, **kwargs)
-        if src_entity is not None:
-            if "StartTime" in src_entity or "TimeGenerated" in src_entity:
-                self.TimeGenerated = (
-                    src_entity["StartTime"] or src_entity["TimeGenerated"]
-                )
-            if "EndTime" in src_entity:
-                self.EndTime = src_entity["EndTime"]
-            if "StartTime" in src_entity:
-                self.StartTime = src_entity["StartTime"]
-            if "AlertDisplayName" in src_entity:
-                self.DisplayName = src_entity["AlertDisplayName"]
-            if "SystemAlertId" in src_entity:
-                self.SystemAlertIds.append(src_entity["SystemAlertId"])
-            elif "ID" in src_entity:
-                self.SystemAlertIds.append(src_entity["ID"])
-            if "Name" in src_entity:
-                self.DisplayName = src_entity["Name"]
-            if "Entities" in src_entity and src_entity["Entities"]:
-                if isinstance(src_entity["Entities"], str):
-                    try:
-                        ents = _extract_entities(json.loads(src_entity["Entities"]))
-                    except json.JSONDecodeError:
-                        ents = []
-                else:
-                    ents = _extract_entities(src_entity["Entities"])
-                self.Entities = self._create_entities(ents)
-            self._add_additional_data(src_entity)
+        if src_entity:
+            self._create_from_ent(src_entity)
 
-        if src_event is not None:
+        if src_event:
             self._create_from_event(src_event)
+
+    def _create_from_ent(self, src_entity):  # noqa: MC0001
+        if "StartTime" in src_entity or "TimeGenerated" in src_entity:
+            self.TimeGenerated = src_entity["StartTime"] or src_entity["TimeGenerated"]
+        if "EndTime" in src_entity:
+            self.EndTime = src_entity["EndTime"]
+        if "StartTime" in src_entity:
+            self.StartTime = src_entity["StartTime"]
+        if "AlertDisplayName" in src_entity:
+            self.DisplayName = src_entity["AlertDisplayName"]
+        if "SystemAlertId" in src_entity:
+            self.SystemAlertIds.append(src_entity["SystemAlertId"])
+        elif "ID" in src_entity:
+            self.SystemAlertIds.append(src_entity["ID"])
+        if "Name" in src_entity:
+            self.DisplayName = src_entity["Name"]
+        if "Entities" in src_entity and src_entity["Entities"]:
+            if isinstance(src_entity["Entities"], str):
+                try:
+                    ents = _extract_entities(json.loads(src_entity["Entities"]))
+                except json.JSONDecodeError:
+                    ents = []
+            else:
+                ents = _extract_entities(src_entity["Entities"])
+            self.Entities = self._create_entities(ents)
+        self._add_additional_data(src_entity)
 
     def _extract_entities(self, src_row):  # noqa: MC0001
         input_entities = []
@@ -296,7 +297,7 @@ def _find_og_ent(ent, base_ents):
     return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
 
 
-def _generate_base_ents(ents: list) -> list:
+def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
     """Generate a list of all enties form a set of nested entities."""
     base_ents = []
     for ent in ents:

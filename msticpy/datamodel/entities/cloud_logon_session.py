@@ -32,6 +32,7 @@ class CloudLogonSession(Entity):
         The UserAgent
     StartTime: str
         The time the session started
+
     """
 
     ID_PROPERTIES = ["Name"]
@@ -51,6 +52,8 @@ class CloudLogonSession(Entity):
             Create entity from existing entity or
             other mapping object that implements entity properties.
             (the default is None)
+        src_event:  Mapping[str, Any], optional
+            Create entity from an event
 
         Other Parameters
         ----------------
