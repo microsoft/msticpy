@@ -132,7 +132,7 @@ def test_entity_entity_graph():
 def test_pd_graph():
     """Test graph creation with a pandas dataframe."""
     graph = EntityGraph(sent_incidents)
-    assert len(graph.alertentity_graph.nodes()) == 10
+    assert len(graph.alertentity_graph.nodes()) == 9
     assert "Alert: qdbbijed" in graph.alertentity_graph.nodes()
     accessor_graph = sent_incidents.mp_incident_graph.build()
     assert len(accessor_graph.alertentity_graph.nodes()) == 10
