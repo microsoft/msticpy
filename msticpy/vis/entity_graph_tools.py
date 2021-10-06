@@ -3,9 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""
-Creates an entity graph for an Azure Sentinel Incident
-"""
+"""Creates an entity graph for an Azure Sentinel Incident."""
 from datetime import datetime
 from typing import List, Optional, Union
 
@@ -22,8 +20,8 @@ from ..datamodel.entities.alert import Alert
 from ..datamodel.entities.soc.incident import Incident
 from ..nbtools.nbdisplay import plot_entity_graph
 from ..nbtools.security_alert import SecurityAlert
-from ..nbtools.timeline_duration import display_timeline_duration
 from ..nbtools.timeline import display_timeline
+from ..nbtools.timeline_duration import display_timeline_duration
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -39,6 +37,16 @@ class EntityGraph:
         self,
         entity: Union[Incident, Alert, pd.DataFrame, pd.Series, Entity, SecurityAlert],
     ):
+        """
+        Create a new instance of the entity graph.
+
+        Parameters
+        ----------
+        entity : Union[Incident, Alert, pd.DataFrame, pd.Series, Entity, SecurityAlert]
+            The initial item to add to the graph.
+            Can be an Incident, Alert, SecurityAlert or other Entity
+
+        """
         output_notebook()
         self.alertentity_graph = nx.Graph(id="IncidentGraph")
         if isinstance(entity, (Incident, Alert)):
@@ -128,7 +136,7 @@ class EntityGraph:
 
     def add_entity(self, ent: Entity, attached_to: str = None):
         """
-        Add an entity to the graph
+        Add an entity to the graph.
 
         Parameters
         ----------
@@ -148,6 +156,7 @@ class EntityGraph:
         ----------
         incident : Union[Incident, Alert, pd.DataFrame]
             This can be an alert, and incident or a DataFrame of alerts or incidents
+
         """
         inc = None
         if isinstance(incident, pd.DataFrame):
@@ -181,6 +190,8 @@ class EntityGraph:
             What color to make the node on the graph, by default "blue"
         attached_to : Union[str, List], optional
             What existing nodes on the graph to attach it the note to, by default None
+        user: str, optional
+            What user to associate the note with
 
         """
         self.alertentity_graph.add_node(
@@ -200,7 +211,7 @@ class EntityGraph:
 
     def add_link(self, source: str, target: str):
         """
-        Add a link between 2 nodes on the graph
+        Add a link between 2 nodes on the graph.
 
         Parameters
         ----------
@@ -232,7 +243,7 @@ class EntityGraph:
 
     def remove_link(self, source: str, target: str):
         """
-        Remove a link between 2 nodes on the graph
+        Remove a link between 2 nodes on the graph.
 
         Parameters
         ----------
@@ -260,7 +271,7 @@ class EntityGraph:
 
     def remove_node(self, name: str):
         """
-        Remove a node from the graph
+        Remove a node from the graph.
 
         Parameters
         ----------
@@ -307,14 +318,14 @@ class EntityGraph:
         )
 
     def _check_type_create(self, incident: Union[Incident, Alert, None]):
-        """Checks what type of entity is passed in and creates relevent graph."""
+        """Check what type of entity is passed in and creates relevent graph."""
         if isinstance(incident, Incident):
             self._create_incident_graph(incident)
         elif isinstance(incident, Alert):
             self._create_alert_graph(incident)
 
     def _create_incident_graph(self, incident):
-        """Create graph of an incident entity"""
+        """Create graph of an incident entity."""
         incident_name = "Incident: " + incident["DisplayName"]
         self._add_incident_node(incident)
         if incident.Alerts:
@@ -332,7 +343,7 @@ class EntityGraph:
                 self._add_entity_node(ent, incident_name)
 
     def _create_alert_graph(self, incident):
-        """Create graph of an alert entity"""
+        """Create graph of an alert entity."""
         alert_name = "Alert: " + incident["DisplayName"]
         self._add_alert_node(incident, alert_name)
         if incident.Entities:
