@@ -4,9 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Alert Entity class."""
-from datetime import datetime
-from typing import Any, List, Mapping, Optional, Tuple, Dict
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -93,7 +95,7 @@ class Alert(Entity):
         if src_entity:
             self._create_from_ent(src_entity)
 
-        if src_event:
+        if isinstance(src_event, pd.Series) or src_event:
             self._create_from_event(src_event)
 
     def _create_from_ent(self, src_entity):  # noqa: MC0001
