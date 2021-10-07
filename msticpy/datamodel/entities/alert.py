@@ -83,8 +83,8 @@ class Alert(Entity):
         self.DisplayName: Optional[str] = None
         self.CompromisedEntity: Optional[str] = None
         self.Count: Any = None
-        self.StartTime: datetime = None
-        self.EndTime: datetime = None
+        self.StartTime: Optional[datetime] = None
+        self.EndTime: Optional[datetime] = None
         self.Severity: Any = None
         self.SystemAlertIds: List[str] = []
         self.AlertType: Optional[str] = None
@@ -149,15 +149,15 @@ class Alert(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        if self.StartTimeUtc and self.CompromisedEntity:
-            return f"{self.DisplayName} ({self.StartTimeUtc}) {self.CompromisedEntity}"
+        if self.StartTime and self.CompromisedEntity:
+            return f"{self.DisplayName} ({self.StartTime}) {self.CompromisedEntity}"
         else:
             return f"{self.DisplayName} - {self.SystemAlertIds}"
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.DisplayName or self.__class__.__name__
+        return f"Alert: {self.DisplayName}" or self.__class__.__name__
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""

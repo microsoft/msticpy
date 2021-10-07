@@ -81,7 +81,7 @@ class Incident(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Description."""
-        return self.DisplayName
+        return f"Incident: {self.DisplayName}"
 
     def _create_from_sent_event(self, src_event):
         self.TimeGenerated = src_event["properties.createdTimeUtc"]

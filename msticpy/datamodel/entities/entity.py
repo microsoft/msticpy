@@ -65,6 +65,7 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
+        self.TimeGenerated = None
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknownentity" and "Type" in kwargs:
@@ -499,11 +500,14 @@ class Entity(ABC, Node):
             Dictionary of name, value properties.
 
         """
-        return {
-            name: value
+        props = {
+            name: str(value)
             for name, value in self.properties.items()
             if not isinstance(value, (Entity, list)) and name != "edges"
         }
+        props["Description"] = self.description_str
+        props["Name"] = self.name_str
+        return props
 
     def to_networkx(self, graph: nx.Graph = None) -> nx.Graph:
         """
@@ -523,13 +527,12 @@ class Entity(ABC, Node):
 
         """
         graph = graph or nx.Graph()
-
         if not graph.has_node(self):
-            graph.add_node(self, **self.node_properties)
+            graph.add_node(self.name_str, **self.node_properties)
         for edge in self.edges:
-            if graph.has_edge(edge.source, edge.target):
+            if graph.has_edge(edge.source.name_str, edge.target.name_str):
                 continue
-            graph.add_edge(edge.source, edge.target, **edge.attrs)
+            graph.add_edge(edge.source.name_str, edge.target.name_str, **edge.attrs)
 
             for node in (edge.source, edge.target):
                 # If this node has edges that are not in our graph
@@ -537,7 +540,7 @@ class Entity(ABC, Node):
                 if any(
                     edge
                     for edge in node.edges
-                    if not graph.has_edge(edge.source, edge.target)
+                    if not graph.has_edge(edge.source.name_str, edge.target.name_str)
                 ):
                     ent_node = typing.cast(Entity, node)
                     ent_node.to_networkx(graph)

@@ -7,18 +7,20 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
+import numpy as np
 import networkx as nx
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
 from bokeh.models import LayoutDOM
+from bokeh.plotting import figure, from_networkx
+from bokeh.models import Circle, HoverTool, Label
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
 from ..datamodel.entities.soc.incident import Incident
-from ..nbtools.nbdisplay import plot_entity_graph
 from ..nbtools.security_alert import SecurityAlert
 from ..nbtools.timeline import display_timeline
 from ..nbtools.timeline_duration import display_timeline_duration
@@ -76,7 +78,7 @@ class EntityGraph:
             A Bokeh figure object
 
         """
-        return plot_entity_graph(self.alertentity_graph, hide=hide)
+        return plot_entitygraph(self.alertentity_graph, hide=hide)
 
     def plot_with_timeline(self, hide: bool = False) -> LayoutDOM:
         """
@@ -174,8 +176,6 @@ class EntityGraph:
         name: str,
         description: Optional[str] = None,
         attached_to: Union[str, List] = None,
-        user: str = "Analyst",
-        color: str = "blue",
     ):
         """
         Add a node to the graph representing a note or comment.
@@ -186,8 +186,6 @@ class EntityGraph:
             The name of the node to add
         description : Optional[str], optional
             A description of the note, by default None
-        color : str, optional
-            What color to make the node on the graph, by default "blue"
         attached_to : Union[str, List], optional
             What existing nodes on the graph to attach it the note to, by default None
         user: str, optional
@@ -196,12 +194,10 @@ class EntityGraph:
         """
         self.alertentity_graph.add_node(
             name,
-            name=name,
-            description=description,
-            color=color,
-            node_type="analystnote",
-            user=user,
-            time_generated=datetime.now(),
+            Name=name,
+            Description=description,
+            Type="analystnote",
+            TimeGenerated=datetime.now(),
         )
         if attached_to:
             if isinstance(attached_to, str):
@@ -287,26 +283,24 @@ class EntityGraph:
 
     def to_df(self) -> pd.DataFrame:
         """Generate a dataframe of nodes in the graph."""
-        names = [node[1]["name"] for node in self.alertentity_graph.nodes.items()]
+        names = [node[1]["Name"] for node in self.alertentity_graph.nodes.items()]
         descs = [
-            node[1]["description"] for node in self.alertentity_graph.nodes.items()
+            node[1]["Description"] for node in self.alertentity_graph.nodes.items()
         ]
-        types = [node[1]["node_type"] for node in self.alertentity_graph.nodes.items()]
+        types = [node[1]["Type"] for node in self.alertentity_graph.nodes.items()]
         times = [
-            node[1]["time_generated"] if "time_generated" in node[1] else None
+            node[1]["TimeGenerated"] if "TimeGenerated" in node[1] else None
             for node in self.alertentity_graph.nodes.items()
         ]
         starttimes = [
-            node[1]["start_time"]
-            if "start_time" in node[1]
-            else node[1]["time_generated"]
+            node[1]["StartTime"] if "StartTime" in node[1] else node[1]["TimeGenerated"]
             for node in self.alertentity_graph.nodes.items()
         ]
         endtimes = [
-            node[1]["end_time"] if "end_time" in node[1] else None
+            node[1]["EndTime"] if "EndTime" in node[1] else None
             for node in self.alertentity_graph.nodes.items()
         ]
-        return pd.DataFrame(
+        tl_df = pd.DataFrame(
             {
                 "Name": names,
                 "Description": descs,
@@ -316,98 +310,43 @@ class EntityGraph:
                 "StartTime": starttimes,
             }
         )
+        tl_df.replace("None", np.NaN, inplace=True)
+        return tl_df
 
     def _check_type_create(self, incident: Union[Incident, Alert, None]):
         """Check what type of entity is passed in and creates relevent graph."""
         if isinstance(incident, Incident):
-            self._create_incident_graph(incident)
+            self._add_incident_node(incident)
         elif isinstance(incident, Alert):
-            self._create_alert_graph(incident)
-
-    def _create_incident_graph(self, incident):
-        """Create graph of an incident entity."""
-        incident_name = "Incident: " + incident["DisplayName"]
-        self._add_incident_node(incident)
-        if incident.Alerts:
-            # do the ref mapping stuff here
-            for alert in incident.Alerts:
-                alert_name = f"Alert: {alert['DisplayName']}"
-                incident_name = f"Incident: {incident['DisplayName']}"
-                self._add_alert_node(alert, alert_name, incident_name)
-                if alert["Entities"]:
-                    for ent in alert["Entities"]:
-                        self._add_entity_node(ent, alert_name)
-        if incident.Entities:
-            entities = _dedupe_entities(incident.Alerts, incident.Entities)
-            for ent in entities:
-                self._add_entity_node(ent, incident_name)
-
-    def _create_alert_graph(self, incident):
-        """Create graph of an alert entity."""
-        alert_name = "Alert: " + incident["DisplayName"]
-        self._add_alert_node(incident, alert_name)
-        if incident.Entities:
-            for ent in incident.Entities:
-                self._add_entity_node(ent, alert_name)
+            self._add_alert_node(incident)
 
     def _add_entity_node(self, ent, attached_to=None):
         """Add an Entity to the graph."""
-        e_name = ent.name_str
-        e_desc = ent.description_str
-        e_startime = ent.StartTime or ent.TimeGenerated
-        self.alertentity_graph.add_node(
-            e_name,
-            entitytype=ent.Type,
-            name=e_name,
-            description=e_desc,
-            color="green",
-            node_type="entity",
-            source=str(ent),
-            start_time=e_startime,
-            end_time=ent.EndTime,
-        )
+        self.alertentity_graph = nx.compose(self.alertentity_graph, ent.to_networkx())
         if attached_to:
-            self.add_link(e_name, attached_to)
-        if ent.has_edge:
-            self._add_entity_edges(ent.edges, e_name)
+            self.add_link(attached_to, ent.name_str)
 
-    def _add_alert_node(self, alert, alert_name=None, incident_name=None):
+    def _add_alert_node(self, alert, incident_name=None):
         """Add an alert entity to the graph."""
-        if not alert_name:
-            alert_name = "Alert: " + alert.name_str
-        self.alertentity_graph.add_node(
-            alert_name,
-            name=alert.name_str,
-            description=alert.description_str,
-            color="orange",
-            node_type="alert",
-            source=str(alert),
-            entitytype="alert",
-            time_generated=alert.TimeGenerated,
-            start_time=alert.StartTime,
-            end_time=alert.EndTime,
-        )
+        self.alertentity_graph = nx.compose(self.alertentity_graph, alert.to_networkx())
+        if alert["Entities"]:
+            for ent in alert["Entities"]:
+                self._add_entity_node(ent, alert.name_str)
         if incident_name:
-            self.add_link(incident_name, alert_name)
-        if alert.has_edge:
-            self._add_entity_edges(alert.edges, alert_name)
+            self.add_link(incident_name, alert.name_str)
 
     def _add_incident_node(self, incident):
         """Add an incident entity to the graph."""
-        incident_name = "Incident: " + incident.name_str
-        self.alertentity_graph.add_node(
-            incident_name,
-            name=incident.name_str,
-            time_generated=incident.TimeGenerated,
-            description=incident.description_str,
-            color="red",
-            node_type="incident",
-            entitytype="incident",
-            start_time=incident.StartTime,
-            end_time=incident.EndTime,
+        self.alertentity_graph = nx.compose(
+            self.alertentity_graph, incident.to_networkx()
         )
-        if incident.has_edge:
-            self._add_entity_edges(incident.edges, incident_name)
+        if incident.Alerts:
+            for alert in incident.Alerts:
+                self._add_alert_node(alert, incident.name_str)
+        if incident.Entities:
+            entities = _dedupe_entities(incident.Alerts, incident.Entities)
+            for ent in entities:
+                self._add_entity_node(ent, incident.name_str)
 
     def _add_entity_edges(self, edges: set, attached_to: str):
         """Check entity edges and add them."""
@@ -485,3 +424,104 @@ class EntityGraphAccessor:
     def build(self) -> EntityGraph:
         """Generate an incident graph from the dataframe but without plotting it."""
         return EntityGraph(self._df)
+
+
+def plot_entitygraph(  # pylint: disable=too-many-locals
+    entity_graph: nx.Graph,
+    node_size: int = 25,
+    font_size: Union[int, str] = 10,
+    height: int = 800,
+    width: int = 800,
+    scale: int = 2,
+    hide: bool = False,
+) -> figure:
+    """
+    Plot entity graph with Bokeh.
+
+    Parameters
+    ----------
+    entity_graph : nx.Graph
+        The entity graph as a networkX graph
+    node_size : int, optional
+        Size of the nodes in pixels, by default 25
+    font_size : int, optional
+        Font size for node labels, by default 10
+        Can be an integer (point size) or a string (e.g. "10pt")
+    width : int, optional
+        Width in pixels, by default 800
+    height : int, optional
+        Image height (the default is 800)
+    scale : int, optional
+        Position scale (the default is 2)
+    hide : bool, optional
+        Don't show the plot, by default False. If True, just
+        return the figure.
+
+    Returns
+    -------
+    bokeh.plotting.figure
+        The network plot.
+
+    """
+    color_map = {
+        "incident": "red",
+        "alert": "orange",
+        "alerts": "orange",
+        "securityalert": "orange",
+        "analystnote": "blue",
+    }
+    output_notebook()
+    font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
+    node_attrs = {}
+    for node, attrs in entity_graph.nodes(data=True):
+        try:
+            color = color_map.get(attrs["Type"].lower(), "green")
+        except KeyError:
+            color = "green"
+        node_attrs.update({node: color})
+
+    nx.set_node_attributes(entity_graph, node_attrs, "node_color")
+
+    plot = figure(
+        title="Alert Entity graph",
+        x_range=(-3, 3),
+        y_range=(-3, 3),
+        width=width,
+        height=height,
+    )
+
+    plot.add_tools(
+        HoverTool(
+            tooltips=[
+                ("Name", "@Name"),
+                ("Description", "@Description"),
+                ("Type", "@Type"),
+            ]
+        )
+    )
+
+    graph_renderer = from_networkx(
+        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
+    )
+
+    graph_renderer.node_renderer.glyph = Circle(
+        size=node_size, fill_color="node_color", fill_alpha=0.5
+    )
+    # pylint: disable=no-member
+    plot.renderers.append(graph_renderer)
+
+    # Create labels
+    for name, pos in graph_renderer.layout_provider.graph_layout.items():
+        label = Label(
+            x=pos[0],
+            y=pos[1],
+            x_offset=5,
+            y_offset=5,
+            text=name,
+            text_font_size=font_pnt,
+        )
+        plot.add_layout(label)
+    # pylint: enable=no-member
+    if not hide:
+        show(plot)
+    return plot
