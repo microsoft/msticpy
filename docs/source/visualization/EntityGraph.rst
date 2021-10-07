@@ -139,14 +139,13 @@ As well as adding entities to the graph you will also want to update the links b
 Adding Notes
 ------------
 Entities are not the only elements that you might want to record as part of an investigation. To include a wide range of other items and observations the EntityGraph has the concept of Notes. Notes are nodes in the graph that have free form titles and descriptions, allowing the user to add anything they need - be it a comment on an entity on the graph, or a query used to find an event.
-Notes area added with the `add_note` function. As with the `add_entity` function notes can be attached to an existing entity in the graph. In addition, you can adjust the color of the node added to the graph, and add a username associated with the note.
+Notes area added with the `add_note` function. As with the `add_entity` function notes can be attached to an existing entity in the graph.
 
 .. code:: ipython3
 
     graph.add_note(name="This is a note",
         description="Notes allow for free form additions to the graph",
-        attached_to="Incident: Sample Incident",
-        color="purple")
+        attached_to="Incident: Sample Incident")
     graph.plot()
 
 .. image:: _static/ent_graph_note.png
