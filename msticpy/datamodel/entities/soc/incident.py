@@ -10,7 +10,7 @@ import pandas as pd
 
 from ...._version import VERSION
 from ....common.utility import export
-from ...entities.entity import Entity, ent_camel
+from ...entities.entity import Entity, camelcase_property_names
 from ...entities.alert import Alert
 
 __version__ = VERSION
@@ -63,7 +63,6 @@ class Incident(Entity):
         self.Labels: Optional[List] = None
         self.Alerts: Optional[List] = None
         self.Entities: Optional[List] = None
-        self.AdditionalData: Optional[Dict] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -164,7 +163,7 @@ def _create_entities(entities):
         else:
             ent_details = ent
             ent_type = "unknown"
-        new_ent = ent_camel(ent_details)
+        new_ent = camelcase_property_names(ent_details)
         ent_obj = Entity.ENTITY_NAME_MAP[ent_type.lower()](src_event=new_ent)
         new_ents.append(ent_obj)
     return new_ents

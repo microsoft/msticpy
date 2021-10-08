@@ -139,7 +139,7 @@ class Process(Entity):
     @property
     def ProcessFilePath(self) -> Optional[str]:  # noqa: N802
         """Return the name of the process file path."""
-        file = self["ImageFile"]
+        file = self.ImageFile
         return file.FullPath if file else None
 
     @property
@@ -152,7 +152,9 @@ class Process(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.ImageFile or self.__class__.__name__
+        if self.ImageFile:
+            return f"{self.ImageFile.name_str}[pid:{self.ProcessId}]"
+        return self.ImageFile.name_str if self.ImageFile else super().name_str
 
     _entity_schema = {
         # ProcessId (type System.String)

@@ -52,7 +52,7 @@ class EntityGraph:
         output_notebook()
         self.alertentity_graph = nx.Graph(id="IncidentGraph")
         if isinstance(entity, (Incident, Alert)):
-            self._check_type_create(entity)
+            self._add_incident_or_alert_node(entity)
         elif isinstance(entity, pd.DataFrame):
             self.add_incident(entity)
         elif isinstance(entity, pd.Series):
@@ -61,9 +61,41 @@ class EntityGraph:
             self._add_entity_node(entity)
         elif isinstance(entity, SecurityAlert):
             entity = Alert(entity)  # type: ignore
-            self._check_type_create(entity)
+            self._add_incident_or_alert_node(entity)
 
-    def plot(self, hide: bool = False) -> LayoutDOM:
+    def plot(self, hide: bool = False, timeline: bool = False, **kwargs) -> LayoutDOM:
+        """
+        Plot a graph of entities.
+
+        Parameters
+        ----------
+        hide : bool, optional
+            Set true to not display the graphic, by default False
+        timeline : bool, optional
+            Set to True to display a timeline, by default False
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+
+        Returns
+        -------
+        LayoutDOM
+            A Bokeh figure object
+
+        """
+        if timeline:
+            return self._plot_with_timeline(hide=hide, **kwargs)
+        return self._plot_no_timeline(hide=hide, **kwargs)
+
+    def _plot_no_timeline(self, hide: bool = False, **kwargs) -> LayoutDOM:
         """
         Plot a graph of entities.
 
@@ -78,9 +110,9 @@ class EntityGraph:
             A Bokeh figure object
 
         """
-        return plot_entitygraph(self.alertentity_graph, hide=hide)
+        return plot_entitygraph(self.alertentity_graph, hide=hide, **kwargs)
 
-    def plot_with_timeline(self, hide: bool = False) -> LayoutDOM:
+    def _plot_with_timeline(self, hide: bool = False, **kwargs) -> LayoutDOM:
         """
         Plot the entity graph with a timeline.
 
@@ -104,12 +136,12 @@ class EntityGraph:
                 len(tl_df["TimeGenerated"].unique()) == 1
                 and not tl_df["TimeGenerated"].unique()[0]
             ):
-                print("No timestamps avalaible to create timeline")
-                return self.plot()
+                print("No timestamps available to create timeline")
+                return self._plot_no_timeline(timeline=False, hide=hide, **kwargs)
         tl_df["TimeGenerated"] = pd.to_datetime(tl_df["TimeGenerated"], utc=True)
         tl_df["StartTime"] = pd.to_datetime(tl_df["StartTime"], utc=True)
         tl_df["EndTime"] = pd.to_datetime(tl_df["EndTime"], utc=True)
-        graph = self.plot(hide=True)
+        graph = self._plot_no_timeline(hide=True, **kwargs)
         if tl_type == "duration":
             timeline = display_timeline_duration(
                 tl_df.dropna(subset=["TimeGenerated"]),
@@ -167,9 +199,9 @@ class EntityGraph:
                     inc = Incident(src_event=row[1])
                 elif "AlertName" in row[1]:
                     inc = Alert(src_event=row[1])  # type: ignore
-                self._check_type_create(inc)
+                self._add_incident_or_alert_node(inc)
         else:
-            self._check_type_create(incident)
+            self._add_incident_or_alert_node(incident)
 
     def add_note(
         self,
@@ -313,7 +345,7 @@ class EntityGraph:
         tl_df.replace("None", np.NaN, inplace=True)
         return tl_df
 
-    def _check_type_create(self, incident: Union[Incident, Alert, None]):
+    def _add_incident_or_alert_node(self, incident: Union[Incident, Alert, None]):
         """Check what type of entity is passed in and creates relevent graph."""
         if isinstance(incident, Incident):
             self._add_incident_node(incident)
@@ -366,7 +398,7 @@ class EntityGraph:
 
 
 def _dedupe_entities(alerts, ents) -> list:
-    """Deduplicate incedent and alert entities."""
+    """Deduplicate incident and alert entities."""
     alrt_ents = []
     for alrt in alerts:
         if alrt["Entities"]:
@@ -380,7 +412,7 @@ def _dedupe_entities(alerts, ents) -> list:
 
 @pd.api.extensions.register_dataframe_accessor("mp_incident_graph")
 class EntityGraphAccessor:
-    """Pandas api extension for Entinty Graph."""
+    """Pandas api extension for Entity Graph."""
 
     def __init__(self, pandas_obj):
         """Instantiate pandas extension class."""
@@ -419,7 +451,7 @@ class EntityGraphAccessor:
         ):
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
         graph = EntityGraph(self._df)
-        graph.plot_with_timeline()
+        graph.plot(timeline=True)
 
     def build(self) -> EntityGraph:
         """Generate an incident graph from the dataframe but without plotting it."""

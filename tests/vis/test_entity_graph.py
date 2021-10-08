@@ -5,11 +5,14 @@
 # --------------------------------------------------------------------------
 """Test module for EntityGraph."""
 import pandas as pd
+from bokeh.models.layouts import Column
+from bokeh.plotting.figure import Figure
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
+
+# pylint: disable=unused-import
+from msticpy.vis import mp_pandas_plot  # noqa: F401
 from msticpy.vis.entity_graph_tools import EntityGraph
-from bokeh.plotting.figure import Figure
-from bokeh.models.layouts import Column
 
 from ..nbtools.test_security_alert import sample_alert
 from ..unit_test_lib import get_test_data_path
@@ -74,7 +77,7 @@ inc = {
     "Alerts": [
         {
             "ID": "8b7d06d8-dbae-4b23-87ed-1a27b75437d5",
-            "Name": "User Added to Priviledged Group in CONTOSO Domain",
+            "Name": "User Added to Privileged Group in CONTOSO Domain",
             "Entities": None,
         }
     ],
@@ -111,14 +114,14 @@ def test_entity_graph_incident():
 def test_entity_alert_graph():
     """Test graph creation with an alert."""
     graph = EntityGraph(alert)
-    assert len(graph.alertentity_graph.nodes()) == 18
+    assert len(graph.alertentity_graph.nodes()) == 17
     assert "cmd.exe" in graph.alertentity_graph.nodes()
 
 
 def test_entity_sec_alert_graph():
     """Test graph creation with a security alert."""
     graph = EntityGraph(sec_alert)
-    assert len(graph.alertentity_graph.nodes()) == 18
+    assert len(graph.alertentity_graph.nodes()) == 17
     assert "cmd.exe" in graph.alertentity_graph.nodes()
 
 
@@ -154,7 +157,7 @@ def test_incident_add():
     """Test adding an incident to an existing graph."""
     graph = EntityGraph(incident)
     graph.add_incident(alert)
-    assert len(graph.alertentity_graph.nodes()) == 22
+    assert len(graph.alertentity_graph.nodes()) == 21
     assert "cmd.exe" in graph.alertentity_graph.nodes()
 
 
@@ -170,15 +173,13 @@ def test_note_add():
 def test_link_add_remove():
     """Test adding and removing a link in an graph."""
     graph = EntityGraph(incident)
-    graph.add_link("demo", "Alert: User Added to Priviledged Group in CONTOSO Domain")
+    graph.add_link("demo", "Alert: User Added to Privileged Group in CONTOSO Domain")
     assert graph.alertentity_graph.has_edge(
-        "demo", "Alert: User Added to Priviledged Group in CONTOSO Domain"
+        "demo", "Alert: User Added to Privileged Group in CONTOSO Domain"
     )
-    graph.remove_link(
-        "demo", "Alert: User Added to Priviledged Group in CONTOSO Domain"
-    )
+    graph.remove_link("demo", "Alert: User Added to Privileged Group in CONTOSO Domain")
     assert not graph.alertentity_graph.has_edge(
-        "demo", "Alert: User Added to Priviledged Group in CONTOSO Domain"
+        "demo", "Alert: User Added to Privileged Group in CONTOSO Domain"
     )
 
 
@@ -195,13 +196,23 @@ def test_to_df():
     df = graph.to_df()
     assert len(df.index) == 4
     assert "demo" in df["Name"].values
-    assert "User Added to Priviledged Group in CONTOSO Domain" in df["Name"].values
+    assert (
+        "Alert: User Added to Privileged Group in CONTOSO Domain" in df["Name"].values
+    )
 
 
 def test_plot():
     """Test plotting produces Bokeh objects."""
     graph = EntityGraph(incident)
     plot = graph.plot(hide=True)
-    tl_plot = graph.plot_with_timeline(hide=True)
+    tl_plot = graph.plot(hide=True, timeline=True)
     assert isinstance(plot, Figure)
     assert isinstance(tl_plot, Column)
+
+
+def test_df_plot():
+    """Test plotting from DataFrame"""
+    plot = sent_incidents.mp_plot.incident_graph()
+    assert isinstance(plot, Figure)
+    plot = sent_incidents.mp_plot.incident_graph(timeline=True)
+    assert isinstance(plot, Column)
