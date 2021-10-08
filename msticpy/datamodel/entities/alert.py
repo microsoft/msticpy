@@ -12,7 +12,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
-from .entity import Entity, ent_camel
+from .entity import Entity, camelcase_property_names
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -199,7 +199,7 @@ class Alert(Entity):
         self.Entities = self._create_entities(ents)
 
     def _create_entities(self, entities):
-        """Create alert entities from  returned dicts."""
+        """Create alert entities from returned dicts."""
         new_ents = []
         for ent in entities:
             if isinstance(ent, Tuple):
@@ -211,7 +211,7 @@ class Alert(Entity):
             else:
                 ent_details = ent
                 ent_type = "Unknown"
-            new_ent = ent_camel(ent_details)
+            new_ent = camelcase_property_names(ent_details)
             ent_obj = Entity.instantiate_entity(
                 new_ent, entity_type=Entity.ENTITY_NAME_MAP[ent_type.lower()]
             )

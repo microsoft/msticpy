@@ -59,12 +59,14 @@ class RegistryKey(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Hive}\\{self.Key}"
+        return f"{self.Hive.short_name if self.Hive else 'HiveNA'}\\{self.Key}"
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.__class__.__name__
+        hive = self.Hive.short_name if self.Hive else ""
+        r_key = self.Key.rsplit("\\", maxsplit=1)[-1] if self.Key else "RegKeyNA"
+        return f"{hive}\\..\\{r_key}"
 
     _entity_schema = {
         # Hive (type System.Nullable`1

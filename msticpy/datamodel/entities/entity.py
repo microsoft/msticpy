@@ -220,6 +220,8 @@ class Entity(ABC, Node):
         params = ", ".join(
             f"{name}={val}" for name, val in self.properties.items() if val
         )
+        if self.edges:
+            params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
             params = params[:80] + "..."
@@ -347,6 +349,8 @@ class Entity(ABC, Node):
             if not self.properties[prop]:
                 setattr(merged, prop, value)
             # Future (ianhelle) - cannot merge ID field
+        if other.edges:
+            self.edges.update(other.edges)
         return merged
 
     def can_merge(self, other: Any) -> bool:
@@ -397,7 +401,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith("_")
+            if not name.startswith("_") and name != "edges"
         }
 
     @property
@@ -461,7 +465,7 @@ class Entity(ABC, Node):
 
         if entity_type:
             return entity_type(raw_entity)
-        if entity_type_name.lower() in cls.ENTITY_NAME_MAP:
+        if entity_type_name and entity_type_name.lower() in cls.ENTITY_NAME_MAP:
             return cls.ENTITY_NAME_MAP[entity_type_name.lower()](raw_entity)
 
         raise TypeError(f"Could not find a suitable type for {entity_type}")
@@ -530,6 +534,10 @@ class Entity(ABC, Node):
         if not graph.has_node(self):
             graph.add_node(self.name_str, **self.node_properties)
         for edge in self.edges:
+            if not isinstance(edge.source, Entity) or not isinstance(
+                edge.target, Entity
+            ):
+                continue
             if graph.has_edge(edge.source.name_str, edge.target.name_str):
                 continue
             graph.add_edge(edge.source.name_str, edge.target.name_str, **edge.attrs)
@@ -540,7 +548,9 @@ class Entity(ABC, Node):
                 if any(
                     edge
                     for edge in node.edges
-                    if not graph.has_edge(edge.source.name_str, edge.target.name_str)
+                    if isinstance(edge.source, Entity)
+                    and isinstance(edge.target, Entity)
+                    and not graph.has_edge(edge.source.name_str, edge.target.name_str)
                 ):
                     ent_node = typing.cast(Entity, node)
                     ent_node.to_networkx(graph)
@@ -660,6 +670,6 @@ class Entity(ABC, Node):
         delattr(cls, func_name)
 
 
-def ent_camel(input_ent: dict):
-    """Convert Azure Sentinel API entities to camel case naming."""
+def camelcase_property_names(input_ent: Dict[str, Any]) -> Dict[str, Any]:
+    """Change initial letter Azure Sentinel API entity properties to upper case."""
     return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}

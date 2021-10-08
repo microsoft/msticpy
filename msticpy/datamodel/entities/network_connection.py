@@ -74,12 +74,9 @@ class NetworkConnection(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return "{}:{} [{}]-> {}:{}".format(
-            self.SourceAddress,
-            self.SourcePort,
-            self.Protocol,
-            self.DestinationAddress,
-            self.DestinationPort,
+        return (
+            f"{self.SourceAddress}:{self.SourcePort} [{self.Protocol}]-> "
+            "{self.DestinationAddress}:{self.DestinationPort}"
         )
 
     @property
