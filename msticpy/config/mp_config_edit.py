@@ -7,6 +7,7 @@
 from typing import Any, Dict, Optional, Union
 
 import ipywidgets as widgets
+from IPython.display import display
 
 from .._version import VERSION
 from .ce_azure_sentinel import CEAzureSentinel
@@ -65,6 +66,8 @@ class MpConfigEdit(CompEditDisplayMixin):
             If settings is a file path, this parameter is ignored.
 
         """
+        self._lbl_loading = widgets.Label(value="Loading. Please wait.")
+        display(self._lbl_loading)
         if isinstance(settings, MpConfigFile):
             self.mp_conf_file = MpConfigFile(settings=settings.settings)
             if not self.mp_conf_file.current_file and conf_filepath:
@@ -80,13 +83,16 @@ class MpConfigEdit(CompEditDisplayMixin):
             self.mp_conf_file = MpConfigFile()
             self.mp_conf_file.load_default()
         self.tool_buttons: Dict[str, widgets.Widget] = {}
+        self._inc_loading_label()
 
         # Get the settings definitions and Config controls object
         mp_def_dict = get_mpconfig_definitions()
         self.mp_controls = MpConfigControls(mp_def_dict, self.mp_conf_file.settings)
+        self._inc_loading_label()
+
         # Set up the tabs
         self.tab_ctrl = CompEditTabs(self._get_tab_definitions())
-        # self._create_data_tabs(self.mp_controls)
+        self._inc_loading_label()
 
         self.txt_current_file = widgets.Text(
             description="Conf File",
@@ -106,6 +112,10 @@ class MpConfigEdit(CompEditDisplayMixin):
             ]
         )
         self.layout = widgets.VBox([self.tab_ctrl.layout, vbox])
+        self._lbl_loading.layout.visibility = "hidden"
+
+    def _inc_loading_label(self):
+        self._lbl_loading.value = f"{self._lbl_loading.value}."
 
     @property
     def tab_names(self):

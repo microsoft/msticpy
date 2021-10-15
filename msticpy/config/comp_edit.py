@@ -308,7 +308,7 @@ class CompEditTabs:
         self._tab_names.append(tab_name)
         new_idx = len(self._tab_state)
         # add dummy control to tab state and control def to lazy tab dict
-        dummy_ctrl = widgets.Label(value="")
+        dummy_ctrl = widgets.Label(value="loading...")
         self._tab_state.append(dummy_ctrl)
         self._tab_lazy_load[new_idx] = control_def
         self.controls[tab_name] = dummy_ctrl

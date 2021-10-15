@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
+import json
 import pprint
 import typing
 from abc import ABC
@@ -209,7 +210,7 @@ class Entity(ABC, Node):
 
     def __str__(self) -> str:
         """Return string representation of entity."""
-        return pprint.pformat(self._to_dict(self), indent=2, width=100)
+        return pprint.pformat(self._to_dict(), indent=2, width=100)
 
     def __repr__(self) -> str:
         """Return repr of entity."""
@@ -221,13 +222,15 @@ class Entity(ABC, Node):
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
 
-    def _to_dict(self, entity) -> dict:
+    def _to_dict(self) -> dict:
         """Return as simple nested dictionary."""
+        # pylint: disable=protected-access
         return {
-            prop: self._to_dict(val) if isinstance(val, Entity) else val
-            for prop, val in entity.properties.items()
+            prop: val._to_dict() if isinstance(val, Entity) else val
+            for prop, val in self.properties.items()
             if val is not None
         }
+        # pylint: enable=protected-access
 
     def _repr_html_(self) -> str:
         """
@@ -255,6 +258,12 @@ class Entity(ABC, Node):
         e_type = self.Type
         e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
         return f"<h3>{e_type}</h3>{e_text}"
+
+    def toJSON(self):  # noqa: N802
+        """Return object as a JSON string."""
+        return json.dumps(
+            {name: val for name, val in self._to_dict().items() if name != "edges"}
+        )
 
     def __eq__(self, other: Any) -> bool:
         """
