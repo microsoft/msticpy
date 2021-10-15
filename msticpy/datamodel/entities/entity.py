@@ -33,6 +33,21 @@ class ContextObject:
 # pylint: enable=too-few-public-methods
 
 
+class _EntityJSONEncoder(json.JSONEncoder):
+    """Encode entity to JSON."""
+
+    def default(self, o):
+
+        if isinstance(o, Entity):
+            return {
+                name: value
+                for name, value in o.properties.items()
+                if value and name != "edges"
+            }
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, o)
+
+
 # Future: replace setting entity properties in __dict__ with
 # setattr (to support attributes implemented as properties)
 @export
@@ -46,6 +61,7 @@ class Entity(ABC, Node):
     ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
     ID_PROPERTIES: List[str] = []
+    JSONEncoder = _EntityJSONEncoder
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -259,11 +275,9 @@ class Entity(ABC, Node):
         e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
         return f"<h3>{e_type}</h3>{e_text}"
 
-    def toJSON(self):  # noqa: N802
+    def to_json(self):  # noqa: N802
         """Return object as a JSON string."""
-        return json.dumps(
-            {name: val for name, val in self._to_dict().items() if name != "edges"}
-        )
+        return json.dumps(self, cls=self.JSONEncoder)
 
     def __eq__(self, other: Any) -> bool:
         """
