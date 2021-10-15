@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 import pytest_check as check
 import yaml
+import ipywidgets as widgets
 from msticpy.config.comp_edit import (
     CEItemsBase,
     CompEditItems,
@@ -27,15 +28,35 @@ __author__ = "Ian Hellen"
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def mp_edit():
     """Get instantiated editor."""
     CompEditStatusMixin.testing = True
     return MpConfigEdit()
 
 
+def _check_tab_state(mp_edit_control, enabled, dummy):
+    """Check the current lazy-load status of the tabs."""
+    ce_controls = dummy_controls = 0
+    for tab in mp_edit_control.controls.values():
+        if isinstance(tab, widgets.Label):
+            dummy_controls += 1
+        else:
+            ce_controls += 1
+    check.equal(ce_controls, enabled, "One control initialized")
+    check.equal(dummy_controls, dummy, "Rest of controls are dummy")
+
+
 def test_mp_edit_load(mp_edit):
     """Creating instance of MpConfigEdit."""
+    _check_tab_state(mp_edit, enabled=1, dummy=(len(mp_edit.controls) - 1))
+    # since the tab controls are loaded lazily, we need to
+    # select each tab to force loading
+    for tab_name in mp_edit.tab_names:
+        mp_edit.tab_ctrl.set_tab(tab_name)
+
+    _check_tab_state(mp_edit, enabled=len(mp_edit.controls), dummy=0)
+
     for idx, (title, tab) in enumerate(mp_edit.controls.items()):
 
         check.equal(mp_edit.tab_ctrl.tab.get_title(idx), title)
@@ -71,7 +92,7 @@ def test_mp_edit_load(mp_edit):
 def test_mp_edit_load_params():
     """Test different startup params for MpConfigEdit."""
     config_path = Path(TEST_DATA_PATH).joinpath("msticpyconfig.yaml")
-    with open(config_path, "r") as conf_fh:
+    with open(config_path, "r", encoding="utf-8") as conf_fh:
         settings = yaml.safe_load(conf_fh)
 
     orig_settings = deepcopy(settings)
