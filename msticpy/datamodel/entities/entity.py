@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
+import json
 import pprint
 import typing
 from abc import ABC
@@ -32,6 +33,21 @@ class ContextObject:
 # pylint: enable=too-few-public-methods
 
 
+class _EntityJSONEncoder(json.JSONEncoder):
+    """Encode entity to JSON."""
+
+    def default(self, o):
+
+        if isinstance(o, Entity):
+            return {
+                name: value
+                for name, value in o.properties.items()
+                if value and name != "edges"
+            }
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, o)
+
+
 # Future: replace setting entity properties in __dict__ with
 # setattr (to support attributes implemented as properties)
 @export
@@ -45,6 +61,7 @@ class Entity(ABC, Node):
     ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
     ID_PROPERTIES: List[str] = []
+    JSONEncoder = _EntityJSONEncoder
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -209,7 +226,7 @@ class Entity(ABC, Node):
 
     def __str__(self) -> str:
         """Return string representation of entity."""
-        return pprint.pformat(self._to_dict(self), indent=2, width=100)
+        return pprint.pformat(self._to_dict(), indent=2, width=100)
 
     def __repr__(self) -> str:
         """Return repr of entity."""
@@ -221,13 +238,15 @@ class Entity(ABC, Node):
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
 
-    def _to_dict(self, entity) -> dict:
+    def _to_dict(self) -> dict:
         """Return as simple nested dictionary."""
+        # pylint: disable=protected-access
         return {
-            prop: self._to_dict(val) if isinstance(val, Entity) else val
-            for prop, val in entity.properties.items()
+            prop: val._to_dict() if isinstance(val, Entity) else val
+            for prop, val in self.properties.items()
             if val is not None
         }
+        # pylint: enable=protected-access
 
     def _repr_html_(self) -> str:
         """
@@ -255,6 +274,10 @@ class Entity(ABC, Node):
         e_type = self.Type
         e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
         return f"<h3>{e_type}</h3>{e_text}"
+
+    def to_json(self):  # noqa: N802
+        """Return object as a JSON string."""
+        return json.dumps(self, cls=self.JSONEncoder)
 
     def __eq__(self, other: Any) -> bool:
         """

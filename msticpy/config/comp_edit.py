@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """Component Edit base and mixin classes."""
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 from time import sleep
-from typing import Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -128,46 +128,6 @@ class CompEditHelp:
         return self.accdn_help
 
 
-class CompEditTabs:
-    """Tab class."""
-
-    def __init__(self, tabs: Optional[Dict[str, widgets.Widget]] = None):
-        """Initialize the class."""
-        self.tab = widgets.Tab()
-        self.layout = self.tab
-        self.tab_controls = tabs or {}
-        if self.tab_controls:
-            for tab_name, tab_ctrl in self.tab_controls.items():
-                self.add_tab(tab_name, tab_ctrl)
-
-    def add_tab(self, tab_name: str, control: widgets.Widget):
-        """Add a tab with name `tab_name` and content `control`."""
-        self.tab_controls[tab_name] = control
-        tab_children = list(self.tab.children)
-        new_idx = len(tab_children)
-        tab_children.append(control.layout)
-        self.tab.children = tab_children
-        self.tab.set_title(new_idx, tab_name)
-
-    def set_tab(self, tab_name: Optional[str], index: int = 0):
-        """Programatically set the tab by name or index."""
-        if tab_name:
-            tab_index = [
-                idx
-                for idx, tabname in enumerate(self.tab_controls)
-                if tab_name.casefold() == tabname.casefold()
-            ]
-            if tab_index:
-                self.tab.selected_index = tab_index[0]
-            return
-        self.tab.selected_index = index
-
-    @property
-    def tab_names(self):
-        """Return a list of current tabs."""
-        return list(enumerate(self.tab_controls.keys()))
-
-
 class CompEditFrame(CompEditDisplayMixin, CompEditUtilsMixin, CompEditStatusMixin):
     """Edit frame class for components."""
 
@@ -265,10 +225,116 @@ class CEItemsBase(CompEditItems, ABC):
 class SettingsControl(ABC):
     """Abstract base class for settings controls."""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def value(self) -> Union[str, Dict[str, Optional[str]]]:
         """Return the current value of the control."""
 
     @value.setter
     def value(self, value: Union[str, Dict[str, Optional[str]]]):
         """Set value of controls from dict."""
+
+
+CETabControlDef = Tuple[type, Union[List[Any], Dict[str, Any]]]
+
+
+class CompEditTabs:
+    """Tab class."""
+
+    def __init__(self, tabs: Optional[Dict[str, CETabControlDef]] = None):
+        """
+        Initialize the CompEditTabs class.
+
+        Parameters
+        ----------
+        tabs : Optional[Dict[str, Tuple[type, Union[List[Any], Dict[str, Any]]]]], optional
+            Tab definitions or contents, by default None.
+            Each definition can be a Tuple of class and list of args
+            or a Tuple of class and dict of kwargs.
+
+        """
+        self.tab = widgets.Tab()
+        self.layout = self.tab
+        tabs = tabs or {}
+        self._tab_state: List[widgets.Widget] = []
+        self._tab_lazy_load: Dict[int, CETabControlDef] = {}
+        self._tab_names: List[str] = []
+        self.controls: Dict[str, Any] = {}
+        if tabs:
+            for tab_name, tab_ctrl in tabs.items():
+                if isinstance(tab_ctrl, CEItemsBase):
+                    # if this is an already-instantiated widget, just add the tab
+                    self.add_tab(tab_name, tab_ctrl)
+                    self._tab_state.append(tab_ctrl.layout)
+                elif isinstance(tab_ctrl, tuple):
+                    # if we're doing lazy loading, add a lazy-load tab
+                    self._add_lazy_tab(tab_name, tab_ctrl)
+            if self._tab_lazy_load:
+                # Make sure content is loaded for tab 0
+                self._load_tab(0)
+        self.tab.observe(self._on_select_tab, names="selected_index")
+
+    def _load_tab(self, tab_index):
+        """Load any lazily-loaded tab content."""
+        if not self._tab_lazy_load:
+            return
+        if isinstance(self._tab_state[tab_index], widgets.Label):
+            wgt_cls, args = self._tab_lazy_load[tab_index]
+            # initialize the class object with args or kwargs
+            ctrl = wgt_cls(*args) if isinstance(args, list) else wgt_cls(**args)
+            # set this control as the current tab state
+            self._tab_state[tab_index] = ctrl.layout
+            # update the controls dict
+            self.controls[self._tab_names[tab_index]] = ctrl
+            # update the tab control children with the new state
+            self.tab.children = self._tab_state
+
+    def _on_select_tab(self, change):
+        """Handle tab select index events."""
+        tab_index = change.get("new")
+        self._load_tab(tab_index)
+
+    def add_tab(self, tab_name: str, control: CEItemsBase):
+        """Add a tab with name `tab_name` and content `control`."""
+        self._tab_names.append(tab_name)
+        new_idx = len(self._tab_state)
+        self._tab_state.append(control.layout)
+        self.tab.children = self._tab_state
+        self.tab.set_title(new_idx, tab_name)
+        self.controls[tab_name] = control
+
+    def _add_lazy_tab(self, tab_name: str, control_def: CETabControlDef):
+        """Add a lazily-loaded tab with name `tab_name` and definition `control_def`."""
+        self._tab_names.append(tab_name)
+        new_idx = len(self._tab_state)
+        # add dummy control to tab state and control def to lazy tab dict
+        dummy_ctrl = widgets.Label(value="loading...")
+        self._tab_state.append(dummy_ctrl)
+        self._tab_lazy_load[new_idx] = control_def
+        self.controls[tab_name] = dummy_ctrl
+        # Refresh tab control children and set title
+        self.tab.children = self._tab_state
+        self.tab.set_title(new_idx, tab_name)
+
+    def set_tab(self, tab_name: Optional[str], index: int = 0):
+        """Programatically set the tab by name or index."""
+        if tab_name:
+            tab_index = [
+                idx
+                for idx, tabname in enumerate(self._tab_names)
+                if tab_name.casefold() == tabname.casefold()
+            ]
+            if tab_index:
+                self.tab.selected_index = tab_index[0]
+            return
+        self.tab.selected_index = index
+
+    @property
+    def tab_names(self) -> List[str]:
+        """Return a list of current tabs."""
+        return self._tab_names
+
+    @property
+    def tab_controls(self) -> Dict[str, Any]:
+        """Return a list of current tab names and controls."""
+        return self.controls

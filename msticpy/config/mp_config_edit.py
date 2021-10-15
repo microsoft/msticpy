@@ -7,6 +7,7 @@
 from typing import Any, Dict, Optional, Union
 
 import ipywidgets as widgets
+from IPython.display import display
 
 from .._version import VERSION
 from .ce_azure_sentinel import CEAzureSentinel
@@ -16,7 +17,7 @@ from .ce_azure import CEAzure
 from .ce_other_providers import CEOtherProviders
 from .ce_ti_providers import CETIProviders
 from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
-from .comp_edit import CompEditDisplayMixin, CompEditTabs
+from .comp_edit import CompEditDisplayMixin, CompEditTabs, CETabControlDef
 from .mp_config_file import MpConfigFile
 from .mp_config_control import MpConfigControls, get_mpconfig_definitions
 
@@ -26,6 +27,17 @@ __author__ = "Ian Hellen"
 
 class MpConfigEdit(CompEditDisplayMixin):
     """Msticpy Configuration helper class."""
+
+    _TAB_DEFINITIONS = {
+        "AzureSentinel": CEAzureSentinel,
+        "TI Providers": CETIProviders,
+        "Data Providers": CEDataProviders,
+        "GeoIP Providers": CEOtherProviders,
+        "Key Vault": CEKeyVault,
+        "Azure": CEAzure,
+        "Autoload QueryProvs": CEAutoLoadQProvs,
+        "Autoload Components": CEAutoLoadComps,
+    }
 
     def __init__(
         self,
@@ -54,6 +66,8 @@ class MpConfigEdit(CompEditDisplayMixin):
             If settings is a file path, this parameter is ignored.
 
         """
+        self._lbl_loading = widgets.Label(value="Loading. Please wait.")
+        display(self._lbl_loading)
         if isinstance(settings, MpConfigFile):
             self.mp_conf_file = MpConfigFile(settings=settings.settings)
             if not self.mp_conf_file.current_file and conf_filepath:
@@ -69,12 +83,16 @@ class MpConfigEdit(CompEditDisplayMixin):
             self.mp_conf_file = MpConfigFile()
             self.mp_conf_file.load_default()
         self.tool_buttons: Dict[str, widgets.Widget] = {}
+        self._inc_loading_label()
 
+        # Get the settings definitions and Config controls object
         mp_def_dict = get_mpconfig_definitions()
         self.mp_controls = MpConfigControls(mp_def_dict, self.mp_conf_file.settings)
-        self.tab_ctrl = CompEditTabs()
-        self.controls: Dict[str, Any] = {}
-        self._create_data_tabs(self.mp_controls)
+        self._inc_loading_label()
+
+        # Set up the tabs
+        self.tab_ctrl = CompEditTabs(self._get_tab_definitions())
+        self._inc_loading_label()
 
         self.txt_current_file = widgets.Text(
             description="Conf File",
@@ -94,11 +112,20 @@ class MpConfigEdit(CompEditDisplayMixin):
             ]
         )
         self.layout = widgets.VBox([self.tab_ctrl.layout, vbox])
+        self._lbl_loading.layout.visibility = "hidden"
+
+    def _inc_loading_label(self):
+        self._lbl_loading.value = f"{self._lbl_loading.value}."
 
     @property
     def tab_names(self):
         """Return a list of current tabs."""
         return self.tab_ctrl.tab_names
+
+    @property
+    def controls(self):
+        """Return a list of current tab names and controls."""
+        return self.tab_ctrl.tab_controls
 
     def set_tab(self, tab_name: Optional[str], index: int = 0):
         """Programatically set the tab by name or index."""
@@ -128,23 +155,22 @@ class MpConfigEdit(CompEditDisplayMixin):
             ]
         )
 
-    def _create_data_tabs(self, mp_controls):
-        self.controls = {
-            "AzureSentinel": CEAzureSentinel(mp_controls),
-            "TI Providers": CETIProviders(mp_controls),
-            "Data Providers": CEDataProviders(mp_controls),
-            "GeoIP Providers": CEOtherProviders(mp_controls),
-            "Key Vault": CEKeyVault(mp_controls),
-            "Azure": CEAzure(mp_controls),
-            "Autoload QueryProvs": CEAutoLoadQProvs(mp_controls),
-            "Autoload Components": CEAutoLoadComps(mp_controls),
-        }
+    def _create_data_tabs(self):
+        """Create all tab contents."""
         self.tab_ctrl.tab.children = []
-        for name, ctrl in self.controls.items():
+        for name, (ctrl_cls, args) in self._get_tab_definitions().items():
+            ctrl = ctrl_cls(*args)
             # add to tabs
             self.tab_ctrl.add_tab(name, control=ctrl)
             # Set these controls as named attributes on the object
             setattr(self, name.replace(" ", "_"), ctrl)
+
+    def _get_tab_definitions(self) -> Dict[str, CETabControlDef]:
+        """Return tab definitions and arguments."""
+        return {
+            name: (cls, [self.mp_controls])
+            for name, cls in self._TAB_DEFINITIONS.items()
+        }
 
     @property
     def current_config_file(self):
