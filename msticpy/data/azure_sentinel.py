@@ -24,8 +24,6 @@ _PATH_MAPPING = {
     "incidents": "/providers/Microsoft.SecurityInsights/incidents",
 }
 
-_BASE_URL = "https://management.azure.com/"
-
 
 class AzureSentinel(AzureData):
     """Class for returning key Azure Sentinel elements."""
