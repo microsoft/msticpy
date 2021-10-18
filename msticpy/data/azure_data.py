@@ -283,7 +283,6 @@ class AzureData:
                 title="Please call connect() before continuing.",
             )
 
-        # self.resource_client = ResourceManagementClient(self.credentials.modern, sub_id)
         self._check_client("resource_client", sub_id)
 
         resources = []  # type: List
