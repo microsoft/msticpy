@@ -76,9 +76,6 @@ def test_geoiplite_download(tmp_path):
                 check.is_false(warn.message.args[0].startswith("GeoIpLookup:"))
             else:
                 check.is_false(warn.message.startswith("GeoIpLookup:"))
-        #check.is_false(
-            #any(warn.message.startswith("GeoIpLookup:") for warn in warning_record.list)
-        #)
     finally:
         if tgt_folder.exists():
             for file in tgt_folder.glob("*"):
