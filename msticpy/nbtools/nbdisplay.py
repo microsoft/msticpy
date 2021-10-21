@@ -227,6 +227,7 @@ def plot_entity_graph(
                 ("node_type", "@node_type"),
                 ("name", "@name"),
                 ("description", "@description"),
+                ("entitytype", "@entitytype"),
             ]
         )
     )
@@ -364,10 +365,11 @@ def format_logon(
 
 def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
     """Format a pandas series logon record."""
-    logon_record = []
-    logon_record.append(f"<b>Account: </b>{logon_row['TargetUserName']}")
-    logon_record.append(f"<b>Account Domain: </b>{logon_row['TargetDomainName']}")
-    logon_record.append(f"<b>Logon Time: </b>{logon_row['TimeGenerated']}")
+    logon_record = [
+        f"<b>Account: </b>{logon_row['TargetUserName']}",
+        f"<b>Account Domain: </b>{logon_row['TargetDomainName']}",
+        f"<b>Logon Time: </b>{logon_row['TimeGenerated']}",
+    ]
 
     if os_family == "Windows":
         logon_type = logon_row["LogonType"]

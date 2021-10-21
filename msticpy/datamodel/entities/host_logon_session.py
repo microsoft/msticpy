@@ -93,6 +93,13 @@ class HostLogonSession(Entity):
             return f"{self.Host.HostName}: session: {self.SessionId}"
         return self.__class__.__name__
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        if self.Host:
+            return f"{self.Host.HostName}"
+        return self.__class__.__name__
+
     _entity_schema = {
         # Account
         "Account": "Account",
@@ -104,4 +111,7 @@ class HostLogonSession(Entity):
         "Host": "Host",
         # SessionId (type System.String)
         "SessionId": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

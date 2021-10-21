@@ -155,7 +155,8 @@ sources:
         | where TimeGenerated <= datetime({end})
         | extend Result = iif(ResultType==0, "Sucess", "Failed")
         | extend Latitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).latitude)
-        | extend Longitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).longitude)'
+        | extend Longitude = tostring(parse_json(tostring(LocationDetails.geoCoordinates)).longitude)
+        {add_query_items}'
     parameters:
       table:
         description: Table name

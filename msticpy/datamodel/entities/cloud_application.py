@@ -63,9 +63,17 @@ class CloudApplication(Entity):
         """Return Entity Description."""
         return self.Name or self.__class__.__name__
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Name or self.__class__.__name__
+
     _entity_schema = {
         # Name (type System.String)
         "Name": None,
         "AppId": None,
         "InstanceName": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
