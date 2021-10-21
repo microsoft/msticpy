@@ -65,6 +65,11 @@ class AzureResource(Entity):
         return self.ResourceId or self.__class__.__name__
 
     @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.ResourceId or self.__class__.__name__
+
+    @property
     def SubscriptionId(self):  # noqa
         """Return the subscription Id or None."""
         return self.ResourceIdParts.get("subscriptions")
@@ -85,6 +90,9 @@ class AzureResource(Entity):
         # ResourceIdParts (type System.Collections.Generic.IReadOnlyDictionary`2
         # [System.String,System.String])
         "ResourceIdParts": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
     def _extract_resource_parts(self):

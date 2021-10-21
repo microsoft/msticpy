@@ -67,6 +67,11 @@ class Dns(Entity):
         """Return Entity Description."""
         return f"{self.DomainName}: IPs: {repr(self.IpAdresses)}"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.DomainName or self.__class__.__name__
+
     _entity_schema = {
         # DomainName (type System.String)
         "DomainName": None,
@@ -79,4 +84,7 @@ class Dns(Entity):
         # HostIpAddress (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.IP)
         "HostIpAddress": "IpAddress",
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
