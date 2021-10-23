@@ -75,6 +75,11 @@ class GeoLocation(Entity, ContextObject):
         """Return Entity Description."""
         return f"{self.CountryCode}; {self.State}; {self.City}"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.CountryCode or self.__class__.__name__
+
     _entity_schema = {
         # str
         "CountryCode": None,
@@ -90,4 +95,7 @@ class GeoLocation(Entity, ContextObject):
         "Latitude": None,
         # int
         "Asn": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

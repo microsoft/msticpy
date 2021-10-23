@@ -152,7 +152,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             "Recommended: switch to using the 'Python 3.8 - AzureML' notebook kernel"
             " if this is available."
         )
-    _disp_html(f"Info: Python kernel version {sys_ver} OK<br>")
+    _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
 def _check_mp_install(
@@ -212,7 +212,7 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
             f"Required version: {mp_min_pkg_ver}",
         )
 
-    _disp_html(f"Info: msticpy version {mp_min_pkg_ver} OK<br>")
+    _disp_html(f"Info: msticpy version {inst_version} (>= {mp_min_pkg_ver}) - OK<br>")
 
 
 def _set_kql_env_vars(extras: Optional[List[str]]):
@@ -245,7 +245,7 @@ def get_aml_user_folder() -> Optional[Path]:
     path_parts = Path(".").absolute().parts
     if "Users" not in path_parts:
         return None
-    # find the index of the last occurence of "users"
+    # find the index of the last occurrence of "users"
     users_idx = len(path_parts) - path_parts[::-1].index("Users")
     # the user folder is one item below this
     if len(path_parts) < users_idx + 1:

@@ -38,16 +38,21 @@ from .submission_mail import SubmissionMail
 from .threat_intelligence import Threatintelligence
 from .unknown_entity import UnknownEntity
 from .url import Url
+from .cloud_logon_session import CloudLogonSession
+from ..soc.incident import Incident
 
 # Dictionary to map text names of types to the class.
 Entity.ENTITY_NAME_MAP.update(
     {
         "account": Account,
         "azureresource": AzureResource,
+        "azure-resource": AzureResource,
         "host": Host,
         "process": Process,
         "file": File,
         "cloudapplication": CloudApplication,
+        "cloud-application": CloudApplication,
+        "dns": Dns,
         "dnsresolve": Dns,
         "ipaddress": IpAddress,
         "iotdevice": IoTDevice,
@@ -55,7 +60,9 @@ Entity.ENTITY_NAME_MAP.update(
         "networkconnection": NetworkConnection,
         "mailbox": Mailbox,
         "mail-message": MailMessage,
+        "mailmessage": MailMessage,
         "mail-cluster": MailCluster,
+        "mailcluster": MailCluster,
         "malware": Malware,
         "registry-key": RegistryKey,
         "registrykey": RegistryKey,
@@ -73,6 +80,9 @@ Entity.ENTITY_NAME_MAP.update(
         "url": Url,
         "unknown": UnknownEntity,
         "geolocation": GeoLocation,
+        "location": GeoLocation,
+        "incident": Incident,
+        "cloud-logon-session": CloudLogonSession,
     }
 )
 

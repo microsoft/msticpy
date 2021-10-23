@@ -348,7 +348,7 @@ class AzureSentinel(AzureData):
 
         return incidents_df
 
-    def get_incident(  # pylint: disable=too-many-locals
+    def get_incident(  # pylint: disable=too-many-locals, too-many-arguments
         self,
         incident_id: str,
         res_id: str = None,
@@ -356,6 +356,7 @@ class AzureSentinel(AzureData):
         res_grp: str = None,
         ws_name: str = None,
         entities: bool = False,
+        alerts: bool = False,
     ) -> pd.DataFrame:
         """
         Get details on a specific incident.
@@ -374,6 +375,8 @@ class AzureSentinel(AzureData):
             Workspace name of the workspace, to be used if not providing Resource ID.
         entities : bool, optional
             If True, include all entities in the response. Default is False.
+        alerts : bool, optional
+            If True, include all alerts in the response. Default is False.
 
         Returns
         -------
@@ -386,6 +389,9 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
+        if "/" in incident_id and not res_id:
+            res_id = "/".join(incident_id.split("/")[:9])
+            incident_id = incident_id.split("/")[-1]
         res_id = res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
@@ -415,6 +421,25 @@ class AzureSentinel(AzureData):
                     (ent["kind"], ent["properties"]) for ent in ents.json()["entities"]
                 ]
                 incident_df["Entities"] = [unique_entities]
+
+        if alerts:
+            alerts_url = incident_url + "/alerts"
+            alerts_parameters = {"api-version": "2021-04-01"}
+            alerts_resp = requests.post(
+                alerts_url,
+                headers=_get_api_headers(self.token),
+                params=alerts_parameters,
+            )
+            if alerts_resp.status_code == 200:
+                for alrts in alerts_resp.json()["value"]:
+                    unique_alerts = [
+                        {
+                            "ID": alrts["properties"]["systemAlertId"],
+                            "Name": alrts["properties"]["alertDisplayName"],
+                        }
+                        for alrts in alerts_resp.json()["value"]
+                    ]
+                    incident_df["Alerts"] = [unique_alerts]
 
         return incident_df
 

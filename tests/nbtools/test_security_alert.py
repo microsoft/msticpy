@@ -16,6 +16,8 @@ from msticpy.nbtools.nbdisplay import format_alert
 from msticpy.nbtools.security_alert import SecurityAlert
 from msticpy.nbtools.security_alert_graph import create_alert_graph
 
+# pylint: disable=redefined-outer-name
+
 sample_alert = {
     "StartTimeUtc": "2018-09-27 16:59:16",
     "EndTimeUtc": "2018-09-27 16:59:16",
@@ -216,7 +218,6 @@ class TestSecurityAlert(unittest.TestCase):
         repr_alert = repr(alert)
         self.assertIsNotNone(repr_alert)
 
-        #
         self.assertIsNotNone(alert.primary_host)
         self.assertEqual("TESTHOST", alert.primary_host.HostName)
         self.assertIsNotNone(alert.primary_process)
@@ -277,7 +278,7 @@ class TestSecurityAlert(unittest.TestCase):
 
 
 @pytest.fixture(scope="module")
-def alert():
+def test_alert():
     raw_alert = pd.Series(sample_alert)
     raw_alert["StartTimeUtc"] = pd.to_datetime(raw_alert["StartTimeUtc"])
     raw_alert["EndTimeUtc"] = pd.to_datetime(raw_alert["EndTimeUtc"])
@@ -285,8 +286,8 @@ def alert():
     return raw_alert
 
 
-def test_alert_native_graph(alert):
-    alert = SecurityAlert(alert)
+def test_alert_native_graph(test_alert):
+    alert = SecurityAlert(test_alert)
     graph = None
     for ent in alert.entities:
         if graph is None:
@@ -303,7 +304,6 @@ def test_alert_native_graph(alert):
 
     # Get the sets of components
     connected_components = list(nx.connected_components(graph)).copy()
-    edges_to_add = []
     for sub_graph in connected_components:
         # connect alert to most connected entities
         node_neighbors = [

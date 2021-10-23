@@ -115,13 +115,23 @@ class Host(Entity):
         """Return Entity Description."""
         return f"{self.fqdn} ({self.OSFamily})"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.HostName or self.__class__.__name__
+
     def _create_from_event(self, src_event):
-        self._computer = src_event["Computer"]
-        if "." in src_event["Computer"]:
-            self.HostName = src_event["Computer"].split(".", 1)[0]
-            self.DnsDomain = src_event["Computer"].split(".", 1)[1]
-        else:
-            self.HostName = src_event["Computer"]
+        if "Computer" in src_event:
+            self._computer = src_event["Computer"]
+            if "." in src_event["Computer"]:
+                self.HostName = src_event["Computer"].split(".", 1)[0]
+                self.DnsDomain = src_event["Computer"].split(".", 1)[1]
+            else:
+                self.HostName = src_event["Computer"]
+        elif "HostName" in src_event:
+            self.HostName = src_event["HostName"]
+            if "DnsDomain" in src_event:
+                self.DnsDomain = src_event["DnsDomain"]
         self.NetBiosName = self.HostName
 
     _entity_schema = {
@@ -142,4 +152,7 @@ class Host(Entity):
         "OSFamily": "OSFamily",
         # IsDomainJoined (type System.Nullable`1[System.Boolean])
         "IsDomainJoined": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

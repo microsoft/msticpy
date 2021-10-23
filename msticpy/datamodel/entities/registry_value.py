@@ -66,7 +66,14 @@ class RegistryValue(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Name}[{self.ValueType}]:{repr(self.Value)}"
+        key = self.Key.description_str if self.Key else "Unknown key"
+        return f"{key}:{self.Name}[{self.ValueType}]:{repr(self.Value)}"
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        key = self.Key.name_str if self.Key else "RegPathNA"
+        return f"{key}:{(self.Name or 'NameNA')} (RegVal)"
 
     _entity_schema = {
         # Key (type Microsoft.Azure.Security.Detection
@@ -78,4 +85,7 @@ class RegistryValue(Entity):
         "Value": None,
         # ValueType (type System.Nullable`1[Microsoft.Win32.RegistryValueKind])
         "ValueType": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
