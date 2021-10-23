@@ -69,8 +69,13 @@ class IpAddress(Entity):
         self.ThreatIntelligence: List[Threatintelligence] = []
         super().__init__(src_entity=src_entity, **kwargs)
 
-        if src_event is not None and "IpAddress" in src_event:
-            self.Address = src_event["IpAddress"]
+        if src_event is not None and "Location" in src_event:
+            self.Location = GeoLocation(src_event["Location"])
+        if src_event is not None:
+            if "IpAddress" in src_event:
+                self.Address = src_event["IpAddress"]
+            elif "Address" in src_event:
+                self.Address = src_event["Address"]
 
     @property
     def ip_address(self) -> Union[IPv4Address, IPv6Address, None]:
@@ -83,7 +88,16 @@ class IpAddress(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return self.Address
+        return (
+            f"{self.Address} - {self.Location.CountryCode}"
+            if self.Location
+            else self.Address
+        )
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Address or self.__class__.__name__
 
     _entity_schema = {
         # Address (type System.String)
@@ -95,6 +109,9 @@ class IpAddress(Entity):
         # [Microsoft.Azure.Security.Detection.AlertContracts.V3
         # .ContextObjects.ThreatIntelligence])
         "ThreatIntelligence": (list, "Threatintelligence"),
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
 

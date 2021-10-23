@@ -950,9 +950,7 @@ def _get_tick_formatter() -> DatetimeTickFormatter:
 
 def _calc_auto_plot_height(group_count):
     """Dynamic calculation of plot height."""
-    ht_per_row = 40
-    if group_count > 15:
-        ht_per_row = 25
+    ht_per_row = 25 if group_count > 15 else 40
     return max(ht_per_row * group_count, 300)
 
 

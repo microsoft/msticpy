@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Entity class."""
+import json
 import pprint
 import typing
 from abc import ABC
@@ -32,6 +33,21 @@ class ContextObject:
 # pylint: enable=too-few-public-methods
 
 
+class _EntityJSONEncoder(json.JSONEncoder):
+    """Encode entity to JSON."""
+
+    def default(self, o):
+
+        if isinstance(o, Entity):
+            return {
+                name: value
+                for name, value in o.properties.items()
+                if value and name != "edges"
+            }
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, o)
+
+
 # Future: replace setting entity properties in __dict__ with
 # setattr (to support attributes implemented as properties)
 @export
@@ -45,6 +61,7 @@ class Entity(ABC, Node):
     ENTITY_NAME_MAP: Dict[str, type] = {}
     _entity_schema: Dict[str, Any] = {}
     ID_PROPERTIES: List[str] = []
+    JSONEncoder = _EntityJSONEncoder
 
     def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
         """
@@ -65,6 +82,7 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
+        self.TimeGenerated = None
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknownentity" and "Type" in kwargs:
@@ -82,6 +100,8 @@ class Entity(ABC, Node):
             # add AdditionalData dictionary if it's populated
             if "AdditionalData" in src_entity:
                 self.AdditionalData = src_entity["AdditionalData"]
+            if "TimeGenerated" in src_entity:
+                self.TimeGenerated = src_entity["TimeGenerated"]
 
         if kwargs:
             self.__dict__.update(kwargs)
@@ -195,7 +215,8 @@ class Entity(ABC, Node):
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
-        if name in self._entity_schema:
+        props = ["name_str", "description_str"]
+        if name in self._entity_schema or name in props:
             return None
         raise AttributeError(f"{name} is not a valid attribute.")
 
@@ -209,25 +230,29 @@ class Entity(ABC, Node):
 
     def __str__(self) -> str:
         """Return string representation of entity."""
-        return pprint.pformat(self._to_dict(self), indent=2, width=100)
+        return pprint.pformat(self._to_dict(), indent=2, width=100)
 
     def __repr__(self) -> str:
         """Return repr of entity."""
         params = ", ".join(
             f"{name}={val}" for name, val in self.properties.items() if val
         )
+        if self.edges:
+            params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
             params = params[:80] + "..."
         return f"{self.__class__.__name__}({params})"
 
-    def _to_dict(self, entity) -> dict:
+    def _to_dict(self) -> dict:
         """Return as simple nested dictionary."""
+        # pylint: disable=protected-access
         return {
-            prop: self._to_dict(val) if isinstance(val, Entity) else val
-            for prop, val in entity.properties.items()
+            prop: val._to_dict() if isinstance(val, Entity) else val
+            for prop, val in self.properties.items()
             if val is not None
         }
+        # pylint: enable=protected-access
 
     def _repr_html_(self) -> str:
         """
@@ -255,6 +280,10 @@ class Entity(ABC, Node):
         e_type = self.Type
         e_text = e_text.replace("\n", "<br>").replace(" ", "&nbsp;")
         return f"<h3>{e_type}</h3>{e_text}"
+
+    def to_json(self):  # noqa: N802
+        """Return object as a JSON string."""
+        return json.dumps(self, cls=self.JSONEncoder)
 
     def __eq__(self, other: Any) -> bool:
         """
@@ -343,6 +372,8 @@ class Entity(ABC, Node):
             if not self.properties[prop]:
                 setattr(merged, prop, value)
             # Future (ianhelle) - cannot merge ID field
+        if other.edges:
+            self.edges.update(other.edges)
         return merged
 
     def can_merge(self, other: Any) -> bool:
@@ -393,7 +424,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith("_")
+            if not name.startswith("_") and name != "edges"
         }
 
     @property
@@ -410,6 +441,21 @@ class Entity(ABC, Node):
 
         """
         return self.Type
+
+    @property
+    def name_str(self) -> str:
+        """
+        Return Name Description.
+
+        Returns
+        -------
+        str
+            Entity Name (optional). If not overridden
+            by the Entity instance type, it will return the
+            class name string.
+
+        """
+        return self.__class__.__name__
 
     @classmethod
     def instantiate_entity(
@@ -436,13 +482,14 @@ class Entity(ABC, Node):
             return raw_entity
 
         entity_type_name = raw_entity.get("Type")
+
         if not entity_type_name and entity_type:
             entity_type_name = cls._get_entity_type_name(entity_type)
 
         if entity_type:
             return entity_type(raw_entity)
-        if entity_type_name in cls.ENTITY_NAME_MAP:
-            return cls.ENTITY_NAME_MAP[entity_type_name](raw_entity)
+        if entity_type_name and entity_type_name.lower() in cls.ENTITY_NAME_MAP:
+            return cls.ENTITY_NAME_MAP[entity_type_name.lower()](raw_entity)
 
         raise TypeError(f"Could not find a suitable type for {entity_type}")
 
@@ -480,11 +527,14 @@ class Entity(ABC, Node):
             Dictionary of name, value properties.
 
         """
-        return {
-            name: value
+        props = {
+            name: str(value)
             for name, value in self.properties.items()
             if not isinstance(value, (Entity, list)) and name != "edges"
         }
+        props["Description"] = self.description_str
+        props["Name"] = self.name_str
+        return props
 
     def to_networkx(self, graph: nx.Graph = None) -> nx.Graph:
         """
@@ -504,13 +554,16 @@ class Entity(ABC, Node):
 
         """
         graph = graph or nx.Graph()
-
         if not graph.has_node(self):
-            graph.add_node(self, **self.node_properties)
+            graph.add_node(self.name_str, **self.node_properties)
         for edge in self.edges:
-            if graph.has_edge(edge.source, edge.target):
+            if not isinstance(edge.source, Entity) or not isinstance(
+                edge.target, Entity
+            ):
                 continue
-            graph.add_edge(edge.source, edge.target, **edge.attrs)
+            if graph.has_edge(edge.source.name_str, edge.target.name_str):
+                continue
+            graph.add_edge(edge.source.name_str, edge.target.name_str, **edge.attrs)
 
             for node in (edge.source, edge.target):
                 # If this node has edges that are not in our graph
@@ -518,7 +571,9 @@ class Entity(ABC, Node):
                 if any(
                     edge
                     for edge in node.edges
-                    if not graph.has_edge(edge.source, edge.target)
+                    if isinstance(edge.source, Entity)
+                    and isinstance(edge.target, Entity)
+                    and not graph.has_edge(edge.source.name_str, edge.target.name_str)
                 ):
                     ent_node = typing.cast(Entity, node)
                     ent_node.to_networkx(graph)
@@ -636,3 +691,8 @@ class Entity(ABC, Node):
                 "This is not a pivot function.",
             )
         delattr(cls, func_name)
+
+
+def camelcase_property_names(input_ent: Dict[str, Any]) -> Dict[str, Any]:
+    """Change initial letter Azure Sentinel API entity properties to upper case."""
+    return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}

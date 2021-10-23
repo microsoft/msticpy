@@ -39,7 +39,12 @@ class Mailbox(Entity):
 
     ID_PROPERTIES = ["MailboxPrimaryAddress"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
@@ -48,6 +53,9 @@ class Mailbox(Entity):
         src_entity : Mapping[str, Any], optional
             Create entity from existing entity or
             other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
             (the default is None)
 
         Other Parameters
@@ -64,10 +72,25 @@ class Mailbox(Entity):
         self.RiskLevel: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.MailboxPrimaryAddress = src_event.get("MailboxPrimaryAddress")
+        self.Upn = src_event.get("Upn")
+        self.DisplayName = src_event.get("DisplayName")
 
     @property
     def description_str(self):
         """Return Entity Description."""
+        return (
+            f"{self.MailboxPrimaryAddress} - {self.RiskLevel}"
+            or self.__class__.__name__
+        )
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
         return self.MailboxPrimaryAddress or self.__class__.__name__
 
     _entity_schema = {
@@ -76,4 +99,7 @@ class Mailbox(Entity):
         "Upn": None,
         "ExternalDirectoryObjectId": None,
         "RiskLevel": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

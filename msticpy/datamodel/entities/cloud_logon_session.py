@@ -3,45 +3,46 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Malware Entity class."""
-from typing import Any, List, Mapping, Optional
+"""CloudApplication Entity class."""
+from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
 from .entity import Entity
-from .file import File
-from .process import Process
 
 __version__ = VERSION
-__author__ = "Ian Hellen"
+__author__ = "Pete Bryan"
 
 
 # pylint: disable=invalid-name
 
 
 @export
-class Malware(Entity):
+class CloudLogonSession(Entity):
     """
-    Malware Entity class.
+    CloudLogonSession Entity class.
 
     Attributes
     ----------
-    Name : str
-        Malware Name
-    Category : str
-        Malware Category
-    File : File
-        Malware File
-    Files : List[File]
-        Malware Files
-    Processes : List[Process]
-        Malware Processes
+    SessionId : str
+        The loggon session ID
+    Account : str
+        The Account
+    UserAgent : str
+        The UserAgent
+    StartTime: str
+        The time the session started
 
     """
 
     ID_PROPERTIES = ["Name"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
@@ -51,6 +52,8 @@ class Malware(Entity):
             Create entity from existing entity or
             other mapping object that implements entity properties.
             (the default is None)
+        src_event:  Mapping[str, Any], optional
+            Create entity from an event
 
         Other Parameters
         ----------------
@@ -59,32 +62,36 @@ class Malware(Entity):
             kw arguments.
 
         """
-        self.Name: str = ""
-        self.Category: str = ""
-        self.File: Optional[File] = None
-        self.Files: List[File] = []
-        self.Processes: List[Process] = []
+        self.SessionId: Optional[str] = None
+        self.Account: Optional[str] = None
+        self.UserAgent: Optional[str] = None
+        self.StartTime: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.SessionId = src_event.get("SessionId")
+        self.Account = src_event.get("Account")
+        self.UserAgent = src_event.get("UserAgent")
+        self.StartTime = src_event.get("StartTimeUtc")
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return f"{self.Name}: {self.Category}"
+        return self.Account or self.__class__.__name__
 
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return self.Name or self.__class__.__name__
+        desc = f"{self.StartTime} - {self.Account} - {self.UserAgent}"
+        return desc or self.__class__.__name__
 
     _entity_schema = {
         # Name (type System.String)
-        "Name": None,
-        # Category (type System.String)
-        "Category": None,
-        # File (type Microsoft.Azure.Security.Detection.AlertContracts.V3.Entities.File)
-        "File": "File",
-        "Files": (list, "File"),
-        "Processes": (list, "Process"),
+        "SessionId": None,
+        "Account": None,
+        "UserAgent": None,
         "TimeGenerated": None,
         "StartTime": None,
         "EndTime": None,

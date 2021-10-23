@@ -233,7 +233,7 @@ class SecurityBase(QueryParamProvider):
             for proc in procs
             if "ParentProcess" in proc
             and proc["ParentProcess"]
-            and proc["ParentProcess"] in procs
+            and proc.ParentProcess.ProcessId in {proc.ProcessId for proc in procs}
         ]
         return procs_with_parent[0] if procs_with_parent else procs[0]
 

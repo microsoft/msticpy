@@ -59,7 +59,12 @@ class MailCluster(Entity):
 
     ID_PROPERTIES = ["Query", "Source"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
@@ -68,6 +73,9 @@ class MailCluster(Entity):
         src_entity : Mapping[str, Any], optional
             Create entity from existing entity or
             other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
             (the default is None)
 
         Other Parameters
@@ -94,11 +102,28 @@ class MailCluster(Entity):
         self.ClusterGroup: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event is not None:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.NetworkMessageIds = src_event["NetworkMessageIds"]
+        self.CountByThreatType = src_event["CountByThreatType"]
+        self.CountByProtectionStatus = src_event["CountByProtectionStatus"]
+        self.Query = src_event["Query"]
+        self.QueryTime = src_event["QueryTime"]
+        self.MailCount = src_event["MailCount"]
+        self.Source = src_event["Source"]
 
     @property
     def description_str(self):
         """Return Entity Description."""
-        return self.Query or self.__class__.__name__
+        return self.Query or self.NetworkMessageIds or self.__class__.__name__
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        hash_val = hash(str(self.NetworkMessageIds))
+        return f"{self.__class__.__name__} - {hash_val}"
 
     _entity_schema = {
         "NetworkMessageIds": None,
@@ -116,4 +141,7 @@ class MailCluster(Entity):
         "ClusterQueryStartTime": None,
         "ClusterQueryEndTime": None,
         "ClusterGroup": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
