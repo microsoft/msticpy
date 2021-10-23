@@ -114,20 +114,20 @@ The following resources will help you set up your configuration:
 _PANDAS_REQ_VERSION = (0, 25, 0)
 
 
-def _get_verbose_setting() -> Callable[[Optional[bool]], bool]:
+def _get_verbosity_setting() -> Callable[[Optional[int]], int]:
     """Closure for holding trace setting."""
-    _verbose_enabled = False
+    _verbosity = 1
 
-    def _verbose(verbose: Optional[bool] = None) -> bool:
-        nonlocal _verbose_enabled
-        if verbose is not None:
-            _verbose_enabled = verbose
-        return _verbose_enabled
+    def _verbose(verbosity: Optional[int] = None) -> int:
+        nonlocal _verbosity
+        if verbosity is not None:
+            _verbosity = verbosity
+        return _verbosity
 
     return _verbose
 
 
-_VERBOSE = _get_verbose_setting()
+_VERBOSITY: Callable[[Optional[int]], int] = _get_verbosity_setting()
 
 _NB_IMPORTS = [
     dict(pkg="pandas", alias="pd"),
@@ -182,7 +182,17 @@ current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 
 
 def _pr_output(*args):
-    """Send output to IPython display or print."""
+    """Output to IPython display or print."""
+    if not _VERBOSITY():
+        return
+    if is_ipython():
+        display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
+    else:
+        print(*args)
+
+
+def _err_output(*args):
+    """Output to IPython display or print - always output regardless of verbosity."""
     if is_ipython():
         display(HTML(" ".join([*args, "<br>"]).replace("\n", "<br>")))
     else:
@@ -241,8 +251,14 @@ def init_notebook(
         Defaults to system/user settings if no value is supplied.
     verbose : bool, optional
         Display more verbose status, by default False
+        Deprecated - use `verbosity` parameter
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
+    verbosity : int, optional
+        0 = No output
+        1 = Brief output (default)
+        2 = Detailed output
+        1 is equivalent to verbose=False, 2 is equivalent to verbose=True
 
     Returns
     -------
@@ -260,17 +276,23 @@ def init_notebook(
     global current_providers  # pylint: disable=global-statement, invalid-name
 
     check_kwargs(
-        kwargs, ["user_install", "friendly_exceptions", "no_config_check", "verbose"]
+        kwargs,
+        [
+            "user_install",
+            "friendly_exceptions",
+            "no_config_check",
+            "verbosity",
+            "verbose",
+        ],
     )
     user_install: bool = kwargs.pop("user_install", False)
     friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
 
-    verbose: bool = kwargs.pop("verbose", False)
+    verbosity: int = kwargs.pop("verbosity", 2 if kwargs.pop("verbose", False) else 1)
+    _VERBOSITY(verbosity)
 
-    _VERBOSE(verbose)
-
-    display(HTML("<hr><h4>Starting Notebook initialization...</h4>"))
+    _pr_output("<hr><h4>Starting Notebook initialization...</h4>")
     # Check Azure ML environment
     if is_in_aml():
         check_versions_aml(*_get_aml_globals(namespace))
@@ -303,7 +325,7 @@ def init_notebook(
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions")
     if friendly_exceptions:
-        if verbose:
+        if _VERBOSITY() == 2:
             _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(
             InteractiveShell.showtraceback
@@ -322,7 +344,7 @@ def init_notebook(
 
     # show any warnings
     init_status = _show_init_warnings(imp_ok, conf_ok)
-    display(HTML("<h4>Notebook initialization complete</h4>"))
+    _pr_output("<h4>Notebook initialization complete</h4>")
     return init_status
 
 
@@ -418,8 +440,8 @@ def _global_imports(  # noqa: MC0001
                 additional_packages, user=user_install
             )
             if not pkg_success:
-                _pr_output("One or more packages failed to install.")
-                _pr_output(
+                _err_output("One or more packages failed to install.")
+                _err_output(
                     "Please re-run init_notebook() with the parameter user_install=True."
                 )
             # We want to force import lib to see anything that we've
@@ -460,7 +482,7 @@ def _get_or_create_config() -> bool:
     # 7. Error - no Azure sentinel config
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
-        display(HTML(_MISSING_MPCONFIG_ENV_ERR))
+        _err_output(_MISSING_MPCONFIG_ENV_ERR)
     if not mp_path or not Path(mp_path).is_file():
         mp_path = search_for_file("msticpyconfig.yaml", paths=[".", ".."])
 
@@ -489,7 +511,7 @@ def _get_or_create_config() -> bool:
         _populate_config_to_mp_config(mp_path, config_json)
         return True
 
-    _pr_output("No valid configuration for Azure Sentinel found.")
+    _pr_output("No MSTICPy configuration file found.")
     return False
 
 
@@ -569,13 +591,13 @@ def _imp_module(nm_spc: Dict[str, Any], module_name: str, alias: str = None):
     try:
         mod = importlib.import_module(module_name)
     except ImportError:
-        display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
+        _err_output(_IMPORT_MODULE_MSSG.format(module=module_name))
         return None
     if alias:
         nm_spc[alias] = mod
     else:
         nm_spc[module_name] = mod
-    if _VERBOSE():  # type: ignore
+    if _VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{module_name} imported (alias={alias})")
     return mod
 
@@ -585,13 +607,13 @@ def _imp_module_all(nm_spc: Dict[str, Any], module_name):
     try:
         imported_mod = importlib.import_module(module_name)
     except ImportError:
-        display(HTML(_IMPORT_MODULE_MSSG.format(module=module_name)))
+        _err_output(_IMPORT_MODULE_MSSG.format(module=module_name))
         return
     for item in dir(imported_mod):
         if item.startswith("_"):
             continue
         nm_spc[item] = getattr(imported_mod, item)
-    if _VERBOSE():  # type: ignore
+    if _VERBOSITY() == 2:  # type: ignore
         _pr_output(f"All items imported from {module_name}")
 
 
@@ -609,14 +631,14 @@ def _imp_from_package(
         try:
             mod = importlib.import_module(pkg)
         except ImportError:
-            display(HTML(_IMPORT_MODULE_MSSG.format(module=pkg)))
+            _err_output(_IMPORT_MODULE_MSSG.format(module=pkg))
             return None
         obj = getattr(mod, tgt)
     if alias:
         nm_spc[alias] = obj
     else:
         nm_spc[tgt] = obj
-    if _VERBOSE():  # type: ignore
+    if _VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{tgt} imported from {pkg} (alias={alias})")
     return obj
 
@@ -631,7 +653,7 @@ def _check_and_reload_pkg(
         raise MsticpyException(f"Package {pkg_name} has no version data.")
     pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
     if pkg_version < req_version:
-        display(HTML(_MISSING_PKG_WARN.format(package=pkg_name)))
+        _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
         resp = (
             input("Install the package now? (y/n)") if not unit_testing() else "y"
         )  # nosec
@@ -645,7 +667,7 @@ def _check_and_reload_pkg(
                 importlib.reload(pkg)
             else:
                 _imp_module(nm_spc, pkg_name, alias=alias)
-    if _VERBOSE():  # type: ignore
+    if _VERBOSITY() == 2:  # type: ignore
         _pr_output(f"{pkg_name} imported version {pkg.__version__}")
     return warn_mssg
 
@@ -675,7 +697,7 @@ def _check_azure_cli_status():
         elif status == AzureCliStatus.CLI_NOT_INSTALLED:
             _pr_output(
                 "Azure CLI not detected. AzCLI single sign-on disabled"
-                " ({_CLI_WIKI_MSSG_SHORT})"
+                f" ({_CLI_WIKI_MSSG_SHORT})"
             )
         elif message:
             _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))

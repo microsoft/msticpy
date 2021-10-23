@@ -256,7 +256,7 @@ def build_process_tree(
     merged_procs_keys = _add_tree_properties(extr_proc_tree)
 
     # Build process paths
-    proc_tree = _build_proc_tree(merged_procs_keys)
+    proc_tree = build_proc_tree(merged_procs_keys)
 
     if show_summary:
         print(get_summary_info(proc_tree))
@@ -311,8 +311,23 @@ def _add_tree_properties(proc_tree):
     return proc_tree
 
 
-def _build_proc_tree(input_tree: pd.DataFrame, max_depth=-1) -> pd.DataFrame:
-    """Build process tree paths."""
+def build_proc_tree(input_tree: pd.DataFrame, max_depth: int = -1) -> pd.DataFrame:
+    """
+    Build process tree paths.
+
+    Parameters
+    ----------
+    input_tree : pd.DataFrame
+        DataFrame containing process and parent key definitions
+    max_depth : int, optional
+        Maximum depth to process the tree, by default -1 (no limit)
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with ordered paths for each process.
+
+    """
     # set default path == current process ID
     input_tree["path"] = input_tree["source_index"]
 
