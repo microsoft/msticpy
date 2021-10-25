@@ -639,12 +639,17 @@ class VTLookupV3:
         try:
             graph.save_graph()
         except vt_graph_errs.SaveGraphError as graph_err:
-            raise MsticpyVTGraphSaveGraphError(
-                "Could not save Graph. %s" % ""
+            message = (
+                ""
                 if not private
-                else "Please check you have Private Graph premium feature enabled in"
-                "your subscription. It is possible to create public Graphs"
-                "with 'private=False' input argument"
+                else (
+                    "Please check you have Private Graph premium feature enabled in"
+                    "your subscription. It is possible to create public Graphswith"
+                    " 'private=False' input argument"
+                )
+            )
+            raise MsticpyVTGraphSaveGraphError(
+                f"Could not save Graph. {message}"
             ) from graph_err
 
         return graph.graph_id

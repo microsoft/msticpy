@@ -93,7 +93,7 @@ def find_entity(entity):
     entity_classes = {
         cls.__name__.casefold(): cls for cls in Entity.ENTITY_NAME_MAP.values()
     }
-    if entity_cf in Entity.ENTITY_NAME_MAP.keys():
+    if entity_cf in Entity.ENTITY_NAME_MAP:
         print(f"Match found '{Entity.ENTITY_NAME_MAP[entity].__name__}'")
         return Entity.ENTITY_NAME_MAP[entity]
     if entity_cf in entity_classes:

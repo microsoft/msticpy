@@ -53,7 +53,7 @@ class SecurityBase(QueryParamProvider):
         self._entities: List[Entity] = []
 
         # Extract and cache alert ID properties
-        self._ids: Dict[str, str] = dict()
+        self._ids: Dict[str, str] = {}
         if self._source_data is not None:
             for id_property in _ID_PROPERTIES:
                 if id_property in self._source_data:
@@ -356,11 +356,12 @@ class SecurityBase(QueryParamProvider):
         if self.is_in_log_analytics:
             return "true"
         if self.is_in_azure_sub:
-            return "AzureResourceSubscriptionId {} '{}'".format(
-                operator, self._ids["AzSubscriptionId"]
+            return (
+                f"AzureResourceSubscriptionId {operator} "
+                f"'{self._ids['AzSubscriptionId']}'"
             )
         if self.is_in_workspace:
-            return "WorkspaceId {} '{}'".format(operator, self._ids["WorkspaceId"])
+            return f"WorkspaceId {operator} '{self._ids['WorkspaceId']}'"
 
         # Otherwise we default to including everything
         return "true"
@@ -374,24 +375,22 @@ class SecurityBase(QueryParamProvider):
         """
         if self.primary_host:
             case_insens_op = "=~" if operator == "==" else "!~"
-            return "Computer {} '{}'".format(case_insens_op, self.primary_host.computer)
+            return f"Computer {case_insens_op} '{self.primary_host.computer}'"
 
         if (
             self.is_in_log_analytics
             and "SourceComputerId" in self._ids
             and self._ids["SourceComputerId"]
         ):
-            return "SourceComputerId {} '{}'".format(
-                operator, self._ids["SourceComputerId"]
-            )
+            return f"SourceComputerId {operator} '{self._ids['SourceComputerId']}'"
         if (
             self.is_in_azure_sub
             and "AzureResourceId" in self._ids
             and self._ids["AzResourceId"]
         ):
-            return "AzureResourceId {} '{}'".format(operator, self._ids["AzResourceId"])
+            return f"AzureResourceId {operator} '{self._ids['AzResourceId']}'"
         if self.is_in_workspace and "AgendId" in self._ids and self._ids["AgentId"]:
-            return "AgentId {} '{}'".format(operator, self._ids["AgentId"])
+            return f"AgentId {operator} '{self._ids['AgentId']}'"
         return None
 
     def get_entities_of_type(self, entity_type: str) -> List[Entity]:

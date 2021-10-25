@@ -84,8 +84,7 @@ def get_all_endpoints(cloud: str) -> azure_cloud.CloudEndpoints:
         If the cloud name is not valid.
 
     """
-    if cloud in _CLOUD_ALIASES.keys():
-        cloud = _CLOUD_ALIASES[cloud]
+    cloud = _CLOUD_ALIASES.get(cloud, cloud)
     try:
         endpoints = _CLOUD_MAPPING[cloud].endpoints
     except KeyError as cloud_err:
@@ -116,8 +115,7 @@ def get_all_suffixes(cloud: str) -> azure_cloud.CloudSuffixes:
         If the cloud name is not valid.
 
     """
-    if cloud in _CLOUD_ALIASES.keys():
-        cloud = _CLOUD_ALIASES[cloud]
+    cloud = _CLOUD_ALIASES.get(cloud, cloud)
     try:
         endpoints = _CLOUD_MAPPING[cloud].suffixes
     except KeyError as cloud_err:
