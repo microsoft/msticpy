@@ -142,7 +142,7 @@ def add_unbound_pivot_function(
 
 def _read_reg_file(file_path: str):
     """Read the yaml file and return generator of PivotRegistrations."""
-    with open(file_path) as f_handle:
+    with open(file_path, "r", encoding="utf-8") as f_handle:
         # use safe_load instead load
         pivot_regs = yaml.safe_load(f_handle)
 

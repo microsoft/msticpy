@@ -115,10 +115,11 @@ def dbcluster_events(
     elif isinstance(data, np.ndarray):
         x_input = data if cluster_columns is None else data[:, cluster_columns].values
     if x_input is None:
-        mssg = "Input data not in expected format.\n{} is not one of allowed types {}"
         type_list = ", ".join(str(t) for t in allowed_types)
-        mssg = mssg.format(str(type(data)), type_list)
-        raise ValueError(mssg)
+        raise ValueError(
+            f"Input data not in expected format.\n{type(data)}",
+            f" is not one of allowed types: {type_list}",
+        )
 
     # Create DBSCAN cluster object
     db_cluster = DBSCAN(
@@ -153,26 +154,26 @@ def dbcluster_events(
 
 
 def _merge_clustered_items(
-    cluster_set: np.array,
-    labels: np.array,
-    data: Union[pd.DataFrame, np.array],
+    cluster_set: np.ndarray,
+    labels: np.ndarray,
+    data: Union[pd.DataFrame, np.ndarray],
     time_column: str,
-    counts: np.array,
+    counts: np.ndarray,
 ) -> pd.DataFrame:
     """
     Merge outliers and core clusters into single DataFrame.
 
     Parameters
     ----------
-    cluster_set : np.array
+    cluster_set : np.ndarray
         The set of clusters
-    labels : np.array
+    labels : np.ndarray
         The cluster labels
-    data : Union[pd.DataFrame, np.array]
+    data : Union[pd.DataFrame, np.ndarray]
         The source data
     time_column : str
         Name of the Time column
-    counts : np.array
+    counts : np.ndarray
         The counts of members in each cluster
 
     Returns
@@ -181,7 +182,7 @@ def _merge_clustered_items(
         Merged dataframe
 
     """
-    tz_aware = data.iloc[0][time_column].tz
+    tz_aware = data.iloc[0][time_column].tz if isinstance(data, pd.DataFrame) else False
     ts_type = "datetime64[ns, UTC]" if tz_aware is not None else "datetime64[ns]"
 
     cluster_list = []
@@ -618,7 +619,7 @@ def crc32_hash_df(data: pd.DataFrame, column: str) -> pd.Series:
 
 # pylint: disable=too-many-arguments, too-many-statements
 @export  # noqa: C901, MC0001
-def plot_cluster(
+def plot_cluster(  # noqa: C901, MC0001
     db_cluster: DBSCAN,
     data: pd.DataFrame,
     x_predict: np.ndarray,
@@ -659,13 +660,9 @@ def plot_cluster(
     """
     max_idx = x_predict.shape[1] - 1
     if plot_features[0] >= x_predict.shape[1]:
-        raise ValueError(
-            "plot_features[0] index must be a value from 0 to {}.".format(max_idx)
-        )
+        raise ValueError(f"plot_features[0] index must be a value from 0 to {max_idx}.")
     if plot_features[1] >= x_predict.shape[1]:
-        raise ValueError(
-            "plot_features[1] index must be a value from 0 to {}.".format(max_idx)
-        )
+        raise ValueError(f"plot_features[1] index must be a value from 0 to {max_idx}.")
     if plot_features[0] == plot_features[1]:
         mssg = "plot_features indexes must be 2 different values in range 0 to"
         raise ValueError(mssg + f" {max_idx}.")
@@ -687,8 +684,8 @@ def plot_cluster(
     _, counts = np.unique(labels, return_counts=True)
 
     if verbose:
-        print("Estimated number of clusters: %d" % n_clusters_)
-        print("Estimated number of noise points: %d" % n_noise_)
+        print(f"Estimated number of clusters: {n_clusters_}")
+        print(f"Estimated number of noise points: {n_noise_}")
         # print("Silhouette Coefficient: %0.3f"
         #       % metrics.silhouette_score(x_predict, labels))
 
@@ -741,6 +738,6 @@ def plot_cluster(
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title("Estimated number of clusters: %d" % n_clusters_)
+    plt.title(f"Estimated number of clusters: {n_clusters_}")
     plt.show()
     return plt

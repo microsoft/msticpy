@@ -190,7 +190,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         # create a backup, if required
         if backup and Path(file).is_file():
             Path(file).replace(f"{file}.save_{datetime.now().strftime('%H%M%S')}")
-        with open(file, "w") as mp_hdl:
+        with open(file, "w", encoding="utf-8") as mp_hdl:
             yaml.safe_dump(self.settings, mp_hdl)
 
     def show_kv_secrets(self, show: bool = True):
@@ -240,7 +240,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     def _read_mp_config(self, file):
         if Path(file).is_file():
-            with open(file, "r") as mp_hdl:
+            with open(file, "r", encoding="utf-8") as mp_hdl:
                 try:
                     return yaml.safe_load(mp_hdl)
                 except yaml.scanner.ScannerError as err:
@@ -251,7 +251,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         """Map config.json settings to MSTICPy settings."""
         if "resource_group" in self.settings:
             ws_settings = {
-                _CONFIG_MAP[entry]: self.settings[entry] for entry in _CONFIG_MAP
+                config: self.settings[entry] for entry, config in _CONFIG_MAP.items()
             }
             workspace = self.settings.get("workspace_name", "Default")
             self.settings = {"AzureSentinel": {"Workspaces": {workspace: ws_settings}}}

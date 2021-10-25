@@ -204,7 +204,7 @@ class QueryStore:
             self.add_data_source(new_source)
 
     @classmethod  # noqa: MC0001
-    def import_files(
+    def import_files(  # noqa: MC0001
         cls, source_path: list, recursive: bool = False
     ) -> Dict[str, "QueryStore"]:
         """
@@ -231,7 +231,7 @@ class QueryStore:
             a source file.
 
         """
-        env_stores: Dict[str, QueryStore] = dict()
+        env_stores: Dict[str, QueryStore] = {}
         for query_dir in source_path:
             if not path.isdir(query_dir):
                 raise FileNotFoundError(f"{query_dir} is not a directory")

@@ -557,7 +557,7 @@ def _print_bytes(bytes_array: bytes):
 
 
 def _as_byte_string(bytes_array) -> str:
-    return " ".join(["{0:02x}".format(b) for b in bytes_array])
+    return " ".join(f"{b:02x}" for b in bytes_array)
 
 
 def _empty_binary_rec() -> BinaryRecord:
@@ -786,14 +786,11 @@ def get_items_from_tar(binary: bytes) -> Tuple[str, Dict[str, bytes]]:
     file_obj = io.BytesIO(binary)
     # Open tarfile
     with tarfile.open(mode="r", fileobj=file_obj) as tar:
-        archive_dict = dict()  # Dict[str, Optional[bytes]]
+        archive_dict: Dict[str, bytes] = {}
         # Iterate over every member
         for item in tar.getnames():
             tar_file = tar.extractfile(item)
-            if tar_file:
-                archive_dict[item] = tar_file.read()
-            else:
-                archive_dict[item] = b""
+            archive_dict[item] = tar_file.read() if tar_file else b""
         return "tar", archive_dict
 
 

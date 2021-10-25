@@ -122,11 +122,11 @@ class Account(Entity):
             return ""
         name = self["Name"]
         if "NTDomain" in self and self.NTDomain:
-            return "{}\\{}".format(self.NTDomain, name)
+            return f"{self.NTDomain}\\{name}"
         if "UPNSuffix" in self and self.UPNSuffix:
-            return "{}@{}".format(name, self.UPNSuffix)
+            return f"{name}@{self.UPNSuffix}"
         if "Host" in self and self.Host:
-            return "{}\\{}".format(self.Host.HostName, name)
+            return f"{self.Host.HostName}\\{name}"
         return name
 
     def _create_from_event(self, src_event, role):

@@ -127,9 +127,9 @@ def convert_to_ip_entities(  # noqa: MC0001
 
 @export  # noqa: MC0001
 # pylint: disable=too-many-return-statements, invalid-name
-def get_ip_type(ip: str = None, ip_str: str = None) -> str:
+def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
     """
-    Validate value is an IP address and deteremine IPType category.
+    Validate value is an IP address and determine IPType category.
 
     (IPAddress category is e.g. Private/Public/Multicast).
 

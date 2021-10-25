@@ -73,7 +73,8 @@ def test_geoiplite_download(tmp_path):
         # that filter through to this test)
         check.is_false(
             any(
-                str(warn.message).startswith("GeoIpLookup:")
+                isinstance(warn.message, str)
+                and warn.message.startswith("GeoIpLookup:")
                 for warn in warning_record.list
             )
         )
@@ -93,8 +94,8 @@ def test_geoiplite_lookup():
         ip_location = GeoLiteLookup()
 
         loc_result, ip_entities = ip_location.lookup_ip(ip_addr_list=ips)
-        check.equal(len(ip_entities), 4)
-        check.equal(len(loc_result), 4)
+        check.equal(len(ip_entities), len(ips))
+        check.equal(len(loc_result), len(ips))
         for ip_entity in ip_entities:
             check.is_not_none(ip_entity.Location)
 
@@ -107,7 +108,7 @@ def test_ipstack_lookup():
     with custom_mp_config(_MP_CONFIG_PATH):
         ip_location = IPStackLookup()
         loc_result, ip_entities = ip_location.lookup_ip(ip_addr_list=ips)
-        check.equal(len(ip_entities), 4)
-        check.equal(len(loc_result), 4)
+        check.equal(len(ip_entities), len(ips))
+        check.equal(len(loc_result), len(ips))
         for ip_entity in ip_entities:
             check.is_not_none(ip_entity.Location)
