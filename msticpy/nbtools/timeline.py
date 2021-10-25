@@ -229,7 +229,7 @@ _TL_VALUE_KWARGS = ["kind", "y", "x"]
 
 # pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
-def display_timeline_values(
+def display_timeline_values(  # noqa: C901, MC0001
     data: pd.DataFrame,
     value_col: str = None,
     time_column: str = "TimeGenerated",

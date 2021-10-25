@@ -1,0 +1,297 @@
+# Variable 'keys.ipstack_auth' was defined in the Variables tab
+# Variable 'keys.maxmind_auth' was defined in the Variables tab
+# Variable 'PIP_CACHE_DIR' was defined in the Variables tab
+# Variable 'python.version' was defined in the Variables tab
+# Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location
+# Multi-job configuration must be converted to matrix strategy: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+trigger:
+  branches:
+    include:
+    - main
+  batch: True
+pr:
+  branches:
+    include:
+    - main
+schedules:
+- cron: 0 4 * * 1
+  branches:
+    include:
+    - main
+  always: true
+name: $(date:yyyyMMdd)$(rev:.r)
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: main
+stages:
+- stage: PythonTests
+  displayName: Python build and tests
+  variables:
+    # This is run explicity so does not need to be auto-injected
+    skipComponentGovernanceDetection: true
+  jobs:
+  - job: InstallAndTestPackage
+    strategy:
+      matrix:
+        linux:
+          imageName: "ubuntu-latest"
+          python.version: '3.6'
+        mac:
+          imageName: "macos-latest"
+          python.version: '3.8'
+        windows-py36:
+          imageName: "windows-latest"
+          python.version: '3.6'
+        linux-py38:
+          imageName: "ubuntu-latest"
+          python.version: '3.8'
+      maxParallel: 4
+    pool:
+      vmImage: $(imageName)
+    steps:
+    # Add an alias for Windows python=>python3
+    - script: alias python='python3' pip='pip3'
+      condition: in(variables['imageName'], 'ubuntu-latest', 'macos-latest')
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+    - task: Cache@2
+      displayName: Cache pip packages
+      continueOnError: True
+      inputs:
+        key: python | "$(Agent.OS)"
+        path: $(PIP_CACHE_DIR)
+        restoreKeys: python
+    - script: |
+        python -m pip install --upgrade pip wheel setuptools
+        python -m pip install -r requirements-all.txt
+        python -m pip install -e .
+      displayName: 'Install package and dependencies'
+    - script: |
+        python -m pip install --upgrade Pygments>=2.3.1 setuptools>=41.0.1 docutils>=0.14 mock>=1.0.1 pillow==5.4.1 alabaster^>=0.7,^<0.8,!=0.7.5
+        python -m pip install --upgrade commonmark==0.8.1 recommonmark==0.5.0 sphinx^<2 sphinx-rtd-theme^<0.5 readthedocs-sphinx-ext^<1.1
+        make html
+      workingDirectory: docs
+      condition: eq(variables.imageName, 'windows-latest')
+      displayName: 'Sphinx Read the Docs build'
+    - script: |
+        echo Using $MSTICPYCONFIG or %MSTICPYCONFIG%
+        python -m pip install --upgrade pytest pytest-azurepipelines
+        python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
+        python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
+        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml --cov=msticpy --cov-report=xml
+      displayName: pytest
+      env:
+        MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
+        MAXMIND_AUTH: $(keys.maxmind_auth)
+        IPSTACK_AUTH: $(keys.ipstack_auth)
+        MSTICPY_TEST_NOSKIP: 1
+      condition: succeededOrFailed()
+      continueOnError: true
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFiles: '**/*-results.xml'
+        testRunTitle: 'Python $(python.version)'
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage'
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/htmlcov'
+- stage: PythonLinters
+  displayName: Python linters and security checkers
+  dependsOn:
+  - PythonTests
+  condition: succeeded('PythonTests')
+  variables:
+    # This is run explicitly, so does not need to be auto-injected
+    skipComponentGovernanceDetection: true
+  jobs:
+    - job: PythonLintersJob
+      pool:
+        vmImage: windows-latest
+      variables:
+        python.version: '3.6'
+      steps:
+      - task: Cache@2
+        displayName: Cache pip packages
+        continueOnError: True
+        inputs:
+          key: python | "$(Agent.OS)"
+          path: $(PIP_CACHE_DIR)
+          restoreKeys: python
+      - script: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install -r requirements-all.txt
+          python -m pip install -e .
+        displayName: 'Install package and dependencies'
+      - script: |
+          python -m pip install --upgrade pylint pylint_junit
+          pylint msticpy -j 0 --disable=bad-continuation,duplicate-code --disable=E1135,E1101,E1133 --output-format=pylint_junit.JUnitReporter
+        displayName: Pylint
+        continueOnError: true
+        condition: succeededOrFailed()
+      - script: |
+          python -m pip install --upgrade black
+          black -t py36 --diff --check --exclude venv .
+        displayName: Black
+        continueOnError: true
+        condition: succeededOrFailed()
+      - script: |
+          python -m pip install --upgrade bandit
+          bandit -x tests -r -s B303,B404,B603,B607 msticpy
+        displayName: bandit
+        continueOnError: true
+        condition: succeededOrFailed()
+      - script: |
+          python -m pip install --upgrade flake8
+          flake8 --max-line-length=90 --exclude=tests* . --ignore=E501,W503 --jobs=auto
+        displayName: flake8
+        continueOnError: true
+        condition: succeededOrFailed()
+      - script: |
+          python -m pip install mypy lxml types-attrs
+          mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-results.xml msticpy
+        displayName: mypy
+        continueOnError: true
+        condition: succeededOrFailed()
+        env:
+          tools_dir: ${AGENT_TOOLSDIRECTORY}
+      - script: |
+          python -m pip install prospector[with_pyroma]
+          prospector --ignore-paths tests --without-tool pylint
+        displayName: prospector
+        continueOnError: true
+        condition: succeededOrFailed()
+        env:
+          tools_dir: ${AGENT_TOOLSDIRECTORY}
+      - task: PublishTestResults@2
+        displayName: 'Publish Test Results'
+        inputs:
+          testResultsFiles: '**/*-results.xml'
+          testRunTitle: 'Python $(python.version) $(variables.imageName)'
+- stage: SecurityChecks
+  # Pipeline
+  displayName: Azure pipeline, security and component governance tools
+  dependsOn:
+  - PythonTests
+  - PythonLinters
+  variables:
+    # This is run explicitly, so does not need to be auto-injected
+    skipComponentGovernanceDetection: true
+  jobs:
+  - job: SecurityTests
+    # Credscan must be run on Windows
+    pool:
+      vmImage: windows-latest
+    variables:
+      python.version: '$(python.version)'
+    steps:
+    - task: CredScan@2
+      displayName: 'Run CredScan'
+      inputs:
+        toolMajorVersion: V2
+        debugMode: false
+        suppressionsFile: $(Build.SourcesDirectory)\.ci_config\credscan.json
+      continueOnError: true
+      condition: succeededOrFailed()
+    - task: AutoApplicability@1
+      inputs:
+        ExternalRelease: true
+      displayName: 'Run AutoApplicability'
+    - task: PoliCheck@1
+      displayName: 'Run PoliCheck'
+      inputs:
+        SOMEnabled: true
+        optionsUEPATH: $(Build.SourcesDirectory)\.ci_config\UserExclusion.xml
+    - task: VulnerabilityAssessment@0
+      displayName: 'Run Vulnerability Assessment'
+    - task: ComponentGovernanceComponentDetection@0
+      inputs:
+        scanType: 'Register'
+        verbosity: 'Verbose'
+        alertWarningLevel: 'High'
+      displayName: 'Component Detection'
+    - task: AntiMalware@3
+      inputs:
+        InputType: 'Basic'
+        ScanType: 'CustomScan'
+        FileDirPath: '$(Build.StagingDirectory)'
+        EnableServices: true
+        SupportLogOnError: false
+        TreatSignatureUpdateFailureAs: 'Warning'
+        SignatureFreshness: 'UpToDate'
+        TreatStaleSignatureAs: 'Error'
+      continueOnError: true
+      condition: succeededOrFailed()
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
+      displayName: 'Create Security Analysis Report'
+      inputs:
+        CredScan: true
+        PoliCheck: true
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+      displayName: 'Publish Security Analysis Logs'
+      inputs:
+        AllTools: false
+        AntiMalware: true
+        APIScan: false
+        BinSkim: false
+        CodesignValidation: false
+        FortifySCA: false
+        FxCop: false
+        ModernCop: false
+        MSRD: false
+        RoslynAnalyzers: false
+        SDLNativeRules: false
+        Semmle: false
+        TSLint: false
+        WebScout: false
+    - task: notice@0
+      displayName: NOTICE File Generator
+    - task: PostAnalysis@1
+      displayName: Post Analysis
+      inputs:
+        CredScan: true
+        PoliCheck: true
+    - task: dependency-check-build-task@5
+      displayName: 'OWASP Dependency Check'
+      inputs:
+        projectName: msticpy
+        scanPath: '$(Build.SourcesDirectory)'
+        format: HTML,JUNIT
+        suppressionPath: '$(Build.SourcesDirectory)'
+      continueOnError: true
+      condition: succeededOrFailed()
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFiles: '**/*-results.xml'
+        testRunTitle: 'Python $(python.version)'
+- stage: CreatePythonPackage
+  displayName: Create msticpy distribution package and publish msticpy artifact
+  variables:
+    # This is run explicitly so does not need to be auto-injected
+    skipComponentGovernanceDetection: true
+  dependsOn:
+  - SecurityChecks
+  condition: succeeded('SecurityChecks')
+  jobs:
+  - job: CreateDistPackage
+    pool:
+      vmImage: windows-latest
+    variables:
+      python.version: '$(python.version)'
+    steps:
+    - script: 'pip install --upgrade setuptools wheel'
+      displayName: 'Install setuptools'
+    - script: 'python setup.py sdist bdist_wheel'
+      displayName: 'Build sdist and wheel'
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: msticpy'
+      inputs:
+        PathtoPublish: dist
+        ArtifactName: msticpy

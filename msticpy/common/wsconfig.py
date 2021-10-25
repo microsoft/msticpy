@@ -230,7 +230,7 @@ class WorkspaceConfig:
         if not file_path:
             return {}
         try:
-            with open(file_path) as json_file:
+            with open(file_path, "r", encoding="utf-8") as json_file:
                 if json_file:
                     return json.load(json_file)
         except json.JSONDecodeError:
