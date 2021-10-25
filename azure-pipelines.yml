@@ -40,7 +40,7 @@ stages:
           python.version: '3.6'
         mac:
           imageName: "macos-latest"
-          python.version: '3.6'
+          python.version: '3.8'
         windows-py36:
           imageName: "windows-latest"
           python.version: '3.6'
