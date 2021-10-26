@@ -26,6 +26,7 @@ from .timeline import (
     _set_axes_and_grids,
     _get_tick_formatter,
     _plot_ref_events,
+    check_df_columns,
 )
 
 # pylint: disable=unused-import
@@ -38,6 +39,11 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_TIMELINE_HELP = (
+    "https://msticpy.readthedocs.io/en/latest/msticpy.nbtools.html"
+    "#msticpy.nbtools.timeline_duration.{plot_type}"
+)
 
 
 @attr.s(auto_attribs=True)
@@ -136,6 +142,12 @@ def display_timeline_duration(
 
     group_by = [group_by] if isinstance(group_by, str) else list(group_by)
     end_time_column = end_time_column or time_column
+    check_df_columns(
+        data,
+        group_by + [end_time_column, time_column],
+        _TIMELINE_HELP,
+        "display_timeline_duration",
+    )
     grouped_data = _group_durations(data, group_by, time_column, end_time_column)
     min_time = grouped_data["start_time"].min()
     max_time = grouped_data["end_time"].max()

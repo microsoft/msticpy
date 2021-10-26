@@ -32,6 +32,7 @@ from bokeh.plotting import figure, reset_output
 from bokeh.layouts import column
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyParameterError
 from ..common.utility import export, check_kwargs
 
 # pylint: disable=unused-import
@@ -76,6 +77,11 @@ _TL_KWARGS = [
     "xgrid",
     "hide",
 ]
+
+_TIMELINE_HELP = (
+    "https://msticpy.readthedocs.io/en/latest/msticpy.nbtools.html"
+    "#msticpy.nbtools.timeline.{plot_type}"
+)
 
 
 @export
@@ -340,6 +346,9 @@ def display_timeline_values(  # noqa: C901, MC0001
         source_columns = [value_col]
     if value_col not in source_columns:
         source_columns.append(value_col)
+    check_df_columns(
+        data, source_columns + [time_column], _TIMELINE_HELP, "display_timeline_values"
+    )
     graph_df, group_count_df, tool_tip_columns, series_count = _create_data_grouping(
         data, source_columns, time_column, group_by, color
     )
@@ -671,6 +680,38 @@ def _plot_series(data, plot, legend_pos):
             label_text_font_size="8pt",
         )
         plot.add_layout(ext_legend, legend_pos)
+
+
+def check_df_columns(
+    data: pd.DataFrame, req_columns: List[str], help_uri: str, plot_type: str
+):
+    """
+    Check that specified columns are in the DataFrame.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        [description]
+    req_columns : List[str]
+        [description]
+    help_uri : str
+        [description]
+    plot_type : str
+        [description]
+
+    Raises
+    ------
+    MsticpyParameterError
+        If one or more columns not found in `data`
+
+    """
+    missing_cols = set(req_columns) - set(data.columns)
+    if missing_cols:
+        raise MsticpyParameterError(
+            title="Columns not found in DataFrame",
+            help_uri=help_uri.format(plot_type=plot_type),
+            parameter=missing_cols,
+        )
 
 
 def _set_axes_and_grids(data, plot, show_yaxis, ygrid, xgrid):
