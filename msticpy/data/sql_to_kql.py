@@ -461,8 +461,8 @@ def _single_quote_strings(sql: str) -> str:
 
 def _remap_kewords(sql: str) -> str:
     """Replace keywords in source SQL statement."""
-    for repl_kw in REMAPPED_KEYWORDS:
-        sql = re.sub(f"\\s{repl_kw}\\s", f" {REMAPPED_KEYWORDS[repl_kw]} ", sql)
+    for repl_kw, mapped_kw in REMAPPED_KEYWORDS.items():
+        sql = re.sub(f"\\s{repl_kw}\\s", f" {mapped_kw} ", sql)
     return sql
 
 
@@ -543,7 +543,7 @@ def _parse_join(join_expr) -> Optional[str]:
     if "name" in join_expr[join_type]:
         table_name = join_expr[join_type]["name"]
     else:
-        table_name = p_table_expr.split(" ")[0].strip()
+        table_name = p_table_expr.split(" ", maxsplit=1)[0].strip()
     on_expr = _parse_expression(join_expr["on"])
     on_expr = _rewrite_table_refs(on_expr, table_name)
     _db_print(table_expr, kql_join_type, p_table_expr)

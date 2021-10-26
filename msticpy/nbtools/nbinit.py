@@ -508,7 +508,7 @@ def _populate_config_to_mp_config(mp_path, config_json):
     mssg = f"Created '{mp_path}'' with Azure Sentinel settings."
     if Path(mp_path).exists():
         # If there is an existing file read it in
-        mp_config_text = Path(mp_path).read_text()
+        mp_config_text = Path(mp_path).read_text(encoding="utf-8")
         mp_config_settings = yaml.safe_load(mp_config_text)
         # update exist settings with the AzSent settings from config.json
         mp_config_settings.update(mp_config_convert.settings)

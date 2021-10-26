@@ -262,9 +262,8 @@ class VTLookup:
             self._lookup_ioc_type(input_df, ioc_type, src_col, src_idx_col)
 
         self._print_status(
-            "Submission complete. {} responses from {} input rows".format(
-                len(self.results), len(data)
-            ),
+            f"Submission complete. {len(self.results)} "
+            f"responses from {len(data)} input rows",
             2,
         )
 
@@ -307,13 +306,12 @@ class VTLookup:
 
         observable, status = preprocess_observable(observable, ioc_type)
         if observable is None:
-            raise SyntaxError("{} for observable value {}".format(status, observable))
+            raise SyntaxError(f"{status} for observable value {observable}")
 
         if ioc_type not in self._VT_TYPE_MAP:
             raise LookupError(
-                "IoC Type {} not recognized. Valid types are [{}]".format(
-                    ioc_type, ", ".join(self.supported_ioc_types)
-                )
+                f"IoC Type {ioc_type} not recognized.",
+                f"Valid types are [{', '.join(self.supported_ioc_types)}]",
             )
 
         if self._VT_TYPE_MAP[ioc_type] not in self._VT_API_TYPES:
@@ -321,9 +319,8 @@ class VTLookup:
                 k for k, val in self.ioc_vt_type_mapping.items() if val is not None
             }
             err = (
-                "IoC Type {} is recognized by VirusTotal. Valid types are [{}]".format(
-                    ioc_type, ", ".join(vt_types)
-                )
+                f"IoC Type {ioc_type} is recognized by VirusTotal.",
+                f"Valid types are [{'', ''.join(vt_types)}]",
             )
             raise LookupError(err)
 
@@ -427,20 +424,17 @@ class VTLookup:
 
                 if status_code != 200:
                     # Print status messages and add failure cases to results
-                    status = "Failed submission: http error {}".format(status_code)
+                    status = f"Failed submission: http error {status_code}"
                     for failed_obs in obs_batch:
                         self._add_invalid_input_result(
                             failed_obs, ioc_type, status, source_row_index[failed_obs]
                         )
                         self._print_status(
-                            'Error in response submitting observables: "{}", type "{}" '
-                            "http status is {}. Response: {} (Source index {})".format(
-                                obs_submit,
-                                ioc_type,
-                                status_code,
-                                results,
-                                source_row_index[failed_obs],
-                            ),
+                            "Error in response submitting observables: "
+                            f"'{obs_submit}', type '{ioc_type}'"
+                            f"http status is {status_code}. "
+                            f"Response: {results} "
+                            f"(Source index {source_row_index[failed_obs]}",
                             1,
                         )
                 else:
@@ -655,7 +649,7 @@ class VTLookup:
         if observable is None or observable.strip() is None:
             status = "Failed: Empty or missing observable value"
             self._add_invalid_input_result(observable, ioc_type, status, idx)
-            self._print_status(status + " (Source index {})".format(idx), 1)
+            self._print_status(f"{status} (Source index {idx})", 1)
             return SanitizedObservable(None, status)
 
         # Check that observable is of the correct format for this type
@@ -748,7 +742,7 @@ class VTLookup:
             )
             self.results = new_results
 
-            return DuplicateStatus(True, "Duplicates of {}".format(original_indices))
+            return DuplicateStatus(True, f"Duplicates of {original_indices}")
 
         return DuplicateStatus(False, "ok")
 
@@ -822,7 +816,7 @@ class VTLookup:
             :param api_type: The IoC type
         """
         if api_type not in cls._VT_API_TYPES:
-            raise LookupError('Unknown api type "{}"'.format(api_type))
+            raise LookupError(f"Unknown api type '{api_type}'")
         return cls._VT_API.format(type=api_type)
 
     @classmethod

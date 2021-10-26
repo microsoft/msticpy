@@ -111,20 +111,27 @@ class Account(Entity):
         return self.qualified_name
 
     @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Name or self.DisplayName or "Unknown Account"
+
+    @property
     def qualified_name(self) -> str:
         """Windows qualified account name."""
         if "Name" not in self:
             return ""
         name = self["Name"]
         if "NTDomain" in self and self.NTDomain:
-            return "{}\\{}".format(self.NTDomain, name)
+            return f"{self.NTDomain}\\{name}"
         if "UPNSuffix" in self and self.UPNSuffix:
-            return "{}@{}".format(name, self.UPNSuffix)
+            return f"{name}@{self.UPNSuffix}"
         if "Host" in self and self.Host:
-            return "{}\\{}".format(self.Host.HostName, name)
+            return f"{self.Host.HostName}\\{name}"
         return name
 
     def _create_from_event(self, src_event, role):
+        if "Name" in src_event:
+            self.Name = src_event["Name"]
         if role == "subject" and "SubjectUserName" in src_event:
             self.Name = src_event["SubjectUserName"]
             self.NTDomain = (
@@ -155,12 +162,23 @@ class Account(Entity):
         self.AadTenantId = (
             src_event["AadTenantId"] if "AadTenantId" in src_event else None
         )
+        self.Sid = src_event["Sid"] if "Sid" in src_event else None
+        self.NTDomain = src_event["NtDomain"] if "NtDomain" in src_event else None
         self.AadUserId = src_event["AadUserId"] if "AadUserId" in src_event else None
         self.PUID = src_event["PUID"] if "PUID" in src_event else None
-        self.DisplayName = (
-            src_event["DisplayName"] if "DisplayName" in src_event else None
-        )
-        self.UPNSuffix = src_event["UPNSuffix"] if "UPNSuffix" in src_event else None
+        if "DisplayName" in src_event:
+            self.DisplayName = src_event["DisplayName"]
+        elif "AccountName" in src_event:
+            self.DisplayName = src_event["AccountName"]
+        else:
+            self.DisplayName = None
+
+        if "UPNSuffix" in src_event:
+            self.UPNSuffix = src_event["UPNSuffix"]
+        elif "UpnSuffix" in src_event:
+            self.UPNSuffix = src_event["UpnSuffix"]
+        else:
+            self.UPNSuffix = None
 
     _entity_schema = {
         # Name (type System.String)
@@ -187,4 +205,7 @@ class Account(Entity):
         # DisplayName (type System.String)
         "DisplayName": None,
         "ObjectGuid": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

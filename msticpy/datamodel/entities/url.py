@@ -27,25 +27,59 @@ class Url(Entity):
     ----------
     Url : str
         The URL
+    DetonationVerdict : str
+        The verdict of the URL detection
 
     """
 
     ID_PROPERTIES = ["Url"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
-            :param src_entity: instantiate entity using properties of src entity
-            :param kwargs: key-value pair representation of entity
+        Parameters
+        ----------
+        src_entity : Mapping[str, Any], optional
+            Create entity from existing entity or
+            other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
+            (the default is None)
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Supply the entity properties as a set of
+            kw arguments.
+
         """
         self.Url: Optional[str] = None
+        self.DetonationVerdict: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.Url = src_event["Url"]
+        if "AdditionalData" in src_event:
+            self.DetonationVerdict = src_event["AdditionalData"]["DetonationVerdict"]
 
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
         return self.Url or super().description_str
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Url or self.__class__.__name__
 
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
@@ -66,4 +100,8 @@ class Url(Entity):
     _entity_schema: Dict[str, Any] = {
         # Url (type System.String)
         "Url": None,
+        "DetonationVerdict": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

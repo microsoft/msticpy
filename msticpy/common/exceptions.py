@@ -399,10 +399,40 @@ class MsticpyImportExtraError(MsticpyUserError, ImportError):
 
 
 class MsticpyAzureConnectionError(MsticpyUserError):
-    """Exception class for KqlConnection errors."""
+    """Exception class for Azure Connection errors."""
 
     DEF_HELP_URI = (
         "Connecting to Azure Sentinel",
         "https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html"
         + "#instantiating-and-connecting-with-an-azure-data-connector",
     )
+
+
+class MsticpyParameterError(MsticpyUserError):
+    """Exception class for missing/incorrect parameters."""
+
+    DEF_HELP_URI = ("MSTICPy documentation", "https://msticpy.readthedocs.io")
+
+    def __init__(
+        self, *args, help_uri: Union[Tuple[str, str], str, None] = None, **kwargs
+    ):
+        """
+        Create parameter exception.
+
+        Parameters
+        ----------
+        help_uri : Union[Tuple[str, str], str, None], optional
+            Override the default help URI.
+        parameters : Union[str, List[str]
+            The name of the bad parameter(s).
+
+        """
+        parameter = kwargs.pop("parameter", None)
+        if not parameter:
+            raise AttributeError("Keyword argument 'parameter' must be supplied")
+        mssg = "One or more parameters were incorrect."
+        if isinstance(parameter, str):
+            parameter = [parameter]
+        add_args = [*args, mssg, ", ".join(parameter)]
+        uri = help_uri or self.DEF_HELP_URI
+        super().__init__(*add_args, help_uri=uri, **kwargs)

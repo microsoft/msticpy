@@ -52,5 +52,8 @@ def test_pivot_browser(_create_pivot):
     browser._btn["copy"].click()
 
     if _ENABLE_CLIP:
-        cb_content = pyperclip.paste()
-        check.equal("entities.Dns.util.dns_components()", cb_content)
+        try:
+            cb_content = pyperclip.paste()
+            check.equal("entities.Dns.util.dns_components()", cb_content)
+        except pyperclip.PyperclipException:
+            print("Pyperclip not operational on this OS.")

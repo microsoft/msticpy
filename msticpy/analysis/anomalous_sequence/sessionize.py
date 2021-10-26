@@ -87,10 +87,8 @@ def sessionize_data(
     ]
 
     # calculate some additional columns
-    agg_df["duration"] = (
-        agg_df["{}_max".format(time_col)] - agg_df["{}_min".format(time_col)]
-    )
-    agg_df["number_events"] = agg_df["{}_list".format(event_col)].apply(len)
+    agg_df["duration"] = agg_df[f"{time_col}_max"] - agg_df[f"{time_col}_min"]
+    agg_df["number_events"] = agg_df[f"{event_col}_list"].apply(len)
 
     agg_df = agg_df.drop("session_ind", axis=1)
     if "index" in agg_df.columns:

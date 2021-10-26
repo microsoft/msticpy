@@ -16,6 +16,7 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from ..unit_test_lib import TEST_DATA_PATH
 
+from msticpy.common.exceptions import MsticpyParameterError
 from msticpy.nbtools.timeline import display_timeline, display_timeline_values
 from msticpy.nbtools.timeline_duration import display_timeline_duration
 
@@ -103,7 +104,7 @@ TIMELINE_COMMON_ARGS: List[Tuple[Dict[str, List[Any]], List[Any]]] = [
 TL_SRC_COLS = [
     (
         {"source_columns": [None, ["Computer", "NewProcessName"], ["OtherCol"]]},
-        [True, True, KeyError],
+        [True, True, (KeyError, MsticpyParameterError)],
     )
 ]
 
