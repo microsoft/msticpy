@@ -31,7 +31,7 @@ def test_geoip_notebook():
     abs_path = Path(_NB_FOLDER).absolute()
 
     if not os.environ.get("MSTICPY_TEST_IPSTACK"):
-        os.environ["MSTICPY_SKIP_IPSTACK_TEST"] = 1
+        os.environ["MSTICPY_SKIP_IPSTACK_TEST"] = "1"
     with open(nb_path, "rb") as f:
         nb_bytes = f.read()
     nb_text = nb_bytes.decode("utf-8")
