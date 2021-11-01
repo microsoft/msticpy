@@ -26,9 +26,12 @@ _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_geoip_notebook():
+    """Test"""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
 
+    if not os.environ.get("MSTICPY_TEST_IPSTACK"):
+        os.environ["MSTICPY_SKIP_IPSTACK_TEST"] = 1
     with open(nb_path, "rb") as f:
         nb_bytes = f.read()
     nb_text = nb_bytes.decode("utf-8")
@@ -47,6 +50,9 @@ def test_geoip_notebook():
         with open(nb_err, mode="w", encoding="utf-8") as f:
             nbformat.write(nb, f)
         raise
+
+    if os.environ.get("MSTICPY_SKIP_IPSTACK_TEST"):
+        del os.environ["MSTICPY_SKIP_IPSTACK_TEST"]
 
 
 @pytest.mark.skipif(
@@ -100,6 +106,9 @@ def test_geoiplite_lookup():
             check.is_not_none(ip_entity.Location)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_IPSTACK"), reason="Skipped ip stack tests."
+)
 def test_ipstack_lookup():
     """Test IPStack lookups."""
     socket_info = socket.getaddrinfo("pypi.org", 0, 0, 0, 0)
