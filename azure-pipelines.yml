@@ -71,7 +71,7 @@ stages:
         python -m pip install -e .
       displayName: 'Install package and dependencies'
     - script: |
-        python -m pip install -r docs/requirements.txt
+        python -m pip install -r $(Build.SourcesDirectory)/docs/requirements.txt
         make html
       workingDirectory: docs
       condition: eq(variables.imageName, 'windows-latest')
