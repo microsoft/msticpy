@@ -81,7 +81,7 @@ class QueryProvider:
         if driver is None:
             driver_class = import_driver(data_environment)
             if issubclass(driver_class, DriverBase):
-                driver = driver_class(**kwargs)  # type: ignore
+                driver = driver_class(data_environment=data_environment, **kwargs)
             else:
                 raise LookupError(
                     "Could not find suitable data provider for", f" {self.environment}"

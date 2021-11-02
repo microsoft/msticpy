@@ -117,9 +117,9 @@ sources:
     args:
       query: '{path}?$filter=createdDateTime ge {start}
         and createdDateTime le {end}
-        and (fileStates/any(d:tolower(fileHash/hashValue) eq tolower("{file_hash}")
-        or fileStates/any(d:tolower(name) eq tolower("{file_path}")
-        or (file_name neq "" and fileStates/any(d:endswith(tolower("{file_name}"), tolower(name)))))
+        and (fileStates/any(d:tolower(d/fileHash/hashValue) eq tolower("{file_hash}")
+        or fileStates/any(d:tolower(d/name) eq tolower("{file_path}")
+        or (file_name neq "" and fileStates/any(d:endswith(tolower("{file_name}"), tolower(d/name)))))
         {add_query_items}'
       uri: None
     parameters:
@@ -146,7 +146,7 @@ sources:
         or hostStates/any(d:d/publicIpAddress eq "{ip_address}")
         or networkConnections/any(d:d/destinationAddress eq "{ip_address}")
         or networkConnections/any(d:d/sourceAddress eq "{ip_address}")
-        or fileStates/any(d:tolower(fileHash/hashValue) eq tolower("{file_hash}")
+        or fileStates/any(d:tolower(d/fileHash/hashValue) eq tolower("{file_hash}")
         or fileStates/any(d:tolower(name) eq tolower("{file_name}")
         or hostStates/any(d:tolower(d/netBiosName) eq tolower("{host_name}")
         or hostStates/any(d:startswith(tolower("{host_name}"), tolower(d/fqdn)))

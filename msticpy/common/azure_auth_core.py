@@ -27,7 +27,12 @@ from .._version import VERSION
 from .cred_wrapper import CredentialWrapper
 from .exceptions import MsticpyAzureConnectionError
 from ..common import pkg_config as config
-from .cloud_mappings import get_all_endpoints, get_all_suffixes
+from .cloud_mappings import (
+    get_all_endpoints,
+    get_all_suffixes,
+    CLOUD_ALIASES,
+    CLOUD_MAPPING,
+)
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -79,6 +84,22 @@ class AzureCloudConfig:
             )
         except KeyError:
             pass  # no Azure section in config
+
+    @property
+    def cloud_names(self) -> List[str]:
+        """Return a list of current cloud names."""
+        return list(CLOUD_MAPPING.keys())
+
+    @staticmethod
+    def resolve_cloud_alias(alias) -> Optional[str]:
+        """Return match of cloud alias or name."""
+        alias_cf = alias.casefold()
+        aliases = {alias.casefold(): cloud for alias, cloud in CLOUD_ALIASES.items()}
+        if alias_cf in aliases:
+            return aliases[alias_cf]
+        if alias_cf in aliases.values():
+            return alias_cf
+        return None
 
     @property
     def endpoints(self) -> azure_cloud.CloudEndpoints:

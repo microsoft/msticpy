@@ -16,7 +16,8 @@ from adal.adal_error import AdalError
 from Kqlmagic.kql_response import KqlError
 from Kqlmagic.kql_engine import KqlEngineError
 from Kqlmagic.my_aad_helper import AuthenticationError
-from Kqlmagic import kql as kql_exec
+
+# from Kqlmagic import kql as kql_exec
 
 from msticpy.data.drivers import kql_driver
 from msticpy.common.exceptions import (
@@ -35,7 +36,7 @@ GET_IPYTHON_PATCH = KqlDriver.__module__ + ".get_ipython"
 
 
 # pylint: disable=too-many-branches, too-many-return-statements
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use, redefined-outer-name
 
 
 class KqlResultTest:
@@ -83,6 +84,7 @@ class _MockIPython:
 
 
 def kql_exec(content):
+    """Mock kql_exec function."""
     if "--config" in content:
         if "=" in content:
             conf_item, conf_value = content.replace("--config", "").strip().split("=")
@@ -249,7 +251,7 @@ def test_kql_query_not_connected(get_ipython):
 
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         kql_driver.query("test")
-    check.is_in("not connected to a workspace.", mp_ex.value.args)
+    check.is_in("not connected to a Workspace", mp_ex.value.args)
     check.is_false(kql_driver.connected)
 
 
