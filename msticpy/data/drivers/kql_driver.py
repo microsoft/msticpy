@@ -116,7 +116,6 @@ class KqlDriver(DriverBase):
         mp_az_auth : Union[bool, str, list, None], optional
             Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
             Values can be:
-
             - True or "default": use the settings in msticpyconfig.yaml 'Azure' section
             - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
             - auth_methods: list of acceptable auth methods from ('msi', 'cli',
@@ -409,7 +408,7 @@ class KqlDriver(DriverBase):
         raise MsticpyKqlConnectionError(
             "Another exception was returned by the service",
             *ex.args,
-            f"Full exception:\n{str(ex)}",
+            f"Full exception:\n{ex}",
             title="connection failed",
         )
 

@@ -150,7 +150,7 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
 
     """
     if Path(config_file).is_file():
-        with open(config_file) as f_handle:
+        with open(config_file, "r", encoding="utf-8") as f_handle:
             # use safe_load instead of load
             try:
                 return yaml.safe_load(f_handle)
@@ -360,8 +360,11 @@ def _check_provider_settings(mp_config, section, key_provs):
         if "Args" not in p_setting:
             continue
         sec_args = p_setting.get("Args")
-        if not sec_args:
-            mp_errors.append(f"'{section}/{p_name}/{sec_args}' key has no settings.")
+        if not sec_args or not isinstance(sec_args, dict):
+            mp_errors.append(
+                f"'{section}/{p_name}/{sec_args}' key has no settings or "
+                + "is not a valid format."
+            )
             continue
         sec_path = f"{section}/{p_name}" if section else f"{p_name}"
         mp_errors.extend(

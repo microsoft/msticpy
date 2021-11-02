@@ -101,19 +101,12 @@ class Process(Entity):
 
     def _create_from_event(self, src_event, role):
         if role == "new":
-            self.ProcessId = (
-                src_event["NewProcessId"] if "NewProcessId" in src_event else None
-            )
-            self.CommandLine = (
-                src_event["CommandLine"] if "CommandLine" in src_event else None
-            )
+            self.ProcessId = src_event.get("NewProcessId")
+            self.CommandLine = src_event.get("CommandLine")
             if "TimeCreatedUtc" in src_event:
                 self.CreationTimeUtc = src_event["TimeCreatedUtc"]
             elif "TimeGenerated" in src_event:
                 self.CreationTimeUtc = src_event["TimeGenerated"]
-            self.ProcessId = (
-                src_event["NewProcessId"] if "NewProcessId" in src_event else None
-            )
             self.ImageFile = File(src_event=src_event, role="new")
             self.Account = Account(src_event=src_event, role="subject")
 
@@ -122,29 +115,19 @@ class Process(Entity):
                 self.ParentProcess = parent
 
             # Linux properties
-            self.success = src_event["success"] if "success" in src_event else None
-            self.audit_user = (
-                src_event["audit_user"] if "audit_user" in src_event else None
-            )
-            self.auid = src_event["auid"] if "auid" in src_event else None
-            self.group = src_event["group"] if "group" in src_event else None
-            self.gid = src_event["gid"] if "gid" in src_event else None
-            self.effective_user = (
-                src_event["effective_user"] if "effective_user" in src_event else None
-            )
-            self.euid = src_event["euid"] if "euid" in src_event else None
-            self.effective_group = (
-                src_event["effective_group"] if "effective_group" in src_event else None
-            )
-            self.egid = (
-                src_event["effective_group"] if "effective_group" in src_event else None
-            )
-            self.cwd = src_event["cwd"] if "cwd" in src_event else None
-            self.name = src_event["cwd"] if "cwd" in src_event else None
+            self.success = src_event.get("success")
+            self.audit_user = src_event.get("audit_user")
+            self.auid = src_event.get("auid")
+            self.group = src_event.get("group")
+            self.gid = src_event.get("gid")
+            self.effective_user = src_event.get("effective_user")
+            self.euid = src_event.get("euid")
+            self.effective_group = src_event.get("effective_group")
+            self.egid = src_event.get("effective_group")
+            self.cwd = src_event.get("cwd")
+            self.name = src_event.get("cwd")
         else:
-            self.ProcessId = (
-                src_event["ProcessId"] if "ProcessId" in src_event else None
-            )
+            self.ProcessId = src_event.get("ProcessId")
             self.ImageFile = File(src_event=src_event, role="parent")
 
     @property
@@ -156,7 +139,7 @@ class Process(Entity):
     @property
     def ProcessFilePath(self) -> Optional[str]:  # noqa: N802
         """Return the name of the process file path."""
-        file = self["ImageFile"]
+        file = self.ImageFile
         return file.FullPath if file else None
 
     @property
@@ -165,6 +148,13 @@ class Process(Entity):
         if self.ProcessFilePath:
             return f"{self.ProcessFilePath}: {self.CommandLine}"
         return self.__class__.__name__
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        if self.ImageFile:
+            return f"{self.ImageFile.name_str}[pid:{self.ProcessId}]"
+        return self.ImageFile.name_str if self.ImageFile else super().name_str
 
     _entity_schema = {
         # ProcessId (type System.String)
@@ -192,4 +182,7 @@ class Process(Entity):
         # Host (type Microsoft.Azure.Security.Detection
         # .AlertContracts.V3.Entities.HostLogonSession)
         "LogonSession": "HostLogonSession",
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

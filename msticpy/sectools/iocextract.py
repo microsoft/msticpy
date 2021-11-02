@@ -320,12 +320,11 @@ class IoCExtract:
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
 
         col_set = set(columns)
-        if not col_set <= set(data.columns):
+        if col_set > set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
-                "Source column(s) {} not found in supplied DataFrame".format(
-                    ", ".join(missing_cols)
-                )
+                f"Source column(s) {', '.join(missing_cols)} not found",
+                " in supplied DataFrame",
             )
 
         result_rows: List[pd.Series] = []
@@ -420,12 +419,11 @@ class IoCExtract:
         if isinstance(columns, str):
             columns = [columns]
         col_set = set(columns)
-        if not col_set <= set(data.columns):
+        if col_set > set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
             raise Exception(
-                "Source column(s) {} not found in supplied DataFrame".format(
-                    ", ".join(missing_cols)
-                )
+                f"Source column(s) {', '.join(missing_cols)} not found",
+                " in supplied DataFrame",
             )
 
         result_rows = []
@@ -484,15 +482,12 @@ class IoCExtract:
             val_type = ioc_type
         if val_type not in self._content_regex:
             raise KeyError(
-                "Unknown type {}. Valid types are: {}".format(
-                    ioc_type, list(self._content_regex.keys())
-                )
+                f"Unknown type {ioc_type}.",
+                f"Valid types are: {list(self._content_regex.keys())}",
             )
         rgx = self._content_regex[val_type]
         pattern_match = rgx.comp_regex.fullmatch(input_str)
-        validated = True
-        if val_type == "dns":
-            validated = self._validate_tld(input_str)
+        validated = self._validate_tld(input_str) if val_type == "dns" else True
         self._ignore_tld = ignore_tld_current
         return pattern_match and validated
 

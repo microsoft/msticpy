@@ -1,6 +1,24 @@
 ## For details of how to configure settings in this file, please
 ## see https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html
 ##
+## The definition for a leaf item is:
+##     type([options])
+##         type can be:
+##           "str" - text box
+##           "bool" - check box
+##           "int" - text box with numeric conversion
+##           "enum" - single select list
+##           "m_enum" - multi-select list
+##         options:
+##           required (bool): if the setting is required
+##           default (str): The default value e.g. True, a_value, ["one"; "two"]
+##             In the case of bool/str/int/enum this is a simple string with no quotes
+##             For m_enum it is a list of items (optionally quoted) separated by semi-colons
+##           format: uuid
+##             only uuid is supported
+##           options (list):
+##              A list of options for the list box, separated by ";" e.g.
+##              options=[one; two; three]
 definitions:
   # Azure Sentinel workspace definition
   workspace_defn: &workspace
@@ -30,7 +48,7 @@ AzureSentinel:
       <<: *workspace
 Azure:
   cloud: enum(required=False, options=[global; cn; usgov; de], default=global)
-  auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["cli", "interactive"])
+  auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["cli"; "interactive"])
 QueryDefinitions:
   # Add paths to folders containing custom query definitions here
   Custom: list(required=False)

@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-import warnings
 from datetime import datetime
 from functools import partial
 from itertools import tee
@@ -504,7 +503,7 @@ class QueryProvider:
         if not Path(config_path).is_absolute():
             config_path = str(Path(__file__).resolve().parent.joinpath(config_path))
         if not Path(config_path).is_dir():
-            warnings.warn(f"Custom query definitions path {config_path} not found")
+            print(f"Warning: Custom query definitions path {config_path} not found")
             return None
         return config_path
 
@@ -514,6 +513,6 @@ class QueryProvider:
         if not Path(config_path).is_absolute():
             config_path = str(Path(config_path).expanduser().resolve())
         if not Path(config_path).is_dir():
-            warnings.warn(f"Custom query definitions path {config_path} not found")
+            print(f"Warning: Custom query definitions path {config_path} not found")
             return None
         return config_path
