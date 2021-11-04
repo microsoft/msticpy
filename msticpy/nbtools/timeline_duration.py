@@ -26,6 +26,7 @@ from .timeline import (
     _set_axes_and_grids,
     _get_tick_formatter,
     _plot_ref_events,
+    check_df_columns,
 )
 
 # pylint: disable=unused-import
@@ -38,6 +39,11 @@ from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_TIMELINE_HELP = (
+    "https://msticpy.readthedocs.io/en/latest/msticpy.nbtools.html"
+    "#msticpy.nbtools.timeline_duration.{plot_type}"
+)
 
 
 @attr.s(auto_attribs=True)
@@ -57,6 +63,7 @@ class PlotParams:
     ref_events: Optional[pd.DataFrame] = None
     ref_col: Optional[str] = None
     ref_times: Optional[List[Tuple[datetime, str]]] = None
+    source_columns: List = []
 
     @classmethod
     def field_list(cls) -> List[str]:
@@ -135,6 +142,12 @@ def display_timeline_duration(
 
     group_by = [group_by] if isinstance(group_by, str) else list(group_by)
     end_time_column = end_time_column or time_column
+    check_df_columns(
+        data,
+        group_by + [end_time_column, time_column],
+        _TIMELINE_HELP,
+        "display_timeline_duration",
+    )
     grouped_data = _group_durations(data, group_by, time_column, end_time_column)
     min_time = grouped_data["start_time"].min()
     max_time = grouped_data["end_time"].max()
@@ -145,9 +158,11 @@ def display_timeline_duration(
     all_data = data.merge(grouped_data, on=group_by)
     all_data_src = ColumnDataSource(all_data)
 
-    tooltips, formatters = _create_tool_tips(
-        grouped_data, [*group_by, "start_time", "end_time"]
-    )
+    tool_tip_cols = [*group_by, "start_time", "end_time"]
+    if "source_columns" in kwargs:
+        tool_tip_cols += kwargs["source_columns"]
+
+    tooltips, formatters = _create_tool_tips(grouped_data, tool_tip_cols)
     hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     title = (
@@ -240,6 +255,10 @@ def _group_durations(
         start_time=pd.NamedAgg(time_column, "min"),
         end_time=pd.NamedAgg(end_time_column, "max"),
     )
+    # If we don't have an endtime for certain types just consider them to be single time events
+    for row in grouped_data.iterrows():
+        if pd.isnull(row[1]["end_time"]):
+            grouped_data.at[row[0], "end_time"] = row[1]["start_time"]
     grouped_data = grouped_data.reset_index()
     grouped_data.index.name = "Row"
     grouped_data = grouped_data.reset_index()

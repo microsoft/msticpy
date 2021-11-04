@@ -770,8 +770,8 @@ class AzureData:
             The subscription ID for the client to connect to, by default None
 
         """
+        client = _CLIENT_MAPPING[client_name]
         if getattr(self, client_name) is None:
-            client = _CLIENT_MAPPING[client_name]
             if sub_id is None:
                 setattr(
                     self,

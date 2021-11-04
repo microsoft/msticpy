@@ -498,24 +498,20 @@ def compute_likelihood_windows_in_session(
     list of likelihoods
 
     """
-    if use_start_end_tokens:
-        if start_token is None or end_token is None:
-            raise MsticpyException(
-                "start_token and end_token should not be set to None when "
-                "use_start_end_tokens is set to True"
-            )
+    if use_start_end_tokens and (start_token is None or end_token is None):
+        raise MsticpyException(
+            "start_token and end_token should not be set to None when "
+            "use_start_end_tokens is set to True"
+        )
 
     likelihoods = []
     sess = session.copy()
     if use_start_end_tokens and end_token:
-        sess += [Cmd(name=str(end_token), params=dict())]
+        sess += [Cmd(name=str(end_token), params={})]
     end = len(sess) - window_len
     for i in range(end + 1):
         window = sess[i : i + window_len]  # noqa E203
-        if i == 0:
-            use_start = use_start_end_tokens
-        else:
-            use_start = False
+        use_start = use_start_end_tokens if i == 0 else False
         lik = compute_likelihood_window(
             window=window,
             prior_probs=prior_probs,

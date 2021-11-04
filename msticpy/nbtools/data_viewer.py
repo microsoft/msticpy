@@ -483,7 +483,7 @@ class DataTableFilter:
                 f"Must have two operands for expression {expr}",
                 f"for operator {operator} and column {col}",
             )
-        return self.data[col].between(test_expr[0], test_expr[1], inclusive=True)
+        return self.data[col].between(test_expr[0], test_expr[1], inclusive="both")
 
     def _conv_expr_type(self, col: str, expr: str):
         """Convert string expression to required type."""

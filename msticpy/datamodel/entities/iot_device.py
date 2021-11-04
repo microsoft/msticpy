@@ -95,6 +95,11 @@ class IoTDevice(Entity):
     @property
     def description_str(self):
         """Return Entity Description."""
+        return f"{self.DeviceName} - {self.DeviceId}" or self.__class__.__name__
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
         return self.DeviceName or self.__class__.__name__
 
     _entity_schema = {
@@ -112,4 +117,7 @@ class IoTDevice(Entity):
         "MacAddress": None,
         "Protocols": None,
         "SerialNumber": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

@@ -61,6 +61,11 @@ class Threatintelligence(Entity):
         """Return Entity Description."""
         return f"{self.ThreatName} ({self.ThreatType})"
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.ThreatName or self.__class__.__name__
+
     _entity_schema = {
         # String Name of the provider from whom this
         # Threat Intelligence information was received
@@ -70,4 +75,7 @@ class Threatintelligence(Entity):
         "Confidence": None,
         "ReportLink": None,
         "ThreatDescription": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

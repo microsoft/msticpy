@@ -13,3 +13,4 @@ Displaying/Visualizing Data
    visualization/MorphCharts
    visualization/DataViewer
    visualization/MatrixPlot
+   visualization/EntityGraph

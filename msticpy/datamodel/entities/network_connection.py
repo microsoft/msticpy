@@ -74,13 +74,15 @@ class NetworkConnection(Entity):
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
-        return "{}:{} [{}]-> {}:{}".format(
-            self.SourceAddress,
-            self.SourcePort,
-            self.Protocol,
-            self.DestinationAddress,
-            self.DestinationPort,
+        return (
+            f"{self.SourceAddress}:{self.SourcePort} [{self.Protocol}]-> "
+            "{self.DestinationAddress}:{self.DestinationPort}"
         )
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.__class__.__name__
 
     _entity_schema = {
         # SourceAddress (type Microsoft.Azure.Security.Detection
@@ -95,4 +97,7 @@ class NetworkConnection(Entity):
         "DestinationPort": None,
         # Protocol (type System.Nullable`1[System.Net.Sockets.ProtocolType])
         "Protocol": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
