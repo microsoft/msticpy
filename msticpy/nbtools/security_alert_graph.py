@@ -165,7 +165,7 @@ def _add_alert_node(nx_graph, alert):
 
 def _find_graph_node(nx_graph, node_type, target_name):
     """Find a node with a given name and type."""
-    node_prefix = "{}: {}".format(node_type, target_name)
+    node_prefix = f"{node_type}: {target_name}"
     nodes = [
         n
         for (n, n_type) in nx.get_node_attributes(nx_graph, "entitytype").items()
@@ -183,20 +183,16 @@ def _add_related_alert_edge(nx_graph, source, target):
     current_count = count_attrs[target_node] if target_node in count_attrs else 0
     current_count += 1
 
-    description = "Related alert: {}  Count:{}".format(
-        target["AlertType"], current_count
-    )
+    description = f"Related alert: {target['AlertType']}  Count:{current_count}"
     node_attrs = {target_node: {"count": current_count, "description": description}}
     nx.set_node_attributes(nx_graph, node_attrs)
     nx_graph.add_edge(source, target_node, weight=0.7, description="Related Alert")
 
 
 def _get_account_qualified_name(account):
-    name = None
-    if "Name" in account:
-        name = account["Name"]
+    name = account["Name"] if "Name" in account else None
     if "NTDomain" in account:
-        return "{}\\{}".format(account["NTDomain"], name)
+        return f"{account['NTDomain']}\\{name}"
     return name
 
 
@@ -220,7 +216,7 @@ def _get_name_and_description(entity, os_family="Windows"):
     elif entity["Type"] in ["ip", "ipaddress"]:
         e_name, e_description = _get_ip_name_desc(entity)
     elif entity["Type"] == "dns":
-        e_name = "{}: {}".format(entity["Type"], entity["DomainName"])
+        e_name = f"{entity['Type']}: {entity['DomainName']}"
         e_description = e_name
     else:
         # Any other type of entity
@@ -233,7 +229,7 @@ def _get_name_and_description(entity, os_family="Windows"):
 def _get_other_name_desc(entity):
     if "Name" in entity:
         e_name = entity["Name"]
-        e_name = "{}: {}".format(entity["Type"], e_name)
+        e_name = f"{entity['Type']}: {e_name}"
     else:
         e_name = entity["Type"]
 
@@ -248,24 +244,22 @@ def _get_other_name_desc(entity):
     # dictionary into a string
     e_properties = "\n".join(
         {
-            "{}:{}".format(k, v)
+            f"{k}:{v}"
             for (k, v) in ent_props.items()
             if (k not in ("Type", "Name") and isinstance(v, str))
         }
     )
-    e_description = "{}\n{})".format(e_name, e_properties)
+    e_description = f"{e_name}\n{e_properties})"
     return e_name, e_description
 
 
 def _get_ip_name_desc(entity):
     e_name = entity["Address"]
-    e_name = "{}: {}".format(entity["Type"], e_name)
+    e_name = f"{entity['Type']}: {e_name}"
     if "Location" in entity and entity["Location"]:
-        e_description = "{}\nc={}, st={}, city={}".format(
-            e_name,
-            entity["Location"]["CountryCode"],
-            entity["Location"]["State"],
-            entity["Location"]["City"],
+        e_description = (
+            f"{e_name}\nc={entity['Location']['CountryCode']}, "
+            f"st={entity['Location']['State']}, city={entity['Location']['City']}"
         )
     else:
         e_description = e_name
@@ -274,7 +268,7 @@ def _get_ip_name_desc(entity):
 
 def _get_file_name_desc(entity):
     e_name = entity["FullPath"]
-    e_name = "{}: {}".format(entity["Type"], e_name)
+    e_name = f"{entity.Type}: {e_name}"
     return e_name, e_name
 
 
@@ -291,8 +285,8 @@ def _get_process_name_desc(entity):
         path = "unknown"
     pid = entity.ProcessId or "PID unknown"
     e_name = path + " [" + pid + "]"
-    e_name = "{}: {}".format(entity["Type"], e_name)
-    e_description = "{}\n(cmdline: '{}')".format(e_name, entity.CommandLine)
+    e_name = f"{entity['Type']}: {e_name}"
+    e_description = f"{e_name}\n(cmdline: '{entity.CommandLine}')"
     return e_name, e_description
 
 
@@ -302,7 +296,7 @@ def _get_account_name_desc(entity):
     e_name = e_dom + (
         entity["Name"] or entity["AadUserId"] or entity["DisplayName"] or "unknown"
     )
-    e_name = "{}: {}".format(entity["Type"], e_name)
+    e_name = f"{entity.Type}: {e_name}"
     if "IsDomainJoined" in entity:
         domain_joined = entity["IsDomainJoined"]
     else:
@@ -311,18 +305,18 @@ def _get_account_name_desc(entity):
         e_description = f"{e_name}\n(LogonId: {entity.LogonId},"
         e_description = e_description + f" Domain-joined: {domain_joined})"
     else:
-        e_description = "{}\n(Domain-joined: {})".format(e_name, domain_joined)
+        e_description = f"{e_name}\n(Domain-joined: {domain_joined})"
     return e_name, e_description
 
 
 def _get_host_name_desc(entity, os_family):
     if "DnsDomain" in entity and is_not_empty(entity["DnsDomain"]):
-        e_name = "{}.{}".format(entity["HostName"], entity["DnsDomain"])
+        e_name = f"{entity.HostName}.{entity.DnsDomain}"
     elif "NTDomain" in entity and is_not_empty(entity["NTDomain"]):
-        e_name = "{}/{}".format(entity["NTDomain"], entity["HostName"])
+        e_name = f"{entity.NTDomain}/{entity.HostName}"
     else:
         e_name = entity["HostName"]
-    e_name = "{}: {}".format(entity["Type"], e_name)
+    e_name = f"{entity.Type}: {e_name}"
 
     if "IsDomainJoined" in entity:
         domain_joined = entity["IsDomainJoined"]
@@ -330,8 +324,6 @@ def _get_host_name_desc(entity, os_family):
         domain_joined = "false"
     if "OSFamily" in entity:
         os_family = entity["OSFamily"]
-    e_description = "{}\n({}, Domain-joined: {})".format(
-        e_name, os_family, domain_joined
-    )
+    e_description = f"{e_name}\n({os_family}, Domain-joined: {domain_joined})"
 
     return e_name, e_description

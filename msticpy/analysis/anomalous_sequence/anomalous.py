@@ -57,9 +57,7 @@ def score_sessions(
     if not isinstance(data, pd.DataFrame):
         raise MsticpyException("`data` should be a pandas dataframe")
     if session_column not in data.columns:
-        raise MsticpyException(
-            '"{}" should be a column in the `data`'.format(session_column)
-        )
+        raise MsticpyException(f'"{session_column}" should be a column in the `data`')
 
     sessions_df = data.copy()
     sessions = sessions_df[session_column].values.tolist()
@@ -71,11 +69,9 @@ def score_sessions(
     )
 
     sessions_df[
-        "rarest_window{}_likelihood".format(window_length)
+        f"rarest_window{window_length}_likelihood"
     ] = model.rare_window_likelihoods[window_length]
-    sessions_df["rarest_window{}".format(window_length)] = model.rare_windows[
-        window_length
-    ]
+    sessions_df[f"rarest_window{window_length}"] = model.rare_windows[window_length]
 
     return sessions_df
 
@@ -211,8 +207,8 @@ def score_and_visualise_sessions(
     scored_sessions = score_sessions(
         data=data, session_column=session_column, window_length=window_length
     )
-    score_column = "rarest_window{}_likelihood".format(window_length)
-    window_column = "rarest_window{}".format(window_length)
+    score_column = f"rarest_window{window_length}_likelihood"
+    window_column = f"rarest_window{window_length}"
 
     visualise_scored_sessions(
         data_with_scores=scored_sessions,

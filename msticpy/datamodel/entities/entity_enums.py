@@ -71,6 +71,13 @@ class RegistryHive(Enum):
     # <summary>HKEY_CURRENT_USER</summary>
     HKEY_CURRENT_USER = 9
 
+    @property
+    def short_name(self) -> str:
+        """Return the key shortname."""
+        # pylint: disable=no-member
+        return f"HK{''.join([n[0] for n in self.name.split('_')[1:]])}"
+        # pylint: enable=no-member
+
 
 ENTITY_ENUMS = {
     Algorithm.__name__: Algorithm,

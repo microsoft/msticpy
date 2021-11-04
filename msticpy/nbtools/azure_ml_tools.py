@@ -4,17 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Checker functions for Azure ML notebooks."""
-import json
 import os
-import socket
 import sys
-import urllib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import parse_version
+from pkg_resources import parse_version, WorkingSet, Requirement, DistInfoDistribution
 
 from .._version import VERSION
 from ..common.pkg_config import refresh_config
@@ -190,12 +187,13 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
 
     _disp_html("Checking msticpy version...<br>")
 
-    inst_version = _get_pkg_version(__version__)
-    if inst_version < mp_min_pkg_ver:
+    # Check currently loaded MP version against notebook requirement
+    loaded_version = _get_pkg_version(__version__)
+    if loaded_version < mp_min_pkg_ver:
         _disp_html(
             MISSING_PKG_ERR.format(
                 package="msticpy",
-                inst_ver=inst_version,
+                inst_ver=loaded_version,
                 req_ver=mp_min_pkg_ver,
             )
         )
@@ -204,15 +202,25 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
 
         _disp_html(
             f"Please run the following command to upgrade MSTICPy<br>"
-            f"<pre>!{mp_pkg_spec}</pre><br>"
+            f"<pre>%pip install --upgrade {mp_pkg_spec}</pre><br>"
         )
         raise ImportError(
             "Unsupported version of MSTICPy installed",
-            f"Installed version: {inst_version}",
+            f"Installed version: {loaded_version}",
             f"Required version: {mp_min_pkg_ver}",
         )
 
-    _disp_html(f"Info: msticpy version {inst_version} (>= {mp_min_pkg_ver}) - OK<br>")
+    # Check loaded version against installed version in the environment
+    # If the version was updated after this version was loaded by Python
+    # we need to warn the user to restart the kernel.
+    installed_version = _get_installed_mp_version()
+    if installed_version and installed_version > loaded_version:
+        _disp_html(
+            f"A newer version of MSTICPy ({installed_version.version})"
+            "has been installed but has not been loaded.<br>"
+            "Please restart the notebook kernel and re-run this cell."
+        )
+    _disp_html(f"Info: msticpy version {loaded_version} (>= {mp_min_pkg_ver}) - OK<br>")
 
 
 def _set_kql_env_vars(extras: Optional[List[str]]):
@@ -226,13 +234,22 @@ def _set_kql_env_vars(extras: Optional[List[str]]):
         os.environ["KQLMAGIC_AZUREML_COMPUTE"] = _get_vm_fqdn()
 
 
-def _get_pkg_version(version: Union[str, Tuple]) -> Any:
+def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
     """Return pkg_resources parsed version from string or tuple."""
     if isinstance(version, str):
         return parse_version(version)
     if isinstance(version, tuple):
         return parse_version(".".join(str(ver) for ver in version))
-    raise TypeError(f"Unparseable type version {version}")
+    raise TypeError(f"Version {version} no parseable.")
+
+
+def _get_installed_mp_version() -> Optional[DistInfoDistribution]:
+    """Return the installed version of MSTICPY."""
+    working_set = WorkingSet()
+    mp_installed = working_set.find(Requirement("msticpy"))
+    if mp_installed:
+        return mp_installed.parsed_version
+    return None
 
 
 def _disp_html(text: str):
@@ -289,30 +306,28 @@ def _set_mpconfig_var():
         )
 
 
-def _get_vm_metadata() -> Mapping[str, Any]:
-    """Use local request to get VM metadata."""
-    vm_uri = "http://169.254.169.254/metadata/instance?api-version=2017-08-01"
-    req = urllib.request.Request(vm_uri)  # type: ignore
-    req.add_header("Metadata", "true")
+_NBVM_PATH = "/mnt/azmnt/.nbvm"
 
-    # Bandit warning on urlopen - Fixed private URL
-    with urllib.request.urlopen(req) as resp:  # type: ignore  # nosec
-        metadata = json.loads(resp.read())
-    return metadata if isinstance(metadata, dict) else {}
+
+def _get_vm_metadata() -> Mapping[str, Any]:
+    """Read VM metadata from definition file."""
+    with open(_NBVM_PATH, "r", encoding="utf-8") as nbvm_handle:
+        nbvm_lines = nbvm_handle.readlines()
+    return {
+        item[0]: item[1]
+        for item in map(lambda x: x.split("=", maxsplit=1), nbvm_lines)
+        if item
+    }
 
 
 def _get_vm_fqdn() -> str:
     """Get the FQDN of the host."""
-    az_region = _get_vm_metadata().get("compute", {}).get("location")
-    return ".".join(
-        [
-            socket.gethostname(),
-            az_region,
-            "instances.azureml.ms",
-        ]
-        if az_region
-        else ""
-    )
+    vm_metadata = _get_vm_metadata()
+    if vm_metadata and "instance" in vm_metadata:
+        return (
+            f"https://{vm_metadata.get('instance')}.{vm_metadata.get('domainsuffix')}"
+        )
+    return ""
 
 
 def _check_kql_prereqs():

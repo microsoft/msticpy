@@ -200,7 +200,7 @@ def _split_file_path(
     path_col: str = "CreatedProcessFilePath",
     file_col: str = "CreatedProcessName",
     separator: str = "\\",
-):
+) -> Dict[str, Union[str, float]]:
     """Split file path in to folder/stem."""
     f_path: Union[str, float] = np.nan
     f_stem: Union[str, float] = np.nan

@@ -81,7 +81,12 @@ class MailMessage(Entity):
 
     ID_PROPERTIES = ["NetworkMessageId", "Recipient"]
 
-    def __init__(self, src_entity: Mapping[str, Any] = None, **kwargs):
+    def __init__(
+        self,
+        src_entity: Mapping[str, Any] = None,
+        src_event: Mapping[str, Any] = None,
+        **kwargs,
+    ):
         """
         Create a new instance of the entity type.
 
@@ -90,6 +95,9 @@ class MailMessage(Entity):
         src_entity : Mapping[str, Any], optional
             Create entity from existing entity or
             other mapping object that implements entity properties.
+            (the default is None)
+        src_event : Mapping[str, Any], optional
+            Create entity from event properties
             (the default is None)
 
         Other Parameters
@@ -127,11 +135,42 @@ class MailMessage(Entity):
         self.ThreatDetectionMethods: Optional[str] = None
 
         super().__init__(src_entity=src_entity, **kwargs)
+        if src_event:
+            self._create_from_event(src_event)
+
+    def _create_from_event(self, src_event):
+        self.Recipient = src_event.get("Recipient")
+        self.Files = src_event.get("FileEntityIds")
+        self.Urls = src_event.get("Urls")
+        self.Threats = src_event.get("Threats")
+        self.SenderIP = src_event.get("SenderIP")
+        self.P1Sender = src_event.get("P1Sender")
+        self.P1SenderDisplayName = src_event.get("P1SenderDisplayName")
+        self.P1SenderDomain = src_event.get("P1SenderDomain")
+        self.P2Sender = src_event.get("P2Sender")
+        self.P2SenderDisplayName = src_event.get("P2SenderDisplayName")
+        self.P2SenderDomain = src_event.get("P2SenderDomain")
+        self.ReceivedDate = src_event.get("ReceiveDate")
+        self.NetworkMessageId = src_event.get("NetworkMessageId")
+        self.InternetMessageId = src_event.get("InternetMessageId")
+        self.Subject = src_event.get("Subject")
+        self.AntispamDirection = src_event.get("AntispamDirection")
+        self.DeliveryAction = src_event.get("DeliveryAction")
+        self.Language = src_event.get("Language")
 
     @property
     def description_str(self):
         """Return Entity Description."""
         return self.NetworkMessageId or self.__class__.__name__
+
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return (
+            self.Subject
+            or f"MailMessage to: {self.Recipient}"
+            or self.__class__.__name__
+        )
 
     _entity_schema = {
         "Recipient": None,
@@ -160,4 +199,7 @@ class MailMessage(Entity):
         "DeliveryLocation": None,
         "Language": None,
         "ThreatDetectionMethods": None,
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }

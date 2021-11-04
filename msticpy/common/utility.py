@@ -94,9 +94,7 @@ def check_py_version(min_ver: Tuple = (3, 6)):
     if sys.version_info < min_ver:
         print("Check the Kernel->Change Kernel menu and ensure that Python 3.6")
         print("or later is selected as the active kernel.")
-        raise SystemExit(
-            "Python %s.%s or later is required.\n" % (min_ver[0], min_ver[1])
-        )
+        raise SystemExit(f"Python {min_ver[0]}.{min_ver[1]} or later is required.\n")
 
 
 @export
@@ -128,7 +126,7 @@ def resolve_pkg_path(part_path: str):
 
 # pylint: disable=not-an-iterable, too-many-branches
 @export  # noqa: MC0001
-def check_and_install_missing_packages(
+def check_and_install_missing_packages(  # noqa: MC0001
     required_packages: List[str],
     force_notebook: bool = False,
     user: bool = False,

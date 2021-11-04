@@ -116,11 +116,18 @@ class File(Entity):
         """Return Entity Description."""
         return self.FullPath or self.__class__.__name__
 
+    @property
+    def name_str(self) -> str:
+        """Return Entity Name."""
+        return self.Name or self.FullPath or self.__class__.__name__
+
     def _create_from_event(self, src_event, role):
         if role == "new" and "NewProcessName" in src_event:
             self._add_paths(src_event["NewProcessName"])
         elif role == "parent" and "ParentProcessName" in src_event:
             self._add_paths(src_event["ParentProcessName"])
+        elif "Directory" in src_event and "FileName" in src_event:
+            self._add_paths(src_event["Directory"], file_name=src_event["FileName"])
 
     _entity_schema = {
         # FullPath (type System.String)
@@ -141,9 +148,12 @@ class File(Entity):
         # Sha256Ac (type System.String)
         "Sha256Ac": None,
         "FileHashes": (list, "FileHash"),
+        "TimeGenerated": None,
+        "StartTime": None,
+        "EndTime": None,
     }
 
-    def _add_paths(self, full_path):
+    def _add_paths(self, full_path, file_name=None):
         if "/" in full_path:
             self.PathSeparator = "/"
             self.OSFamily = OSFamily.Linux
@@ -151,9 +161,14 @@ class File(Entity):
             self.PathSeparator = "\\"
             self.OSFamily = OSFamily.Windows
 
-        self.FullPath = full_path
-        self.Name = full_path.split(self.PathSeparator)[-1]
-        self.Directory = full_path.split(self.PathSeparator)[:-1]
+        if file_name:
+            self.Name = file_name
+            self.Directory = full_path
+            self.FullPath = self.Directory + self.PathSeparator + self.Name
+        else:
+            self.FullPath = full_path
+            self.Name = full_path.split(self.PathSeparator)[-1]
+            self.Directory = full_path.split(self.PathSeparator)[:-1]
 
     @property
     def file_hash(self) -> Optional[str]:

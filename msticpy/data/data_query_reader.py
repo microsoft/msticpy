@@ -60,7 +60,7 @@ def read_query_def_file(query_file: str) -> Tuple[Dict, Dict, Dict]:
 
     """
     data_map = None
-    with open(query_file) as f_handle:
+    with open(query_file, "r", encoding="utf-8") as f_handle:
         # use safe_load instead load
         data_map = yaml.safe_load(f_handle)
 
@@ -117,10 +117,11 @@ def _validate_data_categories(query_def_dict: Dict):
     for env in query_def_dict["metadata"]["data_environments"]:
         if not DataEnvironment.parse(env):
             raise ValueError(
-                f"Unknown data evironment {env} in metadata. ",
+                f"Unknown data environment {env} in metadata. ",
                 "Valid values are\n",
-                ", ".join([e.name for e in DataEnvironment]),
+                ", ".join(e.name for e in DataEnvironment),
             )
+
     if (
         "data_families" not in query_def_dict["metadata"]
         or not query_def_dict["metadata"]["data_families"]
@@ -132,5 +133,5 @@ def _validate_data_categories(query_def_dict: Dict):
             raise ValueError(
                 f"Unknown data family {fam} in metadata. ",
                 "Valid values are\n",
-                ", ".join([f.name for f in DataFamily]),
+                ", ".join(f.name for f in DataFamily),
             )
