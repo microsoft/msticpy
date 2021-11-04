@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from pprint import pformat
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import attr
 import ipywidgets as widgets
@@ -18,7 +18,8 @@ import pandas as pd
 
 from .._version import VERSION
 
-from ..common.exceptions import MsticpyImportExtraError
+from ..common.exceptions import MsticpyImportExtraError, MsticpyUserError
+from ..nbtools.process_tree import plot_process_tree
 from .proc_tree_builder import ProcSchema, build_proc_tree
 
 try:
@@ -99,11 +100,16 @@ class VTFileBehavior:
         "memdump": "/file_behaviours/{sandbox_id}/memdump",
     }
 
+    @classmethod
+    def list_sandboxes(cls) -> List[str]:
+        """Return list of known sandbox types."""
+        return list(cls._SANDBOXES)
+
     def __init__(
         self,
         vt_key: str = None,
         file_id: Optional[str] = None,
-        file_summary: Optional[Dict[str, Any]] = None,
+        file_summary: Optional[Union[pd.DataFrame, pd.Series, Dict[str, Any]]] = None,
     ):
         """
         Initialize the VTFileBehavior class.
@@ -114,18 +120,31 @@ class VTFileBehavior:
             VirusTotal API key, by default None
         file_id : Optional[str], optional
             The ID of the file to look up, by default None
-        file_summary : Optional[Dict[str, Any]], optional
-            VT file summary object dictionary, by default None
+        file_summary : Optional[Union[pd.DataFrame, pd, Series, Dict[str, Any]]], optional
+            VT file summary - this can be in one of the following formats:
+            VT object dictionary
+            Pandas DataFrame - first row is assumed to be the file summary
+            Pandas Series
+            by default None
+
         """
         self._vt_client = vt.Client(apikey=vt_key)
+        if file_id is None and file_summary is None:
+            raise MsticpyUserError(
+                "You must supply either a file_id or a file_summary.",
+                title="Missing required parameter.",
+            )
 
-        self.file_summary = file_summary or {}
+        if isinstance(file_summary, pd.DataFrame):
+            file_summary = file_summary.iloc[0]
+        if isinstance(file_summary, pd.Series):
+            file_summary = file_summary.to_dict()
+        self.file_summary = file_summary or {}  # type: ignore
         self.file_id = file_id or self.file_summary.get("id")
-        # self._file_behavior: Dict[str, Any] = {}
-        # self.categories: Dict[str, Any] = {}
-        # self.process_tree_df: Optional[pd.DataFrame] = None
+
         self._file_behavior: Dict[str, Any] = {}
         self.categories: Dict[str, Any] = {}
+        self.behavior_links: Dict[str, Any] = {}
         self.process_tree_df: Optional[pd.DataFrame] = None
 
     def _reset_summary(self):
@@ -134,32 +153,36 @@ class VTFileBehavior:
         self.process_tree_df: Optional[pd.DataFrame] = None
 
     @property
-    def sandboxes(self) -> List[str]:
-        """Return list of known sandbox types."""
-        return list(self._SANDBOXES)
-
-    @property
     def sandbox_id(self) -> str:
         """Return sandbox ID of detonation."""
         return self.categories.get("id", "")
 
     @property
     def has_evtx(self) -> bool:
-        """Does the detonation have EVTX data (Enterprise only)."""
+        """Return True if EVTX data is available (Enterprise only)."""
         return self.categories.get("has_evtx", False)
 
     @property
     def has_memdump(self) -> bool:
-        """Does the detonation have memory dump data (Enterprise only)."""
+        """Return True if memory dump data is available (Enterprise only)."""
         return self.categories.get("has_memdump", False)
 
     @property
     def has_pcap(self) -> bool:
-        """Does the detonation have PCAP data (Enterprise only)."""
+        """Return True if PCAP data is available (Enterprise only)."""
         return self.categories.get("has_pcap", False)
 
     def get_file_behavior(self, sandbox: str = None):
-        """Retrieve the file behavior data."""
+        """
+        Retrieve the file behavior data.
+
+        Parameters
+        ----------
+        sandbox : str, optional
+            Name of specific sandbox to retrieve, by default None
+            If None, it will retrieve the behavior summary.
+
+        """
         if sandbox:
             endpoint = self._FP_ENDPOINTS["sandbox"].format(
                 id=self.file_id,
@@ -169,7 +192,7 @@ class VTFileBehavior:
             endpoint = self._FP_ENDPOINTS["summary"].format(id=self.file_id)
 
         try:
-            response: vt.object.Object = self._vt_client.get_object(endpoint)
+            self._file_behavior = self._vt_client.get_data(endpoint)
         except vt.APIError as err:
             if err.args and err.args[0] == _VT_API_NOT_FOUND:
                 self._file_behavior = {"id": self.file_id, "result": _VT_API_NOT_FOUND}
@@ -178,18 +201,17 @@ class VTFileBehavior:
         finally:
             self._vt_client.close()
 
-        self._file_behavior = response.to_dict()
         if "attributes" in self._file_behavior:
             self.categories = self._file_behavior.get("attributes", {})
-            # behavior_links = self._file_behavior.get("links")
-            # analysis_date = pd.Timestamp(categories["analysis_date"])
+            self.behavior_links = self._file_behavior.get("links", {})
         else:
             self.categories = self._file_behavior
-            # behavior_links = self._file_behavior.get("links")
-            # analysis_date = vt_df.iloc[0].last_analysis_date
 
-    def browse(self):
+    def browse(self) -> Optional[widgets.VBox]:
         """Browse the behavior categories."""
+        if not self.has_behavior_data:
+            self._print_no_data()
+            return None
         groupings = {}
         remaining_categories = set(self.categories)
         for name, pattern in _FB_CAT_PATTERNS.items():
@@ -223,13 +245,29 @@ class VTFileBehavior:
         return widgets.VBox([html_title, accordion])
 
     @property
-    def process_tree(self):
+    def process_tree(self) -> Any:
         """Return the process tree plot."""
+        if not self.has_behavior_data:
+            self._print_no_data()
+            return None
         if self.process_tree_df is None:
             self.process_tree_df = _build_process_tree(self.categories)
-        return self.process_tree_df.mp_plot.process_tree(
-            schema=ProcSchema(VT_ProcSchema), legend_col="name", hide_legend=True
+        plot, _ = plot_process_tree(
+            data=self.process_tree_df,
+            schema=VT_PROCSCHEMA,
+            legend_col="name",
+            hide_legend=True,
         )
+        return plot
+
+    @property
+    def has_behavior_data(self) -> bool:
+        """Return true if file behavior data available."""
+        return bool(self.categories)
+
+    def _print_no_data(self):
+        """Print a message if operation is tried with no data."""
+        print(f"No data available for {self.file_id}.")
 
 
 # Process tree extraction
@@ -258,7 +296,7 @@ class SIProcess:
 # pylint: enable=too-few-public-methods
 
 
-VT_ProcSchema = ProcSchema(
+VT_PROCSCHEMA = ProcSchema(
     **{
         "process_name": "name",
         "process_id": "process_id",
@@ -275,7 +313,7 @@ VT_ProcSchema = ProcSchema(
 
 
 def _build_process_tree(fb_categories):
-    """Top level function to create displayable DataFrame"""
+    """Top level function to create displayable DataFrame."""
     proc_tree_raw = deepcopy(fb_categories["processes_tree"])
     procs_created = {
         Path(proc).parts[-1].lower(): proc
@@ -283,7 +321,7 @@ def _build_process_tree(fb_categories):
     }
 
     si_procs = _extract_processes(proc_tree_raw, procs_created)
-    process_tree_df = _procs_to_df(si_procs)
+    process_tree_df = pd.DataFrame(_procs_to_df(si_procs)).drop(columns="children")
     process_tree_df = _try_match_commandlines(
         fb_categories["command_executions"], process_tree_df
     )
@@ -335,7 +373,7 @@ def _procs_to_df(procs):
         df_list.append(attr.asdict(proc))
         if proc.children:
             df_list.extend(_procs_to_df(proc.children))
-    return pd.DataFrame(df_list).drop(columns="children")
+    return df_list
 
 
 # Try to Match up 'command_executions' commandline data with
@@ -405,7 +443,7 @@ def _fill_missing_proc_tree_values(process_df: pd.DataFrame) -> pd.DataFrame:
 
 # Process browser helper functions
 def _extract_subcats(pattern, categs):
-    """Extract the category names matching `pattern`"""
+    """Extract the category names matching `pattern`."""
     return {cat for cat in categs if re.match(pattern, cat)}
 
 

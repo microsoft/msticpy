@@ -15,6 +15,7 @@ try:
     from vt_graph_api import VTGraph
     from vt_graph_api import errors as vt_graph_errs
     import nest_asyncio
+    from .vtfile_behavior import VTFileBehavior
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without vt-py, vt-graph-api and",
@@ -512,7 +513,7 @@ class VTLookupV3:
         That is, it will return the IDs of related items in the specified
         `relationship`, if any.
 
-        See also
+        See Also
         --------
         lookup_ioc_related : return the full related objects.
 
@@ -553,7 +554,7 @@ class VTLookupV3:
         This method returns full related objects rather than ID links.
         It is less efficient than looking up ID links only.
 
-        See also
+        See Also
         --------
         lookup_ioc_relationships : return the related IDs.
 
@@ -748,6 +749,102 @@ class VTLookupV3:
 
         return graph.graph_id
 
+    def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
+        """
+        Return the full VT object as a DataFrame.
+
+        Parameters
+        ----------
+        vt_id : str
+            The ID of the object
+        vt_type : str
+            The type of object to query.
+
+        Returns
+        -------
+        pd.DataFrame
+            Single column DataFrame with attribute names as
+            index and values as data column.
+
+        Raises
+        ------
+        KeyError
+            Unrecognized VT Type
+        MsticpyVTNoDataError
+            Error requesting data from VT.
+
+        Notes
+        -----
+        This calls the underlying VT get_object API directly and
+        returns all attributes for the object - hence a very wide
+        DataFrame.
+
+        """
+        if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
+            # pylint: disable=no-member
+            raise KeyError(
+                f"Property type {vt_type} not supported",
+                "Valid types are",
+                ", ".join(x.value for x in VTEntityType.__members__.values()),
+            )
+            # pylint: enable=no-member
+
+        endpoint_name = self._get_endpoint_name(vt_type)
+        try:
+            response: vt.object.Object = self._vt_client.get_object(
+                f"/{endpoint_name}/{vt_id}"
+            )
+            result_df = pd.DataFrame(
+                {
+                    "id": [response.id],
+                    "type": [response.type],
+                }
+            )
+            attribs = pd.json_normalize(response.to_dict()["attributes"])
+            result_df = pd.concat([result_df, attribs], axis=1)
+            result_df["context_attributes"] = response.to_dict().get(
+                "context_attributes"
+            )
+            return _ts_to_pydate(result_df)
+        except vt.APIError as err:
+            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+                return self._item_not_found_df(vt_type, vt_id)
+            raise MsticpyVTNoDataError(
+                "An error occurred requesting data from VirusTotal"
+            ) from err
+        finally:
+            self._vt_client.close()
+
+    def get_file_behavior(
+        self,
+        file_id: Optional[str] = None,
+        file_summary: Optional[Dict[str, Any]] = None,
+        sandbox: Optional[str] = None,
+    ) -> VTFileBehavior:
+        """
+        Return a VTFileBehavior object with file detonation results.
+
+        Parameters
+        ----------
+        file_id : Optional[str], optional
+            The ID of the file to look up, by default None
+        file_summary : Optional[Dict[str, Any]], optional
+            VT file summary object dictionary, by default None
+        sandbox : str, optional
+            Name of specific sandbox to retrieve, by default None
+            If None, it will retrieve the behavior summary.
+
+        Returns
+        -------
+        VTFileBehavior
+
+        """
+        vt_behavior = VTFileBehavior(
+            self._vt_key, file_id=file_id, file_summary=file_summary
+        )
+        vt_behavior.get_file_behavior(sandbox=sandbox)
+        return vt_behavior
+
     @staticmethod
     def relationships_to_graph(
         relationship_dfs: List[pd.DataFrame],
@@ -857,72 +954,6 @@ class VTLookupV3:
             """
             )
         )
-
-    def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
-        """
-        Return the full VT object as a DataFrame.
-
-        Parameters
-        ----------
-        vt_id : str
-            The ID of the object
-        vt_type : str
-            The type of object to query.
-
-        Returns
-        -------
-        pd.DataFrame
-            Single column DataFrame with attribute names as
-            index and values as data column.
-
-        Raises
-        ------
-        KeyError
-            Unrecognized VT Type
-        MsticpyVTNoDataError
-            Error requesting data from VT.
-
-        Notes
-        -----
-        This calls the underlying VT get_object API directly and
-        returns all attributes for the object - hence a very wide
-        DataFrame.
-
-        """
-        if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
-            # pylint: disable=no-member
-            raise KeyError(
-                f"Property type {vt_type} not supported",
-                "Valid types are",
-                ", ".join(x.value for x in VTEntityType.__members__.values()),
-            )
-            # pylint: enable=no-member
-
-        endpoint_name = self._get_endpoint_name(vt_type)
-        try:
-            response: vt.object.Object = self._vt_client.get_object(
-                f"/{endpoint_name}/{vt_id}"
-            )
-            result_df = pd.DataFrame(
-                {
-                    "id": [response.id],
-                    "type": [response.type],
-                }
-            )
-            attribs = pd.json_normalize(response.to_dict()["attributes"])
-            result_df = pd.concat([result_df, attribs], axis=1)
-            result_df["context_attributes"] = response.to_dict().get(
-                "context_attributes"
-            )
-            return _ts_to_pydate(result_df)
-        except vt.APIError as err:
-            if err.args and err.args[0] == _VT_API_NOT_FOUND:
-                return self._item_not_found_df(vt_type, vt_id)
-            raise MsticpyVTNoDataError(
-                "An error occurred requesting data from VirusTotal"
-            ) from err
-        finally:
-            self._vt_client.close()
 
     @classmethod
     def _item_not_found_df(cls, vt_type: str, observable: str):

@@ -6,28 +6,33 @@
 """vtlookupv3 unit tests."""
 import json
 import os
-from typing import Any, Optional, Iterator
-
-import pandas as pd
+import sys
+from typing import Any, Dict, Iterator, Optional
 from unittest.mock import patch
+
+import ipywidgets as widgets
+from bokeh.layouts import LayoutDOM
+import pandas as pd
 import pytest
 import pytest_check as check
-
-from msticpy.sectools.vtlookupv3 import (
-    VTLookupV3,
-    _VT_API_NOT_FOUND,
-    MsticpyVTNoDataError,
-)
+from msticpy.sectools import vtlookupv3
 from vt.object import Object as VtObject
 
 from ..unit_test_lib import get_test_data_path
 
+# pylint: disable=redefined-outer-name, protected-access, unspecified-encoding
+# pylint: disable=no-value-for-parameter
+
+VTLookupV3 = vtlookupv3.VTLookupV3
+_VT_API_NOT_FOUND = vtlookupv3._VT_API_NOT_FOUND
+MsticpyVTNoDataError = vtlookupv3.MsticpyVTNoDataError
+VTFileBehavior = vtlookupv3.VTFileBehavior
+
+
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name, protected-access, unspecified-encoding
 
-
-@patch(VTLookupV3.__module__ + ".vt")
+@patch("msticpy.sectools.vtlookupv3.vt")
 def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
@@ -37,7 +42,12 @@ def create_vt_client(vt_lib) -> VTLookupV3:
 
 
 @pytest.fixture
-def vt_client():
+def vt_client(monkeypatch):
+    """Return a VTLookup instance."""
+    vt_lib_fb = sys.modules["msticpy.sectools.vtfile_behavior"]
+    vt = getattr(vt_lib_fb, "vt")
+    monkeypatch.setattr(vt, "Client", VTClient)
+    monkeypatch.setattr(vt, "APIError", VTAPIError)
     return create_vt_client()
 
 
@@ -72,11 +82,15 @@ class VTClient:
 
     _OBJ_FILES = ["vt3_url_0.json", "vt3_url_1.json", "vt3_url_2.json"]
     _REL_LINK_FILE = "vt3_related_links.json"
+    _FB_SUM_FILE = "vt3_behavior_summary.json"
+    _FB_MS_FILE = "vt3_behavior_ms_sysinternals.json"
 
     _URL_OBJS = [
         json.loads(_D_ROOT.joinpath(url_file).read_text()) for url_file in _OBJ_FILES
     ]
     _URL_LINKS = json.loads(_D_ROOT.joinpath(_REL_LINK_FILE).read_text())
+    _VT_FB_SUMMARY = json.loads(_D_ROOT.joinpath(_FB_SUM_FILE).read_text())
+    _VT_FB_MSSYS = json.loads(_D_ROOT.joinpath(_FB_MS_FILE).read_text())
 
     def __init__(self, apikey: Optional[str] = None):
         """Initialize the class."""
@@ -98,6 +112,15 @@ class VTClient:
         if "not-found" in path:
             raise VTAPIError(message=_VT_API_NOT_FOUND, code=404)
         raise VTAPIError(message="Some error", code=404)
+
+    def get_data(self, path: str, *path_args, params=None) -> Dict[str, Any]:
+        """Fetch the file behavior data from VT."""
+        del path_args, params
+        if "behaviour_summary" in path:
+            return self._VT_FB_SUMMARY
+        if "file_behaviours" in path:
+            return self._VT_FB_MSSYS
+        raise VTAPIError(message=_VT_API_NOT_FOUND, code=404)
 
     def iterator(
         self, path: str, *path_args, params=None, cursor=None, limit=0, batch_size=0
@@ -139,16 +162,16 @@ def test_lookup_ioc(vt_lib):
 
     # Simple lookup
     result_df = vt_client.lookup_ioc(url, vt_type="url")
-    check.equal(result_df.shape, (1, 6))
+    check.equal(result_df.shape, (1, 7))
     check.equal(
-        result_df.iloc[0].name,
+        result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
     )
     check.equal(result_df.iloc[0].type, "url")
 
     # all properties
     result_df = vt_client.lookup_ioc(url, vt_type="url", all_props=True)
-    check.equal(result_df.shape, (1, 286))
+    check.equal(result_df.shape, (1, 287))
 
     # Invalid type
     with pytest.raises(ValueError) as vt_error:
@@ -186,9 +209,9 @@ def test_lookup_iocs(vt_lib):
     result_df = vt_client.lookup_iocs(
         obs_df, observable_column="observable", observable_type_column="type"
     )
-    check.equal(result_df.shape, (3, 6))
+    check.equal(result_df.shape, (3, 7))
     check.equal(
-        result_df.iloc[0].name,
+        result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
     )
     check.equal(result_df.iloc[0].type, "url")
@@ -200,13 +223,13 @@ def test_lookup_iocs(vt_lib):
         observable_type_column="type",
         all_props=True,
     )
-    check.equal(result_df.shape, (3, 398))
+    check.equal(result_df.shape, (3, 399))
     check.equal(
-        result_df.iloc[0].name,
+        result_df.iloc[0].id,
         "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
     )
     check.equal(
-        result_df.iloc[1].name,
+        result_df.iloc[1].id,
         "19e1199c6aa6e817845cc025cd7c8979cec22f8c94bc7416ff16b8808706cd54",
     )
     check.equal(result_df.iloc[0].type, "url")
@@ -232,7 +255,7 @@ def test_lookup_ioc_relationship(vt_client: VTLookupV3):
     result_df = vt_client.lookup_ioc_relationships(
         file, vt_type="file", relationship="contacted_urls"
     )
-    check.equal(result_df.shape, (3, 4))
+    check.equal(result_df.shape, (3, 7))
     result_df_noidx = result_df.reset_index()
     check.equal(
         result_df_noidx.iloc[0].target,
@@ -256,7 +279,7 @@ def test_lookup_ioc_related(vt_client: VTLookupV3):
     result_df = vt_client.lookup_ioc_related(
         file, vt_type="file", relationship="contacted_urls"
     )
-    check.equal(result_df.shape, (3, 400))
+    check.equal(result_df.shape, (3, 403))
     result_df_noidx = result_df.reset_index()
     check.equal(
         result_df_noidx.iloc[0].target,
@@ -284,7 +307,7 @@ def test_lookup_iocs_relationships(vt_client: VTLookupV3):
         observable_type_column="type",
         relationship="contacted_urls",
     )
-    check.equal(result_df.shape, (9, 4))
+    check.equal(result_df.shape, (9, 7))
     result_df_noidx = result_df.reset_index()
     for idx in range(0, 9, 3):
         check.equal(
@@ -305,12 +328,36 @@ def test_get_object(vt_client: VTLookupV3):
     check.equal(result_df.iloc[0].type, "url")
 
 
-def test_get_object(vt_client: VTLookupV3):
-    """Test simple get_object api."""
-    result_df = vt_client.get_object(_TEST_URLS[0], vt_type="url")
-    check.equal(result_df.shape, (1, 286))
-    check.equal(
-        result_df.iloc[0].id,
-        "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
-    )
-    check.equal(result_df.iloc[0].type, "url")
+_EXP_KEYS = {
+    "processes_injected",
+    "processes_terminated",
+    "files_opened",
+    "processes_created",
+    "registry_keys_set",
+    "processes_tree",
+}
+_FB_TESTS = [
+    ("Summary", None, _EXP_KEYS),
+    ("microsoft_sysinternals", "microsoft_sysinternals", _EXP_KEYS),
+]
+
+_FB_TEST_IDS = [test[0] for test in _FB_TESTS]
+
+
+@pytest.mark.parametrize("name, sandbox, keys", _FB_TESTS, ids=_FB_TEST_IDS)
+def test_file_behavior(vt_client: VTLookupV3, name, sandbox, keys):
+    """Test get_file_behavior api."""
+    del name
+    file = "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8"
+    vt_file_behavior = vt_client.get_file_behavior(file_id=file, sandbox=sandbox)
+    check.is_instance(vt_file_behavior, VTFileBehavior)
+    check.is_true(vt_file_behavior.has_behavior_data)
+    check.is_false(keys - vt_file_behavior.categories.keys())
+
+    browser = vt_file_behavior.browse()
+    check.is_instance(browser, widgets.VBox)
+
+    proc_tree = vt_file_behavior.process_tree
+    check.is_instance(proc_tree, LayoutDOM)
+
+    check.is_instance(vt_file_behavior.process_tree_df, pd.DataFrame)
