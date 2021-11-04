@@ -325,7 +325,7 @@ def init_notebook(
     if friendly_exceptions is None:
         friendly_exceptions = get_config("msticpy.FriendlyExceptions")
     if friendly_exceptions:
-        if _VERBOSITY() == 2:
+        if _VERBOSITY() == 2:  # type: ignore
             _pr_output("Friendly exceptions enabled.")
         InteractiveShell.showtraceback = _hook_ipython_exceptions(
             InteractiveShell.showtraceback
