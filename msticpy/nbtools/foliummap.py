@@ -10,6 +10,8 @@ import warnings
 from typing import Iterable, List, Tuple
 
 import folium
+from folium.plugins import MarkerCluster, FeatureGroupSubGroup
+import pygeohash
 
 from .._version import VERSION
 from ..datamodel.entities import Entity, GeoLocation, IpAddress
@@ -190,6 +192,123 @@ class FoliumMap:
             GeoLocation(Latitude=lat, Longitude=long) for lat, long in locations
         ]
         self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
+
+    def decode_geo_hash(self, geohash: str, **kwargs):
+        """TODO Docstring"""
+
+        return pygeohash.decode_exactly(geohash)
+
+    def add_geo_hashes(self, geohashes: Iterable[str], **kwargs):
+        """
+        Take in a collection of geohashes, decode each geohash, and add to the map
+
+        Parameters
+        ----------
+        geohashes : Iterable[str]
+            Iterable of geolocation hashes
+
+        """
+
+        geo_entities = []
+        for geohash in geohashes:
+            decoded_location = decode_geo_hash(geohash)
+            geo_entities.append(GeoLocation(Latitude=decoded_location[0], Longitude=decoded_location[1]))
+        
+        self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
+
+    def add_marker_clusters(self, clusters: Iterable[MarkerCluster], **kwargs):
+        """TODO: Docstring"""
+
+        for cluster in clusters:
+            self.folium_map.add_child(cluster)
+
+        return
+
+    def add_feature_sub_groups(self, subgroups: Iterable[FeatureGroupSubGroup], **kwargs):
+        """TODO: Docstring"""
+
+        for subgroup in subgroups:
+            self.folium_map.add_child(subgroup)
+
+        return
+
+    def save_map(self, file_location: str, **kwargs):
+
+        self.folium_map.save(file_location)
+
+        return
+
+    def create_marker_cluster(self, name: str, **kwargs):
+        """TODO: Docstring"""
+
+        return MarkerCluster(name=name)
+
+    def create_feature_sub_group_of_marker_cluster(self, cluster: MarkerCluster, name: str, **kwargs):
+        """TODO: Docstring"""
+
+        return FeatureGroupSubGroup(cluster, name=name)
+
+    def create_marker(self, location: Tuple[float, float], **kwargs):
+        """TODO Docstring"""
+
+        return folium.Marker(location=location)
+
+    def add_locations_to_feature_subgroup(self, locations: Iterable[Tuple[float, float]], subgroup: FeatureGroupSubGroup, **kwargs):
+        """TODO Docstring"""
+
+        for point in locations:
+            marker = self.create_marker(location=point)
+            marker.add_to(subgroup)
+
+        subgroups = [subgroup]
+
+        self.add_feature_sub_groups(subgroups)
+
+    def add_locations_to_marker_cluster(self, locations: Iterable[Tuple[float, float]], cluster: MarkerCluster, **kwargs):
+        """TODO Docstring"""
+
+        for point in locations:
+            marker = self.create_marker(location=point)
+            marker.add_to(cluster)
+
+        clusters = [cluster]
+
+        self.add_marker_clusters(clusters)
+
+    def create_new_cluster_with_locations(self, locations: Iterable[Tuple[float, float]], name: str, **kwargs):
+        """TODO: Docstring"""
+
+        marker_cluster = self.create_marker_cluster(name=name)
+
+        self.add_locations_to_marker_cluster(locations=locations, cluster=marker_cluster, **kwargs)
+
+    def create_new_subgroup_with_locations(self, locations: Iterable[Tuple[float, float]], subgroup_name: str, cluster_name: str, **kwargs):
+        """TODO: Docstring"""
+
+        marker_cluster = self.create_marker_cluster(name=cluster_name)
+        feature_subgroup = self.create_feature_sub_group_of_marker_cluster(cluster=marker_cluster, name=subgroup_name)
+
+        self.add_locations_to_feature_subgroup(locations=locations, subgroup=feature_subgroup, **kwargs)
+
+    def enable_layer_control(self, **kwargs):
+        """TODO: Docstring"""
+
+        folium.LayerControl().add_to(self.folium_map)
+
+    def create_new_cluster_with_geohashes(self, geohashes: Iterable[str], name: str, **kwargs):
+        """TODO Docstring"""
+        
+        locations = []
+
+        for geohash in geohashes:
+            exact_location = self.decode_geo_hash(geohash)
+            locations.append((exact_location[0], exact_location[1]))
+
+        self.create_new_cluster_with_locations(locations=locations, name=name, kwargs=kwargs)
+
+
+
+
 
 
 def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
