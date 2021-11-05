@@ -14,8 +14,8 @@ repos:
         args:
           - -t
           - py36
-  - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.7.4
+  - repo: https://github.com/PyCQA/pylint
+    rev: v2.11.1
     hooks:
       - id: pylint
         args:

@@ -95,6 +95,12 @@ TIProviders:
       AuthKey: *cred_key
     Primary: bool(default=True)
     Provider: "GreyNoise"
+  RiskIQ:
+    Primary: bool(default=True)
+    Provider: "RiskIQ"
+    Args:
+      ApiID: str()
+      AuthKey: *cred_key
 OtherProviders:
   GeoIPLite:
     Args:

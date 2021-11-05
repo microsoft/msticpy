@@ -122,6 +122,9 @@ The extras available in *MSTICPy* are described in the following table:
 |                  |   (default VT lookup is included   |              |              |
 |                  |   in base install)                 |              |              |
 +------------------+------------------------------------+--------------+--------------+
+| riskiq           | - RiskIQ Illuminate threat intel   |       6s     |   1m:19s     |
+|                  |   provider & pivot functions       |              |              |
++------------------+------------------------------------+--------------+--------------+
 | all              | - Includes all of above packages   |   4m:00s     |   5m:29s     |
 +------------------+------------------------------------+--------------+--------------+
 | dev              | - Development tools plus "base"    |   1m:17s     |   2m:30s     |

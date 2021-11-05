@@ -16,6 +16,7 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
+from importlib.util import find_spec
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Callable
@@ -278,6 +279,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         "OpenPageRank",
         "GeoIPLite",
         "IPStack",
+        "RiskIQ",
     ]
     for conf_section in ["TIProviders", "OtherProviders", _DP_KEY]:
         prov_errors, prov_warn = _check_provider_settings(
@@ -298,19 +300,26 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
 
 def _print_validation_report(mp_errors, mp_warn):
     if mp_errors:
-        title = "\nThe following configuration errors were found:"
-        print(title, "\n", "-" * len(title))
-        for err in mp_errors:
-            print(err)
+        _print_validation_item(
+            "\nThe following configuration errors were found:", mp_errors
+        )
+
     else:
         print("No errors found.")
     if mp_warn:
-        title = "\nThe following configuration warnings were found:"
-        print(title, "\n", "-" * len(title))
-        for err in mp_warn:
-            print(err)
+        _print_validation_item(
+            "\nThe following configuration warnings were found:", mp_warn
+        )
+
     else:
         print("No warnings found.")
+
+
+def _print_validation_item(arg0, arg1):
+    title = arg0
+    print(title, "\n", "-" * len(title))
+    for err in arg1:
+        print(err)
 
 
 def _validate_azure_sentinel(mp_config):
@@ -389,13 +398,21 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
         errs.append(_check_required_key(sec_args, "clientId", sec_path))
         errs.append(_check_required_key(sec_args, "tenantId", sec_path))
         errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
-
+    if p_name == "RiskIQ":
+        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
+        errs.append(_check_required_package("passivetotal", sec_path))
     return [err for err in errs if err]
 
 
 def _check_required_key(conf_section, key, sec_path):
     if key not in conf_section or not conf_section.get(key):
         return f"{sec_path}: Missing or invalid {key}."
+    return None
+
+
+def _check_required_package(package, sec_path):
+    if find_spec(package) is None:
+        return f"{sec_path}: Required package '{package}' is not installed."
     return None
 
 
