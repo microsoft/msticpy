@@ -129,6 +129,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
     @_requests_session.setter
     def _requests_session(self, session):
         """Set the PT Analyzer session."""
+        # pylint: disable=consider-using-dict-items
         for name in ptanalyzer.api_clients:
             ptanalyzer.api_clients[name].session = session
 
@@ -184,12 +185,10 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ]:
             result.result = False
             result.status = TILookupStatus.query_failed.value
-            result.details = "ERROR: unsupported query type {}".format(query_type)
+            result.details = f"ERROR: unsupported query type {query_type}"
             return result
         else:
-            prop = self._IOC_QUERIES.get(
-                "{0}-{1}".format(result.ioc_type, query_type), "ALL"
-            )
+            prop = self._IOC_QUERIES.get(f"{result.ioc_type}-{query_type}", "ALL")
 
         try:
             ptanalyzer.set_context("msticpy", "ti", VERSION, prop)
@@ -299,10 +298,10 @@ class RiskIQ(TIProvider, TIPivotProvider):
             obj.reset(prop)
         try:
             attrib = getattr(obj, prop)
-        except ptanalyzer.AnalyzerAPIError as e:
-            raise RiskIQAPIUserError(e)
-        except ptanalyzer.AnalyzerError as e:
-            raise RiskIQUserError(e.message)
+        except ptanalyzer.AnalyzerAPIError as err:
+            raise RiskIQAPIUserError(err.message) from err
+        except ptanalyzer.AnalyzerError as err:
+            raise RiskIQUserError("Analyzer error.") from err
         return attrib.to_dataframe(**kwargs)
 
     def register_pivots(
