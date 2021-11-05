@@ -419,7 +419,7 @@ def read_from_file(
 
     """
     # read in the file using pd.read_csv()
-    df_raw = pd.read_csv(
+    df_raw: pd.DataFrame = pd.read_csv(
         filepath, sep=dummy_sep, names=["raw_data"], skip_blank_lines=True
     )
 
@@ -427,19 +427,20 @@ def read_from_file(
     df_raw["mssg_id"] = df_raw.apply(
         lambda x: _extract_timestamp(x["raw_data"]), axis=1
     )
-    # pylint: disable=unsupported-assignment-operation
+    # pylint: disable=unsupported-assignment-operation, no-member
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}
     df_raw["AuditdMessage"] = df_raw.apply(
         lambda x: _parse_audit_message(x["raw_data"]), axis=1
     )
-    # pylint: enable=unsupported-assignment-operation
 
     # Group the data by message id string and concatenate the message content
     # dictionaries in a list.
     df_grouped_cols = (
         df_raw.groupby(["mssg_id"]).agg({"AuditdMessage": list}).reset_index()
     )
+    # pylint: enable=unsupported-assignment-operation, no-member
+
     # pass this DataFrame to the event extractor.
     return extract_events_to_df(
         data=df_grouped_cols,

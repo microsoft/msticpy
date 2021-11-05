@@ -55,6 +55,12 @@ TIProviders:
   TorExitNodes:
     Primary: True
     Provider: Tor
+  RiskIQ:
+    Primary: True
+    Provider: "RiskIQ"
+    Args:
+      ApiID: "user@host.com"
+      AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
 OtherProviders:
   GeoIPLite:
     Args:

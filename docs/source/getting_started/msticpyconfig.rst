@@ -634,6 +634,12 @@ Commented configuration file sample
       TorExitNodes:
         Primary: True
         Provider: "Tor"
+      RiskIQ:
+        Args:
+          ApiID: "user@host.com"
+          AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
+        Provider: "RiskIQ"
+        Primary: True
     OtherProviders:
       GeoIPLite:
         Args:
