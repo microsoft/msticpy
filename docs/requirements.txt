@@ -1,5 +1,5 @@
 msticpy
 sphinx==4.2.0
-docutils<0.18.0
+docutils<0.19.0
 sphinx-rtd-theme==1.0.0
 readthedocs-sphinx-ext==2.1.4
