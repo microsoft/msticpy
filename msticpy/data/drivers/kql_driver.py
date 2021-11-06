@@ -258,9 +258,10 @@ class KqlDriver(DriverBase):
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
-            if (
-                hasattr(result, "completion_query_info")
-                and result.completion_query_info["StatusCode"] == 0
+            if hasattr(result, "completion_query_info") and (
+                result.completion_query_info.get("StatusCode") == 0
+                or result.completion_query_info.get("Text")
+                == "Query completed successfully"
             ):
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:

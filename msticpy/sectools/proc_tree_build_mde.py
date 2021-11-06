@@ -278,3 +278,74 @@ def _map_columns(
         else:
             unmapped[col_stem] = col
     return col_mapping, unmapped
+
+
+_SENTINEL_MDE_MAP = {
+    "AccountDomain": "CreatedProcessAccountDomainName",
+    "AccountName": "CreatedProcessAccountName",
+    "AccountSid": "CreatedProcessAccountSid",
+    "DeviceId": "MachineId",
+    "DeviceName": "ComputerDnsName",
+    "FileName": "CreatedProcessName",
+    "FolderPath": "CreatedProcessFilePath",
+    "InitiatingProcessAccountDomain": "InitiatingProcessAccountDomainName",
+    "InitiatingProcessCommandLine": "Process_CommandLine",
+    "InitiatingProcessFileName": "InitiatingProcessName",
+    "InitiatingProcessFolderPath": "InitiatingProcessImageFilePath",
+    "InitiatingProcessMD5": "InitiatingProcessImageMd5",
+    "InitiatingProcessParentFileName": "InitiatingProcessParentProcessName",
+    "InitiatingProcessParentId": "InitiatingProcessParentProcessId",
+    "InitiatingProcessSHA1": "InitiatingProcessImageSha1",
+    "InitiatingProcessSHA256": "InitiatingProcessImageSha256",
+    "InitiatingProcessTokenElevation": "InitiatingProcessTokenElevationType",
+    "MD5": "CreatedProcessFileMd5",
+    "ProcessCommandLine": "CreatedProcessCommandLine",
+    "ProcessCreationTime": "CreatedProcessCreationTime",
+    "ProcessId": "CreatedProcessId",
+    "ProcessIntegrityLevel": "CreatedProcessIntegrityLevel",
+    "ProcessTokenElevation": "CreatedProcessTokenElevationType",
+    "SHA1": "CreatedProcessFileSha1",
+    "SHA256": "CreatedProcessFileSha256",
+}
+
+_UNK_TIME = pd.Timestamp("1970-01-01")
+
+
+def convert_sentinel_to_mde(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert MS Sentinel DeviceProcessEvents data to MDE schema.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input data in MS Sentinel schema.
+
+    Returns
+    -------
+    pd.DataFrame
+        Reformatted data in MDE schema.
+
+    """
+    # Fill in missing timestamps with placeholder
+    data["ProcessCreationTime"] = data.TimeGenerated.fillna(_UNK_TIME)
+    data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
+        _UNK_TIME
+    )
+    data[
+        "InitiatingProcessParentCreationTime"
+    ] = data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
+
+    # Proc tree code references CreateProcessParentId
+    # This should be the same as InitiatingProcessParentId
+    data["CreatedProcessParentId"] = data["InitiatingProcessParentId"]
+
+    # Put a value in parent procs with no name
+    null_proc_parent = data["InitiatingProcessParentFileName"] == ""
+    data.loc[null_proc_parent, "InitiatingProcessParentFileName"] = "unknown"
+
+    # Extract InitiatingProc folder path - remove stem
+    data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(
+        lambda x: x.rsplit("\\", maxsplit=1)[0]
+    )
+
+    return data.rename(columns=_SENTINEL_MDE_MAP)
