@@ -194,7 +194,19 @@ class FoliumMap:
         self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
 
     def decode_geo_hash(self, geohash: str, **kwargs):
-        """TODO Docstring"""
+        """
+        Decode a given geohash
+
+        Parameters
+        ----------
+        geohash: str
+            A string representation of a location 
+
+        Returns
+        -------
+        Tuple
+            Tuple representation of a geohash, format of (Latitude, Longitude, Latitude Error interval, Longitude Error Interval)
+        """
 
         return pygeohash.decode_exactly(geohash)
 
@@ -214,10 +226,18 @@ class FoliumMap:
             decoded_location = decode_geo_hash(geohash)
             geo_entities.append(GeoLocation(Latitude=decoded_location[0], Longitude=decoded_location[1]))
         
-        self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
+        self.add_geoloc_cluster(geo_locations=geo_entities,  **kwargs)
 
     def add_marker_clusters(self, clusters: Iterable[MarkerCluster], **kwargs):
-        """TODO: Docstring"""
+        """
+        Take in a collection of MarkerClusters and add them to the map
+
+        Parameters
+        ----------
+        clusters: Iterable[MarkerCluster]
+            Iterable of MarkerClusters
+
+        """
 
         for cluster in clusters:
             self.folium_map.add_child(cluster)
@@ -225,7 +245,15 @@ class FoliumMap:
         return
 
     def add_feature_sub_groups(self, subgroups: Iterable[FeatureGroupSubGroup], **kwargs):
-        """TODO: Docstring"""
+        """
+        Take in a collection of FeatureGroupSubGroups and add them to the map
+
+        Parameters
+        ----------
+        subgroups: Iterable[FeatureGroupSubGroup]
+            Iterable of FeatureGroupSubGroups
+
+        """
 
         for subgroup in subgroups:
             self.folium_map.add_child(subgroup)
@@ -233,31 +261,94 @@ class FoliumMap:
         return
 
     def save_map(self, file_location: str, **kwargs):
+        """
+        TODO: Review to see if we want this
+        Take in a file location and save the map to that location
+
+        Parameters
+        ----------
+        file_location: str
+            File path to save the current map
+
+        """
 
         self.folium_map.save(file_location)
 
         return
 
     def create_marker_cluster(self, name: str, **kwargs):
-        """TODO: Docstring"""
+        """
+        Create and return a MarkerCluster with a given name
+
+        Parameters
+        ----------
+        name: str
+            Desired name of the MarkerCluster
+
+        Returns
+        -------
+        MarkerCluster
+            A Folium MarkerCluster with the provided name
+
+        """
 
         return MarkerCluster(name=name)
 
     def create_feature_sub_group_of_marker_cluster(self, cluster: MarkerCluster, name: str, **kwargs):
-        """TODO: Docstring"""
+        """
+        Create and return a FeatureGroupSubGroup with a given name on a given MarkerCluster
+
+        Parameters
+        ----------
+        cluster: MarkerCluster
+            Folium MarkerCluster to add FeatureGroupSubGroup to
+
+        name: str
+            Desired name of the MarkerCluster
+
+        Returns
+        -------
+        FeatureGroupSubGroup
+            A Folium FeatureGroupSubGroup with the provided name as part of the given MarkerCluster
+            
+        """
 
         return FeatureGroupSubGroup(cluster, name=name)
 
-    def create_marker(self, location: Tuple[float, float], **kwargs):
-        """TODO Docstring"""
+    def create_marker(self, location: Tuple[float, float], tooltip: str = "", **kwargs):
+        """
+        Create and return a Folium Marker at a given location
 
-        return folium.Marker(location=location)
+        Parameters
+        ----------
+        location: Tuple[float,float]
+            Latitude/Longitude coordinates for the Marker
+
+        Returns
+        -------
+        Marker
+            A Folium Marker at the given location coordinates
+
+        """
+
+        return folium.Marker(location=location, tooltip=tooltip, icon=folium.Icon(**kwargs))
 
     def add_locations_to_feature_subgroup(self, locations: Iterable[Tuple[float, float]], subgroup: FeatureGroupSubGroup, **kwargs):
-        """TODO Docstring"""
+        """
+        Create markers from a collection of locations and add to a given FeatureGroupSubGroup, then add the subgroup to the map
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[flaot,float]]
+            Collection of Latitude/Longitude coordinates to be added to the FeatureGroupSubGroup
+
+        subgroup: FeatureGroupSubGroup
+            Subgroup to add locations to, then add to the map
+
+        """
 
         for point in locations:
-            marker = self.create_marker(location=point)
+            marker = self.create_marker(location=point, **kwargs)
             marker.add_to(subgroup)
 
         subgroups = [subgroup]
@@ -265,10 +356,21 @@ class FoliumMap:
         self.add_feature_sub_groups(subgroups)
 
     def add_locations_to_marker_cluster(self, locations: Iterable[Tuple[float, float]], cluster: MarkerCluster, **kwargs):
-        """TODO Docstring"""
+        """
+        Create markers from a collection of locations and add to a given MarkerCluster, then add the cluster to the map
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[flaot,float]]
+            Collection of Latitude/Longitude coordinates to be added to the MarkerCluster
+
+        cluster: MarkerCluster
+            Marker cluster to add locations to, then add to the map
+
+        """
 
         for point in locations:
-            marker = self.create_marker(location=point)
+            marker = self.create_marker(location=point, **kwargs)
             marker.add_to(cluster)
 
         clusters = [cluster]
@@ -276,14 +378,36 @@ class FoliumMap:
         self.add_marker_clusters(clusters)
 
     def create_new_cluster_with_locations(self, locations: Iterable[Tuple[float, float]], name: str, **kwargs):
-        """TODO: Docstring"""
+        """
+        Create markers from a collection of locations, create a MarkerCluster with the given name, add the locations to the cluster, then add the cluster to the map
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[flaot,float]]
+            Collection of Latitude/Longitude coordinates to be added to the MarkerCluster
+
+        name: str
+            Name of Marker Cluster to create, add locations to, then add to the map
+
+        """
 
         marker_cluster = self.create_marker_cluster(name=name)
 
         self.add_locations_to_marker_cluster(locations=locations, cluster=marker_cluster, **kwargs)
 
     def create_new_subgroup_with_locations(self, locations: Iterable[Tuple[float, float]], subgroup_name: str, cluster_name: str, **kwargs):
-        """TODO: Docstring"""
+        """
+        Create markers from a collection of locations, create a FeatureGroupSubGroup with the given name, add the locations to the subgroup, then add the subgroup to the map
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[flaot,float]]
+            Collection of Latitude/Longitude coordinates to be added to the FeatureGroupSubGroup
+
+        name: str
+            Name of FeatureGroupSubGroup to create, add locations to, then add to the map
+
+        """
 
         marker_cluster = self.create_marker_cluster(name=cluster_name)
         feature_subgroup = self.create_feature_sub_group_of_marker_cluster(cluster=marker_cluster, name=subgroup_name)
@@ -291,12 +415,30 @@ class FoliumMap:
         self.add_locations_to_feature_subgroup(locations=locations, subgroup=feature_subgroup, **kwargs)
 
     def enable_layer_control(self, **kwargs):
-        """TODO: Docstring"""
+        """
+        Enable Layer Control on the map
+
+        Parameters
+        ----------
+        None
+        
+        """
 
         folium.LayerControl().add_to(self.folium_map)
 
     def create_new_cluster_with_geohashes(self, geohashes: Iterable[str], name: str, **kwargs):
-        """TODO Docstring"""
+        """
+        A collection of geohashes that are decoded in location cooridnates, create a MarkerCluster with the given name, add the locations to the cluster, then add the cluster to the map
+
+        Parameters
+        ----------
+        locations: Iterable[str]
+            Collection of geohashes to be decoded and added to the MarkerCluster
+
+        name: str
+            Name of Marker Cluster to create, add locations to, then add to the map
+
+        """
         
         locations = []
 
@@ -304,9 +446,7 @@ class FoliumMap:
             exact_location = self.decode_geo_hash(geohash)
             locations.append((exact_location[0], exact_location[1]))
 
-        self.create_new_cluster_with_locations(locations=locations, name=name, kwargs=kwargs)
-
-
+        self.create_new_cluster_with_locations(locations=locations, name=name, **kwargs)
 
 
 
