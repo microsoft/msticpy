@@ -12,14 +12,14 @@ from .exceptions import MsticpyAzureConfigError
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-_CLOUD_MAPPING = {
+CLOUD_MAPPING = {
     "global": azure_cloud.AZURE_PUBLIC_CLOUD,
     "usgov": azure_cloud.AZURE_US_GOV_CLOUD,
     "de": azure_cloud.AZURE_GERMAN_CLOUD,
     "cn": azure_cloud.AZURE_CHINA_CLOUD,
 }
 
-_CLOUD_ALIASES = {"public": "global", "gov": "usgov", "germany": "de", "china": "cn"}
+CLOUD_ALIASES = {"public": "global", "gov": "usgov", "germany": "de", "china": "cn"}
 
 
 def create_cloud_suf_dict(suffix: str) -> dict:
@@ -39,7 +39,7 @@ def create_cloud_suf_dict(suffix: str) -> dict:
     """
     return {
         cloud: getattr(msr_cloud.suffixes, suffix)
-        for cloud, msr_cloud in _CLOUD_MAPPING.items()
+        for cloud, msr_cloud in CLOUD_MAPPING.items()
     }
 
 
@@ -60,7 +60,7 @@ def create_cloud_ep_dict(endpoint: str) -> dict:
     """
     return {
         cloud: getattr(msr_cloud.endpoints, endpoint)
-        for cloud, msr_cloud in _CLOUD_MAPPING.items()
+        for cloud, msr_cloud in CLOUD_MAPPING.items()
     }
 
 
@@ -84,9 +84,9 @@ def get_all_endpoints(cloud: str) -> azure_cloud.CloudEndpoints:
         If the cloud name is not valid.
 
     """
-    cloud = _CLOUD_ALIASES.get(cloud, cloud)
+    cloud = CLOUD_ALIASES.get(cloud, cloud)
     try:
-        endpoints = _CLOUD_MAPPING[cloud].endpoints
+        endpoints = CLOUD_MAPPING[cloud].endpoints
     except KeyError as cloud_err:
         raise MsticpyAzureConfigError(
             f"""{cloud} is not a valid Azure cloud name.
@@ -115,9 +115,9 @@ def get_all_suffixes(cloud: str) -> azure_cloud.CloudSuffixes:
         If the cloud name is not valid.
 
     """
-    cloud = _CLOUD_ALIASES.get(cloud, cloud)
+    cloud = CLOUD_ALIASES.get(cloud, cloud)
     try:
-        endpoints = _CLOUD_MAPPING[cloud].suffixes
+        endpoints = CLOUD_MAPPING[cloud].suffixes
     except KeyError as cloud_err:
         raise MsticpyAzureConfigError(
             f"""{cloud} is not a valid Azure cloud name.

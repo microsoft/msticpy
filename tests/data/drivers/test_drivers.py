@@ -3,10 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+"""Miscellaneous data provider driver tests."""
 import pytest
+import pytest_check as check
 
 from msticpy.common.exceptions import MsticpyException, MsticpyConnectionError
-from msticpy.data import DataEnvironment
+from msticpy.data import DataEnvironment, QueryProvider
 from msticpy.data.drivers import import_driver
 
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
@@ -21,6 +23,9 @@ except ImportError:
     pass
 
 
+# pylint: disable=protected-access
+
+
 _JSON_RESP = {
     "token_type": "Bearer",
     "expires_in": "3599",
@@ -31,20 +36,37 @@ _JSON_RESP = {
     "access_token": None,
 }
 
+_MDEF_TESTS = [
+    (DataEnvironment.MDE, "https://api.securitycenter.microsoft.com"),
+    (DataEnvironment.MDATP, "https://api.securitycenter.microsoft.com"),
+    (DataEnvironment.MD365, "https://api.security.microsoft.com"),
+]
 
-def test_MDATP():
-    driver_cls = import_driver(DataEnvironment.MDATP)
-    mdatp = driver_cls()
-    assert isinstance(mdatp, MDATPDriver)
+
+@pytest.mark.parametrize("env, api", _MDEF_TESTS)
+def test_MDE_driver(env, api):
+    """Test class MDE driver."""
+    driver_cls = import_driver(env)
+    driver = driver_cls(data_environment=env)
+    check.is_instance(driver, MDATPDriver)
+    check.equal(driver.api_root, api)
+
+    qry_prov = QueryProvider(env.name)
+    driver = qry_prov._query_provider
+    check.is_instance(driver, MDATPDriver)
+    check.equal(driver.api_root, api)
     with pytest.raises(MsticpyConnectionError):
-        mdatp.connect(
+        # expect a connection failure
+        qry_prov.connect(
             connection_str="tenant_id=Test;client_id=Test;client_secret=Test;apiRoot=Test;apiVersion=Test"
         )
     with pytest.raises(MsticpyException):
-        mdatp.connect(app_name="MDATP_TEST")
+        # expect an error due to missing parameters
+        qry_prov.connect(app_name="MDATP_TEST")
 
 
 def test_SecurityGraph():
+    """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.SecurityGraph)
     sec_graph = driver_cls()
     assert isinstance(sec_graph, SecurityGraphDriver)
@@ -52,6 +74,7 @@ def test_SecurityGraph():
 
 @pytest.mark.skipif(not _RGE_IMP_OK, reason="Partial msticpy install")
 def test_ResourceGraph():
+    """Test resource graph driver."""
     driver_cls = import_driver(DataEnvironment.ResourceGraph)
     resource_graph = driver_cls()
     assert isinstance(resource_graph, ResourceGraphDriver)

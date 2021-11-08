@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+"""GeoIP provider unit tests."""
 import os
 from pathlib import Path
 import socket
@@ -26,7 +27,7 @@ _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_geoip_notebook():
-    """Test"""
+    """Test geoip notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
 
