@@ -24,6 +24,7 @@ from ...common.exceptions import (
 )
 from ...common.wsconfig import WorkspaceConfig
 from ...common.utility import export
+from ..query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
 try:
@@ -92,7 +93,7 @@ class KqlDriver(DriverBase):
             self._load_kql_magic()
 
         self._schema: Dict[str, Any] = {}
-
+        self.environment = kwargs.get("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
 
         if connection_str:
@@ -116,10 +117,10 @@ class KqlDriver(DriverBase):
         mp_az_auth : Union[bool, str, list, None], optional
             Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
             Values can be:
-            - True or "default": use the settings in msticpyconfig.yaml 'Azure' section
-            - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
-            - auth_methods: list of acceptable auth methods from ('msi', 'cli',
-              'env' or 'interactive')
+            True or "default": use the settings in msticpyconfig.yaml 'Azure' section
+            str: single auth method name ('msi', 'cli', 'env' or 'interactive')
+            List[str]: list of acceptable auth methods from ('msi', 'cli',
+            'env' or 'interactive')
 
         """
         print("Connecting...", end=" ")
@@ -127,7 +128,7 @@ class KqlDriver(DriverBase):
             connection_str = connection_str.code_connect_str
         if not connection_str:
             raise MsticpyKqlConnectionError(
-                "A connection string is needed to connect to Azure Sentinel.",
+                f"A connection string is needed to connect to {self._connect_target}",
                 title="no connection string",
             )
         if "kqlmagic_args" in kwargs:
@@ -206,7 +207,7 @@ class KqlDriver(DriverBase):
                 if table not in self.schema:
                     raise MsticpyNoDataSourceError(
                         f"The table {table} for this query is not in your workspace",
-                        " schema. Please check your workspace",
+                        " or database schema. Please check your this",
                         title=f"{table} not found.",
                     )
         data, result = self.query_with_results(query)
@@ -236,7 +237,7 @@ class KqlDriver(DriverBase):
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running a query.",
-                title="not connected to a workspace.",
+                title=f"not connected to a {self._connect_target}",
                 help_uri=MsticpyKqlConnectionError.DEF_HELP_URI,
             )
 
@@ -257,9 +258,10 @@ class KqlDriver(DriverBase):
         if result is not None:
             if isinstance(result, pd.DataFrame):
                 return result, None
-            if (
-                hasattr(result, "completion_query_info")
-                and result.completion_query_info["StatusCode"] == 0
+            if hasattr(result, "completion_query_info") and (
+                result.completion_query_info.get("StatusCode") == 0
+                or result.completion_query_info.get("Text")
+                == "Query completed successfully"
             ):
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:
@@ -292,6 +294,12 @@ class KqlDriver(DriverBase):
         if self._ip is not None:
             return self._ip.find_magic("kql") is not None
         return bool(kql_exec("--version"))
+
+    @property
+    def _connect_target(self) -> str:
+        if self.environment == DataEnvironment.MSSentinel:
+            return "Workspace"
+        return "Kusto cluster"
 
     @staticmethod
     def _get_schema() -> Dict[str, Dict]:
@@ -397,7 +405,8 @@ class KqlDriver(DriverBase):
         """Raise an authentication error."""
         ex_mssgs = [
             "The authentication failed.",
-            "Please check the credentials you are using and permissions on the workspace",
+            "Please check the credentials you are using and permissions on the ",
+            "workspace or cluster.",
             *(ex.args),
         ]
         raise MsticpyKqlConnectionError(*ex_mssgs, title="authentication failed")
