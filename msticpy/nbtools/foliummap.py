@@ -315,7 +315,7 @@ class FoliumMap:
 
         return FeatureGroupSubGroup(cluster, name=name)
 
-    def create_marker(self, location: Tuple[float, float], tooltip: str = "", **kwargs):
+    def create_marker(self, location: Tuple[float, float], tooltip: str = None, popup: str = None, **kwargs):
         """
         Create and return a Folium Marker at a given location
 
@@ -324,6 +324,12 @@ class FoliumMap:
         location: Tuple[float,float]
             Latitude/Longitude coordinates for the Marker
 
+        tooltip: str [Optional]
+            Tooltip text for the Marker
+
+        popup: str [Optional]
+            Popup text for the Marker
+
         Returns
         -------
         Marker
@@ -331,7 +337,7 @@ class FoliumMap:
 
         """
 
-        return folium.Marker(location=location, tooltip=tooltip, icon=folium.Icon(**kwargs))
+        return folium.Marker(location=location, tooltip=tooltip, popup=popup, icon=folium.Icon(**kwargs))
 
     def add_locations_to_feature_subgroup(self, locations: Iterable[Tuple[float, float]], subgroup: FeatureGroupSubGroup, **kwargs):
         """
@@ -440,14 +446,55 @@ class FoliumMap:
 
         """
         
+        locations = self.decode_geohash_collection(geohashes)
+
+        self.create_new_cluster_with_locations(locations=locations, name=name, **kwargs)
+
+    def create_new_subgroup_with_geohashes(self, geohashes: Iterable[str], subgroup_name: str, cluster_name: str, **kwargs):
+        """"
+        A collection of geohashes that are decoded in location coordinates, create a FeatureSubGroup with the given name and add to a created Marker Cluster of a given name, add the location to the subgroup, then add the subgroup to the map
+
+        Parameters
+        ----------
+        locations: Iterable[str]
+            Collection of geohashes to be decoded and added to the FeatureGroupSubGroup
+
+        subgroup_name: str
+            Name of SubGorup to create, add locations to, then add to the map
+
+        cluster_name: str
+            Name of the Marker Cluster to create and add the SubGroup to
+
+        """
+
+        locations = self.decode_geohash_collection(geohashes)
+
+        self.create_new_subgroup_with_locations(locations=locations, subgroup_name=subgroup_name, cluster_name=cluster_name, **kwargs)
+
+
+    def decode_geohash_collection(self, geohashes: Iterable[str], **kwargs):
+        """
+        A collection of geohashes that are decoded into location coordinates
+
+        Parameters:
+        ----------
+        locations: Iterbale[str]
+            Collection of geohashes to be decoded
+
+        Returns
+        -------
+        Iterable[Tuple[float, float]]
+            Collection of location coordinates in Latitude/Longitude
+            
+        """
+        
         locations = []
 
         for geohash in geohashes:
             exact_location = self.decode_geo_hash(geohash)
             locations.append((exact_location[0], exact_location[1]))
 
-        self.create_new_cluster_with_locations(locations=locations, name=name, **kwargs)
-
+        return locations
 
 
 

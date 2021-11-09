@@ -34,6 +34,7 @@ msrestazure>=0.6.0
 networkx>=2.2
 numpy>=1.15.4  # pandas
 pandas>=1.1.5
+pygeohash>=1.2.0
 python-dateutil>=2.8.1  # pandas
 pytz>=2019.2  # pandas
 pyyaml>=3.13
