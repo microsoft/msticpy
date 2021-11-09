@@ -92,6 +92,42 @@ class TestFoliumMap(unittest.TestCase):
         self.assertAlmostEqual(center[0], 39.847162352941176)
         self.assertAlmostEqual(center[1], -87.36079411764706)
 
+        # test marker clustering
+        folium_map = FoliumMap(zoom_start=5)
+        locations = [(47.5982328, -122.331),(49.278431, -123.112679),(37.776718, -122.416733)]
+        
+        folium_map.create_new_cluster_with_locations(locations=locations,name="Microsoft Campuses")
+        
+        self.assertEqual(len(locations), len(folium_map.locations))
+
+        # test subgroups
+        folium_map = FoliumMap(zoom_start=5)
+        marker_cluster = folium_map.create_marker_cluster(name="All Campuses")
+
+        clusters = [marker_cluster]
+
+        folium_map.add_marker_clusters(clusters=clusters)
+
+        subgroup_us = folium_map.create_feature_sub_group_of_marker_cluster(cluster=marker_cluster, name="US Campuses")
+        subgroup_ca = folium_map.create_feature_sub_group_of_marker_cluster(cluster=marker_cluster, name="Canadian Campuses")
+
+        locations_us = [(47.5982328, -122.331),(37.776718, -122.416733)]
+        locations_ca = [(49.278431, -123.112679)]
+        
+        folium_map.add_locations_to_feature_subgroup(locations=locations_us,subgroup=subgroup_us, color='blue')
+        folium_map.add_locations_to_feature_subgroup(locations=locations_ca,subgroup=subgroup_ca, color='red')
+        
+        self.assertEqual(len(locations_us) + len(locations_ca), len(folium_map.locations))
+
+        # test geohash
+        folium_map = FoliumMap(zoom_start=5)
+        geohashes = ['c23n8','c2b2q']
+        
+        folium_map.create_new_cluster_with_geohashes(geohashes=geohashes,name="Microsoft Campuses")
+
+        self.assertEqual(len(geohashes), len(folium_map.locations))
+
+
     @pytest.mark.skipif(
         not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
     )
