@@ -199,7 +199,29 @@ MDE_EVENT_SCH = ProcSchema(
     host_name_column="ComputerDnsName",
 )
 
-SUPPORTED_SCHEMAS = (WIN_EVENT_SCH, LX_EVENT_SCH, MDE_EVENT_SCH)
+# Sentinel DeviceProcessEvents schema
+# Only used for identifying input table.
+_MDE_SENTINEL_EVENT_SCH = ProcSchema(
+    time_stamp="TimeGenerated",
+    process_name="FileName",
+    process_id="ProcessId",
+    parent_name="InitiatingProcessFileName",
+    parent_id="InitiatingProcessParentId",
+    logon_id="InitiatingProcessLogonId",
+    target_logon_id="LogonId",
+    cmd_line="ProcessCommandLine",
+    user_name="AccountName",
+    path_separator="\\",
+    user_id="AccountSid",
+    host_name_column="DeviceName",
+)
+
+SUPPORTED_SCHEMAS = (
+    WIN_EVENT_SCH,
+    LX_EVENT_SCH,
+    MDE_EVENT_SCH,
+    _MDE_SENTINEL_EVENT_SCH,
+)
 
 
 def build_process_tree(
@@ -249,6 +271,9 @@ def build_process_tree(
             "pass it as the 'schema' parameter to this function.",
         )
 
+    if schema == _MDE_SENTINEL_EVENT_SCH:
+        procs = mde.convert_sentinel_to_mde(procs)
+        schema = MDE_EVENT_SCH
     if schema == MDE_EVENT_SCH:
         extr_proc_tree = mde.extract_process_tree(procs, debug=debug)
     else:

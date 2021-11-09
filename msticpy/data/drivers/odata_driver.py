@@ -29,7 +29,7 @@ class OData(DriverBase):
     # Large number needed due to variability of APIs
     def __init__(self, **kwargs):
         """
-        Instantiaite MDATPDriver and optionally connect.
+        Instantiate MDATPDriver and optionally connect.
 
         Parameters
         ----------
@@ -38,15 +38,16 @@ class OData(DriverBase):
 
         """
         super().__init__()
+        self.oauth_url: Optional[str] = None
+        self.req_body: Optional[Dict[str, Optional[str]]] = None
+        self.api_ver: Optional[str] = None
+        self.api_root: Optional[str] = None
+        self.request_uri: Optional[str] = None
         self.req_headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": None,
         }
-        self.oauth_url: Optional[str] = None
-        self.req_body: Optional[Dict[str, Optional[str]]] = None
-        self.api_ver: Optional[str] = None
-        self.api_root: Optional[str] = None
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
@@ -88,11 +89,12 @@ class OData(DriverBase):
         Connection string fields:
         tenant_id
         client_id
-        clien_secret
+        client_secret
         apiRoot
         apiVersion
 
         """
+        cs_dict: Dict[str, Any] = {}
         if connection_str:
             self.current_connection = connection_str
             cs_dict = self._parse_connection_str(connection_str)
@@ -127,11 +129,13 @@ class OData(DriverBase):
             )
 
         self.req_headers["Authorization"] = "Bearer " + self.aad_token
-        self.api_root = cs_dict.get(  # type: ignore
-            "apiRoot", self.api_root
-        ) + cs_dict.get(  # type: ignore
-            "apiVersion", self.api_ver  # type: ignore
-        )
+        self.api_root = cs_dict.get("apiRoot", self.api_root)
+        if not self.api_root:
+            raise ValueError(
+                f"Sub class {self.__class__.__name__}", "did not set self.api_root"
+            )
+        api_ver = cs_dict.get("apiVersion", self.api_ver)
+        self.request_uri = self.api_root + api_ver
 
         print("Connected.")
         self._connected = True
@@ -171,22 +175,23 @@ class OData(DriverBase):
         # Build request based on whether endpoint requires data to be passed in
         # request body in or URL
         if kwargs["body"] is True:
-            req_url = self.api_root + kwargs["api_end"]
+            req_url = self.request_uri + kwargs["api_end"]
             req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
             body = {"Query": query}
             response = requests.post(
                 url=req_url, headers=self.req_headers, data=str(body)
             )
         else:
-            # api_root set if self.connected
-            req_url = self.api_root + query  # type: ignore
+            # self.request_uri set if self.connected
+            req_url = self.request_uri + query  # type: ignore
             response = requests.get(url=req_url, headers=self.req_headers)
         if response.status_code != requests.codes["ok"]:
+            print(response.json()["error"]["message"])
             if response.status_code == 401:
                 raise ConnectionRefusedError(
                     "Authentication failed - possible ", "timeout. Please re-connect."
                 )
-            # Raise an exception to handle hittng API limits
+            # Raise an exception to handle hitting API limits
             if response.status_code == 429:
                 raise ConnectionRefusedError("You have likely hit the API limit. ")
             response.raise_for_status()
