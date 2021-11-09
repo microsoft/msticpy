@@ -83,6 +83,7 @@ class DataEnvironment(Enum):
     Unknown = 0
     AzureSentinel = 1  # alias of LogAnalytics
     LogAnalytics = 1
+    MSSentinel = 1
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
@@ -93,6 +94,7 @@ class DataEnvironment(Enum):
     Mordor = 8
     ResourceGraph = 9
     Sumologic = 10
+    MD365 = 11
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

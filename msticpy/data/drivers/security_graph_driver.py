@@ -8,6 +8,7 @@ from typing import Union, Any
 import pandas as pd
 
 from .odata_driver import OData, QuerySource
+from ...common.azure_auth_core import AzureCloudConfig
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -21,7 +22,7 @@ class SecurityGraphDriver(OData):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite KqlDriver and optionally connect.
+        Instantiate KqlDriver and optionally connect.
 
         Parameters
         ----------
@@ -29,17 +30,18 @@ class SecurityGraphDriver(OData):
             Connection string
 
         """
+        azure_cloud = AzureCloudConfig()
         super().__init__()
         self.req_body = {
             "client_id": None,
             "client_secret": None,
             "grant_type": "client_credentials",
-            "scope": "https://graph.microsoft.com/.default",
+            "scope": f"{azure_cloud.endpoints.microsoft_graph_resource_id}/.default",
         }
         self.oauth_url = (
-            "https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token"
+            f"{azure_cloud.endpoints.active_directory}/" "{tenantId}/oauth2/v2.0/token"
         )
-        self.api_root = "https://graph.microsoft.com/"
+        self.api_root = azure_cloud.endpoints.microsoft_graph_resource_id
         self.api_ver = kwargs.get("api_ver", "v1.0")
 
         if connection_str:
