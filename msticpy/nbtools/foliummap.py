@@ -356,6 +356,7 @@ class FoliumMap:
         for point in locations:
             marker = self.create_marker(location=point, **kwargs)
             marker.add_to(subgroup)
+            self.locations.append(point)
 
         subgroups = [subgroup]
 
@@ -378,6 +379,7 @@ class FoliumMap:
         for point in locations:
             marker = self.create_marker(location=point, **kwargs)
             marker.add_to(cluster)
+            self.locations.append(point)
 
         clusters = [cluster]
 
