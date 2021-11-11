@@ -25,7 +25,7 @@ class SecurityGraphDriver(OData):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiate KqlDriver and optionally connect.
+        Instantiate MSGraph driver and optionally connect.
 
         Parameters
         ----------
