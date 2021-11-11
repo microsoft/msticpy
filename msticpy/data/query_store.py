@@ -264,11 +264,11 @@ class QueryStore:
                         new_source = QuerySource(
                             source_name, source, defaults, metadata
                         )
-                        if driver_query_filter and _matches_driver_filter(
-                            new_source, driver_query_filter
+                        if not driver_query_filter or (
+                            driver_query_filter
+                            and _matches_driver_filter(new_source, driver_query_filter)
                         ):
                             env_stores[environment.name].add_data_source(new_source)
-
         return env_stores
 
     def get_query(
