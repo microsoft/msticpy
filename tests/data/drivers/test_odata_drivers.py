@@ -16,6 +16,8 @@ from msticpy.data.drivers import import_driver
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
 from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
 
+from ...unit_test_lib import get_test_data_path, custom_mp_config
+
 _RGE_IMP_OK = False
 try:
     from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
@@ -25,6 +27,7 @@ except ImportError:
     pass
 
 
+MP_PATH = str(get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"))
 # pylint: disable=protected-access
 
 
@@ -50,11 +53,13 @@ def test_MDE_driver(env, api):
     """Test class MDE driver."""
     env_enum = DataEnvironment.parse(env)
     driver_cls = import_driver(env_enum)
-    driver = driver_cls(data_environment=env_enum)
+    with custom_mp_config(MP_PATH):
+        driver = driver_cls(data_environment=env_enum)
     check.is_instance(driver, MDATPDriver)
     check.equal(driver.api_root, api)
 
-    qry_prov = QueryProvider(env)
+    with custom_mp_config(MP_PATH):
+        qry_prov = QueryProvider(env)
     driver = qry_prov._query_provider
     check.is_instance(driver, MDATPDriver)
     check.greater_equal(len(qry_prov.list_queries()), 40)
@@ -95,7 +100,8 @@ def _mde_create_mock(requests):
 def test_mde_connect(requests, env, api):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
-    mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
+    with custom_mp_config(MP_PATH):
+        mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
     mde_drv.connect()
@@ -115,7 +121,8 @@ _MDE_CONNECT_STR = [
 def test_mde_connect_str(requests, env, api, con_str):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
-    mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
+    with custom_mp_config(MP_PATH):
+        mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
     mde_drv.connect(con_str)
@@ -139,7 +146,8 @@ _MDE_CONNECT_PARAMS = [
 def test_mde_connect_params(requests, env, api, params):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
-    mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
+    with custom_mp_config(MP_PATH):
+        mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
     mde_drv.connect(**params)
@@ -153,7 +161,8 @@ _AUTH_RESP = {"access_token": "123456789"}
 def test_security_graph_connect(requests):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.SecurityGraph)
-    sec_graph = driver_cls()
+    with custom_mp_config(MP_PATH):
+        sec_graph = driver_cls()
     assert isinstance(sec_graph, SecurityGraphDriver)
     check.is_false(sec_graph.connected)
     check.equal(sec_graph.api_root, "https://graph.microsoft.com/")
