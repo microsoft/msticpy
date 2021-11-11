@@ -32,10 +32,10 @@ definitions:
   kv_path_defn: &kv_path
     KeyVault: str(required=False)
   cred_key_opts:
-      one_of:
-        - str: str()
-        - <<: *env_var
-        - <<: *kv_path
+    one_of:
+      - str: str()
+      - <<: *env_var
+      - <<: *kv_path
   macros:
     - &cred_key cred_key(mp_defn_path="/definitions/cred_key_opts")
     - &cred_key_opt cred_key(mp_defn_path="/definitions/cred_key_opts", required=False)
@@ -91,7 +91,7 @@ TIProviders:
     Provider: "Tor"
   GreyNoise:
     Args:
-    # Leave AuthKey empty to use the community API or populate if you want to use the Enterprise API features.
+      # Leave AuthKey empty to use the community API or populate if you want to use the Enterprise API features.
       AuthKey: *cred_key
     Primary: bool(default=True)
     Provider: "GreyNoise"
@@ -144,6 +144,18 @@ DataProviders:
   Browshot:
     Args:
       AuthKey: *cred_key
+  MicrosoftDefender:
+    Args:
+      ClientId: str(format=uuid)
+      TenantId: str(format=uuid)
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key
+  MicrosoftGraph:
+    Args:
+      ClientId: str(format=uuid)
+      TenantId: str(format=uuid)
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:
@@ -151,7 +163,7 @@ AzureCLI:
     clientId: str(required=False, format=uuid)
     tenantId: str(required=False, format=uuid)
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
-    clientSecret:  *cred_key
+    clientSecret: *cred_key
 KeyVault:
   # Key Vault connection specification for secrets
   TenantId: str(format=uuid)
