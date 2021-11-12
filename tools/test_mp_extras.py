@@ -188,7 +188,7 @@ def _get_installed_pkgs():
 def create_baseline(output=None):
     """Create baseline file for current packages."""
     output = output or "baseline_pkg.txt"
-    with open(output, "w") as bl_file:
+    with open(output, "w", encoding="utf-8") as bl_file:
         bl_file.write("\n".join(sorted(_get_installed_pkgs())))
     print(f"baseline packages written to {output}")
 
@@ -204,11 +204,11 @@ def make_dist(path: str, verbose: bool):
     print("Creating distrib wheel")
     if verbose:
         print(" ".join(sp_run))
-    subprocess.run(sp_run, cwd=path, **(VERB_ARGS if verbose else {}))
+    subprocess.run(sp_run, cwd=path, **(VERB_ARGS if verbose else {}))  # type: ignore
 
 
 def _read_base_pkg_list(pkg_file):
-    with open(pkg_file, "r") as pkg_fh:
+    with open(pkg_file, "r", encoding="utf-8") as pkg_fh:
         pkg_lines = pkg_fh.readlines()
     for pkg_line in pkg_lines:
         try:

@@ -4,7 +4,7 @@ ProcessTree
 This describes the use of the process tree data and
 visualization modules. These modules can be used with Windows
 process creation events (ID 4688), Linux auditd logs or Microsoft Defender
-for Endpoint (MDE) logs. The
+for Endpoint (MDE)/Microsoft 365 Defender logs. The
 ProcessTree visualization is built
 using the `Bokeh library <https://bokeh.pydata.org>`__.
 
@@ -710,7 +710,7 @@ properties such as process name and process ID between different
 input schemas.
 
 The built-in schemas for Windows 4688, Linux Auditd and Microsoft Defender
-for Endpoint (MDE) are shown below.
+are shown below.
 
 ===================  =====================  =====================  ===========================
 Generic name         Win 4688 schema        Linux auditd schema    MDE schema

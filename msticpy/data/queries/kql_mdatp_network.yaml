@@ -1,7 +1,7 @@
 metadata:
   version: 1
   description: MDATP Queries
-  data_environments: [MDATP, MDE, MD365]
+  data_environments: [MDATP, MDE, M365D]
   data_families: [MDATP]
   tags: ["network"]
 defaults:

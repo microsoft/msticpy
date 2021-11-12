@@ -44,7 +44,7 @@ _JSON_RESP = {
 _MDEF_TESTS = [
     ("MDE", "https://api.securitycenter.microsoft.com/"),
     ("MDATP", "https://api.securitycenter.microsoft.com/"),
-    ("MD365", "https://api.security.microsoft.com/"),
+    ("M365D", "https://api.security.microsoft.com/"),
 ]
 
 
@@ -94,7 +94,7 @@ def _mde_create_mock(requests):
 
 @pytest.mark.parametrize(
     "env, api",
-    [("MDATP", "securitycenter"), ("MDE", "securitycenter"), ("MD365", "security")],
+    [("MDATP", "securitycenter"), ("MDE", "securitycenter"), ("M365D", "security")],
 )
 @patch("msticpy.data.drivers.odata_driver.requests")
 def test_mde_connect(requests, env, api):
@@ -104,7 +104,8 @@ def test_mde_connect(requests, env, api):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
-    mde_drv.connect()
+    with custom_mp_config(MP_PATH):
+        mde_drv.connect()
     _mde_post_checks(mde_drv, api, requests)
 
 
@@ -112,7 +113,7 @@ _CONSTRING = "client_id=1234;tenant_id=8360dd21-0294-4240-9128-89611f415c53;clie
 _MDE_CONNECT_STR = [
     ("MDATP", "securitycenter", _CONSTRING),
     ("MDE", "securitycenter", _CONSTRING),
-    ("MD365", "security", _CONSTRING),
+    ("M365D", "security", _CONSTRING),
 ]
 
 
@@ -125,7 +126,8 @@ def test_mde_connect_str(requests, env, api, con_str):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
-    mde_drv.connect(con_str)
+    with custom_mp_config(MP_PATH):
+        mde_drv.connect(con_str)
     _mde_post_checks(mde_drv, api, requests)
 
 
@@ -137,7 +139,7 @@ _PARAMS = {
 _MDE_CONNECT_PARAMS = [
     ("MDATP", "securitycenter", _PARAMS),
     ("MDE", "securitycenter", _PARAMS),
-    ("MD365", "security", _PARAMS),
+    ("M365D", "security", _PARAMS),
 ]
 
 
@@ -150,7 +152,8 @@ def test_mde_connect_params(requests, env, api, params):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
     _mde_create_mock(requests)
-    mde_drv.connect(**params)
+    with custom_mp_config(MP_PATH):
+        mde_drv.connect(**params)
     _mde_post_checks(mde_drv, api, requests)
 
 
@@ -170,7 +173,8 @@ def test_security_graph_connect(requests):
     response = Mock()
     response.json.return_value = _AUTH_RESP.copy()
     requests.post.return_value = response
-    sec_graph.connect()
+    with custom_mp_config(MP_PATH):
+        sec_graph.connect()
     check.equal(sec_graph.aad_token, _AUTH_RESP["access_token"])
     requests.post.assert_called_once()
     check.equal(

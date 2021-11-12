@@ -40,6 +40,7 @@ DataProviders:
 
 @pytest.fixture(scope="module")
 def kusto_qry_prov():
+    """Return query provider with query paths."""
     qry_path = str(get_test_data_path().joinpath("kusto"))
     msticpy_config = get_test_data_path().joinpath("msticpyconfig.yaml")
     with custom_mp_config(msticpy_config):
@@ -95,7 +96,7 @@ def test_kusto_driver_queries(inst, qry_args, monkeypatch, kusto_qry_prov):
 
 
 @pytest.mark.parametrize("inst, qry_args", _KUSTO_TESTS)
-def test_kusto_driver_params_fail(inst, qry_args, monkeypatch, kusto_qry_prov):
+def test_kusto_driver_params_fail(inst, qry_args, monkeypatch):
     """Test with parameters but missing config."""
     qry_path = str(get_test_data_path().joinpath("kusto"))
     msticpy_config = get_test_data_path().joinpath("msticpyconfig-nokusto.yaml")

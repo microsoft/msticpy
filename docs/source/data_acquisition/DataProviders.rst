@@ -391,24 +391,28 @@ Microsoft Defender for Endpoint, and the Microsoft Graph APIs.
 These connections often rely on having a
 dedicated Azure AD app (plus app secret) for handling the authentication process.
 
-Microsoft Defender
-~~~~~~~~~~~~~~~~~~
+Microsoft 365 Defender
+~~~~~~~~~~~~~~~~~~~~~~
 :py:mod:`MDATP driver API documentation<msticpy.data.drivers.mdatp_driver>`
 
-Details on registering an Azure AD application for MS Defender can be found
+.. note:: This section applies to both Microsoft 365 Defender and Microsoft Defender
+    for Endpoint (MDE). The former supersedes and is a subset of the the latter
+    but both are still available to use.
+
+Details on registering an Azure AD application for MS 365 Defender can be found
 `here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
 Once you have registered the application you can use it to connect to
 the MS Defender API.
 
-When connecting the required elements for connection can be passed in
-a number of ways. The simplest is to pass the required elements as
+The parameters required for connection to Defender can be passed in
+a number of ways. The simplest is to pass these as
 keyword arguments (although it's better to add these to your configuration
 if you are going to be using them directly - see the following section).
 
 You need to both load the Microsoft Defender data provider and call
 the connect function to authenticate.
 
-Call the QueryProvider with "MD365" as the environment parameter.
+Call the QueryProvider with "M365D" as the environment parameter.
 To use the Defender for Endpoint API you can pass "MDE" as the parameter.
 
 If you are specifying connection parameters in the function call (rather
@@ -424,7 +428,7 @@ than using configuration settings), the required parameters are:
         ten_id = input('Tenant ID')
         client_id = input('Client ID')
         client_secret = input('Client Secret')
-        md_prov = QueryProvider('MD365')
+        md_prov = QueryProvider('M365D')
         md_prov.connect(tenant_id=ten_id, client_id=client_id, client_secret=client_secret)
 
 .. note:: You can also specify these parameters as a connection string:
@@ -463,7 +467,7 @@ To use the configured values, call ``connect`` with no parameters.
 
 .. code:: ipython3
 
-        mdatp_prov = QueryProvider('MD365')
+        mdatp_prov = QueryProvider('M365D')
         mdatp_prov.connect()
 
 For examples of using the MS Defender provider, see the sample MDATPQuery Notebook.

@@ -37,7 +37,7 @@ class MDATPDriver(OData):
         super().__init__(**kwargs)
         api_uri, oauth_uri, api_suffix = _select_api_uris(self.data_environment)
         self.add_query_filter("data_environments", "MDE")
-        self.add_query_filter("data_environments", "MD365")
+        self.add_query_filter("data_environments", "M365D")
         self.add_query_filter("data_environments", "MDATP")
 
         self.req_body = {
@@ -83,7 +83,7 @@ def _select_api_uris(data_environment):
     """Return API and login URIs for selected provider type."""
     cloud_config = AzureCloudConfig()
     login_uri = cloud_config.endpoints.active_directory
-    if data_environment == DataEnvironment.MD365:
+    if data_environment == DataEnvironment.M365D:
         return (
             "https://api.security.microsoft.com/",
             f"{login_uri}/{{tenantId}}/oauth2/token",
