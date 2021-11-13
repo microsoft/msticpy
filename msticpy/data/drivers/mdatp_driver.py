@@ -21,6 +21,9 @@ __author__ = "Pete Bryan"
 class MDATPDriver(OData):
     """KqlDriver class to retreive date from MS Defender APIs."""
 
+    CONFIG_NAME = "MicrosoftDefender"
+    _ALT_CONFIG_NAMES = ["MDATPApp"]
+
     def __init__(self, connection_str: str = None, **kwargs):
         """
         Instantiate MSDefenderDriver and optionally connect.
@@ -31,10 +34,12 @@ class MDATPDriver(OData):
             Connection string
 
         """
-        super().__init__()
-        api_uri, oauth_uri, api_suffix = _select_api_uris(
-            data_environment=kwargs.get("data_environment")
-        )
+        super().__init__(**kwargs)
+        api_uri, oauth_uri, api_suffix = _select_api_uris(self.data_environment)
+        self.add_query_filter("data_environments", "MDE")
+        self.add_query_filter("data_environments", "M365D")
+        self.add_query_filter("data_environments", "MDATP")
+
         self.req_body = {
             "client_id": None,
             "client_secret": None,
@@ -78,14 +83,14 @@ def _select_api_uris(data_environment):
     """Return API and login URIs for selected provider type."""
     cloud_config = AzureCloudConfig()
     login_uri = cloud_config.endpoints.active_directory
-    if data_environment == DataEnvironment.MD365:
+    if data_environment == DataEnvironment.M365D:
         return (
-            "https://api.security.microsoft.com",
+            "https://api.security.microsoft.com/",
             f"{login_uri}/{{tenantId}}/oauth2/token",
             "/advancedhunting/run",
         )
     return (
-        "https://api.securitycenter.microsoft.com",
+        "https://api.securitycenter.microsoft.com/",
         f"{login_uri}/{{tenantId}}/oauth2/token",
         "/advancedqueries/run",
     )

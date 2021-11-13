@@ -68,7 +68,7 @@ class SplunkDriver(DriverBase):
 
     def __init__(self, **kwargs):
         """Instantiate Splunk Driver."""
-        super().__init__()
+        super().__init__(**kwargs)
         self.service = None
         self._loaded = True
         self._connected = False

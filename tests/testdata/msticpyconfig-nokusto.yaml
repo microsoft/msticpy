@@ -17,14 +17,14 @@ Azure:
 TIProviders:
   OTX:
     Args:
-      AuthKey:
-        EnvironmentVar: "OTX_AUTH"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "987654321"
     Primary: True
-    Provider: "OTX"
+    Provider: "OTX" # Explicitly name provider to override
   VirusTotal:
     Args:
       AuthKey:
-        EnvironmentVar: "VIRUSTOTAL_AUTH"
+        EnvironmentVar: VTAUTHKEY
     Primary: True
     Provider: "VirusTotal"
   XForce:
@@ -32,30 +32,35 @@ TIProviders:
       ApiID:
         EnvironmentVar: "XFORCE_ID"
       AuthKey:
-        EnvironmentVar: "XFORCE_AUTH"
+        EnvironmentVar: "XFORCE_KEY"
     Primary: False
     Provider: "XForce"
   GreyNoise:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   AzureSentinel:
     Args:
-      # TBD
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
-    Primary: False
-    Provider: "AzSTI"
+    Primary: True
+    Provider: "NoLoad-AzSTI"
   OpenPageRank:
     Args:
-      AuthKey:
-        EnvironmentVar: "OPR_AUTH"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
     Provider: "OPR"
   TorExitNodes:
     Primary: True
     Provider: Tor
+  RiskIQ:
+    Primary: True
+    Provider: "RiskIQ"
+    Args:
+      ApiID: "user@host.com"
+      AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
 OtherProviders:
   GeoIPLite:
     Args:
@@ -65,10 +70,16 @@ OtherProviders:
     Provider: "GeoLiteLookup"
   IPStack:
     Args:
-      AuthKey:
-        EnvironmentVar: "IPSTACK_AUTH"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "987654321-222"
     Provider: "IPStackLookup"
 DataProviders:
+  AzureCLI:
+    Args:
+      clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
+      tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
   MicrosoftDefender:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53

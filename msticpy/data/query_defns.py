@@ -94,7 +94,7 @@ class DataEnvironment(Enum):
     Mordor = 8
     ResourceGraph = 9
     Sumologic = 10
-    MD365 = 11
+    M365D = 11
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

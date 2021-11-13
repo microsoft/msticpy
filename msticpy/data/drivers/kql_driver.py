@@ -62,6 +62,9 @@ _LOGANALYTICS_URL_BY_CLOUD = {
 }
 
 
+# pylint: disable=too-many-instance-attributes
+
+
 @export
 class KqlDriver(DriverBase):
     """KqlDriver class to execute kql queries."""
@@ -83,7 +86,7 @@ class KqlDriver(DriverBase):
         """
         self._ip = get_ipython()
         self._debug = kwargs.get("debug", False)
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
         self._loaded = self._is_kqlmagic_loaded()
@@ -123,7 +126,8 @@ class KqlDriver(DriverBase):
             'env' or 'interactive')
 
         """
-        print("Connecting...", end=" ")
+        if not self._previous_connection:
+            print("Connecting...", end=" ")
         if isinstance(connection_str, WorkspaceConfig):
             connection_str = connection_str.code_connect_str
         if not connection_str:
@@ -143,7 +147,8 @@ class KqlDriver(DriverBase):
             if self._ip is not None:
                 try:
                     kql_exec(connection_str)
-                    print("connected")
+                    if not self._previous_connection:
+                        print("connected")
                 except KqlError as ex:
                     self._raise_kql_error(ex)
                 except KqlEngineError as ex:
@@ -153,6 +158,7 @@ class KqlDriver(DriverBase):
                 except Exception as ex:  # pylint: disable=broad-except
                     self._raise_adal_error(ex)
                 self._connected = True
+                self._previous_connection = True
                 self._schema = self._get_schema()
             else:
                 print(f"Could not connect to kql query provider for {connection_str}")
@@ -232,8 +238,11 @@ class KqlDriver(DriverBase):
         """
         # connect or switch the connection if our connection string
         # is not the current KqlMagic connection.
-        if not self.connected and self.current_connection:
+        # if not self.connected and self.current_connection:
+        try:
             self.connect(self.current_connection)
+        except MsticpyKqlConnectionError:
+            self._connected = False
         if not self.connected:
             raise MsticpyNotConnectedError(
                 "Please run the connect() method before running a query.",
@@ -268,15 +277,7 @@ class KqlDriver(DriverBase):
                     print("Warning - query returned partial results.")
                 return data_frame, result
 
-        # Query failed
-        err_args = []
-        if hasattr(result, "completion_query_info"):
-            err_desc = result.completion_query_info.get("StatusDescription")
-            err_desc = f"StatusDescription {err_desc}"
-            err_code = f"(err_code: {result.completion_query_info.get('StatusCode')})"
-            err_args = [err_desc, err_code]
-        err_args.append(f"Query:\n{query}")
-        raise MsticpyDataQueryError(*err_args)
+        return self._raise_query_failure(query, result)
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
@@ -346,6 +347,27 @@ class KqlDriver(DriverBase):
             else:
                 fmt_list.append(f"{item}")
         return ",".join(fmt_list)
+
+    @staticmethod
+    def _raise_query_failure(query, result):
+        """Raise query failure exception."""
+        err_contents = []
+        if hasattr(result, "completion_query_info"):
+            q_info = result.completion_query_info
+            if "StatusDescription" in q_info:
+                err_contents = [
+                    f"StatusDescription {q_info.get('StatusDescription')}",
+                    f"(err_code: {result.completion_query_info.get('StatusCode')})",
+                ]
+            elif "Text" in q_info:
+                err_contents = [f"StatusDescription {q_info.get('Text')}"]
+            else:
+                err_contents = [f"Unknown error type: {q_info}"]
+        if not err_contents:
+            err_contents = ["Unknown query error"]
+
+        err_contents.append(f"Query:\n{query}")
+        raise MsticpyDataQueryError(*err_contents)
 
     _WS_RGX = r"workspace\(['\"](?P<ws>[^'\"]+)"
     _TEN_RGX = r"tenant\(['\"](?P<tenant>[^'\"]+)"

@@ -363,7 +363,7 @@ Pivot functions are grouped into containers
 
 Data queries are grouped into a container with the name of the data
 provider to which they belong. E.g. AzureSentinel queries are in a
-container of that name, Spunk queries would be in a “Splunk” container.
+container of that name, Splunk queries would be in a “Splunk” container.
 
 TI lookups are put into a "ti" container.
 
