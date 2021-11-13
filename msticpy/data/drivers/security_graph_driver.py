@@ -20,9 +20,12 @@ __author__ = "Ian Hellen"
 class SecurityGraphDriver(OData):
     """Driver to query security graph."""
 
+    CONFIG_NAME = "MicrosoftGraph"
+    _ALT_CONFIG_NAMES = ["SecurityGraphApp"]
+
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiate KqlDriver and optionally connect.
+        Instantiate MSGraph driver and optionally connect.
 
         Parameters
         ----------
@@ -30,8 +33,8 @@ class SecurityGraphDriver(OData):
             Connection string
 
         """
+        super().__init__(**kwargs)
         azure_cloud = AzureCloudConfig()
-        super().__init__()
         self.req_body = {
             "client_id": None,
             "client_secret": None,

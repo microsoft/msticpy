@@ -22,8 +22,8 @@ Use Cases and Environments
 
 Although *msticpy* was originally developed for use with Azure Sentinel,
 much of the package is agnostic to the data source. Data query components
-are also supplied for Microsoft Defender Advanced Threat Protection and
-Microsoft Security Graph.
+for Splunk, Microsoft 365 Defender Advanced, Microsoft Graph and others
+are also included.
 
 The tool APIs typically accept a pandas DataFrame as input and, where
 appropriate, return output as a DataFrame.

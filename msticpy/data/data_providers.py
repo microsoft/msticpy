@@ -375,7 +375,11 @@ class QueryProvider:
                 "No valid query definition files found. ",
                 "Please check your msticpyconfig.yaml settings.",
             )
-        return QueryStore.import_files(source_path=all_query_paths, recursive=True)
+        return QueryStore.import_files(
+            source_path=all_query_paths,
+            recursive=True,
+            driver_query_filter=self._query_provider.query_attach_spec,
+        )
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""

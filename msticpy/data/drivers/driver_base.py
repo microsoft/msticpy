@@ -6,7 +6,8 @@
 """Data driver base class."""
 import abc
 from abc import ABC
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+from collections import defaultdict
+from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
 
 import pandas as pd
 
@@ -17,6 +18,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-instance-attributes
 class DriverBase(ABC):
     """Base class for data providers."""
 
@@ -30,6 +32,9 @@ class DriverBase(ABC):
         self.formatters: Dict[str, Callable] = {}
         self.use_query_paths = True
         self.has_driver_queries = False
+        self._previous_connection = False
+        self.data_environment = kwargs.get("data_environment")
+        self._query_filter: Dict[str, Set[str]] = defaultdict(set)
 
     @property
     def loaded(self) -> bool:
@@ -166,3 +171,18 @@ class DriverBase(ABC):
 
         """
         return [{}]
+
+    @property
+    def query_attach_spec(self) -> Dict[str, Set[str]]:
+        """Parameters that determine whether a query is relevant for the driver."""
+        return self._query_filter
+
+    def add_query_filter(self, name, query_filter):
+        """Add an expression to the query attach filter."""
+        allowed_names = {"data_environments", "data_families", "data_sources"}
+        if name not in allowed_names:
+            raise ValueError(
+                f"'name' {name} must be one of:",
+                ", ".join(f"'{name}'" for name in allowed_names),
+            )
+        self._query_filter[name].add(query_filter)

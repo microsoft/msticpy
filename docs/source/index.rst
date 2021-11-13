@@ -27,8 +27,9 @@ Background - Why we created *msticpy*
 The package was originally built for authoring notebooks in
 `Azure Sentinel <https://azure.microsoft.com/en-us/services/azure-sentinel/>`__.
 While Azure Sentinel is still a big focus of our work, we are
-extending the data query/acquisition components to pull log data from
-other sources (currently Microsoft Defender and Microsoft Graph but we
+have extended the data query/acquisition components to pull log data from
+other sources (e.g. Splunk, Microsoft 365 Defender and Microsoft Graph,
+SumoLogic, and
 are actively working on support for data from other SIEM platforms).
 Most of the components can also be used with data from any source. Pandas
 dataframes are used as the ubiquitous input and output format of almost

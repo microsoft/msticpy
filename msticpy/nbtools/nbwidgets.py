@@ -636,15 +636,17 @@ class SelectAlert:
         self.id_col = id_col
         self.time_col = time_col
 
-        if not columns:
-            columns = [
-                "AlertName",
-                "CompromisedEntity",
-            ]
-        self.columns = columns
+        self.columns = columns or [
+            "AlertName",
+            "CompromisedEntity",
+        ]
 
-        items = alerts[self.columns + [self.time_col] + [self.id_col]]
-        items = items.sort_values(time_col, ascending=True)
+        alert_cols = self.columns
+        if self.time_col not in alert_cols:
+            alert_cols.append(self.time_col)
+        if self.id_col not in alert_cols:
+            alert_cols.append(self.id_col)
+        items = alerts[alert_cols].sort_values(time_col, ascending=True)
         self._select_items = items.apply(
             self._alert_summary,
             axis=1,

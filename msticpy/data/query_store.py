@@ -205,7 +205,10 @@ class QueryStore:
 
     @classmethod  # noqa: MC0001
     def import_files(  # noqa: MC0001
-        cls, source_path: list, recursive: bool = False
+        cls,
+        source_path: list,
+        recursive: bool = False,
+        driver_query_filter: Optional[Dict[str, Set[str]]] = None,
     ) -> Dict[str, "QueryStore"]:
         """
         Import multiple query definition files from directory path.
@@ -217,6 +220,10 @@ class QueryStore:
         recursive : bool, optional
             True to recurse sub-directories
             (the default is False, which only reads from the top level)
+        driver_query_filter : Dict[str, Set[str]]
+            A dictionary of query metadata keys and values. This is used
+            to test each read query to see if it is relevant to the driver
+            and should be returned in the created QueryStore dictionary.
 
         Returns
         -------
@@ -257,8 +264,11 @@ class QueryStore:
                         new_source = QuerySource(
                             source_name, source, defaults, metadata
                         )
-                        env_stores[environment.name].add_data_source(new_source)
-
+                        if not driver_query_filter or (
+                            driver_query_filter
+                            and _matches_driver_filter(new_source, driver_query_filter)
+                        ):
+                            env_stores[environment.name].add_data_source(new_source)
         return env_stores
 
     def get_query(
@@ -319,3 +329,22 @@ class QueryStore:
             for family, query_dict in self.data_families.items()
             if query_name in query_dict
         }
+
+
+def _matches_driver_filter(
+    query_source: QuerySource, filter_spec: Dict[str, Set[str]]
+) -> bool:
+    """Return True if the source metadata matches the filter spec."""
+    match = True
+    for item_name, filter_value in filter_spec.items():
+        if not filter_value:
+            continue
+        source_name = "data_source" if item_name == "data_sources" else item_name
+        source_val = query_source.metadata.get(source_name)
+        if isinstance(source_val, list):
+            match &= bool(filter_value & set(source_val))
+        else:
+            match &= bool(filter_value & {source_val})
+        if not match:
+            break
+    return match
