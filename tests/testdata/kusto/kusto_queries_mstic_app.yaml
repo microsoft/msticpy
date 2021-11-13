@@ -2,8 +2,8 @@ metadata:
   version: 1
   description: Kusto Queries
   data_environments: [Kusto]
-  data_families: [MDE.scrubbeddata]
-  cluster: https://wcdscrubbedservice.kusto.windows.net
+  data_families: [AppAuthCluster.scrubbeddata]
+  cluster: https://msticapp.kusto.windows.net
   tags: ["user"]
 defaults:
   parameters:
@@ -84,8 +84,8 @@ sources:
   query_new_alias:
     description: Lists all processes with a command line containing a string
     metadata:
-      data_families: [MDE2.scrubbeddata]
-      cluster: https://wcdscrubbedservice.kusto.windows.net
+      data_families: [AppAuthClustera.scrubbeddata]
+      cluster: https://msticapp.kusto.windows.net
     args:
       query: '
         {table}
@@ -101,7 +101,7 @@ sources:
     description: Lists all processes with a command line containing a string
     metadata:
       data_families: [scrubbeddata]
-      cluster: https://wcdscrubbedservice.kusto.windows.net
+      cluster: https://msticapp.kusto.windows.net
     args:
       query: '
         {table}
@@ -116,7 +116,7 @@ sources:
   bad_query_no_cluster:
     description: Lists all processes with a command line containing a string
     metadata:
-      data_families: [MDE.scrubbeddata]
+      data_families: [AppAuthCluster.scrubbeddata]
       cluster:
     args:
       query: '
