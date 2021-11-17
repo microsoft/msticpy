@@ -74,15 +74,13 @@ OtherProviders:
       AuthKey: "987654321-222"
     Provider: "IPStackLookup"
 DataProviders:
-  Kusto-MSTIC:
+  Kusto-MSTIC1:
     Args:
-      Cluster: https://msticti.kusto.windows.net
-      ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
-      TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
-      ClientSecret: "[PLACEHOLDER]"
-  Kusto-MDE:
+      Cluster: https://mstic.kusto.windows.net
+      IntegratedAuth: True
+  Kusto-MSTIC2:
     Args:
-      Cluster: https://wcdscrubbedservice.kusto.windows.net
+      Cluster: https://msticapp.kusto.windows.net
       ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
       TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
       ClientSecret: "[PLACEHOLDER]"

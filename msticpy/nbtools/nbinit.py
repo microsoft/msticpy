@@ -465,6 +465,7 @@ def _get_or_create_config() -> bool:
         mp_path = search_for_file("msticpyconfig.yaml", paths=[".", ".."])
 
     if mp_path:
+        errs: List[str] = []
         try:
             std_out_cap = io.StringIO()
             with redirect_stdout(std_out_cap):
