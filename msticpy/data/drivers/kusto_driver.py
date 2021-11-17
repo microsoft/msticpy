@@ -19,12 +19,9 @@ from ..._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_KCS_TEMPLATE = (
-    "azure_data-Explorer://"
-    "tenant='{tenant}';clientid='{clientid}';clientsecret='{clientsecret}';"
-    "cluster='{cluster}';"
-    "database='{database}'"
-)
+_KCS_CODE = "code;"
+_KCS_APP = "tenant='{tenant}';clientid='{clientid}';clientsecret='{clientsecret}';"
+_KCS_TEMPLATE = "azure_data-Explorer://{auth}cluster='{cluster}';database='{database}'"
 
 KustoClusterSettings = Dict[str, Dict[str, Union[str, ProviderArgs]]]
 
@@ -53,6 +50,39 @@ class KustoDriver(KqlDriver):
         self._connected = True
         self._kusto_settings: KustoClusterSettings = _get_kusto_settings()
 
+    def connect(self, connection_str: Optional[str] = None, **kwargs):
+        """
+        Connect to data source.
+
+        Parameters
+        ----------
+        connection_str : str
+            Connect to a data source
+
+        Other Parameters
+        ----------------
+        cluster : str, optional
+            Short name or URI of cluster to connect to.
+        database : str, optional
+            Name of database to connect to.
+        kqlmagic_args : str, optional
+            Additional string of parameters to be passed to KqlMagic
+        mp_az_auth : Union[bool, str, list, None], optional
+            Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
+            Values can be:
+            True or "default": use the settings in msticpyconfig.yaml 'Azure' section
+            str: single auth method name ('msi', 'cli', 'env' or 'interactive')
+            List[str]: list of acceptable auth methods from ('msi', 'cli',
+            'env' or 'interactive')
+
+        """
+        self.current_connection = self._get_connection_string(
+            connection_str=connection_str, **kwargs
+        )
+        kwargs.pop("cluster", None)
+        kwargs.pop("database", None)
+        super().connect(connection_str=self.current_connection, **kwargs)
+
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
@@ -70,7 +100,7 @@ class KustoDriver(KqlDriver):
         ----------------
         cluster : str, Optional
             Supply or override the Kusto cluster name
-        db : str, Optional
+        database : str, Optional
             Supply or override the Kusto database name
         data_source : str, Optional
             alias for `db`
@@ -84,22 +114,34 @@ class KustoDriver(KqlDriver):
             the underlying provider result if an error.
 
         """
+        new_connection = self._get_connection_string(
+            query_source=query_source, **kwargs
+        )
+        if new_connection:
+            self.current_connection = new_connection
+        data, result = self.query_with_results(query)
+        return data if data is not None else result
+
+    def _get_connection_string(self, query_source: QuerySource = None, **kwargs):
+        """Create a connection string from arguments and configuration."""
         # If the connection string is supplied as a parameter, use that
         cluster = database = None
-        self.current_connection = kwargs.get("connection_str")
-        if not self.current_connection:
+        new_connection = kwargs.get("connection_str")
+        if not new_connection:
             # try to get cluster and db from kwargs or query_source metadata
-            cluster = kwargs.get("cluster")
+            cluster = self._lookup_cluster(kwargs.get("cluster", ""))
             database = kwargs.get("database")
             if cluster and database:
-                self.current_connection = self._create_connection(
+                new_connection = self._create_connection(
                     cluster=cluster, database=database
                 )
-        if not self.current_connection and query_source:
+        if not new_connection and query_source:
             # try to get cluster and db from query_source metadata
             cluster = cluster or query_source.metadata.get("cluster")
             data_families = query_source.metadata.get("data_families")
-            if not isinstance(data_families, list) or len(data_families) == 0:
+            if (
+                not isinstance(data_families, list) or len(data_families) == 0
+            ) and not self.current_connection:
                 # call create connection so that we throw an informative error
                 self._create_connection(cluster=cluster, database=database)
             if "." in data_families[0]:  # type: ignore
@@ -108,11 +150,8 @@ class KustoDriver(KqlDriver):
                 # Not expected but we can still use a DB value with no dot
                 qry_db = data_families[0]  # type: ignore
             database = database or qry_db
-            self.current_connection = self._create_connection(
-                cluster=cluster, database=database
-            )
-        data, result = self.query_with_results(query)
-        return data if data is not None else result
+            new_connection = self._create_connection(cluster=cluster, database=database)
+        return new_connection
 
     def _create_connection(self, cluster, database):
         """Create the connection string, checking parameters."""
@@ -143,24 +182,42 @@ class KustoDriver(KqlDriver):
                 "Expected format:",
                 "Kusto[-instance_name]:",
                 "  args:",
-                "    cluster: cluster_uri",
+                "    Cluster: cluster_uri",
+                "    Integrated: True",
+                "or",
+                "Kusto[-instance_name]:",
+                "  args:",
+                "    Cluster: cluster_uri",
                 "    TenantId: tenant_uuid",
                 "    ClientId: tenant_uuid",
                 "    ClientSecret: (string|KeyVault|EnvironmentVar:)",
                 title="Unknown cluster.",
             )
-        return self._create_connection_str(cluster, database)
+        return self._format_connection_str(cluster, database)
 
-    def _create_connection_str(self, cluster: str, database: str) -> Optional[str]:
+    def _format_connection_str(self, cluster: str, database: str) -> Optional[str]:
         """Return connection string with client secret added."""
         fmt_items = self._kusto_settings.get(cluster.casefold())
         if not fmt_items:
             return None
         fmt_items["database"] = database
-        # Note, we don't add the secret until required at runtime to prevent
-        # it hanging around in memory as much as possible.
-        fmt_items["clientsecret"] = fmt_items["args"].get("ClientSecret")  # type: ignore
-        return _KCS_TEMPLATE.format(**fmt_items)
+        if fmt_items.get("integrated_auth"):
+            auth_string = _KCS_CODE
+        else:
+            # Note, we don't add the secret until required at runtime to prevent
+            # it hanging around in memory as much as possible.
+            fmt_items["clientsecret"] = fmt_items["args"].get("ClientSecret")  # type: ignore
+            auth_string = _KCS_APP.format(**fmt_items)
+        return _KCS_TEMPLATE.format(auth=auth_string, **fmt_items)
+
+    def _lookup_cluster(self, cluster: str):
+        """Return cluster URI from config if cluster name is passed."""
+        if cluster.strip().casefold().startswith("https://"):
+            return cluster
+        for cluster_key, kusto_config in self._kusto_settings.items():
+            if cluster_key.startswith(f"https://{cluster.casefold()}."):
+                return kusto_config["cluster"]
+        return None
 
 
 def _get_kusto_settings() -> KustoClusterSettings:
@@ -181,6 +238,7 @@ def _get_kusto_settings() -> KustoClusterSettings:
             )
         kusto_settings[cluster.casefold()] = {
             "tenant": settings.args.get("TenantId"),  # type: ignore
+            "integrated_auth": settings.args.get("IntegratedAuth"),  # type: ignore
             "clientid": settings.args.get("ClientId"),  # type: ignore
             "args": settings.args,
             "cluster": cluster,
