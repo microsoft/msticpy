@@ -1113,7 +1113,7 @@ class SelectItem:
 
         # Check default value is actually present in our list of items
         list_def_val = (
-            self.def_value if self.def_value in self._item_list else self.value
+            self.def_value if self.def_value in self._item_list else self._item_list[0]
         )
 
         self._wgt_select = widgets.Select(
