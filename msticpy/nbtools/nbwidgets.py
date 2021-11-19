@@ -1097,8 +1097,8 @@ class SelectItem:
             Whether to display item filter (the default is True)
         value : str, optional
             A default value to pre-populate the filter with.
-        """
 
+        """
         self.def_value = value
         if item_list:
             self._item_list = item_list
@@ -1112,7 +1112,7 @@ class SelectItem:
             raise ValueError("One of item_list or item_dict must be supplied.")
 
         # Check default value is actually present in our list of items
-        list_def_val = self.def_value if self.def_value in item_list else item_list[0]
+        list_def_val = self.def_value if self.def_value in self._item_list else self.value
 
         self._wgt_select = widgets.Select(
             value=list_def_val,
