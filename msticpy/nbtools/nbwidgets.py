@@ -1063,6 +1063,7 @@ class SelectItem:
         height: str = "100px",
         width: str = "50%",
         display_filter: bool = True,
+        value: str = "",
     ):
         """
         Select an item from a list or dict.
@@ -1094,8 +1095,11 @@ class SelectItem:
             Selection list width (the default is '50%')
         display_filter : bool, optional
             Whether to display item filter (the default is True)
-
+        value : str, optional
+            A default value to pre-populate the filter with.
         """
+
+        self.def_value = value
         if item_list:
             self._item_list = item_list
             self._item_dict = None
@@ -1107,7 +1111,11 @@ class SelectItem:
         else:
             raise ValueError("One of item_list or item_dict must be supplied.")
 
+        # Check default value is actually present in our list of items
+        list_def_val = self.def_value if self.def_value in item_list else item_list[0]
+
         self._wgt_select = widgets.Select(
+            value=list_def_val,
             options=self._item_list,
             description=description,
             layout=Layout(width=width, height=height),
@@ -1116,7 +1124,9 @@ class SelectItem:
         self._display_filter = display_filter
         if display_filter:
             self._w_filter = widgets.Text(
-                value="", description="Filter:", style={"description_width": "initial"}
+                value=self.def_value,
+                description="Filter:",
+                style={"description_width": "initial"},
             )
 
             # set up observer callbacks
