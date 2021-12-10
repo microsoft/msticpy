@@ -5,31 +5,39 @@
 # --------------------------------------------------------------------------
 """OData Driver class."""
 import abc
-from typing import Tuple, Any, Dict, Union, Optional
 import re
 import urllib
-
-import requests
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+import requests
 
-from .driver_base import DriverBase, QuerySource
-from ...common import pkg_config as config
-from ...common.exceptions import MsticpyException, MsticpyConnectionError
 from ..._version import VERSION
+from ...common import pkg_config as config
+from ...common.provider_settings import get_provider_settings
+from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
+
+_HELP_URI = (
+    "https://msticpy.readthedocs.io/en/latest/data_acquisition"
+    "/DataProviders.html#connecting-to-an-odata-source"
+)
+
+# pylint: disable=too-many-instance-attributes
 
 
 class OData(DriverBase):
     """Parent class to retreive date from an oauth based API."""
 
-    # pylint: disable=too-many-instance-attributes
-    # Large number needed due to variability of APIs
+    CONFIG_NAME = ""
+    _ALT_CONFIG_NAMES: Iterable[str] = []
+
     def __init__(self, **kwargs):
         """
-        Instantiate MDATPDriver and optionally connect.
+        Instantiate OData driver and optionally connect.
 
         Parameters
         ----------
@@ -37,7 +45,7 @@ class OData(DriverBase):
             Set true if you want to connect to the provider at initialization
 
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.oauth_url: Optional[str] = None
         self.req_body: Optional[Dict[str, Optional[str]]] = None
         self.api_ver: Optional[str] = None
@@ -52,7 +60,6 @@ class OData(DriverBase):
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
 
-    # pylint: enable=too-many-instance-attributes
     @abc.abstractmethod
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -98,18 +105,24 @@ class OData(DriverBase):
         if connection_str:
             self.current_connection = connection_str
             cs_dict = self._parse_connection_str(connection_str)
-        elif kwargs:
-            cs_dict = kwargs
-            # Allow user to specify location of connection variables in config file.
-            if "app_name" in cs_dict:
-                app_config = config.settings.get(cs_dict["app_name"])
-                if not app_config:
-                    raise MsticpyException(
-                        f"No configuration settings found for {cs_dict['app_name']}."
-                    )
-                cs_dict = app_config["Args"]
         else:
-            raise MsticpyException("No connection details provided.")
+            cs_dict = _get_driver_settings(self.CONFIG_NAME, self._ALT_CONFIG_NAMES)
+            # let user override config settings with function kwargs
+            cs_dict.update(kwargs)
+
+        missing_settings = [
+            setting
+            for setting in ("tenant_id", "client_id", "client_secret")
+            if setting not in cs_dict
+        ]
+        if missing_settings:
+            raise MsticpyUserConfigError(
+                "You must supply the following required connection parameter(s)",
+                "to the connect function or add them to your msticpyconfig.yaml.",
+                ", ".join(f"'{param}'" for param in missing_settings),
+                title="Missing connection parameters.",
+                help_uri=("Connecting to OData sources.", _HELP_URI),
+            )
 
         # self.oauth_url and self.req_body are correctly set in concrete
         # instances __init__
@@ -135,7 +148,7 @@ class OData(DriverBase):
                 f"Sub class {self.__class__.__name__}", "did not set self.api_root"
             )
         api_ver = cs_dict.get("apiVersion", self.api_ver)
-        self.request_uri = self.api_root + api_ver
+        self.request_uri = self.api_root + str(api_ver)
 
         print("Connected.")
         self._connected = True
@@ -164,10 +177,10 @@ class OData(DriverBase):
         """
         if not self.connected:
             self.connect(self.current_connection)
-            if not self.connected:
-                raise ConnectionError(
-                    "Source is not connected. ", "Please call connect() and retry."
-                )
+        if not self.connected:
+            raise ConnectionError(
+                "Source is not connected. ", "Please call connect() and retry."
+            )
 
         if self._debug:
             print(query)
@@ -233,12 +246,11 @@ class OData(DriverBase):
 
         """
         cs_items = connection_str.split(";")
-        cs_dict = {
+        return {
             prop[0]: prop[1]
             for prop in [item.strip().split("=") for item in cs_items]
             if prop[0] and prop[1]
         }
-        return cs_dict
 
     @staticmethod
     def _prepare_param_dict_from_filter(filterstr: str) -> Dict[str, str]:
@@ -258,3 +270,40 @@ class OData(DriverBase):
                 val = filter_param.split("=")[1]
                 get_params[attr] = val
         return get_params
+
+
+_CONFIG_NAME_MAP = {
+    "tenant_id": ("tenantid", "tenant_id"),
+    "client_id": ("clientid", "client_id"),
+    "client_secret": ("clientsecret", "client_secret"),
+}
+
+
+def _map_config_dict_name(config_dict: Dict[str, str]):
+    """Map configuration parameter names to expected values."""
+    mapped_dict = config_dict.copy()
+    for provided_name in config_dict:
+        for req_name, alternates in _CONFIG_NAME_MAP.items():
+            if provided_name.casefold() in alternates:
+                mapped_dict[req_name] = config_dict[provided_name]
+                break
+    return mapped_dict
+
+
+def _get_driver_settings(config_name, alt_names) -> Dict[str, str]:
+    """Try to retrieve config settings for OAuth drivers."""
+    drv_config = get_provider_settings("DataProviders").get(config_name)
+    app_config: Dict[str, str] = {}
+    if drv_config:
+        app_config = dict(drv_config.args)
+    else:
+        # Otherwise fall back on legacy settings location
+        for alt_name in alt_names:
+            app_config = config.settings.get(alt_name, {}).get("Args")
+            if app_config:
+                break
+
+    if not app_config:
+        return {}
+    # map names to allow for different spellings
+    return _map_config_dict_name(app_config)

@@ -24,7 +24,7 @@ class LocalDataDriver(DriverBase):
 
     def __init__(self, connection_str: str = None, **kwargs):
         """
-        Instantiaite LocalDataDriver and optionally connect.
+        Instantiate LocalDataDriver and optionally connect.
 
         Parameters
         ----------
@@ -36,7 +36,7 @@ class LocalDataDriver(DriverBase):
         """
         del connection_str
         self._debug = kwargs.get("debug", False)
-        super().__init__()
+        super().__init__(**kwargs)
 
         # If data paths specified, use these
         data_paths = kwargs.get("data_paths")

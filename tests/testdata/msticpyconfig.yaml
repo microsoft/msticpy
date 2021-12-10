@@ -8,9 +8,9 @@ AzureSentinel:
       TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
 QueryDefinitions:
   Default:
-    - 'queries'
+    - "queries"
   Custom:
-    - 'testdata'
+    - "testdata"
 Azure:
   cloud: "global"
   auth_methods: ["env", "cli", "msi", "interactive"]
@@ -73,9 +73,32 @@ OtherProviders:
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       AuthKey: "987654321-222"
     Provider: "IPStackLookup"
-AzureCLI:
-  Args:
-    clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
-    tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
-    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
-    clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
+DataProviders:
+  Kusto-MSTIC1:
+    Args:
+      Cluster: https://mstic.kusto.windows.net
+      IntegratedAuth: True
+  Kusto-MSTIC2:
+    Args:
+      Cluster: https://msticapp.kusto.windows.net
+      ClientId: 69d28fd7-42a5-48bc-a619-af56397b1111
+      TenantId: 69d28fd7-42a5-48bc-a619-af56397b9f28
+      ClientSecret: "[PLACEHOLDER]"
+  AzureCLI:
+    Args:
+      clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
+      tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
+  MicrosoftDefender:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
+  MicrosoftGraph:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"

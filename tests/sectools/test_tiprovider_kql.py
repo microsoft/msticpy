@@ -21,7 +21,7 @@ _TEST_DATA = get_test_data_path()
 
 
 class Kql_Result:
-    pass
+    """Mock result."""
 
 
 class KqlTestDriver(DriverBase):
@@ -29,7 +29,7 @@ class KqlTestDriver(DriverBase):
 
     def __init__(self, connection_str: str = None, **kwargs):
         del connection_str
-        super().__init__()
+        super().__init__(**kwargs)
 
         self._loaded = True
         self._connected = True

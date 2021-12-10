@@ -433,7 +433,7 @@ def _check_env_vars(args_key, section):
     for val in args_key.values():
         if not val:
             continue
-        if "EnvironmentVar" in val:
+        if isinstance(val, dict) and "EnvironmentVar" in val:
             env_name = val.get("EnvironmentVar")
             if not env_name:
                 mp_errs.append(f"{section}: No environment variable name specified.")

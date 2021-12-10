@@ -1,12 +1,11 @@
 metadata:
   version: 1
-  description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
-  tags: ["process"]
+  description: Kusto Queries
+  data_environments: [Kusto]
+  data_families: [IntegAuthCluster.scrubbeddata]
+  cluster: https://mstic.kusto.windows.net
+  tags: ["user"]
 defaults:
-  metadata:
-    data_source: "process_events"
   parameters:
     table:
       description: Table name
@@ -71,6 +70,54 @@ sources:
   process_cmd_line:
     description: Lists all processes with a command line containing a string
     metadata:
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  query_new_alias:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [IntegAuthCluster2.scrubbeddata]
+      cluster: https://mstic.kusto.windows.net
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  bad_query_fam_no_dot:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [scrubbeddata]
+      cluster: https://mstic.kusto.windows.net
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where ProcessCommandLine contains "{cmd_line}"
+        {add_query_items}'
+    parameters:
+      cmd_line:
+        description: Command line artifact to search for
+        type: str
+  bad_query_no_cluster:
+    description: Lists all processes with a command line containing a string
+    metadata:
+      data_families: [IntegAuthCluster.scrubbeddata]
+      cluster:
     args:
       query: '
         {table}
