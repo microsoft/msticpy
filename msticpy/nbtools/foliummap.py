@@ -125,35 +125,31 @@ class FoliumMap:
                 )
                 continue
             loc_props = ", ".join(
-                [
-                    f"{key}={val}"
-                    for key, val in ip_entity.Location.properties.items()
-                    if val
-                ]
+                f"{key}={val}"
+                for key, val in ip_entity.Location.properties.items()
+                if val
             )
-            popup_text = "{loc_props}<br>IP: {IP}".format(
-                IP=ip_entity.Address, loc_props=loc_props
-            )
+
+            popup_text = f"{loc_props}<br>IP: {ip_entity.Address}"
             if (
                 "City" in ip_entity.Location.properties
                 or "CountryName" in ip_entity.Location.properties
             ):
-                tooltip_text = "{City}, {CountryName}".format(
-                    **ip_entity.Location.properties
+                tooltip_text = (
+                    f"{ip_entity.Location.City}, {ip_entity.Location.CountryName}"
                 )
             else:
-                tooltip_text = "{Latitude}, {Longitude}".format(
-                    **ip_entity.Location.properties
+                tooltip_text = (
+                    f"{ip_entity.Location.Latitude}, {ip_entity.Location.Longitude}"
                 )
 
             if ip_entity.AdditionalData:
                 addl_props = ", ".join(
-                    [
-                        f"{key}={val}"
-                        for key, val in ip_entity.AdditionalData.items()
-                        if val
-                    ]
+                    f"{key}={val}"
+                    for key, val in ip_entity.AdditionalData.items()
+                    if val
                 )
+
                 popup_text = f"{popup_text}<br>{addl_props}"
                 tooltip_text = f"{tooltip_text}, {addl_props}"
             marker = folium.Marker(

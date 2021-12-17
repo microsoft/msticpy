@@ -20,6 +20,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.LogAnalytics: ("kql_driver", "KqlDriver"),
     DataEnvironment.AzureSecurityCenter: ("kql_driver", "KqlDriver"),
     DataEnvironment.SecurityGraph: ("security_graph_driver", "SecurityGraphDriver"),
+    DataEnvironment.Kusto: ("kusto_driver", "KustoDriver"),
     DataEnvironment.MDATP: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.MDE: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.LocalData: ("local_data_driver", "LocalDataDriver"),
@@ -27,7 +28,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Mordor: ("mordor_driver", "MordorDriver"),
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
     DataEnvironment.ResourceGraph: ("resource_graph_driver", "ResourceGraphDriver"),
-    DataEnvironment.Kusto: ("kql_driver", "KqlDriver"),
+    DataEnvironment.M365D: ("mdatp_driver", "MDATPDriver"),
 }
 
 

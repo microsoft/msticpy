@@ -414,19 +414,20 @@ def read_from_file(
     occur in an input line. This function uses pandas read_csv
     to read the audit lines into a single column. Using a separator
     that does appear in the input (e.g. space or comma) will cause
-    data to be parsed into muliple columns and anything after the
+    data to be parsed into multiple columns and anything after the
     first separator in a line will be lost.
 
     """
     # read in the file using pd.read_csv()
-    df_raw = pd.read_csv(
+    df_raw: pd.DataFrame = pd.read_csv(
         filepath, sep=dummy_sep, names=["raw_data"], skip_blank_lines=True
     )
 
-    # extract message ID into seperate column
+    # extract message ID into separate column
     df_raw["mssg_id"] = df_raw.apply(
         lambda x: _extract_timestamp(x["raw_data"]), axis=1
     )
+    # pylint: disable=unsupported-assignment-operation, no-member
     # Pack message type and content into a dictionary:
     # {'mssg_type: ['item1=x, item2=y....]}
     df_raw["AuditdMessage"] = df_raw.apply(
@@ -438,6 +439,8 @@ def read_from_file(
     df_grouped_cols = (
         df_raw.groupby(["mssg_id"]).agg({"AuditdMessage": list}).reset_index()
     )
+    # pylint: enable=unsupported-assignment-operation, no-member
+
     # pass this DataFrame to the event extractor.
     return extract_events_to_df(
         data=df_grouped_cols,

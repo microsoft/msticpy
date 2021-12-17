@@ -64,7 +64,7 @@ UserDefaults:
       auth_methods: ['cli','interactive']
       connect: False
     AzureSentinelAPI:
-      auth_methods: ['env','interactive']
+      auth_methods: ['cli','interactive']
       connect: False
 """
 

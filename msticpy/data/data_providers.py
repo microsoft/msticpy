@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider loader."""
-import warnings
 from datetime import datetime
 from functools import partial
 from itertools import tee
@@ -83,7 +82,7 @@ class QueryProvider:
         if driver is None:
             self.driver_class = import_driver(data_environment)
             if issubclass(self.driver_class, DriverBase):
-                driver = self.driver_class(**kwargs)  # type: ignore
+                driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
                 raise LookupError(
                     "Could not find suitable data provider for", f" {self.environment}"
@@ -471,7 +470,11 @@ class QueryProvider:
                 "No valid query definition files found. ",
                 "Please check your msticpyconfig.yaml settings.",
             )
-        return QueryStore.import_files(source_path=all_query_paths, recursive=True)
+        return QueryStore.import_files(
+            source_path=all_query_paths,
+            recursive=True,
+            driver_query_filter=self._query_provider.query_attach_spec,
+        )
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
@@ -599,7 +602,7 @@ class QueryProvider:
         if not Path(config_path).is_absolute():
             config_path = str(Path(__file__).resolve().parent.joinpath(config_path))
         if not Path(config_path).is_dir():
-            warnings.warn(f"Custom query definitions path {config_path} not found")
+            print(f"Warning: Custom query definitions path {config_path} not found")
             return None
         return config_path
 
@@ -609,6 +612,6 @@ class QueryProvider:
         if not Path(config_path).is_absolute():
             config_path = str(Path(config_path).expanduser().resolve())
         if not Path(config_path).is_dir():
-            warnings.warn(f"Custom query definitions path {config_path} not found")
+            print(f"Warning: Custom query definitions path {config_path} not found")
             return None
         return config_path

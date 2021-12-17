@@ -437,7 +437,7 @@ class QueryTime(RegisteredWidget):
     def _create_layout(self):
         return widgets.VBox(
             [
-                widgets.HTML("<h4>{}</h4>".format(self._label)),
+                widgets.HTML(f"<h4>{self._label}</h4>"),
                 widgets.HBox([self._w_origin_dt, self._w_origin_tm]),
                 widgets.VBox(
                     [
@@ -602,6 +602,8 @@ class SelectAlert:
         alerts: pd.DataFrame,
         action: Callable[..., Optional[Tuple]] = None,
         columns: List[str] = None,
+        time_col: str = "StartTimeUtc",
+        id_col: str = "SystemAlertId",
         auto_display: bool = False,
     ):
         """
@@ -619,24 +621,39 @@ class SelectAlert:
             Override the default column names to use from `alerts`
             (the default is ['StartTimeUtc', 'AlertName',
             'CompromisedEntity', 'SystemAlertId'])
+        time_col : str, optional
+            The column in your alerts that determines when it was created
+            Default is 'StartTimeUtc'.
+        id_col : str, optional
+            The column in your data that determines the alert id
+            Default is 'SystemAlertId'.
         auto_display : bool, optional
             Whether to display on instantiation (the default is False)
 
         """
         self.alerts = alerts
         self.alert_action = action
+        self.id_col = id_col
+        self.time_col = time_col
 
-        if not columns:
-            columns = [
-                "StartTimeUtc",
-                "AlertName",
-                "CompromisedEntity",
-                "SystemAlertId",
-            ]
+        self.columns = columns or [
+            "AlertName",
+            "CompromisedEntity",
+        ]
 
-        items = alerts[columns]
-        items = items.sort_values("StartTimeUtc", ascending=True)
-        self._select_items = items.apply(self._alert_summary, axis=1).values.tolist()
+        alert_cols = self.columns
+        if self.time_col not in alert_cols:
+            alert_cols.append(self.time_col)
+        if self.id_col not in alert_cols:
+            alert_cols.append(self.id_col)
+        items = alerts[alert_cols].sort_values(time_col, ascending=True)
+        self._select_items = items.apply(
+            self._alert_summary,
+            axis=1,
+            time_col=self.time_col,
+            id_col=self.id_col,
+            columns=self.columns,
+        ).values.tolist()
 
         self.selected_alert = None
         self.alert_id = None
@@ -662,7 +679,15 @@ class SelectAlert:
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
         self._w_select_alert.observe(self._select_alert, names="value")
-        self.layout = widgets.VBox([self._w_filter_alerts, self._w_select_alert])
+        wgt_list = [self._w_filter_alerts, self._w_select_alert]
+        self._w_display_details = widgets.Checkbox(
+            value=True,
+            description="Display details",
+        )
+        if action:
+            self._w_display_details.observe(self._run_action, names="value")
+            wgt_list.append(self._w_display_details)
+        self.layout = widgets.VBox(wgt_list)
 
         if auto_display:
             self.display()
@@ -674,23 +699,13 @@ class SelectAlert:
         self._select_top_alert()
 
     @staticmethod
-    def _alert_summary(alert_row):
+    def _alert_summary(alert_row, time_col, id_col, columns):
         """Return summarized string of alert properties."""
-        if "TI Risk" in alert_row:
-            return (
-                f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
-                + f" - ({alert_row.CompromisedEntity}) "
-                + f" - TI Risk: {alert_row['TI Risk']}"
-                + f" - [id:{alert_row.SystemAlertId}]",
-                alert_row.SystemAlertId,
-            )
-
-        return (
-            f"{alert_row.StartTimeUtc} - {alert_row.AlertName}"
-            + f" - ({alert_row.CompromisedEntity}) "
-            + f" - [id:{alert_row.SystemAlertId}]",
-            alert_row.SystemAlertId,
-        )
+        item = f"{alert_row[time_col]}"
+        for col in columns:
+            item += f" - {alert_row[col]}"
+        item += f" - {alert_row[id_col]}"
+        return item
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
@@ -710,7 +725,8 @@ class SelectAlert:
         ):
             self.selected_alert = None
         else:
-            self.alert_id = selection["new"]
+            self.alert_id = selection["new"].split("- ")[-1]
+
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
                 self._run_action()
@@ -718,18 +734,19 @@ class SelectAlert:
     def _get_alert(self, alert_id):
         """Get the alert by alert_id."""
         self.alert_id = alert_id
-        selected_alerts = self.alerts[self.alerts["SystemAlertId"] == alert_id]
-
+        selected_alerts = self.alerts[self.alerts[self.id_col] == alert_id]
         if selected_alerts.shape[0] > 0:
             alert = pd.Series(selected_alerts.iloc[0])
-            if isinstance(alert["ExtendedProperties"], str):
+            if "ExtendedProperties" in alert.index and isinstance(
+                alert["ExtendedProperties"], str
+            ):
                 try:
                     alert["ExtendedProperties"] = json.loads(
                         (alert["ExtendedProperties"])
                     )
                 except JSONDecodeError:
                     pass
-            if isinstance(alert["Entities"], str):
+            if "Entities" in alert.index and isinstance(alert["Entities"], str):
                 try:
                     alert["Entities"] = json.loads((alert["Entities"]))
                 except JSONDecodeError:
@@ -741,15 +758,20 @@ class SelectAlert:
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
         if not top_alert.empty:
-            self.alert_id = top_alert.SystemAlertId
+            self._w_select_alert.value = self._w_select_alert.options[0]
+            self.alert_id = top_alert[self.id_col]
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
                 self._run_action()
 
-    def _run_action(self):
+    def _run_action(self, change=None):
         """Run any action function and display details, if any."""
-        output_objs = self.alert_action(self.selected_alert)
+        del change
+        output_objs = None
+        if self._w_display_details.value:
+            output_objs = self.alert_action(self.selected_alert)
         if output_objs is None:
+            self._clear_display()
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
@@ -759,10 +781,17 @@ class SelectAlert:
                 self._disp_elems.append(
                     display(out_obj, display_id=f"{self._output_id}_{idx}")
                 )
+            elif idx == len(self._disp_elems):
+                break
             else:
-                if idx == len(self._disp_elems):
-                    break
                 self._disp_elems[idx].update(out_obj)
+
+    def _clear_display(self):
+        """Clear any current details."""
+        if not self._disp_elems:
+            return
+        for disp_obj in self._disp_elems:
+            disp_obj.update(HTML(""))
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -822,7 +851,9 @@ class AlertSelector(SelectAlert):
 
         """
         self._w_output = widgets.Output(layout={"border": "1px solid black"})
-        super().__init__(alerts, action, columns, auto_display)
+        super().__init__(
+            alerts=alerts, action=action, columns=columns, auto_display=auto_display
+        )
 
     def display(self):
         """Display the interactive widgets."""
@@ -831,7 +862,8 @@ class AlertSelector(SelectAlert):
             widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
         )
 
-    def _run_action(self):
+    def _run_action(self, change=None):
+        del change
         self._w_output.clear_output()
         with self._w_output:
             self.alert_action(self.selected_alert)
@@ -1052,6 +1084,7 @@ class SelectItem:
         height: str = "100px",
         width: str = "50%",
         display_filter: bool = True,
+        value: str = "",
     ):
         """
         Select an item from a list or dict.
@@ -1083,8 +1116,11 @@ class SelectItem:
             Selection list width (the default is '50%')
         display_filter : bool, optional
             Whether to display item filter (the default is True)
+        value : str, optional
+            A default value to pre-populate the filter with.
 
         """
+        self.def_value = value
         if item_list:
             self._item_list = item_list
             self._item_dict = None
@@ -1096,22 +1132,36 @@ class SelectItem:
         else:
             raise ValueError("One of item_list or item_dict must be supplied.")
 
+        # Check default value is actually present in our list of items
+        list_def_val = (
+            self.def_value if self.def_value in self._item_list else self._item_list[0]
+        )
+
         self._wgt_select = widgets.Select(
+            value=list_def_val,
             options=self._item_list,
             description=description,
             layout=Layout(width=width, height=height),
             style={"description_width": "initial"},
         )
+        self._w_display_details = widgets.Checkbox(
+            value=True,
+            description="Display details",
+        )
         self._display_filter = display_filter
         if display_filter:
             self._w_filter = widgets.Text(
-                value="", description="Filter:", style={"description_width": "initial"}
+                value=self.def_value,
+                description="Filter:",
+                style={"description_width": "initial"},
             )
 
             # set up observer callbacks
             self._w_filter.observe(self._update_options, names="value")
         self._wgt_select.observe(self._select_item, names="value")
 
+        if action:
+            self._w_display_details.observe(self._run_action, names="value")
         self.item_action = action
 
         # setup to use updatable display objects
@@ -1141,10 +1191,14 @@ class SelectItem:
                 i for i in self._item_list if change["new"].lower() in i.lower()
             ]
 
-    def _run_action(self):
+    def _run_action(self, change=None):
         """Run any action function and display details, if any."""
-        output_objs = self.item_action(self.value)
+        del change
+        output_objs = None
+        if self._w_display_details.value:
+            output_objs = self.item_action(self.value)
         if output_objs is None:
+            self._clear_display()
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
@@ -1157,6 +1211,13 @@ class SelectItem:
             else:
                 self._disp_elems[idx].update(out_obj)
 
+    def _clear_display(self):
+        """Clear any current details."""
+        if not self._disp_elems:
+            return
+        for disp_obj in self._disp_elems:
+            disp_obj.update(HTML(""))
+
     @property
     def layout(self):
         """Return underlying widget collection."""
@@ -1164,6 +1225,8 @@ class SelectItem:
         if self._display_filter:
             wgt_list.append(self._w_filter)
         wgt_list.append(self._wgt_select)
+        if self.item_action:
+            wgt_list.append(self._w_display_details)
         return widgets.VBox(wgt_list)
 
     def display(self):
@@ -1252,7 +1315,8 @@ class SelectString(SelectItem):
             display_filter=display_filter,
         )
 
-    def _run_action(self):
+    def _run_action(self, change=None):
+        del change
         self._w_output.clear_output()
         with self._w_output:
             self.item_action(self.value)
@@ -1422,20 +1486,17 @@ class SelectSubset:
         # save the current index
         cur_index = max(self._select_list.index)
         if selected_set:
-            if self._src_dict:
-                # if we're working with tuples, we need to specify the tuple to remove
-                for selected in self._select_list.value:
+            for selected in self._select_list.value:
+                if self._src_dict:
                     selected_set.remove(self._src_dict[selected])
-            else:
-                # else just delete the value
-                for selected in self._select_list.value:
+                else:
                     selected_set.remove(selected)
             self._select_list.options = sorted(list(selected_set))
         if not self._select_list.options:
             return
         # try to set the index to the next item in the list
         if cur_index < len(self._select_list.options):
-            next_item = cur_index if cur_index else 0
+            next_item = cur_index or 0
             self._select_list.index = tuple([next_item])
         else:
             last_item = max(len(self._select_list.options) - 1, 0)

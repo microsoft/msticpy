@@ -1,0 +1,35 @@
+abstract: |
+    "Microsoft Threat Intelligence Python Security Tools - MSTICPy
+    
+    A library for InfoSec investigation and hunting in Jupyter Notebooks. It includes functionality to:
+    - query log data from multiple sources
+    - enrich the data with threat intelligence, geo-locations and Azure resource data
+    - extract Indicators of Activity (IoA) from logs and unpack encoded data
+    - analyze for anomalous sessions and  events
+    - visualize data using interactive timelines, process trees and multi-dimensional Morph Charts"
+authors: 
+- given-names: Ian
+  family-names: Hellen
+  affiliation: "Microsoft Corp."
+  alias: ianhelle
+- given-names: Pete
+  family-names: Bryan
+  affiliation: "Microsoft Corp."
+  alias: petebryan
+- given-names: Ashwin
+  family-names: Patil
+  affiliation: "Microsoft Corp."
+  alias: ashwinpatil
+cff-version: "1.2.0"
+date-released: 2021-04-14
+keywords: 
+  - CyberSecurity
+  - Jupyter
+  - InfoSec
+license: MIT
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/microsoft/msticpy"
+repository-artifact: "https://pypi.org/project/msticpy"
+url: "https://github.com/microsoft/msticpy"
+title: MSTICPy
+version: "1.0.0"

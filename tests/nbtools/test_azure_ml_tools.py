@@ -47,7 +47,7 @@ _MP_CONFIG = "msticpyconfig-test.yaml"
 @pytest.fixture(scope="module")
 def aml_file_sys(tmpdir_factory):
     """Create fake aml file system."""
-    mp_text = Path("tests").joinpath(_MP_CONFIG).read_text()
+    mp_text = Path("tests").joinpath(_MP_CONFIG).read_text(encoding="utf-8")
     root = tmpdir_factory.mktemp("aml-test")
     users = root.mkdir("Users")
     user_dir = users.mkdir("aml_user")
@@ -61,8 +61,9 @@ def aml_file_sys(tmpdir_factory):
     yield users, user_dir
 
 
-_MP_FUT_VER = ".".join(f"{int(v) + 1}" for v in aml.__version__.split("."))
-_MP_FUT_VER_T = tuple(int(v) + 1 for v in aml.__version__.split("."))
+_CURR_VERSION = [v for v in aml.__version__.split(".") if v.isnumeric()]
+_MP_FUT_VER = ".".join(f"{int(v) + 1}" for v in _CURR_VERSION)
+_MP_FUT_VER_T = tuple(int(v) + 1 for v in _CURR_VERSION)
 
 _EXP_ENV = {
     "KQLMAGIC_EXTRAS_REQUIRE": "jupyter-basic",

@@ -1,0 +1,94 @@
+AzureSentinel:
+  Workspaces:
+    Default:
+      WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+      TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+    MyTestWS:
+      WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+QueryDefinitions:
+  Default:
+    - "queries"
+  Custom:
+    - "testdata"
+Azure:
+  cloud: "global"
+  auth_methods: ["env", "cli", "msi", "interactive"]
+TIProviders:
+  OTX:
+    Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "987654321"
+    Primary: True
+    Provider: "OTX" # Explicitly name provider to override
+  VirusTotal:
+    Args:
+      AuthKey:
+        EnvironmentVar: VTAUTHKEY
+    Primary: True
+    Provider: "VirusTotal"
+  XForce:
+    Args:
+      ApiID:
+        EnvironmentVar: "XFORCE_ID"
+      AuthKey:
+        EnvironmentVar: "XFORCE_KEY"
+    Primary: False
+    Provider: "XForce"
+  GreyNoise:
+    Args:
+      AuthKey: ""
+    Primary: True
+    Provider: "GreyNoise"
+  AzureSentinel:
+    Args:
+      WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+      TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+    Primary: True
+    Provider: "NoLoad-AzSTI"
+  OpenPageRank:
+    Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+    Primary: True
+    Provider: "OPR"
+  TorExitNodes:
+    Primary: True
+    Provider: Tor
+  RiskIQ:
+    Primary: True
+    Provider: "RiskIQ"
+    Args:
+      ApiID: "user@host.com"
+      AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
+OtherProviders:
+  GeoIPLite:
+    Args:
+      AuthKey:
+        EnvironmentVar: "MAXMIND_AUTH"
+      DBFolder: "~/.msticpy"
+    Provider: "GeoLiteLookup"
+  IPStack:
+    Args:
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      AuthKey: "987654321-222"
+    Provider: "IPStackLookup"
+DataProviders:
+  AzureCLI:
+    Args:
+      clientId: "69d28fd7-42a5-48bc-a619-af56397b1111"
+      tenantId: "69d28fd7-42a5-48bc-a619-af56397b2222"
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      clientSecret: "69d28fd7-42a5-48bc-a619-af56397b3333"
+  MicrosoftDefender:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
+  MicrosoftGraph:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"

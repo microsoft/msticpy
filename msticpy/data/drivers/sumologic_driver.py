@@ -59,7 +59,7 @@ class SumologicDriver(DriverBase):
 
     def __init__(self, **kwargs):
         """Instantiate Sumologic Driver."""
-        super().__init__()
+        super().__init__(**kwargs)
         self.service = None
         self._loaded = True
         self._connected = False
@@ -125,7 +125,7 @@ class SumologicDriver(DriverBase):
                 nb_uri=_SL_NB_URI,
             ) from err
         self._connected = True
-        print("connected with accessid {}".format(arg_dict["accessid"]))
+        print(f"connected with accessid {arg_dict['accessid']}")
 
     def _get_connect_args(
         self, connection_str: Optional[str], **kwargs
@@ -232,7 +232,7 @@ class SumologicDriver(DriverBase):
 
         qry_count = re.search(r"\|\s*count", query, re.IGNORECASE)
         if verbosity >= 2:
-            print("DEBUG: search job {0}".format(searchjob))
+            print(f"DEBUG: search job {searchjob}")
             print(f"DEBUG: search performance: {timer() - timer_start}")
             print(f"DEBUG: messages or records? {qry_count}")
 
@@ -252,7 +252,7 @@ class SumologicDriver(DriverBase):
     def _poll_job_status(self, searchjob, verbosity):
         status = self.service.search_job_status(searchjob)
         if verbosity >= 2:
-            print("DEBUG: status {0}".format(status))
+            print(f"DEBUG: status {status}")
         time_counter = 0
         while status["state"] != "DONE GATHERING RESULTS":
             if status["state"] == "CANCELLED":
