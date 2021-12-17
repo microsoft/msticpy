@@ -9,6 +9,9 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 
+from .proc_tree_schema import (
+    ProcSchema,
+)
 from ..data.query_defns import ensure_df_datetimes
 from .._version import VERSION
 
@@ -317,26 +320,30 @@ _SENTINEL_MDE_MAP = {
     "SHA256": "CreatedProcessFileSha256",
 }
 
-_UNK_TIME = pd.Timestamp("1970-01-01")
+_UNK_TIME = pd.Timestamp("1970-01-01", tz="UTC")
 
 
-def convert_sentinel_to_mde(data: pd.DataFrame) -> pd.DataFrame:
+def convert_mde_schema_to_internal(
+    data: pd.DataFrame, schema: ProcSchema
+) -> pd.DataFrame:
     """
-    Convert MS Sentinel DeviceProcessEvents data to MDE schema.
+    Convert DeviceProcessEvents schema data to internal MDE schema.
 
     Parameters
     ----------
     data : pd.DataFrame
         Input data in MS Sentinel schema.
+    schema : ProcSchema
+        The mapping schema for the data set.
 
     Returns
     -------
     pd.DataFrame
-        Reformatted data in MDE schema.
+        Reformatted data into MDE internal schema.
 
     """
     # Fill in missing timestamps with placeholder
-    data["ProcessCreationTime"] = data.TimeGenerated.fillna(_UNK_TIME)
+    data["ProcessCreationTime"] = data[schema.time_stamp].fillna(_UNK_TIME)
     data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
         _UNK_TIME
     )
@@ -346,11 +353,11 @@ def convert_sentinel_to_mde(data: pd.DataFrame) -> pd.DataFrame:
 
     # Proc tree code references CreateProcessParentId
     # This should be the same as InitiatingProcessParentId
-    data["CreatedProcessParentId"] = data["InitiatingProcessParentId"]
+    data["CreatedProcessParentId"] = data[schema.parent_id]
 
     # Put a value in parent procs with no name
-    null_proc_parent = data["InitiatingProcessParentFileName"] == ""
-    data.loc[null_proc_parent, "InitiatingProcessParentFileName"] = "unknown"
+    null_proc_parent = data[schema.parent_name] == ""
+    data.loc[null_proc_parent, schema.parent_name] = "unknown"
 
     # Extract InitiatingProc folder path - remove stem
     data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(

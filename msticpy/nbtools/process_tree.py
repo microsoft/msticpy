@@ -32,12 +32,8 @@ from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
 import numpy as np
 import pandas as pd
 
-from ..sectools.proc_tree_builder import (
-    build_process_tree,
-    ProcSchema,
-    infer_schema,
-    ProcessTreeSchemaException,
-)
+from ..sectools.proc_tree_builder import build_process_tree, infer_schema
+from ..sectools.proc_tree_schema import ProcSchema, ProcessTreeSchemaException
 
 # pylint: disable=unused-import
 from ..sectools.process_tree_utils import (  # noqa F401
