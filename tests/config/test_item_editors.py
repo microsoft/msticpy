@@ -286,7 +286,7 @@ def test_get_tenant_id():
 
 
 def test_azure_sentinel_editor(mp_conf_ctrl):
-    """Azure Sentinel edit controls."""
+    """Microsoft Sentinel edit controls."""
     edit_comp = CEAzureSentinel(mp_controls=mp_conf_ctrl)
 
     n_opts = len(edit_comp.select_item.options)

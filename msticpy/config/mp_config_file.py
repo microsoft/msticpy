@@ -72,7 +72,9 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.settings = settings or {}
 
         self.kv_client: Any = None
-        self.mp_config_def_path = os.environ.get("MSTICPYCONFIG", "")
+        self.mp_config_def_path = os.environ.get(
+            "MSTICPYCONFIG", "./msticpyconfig.yaml"
+        )
         self._current_file = None
 
         # Set up controls

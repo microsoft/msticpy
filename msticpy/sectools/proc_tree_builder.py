@@ -259,7 +259,8 @@ def build_process_tree(
 
     """
     # If schema is none, infer schema from columns
-    if not schema:
+    if not schema or schema == MDE_EVENT_SCH:
+        # Special case for MDE - since there are two possible schemas
         schema = infer_schema(procs)
     if isinstance(schema, dict):
         schema = ProcSchema(**schema)

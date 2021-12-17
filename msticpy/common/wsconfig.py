@@ -35,7 +35,7 @@ _RESOURCES = [
 ]
 
 _NO_CONFIG_WARN = [
-    "Could not find Azure Sentinel settings in msticpyconfig.yaml or a config.json ",
+    "Could not find Microsoft Sentinel settings in msticpyconfig.yaml or a config.json ",
     "(in the current directory or via a MSTICPYCONFIG variable.)",
     "We found the file '{config_file}' and will use this.",
     "We recommend using an explicit msticpyconfig.yaml specified using the",
@@ -54,7 +54,7 @@ _NO_CONFIG_WARN = [
 _NO_CONFIG_ERR = [
     "Could not find msticpyconfig.yaml or config.json.",
     "The 'config.json' file is created when you launch notebooks from "
-    "Azure Sentinel. If you have copied the notebook to another location "
+    "Microsoft Sentinel. If you have copied the notebook to another location "
     "or folder you will need to copy this configuration file.",
     "Alternatively, we recommend using an explicit msticpyconfig.yaml"
     "and adding your Workspace and Tenant IDs to that file.",
@@ -261,10 +261,10 @@ class WorkspaceConfig:
 
     def prompt_for_ws(self):
         """Display an interactive prompt for Workspace details."""
-        md_warn("No Azure Sentinel configuration found.")
+        md_warn("No Microsoft Sentinel configuration found.")
         md(
             "Please enter the workspace ID and tenant Id"
-            + " to allow connection to the Azure Sentinel workspace."
+            + " to allow connection to the Microsoft Sentinel workspace."
         )
         ws_id_wgt = widgets.Text(description="Workspace Id:", **WIDGET_DEFAULTS)
         ten_id_wgt = widgets.Text(description="Tenant Id:", **WIDGET_DEFAULTS)
@@ -286,7 +286,7 @@ class WorkspaceConfig:
                 "data_acquisition/DataProviders.html#"
                 "connecting-to-an-azure-sentinel-workspace' "
                 "target='_blank' rel='noopener noreferrer'>"
-                "Connecting to an Azure Sentinel Workspace</a>"
+                "Connecting to a Microsoft Sentinel Workspace</a>"
             ),
         )
 

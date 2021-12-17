@@ -9,6 +9,7 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 
+from ..data.query_defns import ensure_df_datetimes
 from .._version import VERSION
 
 __version__ = VERSION
@@ -26,6 +27,13 @@ _MDE_NON_STD_COL_MAP = {
     "InitiatingProcessParentProcessName": "CreatedProcessParentName",
     "InitiatingProcessParentCreationTime": "CreatedProcessParentCreationTimeUtc",
 }
+
+_MDE_TIMESTAMP_COLS = [
+    "CreatedProcessCreationTime",
+    "InitiatingProcessCreationTime",
+    "CreatedProcessParentCreationTimeUtc",
+    "InitiatingProcessParentCreationTime",
+]
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 PARENT_KEY = "parent_key"
@@ -50,6 +58,7 @@ def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFram
         extracted parent processes from child data.
 
     """
+    data = ensure_df_datetimes(data, columns=_MDE_TIMESTAMP_COLS)
     par_child_col_map = _get_par_child_col_mapping(data)
     inferred_parents = _extract_missing_parents(data, par_child_col_map, debug=debug)
     missing_par_uniq = _get_unique_parents(inferred_parents, debug)

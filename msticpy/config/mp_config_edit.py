@@ -29,7 +29,7 @@ class MpConfigEdit(CompEditDisplayMixin):
     """Msticpy Configuration helper class."""
 
     _TAB_DEFINITIONS = {
-        "AzureSentinel": CEAzureSentinel,
+        "MicrosoftSentinel": CEAzureSentinel,
         "TI Providers": CETIProviders,
         "Data Providers": CEDataProviders,
         "GeoIP Providers": CEOtherProviders,

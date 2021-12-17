@@ -694,5 +694,5 @@ class Entity(ABC, Node):
 
 
 def camelcase_property_names(input_ent: Dict[str, Any]) -> Dict[str, Any]:
-    """Change initial letter Azure Sentinel API entity properties to upper case."""
+    """Change initial letter Microsoft Sentinel API entity properties to upper case."""
     return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}
