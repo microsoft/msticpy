@@ -8,8 +8,11 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
-from .proc_tree_schema import (
+# pylint: disable=unused-import
+from .proc_tree_schema import (  # noqa: F401
     ProcSchema,
+    WIN_EVENT_SCH,
+    LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     SUPPORTED_SCHEMAS,

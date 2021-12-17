@@ -146,7 +146,7 @@ class AzCredentials:
 
         @property
         def credentials(self):
-            """Return mocked credentials list"""
+            """Return mocked credentials list."""
             return ["cred1", "cred2", "cred3"]
 
     @property
