@@ -80,7 +80,7 @@ class RegisteredWidget(ABC):
         id_vals: Optional[List[Any]] = None,
         val_attrs: Optional[List[str]] = None,
         nb_params: Optional[Dict[str, str]] = None,
-        ns: Dict[str, Any] = globals(),
+        ns: Dict[str, Any] = globals(),  # pylint: disable=invalid-name
         register: bool = True,
         **kwargs,
     ):
