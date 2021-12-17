@@ -274,7 +274,7 @@ class QueryProvider:
 
         """
         add_connections = [
-            f"{alias}, {driver.current_connection}"
+            f"{alias}: {driver.current_connection}"
             for alias, driver in self._additional_connections.items()
         ]
         return [f"Default: {self._query_provider.current_connection}", *add_connections]
