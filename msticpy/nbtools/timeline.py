@@ -899,7 +899,7 @@ def _create_dict_from_grouping(data, source_columns, time_column, group_by, colo
     return series_dict
 
 
-def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
+def _get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
     """Extract the reference time from kwargs."""
     ref_alert = kwargs.get("alert", None)
     if ref_alert is not None:

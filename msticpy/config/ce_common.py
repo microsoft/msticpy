@@ -47,7 +47,6 @@ if _DEBUG:
             return
         print(*args)
 
-
 else:
 
     def print_debug(*args):
