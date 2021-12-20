@@ -215,7 +215,7 @@ class HttpProvider(TIProvider):
                 key: val.format(**req_params) for key, val in src.headers.items()
             }
             req_dict["headers"] = headers
-        if "User-Agent" not in req_dict["headers"].keys():
+        if "User-Agent" not in req_dict["headers"]:
             req_dict["headers"]["User-Agent"] = _MSTICPY_USER_AGENT
         if src.params:
             q_params: Dict[str, Any] = {
