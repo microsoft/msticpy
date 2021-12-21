@@ -60,7 +60,7 @@ def _get_setup_reqs(
     extras: Optional[List[str]] = None,
     skip_setup=True,
 ):
-    with open(Path(package_root).joinpath(req_file), "r") as req_f:
+    with open(Path(package_root).joinpath(req_file), "r", encoding="utf-8") as req_f:
         req_list = req_f.readlines()
 
     setup_pkgs = _extract_pkg_specs(req_list)
@@ -122,7 +122,7 @@ def get_extras_from_setup(
     setup_py = str(Path(package_root) / setup_py)
 
     setup_txt = None
-    with open(setup_py, "r") as f_handle:
+    with open(setup_py, "r", encoding="utf-8") as f_handle:
         setup_txt = f_handle.read()
 
     srch_txt = "setuptools.setup("
@@ -185,11 +185,11 @@ def _check_std_lib(modules):
     external = set()
     std_libs = set()
     imp_errors = set()
-    paths = {str(Path(p).resolve()).lower() for p in sys.path}
+    paths = {p.casefold() for p in sys.path}
     stdlib_paths = {
         p
         for p in paths
-        if p.startswith(sys.prefix.lower()) and "site-packages" not in p
+        if p.startswith(sys.prefix.casefold()) and "site-packages" not in p
     }
     for mod_name in modules:
         if mod_name not in sys.modules:
@@ -236,12 +236,12 @@ def _check_stdlib_path(module, mod_name, stdlib_paths):
     if fname.endswith(("__init__.py", "__init__.pyc", "__init__.pyo")):
         fname = Path(fname).parent
 
-    if "site-packages" in str(fname).lower():
+    if "site-packages" in str(fname).casefold():
         return None
 
     # step up the module path
     while Path(fname) != Path(fname).parent:
-        if str(fname).lower() in stdlib_paths:
+        if str(fname).casefold() in stdlib_paths:
             # stdlib path, skip
             return mod_name
         fname = Path(fname).parent
@@ -262,7 +262,7 @@ def _match_pkg_to_reqs(imports, setup_reqs):
     req_libs = set()
     req_missing = set()
     for imp in imports:
-        imp = imp.lower()
+        imp = imp.casefold()
         if imp in setup_reqs:
             req_libs.add(setup_reqs[imp])
             continue
@@ -270,7 +270,7 @@ def _match_pkg_to_reqs(imports, setup_reqs):
         for i in range(1, len(imp_parts)):
             imp_name = ".".join(imp_parts[0:i])
 
-            if imp_name.lower() in setup_reqs:
+            if imp_name.casefold() in setup_reqs:
                 req_libs.add(setup_reqs[imp_name])
                 break
         else:

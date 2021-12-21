@@ -7,7 +7,7 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/ambv/black
-    rev: 20.8b1
+    rev: 21.12b0
     hooks:
       - id: black
         language: python
@@ -15,14 +15,14 @@ repos:
           - -t
           - py36
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.11.1
+    rev: v2.12.2
     hooks:
       - id: pylint
         args:
           - --disable=E0401,W0511
           - --ignore-patterns=test_
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.2
     hooks:
       - id: flake8
         args:
