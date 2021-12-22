@@ -11,14 +11,17 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
+
 from msticpy.nbtools.process_tree import build_and_show_process_tree
 from msticpy.sectools import process_tree_utils as pt_util
 from msticpy.sectools import proc_tree_builder as pt_build
+from msticpy.sectools.proc_tree_schema import LX_EVENT_SCH, WIN_EVENT_SCH
 
 from ..unit_test_lib import TEST_DATA_PATH
 
 testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
+testdf_mde_pub = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("mde_proc_pub.pkl"))
 testdf_win_mde = pd.read_csv(
     Path(TEST_DATA_PATH).joinpath("mde_proc_cs1.csv"),
     parse_dates=[
@@ -238,7 +241,7 @@ def test_tree_utils_win():
         "LargestTreeDepth": 7,
     }
 
-    assert pt_build.infer_schema(p_tree) == pt_build.WIN_EVENT_SCH
+    assert pt_build.infer_schema(p_tree) == WIN_EVENT_SCH
 
 
 def test_tree_utils_lx():
@@ -282,12 +285,13 @@ def test_tree_utils_lx():
         "LargestTreeDepth": 5,
     }
 
-    assert pt_build.infer_schema(p_tree_l) == pt_build.LX_EVENT_SCH
+    assert pt_build.infer_schema(p_tree_l) == LX_EVENT_SCH
 
 
 def test_build_process_tree():
     build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
-    build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_lx, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_mde_pub, legend_col="FileName")
 
 
 def test_build_mde_win_tree_dict_schema():

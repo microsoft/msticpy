@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-Azure Sentinel TI provider class.
+Microsoft Sentinel TI provider class.
 
 Input can be a single IoC observable or a pandas DataFrame containing
 multiple observables. Processing may require a an API key and
@@ -27,7 +27,7 @@ __author__ = "Ian Hellen"
 
 @export
 class AzSTI(KqlTIProvider):
-    """Azure Sentinel TI provider class."""
+    """Microsoft Sentinel TI provider class."""
 
     _IOC_QUERIES: Dict[str, tuple] = {
         "ipv4": ("ThreatIntelligence.list_indicators_by_ip", {"ioc": "observables"}),

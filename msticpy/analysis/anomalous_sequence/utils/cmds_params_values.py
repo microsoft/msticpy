@@ -107,9 +107,10 @@ def compute_counts(  # noqa MC0001  # nosec
                 pars = dict.fromkeys(pars)
             for par, val in pars.items():
                 param_counts[par] += 1
-                value_counts[val] += 1
                 cmd_param_counts[cmd.name][par] += 1
-                param_value_counts[par][val] += 1
+                if val:
+                    value_counts[val] += 1
+                    param_value_counts[par][val] += 1
         seq2_counts[prev][end_token] += 1
         seq1_counts[end_token] += 1
 
