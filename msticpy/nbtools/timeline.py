@@ -34,6 +34,7 @@ from bokeh.layouts import column
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import export, check_kwargs
+from ..data.query_defns import ensure_df_datetimes
 
 # pylint: disable=unused-import
 # Importing to activate pandas accessors
@@ -349,6 +350,7 @@ def display_timeline_values(  # noqa: C901, MC0001
     check_df_columns(
         data, source_columns + [time_column], _TIMELINE_HELP, "display_timeline_values"
     )
+    data = ensure_df_datetimes(data=data, columns=time_column)
     graph_df, group_count_df, tool_tip_columns, series_count = _create_data_grouping(
         data, source_columns, time_column, group_by, color
     )
@@ -640,6 +642,7 @@ def _plot_series(data, plot, legend_pos):
         legend_pos = "left"
     legend_items = []
     for ser_name, series_def in data.items():
+
         if legend_pos == "inline":
             p_series = plot.diamond(
                 x=series_def["time_column"],
@@ -786,6 +789,8 @@ def _unpack_data_series_dict(data, **kwargs):
         if not time_col:
             time_col = time_column
             series_def["time_column"] = time_col
+        # ensure named time columns are in datetime format
+        series_data = ensure_df_datetimes(data=series_data, columns=time_col)
         data_columns.update([time_col])
         # add the data columns to the tool tip column set
         tool_tip_columns.update(data_columns)
@@ -899,7 +904,7 @@ def _create_dict_from_grouping(data, source_columns, time_column, group_by, colo
     return series_dict
 
 
-def _get_ref_event_time(**kwargs) -> Tuple[datetime, str]:
+def _get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
     """Extract the reference time from kwargs."""
     ref_alert = kwargs.get("alert", None)
     if ref_alert is not None:

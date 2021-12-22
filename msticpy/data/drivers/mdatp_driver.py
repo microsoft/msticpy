@@ -8,7 +8,7 @@ from typing import Union, Any
 import pandas as pd
 
 from .odata_driver import OData, QuerySource
-from ..query_defns import DataEnvironment
+from ..query_defns import DataEnvironment, ensure_df_datetimes
 from ...common.azure_auth import AzureCloudConfig
 from ...common.utility import export
 from ..._version import VERSION
@@ -76,7 +76,21 @@ class MDATPDriver(OData):
 
         """
         del query_source, kwargs
-        return self.query_with_results(query, body=True, api_end=self.api_suffix)[0]
+        data, response = self.query_with_results(
+            query, body=True, api_end=self.api_suffix
+        )
+        if isinstance(data, pd.DataFrame):
+            # If we got a schema we should convert the DateTimes to pandas datetimes
+            if "Schema" not in response:
+                return data
+            date_fields = [
+                field["Name"]
+                for field in response["Schema"]
+                if field["Type"] == "DateTime"
+            ]
+            data = ensure_df_datetimes(data, columns=date_fields)
+            return data
+        return response
 
 
 def _select_api_uris(data_environment):
