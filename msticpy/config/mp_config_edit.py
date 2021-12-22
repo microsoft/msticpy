@@ -99,9 +99,15 @@ class MpConfigEdit(CompEditDisplayMixin):
             value=self.current_config_file,
             layout=widgets.Layout(width="75%"),
         )
-        self.btn_save = widgets.Button(description="Save Settings")
+        self.btn_save = widgets.Button(
+            description="Save Settings",
+            tooltip="Save current settings to your config file.",
+        )
         self.btn_save.on_click(self._save_file)
-        self.btn_validate = widgets.Button(description="Validate Settings")
+        self.btn_validate = widgets.Button(
+            description="Validate Settings",
+            tooltip="Run basic sanity checks on current settings.",
+        )
         self.btn_validate.on_click(self._validate_config)
         self.cb_backup = widgets.Checkbox(description="Create backup", value=False)
         vbox = widgets.VBox(

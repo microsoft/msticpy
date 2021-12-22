@@ -586,6 +586,19 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
     """
     result_rec = _empty_binary_rec()
     printable_bytes = _as_byte_string(bytes_array)
+    if _GET_UTF16():  # type: ignore
+        try:
+            # Difficult to tell the difference between a real unicode string
+            # and a binary string that happens to decode to a utf-16 string.
+            # So we don't do this unless instructed to
+            decoded_string = bytes_array.decode("utf-16")
+            return result_rec._replace(
+                decoded_string=decoded_string,
+                encoding_type="utf-16",
+                printable_bytes=printable_bytes,
+            )
+        except UnicodeDecodeError:
+            pass
     try:
         decoded_string = bytes_array.decode("utf-8")
         return result_rec._replace(
@@ -596,18 +609,6 @@ def _get_byte_encoding(bytes_array: bytes) -> BinaryRecord:
     except UnicodeDecodeError:
         pass
 
-    if _GET_UTF16():  # type: ignore
-        try:
-            # Difficult to tell the difference between a real unicode string
-            # and a binary string that happens to decode to a utf-16 string
-            decoded_string = bytes_array.decode("utf-16")
-            return result_rec._replace(
-                decoded_string=decoded_string,
-                encoding_type="utf-16",
-                printable_bytes=printable_bytes,
-            )
-        except UnicodeDecodeError:
-            pass
     return result_rec._replace(encoding_type="binary", printable_bytes=printable_bytes)
 
 
