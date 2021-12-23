@@ -26,7 +26,7 @@ _PATH_MAPPING = {
 
 
 class AzureSentinel(AzureData):
-    """Class for returning key Azure Sentinel elements."""
+    """Class for returning key Microsoft Sentinel elements."""
 
     def __init__(self, connect: bool = False, cloud: Optional[str] = None):
         """
@@ -82,7 +82,7 @@ class AzureSentinel(AzureData):
 
     def get_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
         """
-        Return a list of Azure Sentinel workspaces in a Subscription.
+        Return a list of Microsoft Sentinel workspaces in a Subscription.
 
         Parameters
         ----------
@@ -102,7 +102,7 @@ class AzureSentinel(AzureData):
             config = self._check_config(["subscription_id"])
             sub_id = config["subscription_id"]
 
-        print("Finding Azure Sentinel Workspaces...")
+        print("Finding Microsoft Sentinel Workspaces...")
         res = self.get_resources(sub_id=sub_id)  # type: ignore
         # handle no results
         if isinstance(res, pd.DataFrame) and not res.empty:
@@ -124,7 +124,7 @@ class AzureSentinel(AzureData):
 
             return workspaces_dict
 
-        print(f"No Azure Sentinel workspaces in {sub_id}")
+        print(f"No Microsoft Sentinel workspaces in {sub_id}")
         return {}
 
     def set_default_workspace(
@@ -166,7 +166,7 @@ class AzureSentinel(AzureData):
         ws_name: str = None,
     ) -> pd.DataFrame:
         """
-        Return all hunting queries in an Azure Sentinel workspace.
+        Return all hunting queries in a Microsoft Sentinel workspace.
 
         Parameters
         ----------
@@ -212,7 +212,7 @@ class AzureSentinel(AzureData):
         ws_name: str = None,
     ) -> pd.DataFrame:
         """
-        Return all Azure Sentinel alert rules for a workspace.
+        Return all Microsoft Sentinel alert rules for a workspace.
 
         Parameters
         ----------

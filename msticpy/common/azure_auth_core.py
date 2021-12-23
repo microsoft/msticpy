@@ -49,7 +49,7 @@ def default_auth_methods() -> List[str]:
             return az_settings["auth_methods"]
     except KeyError:
         pass  # no Azure section in config
-    return ["env", "cli", "msi", "interactive"]
+    return ["cli", "msi", "interactive"]
 
 
 class AzureCloudConfig:

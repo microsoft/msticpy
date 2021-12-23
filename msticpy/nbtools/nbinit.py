@@ -106,7 +106,7 @@ Some functionality (such as Threat Intel lookups) will not function without
 valid configuration settings.<br>
 The following resources will help you set up your configuration:
 <ul>{"".join(_HELP_URIS)}</ul>
-<br>You can load and run the first two of these from the Azure Sentinel
+<br>You can load and run the first two of these from the Microsoft Sentinel
 <b>Notebooks</b> tab
 """
 
@@ -445,7 +445,7 @@ _AZ_SENT_ERRS = [
 
 
 def _verify_no_azs_errors(errs):
-    """Verify none of the Azure Sentinel errors appear in `errs`."""
+    """Verify none of the Microsoft Sentinel errors appear in `errs`."""
     return all(az_err not in errs for az_err in _AZ_SENT_ERRS)
 
 
@@ -457,7 +457,7 @@ def _get_or_create_config() -> bool:
     # 4. if file and check_file_contents -> return ok
     # 5. search_for_file(config.json)
     # 6. If config.json -> import into mpconfig and save
-    # 7. Error - no Azure sentinel config
+    # 7. Error - no Microsoft Sentinel config
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         display(HTML(_MISSING_MPCONFIG_ENV_ERR))
@@ -473,7 +473,7 @@ def _get_or_create_config() -> bool:
             if errs:
                 _pr_output(std_out_cap.getvalue())
             if _verify_no_azs_errors(errs):
-                # If the mpconfig has an Azure Sentinel config, return here
+                # If the mpconfig has a Microsoft Sentinel config, return here
                 return True
         # pylint: disable=broad-except
         except Exception as err:
@@ -490,7 +490,7 @@ def _get_or_create_config() -> bool:
         _populate_config_to_mp_config(mp_path, config_json)
         return True
 
-    _pr_output("No valid configuration for Azure Sentinel found.")
+    _pr_output("No valid configuration for Microsoft Sentinel found.")
     return False
 
 
@@ -506,7 +506,7 @@ def _populate_config_to_mp_config(mp_path, config_json):
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
         ] = def_azs_settings.copy()
-    mssg = f"Created '{mp_path}'' with Azure Sentinel settings."
+    mssg = f"Created '{mp_path}'' with Microsoft Sentinel settings."
     if Path(mp_path).exists():
         # If there is an existing file read it in
         mp_config_text = Path(mp_path).read_text(encoding="utf-8")
@@ -515,7 +515,7 @@ def _populate_config_to_mp_config(mp_path, config_json):
         mp_config_settings.update(mp_config_convert.settings)
         # update MpConfigFile with the merged settings
         mp_config_convert.settings = mp_config_settings
-        mssg = f"Updated '{mp_path}'' with Azure Sentinel settings."
+        mssg = f"Updated '{mp_path}'' with Microsoft Sentinel settings."
     # Save the file
     mp_config_convert.save_to_file(mp_path, backup=True)
     _pr_output(mssg)
@@ -675,8 +675,7 @@ def _check_azure_cli_status():
             _pr_output(message)
         elif status == AzureCliStatus.CLI_NOT_INSTALLED:
             _pr_output(
-                "Azure CLI not detected. AzCLI single sign-on disabled"
-                " ({_CLI_WIKI_MSSG_SHORT})"
+                "Azure CLI credentials not detected." f" ({_CLI_WIKI_MSSG_SHORT})"
             )
         elif message:
             _pr_output("\n".join([message, _CLI_WIKI_MSSG_GEN]))

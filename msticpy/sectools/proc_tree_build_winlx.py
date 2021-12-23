@@ -7,6 +7,7 @@
 import attr
 import pandas as pd
 
+from ..data.query_defns import ensure_df_datetimes
 from .._version import VERSION
 
 
@@ -84,6 +85,7 @@ def _clean_proc_data(
     schema: "ProcSchema",  # type: ignore  # noqa: F821
 ) -> pd.DataFrame:
     """Return cleaned process data."""
+    procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
     procs_cln = (
         procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
     )

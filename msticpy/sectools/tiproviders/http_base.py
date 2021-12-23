@@ -203,13 +203,14 @@ class HttpProvider(TIProvider):
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         # create a parameter dictionary to pass to requests
-        req_dict: Dict[str, Any] = {"headers": {}}
         # substitute any parameter value from our req_params dict
-        req_dict["url"] = (
-            self._BASE_URL + src.path.format(**req_params)
+        req_dict: Dict[str, Any] = {
+            "headers": {},
+            "url": self._BASE_URL + src.path.format(**req_params)
             if not src.full_url
-            else src.path.format(observable=ioc)
-        )
+            else src.path.format(observable=ioc),
+        }
+
         if src.headers:
             headers: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.headers.items()

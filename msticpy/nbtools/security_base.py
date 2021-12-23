@@ -14,8 +14,8 @@ import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import escape_windows_path, export
-from ..data.query_defns import DataEnvironment, DataFamily, QueryParamProvider
-from ..datamodel.entities import Account, Entity, Host, Process
+from ..data.query_defns import DataEnvironment, QueryParamProvider
+from ..datamodel.entities import Account, Entity, Host, Process, OSFamily
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -271,7 +271,7 @@ class SecurityBase(QueryParamProvider):
             )
             acct_name = self.primary_account.Name if self.primary_account else None
             path_separator = self.path_separator
-            if self.data_family == DataFamily.WindowsSecurity:
+            if self.data_family == OSFamily.Windows:
                 proc_name = escape_windows_path(proc_name)
                 path_separator = escape_windows_path(self.path_separator)
 
@@ -297,12 +297,12 @@ class SecurityBase(QueryParamProvider):
             return {}
 
     @property
-    def data_family(self) -> DataFamily:
+    def data_family(self) -> OSFamily:
         """Return the data family of the alert for subsequent queries."""
         if self.os_family == "Linux":
-            return DataFamily.LinuxSecurity
+            return OSFamily.Linux
         if self.os_family == "Windows":
-            return DataFamily.WindowsSecurity
+            return OSFamily.Windows
         raise ValueError("Unknown Data family.")
 
     @property

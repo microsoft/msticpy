@@ -637,7 +637,7 @@ class Entity(ABC, Node):
 
         """
         func_path = func_name.split(".") if "." in func_name else [func_name]
-        curr_attr = cls
+        curr_attr: Optional[Any] = cls
         for path in func_path:
             curr_attr = getattr(curr_attr, path, None)  # type: ignore
             if not curr_attr:
@@ -694,5 +694,5 @@ class Entity(ABC, Node):
 
 
 def camelcase_property_names(input_ent: Dict[str, Any]) -> Dict[str, Any]:
-    """Change initial letter Azure Sentinel API entity properties to upper case."""
+    """Change initial letter Microsoft Sentinel API entity properties to upper case."""
     return {key[0].upper() + key[1:]: input_ent[key] for key in input_ent}

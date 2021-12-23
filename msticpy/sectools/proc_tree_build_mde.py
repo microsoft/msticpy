@@ -9,6 +9,10 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 
+from .proc_tree_schema import (
+    ProcSchema,
+)
+from ..data.query_defns import ensure_df_datetimes
 from .._version import VERSION
 
 __version__ = VERSION
@@ -26,6 +30,13 @@ _MDE_NON_STD_COL_MAP = {
     "InitiatingProcessParentProcessName": "CreatedProcessParentName",
     "InitiatingProcessParentCreationTime": "CreatedProcessParentCreationTimeUtc",
 }
+
+_MDE_TIMESTAMP_COLS = [
+    "CreatedProcessCreationTime",
+    "InitiatingProcessCreationTime",
+    "CreatedProcessParentCreationTimeUtc",
+    "InitiatingProcessParentCreationTime",
+]
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
 PARENT_KEY = "parent_key"
@@ -50,6 +61,7 @@ def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFram
         extracted parent processes from child data.
 
     """
+    data = ensure_df_datetimes(data, columns=_MDE_TIMESTAMP_COLS)
     par_child_col_map = _get_par_child_col_mapping(data)
     inferred_parents = _extract_missing_parents(data, par_child_col_map, debug=debug)
     missing_par_uniq = _get_unique_parents(inferred_parents, debug)
@@ -308,26 +320,30 @@ _SENTINEL_MDE_MAP = {
     "SHA256": "CreatedProcessFileSha256",
 }
 
-_UNK_TIME = pd.Timestamp("1970-01-01")
+_UNK_TIME = pd.Timestamp("1970-01-01", tz="UTC")
 
 
-def convert_sentinel_to_mde(data: pd.DataFrame) -> pd.DataFrame:
+def convert_mde_schema_to_internal(
+    data: pd.DataFrame, schema: ProcSchema
+) -> pd.DataFrame:
     """
-    Convert MS Sentinel DeviceProcessEvents data to MDE schema.
+    Convert DeviceProcessEvents schema data to internal MDE schema.
 
     Parameters
     ----------
     data : pd.DataFrame
         Input data in MS Sentinel schema.
+    schema : ProcSchema
+        The mapping schema for the data set.
 
     Returns
     -------
     pd.DataFrame
-        Reformatted data in MDE schema.
+        Reformatted data into MDE internal schema.
 
     """
     # Fill in missing timestamps with placeholder
-    data["ProcessCreationTime"] = data.TimeGenerated.fillna(_UNK_TIME)
+    data["ProcessCreationTime"] = data[schema.time_stamp].fillna(_UNK_TIME)
     data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
         _UNK_TIME
     )
@@ -337,11 +353,11 @@ def convert_sentinel_to_mde(data: pd.DataFrame) -> pd.DataFrame:
 
     # Proc tree code references CreateProcessParentId
     # This should be the same as InitiatingProcessParentId
-    data["CreatedProcessParentId"] = data["InitiatingProcessParentId"]
+    data["CreatedProcessParentId"] = data[schema.parent_id]
 
     # Put a value in parent procs with no name
-    null_proc_parent = data["InitiatingProcessParentFileName"] == ""
-    data.loc[null_proc_parent, "InitiatingProcessParentFileName"] = "unknown"
+    null_proc_parent = data[schema.parent_name] == ""
+    data.loc[null_proc_parent, schema.parent_name] = "unknown"
 
     # Extract InitiatingProc folder path - remove stem
     data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(
