@@ -80,7 +80,7 @@ class RegisteredWidget(ABC):
         id_vals: Optional[List[Any]] = None,
         val_attrs: Optional[List[str]] = None,
         nb_params: Optional[Dict[str, str]] = None,
-        ns: Dict[str, Any] = globals(),  # pylint: disable=invalid-name
+        name_space: Dict[str, Any] = globals(),
         register: bool = True,
         **kwargs,
     ):
@@ -102,7 +102,7 @@ class RegisteredWidget(ABC):
             attribute currently has no value (i.e. restoring a value from
             the registry takes priority over this),
             by default None
-        ns : Dict[str, Any], optional
+        name_space : Dict[str, Any], optional
             Namespace to look for global variables, by default None
         register : bool
             Do not register the widget or retrieve values from previously-
@@ -125,13 +125,13 @@ class RegisteredWidget(ABC):
             _WIDGET_REG[self._id] = self
 
         # if there are any notebook params relevant to this control
-        if nb_params and ns:
+        if nb_params and name_space:
             for attr, nb_param in nb_params.items():
                 # if this doesn't have a value set explicitly or
                 # one that was recovered from the widget registry
                 # set it from the nb_param value
-                if nb_param in ns and not getattr(self, attr, None):
-                    setattr(self, attr, ns[nb_param])
+                if nb_param in name_space and not getattr(self, attr, None):
+                    setattr(self, attr, name_space[nb_param])
 
 
 # pylint: enable=too-few-public-methods
