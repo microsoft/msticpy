@@ -8,7 +8,7 @@ from typing import Tuple, Dict, Iterable, Any
 from pathlib import Path
 import yaml
 
-from .query_defns import DataFamily, DataEnvironment
+from .query_defns import DataEnvironment
 from .._version import VERSION
 
 __version__ = VERSION
@@ -127,11 +127,3 @@ def _validate_data_categories(query_def_dict: Dict):
         or not query_def_dict["metadata"]["data_families"]
     ):
         raise ValueError("Imported file has no data families defined")
-
-    for fam in query_def_dict["metadata"]["data_families"]:
-        if not DataFamily.parse(fam):
-            raise ValueError(
-                f"Unknown data family {fam} in metadata. ",
-                "Valid values are\n",
-                ", ".join(f.name for f in DataFamily),
-            )

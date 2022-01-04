@@ -10,6 +10,9 @@ import numpy as np
 import pandas as pd
 
 from .._version import VERSION
+from ..data.query_defns import ensure_df_datetimes
+from .proc_tree_schema import ProcSchema
+from .proc_tree_schema import ColNames as Col
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -27,9 +30,14 @@ _MDE_NON_STD_COL_MAP = {
     "InitiatingProcessParentCreationTime": "CreatedProcessParentCreationTimeUtc",
 }
 
+_MDE_TIMESTAMP_COLS = [
+    "CreatedProcessCreationTime",
+    "InitiatingProcessCreationTime",
+    "CreatedProcessParentCreationTimeUtc",
+    "InitiatingProcessParentCreationTime",
+]
+
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
-PARENT_KEY = "parent_key"
-PROC_KEY = "proc_key"
 
 
 def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFrame:
@@ -50,6 +58,7 @@ def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFram
         extracted parent processes from child data.
 
     """
+    data = ensure_df_datetimes(data, columns=_MDE_TIMESTAMP_COLS)
     par_child_col_map = _get_par_child_col_mapping(data)
     inferred_parents = _extract_missing_parents(data, par_child_col_map, debug=debug)
     missing_par_uniq = _get_unique_parents(inferred_parents, debug)
@@ -109,7 +118,7 @@ def _extract_missing_parents(
     # add process key
     _add_proc_key(
         data,
-        PROC_KEY,
+        Col.proc_key,
         "CreatedProcessName",
         "CreatedProcessId",
         "CreatedProcessCreationTime",
@@ -122,7 +131,7 @@ def _extract_missing_parents(
     # Create parent key
     _add_proc_key(
         data,
-        PARENT_KEY,
+        Col.parent_key,
         "InitiatingProcessName",
         "InitiatingProcessId",
         "InitiatingProcessCreationTime",
@@ -139,8 +148,8 @@ def _extract_missing_parents(
         regex="Initiating.*|parent_key|src_index"
     ).merge(  # parents
         data.filter(non_par_cols),  # created_procs
-        left_on=PARENT_KEY,
-        right_on=PROC_KEY,
+        left_on=Col.parent_key,
+        right_on=Col.proc_key,
         suffixes=("_child", "_par"),
         how="left",
     )
@@ -151,7 +160,7 @@ def _extract_missing_parents(
     missing_parents = (
         missing_parents.dropna(axis=1, how="all")
         .rename(columns=col_mapping)
-        .rename(columns={"parent_key_child": PROC_KEY})
+        .rename(columns={"parent_key_child": Col.proc_key})
         .drop(columns=["InitiatingProcessFileName"])
     )
     missing_parents["CreatedProcessFilePath"] = (
@@ -166,7 +175,7 @@ def _extract_missing_parents(
         found_parents = merged_parents[~merged_parents["CreatedProcessParentId"].isna()]
         print("existing parent procs", len(found_parents))
         mpar_uniq_test = (
-            missing_parents.drop(columns="src_index").groupby("proc_key").nunique()
+            missing_parents.drop(columns="src_index").groupby(Col.proc_key).nunique()
         )
         if not mpar_uniq_test[mpar_uniq_test > 1].dropna(how="all").empty:
             print("Error - some extracted parents have duplicate keys")
@@ -187,7 +196,7 @@ def _get_unique_parents(data, debug=False):
         print("unique:", missing_par_uniq.shape, "original:", data.shape)
     _add_proc_key(
         missing_par_uniq,
-        PARENT_KEY,
+        Col.parent_key,
         "InitiatingProcessName",
         "CreatedProcessParentId",
         "CreatedProcessParentCreationTimeUtc",
@@ -243,7 +252,7 @@ def _extract_missing_gparents(data):
     )
     _add_proc_key(
         missing_gps,
-        "proc_key",
+        Col.proc_key,
         "CreatedProcessName",
         "CreatedProcessId",
         "CreatedProcessCreationTime",
@@ -278,3 +287,78 @@ def _map_columns(
         else:
             unmapped[col_stem] = col
     return col_mapping, unmapped
+
+
+_SENTINEL_MDE_MAP = {
+    "AccountDomain": "CreatedProcessAccountDomainName",
+    "AccountName": "CreatedProcessAccountName",
+    "AccountSid": "CreatedProcessAccountSid",
+    "DeviceId": "MachineId",
+    "DeviceName": "ComputerDnsName",
+    "FileName": "CreatedProcessName",
+    "FolderPath": "CreatedProcessFilePath",
+    "InitiatingProcessAccountDomain": "InitiatingProcessAccountDomainName",
+    "InitiatingProcessCommandLine": "Process_CommandLine",
+    "InitiatingProcessFileName": "InitiatingProcessName",
+    "InitiatingProcessFolderPath": "InitiatingProcessImageFilePath",
+    "InitiatingProcessMD5": "InitiatingProcessImageMd5",
+    "InitiatingProcessParentFileName": "InitiatingProcessParentProcessName",
+    "InitiatingProcessParentId": "InitiatingProcessParentProcessId",
+    "InitiatingProcessSHA1": "InitiatingProcessImageSha1",
+    "InitiatingProcessSHA256": "InitiatingProcessImageSha256",
+    "InitiatingProcessTokenElevation": "InitiatingProcessTokenElevationType",
+    "MD5": "CreatedProcessFileMd5",
+    "ProcessCommandLine": "CreatedProcessCommandLine",
+    "ProcessCreationTime": "CreatedProcessCreationTime",
+    "ProcessId": "CreatedProcessId",
+    "ProcessIntegrityLevel": "CreatedProcessIntegrityLevel",
+    "ProcessTokenElevation": "CreatedProcessTokenElevationType",
+    "SHA1": "CreatedProcessFileSha1",
+    "SHA256": "CreatedProcessFileSha256",
+}
+
+_UNK_TIME = pd.Timestamp("1970-01-01", tz="UTC")
+
+
+def convert_mde_schema_to_internal(
+    data: pd.DataFrame, schema: ProcSchema
+) -> pd.DataFrame:
+    """
+    Convert DeviceProcessEvents schema data to internal MDE schema.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input data in MS Sentinel schema.
+    schema : ProcSchema
+        The mapping schema for the data set.
+
+    Returns
+    -------
+    pd.DataFrame
+        Reformatted data into MDE internal schema.
+
+    """
+    # Fill in missing timestamps with placeholder
+    data["ProcessCreationTime"] = data[schema.time_stamp].fillna(_UNK_TIME)
+    data["InitiatingProcessCreationTime"] = data.InitiatingProcessCreationTime.fillna(
+        _UNK_TIME
+    )
+    data[
+        "InitiatingProcessParentCreationTime"
+    ] = data.InitiatingProcessParentCreationTime.fillna(_UNK_TIME)
+
+    # Proc tree code references CreateProcessParentId
+    # This should be the same as InitiatingProcessParentId
+    data["CreatedProcessParentId"] = data[schema.parent_id]
+
+    # Put a value in parent procs with no name
+    null_proc_parent = data[schema.parent_name] == ""
+    data.loc[null_proc_parent, schema.parent_name] = "unknown"
+
+    # Extract InitiatingProc folder path - remove stem
+    data["InitiatingProcessFolderPath"] = data.InitiatingProcessFolderPath.apply(
+        lambda x: x.rsplit("\\", maxsplit=1)[0]
+    )
+
+    return data.rename(columns=_SENTINEL_MDE_MAP)

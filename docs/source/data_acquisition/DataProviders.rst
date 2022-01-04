@@ -386,25 +386,40 @@ Connecting to an OData Source
 -----------------------------
 :py:mod:`OData driver API documentation<msticpy.data.drivers.odata_driver>`
 
-You can also connect to OData based data sources such as the MDATP API,
-or the Security Graph API. These connections often rely on having a
-dedicated Azure AD app for handling the authentication process.
+You can also connect to OData based data sources such as the Microsoft Defender,
+Microsoft Defender for Endpoint, and the Microsoft Graph APIs.
+These connections often rely on having a
+dedicated Azure AD app (plus app secret) for handling the authentication process.
 
-MDATP
-~~~~~
+Microsoft 365 Defender
+~~~~~~~~~~~~~~~~~~~~~~
 :py:mod:`MDATP driver API documentation<msticpy.data.drivers.mdatp_driver>`
 
-Details on registering an Azure AD application for MDATP can be found
+.. note:: This section applies to both Microsoft 365 Defender and Microsoft Defender
+    for Endpoint (MDE). The former supersedes and is a subset of the the latter
+    but both are still available to use.
+
+Details on registering an Azure AD application for MS 365 Defender can be found
 `here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
 Once you have registered the application you can use it to connect to
-the MDATP API via the MDATP Data Environment.
+the MS Defender API.
 
-When connecting the required elements for connection can be passed in
-a number of ways. The simpliest is to pass the required elements as
-kwargs. The required elements are:
+The parameters required for connection to Defender can be passed in
+a number of ways. The simplest is to pass these as
+keyword arguments (although it's better to add these to your configuration
+if you are going to be using them directly - see the following section).
 
-* tenant_id -- The tenant ID of the MDATP workspace to connect to.
-* client_id -- The ID of the application registered for MDATP.
+You need to both load the Microsoft Defender data provider and call
+the connect function to authenticate.
+
+Call the QueryProvider with "M365D" as the environment parameter.
+To use the Defender for Endpoint API you can pass "MDE" as the parameter.
+
+If you are specifying connection parameters in the function call (rather
+than using configuration settings), the required parameters are:
+
+* tenant_id -- The tenant ID of the Defender workspace to connect to.
+* client_id -- The ID of the application registered for MS Defender.
 * client_secret -- The secret used for by the application.
 
 
@@ -413,38 +428,61 @@ kwargs. The required elements are:
         ten_id = input('Tenant ID')
         client_id = input('Client ID')
         client_secret = input('Client Secret')
-        mdatp_prov = QueryProvider('MDATP')
-        mdatp_prov.connect(tenant_id=ten_id, client_id=client_id, client_secret=client_secret)
+        md_prov = QueryProvider('M365D')
+        md_prov.connect(tenant_id=ten_id, client_id=client_id, client_secret=client_secret)
+
+.. note:: You can also specify these parameters as a connection string:
+    "tenant_id='my_tenant'; client_id='my_appid'; client_secret='my_secret'"
 
 Alternatively you can store these details in the msticpyconfig.yaml
 file. Details should be included in the following format:
 
 .. code:: yaml
 
-      MDATPApp:
+      MicrosoftDefender:
           Args:
             ClientId: "CLIENT ID"
             ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
 
-To use the stored variables when connecting pass app_name to the connect
-function with the value passed being the heading used in msticpyconfig.yaml
+
+We strongly recommend storing the client secret value
+in Azure Key Vault. You can replace the text value with a referenced
+to a Key Vault secret using the MSTICPy configuration editor.
+See :doc:`msticpy Settings Editor <../getting_started/SettingsEditor>`)
+
+Your configuration when using Key Vault should look like the following:
+
+.. code:: yaml
+
+      MicrosoftDefender:
+          Args:
+            ClientId: "CLIENT ID"
+            ClientSecret:
+                KeyVault:
+            TenantId: "TENANT ID"
+
+
+To use the configured values, call ``connect`` with no parameters.
 
 .. code:: ipython3
 
-        mdatp_prov = QueryProvider('MDATP')
-        mdatp_prov.connect(app_name="MDATPApp")
+        mdatp_prov = QueryProvider('M365D')
+        mdatp_prov.connect()
 
-For examples of using the MDATP connector see the sample MDATPQuery Notebook.
+For examples of using the MS Defender provider, see the sample MDATPQuery Notebook.
 
 
 Security Graph API
 ~~~~~~~~~~~~~~~~~~
 :py:mod:`Security Graph driver API documentation<msticpy.data.drivers.security_graph_driver>`
 
-Connecting to the Security Graph API follows the same format as MDATP
+Connecting to the Security Graph API follows the same format as MS Defender
 connections with connection variables passed to the function in the
-same way.
+same way. The configuration format is also identical to that specified in the
+previous section.
+
+
 
 Details for registering an application for the Security Graph API can
 be found `here <https://docs.microsoft.com/en-us/graph/auth-register-app-v2?context=graph%2Fapi%2F1.0&view=graph-rest-1.0>`__.
@@ -452,7 +490,7 @@ be found `here <https://docs.microsoft.com/en-us/graph/auth-register-app-v2?cont
 .. code:: ipython3
 
         mdatp_prov = QueryProvider('SecurityGraph')
-        mdatp_prov.connect(app_name="SecurityGraphApp")
+        mdatp_prov.connect()
 
 
 Using Local Data - the LocalData provider

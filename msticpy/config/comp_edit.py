@@ -149,9 +149,21 @@ class CompEditItemButtons:
     def __init__(self):
         """Initialize the class."""
         btn_layout = widgets.Layout(width="100px")
-        self.btn_add = widgets.Button(description="Add", layout=btn_layout)
-        self.btn_del = widgets.Button(description="Delete", layout=btn_layout)
-        self.btn_save = widgets.Button(description="Update", layout=btn_layout)
+        self.btn_add = widgets.Button(
+            description="Add",
+            tooltip="Add provider/item in drop-down to your settings.",
+            layout=btn_layout,
+        )
+        self.btn_del = widgets.Button(
+            description="Delete",
+            tooltip="Remove selected provider/item from your settings.",
+            layout=btn_layout,
+        )
+        self.btn_save = widgets.Button(
+            description="Update",
+            tooltip="Confirms updates to the settings changes",
+            layout=btn_layout,
+        )
         self.layout = widgets.HBox([self.btn_add, self.btn_del, self.btn_save])
 
 
@@ -189,7 +201,9 @@ class CompEditSimple(CompEditFrame):
         """Initialize the class. Set a label with `description` as content."""
         super().__init__(description=description)
         self.edit_frame = widgets.VBox(layout=self.border_layout("100%"))
-        self.btn_save = widgets.Button(description="Save")
+        self.btn_save = widgets.Button(
+            description="Update", tooltip="Confirms updates to the settings changes"
+        )
         self.container = widgets.VBox(
             [self.edit_frame, self.btn_save], layout=self.no_border_layout("100%")
         )

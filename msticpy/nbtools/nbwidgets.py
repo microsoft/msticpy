@@ -80,7 +80,7 @@ class RegisteredWidget(ABC):
         id_vals: Optional[List[Any]] = None,
         val_attrs: Optional[List[str]] = None,
         nb_params: Optional[Dict[str, str]] = None,
-        ns: Dict[str, Any] = globals(),
+        name_space: Dict[str, Any] = globals(),
         register: bool = True,
         **kwargs,
     ):
@@ -102,7 +102,7 @@ class RegisteredWidget(ABC):
             attribute currently has no value (i.e. restoring a value from
             the registry takes priority over this),
             by default None
-        ns : Dict[str, Any], optional
+        name_space : Dict[str, Any], optional
             Namespace to look for global variables, by default None
         register : bool
             Do not register the widget or retrieve values from previously-
@@ -125,13 +125,13 @@ class RegisteredWidget(ABC):
             _WIDGET_REG[self._id] = self
 
         # if there are any notebook params relevant to this control
-        if nb_params and ns:
+        if nb_params and name_space:
             for attr, nb_param in nb_params.items():
                 # if this doesn't have a value set explicitly or
                 # one that was recovered from the widget registry
                 # set it from the nb_param value
-                if nb_param in ns and not getattr(self, attr, None):
-                    setattr(self, attr, ns[nb_param])
+                if nb_param in name_space and not getattr(self, attr, None):
+                    setattr(self, attr, name_space[nb_param])
 
 
 # pylint: enable=too-few-public-methods
@@ -636,15 +636,17 @@ class SelectAlert:
         self.id_col = id_col
         self.time_col = time_col
 
-        if not columns:
-            columns = [
-                "AlertName",
-                "CompromisedEntity",
-            ]
-        self.columns = columns
+        self.columns = columns or [
+            "AlertName",
+            "CompromisedEntity",
+        ]
 
-        items = alerts[self.columns + [self.time_col] + [self.id_col]]
-        items = items.sort_values(time_col, ascending=True)
+        alert_cols = self.columns
+        if self.time_col not in alert_cols:
+            alert_cols.append(self.time_col)
+        if self.id_col not in alert_cols:
+            alert_cols.append(self.id_col)
+        items = alerts[alert_cols].sort_values(time_col, ascending=True)
         self._select_items = items.apply(
             self._alert_summary,
             axis=1,
@@ -677,7 +679,15 @@ class SelectAlert:
         # set up observer callbacks
         self._w_filter_alerts.observe(self._update_options, names="value")
         self._w_select_alert.observe(self._select_alert, names="value")
-        self.layout = widgets.VBox([self._w_filter_alerts, self._w_select_alert])
+        wgt_list = [self._w_filter_alerts, self._w_select_alert]
+        self._w_display_details = widgets.Checkbox(
+            value=True,
+            description="Display details",
+        )
+        if action:
+            self._w_display_details.observe(self._run_action, names="value")
+            wgt_list.append(self._w_display_details)
+        self.layout = widgets.VBox(wgt_list)
 
         if auto_display:
             self.display()
@@ -748,15 +758,20 @@ class SelectAlert:
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
         if not top_alert.empty:
+            self._w_select_alert.value = self._w_select_alert.options[0]
             self.alert_id = top_alert[self.id_col]
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
                 self._run_action()
 
-    def _run_action(self):
+    def _run_action(self, change=None):
         """Run any action function and display details, if any."""
-        output_objs = self.alert_action(self.selected_alert)
+        del change
+        output_objs = None
+        if self._w_display_details.value:
+            output_objs = self.alert_action(self.selected_alert)
         if output_objs is None:
+            self._clear_display()
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
@@ -770,6 +785,13 @@ class SelectAlert:
                 break
             else:
                 self._disp_elems[idx].update(out_obj)
+
+    def _clear_display(self):
+        """Clear any current details."""
+        if not self._disp_elems:
+            return
+        for disp_obj in self._disp_elems:
+            disp_obj.update(HTML(""))
 
     def _ipython_display_(self):
         """Display in IPython."""
@@ -840,7 +862,8 @@ class AlertSelector(SelectAlert):
             widgets.VBox([self._w_filter_alerts, self._w_select_alert, self._w_output])
         )
 
-    def _run_action(self):
+    def _run_action(self, change=None):
+        del change
         self._w_output.clear_output()
         with self._w_output:
             self.alert_action(self.selected_alert)
@@ -1061,6 +1084,7 @@ class SelectItem:
         height: str = "100px",
         width: str = "50%",
         display_filter: bool = True,
+        value: str = "",
     ):
         """
         Select an item from a list or dict.
@@ -1092,8 +1116,11 @@ class SelectItem:
             Selection list width (the default is '50%')
         display_filter : bool, optional
             Whether to display item filter (the default is True)
+        value : str, optional
+            A default value to pre-populate the filter with.
 
         """
+        self.def_value = value
         if item_list:
             self._item_list = item_list
             self._item_dict = None
@@ -1105,22 +1132,36 @@ class SelectItem:
         else:
             raise ValueError("One of item_list or item_dict must be supplied.")
 
+        # Check default value is actually present in our list of items
+        list_def_val = (
+            self.def_value if self.def_value in self._item_list else self._item_list[0]
+        )
+
         self._wgt_select = widgets.Select(
+            value=list_def_val,
             options=self._item_list,
             description=description,
             layout=Layout(width=width, height=height),
             style={"description_width": "initial"},
         )
+        self._w_display_details = widgets.Checkbox(
+            value=True,
+            description="Display details",
+        )
         self._display_filter = display_filter
         if display_filter:
             self._w_filter = widgets.Text(
-                value="", description="Filter:", style={"description_width": "initial"}
+                value=self.def_value,
+                description="Filter:",
+                style={"description_width": "initial"},
             )
 
             # set up observer callbacks
             self._w_filter.observe(self._update_options, names="value")
         self._wgt_select.observe(self._select_item, names="value")
 
+        if action:
+            self._w_display_details.observe(self._run_action, names="value")
         self.item_action = action
 
         # setup to use updatable display objects
@@ -1150,10 +1191,14 @@ class SelectItem:
                 i for i in self._item_list if change["new"].lower() in i.lower()
             ]
 
-    def _run_action(self):
+    def _run_action(self, change=None):
         """Run any action function and display details, if any."""
-        output_objs = self.item_action(self.value)
+        del change
+        output_objs = None
+        if self._w_display_details.value:
+            output_objs = self.item_action(self.value)
         if output_objs is None:
+            self._clear_display()
             return
         if not isinstance(output_objs, (tuple, list)):
             output_objs = [output_objs]
@@ -1166,6 +1211,13 @@ class SelectItem:
             else:
                 self._disp_elems[idx].update(out_obj)
 
+    def _clear_display(self):
+        """Clear any current details."""
+        if not self._disp_elems:
+            return
+        for disp_obj in self._disp_elems:
+            disp_obj.update(HTML(""))
+
     @property
     def layout(self):
         """Return underlying widget collection."""
@@ -1173,6 +1225,8 @@ class SelectItem:
         if self._display_filter:
             wgt_list.append(self._w_filter)
         wgt_list.append(self._wgt_select)
+        if self.item_action:
+            wgt_list.append(self._w_display_details)
         return widgets.VBox(wgt_list)
 
     def display(self):
@@ -1261,7 +1315,8 @@ class SelectString(SelectItem):
             display_filter=display_filter,
         )
 
-    def _run_action(self):
+    def _run_action(self, change=None):
+        del change
         self._w_output.clear_output()
         with self._w_output:
             self.item_action(self.value)

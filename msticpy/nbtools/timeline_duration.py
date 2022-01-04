@@ -18,6 +18,7 @@ from bokeh.layouts import column
 from bokeh.transform import dodge
 
 from ..common.utility import check_kwargs
+from ..data.query_defns import ensure_df_datetimes
 from .timeline import (
     _create_tool_tips,
     _create_range_tool,
@@ -142,6 +143,7 @@ def display_timeline_duration(
 
     group_by = [group_by] if isinstance(group_by, str) else list(group_by)
     end_time_column = end_time_column or time_column
+    data = ensure_df_datetimes(data, columns=list(set([time_column, end_time_column])))
     check_df_columns(
         data,
         group_by + [end_time_column, time_column],
