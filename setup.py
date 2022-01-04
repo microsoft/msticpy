@@ -27,19 +27,19 @@ def install_requires_rtd(install_list: list) -> list:
     ]
 
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     LONG_DESC = fh.read()
 
 # pylint: disable=locally-disabled, invalid-name
-with open("msticpy/_version.py", "r") as fd:
+with open("msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
 # pylint: enable=locally-disabled, invalid-name
 
-with open("requirements.txt", "r") as fh:
+with open("requirements.txt", "r", encoding="utf-8") as fh:
     INSTALL_REQUIRES = fh.readlines()
 
-with open("requirements-dev.txt", "r") as fh:
+with open("requirements-dev.txt", "r", encoding="utf-8") as fh:
     INSTALL_DEV_REQUIRES = fh.readlines()
 
 
@@ -107,14 +107,29 @@ setuptools.setup(
     project_urls={
         "Documentation": "https://msticpy.readthedocs.io",
         "Code": "https://github.com/microsoft/msticpy",
+        "Issue tracker": "https://github.com/microsoft/msticpy/issues",
     },
     python_requires=">=3.6",
     packages=setuptools.find_packages(exclude=["tests", "tests.*", "*.tests.*"]),
     classifiers=[
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Development Status :: 5 - Production/Stable",
+        "Framework :: IPython",
+        "Framework :: Jupyter",
+        "Framework :: Jupyter :: JupyterLab",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Information Technology",
+        "Topic :: Security",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS,
