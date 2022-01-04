@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""datq query test class."""
+"""KQL driver query test class."""
 from contextlib import redirect_stdout
 import io
 from unittest.mock import patch
@@ -16,7 +16,8 @@ from adal.adal_error import AdalError
 from Kqlmagic.kql_response import KqlError
 from Kqlmagic.kql_engine import KqlEngineError
 from Kqlmagic.my_aad_helper import AuthenticationError
-from Kqlmagic import kql as kql_exec
+
+# from Kqlmagic import kql as kql_exec
 
 from msticpy.data.drivers import kql_driver
 from msticpy.common.exceptions import (
@@ -35,7 +36,7 @@ GET_IPYTHON_PATCH = KqlDriver.__module__ + ".get_ipython"
 
 
 # pylint: disable=too-many-branches, too-many-return-statements
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use, redefined-outer-name
 
 
 class KqlResultTest:
@@ -83,6 +84,7 @@ class _MockIPython:
 
 
 def kql_exec(content):
+    """Mock kql_exec function."""
     if "--config" in content:
         if "=" in content:
             conf_item, conf_value = content.replace("--config", "").strip().split("=")
@@ -125,8 +127,46 @@ def kql_exec(content):
 KQL_EXEC_PATCH = (kql_driver, "kql_exec", kql_exec)
 
 
+class AzCredentials:
+    """Mock credentials class."""
+
+    class ModernCred:
+        """Mock modern credentials class."""
+
+        class Token:
+            """Mocked token class."""
+
+            token = "Token"
+
+        @classmethod
+        def get_token(cls, *args, **kwargs):
+            """Return the token."""
+            del args, kwargs
+            return cls.Token()
+
+        @property
+        def credentials(self):
+            """Return mocked credentials list."""
+            return ["cred1", "cred2", "cred3"]
+
+    @property
+    def modern(self):
+        """Return the modern credentials."""
+        return self.ModernCred()
+
+
+def az_connect(*args, **kwargs):
+    """Mock the az_connect function."""
+    del args, kwargs
+    return AzCredentials()
+
+
+AZ_CONNECT_PATH = (kql_driver, "az_connect", az_connect)
+
+
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_load(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -141,6 +181,7 @@ def test_kql_load(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_connect(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -153,6 +194,7 @@ def test_kql_connect(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_connect_no_cs(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -165,6 +207,7 @@ def test_kql_connect_no_cs(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_connect_kql_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -192,6 +235,7 @@ def test_kql_connect_kql_exceptions(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_connect_adal_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -216,6 +260,7 @@ def test_kql_connect_adal_exceptions(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_connect_authn_exceptions(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -229,6 +274,7 @@ def test_kql_connect_authn_exceptions(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_schema(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -242,6 +288,7 @@ def test_kql_schema(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_query_not_connected(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -249,12 +296,13 @@ def test_kql_query_not_connected(get_ipython):
 
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         kql_driver.query("test")
-    check.is_in("not connected to a workspace.", mp_ex.value.args)
+    check.is_in("not connected to a Workspace", mp_ex.value.args)
     check.is_false(kql_driver.connected)
 
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_query_failed(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -274,6 +322,7 @@ def test_kql_query_failed(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_query_success(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -286,6 +335,7 @@ def test_kql_query_success(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_query_partial(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()
@@ -301,6 +351,7 @@ def test_kql_query_partial(get_ipython):
 
 @patch(GET_IPYTHON_PATCH)
 @patch.object(*KQL_EXEC_PATCH)
+@patch.object(*AZ_CONNECT_PATH)
 def test_kql_query_no_table(get_ipython):
     """Check loaded true."""
     get_ipython.return_value = _MockIPython()

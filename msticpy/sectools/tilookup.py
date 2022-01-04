@@ -270,8 +270,8 @@ class TILookup:
             if not as_list:
                 print(provider_name)
             providers.append(provider_name)
-            if show_query_types:
-                provider_class.usage()
+            if show_query_types and provider_class:
+                provider_class.usage()  # type: ignore
         if as_list:
             return providers
         return None

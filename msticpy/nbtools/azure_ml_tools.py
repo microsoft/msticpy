@@ -216,7 +216,7 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
     installed_version = _get_installed_mp_version()
     if installed_version and installed_version > loaded_version:
         _disp_html(
-            f"A newer version of MSTICPy ({installed_version.version})"
+            f"A newer version of MSTICPy ({installed_version})"
             "has been installed but has not been loaded.<br>"
             "Please restart the notebook kernel and re-run this cell."
         )

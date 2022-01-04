@@ -288,7 +288,6 @@ if _KEYVAULT:
         except Exception as err:  # pylint: disable=broad-except
             return False, str(err), None
 
-
 else:
 
     def _set_kv_secret_value(
