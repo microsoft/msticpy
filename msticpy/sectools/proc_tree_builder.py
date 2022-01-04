@@ -21,7 +21,7 @@ from .proc_tree_schema import (  # noqa: F401
     WIN_EVENT_SCH,
     ProcSchema,
 )
-from .proc_tree_schema import SchemaNames as SN
+from .proc_tree_schema import ColNames as Col
 from .process_tree_utils import get_summary_info
 
 __version__ = VERSION
@@ -122,19 +122,19 @@ def _add_tree_properties(proc_tree):
     """Add root, branch, leaf properties and set proc_key as index."""
     proc_tree = proc_tree.copy()
     # Create labels based on node type
-    ppids = proc_tree[[SN.parent_key]].set_index(SN.parent_key)
+    ppids = proc_tree[[Col.parent_key]].set_index(Col.parent_key)
     proc_tree = proc_tree.assign(IsRoot=False, IsLeaf=False, IsBranch=False)
 
-    is_root = proc_tree[SN.parent_key].isna()
-    has_child = proc_tree[SN.proc_key].isin(ppids.index)
+    is_root = proc_tree[Col.parent_key].isna()
+    has_child = proc_tree[Col.proc_key].isin(ppids.index)
     proc_tree.loc[is_root, "IsRoot"] = True
     proc_tree.loc[~has_child, "IsLeaf"] = True
     proc_tree.loc[~is_root & has_child, "IsBranch"] = True
 
     # Save the current numeric index as "source_index" converting to string
-    proc_tree[SN.source_index] = proc_tree.index.astype(str)
+    proc_tree[Col.source_index] = proc_tree.index.astype(str)
     # Set the index of the output frame to be the proc_key
-    proc_tree = proc_tree.set_index(SN.proc_key)
+    proc_tree = proc_tree.set_index(Col.proc_key)
 
     first_unique = proc_tree.index.duplicated()
     proc_tree = proc_tree[~first_unique]
@@ -144,7 +144,7 @@ def _add_tree_properties(proc_tree):
 def _build_proc_tree(input_tree: pd.DataFrame, max_depth=-1) -> pd.DataFrame:
     """Build process tree paths."""
     # set default path == current process ID
-    input_tree["path"] = input_tree[SN.source_index]
+    input_tree["path"] = input_tree[Col.source_index]
     # input_tree["parent_index"] = np.nan
 
     cur_level = input_tree[input_tree["IsRoot"]]
@@ -152,7 +152,7 @@ def _build_proc_tree(input_tree: pd.DataFrame, max_depth=-1) -> pd.DataFrame:
 
     cur_level_num = 0
     while True:
-        sel_crit = remaining_procs[SN.parent_key].isin(cur_level.index)
+        sel_crit = remaining_procs[Col.parent_key].isin(cur_level.index)
         next_level = remaining_procs[sel_crit].copy()
         remaining_procs = remaining_procs[~sel_crit]
 
@@ -164,9 +164,9 @@ def _build_proc_tree(input_tree: pd.DataFrame, max_depth=-1) -> pd.DataFrame:
 
         # merge next level with current level
         tmp_df = next_level.merge(
-            cur_level[[SN.source_index, "path"]],
+            cur_level[[Col.source_index, "path"]],
             how="inner",
-            left_on=SN.parent_key,
+            left_on=Col.parent_key,
             right_index=True,
         )
 

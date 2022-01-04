@@ -223,7 +223,7 @@ SUPPORTED_SCHEMAS = (
 
 
 # pylint: disable=too-few-public-methods
-class SchemaNames:
+class ColNames:
     """Class to hold constant column names."""
 
     proc_key = "proc_key"

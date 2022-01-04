@@ -33,7 +33,7 @@ from .._version import VERSION
 from ..common.utility import check_kwargs
 from ..sectools.proc_tree_builder import build_process_tree, infer_schema
 from ..sectools.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
-from ..sectools.proc_tree_schema import SchemaNames as SN
+from ..sectools.proc_tree_schema import ColNames as Col
 
 # pylint: disable=unused-import
 from ..sectools.process_tree_utils import (  # noqa F401
@@ -424,7 +424,7 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
         IPython.notebook.kernel.execute(py_str);
     """
     return CustomJS(
-        args=dict(source=source, itemkey=SN.proc_key, output_var=result_var),
+        args=dict(source=source, itemkey=Col.proc_key, output_var=result_var),
         code=ret_var_js,
     )
 
@@ -538,11 +538,11 @@ def _create_data_table(
 
 def _check_proc_tree_schema(data):
     """Return true if expected process tree columns are present."""
-    if data.index.name != SN.proc_key:
-        return {SN.proc_key}
+    if data.index.name != Col.proc_key:
+        return {Col.proc_key}
     expected_cols = set(
         [
-            SN.parent_key,
+            Col.parent_key,
             "IsRoot",
             "IsLeaf",
             "IsBranch",
