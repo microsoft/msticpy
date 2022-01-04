@@ -10,7 +10,7 @@ import networkx as nx
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.data.query_defns import DataEnvironment, DataFamily
+from msticpy.data.query_defns import DataEnvironment
 from msticpy.datamodel import entities
 from msticpy.nbtools.nbdisplay import format_alert
 from msticpy.nbtools.security_alert import SecurityAlert
@@ -248,7 +248,7 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertEqual(1, len(alert.get_entities_of_type(entity_type="host")))
 
         self.assertGreater(len(alert.query_params), 5)
-        self.assertEqual(alert.data_family, DataFamily.WindowsSecurity)
+        self.assertEqual(alert.data_family, entities.OSFamily.Windows)
         self.assertEqual(alert.data_environment, DataEnvironment.LogAnalytics)
 
     def test_alert_display(self):

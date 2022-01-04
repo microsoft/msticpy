@@ -20,12 +20,12 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-many-ancestors
 class CEAzureSentinel(CEItemsBase):
-    """Azure Sentinel Workspaces editor component."""
+    """Microsoft Sentinel Workspaces editor component."""
 
-    _DESCRIPTION = "Azure Sentinel workspace settings"
+    _DESCRIPTION = "Microsoft Sentinel workspace settings"
     _COMP_PATH = "AzureSentinel.Workspaces"
     _HELP_TEXT = """
-    Supply the parameters for your Azure Sentinel workspaces here.<br>
+    Supply the parameters for your Microsoft Sentinel workspaces here.<br>
 
     You can get all of these (apart from 'TenantID') from your workspace portal.
     Navigate to "Settings" (on the left side of the screen), then click the
@@ -50,7 +50,7 @@ class CEAzureSentinel(CEItemsBase):
     can be a duplicate of another named entry.
     """
     _HELP_URI = {
-        "Connecting to an Azure Sentinel Workspace": (
+        "Connecting to a Microsoft Sentinel Workspace": (
             "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
             + "DataProviders.html#connecting-to-an-azure-sentinel-workspace"
         ),

@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Creates an entity graph for an Azure Sentinel Incident."""
+"""Creates an entity graph for a Microsoft Sentinel Incident."""
 from datetime import datetime
 from typing import List, Optional, Union
 
