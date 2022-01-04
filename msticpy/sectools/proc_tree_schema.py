@@ -220,3 +220,19 @@ SUPPORTED_SCHEMAS = (
     MDE_INT_EVENT_SCH,
     MDE_EVENT_SCH,
 )
+
+
+# pylint: disable=too-few-public-methods
+class SchemaNames:
+    """Class to hold constant column names."""
+
+    proc_key = "proc_key"
+    parent_key = "parent_key"
+    new_process_lc = "new_process_lc"
+    parent_proc_lc = "parent_proc_lc"
+    timestamp_orig_par = "timestamp_orig_par"
+    EffectiveLogonId = "EffectiveLogonId"
+    source_index = "source_index"
+    source_index_par = "source_index_par"
+    new_process_lc_par = "new_process_lc_par"
+    EffectiveLogonId_par = "EffectiveLogonId_par"

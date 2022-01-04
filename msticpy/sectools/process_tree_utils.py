@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional, Union
 import pandas as pd
 
 from .._version import VERSION
+from .proc_tree_schema import SchemaNames as SN
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -31,7 +32,7 @@ def get_process_key(procs: pd.DataFrame, source_index: int) -> str:
         The process key of the process.
 
     """
-    return procs[procs["source_index"] == source_index].iloc[0].name
+    return procs[procs[SN.source_index] == source_index].iloc[0].name
 
 
 # def build_process_key(  # type: ignore  # noqa: F821
@@ -154,7 +155,7 @@ def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
     """
     proc = get_process(procs, source)
     p_path = proc.path.split("/")
-    root_proc = procs[procs["source_index"] == p_path[0]]
+    root_proc = procs[procs[SN.source_index] == p_path[0]]
     return root_proc.iloc[0]
 
 
@@ -220,7 +221,7 @@ def get_children(
 
     """
     proc = get_process(procs, source)
-    children = procs[procs["parent_key"] == proc.name]
+    children = procs[procs[SN.parent_key] == proc.name]
     if include_source:
         return children.append(proc)
     return children
@@ -260,12 +261,12 @@ def get_descendents(
     while max_levels == -1 or level < max_levels:
         if rem_procs is not None:
             # pylint: disable=unsubscriptable-object
-            children = rem_procs[rem_procs["parent_key"].isin(parent_keys)]
-            rem_procs = rem_procs[~rem_procs["parent_key"].isin(parent_keys)]
+            children = rem_procs[rem_procs[SN.parent_key].isin(parent_keys)]
+            rem_procs = rem_procs[~rem_procs[SN.parent_key].isin(parent_keys)]
             # pylint: enable=unsubscriptable-object
         else:
-            children = procs[procs["parent_key"].isin(parent_keys)]
-            rem_procs = procs[~procs["parent_key"].isin(parent_keys)]
+            children = procs[procs[SN.parent_key].isin(parent_keys)]
+            rem_procs = procs[~procs[SN.parent_key].isin(parent_keys)]
         if children.empty:
             break
         descendents.append(children)
@@ -276,7 +277,7 @@ def get_descendents(
         desc_procs = pd.concat(descendents)
     else:
         desc_procs = pd.DataFrame(columns=proc.index, index=None)
-        desc_procs.index.name = "proc_key"
+        desc_procs.index.name = SN.proc_key
     if include_source:
         return desc_procs.append(proc).sort_values("path")
     return desc_procs.sort_values("path")
@@ -305,7 +306,7 @@ def get_ancestors(procs: pd.DataFrame, source, include_source=True) -> pd.DataFr
     p_path = proc.path.split("/")
     if not include_source:
         p_path.remove(proc.source_index)
-    return procs[procs["source_index"].isin(p_path)].sort_values("path")
+    return procs[procs[SN.source_index].isin(p_path)].sort_values("path")
 
 
 def get_siblings(
