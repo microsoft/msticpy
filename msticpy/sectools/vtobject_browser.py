@@ -72,7 +72,8 @@ def summary_html(title, summary):
 def lookup_file_id(btn):
     """Handle lookup button click."""
     del btn
-    global vt_df  # pylint: disable=global-statement, invalid-name
+    # pylint: disable=global-statement, invalid-name, no-member
+    global vt_df
     vt_df = vt.get_object(txt_file_id.value, vt_type="file").T
     html_header.value = summary_html(BASIC_TITLE, get_summary(vt_df))
     if (

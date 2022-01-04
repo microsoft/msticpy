@@ -7,54 +7,52 @@
 from collections import namedtuple
 from typing import Optional, Tuple, Union
 
-from bokeh.io import output_notebook, show, reset_output
-from bokeh.plotting import figure
-from bokeh.transform import dodge, factor_cmap, linear_cmap
-from bokeh.models import (
-    HoverTool,
-    ColumnDataSource,
-    CustomJS,
-    # Legend,
-    # LegendItem,
-    BoxSelectTool,
-    RangeTool,
-    ColorBar,
-)
-
-# pylint: disable=no-name-in-module
-from bokeh.palettes import viridis
+import numpy as np
+import pandas as pd
+from bokeh.io import output_notebook, reset_output, show
 
 # pylint: enable=no-name-in-module
 from bokeh.layouts import column, row
-from bokeh.models import LayoutDOM
-from bokeh.models.widgets import DataTable, TableColumn, DateFormatter
+from bokeh.models import (
+    BoxSelectTool,
+    ColorBar,
+    ColumnDataSource,
+    CustomJS,
+    HoverTool,
+    LayoutDOM,
+    RangeTool,
+)
+from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 
-import numpy as np
-import pandas as pd
+# pylint: disable=no-name-in-module
+from bokeh.palettes import viridis
+from bokeh.plotting import figure
+from bokeh.transform import dodge, factor_cmap, linear_cmap
 
+from .._version import VERSION
+from ..common.utility import check_kwargs
 from ..sectools.proc_tree_builder import build_process_tree, infer_schema
-from ..sectools.proc_tree_schema import ProcSchema, ProcessTreeSchemaException
+from ..sectools.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
+from ..sectools.proc_tree_schema import ColNames as Col
 
 # pylint: disable=unused-import
 from ..sectools.process_tree_utils import (  # noqa F401
-    get_process_key,
-    get_roots,
-    get_process,
-    get_parent,
-    get_root,
-    get_root_tree,
-    get_tree_depth,
+    get_ancestors,
     get_children,
     get_descendents,
-    get_ancestors,
+    get_parent,
+    get_process,
+    get_process_key,
+    get_root,
+    get_root_tree,
+    get_roots,
     get_siblings,
     get_summary_info,
+    get_tree_depth,
 )
 
 # pylint: enable=unused-import
 
-from ..common.utility import check_kwargs
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -338,15 +336,17 @@ def _pre_process_tree(
 
     levels = proc_tree["Level"].unique()
 
+    proc_tree[schema.process_name] = proc_tree[schema.process_name].fillna("unknown")
     proc_tree["__proc_name$$"] = proc_tree.apply(
         lambda x: x[schema.process_name].split(schema.path_separator)[-1], axis=1
     )
+    proc_tree[schema.process_id] = proc_tree[schema.process_id].fillna("unknown")
     proc_tree["__proc_id$$"] = proc_tree[schema.process_id].apply(
         _pid_fmt, args=(pid_fmt,)
     )
 
     # trim long commandlines
-    max_cmd_len = int(500 / len(levels))
+    max_cmd_len = 500 // len(levels)
     long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
     proc_tree.loc[long_cmd, "__cmd_line$$"] = (
         proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."
@@ -424,7 +424,7 @@ def _create_js_callback(source: ColumnDataSource, result_var: str) -> CustomJS:
         IPython.notebook.kernel.execute(py_str);
     """
     return CustomJS(
-        args=dict(source=source, itemkey="proc_key", output_var=result_var),
+        args=dict(source=source, itemkey=Col.proc_key, output_var=result_var),
         code=ret_var_js,
     )
 
@@ -538,16 +538,16 @@ def _create_data_table(
 
 def _check_proc_tree_schema(data):
     """Return true if expected process tree columns are present."""
-    if data.index.name != "proc_key":
-        return {"proc_key"}
+    if data.index.name != Col.proc_key:
+        return {Col.proc_key}
     expected_cols = set(
         [
-            "parent_key",
+            Col.parent_key,
             "IsRoot",
             "IsLeaf",
             "IsBranch",
             "path",
-            "parent_index",
+            # "parent_index",
         ]
     )
     return expected_cols - set(data.columns)
