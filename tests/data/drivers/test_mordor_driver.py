@@ -8,6 +8,8 @@ import contextlib
 from datetime import datetime
 import io
 import os
+import pickle
+from pathlib import Path
 
 import pytest
 import pytest_check as check
@@ -19,6 +21,10 @@ from msticpy.data.drivers.mordor_driver import (
     MordorDriver,
     search_mdr_data,
     download_mdr_file,
+    MordorEntry,
+    _MITRE_TACTICS_CACHE,
+    _MITRE_TECH_CACHE,
+    _MORDOR_CACHE,
 )
 
 __author__ = "Ian Hellen"
@@ -35,7 +41,7 @@ def save_folder(tmp_path_factory):
     return str(tmp_path_factory.mktemp(_SAVE_FOLDER))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def qry_provider(save_folder):
     """Query Provider fixture."""
     qry_prov = QueryProvider("Mordor", save_folder=save_folder)
@@ -43,7 +49,7 @@ def qry_provider(save_folder):
     return qry_prov
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mdr_driver(qry_provider):
     """Test fixture to create mordor driver."""
     return qry_provider._query_provider
@@ -74,6 +80,31 @@ def test_mordor_load(mdr_driver: MordorDriver):
     for attack in first_item.attack_mappings:
         check.is_in("technique", attack)
         check.is_in("tactics", attack)
+
+
+def test_mordor_cache(save_folder, qry_provider):
+    """Test to see if connecting has created valid cache files."""
+    tactics_cache = Path(save_folder).joinpath(_MITRE_TACTICS_CACHE)
+    tech_cache = Path(save_folder).joinpath(_MITRE_TECH_CACHE)
+    mordor_cache = Path(save_folder).joinpath(_MORDOR_CACHE)
+
+    check.is_true(tactics_cache.is_file())
+    check.is_true(tech_cache.is_file())
+    check.is_true(mordor_cache.is_file())
+
+    tactics_df = pd.read_pickle(tactics_cache)
+    check.is_instance(tactics_df, pd.DataFrame)
+    check.greater_equal(len(tactics_df), 10)
+    techniques_df = pd.read_pickle(tech_cache)
+    check.is_instance(techniques_df, pd.DataFrame)
+    check.greater_equal(len(techniques_df), 50)
+
+    with open(mordor_cache, "rb") as pickle_file:
+        md_metadata = pickle.load(pickle_file)
+
+    check.is_instance(md_metadata, dict)
+    item = next(iter(md_metadata.values()))
+    check.is_instance(item, MordorEntry)
 
 
 def test_mordor_search(mdr_driver: MordorDriver):
