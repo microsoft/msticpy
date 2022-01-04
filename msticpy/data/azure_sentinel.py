@@ -6,6 +6,7 @@
 """Uses the Azure Python SDK to collect and return details related to Azure."""
 from typing import Dict, List, Tuple, Optional
 from uuid import uuid4
+from collections import Counter
 
 import pandas as pd
 import requests
@@ -13,7 +14,7 @@ from azure.common.exceptions import CloudError
 
 from .azure_data import AzureData
 from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
-from ..common.exceptions import MsticpyAzureConfigError
+from ..common.exceptions import MsticpyAzureConfigError, MsticpyUserError
 from ..common.wsconfig import WorkspaceConfig
 
 _PATH_MAPPING = {
@@ -22,13 +23,21 @@ _PATH_MAPPING = {
     "ss_path": "/savedSearches",
     "bookmarks": "/providers/Microsoft.SecurityInsights/bookmarks",
     "incidents": "/providers/Microsoft.SecurityInsights/incidents",
+    "data_connectors": "/providers/Microsoft.SecurityInsights/dataConnectors",
+    "watchlists": "/providers/Microsoft.SecurityInsights/watchlists",
+    "alert_template": "/providers/Microsoft.SecurityInsights/alertRuleTemplates",
 }
 
 
 class AzureSentinel(AzureData):
     """Class for returning key Microsoft Sentinel elements."""
 
-    def __init__(self, connect: bool = False, cloud: Optional[str] = None):
+    def __init__(
+        self,
+        connect: bool = False,
+        cloud: Optional[str] = None,
+        res_id: Optional[str] = None,
+    ):
         """
         Initialize connector for Azure APIs.
 
@@ -40,6 +49,9 @@ class AzureSentinel(AzureData):
             Specify cloud to use, overriding any configuration value.
             Default is to use configuration setting or public cloud if no
             configuration setting is available.
+        res_id : str, optional
+            Set the Sentinel workspace resource ID you want to use, if not specified
+            defaults will be looked for or details can be passed seperately with functions.
 
         """
         super().__init__(connect=connect, cloud=cloud)
@@ -47,6 +59,7 @@ class AzureSentinel(AzureData):
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
+        self.res_id = _validate_res_id(res_id)
 
     def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
         """
@@ -80,7 +93,7 @@ class AzureSentinel(AzureData):
                 f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}"
             )
 
-    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
+    def list_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
         """
         Return a list of Microsoft Sentinel workspaces in a Subscription.
 
@@ -120,12 +133,15 @@ class AzureSentinel(AzureData):
             workspaces_dict = {}
             for wrkspace in workspaces:
                 name = wrkspace.split("/")[-1]
-                workspaces_dict.update({name: wrkspace})
-
+                workspaces_dict[name] = wrkspace
             return workspaces_dict
 
         print(f"No Microsoft Sentinel workspaces in {sub_id}")
         return {}
+
+    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
+        """Backward comapatability for older function names."""
+        return self.list_sentinel_workspaces(sub_id)
 
     def set_default_workspace(
         self, sub_id: Optional[str], workspace: Optional[str] = None
@@ -158,7 +174,7 @@ class AzureSentinel(AzureData):
             return self.default_workspace[0]
         return None
 
-    def get_hunting_queries(
+    def list_hunting_queries(
         self,
         res_id: str = None,
         sub_id: str = None,
@@ -185,26 +201,29 @@ class AzureSentinel(AzureData):
             A table of the hunting queries.
 
         """
-        # If res_id isn't provided try and get them from config
-        res_id = res_id or self._get_default_workspace()
-        if not res_id:
-            res_id = self._build_res_id(sub_id, res_grp, ws_name)
-
-        url = self._build_paths(res_id, self.base_url)
-        saved_searches_url = url + _PATH_MAPPING["ss_path"]
-        params = {"api-version": "2017-04-26-preview"}
-
-        response = requests.get(
-            saved_searches_url, headers=_get_api_headers(self.token), params=params
+        saved_query_df = self._list_items(
+            item_tpye="alert_rules",
+            api_version="2017-04-26-preview",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
         )
-        if response.status_code == 200:
-            queries_df = _azs_api_result_to_df(response)
-        else:
-            raise CloudError(response=response)
+        return saved_query_df[
+            saved_query_df["properties.Category"] == "Hunting Queries"
+        ]
 
-        return queries_df[queries_df["properties.Category"] == "Hunting Queries"]
+    def get_hunting_queries(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """Backward comapatability for older function names."""
+        return self.list_hunting_queries(res_id, sub_id, res_grp, ws_name)
 
-    def get_alert_rules(
+    def list_alert_rules(
         self,
         res_id: str = None,
         sub_id: str = None,
@@ -231,25 +250,25 @@ class AzureSentinel(AzureData):
             A table of the workspace's alert rules.
 
         """
-        res_id = res_id or self._get_default_workspace()
-        if not res_id:
-            res_id = self._build_res_id(sub_id, res_grp, ws_name)
-
-        url = self._build_paths(res_id, self.base_url)
-        alert_rules_url = url + _PATH_MAPPING["alert_rules"]
-        params = {"api-version": "2020-01-01"}
-
-        response = requests.get(
-            alert_rules_url, headers=_get_api_headers(self.token), params=params
+        return self._list_items(
+            item_tpye="alert_rules",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
         )
-        if response.status_code == 200:
-            alerts_df = _azs_api_result_to_df(response)
-        else:
-            raise CloudError(response=response)
 
-        return alerts_df
+    def get_alert_rules(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """Backward comapatability for older function names."""
+        return self.list_alert_rules(res_id, sub_id, res_grp, ws_name)
 
-    def get_bookmarks(
+    def list_bookmarks(
         self,
         res_id: str = None,
         sub_id: str = None,
@@ -281,25 +300,25 @@ class AzureSentinel(AzureData):
             If bookmark collection fails.
 
         """
-        res_id = res_id or self._get_default_workspace()
-        if not res_id:
-            res_id = self._build_res_id(sub_id, res_grp, ws_name)
-
-        url = self._build_paths(res_id, self.base_url)
-        bookmarks_url = url + _PATH_MAPPING["bookmarks"]
-        params = {"api-version": "2020-01-01"}
-
-        response = requests.get(
-            bookmarks_url, headers=_get_api_headers(self.token), params=params
+        return self._list_items(
+            item_tpye="bookmarks",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
         )
-        if response.status_code == 200:
-            bookmarks_df = _azs_api_result_to_df(response)
-        else:
-            raise CloudError(response=response)
 
-        return bookmarks_df
+    def get_bookmarks(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """Backward comapatability for older function names."""
+        return self.list_bookmarks(res_id, sub_id, res_grp, ws_name)
 
-    def get_incidents(
+    def list_incidents(
         self,
         res_id: str = None,
         sub_id: str = None,
@@ -331,22 +350,23 @@ class AzureSentinel(AzureData):
             If incidents could not be retrieved.
 
         """
-        res_id = res_id or self._get_default_workspace()
-        if not res_id:
-            res_id = self._build_res_id(sub_id, res_grp, ws_name)
-
-        url = self._build_paths(res_id, self.base_url)
-        incidents_url = url + _PATH_MAPPING["incidents"]
-        params = {"api-version": "2020-01-01"}
-        response = requests.get(
-            incidents_url, headers=_get_api_headers(self.token), params=params
+        return self._list_items(
+            item_tpye="incidents",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
         )
-        if response.status_code == 200:
-            incidents_df = _azs_api_result_to_df(response)
-        else:
-            raise CloudError(response=response)
 
-        return incidents_df
+    def get_incidents(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """Backward comapatability for older function names."""
+        return self.list_incidents(res_id, sub_id, res_grp, ws_name)
 
     def get_incident(  # pylint: disable=too-many-locals, too-many-arguments
         self,
@@ -392,9 +412,10 @@ class AzureSentinel(AzureData):
         if "/" in incident_id and not res_id:
             res_id = "/".join(incident_id.split("/")[:9])
             incident_id = incident_id.split("/")[-1]
-        res_id = res_id or self._get_default_workspace()
+        res_id = res_id or self.res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
 
         url = self._build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
@@ -477,9 +498,10 @@ class AzureSentinel(AzureData):
             If incident could not be updated.
 
         """
-        res_id = res_id or self._get_default_workspace()
+        res_id = res_id or self.res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
 
         incident_dets = self.get_incident(incident_id=incident_id, res_id=res_id)
         url = self._build_paths(res_id, self.base_url)
@@ -487,9 +509,9 @@ class AzureSentinel(AzureData):
         incident_url = incidents_url + f"/{incident_id}"
         params = {"api-version": "2020-01-01"}
         if "title" not in update_items.keys():
-            update_items.update({"title": incident_dets.iloc[0]["properties.title"]})
+            update_items["title"] = incident_dets.iloc[0]["properties.title"]
         if "status" not in update_items.keys():
-            update_items.update({"status": incident_dets.iloc[0]["properties.status"]})
+            update_items["status"] = incident_dets.iloc[0]["properties.status"]
         data = _build_data(update_items, etag=incident_dets.iloc[0]["etag"])
         response = requests.put(
             incident_url,
@@ -535,13 +557,14 @@ class AzureSentinel(AzureData):
             If message could not be posted.
 
         """
-        res_id = res_id or self._get_default_workspace()
+        res_id = res_id or self.res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
 
         url = self._build_paths(res_id, self.base_url)
         incident_url = url + _PATH_MAPPING["incidents"]
-        comment_url = incident_url + f"/{incident_id}/comments/{str(uuid4())}"
+        comment_url = incident_url + f"/{incident_id}/comments/{uuid4()}"
         params = {"api-version": "2020-01-01"}
         data = _build_data({"message": comment})
         response = requests.put(
@@ -554,6 +577,347 @@ class AzureSentinel(AzureData):
             print("Comment posted.")
         else:
             raise CloudError(response=response)
+
+    def list_data_connectors(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """List deployed data connectors.
+
+        Parameters
+        ----------
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the deployed data connectors
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        return self._list_items(
+            item_tpye="data_connectors",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
+        )
+
+    def list_analytic_rules(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """List deployed Analytics
+
+        Parameters
+        ----------
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the deployed analytics
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        return self._list_items(
+            item_tpye="alert_rules",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
+        )
+
+    def list_analytic_templates(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """List Analytic Templates
+
+        Parameters
+        ----------
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the analytics templates
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        return self._list_items(
+            item_tpye="alert_template",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
+        )
+
+    def list_watchlists(
+        self,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """List Deployed Watchlists
+
+        Parameters
+        ----------
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the watchlists
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        return self._list_items(
+            item_tpye="watchlists",
+            api_version="2021-04-01",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
+        )
+
+    def create_watchlist(
+        self,
+        watchlist_name: str,
+        description: str,
+        search_key: str,
+        provider: str = "MSTICPy",
+        source: str = "Notebook",
+        data: pd.DataFrame = None,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Create a new watchlist
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The name of the watchlist you want to create, this can't be the name of an existing watchlist.
+        description : str
+            A description of the watchlist to be created.
+        search_key : str
+            The search key is used to optimize query performance when using watchlists for joins with other data.
+            This should be the key column that will be used in the watchlist when joining to other data tables.
+        provider : str, optional
+            This is the label attached to the watchlist showing who created it, by default "MSTICPy"
+        source : str, optional
+            The source of the data to be put in the watchlist, by default "Notebook"
+        data: pd.DataFrame, optional
+            The data you want to upload to the watchlist
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        MsticpyUserError
+            Raised if the watchlist name already exists.
+        CloudError
+            If there is an issue creating the watchlist.
+        """
+        existing_watchlists = self.list_watchlists(res_id, sub_id, res_grp, ws_name)[
+            "name"
+        ]
+        if watchlist_name in existing_watchlists:
+            raise MsticpyUserError(f"Watchlist {watchlist_name} already exists.")
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+
+        url = self._build_paths(res_id, self.base_url)
+        watchlist_url = url + _PATH_MAPPING["watchlists"] + f"/{watchlist_name}"
+        params = {"api-version": "2021-04-01"}
+        data_items = {
+            "displayName": watchlist_name,
+            "source": source,
+            "provider": provider,
+            "description": description,
+            "itemsSearchKey": search_key,
+            "contentType": "text/csv",
+        }
+        if isinstance(data, pd.DataFrame) and not data.empty:
+            data = data.to_csv(index=False)
+            data_items["rawContent"] = data
+        data = _build_data(data_items, "watchlists")
+        response = requests.put(
+            watchlist_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code == 200:
+            print("Watchlist created.")
+        else:
+            raise CloudError(response=response)
+
+    def list_watchlist_items(
+        self,
+        watchlist_name: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ) -> pd.DataFrame:
+        """List items in a watchlist
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The name of the watchlist to get items from
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the watchlists
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        watchlist_name_str = f"/{watchlist_name}/watchlistItems"
+        return self._list_items(
+            item_tpye="watchlists",
+            api_version="2021-04-01",
+            res_id=res_id,
+            sub_id=sub_id,
+            res_grp=res_grp,
+            ws_name=ws_name,
+            appendix=watchlist_name_str,
+        )
+
+    def _list_items(
+        self,
+        item_tpye: str,
+        api_version: str = "2020-01-01",
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+        appendix: str = None,
+    ) -> pd.DataFrame:
+        """Returns lists of core resources from APIs
+
+        Parameters
+        ----------
+        item_tpye : str
+            The type of resource you want to list.
+        api_version: str, optional
+            The API version to use, by default '2020-01-01'
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the requested items.
+
+        Raises
+        ------
+        CloudError
+            If a valid result is not returned.
+
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+
+        url = self._build_paths(res_id, self.base_url)
+        item_url = url + _PATH_MAPPING[item_tpye]
+        if appendix:
+            item_url = item_url + appendix
+        params = {"api-version": api_version}
+        response = requests.get(
+            item_url, headers=_get_api_headers(self.token), params=params
+        )
+        if response.status_code == 200:
+            results_df = _azs_api_result_to_df(response)
+        else:
+            raise CloudError(response=response)
+
+        return results_df
 
     def _check_config(self, items: List) -> Dict:
         """
@@ -575,7 +939,7 @@ class AzureSentinel(AzureData):
             self.config = WorkspaceConfig()  # type: ignore
         for item in items:
             if item in self.config:  # type: ignore
-                config_items.update({item: self.config[item]})  # type: ignore
+                config_items[item] = self.config[item]
             else:
                 raise MsticpyAzureConfigError(f"No {item} avaliable in config.")
 
@@ -722,7 +1086,7 @@ def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
     return pd.json_normalize(j_resp)
 
 
-def _build_data(items: dict, **kwargs) -> dict:
+def _build_data(items: dict, endpoint: str = None, **kwargs) -> dict:
     """
     Build request data body from items.
 
@@ -739,12 +1103,46 @@ def _build_data(items: dict, **kwargs) -> dict:
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key, _ in items.items():
-        if key in ["severity", "status", "title", "message"]:
+        if key in ["severity", "status", "title", "message"] or endpoint in {
+            "watchlists"
+        }:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
-            data_body.update({key: items[key]})
-
+            data_body[key] = items[key]
     if "etag" in kwargs:
-        data_body.update({"etag": kwargs.get("etag")})  # type:ignore
-
+        data_body["etag"] = kwargs.get("etag")
     return data_body
+
+
+def _validate_res_id(res_id):
+    """Validate a Resource ID String and fix if needed."""
+    valid = _validator(res_id)
+    if not valid:
+        res_id = _fix_res_id(res_id)
+        valid = _validator(res_id)
+    if not valid:
+        raise MsticpyAzureConfigError(
+            "The Sentinel Workspace Resource ID provided is not valid."
+        )
+    else:
+        return res_id
+
+
+def _validator(res_id):
+    """Check Resource ID string matches pattern expected."""
+    counts = Counter(res_id)
+    return bool(
+        res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/")
+    )
+
+
+def _fix_res_id(res_id):
+    """Try to fix common issues with Resource ID string."""
+    if not res_id.startswith("/"):
+        res_id = "/" + res_id
+    if res_id.endswith("/"):
+        res_id = res_id[:-1]
+    counts = Counter(res_id)
+    if counts["/"] > 8:
+        res_id = "/".join(res_id.split("/")[:9])
+    return res_id
