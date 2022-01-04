@@ -138,8 +138,10 @@ class KqlDriver(DriverBase):
             )
         if "kqlmagic_args" in kwargs:
             connection_str = connection_str + " " + kwargs["kqlmagic_args"]
-        if "mp_az_auth" in kwargs and "try_token" not in kwargs:
-            self._set_az_auth_option(kwargs["mp_az_auth"])
+        # Default to using Azure Auth if possible.
+        mp_az_auth = kwargs.pop("mp_az_auth", "default")
+        if mp_az_auth and "try_token" not in kwargs:
+            self._set_az_auth_option(mp_az_auth)
         self.current_connection = connection_str
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
@@ -386,7 +388,7 @@ class KqlDriver(DriverBase):
         kql_err = json.loads(ex.args[0]).get("error")
         if kql_err.get("code") == "WorkspaceNotFoundError":
             ex_mssgs = [
-                "The workspace ID used to connect to Azure Sentinel could not be found.",
+                "The workspace ID used to connect to Microsoft Sentinel could not be found.",
                 "Please check that this is a valid workspace for your subscription",
             ]
             ws_match = re.search(self._WS_RGX, self.current_connection, re.IGNORECASE)

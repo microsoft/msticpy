@@ -8,7 +8,8 @@ import attr
 import pandas as pd
 
 from .._version import VERSION
-
+from ..data.query_defns import ensure_df_datetimes
+from .proc_tree_schema import ColNames as Col
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -64,17 +65,17 @@ def extract_process_tree(
     # Create Process and parent Keys
     _assign_proc_key(
         merged_procs_par,
-        "proc_key",
-        "new_process_lc",
+        Col.proc_key,
+        Col.new_process_lc,
         schema.process_id,
         schema.time_stamp,
     )
     _assign_proc_key(
         merged_procs_par,
-        "parent_key",
-        "parent_proc_lc",
+        Col.parent_key,
+        Col.parent_proc_lc,
         schema.parent_id,
-        "TimeGenerated_orig_par",
+        Col.timestamp_orig_par,
     )
     return merged_procs_par
 
@@ -84,32 +85,33 @@ def _clean_proc_data(
     schema: "ProcSchema",  # type: ignore  # noqa: F821
 ) -> pd.DataFrame:
     """Return cleaned process data."""
+    procs = ensure_df_datetimes(procs, columns=schema.time_stamp)
     procs_cln = (
         procs.drop_duplicates().sort_values(schema.time_stamp, ascending=True).copy()
     )
 
     # Filter out any non-process events
-    if schema.event_type_col and schema.event_id_identifier:
+    if schema.event_id_column and schema.event_id_identifier:
         event_type_filter = procs_cln[schema.event_type_col] == schema.event_filter
         procs_cln = procs_cln[event_type_filter]
     # Convert any numeric schema cols to str types
     procs_cln = _num_cols_to_str(procs_cln, schema)
 
-    procs_cln["EffectiveLogonId"] = procs_cln[schema.logon_id]
+    procs_cln[Col.EffectiveLogonId] = procs_cln[schema.logon_id]
     # Create effective logon Id for Windows, if the TargetLogonId is not 0x0
     if schema.target_logon_id:
         has_tgt_logonid = (procs_cln[schema.target_logon_id] != "0x0") & (
             procs_cln[schema.target_logon_id].notna()
         )
-        procs_cln.loc[has_tgt_logonid, "EffectiveLogonId"] = procs_cln[
+        procs_cln.loc[has_tgt_logonid, Col.EffectiveLogonId] = procs_cln[
             schema.target_logon_id
         ]
-    procs_cln["new_process_lc"] = procs_cln[schema.process_name].str.lower()
+    procs_cln[Col.new_process_lc] = procs_cln[schema.process_name].str.lower()
     if schema.parent_name:
         no_pproc = procs_cln[schema.parent_name] == ""
         procs_cln.loc[no_pproc, schema.parent_name] = "unknown"
-        procs_cln["parent_proc_lc"] = procs_cln[schema.parent_name].str.lower()
-    procs_cln["source_index"] = procs_cln.index
+        procs_cln[Col.parent_proc_lc] = procs_cln[schema.parent_name].str.lower()
+    procs_cln[Col.source_index] = procs_cln.index
     return procs_cln
 
 
@@ -155,22 +157,22 @@ def _merge_parent_by_time(
         procs[
             [
                 schema.process_id,
-                "EffectiveLogonId",
-                "new_process_lc",
-                "source_index",
+                Col.EffectiveLogonId,
+                Col.new_process_lc,
+                Col.source_index,
                 schema.parent_id,
                 schema.time_stamp,
                 schema.process_name,
             ]
         ]
-        .assign(TimeGenerated_orig_par=procs[schema.time_stamp])
+        .assign(timestamp_orig_par=procs[schema.time_stamp])
         .sort_values(schema.time_stamp, ascending=True)
     )
     # if we have a parent name (Windows) - use that as part of the
     # match
     if schema.parent_name:
-        par_join_cols = [schema.process_id, "new_process_lc"]
-        child_join_cols = [schema.parent_id, "parent_proc_lc"]
+        par_join_cols = [schema.process_id, Col.new_process_lc]
+        child_join_cols = [schema.parent_id, Col.parent_proc_lc]
     else:
         par_join_cols = [schema.process_id]
         child_join_cols = [schema.parent_id]
@@ -196,47 +198,49 @@ def _extract_inferred_parents(
     time_zero = pd.Timestamp(0) if tz_aware is None else pd.Timestamp(0, tz=0)
 
     # Fill in missing values for root processes
-    root_procs_crit = merged_procs["source_index_par"].isna()
+    root_procs_crit = merged_procs[Col.source_index_par].isna()
     merged_procs.loc[root_procs_crit, "NewProcessId_par"] = merged_procs[
         schema.parent_id
     ]
+    parent_col_name = schema.parent_name or "ParentName"
     if schema.parent_name:
-        merged_procs.loc[root_procs_crit, "new_process_lc_par"] = merged_procs[
-            "parent_proc_lc"
+        merged_procs.loc[root_procs_crit, Col.new_process_lc_par] = merged_procs[
+            Col.parent_proc_lc
         ]
     else:
-        merged_procs.loc[root_procs_crit, "new_process_lc_par"] = "unknown"
+        merged_procs.loc[root_procs_crit, Col.new_process_lc_par] = "unknown"
         merged_procs.loc[root_procs_crit, f"{schema.process_name}_par"] = "unknown"
         # If the schema doesn't have a ParentProcessName/parent_proc_lc - copy this value
         # from the merged data for ALL processes
-        merged_procs["ParentProcessName"] = merged_procs[f"{schema.process_name}_par"]
-        merged_procs["parent_proc_lc"] = merged_procs["new_process_lc_par"]
-    merged_procs.loc[root_procs_crit, "EffectiveLogonId_par"] = merged_procs[
+        merged_procs[parent_col_name] = merged_procs[f"{schema.process_name}_par"]
+        merged_procs[Col.parent_proc_lc] = merged_procs[Col.new_process_lc_par]
+    merged_procs.loc[root_procs_crit, Col.EffectiveLogonId_par] = merged_procs[
         schema.logon_id
     ]
-    merged_procs.loc[root_procs_crit, "TimeGenerated_orig_par"] = time_zero
+    merged_procs.loc[root_procs_crit, Col.timestamp_orig_par] = time_zero
 
     # Extract synthentic rows for the parents of root processes
+    parent_cols = [
+        schema.host_name_column,
+        schema.parent_id,
+        Col.EffectiveLogonId_par,
+        parent_col_name,
+        Col.parent_proc_lc,
+    ]
+    if schema.event_id_column:
+        parent_cols.append(schema.event_id_column)
     inferred_parents = (
-        merged_procs[root_procs_crit][
-            [
-                schema.event_id_column,
-                schema.host_name_column,
-                schema.parent_id,
-                "EffectiveLogonId_par",
-                "ParentProcessName",
-                "parent_proc_lc",
-            ]
-        ]
+        merged_procs[root_procs_crit][parent_cols]
         .rename(
             columns={
                 schema.parent_id: schema.process_id,
-                "ParentProcessName": schema.process_name,
-                "parent_proc_lc": "new_process_lc",
-                "EffectiveLogonId_par": schema.logon_id,
+                schema.parent_name: schema.process_name,
+                Col.parent_proc_lc: Col.new_process_lc,
+                Col.EffectiveLogonId_par: schema.logon_id,
             }
         )
-        .assign(TimeGenerated=time_zero, EffectiveLogonId=merged_procs[schema.logon_id])
+        .assign(time_stamp=time_zero, EffectiveLogonId=merged_procs[schema.logon_id])
+        .rename(columns={"time_stamp": schema.time_stamp})
         .drop_duplicates()
     )
 
@@ -260,6 +264,7 @@ def _assign_proc_key(
         + "|"
         + proc_data[timestamp_col].dt.round("10us").dt.strftime(TS_FMT_STRING)
     )
+    # proc_data[key_name] = proc_data[key_name].fillna("")
 
 
 # Diagnostic/debug functions
@@ -271,7 +276,7 @@ def _check_merge_status(procs, merged_procs, schema):
         .groupby(orig_cols)
         .count()
         .reset_index()
-        .query(f"{schema.process_id}_par > 1")["source_index"]
+        .query(f"{schema.process_id}_par > 1")[Col.source_index]
     )
 
     # Check status
@@ -280,12 +285,15 @@ def _check_merge_status(procs, merged_procs, schema):
     print("Merged # procs - dropna", len(merged_procs.dropna()))
 
     print(
-        "Unique merged_procs index in merge", len(merged_procs["source_index"].unique())
+        "Unique merged_procs index in merge",
+        len(merged_procs[Col.source_index].unique()),
     )
     print("These two should add up to top line")
     row_dups = len(rows_with_dups2)
     print("Rows with dups", row_dups)
-    row_nodups = len(merged_procs[~merged_procs["source_index"].isin(rows_with_dups2)])
+    row_nodups = len(
+        merged_procs[~merged_procs[Col.source_index].isin(rows_with_dups2)]
+    )
     print("Rows with no dups", row_nodups)
     print(row_dups, "+", row_nodups, "=", row_dups + row_nodups)
 
@@ -304,19 +312,23 @@ def _check_inferred_parents(procs, procs_par):
 
 def _check_proc_keys(merged_procs_par, schema):
     """Diagnostic for _assign_proc_keys."""
-    crit1 = merged_procs_par["TimeGenerated_orig_par"].isin(
+    crit1 = merged_procs_par[Col.timestamp_orig_par].isin(
         merged_procs_par[schema.time_stamp]
     )
-    crit2 = merged_procs_par["EffectiveLogonId"].isin(merged_procs_par[schema.logon_id])
+    crit2 = merged_procs_par[Col.EffectiveLogonId].isin(
+        merged_procs_par[schema.logon_id]
+    )
     c2a = None
     if schema.target_logon_id:
-        c2a = merged_procs_par["EffectiveLogonId"].isin(
+        c2a = merged_procs_par[Col.EffectiveLogonId].isin(
             merged_procs_par[schema.target_logon_id]
         )
-    crit3 = merged_procs_par["parent_proc_lc"].isin(merged_procs_par["new_process_lc"])
+    crit3 = merged_procs_par[Col.parent_proc_lc].isin(
+        merged_procs_par[Col.new_process_lc]
+    )
     crit4 = merged_procs_par[schema.process_id].isin(merged_procs_par[schema.parent_id])
-    crit5 = merged_procs_par["parent_key"].isin(merged_procs_par.index)
-    crit6 = merged_procs_par["parent_key"].isna()
+    crit5 = merged_procs_par[Col.parent_key].isin(merged_procs_par.index)
+    crit6 = merged_procs_par[Col.parent_key].isna()
     print("has parent time", len(merged_procs_par[crit1]))
     print("effectivelogonId in subjectlogonId", len(merged_procs_par[crit2]))
     if schema.target_logon_id and c2a is not None:

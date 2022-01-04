@@ -78,7 +78,9 @@ class TestPkgConfig(unittest.TestCase):
             wrn_mssg = io.StringIO()
             with redirect_stdout(wrn_mssg):
                 wstest_config = WorkspaceConfig()
-            self.assertIn("Could not find Azure Sentinel settings", wrn_mssg.getvalue())
+            self.assertIn(
+                "Could not find Microsoft Sentinel settings", wrn_mssg.getvalue()
+            )
             self.assertIn("workspace_id", wstest_config)
             self.assertIsNotNone(wstest_config["workspace_id"])
             self.assertEqual(wstest_config["workspace_id"], _NAMED_WS["WorkspaceId"])
