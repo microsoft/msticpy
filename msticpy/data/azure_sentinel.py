@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from uuid import uuid4
 from collections import Counter
 
 import pandas as pd
 import requests
 from azure.common.exceptions import CloudError
+from uuid import uuid4
 
 from .azure_data import AzureData
 from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
@@ -139,10 +140,6 @@ class AzureSentinel(AzureData):
         print(f"No Microsoft Sentinel workspaces in {sub_id}")
         return {}
 
-    def get_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
-        """Backward comapatability for older function names."""
-        return self.list_sentinel_workspaces(sub_id)
-
     def set_default_workspace(
         self, sub_id: Optional[str], workspace: Optional[str] = None
     ):
@@ -213,16 +210,6 @@ class AzureSentinel(AzureData):
             saved_query_df["properties.Category"] == "Hunting Queries"
         ]
 
-    def get_hunting_queries(
-        self,
-        res_id: str = None,
-        sub_id: str = None,
-        res_grp: str = None,
-        ws_name: str = None,
-    ) -> pd.DataFrame:
-        """Backward comapatability for older function names."""
-        return self.list_hunting_queries(res_id, sub_id, res_grp, ws_name)
-
     def list_alert_rules(
         self,
         res_id: str = None,
@@ -257,16 +244,6 @@ class AzureSentinel(AzureData):
             res_grp=res_grp,
             ws_name=ws_name,
         )
-
-    def get_alert_rules(
-        self,
-        res_id: str = None,
-        sub_id: str = None,
-        res_grp: str = None,
-        ws_name: str = None,
-    ) -> pd.DataFrame:
-        """Backward comapatability for older function names."""
-        return self.list_alert_rules(res_id, sub_id, res_grp, ws_name)
 
     def list_bookmarks(
         self,
@@ -308,16 +285,6 @@ class AzureSentinel(AzureData):
             ws_name=ws_name,
         )
 
-    def get_bookmarks(
-        self,
-        res_id: str = None,
-        sub_id: str = None,
-        res_grp: str = None,
-        ws_name: str = None,
-    ) -> pd.DataFrame:
-        """Backward comapatability for older function names."""
-        return self.list_bookmarks(res_id, sub_id, res_grp, ws_name)
-
     def list_incidents(
         self,
         res_id: str = None,
@@ -357,16 +324,6 @@ class AzureSentinel(AzureData):
             res_grp=res_grp,
             ws_name=ws_name,
         )
-
-    def get_incidents(
-        self,
-        res_id: str = None,
-        sub_id: str = None,
-        res_grp: str = None,
-        ws_name: str = None,
-    ) -> pd.DataFrame:
-        """Backward comapatability for older function names."""
-        return self.list_incidents(res_id, sub_id, res_grp, ws_name)
 
     def get_incident(  # pylint: disable=too-many-locals, too-many-arguments
         self,
@@ -781,15 +738,13 @@ class AzureSentinel(AzureData):
         CloudError
             If there is an issue creating the watchlist.
         """
-        existing_watchlists = self.list_watchlists(res_id, sub_id, res_grp, ws_name)[
-            "name"
-        ]
-        if watchlist_name in existing_watchlists:
-            raise MsticpyUserError(f"Watchlist {watchlist_name} already exists.")
         res_id = res_id or self.res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
         res_id = _validate_res_id(res_id)
+
+        if not self._check_watchlist_exists(watchlist_name, res_id):
+            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
 
         url = self._build_paths(res_id, self.base_url)
         watchlist_url = url + _PATH_MAPPING["watchlists"] + f"/{watchlist_name}"
@@ -862,6 +817,190 @@ class AzureSentinel(AzureData):
             appendix=watchlist_name_str,
         )
 
+    def add_watchlist_item(
+        self,
+        watchlist_name: str,
+        item: Union[Dict, pd.Series, pd.DataFrame],
+        overwrite: bool = False,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Add or update an item in a Watchlist
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The name of the watchlist to add items to
+        item : Union[Dict, pd.Series, pd.DataFrame]
+            The item to add, this can be a dictionary of valies, a Pandas Series, or a Pandas DataFrame
+        overwrite : bool, optional
+            Wether you want to overwrite an item if it already exists in the watchlist, by default False
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        MsticpyUserError
+            If the specified Watchlist does not exist.
+        MsticpyUserError
+            If the item already exists in the Watchlist and overwrite is set to False
+        CloudError
+            If the API returns an error.
+        """
+        # Generate or use resource ID
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        # Check requested watchlist actually exists
+        if not self._check_watchlist_exists(watchlist_name, res_id):
+            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+
+        new_items = []
+        # Convert items to add to dictionary format
+        if isinstance(item, pd.Series):
+            new_items = [dict(item)]
+        elif isinstance(item, Dict):
+            new_items = [item]
+        elif isinstance(item, pd.DataFrame):
+            for _, line_item in item.iterrows():
+                new_items.append(dict(line_item))
+
+        current_items = self.list_watchlist_items(
+            res_id=res_id, watchlist_name=watchlist_name
+        )
+        current_items_values = current_items.filter(
+            regex="^properties.itemsKeyValue.", axis=1
+        )
+        current_items_values.columns = current_items_values.columns.str.replace(
+            "properties.itemsKeyValue.", "", regex=False
+        )
+
+        for item in new_items:
+            # See if item already exists, if it does get the item ID
+            current_df, item_series = current_items_values.align(
+                pd.Series(item), axis=1, copy=False
+            )
+            if (current_df == item_series).all(axis=1).any() and overwrite:
+                id = current_items[current_items.isin(list(item.values())).any(axis=1)][
+                    "properties.watchlistItemId"
+                ].iloc[0]
+            # If not in watchlist already generate new ID
+            elif not (current_df == item_series).all(axis=1).any():
+                id = str(uuid4())
+            else:
+                raise MsticpyUserError(
+                    "Item already exists in the watchlist. Set overwrite = True to replace."
+                )
+
+            url = self._build_paths(res_id, self.base_url)
+            watchlist_url = (
+                url
+                + _PATH_MAPPING["watchlists"]
+                + f"/{watchlist_name}/watchlistItems/{id}"
+            )
+            params = {"api-version": "2021-04-01"}
+            data = {"properties": {"itemsKeyValue": item}}
+            response = requests.put(
+                watchlist_url,
+                headers=_get_api_headers(self.token),
+                params=params,
+                data=str(data),
+            )
+            if response.status_code == 200:
+                continue
+            else:
+                raise CloudError(response=response)
+
+        print(f"Items added to {watchlist_name}")
+
+
+    def delete_watchlist(
+        self,
+        watchlist_name: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Delete a selected Watchlist
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The name of the Watchlist to deleted
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        MsticpyUserError
+            If Watchlist does not exist.
+        CloudError
+            If the API returns an error.
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        # Check requested watchlist actually exists
+        if not self._check_watchlist_exists(watchlist_name, res_id):
+            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+
+        url = self._build_paths(res_id, self.base_url)
+        watchlist_url = (
+            url
+            + _PATH_MAPPING["watchlists"]
+            + f"/{watchlist_name}"
+        )
+        params = {"api-version": "2021-04-01"}
+        response = requests.delete(
+            watchlist_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+        )
+        if response.status_code == 200:
+            print(f"Watchlist {watchlist_name} deleted")
+        else:
+            raise CloudError(response=response)
+
+    def _check_watchlist_exists(
+        self,
+        watchlist_name: str,
+        res_id: str = None,
+    ):
+        """Checks whether a Watchlist exists or not.
+
+        Parameters
+        ----------
+        watchlist_name : str
+            The Watchlist to check for.
+        res_id : str, optional
+            The Resource ID of the Sentinel workspace to check in, by default None
+
+        Returns
+        -------
+        bool
+            Whether the Watchlist exists or not.
+        """
+        # Check requested watchlist actually exists
+        existing_watchlists = self.list_watchlists(res_id)["name"].values
+        return watchlist_name in existing_watchlists
+
     def _list_items(
         self,
         item_tpye: str,
@@ -918,6 +1057,13 @@ class AzureSentinel(AzureData):
             raise CloudError(response=response)
 
         return results_df
+
+    # Get > List Aliases
+    get_alert_rules = list_alert_rules
+    get_sentinel_workspaces = list_sentinel_workspaces
+    get_hunting_queries = list_hunting_queries
+    get_bookmarks = list_bookmarks
+    get_incidents = list_incidents
 
     def _check_config(self, items: List) -> Dict:
         """
@@ -1138,6 +1284,8 @@ def _validator(res_id):
 
 def _fix_res_id(res_id):
     """Try to fix common issues with Resource ID string."""
+    if res_id.startswith("https:"):
+        res_id = "/".join(res_id.split("/")[5:])
     if not res_id.startswith("/"):
         res_id = "/" + res_id
     if res_id.endswith("/"):
