@@ -125,7 +125,6 @@ setuptools.setup(
         "Development Status :: 5 - Production/Stable",
         "Framework :: IPython",
         "Framework :: Jupyter",
-        "Framework :: Jupyter :: JupyterLab",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "Topic :: Security",
