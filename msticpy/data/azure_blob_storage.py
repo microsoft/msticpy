@@ -27,6 +27,7 @@ class AzureBlobStorage:
         """Initialize connector for Azure Python SDK."""
         self.connected = False
         self.abs_site = f"{abs_name}.blob.core.windows.net"
+        self.connection_string = abs_connection_string
         self.credentials: Optional[AzCredentials] = None
         self.abs_client: Optional[BlobServiceClient] = None
         if connect is True:
