@@ -272,6 +272,7 @@ class TILookup:
             providers.append(provider_name)
             if show_query_types and provider_class:
                 provider_class.usage()
+
         if as_list:
             return providers
         return None
