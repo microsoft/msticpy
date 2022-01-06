@@ -16,11 +16,11 @@ import ipywidgets as widgets
 import numpy as np
 import pandas as pd
 
-from .._version import VERSION
+from ..._version import VERSION
 
-from ..common.exceptions import MsticpyImportExtraError, MsticpyUserError
-from ..nbtools.process_tree import plot_process_tree
-from .proc_tree_builder import ProcSchema, build_proc_tree
+from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
+from ...nbtools.process_tree import plot_process_tree
+from ..proc_tree_builder import ProcSchema, build_proc_tree
 
 try:
     import vt
@@ -35,7 +35,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-_VT_API_NOT_FOUND = "NotFoundError"
+VT_API_NOT_FOUND = "NotFoundError"
 
 
 _FB_CAT_PATTERNS = {
@@ -194,8 +194,8 @@ class VTFileBehavior:
         try:
             self._file_behavior = self._vt_client.get_data(endpoint)
         except vt.APIError as err:
-            if err.args and err.args[0] == _VT_API_NOT_FOUND:
-                self._file_behavior = {"id": self.file_id, "result": _VT_API_NOT_FOUND}
+            if err.args and err.args[0] == VT_API_NOT_FOUND:
+                self._file_behavior = {"id": self.file_id, "result": VT_API_NOT_FOUND}
                 return
             raise
         finally:

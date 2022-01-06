@@ -6,15 +6,18 @@
 """VirusTotal Pivot functions."""
 from enum import Flag, auto
 from functools import partial
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple, Union
 
-from .._version import VERSION
+from ..._version import VERSION
 from .vtlookupv3 import VTLookupV3
-from ..common.utility import enum_parse
-from ..datamodel.pivot import Pivot, PivotRegistration
+from ...common.utility import enum_parse
+from ...common.provider_settings import get_provider_settings
+from ...datamodel.pivot import Pivot, PivotRegistration
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
+
+_USE_PRIVATE_API_KEY = "UseVT3PrivateAPI"
 
 
 class VTAPIScope(Flag):
@@ -93,8 +96,16 @@ _ENTITY_PROPS = {
 
 
 # pylint: disable=no-member
-def add_pivot_functions(api_scope: str = VTAPIScope.PUBLIC.name.lower()):
-    """Add VT functions as pivot functions."""
+def add_pivot_functions(api_scope: Optional[str] = None):
+    """
+    Add VT3 relationship functions as pivot functions.
+
+    Parameters
+    ----------
+    api_scope : Optional[str], optional
+        "public" or "private", by default "public"
+
+    """
     ent_funcs = _create_pivots(api_scope)
     for entity, funcs in ent_funcs.items():
         for func_name, func in funcs.items():
@@ -110,9 +121,15 @@ def add_pivot_functions(api_scope: str = VTAPIScope.PUBLIC.name.lower()):
 
 
 # pylint: disable=no-member
-def _create_pivots(api_scope: str = VTAPIScope.PUBLIC.name.lower()):
+def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
+    if api_scope is None:
+        scope = _get_vt_api_scope()
+    elif isinstance(api_scope, str):
+        scope = enum_parse(VTAPIScope, api_scope) or VTAPIScope.PUBLIC
+    else:
+        scope = api_scope
     vt_client = VTLookupV3()
-    scope = enum_parse(VTAPIScope, api_scope)
+
     if not isinstance(scope, VTAPIScope):
         # pylint: disable=not-an-iterable
         scope_names = [f"{name.lower()}" for name in VTAPIScope.__members__]
@@ -153,3 +170,16 @@ def _get_relationships(vt_client, entity_id, vt_type, relationship):
         observable=entity_id, vt_type=vt_type, relationship=relationship
     )
     return result_df.reset_index()
+
+
+def _get_vt_api_scope() -> VTAPIScope:
+    """Retrieve the VT enterprise key from settings."""
+    prov_settings = get_provider_settings("TIProviders")
+    vt_settings = prov_settings.get("VirusTotal")
+    if vt_settings:
+        return (
+            VTAPIScope.PRIVATE
+            if vt_settings.args.get("UseVT3PrivateAPI", False)
+            else VTAPIScope.PUBLIC
+        )
+    return VTAPIScope.PUBLIC

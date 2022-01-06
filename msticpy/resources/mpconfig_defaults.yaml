@@ -63,6 +63,7 @@ TIProviders:
   VirusTotal:
     Args:
       AuthKey: *cred_key
+      UseVT3PrivateAPI: bool(required=False, default=False)
     Primary: bool(default=True)
     Provider: "VirusTotal"
   XForce:
@@ -70,7 +71,7 @@ TIProviders:
     Args:
       ApiID: *cred_key
       AuthKey: *cred_key
-    Primary: bool(default=True)
+    Primary: bool(default=False)
     Provider: "XForce"
   AzureSentinel:
     # Note this can be a different workspace/tenant from your main workspace
@@ -87,7 +88,7 @@ TIProviders:
     Primary: bool(default=False)
     Provider: "OPR"
   TorExitNodes:
-    Primary: bool(default=True)
+    Primary: bool(default=False)
     Provider: "Tor"
   GreyNoise:
     Args:

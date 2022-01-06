@@ -41,6 +41,7 @@ from ..common.utility import (
     unit_testing,
 )
 from ..config import MpConfigFile
+from ..datamodel.pivot import Pivot
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml
 from .user_config import load_user_defaults
@@ -565,6 +566,28 @@ def _set_nb_options(namespace):
     if "try_azcli_login" not in kql_config:
         kql_config = ";".join([kql_config, "try_azcli_login=True"])
         os.environ["KQLMAGIC_CONFIGURATION"] = kql_config
+
+
+def _load_pivots(namespace):
+    """Load pivot functions."""
+    if not Pivot.current:
+        pivot = Pivot()
+        namespace["pivot"] = pivot
+
+    vt_pivot = None
+    try:
+        get_config("TIProviders.VirusTotal")
+        try:
+            vt_pivot = importlib.import_module("msticpy.sectools.vtlookupv3.vt_pivot")
+            namespace["vt_pivot"] = vt_pivot
+        except ImportError:
+            # Importing Vt3 libraries failed.
+            pass
+    except KeyError:
+        # No VT settings detected
+        pass
+    if vt_pivot:
+        vt_pivot.add_pivot_functions()
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
