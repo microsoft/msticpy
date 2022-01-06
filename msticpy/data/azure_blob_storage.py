@@ -23,7 +23,12 @@ from ..common.azure_auth_core import AzCredentials
 class AzureBlobStorage:
     """Class for interacting with Azure Blob Storage."""
 
-    def __init__(self, abs_name: str = None, connect: bool = False, abs_connection_string: str = None):
+    def __init__(
+        self,
+        abs_name: str = None,
+        connect: bool = False,
+        abs_connection_string: str = None,
+    ):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
         self.abs_site = f"{abs_name}.blob.core.windows.net"
@@ -45,7 +50,9 @@ class AzureBlobStorage:
         if not self.connection_string:
             self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
         else:
-            self.abs_client = BlobServiceClient.from_connection_string(self.connection_string)
+            self.abs_client = BlobServiceClient.from_connection_string(
+                self.connection_string
+            )
         if not self.abs_client:
             raise CloudError("Could not create a Blob Storage client.")
         self.connected = True
