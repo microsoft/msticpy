@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 from azure.common.exceptions import CloudError
 from uuid import uuid4
+from IPython.core.display import display
 
 from .azure_data import AzureData
 from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
@@ -284,6 +285,141 @@ class AzureSentinel(AzureData):
             res_grp=res_grp,
             ws_name=ws_name,
         )
+
+    # ToDo get results section working
+    def create_bookmark(
+        self,
+        name: str,
+        query: str,
+        results: str = None,
+        notes: str = None,
+        labels: List[str] = None,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Create a bookmark in the Sentinel Workpsace
+
+        Parameters
+        ----------
+        name : str
+            The name of the bookmark to use
+        query : str
+            The KQL query for the bookmark
+        results : str, optional
+            The results of the query to include with the bookmark
+        notes : str, optional
+            Any notes you want associated with the bookmark, by default None
+        labels : List[str], optional
+            Any labels you want associated with the bookmark, by default None
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            If API retunrs an error.
+
+        """
+        # Generate or use resource ID
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        id = str(uuid4())
+        url = self._build_paths(res_id, self.base_url)
+        bookmark_url = url + _PATH_MAPPING["bookmarks"] + f"/{id}"
+        data_items = {
+            "displayName": name,
+            "query": query,
+        }
+        if results:
+            data_items["queryResults"] = results
+        if notes:
+            data_items["notes"] = notes
+        if labels:
+            data_items["labels"] = labels
+        data = _build_data(data_items, props=True)
+        params = {"api-version": "2020-01-01"}
+        response = requests.put(
+            bookmark_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code == 200:
+            print("Bookmark created.")
+        else:
+            raise CloudError(response=response)
+
+    def delete_bookmark(
+        self,
+        bookmark_id: str = None,
+        bookmark_name: str = None,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Delete the selected bookmark
+
+        Parameters
+        ----------
+        bookmark_id : str, optional
+            The GUID of the bookmark to delete.
+        bookmark_name: str, optional
+            The name of the bookmark to delete.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            If the API returns an error.
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        if not bookmark_id and bookmark_name:
+            bookmarks = self.list_bookmarks(res_id)
+            items = bookmarks[
+                bookmarks["properties.displayName"].str.contains(bookmark_name)
+            ]
+            if len(items) == 0:
+                raise MsticpyUserError("Bookmark not found")
+            if len(items) > 1:
+                display(items[["name", "properties.displayName"]])
+                raise MsticpyUserError(
+                    "Multiple bookmarks found with that name please user bookmark_id to identify bookmark to delete by its GUID"
+                )
+            else:
+                bookmark_id = items["name"].iloc[0]
+        url = self._build_paths(res_id, self.base_url)
+        bookmark_url = url + _PATH_MAPPING["bookmarks"] + f"/{bookmark_id}"
+        params = {"api-version": "2020-01-01"}
+        response = requests.delete(
+            bookmark_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+        )
+        if response.status_code == 200:
+            print("Bookmark deleted.")
+        else:
+            raise CloudError(response=response)
 
     def list_incidents(
         self,
@@ -760,7 +896,7 @@ class AzureSentinel(AzureData):
         if isinstance(data, pd.DataFrame) and not data.empty:
             data = data.to_csv(index=False)
             data_items["rawContent"] = data
-        data = _build_data(data_items, "watchlists")
+        data = _build_data(data_items, props=True)
         response = requests.put(
             watchlist_url,
             headers=_get_api_headers(self.token),
@@ -922,7 +1058,6 @@ class AzureSentinel(AzureData):
 
         print(f"Items added to {watchlist_name}")
 
-
     def delete_watchlist(
         self,
         watchlist_name: str,
@@ -962,11 +1097,7 @@ class AzureSentinel(AzureData):
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
 
         url = self._build_paths(res_id, self.base_url)
-        watchlist_url = (
-            url
-            + _PATH_MAPPING["watchlists"]
-            + f"/{watchlist_name}"
-        )
+        watchlist_url = url + _PATH_MAPPING["watchlists"] + f"/{watchlist_name}"
         params = {"api-version": "2021-04-01"}
         response = requests.delete(
             watchlist_url,
@@ -1232,7 +1363,7 @@ def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
     return pd.json_normalize(j_resp)
 
 
-def _build_data(items: dict, endpoint: str = None, **kwargs) -> dict:
+def _build_data(items: dict, props: bool = False, **kwargs) -> dict:
     """
     Build request data body from items.
 
@@ -1240,6 +1371,8 @@ def _build_data(items: dict, endpoint: str = None, **kwargs) -> dict:
     ----------
     items : dict
         A set pf items to be formated in the request body.
+    props: bool, optional
+        Whether all items are to be built as properities. Default is false.
 
     Returns
     -------
@@ -1249,9 +1382,7 @@ def _build_data(items: dict, endpoint: str = None, **kwargs) -> dict:
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key, _ in items.items():
-        if key in ["severity", "status", "title", "message"] or endpoint in {
-            "watchlists"
-        }:
+        if key in ["severity", "status", "title", "message"] or props:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
             data_body[key] = items[key]
@@ -1294,3 +1425,6 @@ def _fix_res_id(res_id):
     if counts["/"] > 8:
         res_id = "/".join(res_id.split("/")[:9])
     return res_id
+
+
+MicrosoftSentinel = AzureSentinel
