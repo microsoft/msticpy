@@ -11,12 +11,13 @@ from typing import Any, Dict, Iterator, Optional
 from unittest.mock import patch
 
 import ipywidgets as widgets
-from bokeh.layouts import LayoutDOM
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.sectools import vtlookupv3
+from bokeh.layouts import LayoutDOM
 from vt.object import Object as VtObject
+
+from msticpy.sectools import vtlookupv3
 
 from ..unit_test_lib import get_test_data_path
 
@@ -24,15 +25,16 @@ from ..unit_test_lib import get_test_data_path
 # pylint: disable=no-value-for-parameter
 
 VTLookupV3 = vtlookupv3.VTLookupV3
-_VT_API_NOT_FOUND = vtlookupv3._VT_API_NOT_FOUND
+VT_API_NOT_FOUND = vtlookupv3.VT_API_NOT_FOUND
 MsticpyVTNoDataError = vtlookupv3.MsticpyVTNoDataError
 VTFileBehavior = vtlookupv3.VTFileBehavior
+VTBrowser = vtlookupv3.VTObjectBrowser
 
 
 __author__ = "Ian Hellen"
 
 
-@patch("msticpy.sectools.vtlookupv3.vt")
+@patch("msticpy.sectools.vtlookupv3.vtlookupv3.vt")
 def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
@@ -44,7 +46,7 @@ def create_vt_client(vt_lib) -> VTLookupV3:
 @pytest.fixture
 def vt_client(monkeypatch):
     """Return a VTLookup instance."""
-    vt_lib_fb = sys.modules["msticpy.sectools.vtfile_behavior"]
+    vt_lib_fb = sys.modules["msticpy.sectools.vtlookupv3.vtfile_behavior"]
     vt = getattr(vt_lib_fb, "vt")
     monkeypatch.setattr(vt, "Client", VTClient)
     monkeypatch.setattr(vt, "APIError", VTAPIError)
@@ -84,6 +86,7 @@ class VTClient:
     _REL_LINK_FILE = "vt3_related_links.json"
     _FB_SUM_FILE = "vt3_behavior_summary.json"
     _FB_MS_FILE = "vt3_behavior_ms_sysinternals.json"
+    _FILE_SUMMARY = "vt3_file_1.json"
 
     _URL_OBJS = [
         json.loads(_D_ROOT.joinpath(url_file).read_text()) for url_file in _OBJ_FILES
@@ -91,6 +94,7 @@ class VTClient:
     _URL_LINKS = json.loads(_D_ROOT.joinpath(_REL_LINK_FILE).read_text())
     _VT_FB_SUMMARY = json.loads(_D_ROOT.joinpath(_FB_SUM_FILE).read_text())
     _VT_FB_MSSYS = json.loads(_D_ROOT.joinpath(_FB_MS_FILE).read_text())
+    _VT_FILE_SUMMARY = json.loads(_D_ROOT.joinpath(_FILE_SUMMARY).read_text())
 
     def __init__(self, apikey: Optional[str] = None):
         """Initialize the class."""
@@ -109,8 +113,10 @@ class VTClient:
             return VtObject.from_dict(self._URL_OBJS[1])
         if "three" in path:
             return VtObject.from_dict(self._URL_OBJS[2])
+        if "file" in path:
+            return VtObject.from_dict(self._VT_FILE_SUMMARY)
         if "not-found" in path:
-            raise VTAPIError(message=_VT_API_NOT_FOUND, code=404)
+            raise VTAPIError(message=VT_API_NOT_FOUND, code=404)
         raise VTAPIError(message="Some error", code=404)
 
     def get_data(self, path: str, *path_args, params=None) -> Dict[str, Any]:
@@ -120,7 +126,7 @@ class VTClient:
             return self._VT_FB_SUMMARY
         if "file_behaviours" in path:
             return self._VT_FB_MSSYS
-        raise VTAPIError(message=_VT_API_NOT_FOUND, code=404)
+        raise VTAPIError(message=VT_API_NOT_FOUND, code=404)
 
     def iterator(
         self, path: str, *path_args, params=None, cursor=None, limit=0, batch_size=0
@@ -361,3 +367,28 @@ def test_file_behavior(vt_client: VTLookupV3, name, sandbox, keys):
     check.is_instance(proc_tree, LayoutDOM)
 
     check.is_instance(vt_file_behavior.process_tree_df, pd.DataFrame)
+
+
+def test_get_object_browser(vt_client: VTLookupV3):
+    """Test object browser."""
+    del vt_client
+    vt_browser = VTBrowser()
+    # emulate looking up a file using UI
+    vt_browser.txt_file_id.value = "file"
+    vt_browser.btn_lookup.click()
+
+    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(
+        vt_browser._current_data.iloc[0].id,
+        "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
+    )
+    check.equal(vt_browser._current_data.iloc[0].type, "file")
+    check.equal(set(vt_browser._current_data.columns), set(vt_browser.data_sel.options))
+
+    # Check that it auto-loads from init
+    vt_browser = VTBrowser("file")
+    check.equal(vt_browser._current_data.shape, (1, 584))
+    check.equal(
+        vt_browser._current_data.iloc[0].id,
+        "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
+    )

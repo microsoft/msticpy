@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import pandas as pd
 from IPython.display import HTML, display
 
-from ..common.exceptions import MsticpyImportExtraError
-from ..common.utility import is_ipython
-from ..common.provider_settings import get_provider_settings
+from ...common.exceptions import MsticpyImportExtraError
+from ...common.utility import is_ipython
+from ...common.provider_settings import get_provider_settings
 
 try:
     import vt
@@ -76,7 +76,7 @@ def _make_sync(future):
     return event_loop.run_until_complete(future)
 
 
-_VT_API_NOT_FOUND = "NotFoundError"
+VT_API_NOT_FOUND = "NotFoundError"
 
 
 class VTLookupV3:
@@ -161,7 +161,7 @@ class VTLookupV3:
             ]
             vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
             # Format dates for pandas
-            vt_df = _ts_to_pydate(vt_df)
+            vt_df = timestamps_to_utcdate(vt_df)
         elif obj_dict:
             vt_df = pd.json_normalize([obj_dict])
         else:
@@ -231,7 +231,7 @@ class VTLookupV3:
             response = self._vt_client.get_object(f"/{endpoint_name}/{observable}")
             return self._parse_vt_object(response, all_props=all_props)
         except vt.APIError as err:
-            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+            if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._item_not_found_df(vt_type, observable)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
@@ -471,7 +471,7 @@ class VTLookupV3:
                 # if "index" in result_df.columns:
                 #     result_df.drop(columns=["index"], inplace=True)
         except vt.APIError as err:
-            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+            if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._relation_not_found_df(vt_type, observable, relationship)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
@@ -805,9 +805,9 @@ class VTLookupV3:
             result_df["context_attributes"] = response.to_dict().get(
                 "context_attributes"
             )
-            return _ts_to_pydate(result_df)
+            return timestamps_to_utcdate(result_df)
         except vt.APIError as err:
-            if err.args and err.args[0] == _VT_API_NOT_FOUND:
+            if err.args and err.args[0] == VT_API_NOT_FOUND:
                 return self._item_not_found_df(vt_type, vt_id)
             raise MsticpyVTNoDataError(
                 "An error occurred requesting data from VirusTotal"
@@ -991,7 +991,7 @@ def _get_vt_api_key() -> Optional[str]:
     return None
 
 
-def _ts_to_pydate(data):
+def timestamps_to_utcdate(data: pd.DataFrame):
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
     for date_col in (col for col in data.columns if col.endswith("_date")):
         data[date_col] = pd.to_datetime(data[date_col], unit="s", utc=True)
