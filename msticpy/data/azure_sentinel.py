@@ -48,7 +48,13 @@ class AzureSentinel(AzureData):
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
 
-    def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
+    def connect(
+        self,
+        auth_methods: List = None,
+        tenant_id: str = None,
+        silent: bool = False,
+        **kwargs,
+    ):
         """
         Authenticate with the SDK & API.
 
@@ -56,11 +62,13 @@ class AzureSentinel(AzureData):
         ----------
         auth_methods : List, optional
             list of preferred authentication methods to use, by default None
+        tenant_id : str, optional
+            Specify cloud tenant to use
         silent : bool, optional
             Set true to prevent output during auth process, by default False
 
         """
-        super().connect(auth_methods=auth_methods, silent=silent)
+        super().connect(auth_methods=auth_methods, tenant_id=tenant_id, silent=silent)
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:

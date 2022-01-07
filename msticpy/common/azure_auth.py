@@ -30,6 +30,7 @@ __author__ = "Pete Bryan"
 
 def az_connect(
     auth_methods: List[str] = None,
+    tenant_id: str = None,
     silent: bool = False,
 ) -> AzCredentials:
     """
@@ -45,6 +46,8 @@ def az_connect(
         - "msi" - to user Managed Service Identity details
         - "interactive" - to prompt for interactive login
         Default is ["env", "cli", "msi", "interactive"]
+    tenant_id : str, optional
+        The tenant to authenticate against. If not supplied, the default tenant for the identity will be used.
     silent : bool, optional
         Set True to hide all output during connection, by default False
 
@@ -76,7 +79,9 @@ def az_connect(
             os.environ["AZURE_CLIENT_SECRET"] = (
                 az_cli_config.args.get("clientSecret") or ""
             )
-    credentials = az_connect_core(auth_methods=auth_methods, silent=silent)
+    credentials = az_connect_core(
+        auth_methods=auth_methods, tenant_id=tenant_id, silent=silent
+    )
     sub_client = SubscriptionClient(
         credential=credentials.modern,
         base_url=az_cloud_config.endpoints.resource_manager,
@@ -88,7 +93,7 @@ def az_connect(
     return credentials
 
 
-def az_user_connect(silent: bool = False) -> AzCredentials:
+def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredentials:
     """
     Authenticate to the SDK using user based authentication methods, Azure CLI or interactive logon.
 
@@ -102,4 +107,6 @@ def az_user_connect(silent: bool = False) -> AzCredentials:
     AzCredentials
 
     """
-    return az_connect_core(auth_methods=["cli", "interactive"], silent=silent)
+    return az_connect_core(
+        auth_methods=["cli", "interactive"], tenant_id=tenant_id, silent=silent
+    )
