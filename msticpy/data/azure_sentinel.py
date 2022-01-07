@@ -9,9 +9,10 @@ from uuid import uuid4
 from collections import Counter
 
 import pandas as pd
+from pandas.core.base import NoNewAttributesMixin
 import requests
 from azure.common.exceptions import CloudError
-from uuid import uuid4
+from uuid import uuid4, UUID
 from IPython.core.display import display
 
 from .azure_data import AzureData
@@ -333,9 +334,9 @@ class AzureSentinel(AzureData):
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
         res_id = _validate_res_id(res_id)
-        id = str(uuid4())
+        bkmark_id = str(uuid4())
         url = self._build_paths(res_id, self.base_url)
-        bookmark_url = url + _PATH_MAPPING["bookmarks"] + f"/{id}"
+        bookmark_url = url + _PATH_MAPPING["bookmarks"] + f"/{bkmark_id}"
         data_items = {
             "displayName": name,
             "query": query,
@@ -361,8 +362,7 @@ class AzureSentinel(AzureData):
 
     def delete_bookmark(
         self,
-        bookmark_id: str = None,
-        bookmark_name: str = None,
+        bookmark: str = None,
         res_id: str = None,
         sub_id: str = None,
         res_grp: str = None,
@@ -394,20 +394,7 @@ class AzureSentinel(AzureData):
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
         res_id = _validate_res_id(res_id)
-        if not bookmark_id and bookmark_name:
-            bookmarks = self.list_bookmarks(res_id)
-            items = bookmarks[
-                bookmarks["properties.displayName"].str.contains(bookmark_name)
-            ]
-            if len(items) == 0:
-                raise MsticpyUserError("Bookmark not found")
-            if len(items) > 1:
-                display(items[["name", "properties.displayName"]])
-                raise MsticpyUserError(
-                    "Multiple bookmarks found with that name please user bookmark_id to identify bookmark to delete by its GUID"
-                )
-            else:
-                bookmark_id = items["name"].iloc[0]
+        bookmark_id = self._get_bookmark_id(bookmark, res_id)
         url = self._build_paths(res_id, self.base_url)
         bookmark_url = url + _PATH_MAPPING["bookmarks"] + f"/{bookmark_id}"
         params = {"api-version": "2020-01-01"}
@@ -463,13 +450,15 @@ class AzureSentinel(AzureData):
 
     def get_incident(  # pylint: disable=too-many-locals, too-many-arguments
         self,
-        incident_id: str,
+        incident: str,
         res_id: str = None,
         sub_id: str = None,
         res_grp: str = None,
         ws_name: str = None,
         entities: bool = False,
         alerts: bool = False,
+        comments: bool = False,
+        bookmarks: bool = False,
     ) -> pd.DataFrame:
         """
         Get details on a specific incident.
@@ -502,14 +491,11 @@ class AzureSentinel(AzureData):
             If incident could not be retrieved.
 
         """
-        if "/" in incident_id and not res_id:
-            res_id = "/".join(incident_id.split("/")[:9])
-            incident_id = incident_id.split("/")[-1]
         res_id = res_id or self.res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_res_id(sub_id, res_grp, ws_name)
         res_id = _validate_res_id(res_id)
-
+        incident_id = self._get_incident_id(incident, res_id)
         url = self._build_paths(res_id, self.base_url)
         incidents_url = url + _PATH_MAPPING["incidents"]
         incident_url = incidents_url + f"/{incident_id}"
@@ -554,6 +540,52 @@ class AzureSentinel(AzureData):
                         for alrts in alerts_resp.json()["value"]
                     ]
                     incident_df["Alerts"] = [unique_alerts]
+
+        if comments:
+            comments_url = incident_url + "/comments"
+            comment_params = {"api-version": "2021-04-01"}
+            comments_response = requests.get(
+                comments_url,
+                headers=_get_api_headers(self.token),
+                params=comment_params,
+            )
+            if comments_response.status_code == 200:
+                comment_details = comments_response.json()
+                comments_list = [
+                    {
+                        "Message": comment["properties"]["message"],
+                        "Author": comment["properties"]["author"]["name"],
+                    }
+                    for comment in comment_details["value"]
+                ]
+                incident_df["Comments"] = [comments_list]
+
+        if bookmarks:
+            relations_url = incident_url + "/relations"
+            relations_params = {"api-version": "2021-04-01"}
+            relations_response = requests.get(
+                relations_url,
+                headers=_get_api_headers(self.token),
+                params=relations_params,
+            )
+            bookmarks_list = []
+            if relations_response.json()["value"]:
+
+                for relationship in relations_response.json()["value"]:
+                    if (
+                        relationship["properties"]["relatedResourceType"]
+                        == "Microsoft.SecurityInsights/Bookmarks"
+                    ):
+                        bkmark_id = relationship["properties"]["relatedResourceName"]
+                        bookmarks = self.list_bookmarks(res_id)
+                        bookmark = bookmarks[bookmarks["name"] == bkmark_id].iloc[0]
+                        bookmarks_list.append(
+                            {
+                                "Bookmark ID": bkmark_id,
+                                "Bookmark Title": bookmark["properties.displayName"],
+                            }
+                        )
+            incident_df["Bookmarks"] = [bookmarks_list]
 
         return incident_df
 
@@ -616,6 +648,236 @@ class AzureSentinel(AzureData):
             print("Incident updated.")
         else:
             raise CloudError(response=response)
+
+    def create_incident(
+        self,
+        title: str,
+        severity: str,
+        status: str = "New",
+        description: str = None,
+        first_activity_time: str = None,
+        last_activity_time: str = None,
+        labels: List = None,
+        bookmarks: List = None,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Create a Sentinel Incident
+
+        Parameters
+        ----------
+        title : str
+            The title of the incident to create
+        severity : str
+            The severity to assign the incident, options are:
+               Informational, Low, Medium, High
+        status : str, optional
+            The status to assign the incident, by default "New"
+            Options are:
+                New, Active, Closed
+        description : str, optional
+            A description of the incident, by default None
+        first_activity_time : str, optional
+            The start time of the incident activity, by default None
+        last_activity_time : str, optional
+            The end time of the incident activity, by default None
+        labels : List, optional
+            Any labels to apply to the incident, by default None
+        bookmarks : List, optional
+            A list of bookmark GUIDS you want to associate with the incident
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            If the API returns an error
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        incident_id = uuid4()
+        url = self._build_paths(res_id, self.base_url)
+        incidents_url = url + _PATH_MAPPING["incidents"]
+        incident_url = incidents_url + f"/{incident_id}"
+        params = {"api-version": "2020-01-01"}
+        data_items = {
+            "title": title,
+            "severity": severity.capitalize(),
+            "status": status.capitalize(),
+        }
+        if description:
+            data_items["description"] = description
+        if labels:
+            labels = [{"labelName": lab, "labelType": "User"} for lab in labels]
+            data_items["labels"] = labels
+        # ToDo add some error checking/formatting for the datetimes
+        if first_activity_time:
+            data_items["firstActivityTimeUtc"] = first_activity_time
+        if last_activity_time:
+            data_items["lastActivityTimeUtc"] = last_activity_time
+        data = _build_data(data_items, props=True)
+        response = requests.put(
+            incident_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code != 201:
+            raise CloudError(response=response)
+        if bookmarks:
+            for mark in bookmarks:
+                relation_id = uuid4()
+                bookmark_id = self._get_bookmark_id(mark, res_id)
+                mark_res_id = (
+                    self._build_paths(res_id, self.base_url)
+                    + _PATH_MAPPING["bookmarks"]
+                    + f"/{bookmark_id}"
+                )
+                bookmark_url = incident_url + f"/relations/{relation_id}"
+                bkmark_data_items = {"relatedResourceId": mark_res_id}
+                data = _build_data(bkmark_data_items, props=True)
+                params = {"api-version": "2021-04-01"}
+                response = requests.put(
+                    bookmark_url,
+                    headers=_get_api_headers(self.token),
+                    params=params,
+                    data=str(data),
+                )
+        print("Incident created.")
+
+    def _get_incident_id(self, incident: str, res_id: str) -> str:
+        """Get an incident ID
+
+        Parameters
+        ----------
+        incident : str
+            An incident identifier
+        res_id : str
+            The resource ID of the Sentinel Workspace incident is in
+
+        Returns
+        -------
+        str
+            The Incident GUID
+
+        Raises
+        ------
+        MsticpyUserError
+            If incident can't be found or multiple matching incidents found.
+
+        """
+        try:
+            UUID(incident)
+            return incident
+        except ValueError:
+            incidents = self.list_incidents(res_id)
+            filtered_incidents = incidents[
+                incidents["properties.title"].str.contains(incident)
+            ]
+            if len(filtered_incidents) > 1:
+                display(filtered_incidents[["name", "properties.title"]])
+                raise MsticpyUserError(
+                    "More than one incident found, please specify by GUID"
+                )
+            if (
+                not isinstance(filtered_incidents, pd.DataFrame)
+                or filtered_incidents.empty
+            ):
+                raise MsticpyUserError(f"Incident {incident} not found")
+            return filtered_incidents["name"].iloc[0]
+
+    def _get_bookmark_id(self, bookmark: str, res_id: str) -> str:
+        try:
+            UUID(bookmark)
+            return bookmark
+        except ValueError as bkmark_name:
+            bookmarks = self.list_bookmarks(res_id)
+            filtered_bookmarks = bookmarks[
+                bookmarks["properties.displayName"].str.contains(bookmark)
+            ]
+            if len(filtered_bookmarks) > 1:
+                display(filtered_bookmarks[["name", "properties.displayName"]])
+                raise MsticpyUserError(
+                    "More than one incident found, please specify by GUID"
+                ) from bkmark_name
+            if (
+                not isinstance(filtered_bookmarks, pd.DataFrame)
+                or filtered_bookmarks.empty
+            ):
+                raise MsticpyUserError(
+                    f"Incident {bookmark} not found"
+                ) from bkmark_name
+            return filtered_bookmarks["name"].iloc[0]
+
+    def add_bookmark_to_incident(
+        self,
+        incident: str,
+        bookmark: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Add a bookmark to an incident.
+
+        Parameters
+        ----------
+        incident : str
+            Either an incident name or an incident GUID
+        bookmark_id : str
+            Either a bookmakr name or bookmark GUID
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
+
+        Raises
+        ------
+        CloudError
+            [description]
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        incident_id = self._get_incident_id(incident, res_id)
+        url = self._build_paths(res_id, self.base_url)
+        incidents_url = url + _PATH_MAPPING["incidents"]
+        incident_url = incidents_url + f"/{incident_id}"
+        bookmark_id = self._get_bookmark_id(bookmark, res_id)
+        mark_res_id = (
+            self._build_paths(res_id, self.base_url)
+            + _PATH_MAPPING["bookmarks"]
+            + f"/{bookmark_id}"
+        )
+        relations_id = uuid4()
+        bookmark_url = incident_url + f"/relations/{relations_id}"
+        bkmark_data_items = {"relatedResourceId": mark_res_id}
+        data = _build_data(bkmark_data_items, props=True)
+        params = {"api-version": "2021-04-01"}
+        response = requests.put(
+            bookmark_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code != 201:
+            raise CloudError(response=response)
+        print("Bookmark added to incident.")
 
     def post_comment(
         self,
@@ -710,17 +972,100 @@ class AzureSentinel(AzureData):
             ws_name=ws_name,
         )
 
-    def list_analytic_rules(
+    def _get_template_id(
         self,
+        template: str,
+        res_id: str,
+    ) -> str:
+        """Get an analytic template ID
+
+        Parameters
+        ----------
+        template : str
+            Template ID or Name
+        res_id : str
+            Sentinel workspace to get template from
+
+        Returns
+        -------
+        str
+            Template ID
+
+        Raises
+        ------
+        MsticpyUserError
+            If template not found or multiple templates found.
+        """
+        try:
+            UUID(template)
+            return template
+        except ValueError as template_name:
+            templates = self.list_analytic_templates(res_id)
+            template = templates[
+                templates["properties.displayName"].str.contains(template)
+            ]
+            if len(template) > 1:
+                display(template[["name", "properties.displayName"]])
+                raise MsticpyUserError(
+                    "More than one template found, please specify by GUID"
+                ) from template_name
+            if not isinstance(template, pd.DataFrame) or template.empty:
+                raise MsticpyUserError(
+                    f"Template {template} not found"
+                ) from template_name
+            return template["name"].iloc[0]
+
+    def create_analytic_rule(
+        self,
+        template: str = None,
+        name: str = None,
+        enabled: bool = True,
+        query: str = None,
+        queryFrequency: str = "PT5H",
+        queryPeriod: str = "PT5H",
+        severity: str = "Medium",
+        suppressionDuration: str = "PT1H",
+        suppressionEnabled: bool = False,
+        triggerOperator: str = "GreaterThan",
+        triggerThreshold: int = 0,
+        description: str = None,
+        tactics: list = [],
         res_id: str = None,
         sub_id: str = None,
         res_grp: str = None,
         ws_name: str = None,
-    ) -> pd.DataFrame:
-        """List deployed Analytics
+    ):
+        """Create a Sentinel Analytics Rule
 
         Parameters
         ----------
+        template : str, optional
+            The GUID or name of a templated to create the analytic from, by default None
+        name : str, optional
+            The name to give the analytic, by default None
+        enabled : bool, optional
+            Whether you want the analytic to be enabled once deployed, by default True
+        query : str, optional
+            The query string to use in the anlaytic, by default None
+        queryFrequency : str, optional
+            How often the query should run in ISO8601 format, by default "PT5H"
+        queryPeriod : str, optional
+            How far back the query should look in ISO8601 format, by default "PT5H"
+        severity : str, optional
+            The severity to raise incidents as, by default "Medium"
+            Options are; Informational, Low, Medium, or High
+        suppressionDuration : str, optional
+            How long to suppress duplicate alerts in ISO8601 format, by default "PT1H"
+        suppressionEnabled : bool, optional
+            Whether you want to suppress duplicates, by default False
+        triggerOperator : str, optional
+            The operator for the trigger, by default "GreaterThan"
+        triggerThreshold : int, optional
+            The threshold of events required to create the incident, by default 0
+        description : str, optional
+            A description of the analytic, by default None
+        tactics : list, optional
+            A list of MITRE ATT&CK tactics related to the analytic, by default []
         res_id : str, optional
             Resource ID of the workspace, if not provided details from config file will be used.
         sub_id : str, optional
@@ -730,24 +1075,153 @@ class AzureSentinel(AzureData):
         ws_name : str, optional
             Workspace name of the workspace, to be used if not providing Resource ID.
 
+        Raises
+        ------
+        MsticpyUserError
+            If template provided isn't found.
+        CloudError
+            If the API returns an error.
+        """
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        if template:
+            template_id = self._get_template_id(template, res_id)
+            templates = self.list_analytic_templates(res_id)
+            template = templates[templates["name"] == template_id].iloc[0]
+            name = template["properties.displayName"]
+            query = template["properties.query"]
+            queryFrequency = template["properties.queryFrequency"]
+            queryPeriod = template["properties.queryPeriod"]
+            severity = template["properties.severity"]
+            triggerOperator = template["properties.triggerOperator"]
+            triggerThreshold = template["properties.triggerThreshold"]
+            description = template["properties.description"]
+            tactics = (
+                template["properties.tactics"]
+                if not pd.isna(template["properties.tactics"])
+                else []
+            )
+
+        if not name:
+            raise MsticpyUserError(
+                "Please specify either a template ID or analytic details."
+            )
+
+        rule_id = uuid4()
+        url = self._build_paths(res_id, self.base_url)
+        analytic_url = url + _PATH_MAPPING["alert_rules"] + f"/{rule_id}"
+        data_items = {
+            "displayName": name,
+            "query": query,
+            "queryFrequency": queryFrequency,
+            "queryPeriod": queryPeriod,
+            "severity": severity,
+            "suppressionDuration": suppressionDuration,
+            "suppressionEnabled": str(suppressionEnabled).lower(),
+            "triggerOperator": triggerOperator,
+            "triggerThreshold": triggerThreshold,
+            "description": description,
+            "tactics": tactics,
+            "enabled": str(enabled).lower(),
+        }
+        data = _build_data(data_items, props=True)
+        data["kind"] = "Scheduled"
+        params = {"api-version": "2020-01-01"}
+        response = requests.put(
+            analytic_url,
+            headers=_get_api_headers(self.token),
+            params=params,
+            data=str(data),
+        )
+        if response.status_code != 201:
+            raise CloudError(response=response)
+        print("Analytic Created.")
+
+    def _get_analytic_id(self, analytic: str, res_id: str) -> str:
+        """Get the GUID of an analytic rule
+
+        Parameters
+        ----------
+        analytic : str
+            The GUID or name of the analytic
+        res_id : str
+            Sentinel workspace to delete analytic from
+
         Returns
         -------
-        pd.DataFrame
-            A DataFrame containing the deployed analytics
+        str
+            The analytic GUID
+
+        Raises
+        ------
+        MsticpyUserError
+            If analytic not found or multiple matching analytics found
+        """
+        try:
+            UUID(analytic)
+            return analytic
+        except ValueError as analytic_name:
+            analytics = self.list_analytic_rules(res_id)
+            analytic = analytics[
+                analytics["properties.displayName"].str.contains(analytic)
+            ]
+            if len(analytic) > 1:
+                display(analytic[["name", "properties.displayName"]])
+                raise MsticpyUserError(
+                    "More than one analytic found, please specify by GUID"
+                ) from analytic_name
+            if not isinstance(analytic, pd.DataFrame) or analytic.empty:
+                raise MsticpyUserError(
+                    f"Analytic {analytic} not found"
+                ) from analytic_name
+            return analytic["name"].iloc[0]
+
+    def delete_analytic_rule(
+        self,
+        analytic_rule: str,
+        res_id: str = None,
+        sub_id: str = None,
+        res_grp: str = None,
+        ws_name: str = None,
+    ):
+        """Delete a deployed Analytic rule from a Sentinel workspace
+
+        Parameters
+        ----------
+        analytic_rule : str
+            The GUID or name of the analytic.
+        res_id : str, optional
+            Resource ID of the workspace, if not provided details from config file will be used.
+        sub_id : str, optional
+            Sub ID of the workspace, to be used if not providing Resource ID.
+        res_grp : str, optional
+            Resource Group name of the workspace, to be used if not providing Resource ID.
+        ws_name : str, optional
+            Workspace name of the workspace, to be used if not providing Resource ID.
 
         Raises
         ------
         CloudError
-            If a valid result is not returned.
-
+            If the API returns an error.
         """
-        return self._list_items(
-            item_tpye="alert_rules",
-            res_id=res_id,
-            sub_id=sub_id,
-            res_grp=res_grp,
-            ws_name=ws_name,
+        res_id = res_id or self.res_id or self._get_default_workspace()
+        if not res_id:
+            res_id = self._build_res_id(sub_id, res_grp, ws_name)
+        res_id = _validate_res_id(res_id)
+        analytic_id = self._get_analytic_id(analytic_rule, res_id)
+        url = self._build_paths(res_id, self.base_url)
+        analytic_url = url + _PATH_MAPPING["alert_rules"] + f"/{analytic_id}"
+        params = {"api-version": "2020-01-01"}
+        response = requests.delete(
+            analytic_url,
+            headers=_get_api_headers(self.token),
+            params=params,
         )
+        if response.status_code != 200:
+            raise CloudError(response=response)
+        print("Analytic Deleted.")
 
     def list_analytic_templates(
         self,
@@ -1191,6 +1665,8 @@ class AzureSentinel(AzureData):
 
     # Get > List Aliases
     get_alert_rules = list_alert_rules
+    list_analytic_rules = list_alert_rules
+    get_analytic_rules = list_alert_rules
     get_sentinel_workspaces = list_sentinel_workspaces
     get_hunting_queries = list_hunting_queries
     get_bookmarks = list_bookmarks
