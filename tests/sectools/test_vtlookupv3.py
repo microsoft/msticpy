@@ -261,7 +261,7 @@ def test_lookup_ioc_relationship(vt_client: VTLookupV3):
     result_df = vt_client.lookup_ioc_relationships(
         file, vt_type="file", relationship="contacted_urls"
     )
-    check.equal(result_df.shape, (3, 9))
+    check.equal(len(result_df), 3)
     result_df_noidx = result_df.reset_index()
     check.equal(
         result_df_noidx.iloc[0].target,
@@ -313,7 +313,7 @@ def test_lookup_iocs_relationships(vt_client: VTLookupV3):
         observable_type_column="type",
         relationship="contacted_urls",
     )
-    check.equal(result_df.shape, (9, 9))
+    check.equal(len(result_df), 9)
     result_df_noidx = result_df.reset_index()
     for idx in range(0, 9, 3):
         check.equal(
