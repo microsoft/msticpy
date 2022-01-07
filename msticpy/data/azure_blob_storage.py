@@ -17,16 +17,22 @@ from azure.core.exceptions import (
 from azure.storage.blob import BlobServiceClient, generate_blob_sas
 
 from ..common.azure_auth import az_connect
-from ..common.azure_auth_core import AzCredentials
+from ..common.azure_auth_core import AzCredentials, AzureCloudConfig
 
 
 class AzureBlobStorage:
     """Class for interacting with Azure Blob Storage."""
 
-    def __init__(self, abs_name: str, connect: bool = False):
+    def __init__(
+        self,
+        abs_name: str = None,
+        connect: bool = False,
+        abs_connection_string: str = None,
+    ):
         """Initialize connector for Azure Python SDK."""
         self.connected = False
         self.abs_site = f"{abs_name}.blob.core.windows.net"
+        self.connection_string = abs_connection_string
         self.credentials: Optional[AzCredentials] = None
         self.abs_client: Optional[BlobServiceClient] = None
         if connect is True:
@@ -41,7 +47,12 @@ class AzureBlobStorage:
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
-        self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
+        if not self.connection_string:
+            self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
+        else:
+            self.abs_client = BlobServiceClient.from_connection_string(
+                self.connection_string
+            )
         if not self.abs_client:
             raise CloudError("Could not create a Blob Storage client.")
         self.connected = True
@@ -240,8 +251,8 @@ class AzureBlobStorage:
             expiry=end,
             start=start,
         )
-        full_path = f"https://{abs_name}.blob.core.windows.net/{container_name}/{blob_name}?{sast}"
-        return full_path
+        suffix = AzureCloudConfig().suffixes.storage_endpoint
+        return f"https://{abs_name}.blob.{suffix}/{container_name}/{blob_name}?{sast}"
 
 
 def _parse_returned_items(items, remove_list: list = None) -> pd.DataFrame:
