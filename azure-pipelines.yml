@@ -91,7 +91,7 @@ stages:
         mkdir %USERPROFILE%/.msticpy
         mkdir %USERPROFILE%/.msticpy/mordor
         copy /Y $(Build.SourcesDirectory)\tests\testdata\geolite\GeoLite2-City.mmdb %USERPROFILE%\.msticpy
-        copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor/* %USERPROFILE%\.msticpy\mordor
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor\* %USERPROFILE%\.msticpy\mordor
       condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Windows'
     - script: |
