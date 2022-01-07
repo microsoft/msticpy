@@ -133,9 +133,10 @@ class SumologicDriver(DriverBase):
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
-        cs_dict.update(self._get_config_settings())
+        settings, cs_is_instance_name = self._get_config_settings(connection_str)
+        cs_dict.update(settings)
         # If a connection string - parse this and add to config
-        if connection_str:
+        if connection_str and not cs_is_instance_name:
             cs_dict["connection_str"] = connection_str
         if kwargs:
             # if connection args supplied as kwargs
@@ -442,11 +443,24 @@ class SumologicDriver(DriverBase):
 
     # Read values from configuration
     @staticmethod
-    def _get_config_settings() -> Dict[Any, Any]:
+    def _get_config_settings(instance_name: str = None) -> Tuple[Dict[str, Any], bool]:
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
-        sumologic_settings: Optional[ProviderSettings] = data_provs.get("Sumologic")
-        return getattr(sumologic_settings, "args", {})
+        sl_settings = {
+            name: settings
+            for name, settings in data_provs.items()
+            if name.startswith("Sumologic")
+        }
+        sumologic_settings: Optional[ProviderSettings]
+        # Check if the connection string is an instance name
+        sumologic_settings = sl_settings.get(f"Sumologic-{instance_name}")
+        if sumologic_settings:
+            is_instance_name = True
+        else:
+            # otherwise get the default Sumologic entry
+            sumologic_settings = sl_settings.get("Sumologic")
+            is_instance_name = False
+        return getattr(sumologic_settings, "args", {}), is_instance_name
 
     @staticmethod
     def _create_not_connected_err():
