@@ -153,13 +153,14 @@ class VTLookupV3:
             else:
                 obj = attributes
             vt_df = pd.json_normalize(data=[obj])
-            last_analysis_stats = attributes[
+            last_analysis_stats = attributes.get(
                 VTObjectProperties.LAST_ANALYSIS_STATS.value
-            ]
-            vt_df[ColumnNames.DETECTIONS.value] = last_analysis_stats[
-                VTObjectProperties.MALICIOUS.value
-            ]
-            vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
+            )
+            if last_analysis_stats:
+                vt_df[ColumnNames.DETECTIONS.value] = last_analysis_stats[
+                    VTObjectProperties.MALICIOUS.value
+                ]
+                vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
             # Format dates for pandas
             vt_df = timestamps_to_utcdate(vt_df)
         elif obj_dict:
