@@ -15,6 +15,7 @@ from tqdm.auto import tqdm
 
 from .._version import VERSION
 from ..common import pkg_config as config
+from ..common.exceptions import MsticpyDataQueryError
 from ..common.utility import export, valid_pyname
 from ..nbtools.nbwidgets import QueryTime
 from .browsers.query_browser import browse_queries
@@ -77,16 +78,18 @@ class QueryProvider:
                 raise TypeError(f"Unknown data environment {data_environment}")
 
         self.environment = data_environment.name
-
+        self._driver_kwargs = kwargs
         if driver is None:
-            driver_class = import_driver(data_environment)
-            if issubclass(driver_class, DriverBase):
-                driver = driver_class(data_environment=data_environment, **kwargs)
+            self.driver_class = import_driver(data_environment)
+            if issubclass(self.driver_class, DriverBase):
+                driver = self.driver_class(data_environment=data_environment, **kwargs)
             else:
                 raise LookupError(
                     "Could not find suitable data provider for", f" {self.environment}"
                 )
-
+        else:
+            self.driver_class = driver.__class__
+        self._additional_connections: Dict[str, DriverBase] = {}
         self._query_provider = driver
         self.all_queries = QueryContainer()
 
@@ -132,6 +135,41 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
+
+    def add_connection(
+        self,
+        connection_str: Optional[str] = None,
+        alias: Optional[str] = None,
+        **kwargs,
+    ):
+        """
+        Add an additional connection for the query provider.
+
+        Parameters
+        ----------
+        connection_str : Optional[str], optional
+            Connection string for the provider, by default None
+        alias : Optional[str], optional
+            Alias to use for the connection, by default None
+
+        Other Parameters
+        ----------------
+        kwargs : Dict[str, Any]
+            Other parameters passed to the driver constructor.
+
+        Notes
+        -----
+        Some drivers may accept types other than strings for the
+        `connection_str` parameter.
+
+        """
+        # create a new instance of the driver class
+        new_driver = self.driver_class(**(self._driver_kwargs))
+        # connect
+        new_driver.connect(connection_str=connection_str, **kwargs)
+        # add to collection
+        driver_key = alias or str(len(self._additional_connections))
+        self._additional_connections[driver_key] = new_driver
 
     @property
     def connected(self) -> bool:
@@ -225,12 +263,44 @@ class QueryProvider:
         """
         return list(self.query_store.query_names)
 
-    def query_help(self, query_name):
-        """Print help for query."""
+    def list_connections(self) -> List[str]:
+        """
+        Return a list of current connections or the default connection.
+
+        Returns
+        -------
+        List[str]
+            The alias and connection string for each connection.
+
+        """
+        add_connections = [
+            f"{alias}: {driver.current_connection}"
+            for alias, driver in self._additional_connections.items()
+        ]
+        return [f"Default: {self._query_provider.current_connection}", *add_connections]
+
+    def query_help(self, query_name: str):
+        """
+        Print help for `query_name`.
+
+        Parameters
+        ----------
+        query_name : str
+            The name of the query.
+
+        """
         self.query_store[query_name].help()
 
-    def get_query(self, query_name) -> str:
-        """Return the raw query text."""
+    def get_query(self, query_name: str) -> str:
+        """
+        Return the raw query text for `query_name`.
+
+        Parameters
+        ----------
+        query_name : str
+            The name of the query.
+
+        """
         return self.query_store[query_name].query
 
     def exec_query(self, query: str, **kwargs) -> Union[pd.DataFrame, Any]:
@@ -241,6 +311,14 @@ class QueryProvider:
         ----------
         query : str
             [description]
+        use_connections : Union[str, List[str]]
+
+        Other Parameters
+        ----------------
+        query_options : Dict[str, Any]
+            Additional options passed to query driver.
+        kwargs : Dict[str, Any]
+            Additional options passed to query driver.
 
         Returns
         -------
@@ -250,7 +328,24 @@ class QueryProvider:
 
         """
         query_options = kwargs.pop("query_options", {}) or kwargs
-        return self._query_provider.query(query, **query_options)
+        query_source = kwargs.pop("query_source", None)
+        result = self._query_provider.query(
+            query, query_source=query_source, **query_options
+        )
+        if not self._additional_connections:
+            return result
+        # run query against all connections
+        results = [result]
+        print(f"Running query for {len(self._additional_connections)} connections.")
+        for con_name, connection in self._additional_connections.items():
+            print(f"{con_name}...")
+            try:
+                results.append(
+                    connection.query(query, query_source=query_source, **query_options)
+                )
+            except MsticpyDataQueryError:
+                print(f"Query {con_name} failed.")
+        return pd.concat(results)
 
     def browse_queries(self, **kwargs):
         """
@@ -324,7 +419,7 @@ class QueryProvider:
 
         # Handle any query options passed
         query_options = self._get_query_options(params, kwargs)
-        return self._query_provider.query(query_str, query_source, **query_options)
+        return self.exec_query(query_str, query_source=query_source, **query_options)
 
     def _check_for_time_params(self, params, missing):
         """Fall back on builtin query time if no time parameters were supplied."""
@@ -465,7 +560,7 @@ class QueryProvider:
         # and send to query function.
         query_options = self._get_query_options(query_params, kwargs)
         query_dfs = [
-            self._query_provider.query(query_str, query_source, **query_options)
+            self.exec_query(query_str, query_source=query_source, **query_options)
             for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
         ]
 
