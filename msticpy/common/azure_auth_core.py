@@ -55,7 +55,7 @@ def default_auth_methods() -> List[str]:
 class AzureCloudConfig:
     """Azure Cloud configuration."""
 
-    def __init__(self, cloud: str = None):
+    def __init__(self, cloud: str = None, tenant_id: str = None):
         """
         Initialize AzureCloudConfig from `cloud` or configuration.
 
@@ -65,6 +65,10 @@ class AzureCloudConfig:
             The cloud to retrieve configuration for. If not supplied,
             the cloud ID is read from configuration. If this is not available,
             it defaults to 'global'.
+        tenant_id : str, optional
+            The tenant to authenticate against. If not supplied,
+            the tenant ID is read from configuration, or the default tenant
+            for the identity.
 
         """
         if cloud:
@@ -77,6 +81,18 @@ class AzureCloudConfig:
                     self.cloud = az_settings["cloud"]
             except KeyError:
                 pass  # no Azure section in config
+
+        if tenant_id:
+            self.tenant_id = tenant_id
+        else:
+            self.tenant_id = None
+            try:
+                az_settings = config.get_config("Azure")
+                if az_settings and "tenant_id" in az_settings:
+                    self.tenant_id = az_settings["tenant_id"]
+            except KeyError:
+                pass  # no Azure section in config
+
         self.auth_methods = default_auth_methods()
         try:
             self.auth_methods = config.get_config("Azure").get(
@@ -144,7 +160,11 @@ class AzureCloudConfig:
 
 
 def _az_connect_core(
-    auth_methods: List[str] = None, cloud: str = None, silent: bool = False, **kwargs
+    auth_methods: List[str] = None,
+    cloud: str = None,
+    tenant_id: str = None,
+    silent: bool = False,
+    **kwargs,
 ) -> AzCredentials:
     """
     Authenticate using multiple authentication sources.
@@ -164,6 +184,9 @@ def _az_connect_core(
         What Azure cloud to connect to.
         By default it will attempt to use the cloud setting from config file.
         If this is not set it will default to Azure Public Cloud
+    tenant_id : str, optional
+        The tenant to authenticate against. If not supplied,
+        the tenant ID is read from configuration, or the default tenant for the identity.
     silent : bool, optional
         Whether to display any output during auth process. Default is False.
 
@@ -195,7 +218,8 @@ def _az_connect_core(
     """
     # Create the auth methods with the specified cloud region
     cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
-    auth_options = _create_auth_options(cloud)
+    tenant_id = tenant_id or AzureCloudConfig().tenant_id
+    auth_options = _create_auth_options(cloud, tenant_id)
     if not auth_methods:
         auth_methods = default_auth_methods()
     try:
@@ -309,7 +333,7 @@ def _filter_all_warnings(record) -> bool:
     return True
 
 
-def _create_auth_options(cloud: str = None) -> dict:
+def _create_auth_options(cloud: str = None, tenant_id: str = None) -> dict:
     """Create auth options dict with correct cloud set."""
     az_config = AzureCloudConfig(cloud)
 
@@ -319,7 +343,9 @@ def _create_auth_options(cloud: str = None) -> dict:
         "env": EnvironmentCredential(),
         "cli": AzureCliCredential(),
         "msi": ManagedIdentityCredential(),
-        "interactive": InteractiveBrowserCredential(authority=aad_uri),
+        "interactive": InteractiveBrowserCredential(
+            authority=aad_uri, tenant_id=tenant_id
+        ),
     }
 
 
