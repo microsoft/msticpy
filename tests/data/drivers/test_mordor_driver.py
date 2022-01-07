@@ -10,6 +10,7 @@ import io
 import os
 import pickle
 from pathlib import Path
+import shutil
 
 import pytest
 import pytest_check as check
@@ -27,6 +28,8 @@ from msticpy.data.drivers.mordor_driver import (
     _MORDOR_CACHE,
 )
 
+from ...unit_test_lib import get_test_data_path
+
 __author__ = "Ian Hellen"
 
 _SAVE_FOLDER = "mordor_test"
@@ -38,7 +41,10 @@ _SAVE_FOLDER = "mordor_test"
 @pytest.fixture(scope="session")
 def save_folder(tmp_path_factory):
     """Query Provider fixture."""
-    return str(tmp_path_factory.mktemp(_SAVE_FOLDER))
+    cache_folder = tmp_path_factory.mktemp(_SAVE_FOLDER)
+    for file in get_test_data_path().joinpath("mordor").glob("*.pkl"):
+        shutil.copy(str(file), str(cache_folder))
+    return str(cache_folder)
 
 
 @pytest.fixture

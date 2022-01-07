@@ -70,6 +70,7 @@ class MordorDriver(DriverBase):
         self.save_folder = kwargs.pop(
             "save_folder", mdr_settings.get("save_folder", ".")
         )
+        self.save_folder = _resolve_cache_folder(self.save_folder)
         self.silent = kwargs.pop("silent", False)
 
         self._loaded = True
@@ -143,6 +144,7 @@ class MordorDriver(DriverBase):
             raise self._create_not_connected_err()
         use_cached = kwargs.pop("used_cached", self.use_cached)
         save_folder = kwargs.pop("save_folder", self.save_folder)
+        save_folder = _resolve_cache_folder(save_folder)
         silent = kwargs.pop("silent", self.silent)
         result_df = download_mdr_file(
             file_uri=query,
@@ -264,6 +266,14 @@ class MordorDriver(DriverBase):
             title="not connected to Mordor.",
             help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
         )
+
+
+def _resolve_cache_folder(cache_path: str):
+    """Expands and optionally creates cache folder."""
+    cache_folder = Path(cache_path).expanduser()
+    if not cache_folder.is_dir():
+        cache_folder.mkdir(parents=True, exist_ok=True)
+    return str(cache_folder)
 
 
 # pylint: enable=too-many-instance-attributes
@@ -615,7 +625,10 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
     for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"):
         gh_file_content = _get_mdr_file(y_file)
-        yaml_doc = yaml.safe_load(gh_file_content)
+        try:
+            yaml_doc = yaml.safe_load(gh_file_content)
+        except yaml.error.YAMLError:
+            continue
         doc_id = yaml_doc.get("id")
         md_metadata[doc_id] = MordorEntry(**yaml_doc)
 
