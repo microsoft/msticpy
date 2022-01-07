@@ -11,6 +11,13 @@
     "id": "19e1199c6aa6e817845cc025cd7c8979cec22f8c94bc7416ff16b8808706cd54",
     "context_attributes": {
       "url": "http://218.54.47.76/"
+    },
+    "attributes": {
+      "attrib1": "value1",
+      "last_analysis_stats": {
+        "malicious": 10,
+        "other": 15
+      }
     }
   },
   {
@@ -18,6 +25,9 @@
     "id": "03283ca11f82c0e152c6f3751f2484289437462afdd14115cd859eef23bead1f",
     "context_attributes": {
       "url": "http://218.54.47.74/"
+    },
+    "attributes": {
+      "attrib1": "value1"
     }
   }
 ]

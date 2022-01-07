@@ -80,8 +80,8 @@ stages:
         echo Using $MSTICPYCONFIG or %MSTICPYCONFIG%
         python -m pip install --upgrade pytest pytest-azurepipelines
         python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
-        python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
-        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml --cov=msticpy --cov-report=xml
+        python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow pandas
+        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml -n auto --cov=msticpy --cov-report=xml
       displayName: pytest
       env:
         MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
