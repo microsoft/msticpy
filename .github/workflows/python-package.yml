@@ -35,7 +35,7 @@ jobs:
           ${{ runner.os }}-
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip wheel setuptools==56.0.0
+        python -m pip install --upgrade pip wheel setuptools
         if [ -f requirements-all.txt ]; then
           python -m pip install -r requirements-all.txt
         elif [ -f requirements.txt ]; then
