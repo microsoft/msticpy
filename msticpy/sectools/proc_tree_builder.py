@@ -19,6 +19,7 @@ from .proc_tree_schema import (  # noqa: F401
     MDE_INT_EVENT_SCH,
     SUPPORTED_SCHEMAS,
     WIN_EVENT_SCH,
+    SYSMON_PROCESS_CREATE_EVENT_SCH,
     ProcSchema,
 )
 from .proc_tree_schema import ColNames as Col
