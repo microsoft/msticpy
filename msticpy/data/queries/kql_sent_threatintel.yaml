@@ -19,11 +19,9 @@ defaults:
       start:
         description: Query start time
         type: datetime
-        default: -30
       end:
         description: Query end time
         type: datetime
-        default: 0
       add_query_items:
         description: Additional query clauses
         type: str
@@ -42,18 +40,6 @@ sources:
         {add_query_items}'
       uri: None
     parameters:
-      start:
-        description: Query start time
-        type: datetime
-        default: -1
-      end:
-        description: Query end time
-        type: datetime
-        default: 0
-      observables:
-        description: List of observables
-        type: list
-        default: ""
   list_indicators_by_ip:
     description: Retrieves list of indicators by IP Address
     metadata:

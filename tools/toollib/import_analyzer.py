@@ -186,6 +186,7 @@ def _check_std_lib(modules):
     std_libs = set()
     imp_errors = set()
     paths = {p.casefold() for p in sys.path}
+    paths.update({str(Path(p).resolve()).casefold() for p in sys.path})
     stdlib_paths = {
         p
         for p in paths
@@ -268,7 +269,7 @@ def _match_pkg_to_reqs(imports, setup_reqs):
             continue
         imp_parts = imp.split(".")
         for i in range(1, len(imp_parts)):
-            imp_name = ".".join(imp_parts[0:i])
+            imp_name = ".".join(imp_parts[:i])
 
             if imp_name.casefold() in setup_reqs:
                 req_libs.add(setup_reqs[imp_name])

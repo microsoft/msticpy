@@ -19,26 +19,10 @@ defaults:
           | project-rename StartTimeUtc = StartTime, EndTimeUtc = EndTime,
           AlertDisplayName = DisplayName, Severity = AlertSeverity
           | extend AlertType = iif(isempty(AlertType), AlertName, AlertType)'
-      start:
-        description: Query start time
-        type: datetime
-        default: -30
-      end:
-        description: Query end time
-        type: datetime
-        default: 0
       add_query_items:
         description: Additional query clauses
         type: str
         default: ''
-      subscription_filter:
-        description: Optional subscription/tenant filter expression
-        type: str
-        default: 'true'
-      path_separator:
-        description: Path separator
-        type: str
-        default: '\\'
 sources:
   list_alerts:
     description: Retrieves list of alerts
@@ -47,7 +31,6 @@ sources:
       query: '
         {table}
         {query_project}
-        | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | extend extendedProps = parse_json(ExtendedProperties)
@@ -56,6 +39,12 @@ sources:
         {add_query_items}'
       uri: None
     parameters:
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
   list_alerts_counts:
     description: Retrieves summary count of alerts by type
     metadata:
@@ -63,7 +52,6 @@ sources:
       query: '
         {table}
         {query_project}
-        | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | summarize alertCount=count(), firstAlert=min(TimeGenerated),
@@ -71,6 +59,12 @@ sources:
         | order by alertCount desc
         {add_query_items}'
     parameters:
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
   get_alert:
     description: Retrieves a single alert by SystemAlertId
     metadata:
@@ -78,7 +72,6 @@ sources:
       query: '
         {table}
         {query_project}
-        | where {subscription_filter}
         | extend extendedProps = parse_json(ExtendedProperties)
         | extend CompromisedEntity = tostring(extendedProps["Compromised Host"])
         | project-away extendedProps
@@ -88,14 +81,6 @@ sources:
       system_alert_id:
         description: 'The ID of the alert'
         type: str
-      start:
-        description: Query start time
-        type: datetime
-        default: 0  # fake default to prevent this being viewed as required
-      end:
-        description: Query end time
-        type: datetime
-        default: 0  # fake default to prevent this being viewed as required
   list_related_alerts:
     description: Retrieves list of alerts with a common host, account or process
     metadata:
@@ -113,7 +98,6 @@ sources:
         let src_proc = "{process_name}";
         {table}
         {query_project}
-        | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
         | extend Computer = src_host
@@ -149,6 +133,16 @@ sources:
         description: The process name to find
         type: str
         default: ''
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      path_separator:
+        description: Path separator
+        type: str
+        default: '\\'
   list_alerts_for_ip:
     description: Retrieves list of alerts with a common IP Address
     metadata:
