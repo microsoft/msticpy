@@ -85,7 +85,7 @@ stages:
         touch ~/.msticpy/mordor/mitre_tact_cache.pkl
         touch ~/.msticpy/mordor/mitre_tech_cache.pkl
         touch ~/.msticpy/mordor/mordor_cache.pkl
-      condition: neq(variables.imageName, 'windows-latest')
+      condition: ne(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Linux'
     - script: |
         mkdir %USERPROFILE%/.msticpy
