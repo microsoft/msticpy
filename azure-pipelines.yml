@@ -79,7 +79,7 @@ stages:
     - script: |
         mkdir ~/.msticpy
         mkdir ~/.msticpy/mordor
-        cp $(Build.SourcesDirectory)/tests/testdata/GeoLite2-City.mmdb ~/.msticpy
+        cp $(Build.SourcesDirectory)/tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
         touch ~/.msticpy/GeoLite2-City.mmdb
         cp -r $(Build.SourcesDirectory)/tests/testdata/mordor/* ~/.msticpy/mordor
         touch ~/.msticpy/mordor/mitre_tact_cache.pkl
@@ -90,7 +90,7 @@ stages:
     - script: |
         mkdir %USERPROFILE%/.msticpy
         mkdir %USERPROFILE%/.msticpy/mordor
-        copy /Y $(Build.SourcesDirectory)\tests\testdata\GeoLite2-City.mmdb %USERPROFILE%\.msticpy
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\geolite\GeoLite2-City.mmdb %USERPROFILE%\.msticpy
         copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor/* %USERPROFILE%\.msticpy\mordor
       condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Windows'
