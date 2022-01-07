@@ -90,6 +90,7 @@ def test_mordor_load(mdr_driver: MordorDriver):
 
 def test_mordor_cache(save_folder, qry_provider):
     """Test to see if connecting has created valid cache files."""
+    del qry_provider
     tactics_cache = Path(save_folder).joinpath(_MITRE_TACTICS_CACHE)
     tech_cache = Path(save_folder).joinpath(_MITRE_TECH_CACHE)
     mordor_cache = Path(save_folder).joinpath(_MORDOR_CACHE)

@@ -269,7 +269,7 @@ class MordorDriver(DriverBase):
 
 
 def _resolve_cache_folder(cache_path: str):
-    """Expands and optionally creates cache folder."""
+    """Expand and optionally creates cache folder."""
     cache_folder = Path(cache_path).expanduser()
     if not cache_folder.is_dir():
         cache_folder.mkdir(parents=True, exist_ok=True)
