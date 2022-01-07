@@ -51,7 +51,7 @@ jobs:
       run: |
         mkdir ~/.msticpy
         mkdir ~/.msticpy/mordor
-        cp ./tests/testdata/GeoLite2-City.mmdb ~/.msticpy
+        cp ./tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
         touch ~/.msticpy/GeoLite2-City.mmdb
         cp -r ./tests/testdata/mordor/* ~/.msticpy/mordor
         touch ~/.msticpy/mordor/mitre_tact_cache.pkl
