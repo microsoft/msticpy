@@ -10,6 +10,8 @@ import warnings
 from typing import Iterable, List, Tuple
 
 import folium
+from folium.plugins import MarkerCluster, FeatureGroupSubGroup
+import pygeohash
 
 from .._version import VERSION
 from ..datamodel.entities import Entity, GeoLocation, IpAddress
@@ -191,6 +193,338 @@ class FoliumMap:
         ]
         self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
 
+    def add_geo_hashes(self, geohashes: Iterable[str], **kwargs):
+        """
+        Add decoded geohashes to the map.
+
+        Parameters
+        ----------
+        geohashes : Iterable[str]
+            Iterable of geolocation hashes
+
+        """
+        geo_entities = []
+        for geohash in geohashes:
+            decoded_location = decode_geo_hash(geohash)
+            geo_entities.append(
+                GeoLocation(Latitude=decoded_location[0], Longitude=decoded_location[1])
+            )
+
+        self.add_geoloc_cluster(geo_locations=geo_entities, **kwargs)
+
+    def add_marker_clusters(self, clusters: Iterable[MarkerCluster]):
+        """
+        Add MarkerClusters and to the map.
+
+        Parameters
+        ----------
+        clusters: Iterable[MarkerCluster]
+            Iterable of MarkerClusters
+
+        """
+        for cluster in clusters:
+            self.folium_map.add_child(cluster)
+
+    def add_feature_sub_groups(self, subgroups: Iterable[FeatureGroupSubGroup]):
+        """
+        Add FeatureGroupSubGroups and to the map.
+
+        Parameters
+        ----------
+        subgroups: Iterable[FeatureGroupSubGroup]
+            Iterable of FeatureGroupSubGroups
+
+        """
+        for subgroup in subgroups:
+            self.folium_map.add_child(subgroup)
+
+    def save_map(self, path: str):
+        """
+        Save the map to `path`.
+
+        Parameters
+        ----------
+        path: str
+            File path to save the current map
+
+        """
+        self.folium_map.save(path)
+
+    def add_locations_to_feature_subgroup(
+        self,
+        locations: Iterable[Tuple[float, float]],
+        subgroup: FeatureGroupSubGroup,
+        **kwargs,
+    ):
+        """
+        Create markers from locations and add the FeatureGroupSubGroup.
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[float, float]]
+            Collection of Latitude/Longitude coordinates to be added
+            to the FeatureGroupSubGroup
+        subgroup: FeatureGroupSubGroup
+            Subgroup to add locations to, then add to the map
+
+        """
+        for point in locations:
+            marker = self.create_marker(location=point, **kwargs)
+            marker.add_to(subgroup)
+            self.locations.append(point)
+
+        subgroups = [subgroup]
+
+        self.add_feature_sub_groups(subgroups)
+
+    def add_locations_to_marker_cluster(
+        self, locations: Iterable[Tuple[float, float]], cluster: MarkerCluster, **kwargs
+    ):
+        """
+        Create markers from locations and add to MarkerCluster.
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[float, float]]
+            Collection of Latitude/Longitude coordinates to be added
+            to the MarkerCluster
+        cluster: MarkerCluster
+            Marker cluster to add locations to, then add to the map
+
+        """
+        for point in locations:
+            marker = self.create_marker(location=point, **kwargs)
+            marker.add_to(cluster)
+            self.locations.append(point)
+
+        clusters = [cluster]
+
+        self.add_marker_clusters(clusters)
+
+    def create_new_cluster_with_locations(
+        self, locations: Iterable[Tuple[float, float]], name: str, **kwargs
+    ):
+        """
+        Create a MarkerCluster with locations.
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[float, float]]
+            Collection of Latitude/Longitude coordinates to be added to the
+            MarkerCluster
+        name: str
+            Name of Marker Cluster to create, add locations to,
+            then add to the map
+
+        """
+        marker_cluster = MarkerCluster(name=name)
+
+        self.add_locations_to_marker_cluster(
+            locations=locations, cluster=marker_cluster, **kwargs
+        )
+
+    def create_new_subgroup_with_locations(
+        self,
+        locations: Iterable[Tuple[float, float]],
+        subgroup_name: str,
+        cluster_name: str,
+        **kwargs,
+    ):
+        """
+        Create subgroup of markers from locations.
+
+        Parameters
+        ----------
+        locations: Iterable[Tuple[float, float]]
+            Collection of Latitude/Longitude coordinates to be added
+            to the FeatureGroupSubGroup
+        subgroup_name: str
+            Name of FeatureGroupSubGroup to create, add locations to,
+            then add to the map
+        cluster_name : str
+            Name of the cluster
+
+        Notes
+        -----
+        This function creates a marker cluster and FeatureGroupSubGroup,
+        then add the locations to the subgroup, then add the subgroup to the map.
+
+        """
+        marker_cluster = MarkerCluster(name=cluster_name)
+        feature_subgroup = FeatureGroupSubGroup(marker_cluster, name=subgroup_name)
+
+        self.add_locations_to_feature_subgroup(
+            locations=locations, subgroup=feature_subgroup, **kwargs
+        )
+
+    def enable_layer_control(self):
+        """
+        Enable Layer Control on the map.
+
+        Parameters
+        ----------
+        None
+
+        """
+        folium.LayerControl().add_to(self.folium_map)
+
+    def create_new_cluster_with_geohashes(
+        self, geohashes: Iterable[str], name: str, **kwargs
+    ):
+        """
+        Create a MarkerCluster and add geohash locations.
+
+        Parameters
+        ----------
+        geohashes: Iterable[str]
+            Collection of geohashes to be decoded and added to the MarkerCluster
+        name: str
+            Name of Marker Cluster to create, add locations to, then add to the map
+
+        """
+        locations = decode_geohash_collection(geohashes)
+        self.create_new_cluster_with_locations(locations=locations, name=name, **kwargs)
+
+    def create_new_subgroup_with_geohashes(
+        self, geohashes: Iterable[str], subgroup_name: str, cluster_name: str, **kwargs
+    ):
+        """
+        Create a FeatureSubGroup with collection of geohash locations.
+
+        Parameters
+        ----------
+        geohashes: Iterable[str]
+            Collection of geohashes to be decoded and added to
+            the FeatureGroupSubGroup
+        subgroup_name: str
+            Name of SubGroup to create, add locations to, then add to the map
+        cluster_name: str
+            Name of the Marker Cluster to create and add the SubGroup to
+
+        """
+        locations = decode_geohash_collection(geohashes)
+
+        self.create_new_subgroup_with_locations(
+            locations=locations,
+            subgroup_name=subgroup_name,
+            cluster_name=cluster_name,
+            **kwargs,
+        )
+
+    @staticmethod
+    def create_marker(
+        location: Tuple[float, float],
+        tooltip: str = None,
+        popup: str = None,
+        **kwargs,
+    ) -> folium.Marker:
+        """
+        Create and return a Folium Marker at a given location.
+
+        Parameters
+        ----------
+        location: Tuple[float,float]
+            Latitude/Longitude coordinates for the Marker
+        tooltip: str [Optional]
+            Tooltip text for the Marker
+        popup: str [Optional]
+            Popup text for the Marker
+
+        Returns
+        -------
+        Marker
+            A Folium Marker at the given location coordinates
+
+        """
+        return folium.Marker(
+            location=location, tooltip=tooltip, popup=popup, icon=folium.Icon(**kwargs)
+        )
+
+    @staticmethod
+    def create_marker_cluster(name: str):
+        """
+        Create and return a MarkerCluster with name.
+
+        Parameters
+        ----------
+        name: str
+            Name of the MarkerCluster
+
+        Returns
+        -------
+        MarkerCluster
+            A Folium MarkerCluster with the provided name
+
+        """
+        return MarkerCluster(name=name)
+
+    @staticmethod
+    def create_feature_sub_group_of_marker_cluster(
+        cluster: MarkerCluster, name: str
+    ) -> FeatureGroupSubGroup:
+        """
+        Return a FeatureGroupSubGroup with `name` for a MarkerCluster.
+
+        Parameters
+        ----------
+        cluster: MarkerCluster
+            Folium MarkerCluster to add FeatureGroupSubGroup to
+        name: str
+            Desired name of the MarkerCluster
+
+        Returns
+        -------
+        FeatureGroupSubGroup
+            A Folium FeatureGroupSubGroup with the provided name as part
+            of the given MarkerCluster
+
+        """
+        return FeatureGroupSubGroup(cluster, name=name)
+
+
+def decode_geo_hash(geohash: str) -> Tuple[float, float, float, float]:
+    """
+    Decode a geohash.
+
+    Parameters
+    ----------
+    geohash: str
+        A string representation of a location
+
+    Returns
+    -------
+    Tuple
+        Tuple representation of a geohash, format of:
+        (Latitude, Longitude,
+        Latitude Error interval, Longitude Error Interval)
+
+    """
+    return pygeohash.decode_exactly(geohash)
+
+
+def decode_geohash_collection(geohashes: Iterable[str]):
+    """
+    Return collection of geohashes decoded into location coordinates.
+
+    Parameters
+    ----------
+    geohashes: Iterable[str]
+        Collection of geohashes to be decoded
+
+    Returns
+    -------
+    Iterable[Tuple[float, float]]
+        Collection of location coordinates in Latitude/Longitude
+
+    """
+    locations = []
+
+    for geohash in geohashes:
+        exact_location = decode_geo_hash(geohash)
+        locations.append((exact_location[0], exact_location[1]))
+
+    return locations
+
 
 def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     """
@@ -210,7 +544,7 @@ def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     Returns
     -------
     Tuple
-        The Lattitude and Longitude calculated
+        The Latitude and Longitude calculated
 
     Notes
     -----
