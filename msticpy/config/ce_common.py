@@ -28,12 +28,12 @@ SETTING_LIST_LAYOUT = {
     "style": {"description_width": "100px"},
 }
 
-_TEXT_LAYOUT = {
+TEXT_LAYOUT = {
     "layout": widgets.Layout(width="70%"),
     "style": {"description_width": "100px"},
 }
 
-_TEXT_AREA_LAYOUT = {
+TEXT_AREA_LAYOUT = {
     "layout": widgets.Layout(width="70%"),
     "style": {"description_width": "100px"},
 }
@@ -300,7 +300,7 @@ def get_wgt_ctrl(
             ctrl = widgets.Checkbox(
                 description=var_name,
                 value=py_to_widget(curr_val, val_type=st_type),
-                **(wgt_style or _TEXT_LAYOUT),
+                **(wgt_style or TEXT_LAYOUT),
             )
         elif st_type == "enum":
             ctrl = widgets.Select(
@@ -325,7 +325,7 @@ def get_wgt_ctrl(
             ctrl = widgets.Textarea(
                 description=var_name,
                 value=py_to_widget(curr_val, val_type="list") or "",
-                **(wgt_style or _TEXT_AREA_LAYOUT),
+                **(wgt_style or TEXT_AREA_LAYOUT),
                 # tooltip="Enter each item as 'key:value'. Separate items with new lines.",
             )
             setattr(ctrl, "tag", "list")
@@ -333,7 +333,7 @@ def get_wgt_ctrl(
             ctrl = widgets.Text(
                 description=var_name,
                 value=py_to_widget(curr_val, val_type=st_type),
-                **(wgt_style or _TEXT_AREA_LAYOUT),
+                **(wgt_style or TEXT_AREA_LAYOUT),
                 # tooltip="Enter items (no quotes) on separate lines.",
             )
         mp_controls.set_control(var_path, ctrl)
