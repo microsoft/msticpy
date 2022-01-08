@@ -8,6 +8,7 @@ from pathlib import Path
 import warnings
 
 import pandas as pd
+import pytest
 from pytest import raises
 
 from msticpy.datamodel.entities import Host
@@ -33,8 +34,7 @@ def test_cluster_syslog_logons_df():
 
 
 @pytest.mark.skipif(
-    not os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork",
-    reason="External fork.",
+    os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork", reason="External fork."
 )
 def test_host_data():
     test_config1 = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")
