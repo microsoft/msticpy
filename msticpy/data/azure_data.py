@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
+from collections import Counter
 from typing import Optional, Dict, Tuple, List
 import datetime
 
@@ -190,14 +191,10 @@ class AzureData:
         states = []
         # pylint: disable=unnecessary-comprehension
         try:
-            sub_list = [
-                sub for sub in self.sub_client.subscriptions.list()  # type: ignore
-            ]
+            sub_list = list(self.sub_client.subscriptions.list())  # type: ignore
         except AttributeError:
             self._legacy_auth("sub_client")
-            sub_list = [
-                sub for sub in self.sub_client.subscriptions.list()  # type: ignore
-            ]
+            sub_list = list(self.sub_client.subscriptions.list())  # type: ignore
 
         for item in sub_list:  # type: ignore
             subscription_ids.append(item.subscription_id)
@@ -622,8 +619,7 @@ class AzureData:
 
         return ip_df, nsg_df
 
-    # pylint: disable=too-many-locals, too-many-arguments
-    def get_metrics(
+    def get_metrics(  # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
         self,
         metrics: str,
         resource_id: str,
@@ -706,8 +702,7 @@ class AzureData:
                     output.append(data.total)
             details = pd.DataFrame({"Time": times, "Data": output})
             details.replace(np.nan, 0, inplace=True)
-            results.update({metric.name.value: details})
-
+            results[metric.name.value] = details
         return results
 
     # pylint: enable=too-many-locals, too-many-arguments
@@ -831,3 +826,58 @@ class AzureData:
                     credential_scopes=[self.az_cloud_config.token_uri],
                 ),
             )
+
+
+def get_api_headers(token: str) -> Dict:
+    """
+    Return authorization header with current token.
+
+    Parameters
+    ----------
+    token : str
+        Azure auth token.
+
+    Returns
+    -------
+    Dict
+        A dictionary of headers to be used in API calls.
+
+    """
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+
+def validate_res_id(res_id):
+    """Validate a Resource ID String and fix if needed."""
+    valid = _validator(res_id)
+    if not valid:
+        res_id = _fix_res_id(res_id)
+        valid = _validator(res_id)
+    if not valid:
+        raise MsticpyAzureConfigError("The Resource ID provided is not valid.")
+
+    return res_id
+
+
+def _validator(res_id):
+    """Check Resource ID string matches pattern expected."""
+    counts = Counter(res_id)
+    return bool(
+        res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/")
+    )
+
+
+def _fix_res_id(res_id):
+    """Try to fix common issues with Resource ID string."""
+    if res_id.startswith("https:"):
+        res_id = "/".join(res_id.split("/")[5:])
+    if not res_id.startswith("/"):
+        res_id = "/" + res_id
+    if res_id.endswith("/"):
+        res_id = res_id[:-1]
+    counts = Counter(res_id)
+    if counts["/"] > 8:
+        res_id = "/".join(res_id.split("/")[:9])
+    return res_id
