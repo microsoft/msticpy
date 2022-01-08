@@ -26,6 +26,10 @@ _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork",
+    reason="External fork.",
+)
 def test_geoip_notebook():
     """Test geoip notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
@@ -58,6 +62,10 @@ def test_geoip_notebook():
 
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork",
+    reason="External fork.",
 )
 def test_geoiplite_download(tmp_path):
     """Test forced download of GeoIPLite DB."""

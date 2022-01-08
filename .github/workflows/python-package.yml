@@ -53,6 +53,7 @@ jobs:
         IPSTACK_AUTH: ${{ secrets.IPSTACK_AUTH }}
         MSTICPYCONFIG: ./tests/msticpyconfig-test.yaml
         MSTICPY_TEST_NOSKIP: 1
+        MSTICPY_BUILD_SOURCE: fork
       run: |
         pytest tests -n auto --junitxml=junit/test-${{ matrix.python-version }}-results.xml --cov=msticpy --cov-report=xml
       if: ${{ always() }}
