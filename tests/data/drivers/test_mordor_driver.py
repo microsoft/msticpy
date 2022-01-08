@@ -5,27 +5,26 @@
 # --------------------------------------------------------------------------
 """Mordor data driver test."""
 import contextlib
-from datetime import datetime
 import io
+import json
 import os
-import pickle
-from pathlib import Path
 import shutil
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import patch
 
+import pandas as pd
 import pytest
 import pytest_check as check
-import pandas as pd
-
-
 from msticpy.data import QueryProvider
 from msticpy.data.drivers.mordor_driver import (
-    MordorDriver,
-    search_mdr_data,
-    download_mdr_file,
-    MordorEntry,
     _MITRE_TACTICS_CACHE,
     _MITRE_TECH_CACHE,
     _MORDOR_CACHE,
+    MordorDriver,
+    MordorEntry,
+    download_mdr_file,
+    search_mdr_data,
 )
 
 from ...unit_test_lib import get_test_data_path
@@ -44,12 +43,34 @@ def save_folder(tmp_path_factory):
     cache_folder = tmp_path_factory.mktemp(_SAVE_FOLDER)
     for file in get_test_data_path().joinpath("mordor").glob("*.pkl"):
         shutil.copy(str(file), str(cache_folder))
+    shutil.copy(
+        str(get_test_data_path().joinpath("mordor").joinpath("mordor_cache.json")),
+        str(cache_folder),
+    )
+    mordor_cache_file = Path(cache_folder).joinpath("mordor_cache.json")
+    mdr_cache = json.loads(mordor_cache_file.read_text(encoding="utf-8"))
+    for item in mdr_cache.values():
+        item["mp_last_updated"] = pd.Timestamp.utcnow().isoformat()
+    Path(mordor_cache_file).write_text(
+        json.dumps(mdr_cache, indent=4), encoding="utf-8"
+    )
+
     return str(cache_folder)
 
 
+def get_mdr_data_paths(save_folder):
+    """Mock get_mdr_data_paths."""
+    mdr_cache = json.loads(
+        Path(save_folder).joinpath("mordor_cache.json").read_text(encoding="utf-8")
+    )
+    return list(mdr_cache.keys())
+
+
 @pytest.fixture
-def qry_provider(save_folder):
+@patch("msticpy.data.drivers.mordor_driver.get_mdr_data_paths")
+def qry_provider(get_paths, save_folder):
     """Query Provider fixture."""
+    get_paths.return_value = get_mdr_data_paths(save_folder)
     qry_prov = QueryProvider("Mordor", save_folder=save_folder)
     qry_prov.connect()
     return qry_prov
@@ -106,12 +127,15 @@ def test_mordor_cache(save_folder, qry_provider):
     check.is_instance(techniques_df, pd.DataFrame)
     check.greater_equal(len(techniques_df), 50)
 
-    with open(mordor_cache, "rb") as pickle_file:
-        md_metadata = pickle.load(pickle_file)
-
+    json_text = Path(mordor_cache).read_text(encoding="utf-8")
+    md_metadata = json.loads(json_text)
     check.is_instance(md_metadata, dict)
     item = next(iter(md_metadata.values()))
-    check.is_instance(item, MordorEntry)
+    check.is_instance(item, dict)
+    mdr_entry_dict = item.copy()
+    mdr_entry_dict.pop("mp_last_updated")
+    mordor_entry = MordorEntry(**mdr_entry_dict)
+    check.is_instance(mordor_entry, MordorEntry)
 
 
 def test_mordor_search(mdr_driver: MordorDriver):

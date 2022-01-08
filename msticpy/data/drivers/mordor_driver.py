@@ -4,7 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mordor/OTRF Security datasets driver."""
-import pickle
+import json
+import pickle  # nosec
 import zipfile
 from collections import defaultdict
 from datetime import datetime
@@ -44,7 +45,7 @@ MITRE_TACTICS: pd.DataFrame = None
 
 _MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
 _MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
-_MORDOR_CACHE = "mordor_cache.pkl"
+_MORDOR_CACHE = "mordor_cache.json"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -590,6 +591,9 @@ def _create_mdr_metadata_cache():
 # Create closure
 _GET_MORDOR_METADATA = _create_mdr_metadata_cache()
 
+_LAST_UPDATE_KEY = "mp_last_updated"
+_DEFAULT_TS = pd.Timestamp(pd.Timestamp.utcnow() - pd.Timedelta(days=60))
+
 
 # pylint: disable=global-statement
 def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorEntry]:
@@ -613,35 +617,57 @@ def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorE
         MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
     md_metadata: Dict[str, MordorEntry] = {}
 
-    if cache_folder:
-        mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
-        if _valid_cache(mordor_cache):
-            try:
-                with open(mordor_cache, "rb") as pickle_file:
-                    md_metadata = pickle.load(pickle_file)
-                    return md_metadata
-            except pickle.PickleError:
-                pass
+    md_cached_metadata = _read_mordor_cache(cache_folder)
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
-    for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"):
-        gh_file_content = _get_mdr_file(y_file)
-        try:
-            yaml_doc = yaml.safe_load(gh_file_content)
-        except yaml.error.YAMLError:
-            continue
-        doc_id = yaml_doc.get("id")
-        md_metadata[doc_id] = MordorEntry(**yaml_doc)
+    for filename in tqdm(
+        mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"
+    ):
+        cache_valid = False
+        if filename in md_cached_metadata:
+            metadata_doc = md_cached_metadata[filename]
+            last_timestamp = pd.Timestamp(
+                metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS)
+            )
+            cache_valid = (pd.Timestamp.utcnow() - last_timestamp).days < 30
 
-    if cache_folder:
-        try:
-            with open(mordor_cache, "wb") as pickle_file:
-                pickle.dump(md_metadata, pickle_file)
-        except pickle.PickleError:
-            pass
+        if not cache_valid:
+            gh_file_content = _get_mdr_file(filename)
+            try:
+                metadata_doc = yaml.safe_load(gh_file_content)
+            except yaml.error.YAMLError:
+                continue
+            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.utcnow().isoformat()
+            md_cached_metadata[filename] = metadata_doc
+        doc_id = metadata_doc.get("id")
+        mdr_entry = metadata_doc.copy()
+        mdr_entry.pop(_LAST_UPDATE_KEY, None)
+        md_metadata[doc_id] = MordorEntry(**mdr_entry)
+
+    _write_mordor_cache(md_cached_metadata, cache_folder)
     return md_metadata
 
 
 # pylint: enable=global-statement
+
+
+def _read_mordor_cache(cache_folder) -> Dict[str, Any]:
+    """Return dictionary of cached metadata if cached_folder is a valid path."""
+    md_cached_metadata: Dict[str, Any] = {}
+    mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
+    if _valid_cache(mordor_cache):
+        try:
+            md_json = Path(mordor_cache).read_text(encoding="utf-8")
+            md_cached_metadata = json.loads(md_json)
+        except json.JSONDecodeError:
+            pass
+    return md_cached_metadata
+
+
+def _write_mordor_cache(md_cached_metadata, cache_folder):
+    """Write dictionary of cached metadata if cached_folder is a valid path."""
+    mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
+    json_text = json.dumps(md_cached_metadata, indent=4)
+    Path(mordor_cache).write_text(json_text, encoding="utf-8")
 
 
 def _build_mdr_indexes(
