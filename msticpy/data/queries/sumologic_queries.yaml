@@ -19,11 +19,9 @@ defaults:
     start:
       description: Query start time
       type: datetime
-      default: 2017-08-25T00:00:00
     end:
       description: Query end time
       type: datetime
-      default: 2017-08-26T00:00:00
     project_fields:
       description: Project Field names
       type: str

@@ -9,7 +9,7 @@ import os
 import re
 import warnings
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 from IPython import get_ipython
@@ -31,6 +31,7 @@ try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
     from Kqlmagic.kql_response import KqlError
+    from Kqlmagic.kql_proxy import KqlResponse
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -203,7 +204,6 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-        del kwargs
         if query_source:
             try:
                 table = query_source["args.table"]
@@ -218,11 +218,13 @@ class KqlDriver(DriverBase):
                         " or database schema. Please check your this",
                         title=f"{table} not found.",
                     )
-        data, result = self.query_with_results(query)
+        data, result = self.query_with_results(query, **kwargs)
         return data if data is not None else result
 
     # pylint: disable=too-many-branches
-    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
+    def query_with_results(
+        self, query: str, **kwargs
+    ) -> Tuple[pd.DataFrame, KqlResponse]:
         """
         Execute query string and return DataFrame of results.
 
@@ -238,22 +240,11 @@ class KqlDriver(DriverBase):
             Kql ResultSet.
 
         """
-        # connect or switch the connection if our connection string
-        # is not the current KqlMagic connection.
-        # if not self.connected and self.current_connection:
-        try:
-            self.connect(self.current_connection)
-        except MsticpyKqlConnectionError:
-            self._connected = False
-        if not self.connected:
-            raise MsticpyNotConnectedError(
-                "Please run the connect() method before running a query.",
-                title=f"not connected to a {self._connect_target}",
-                help_uri=MsticpyKqlConnectionError.DEF_HELP_URI,
-            )
-
-        if self._debug:
+        debug = kwargs.pop("debug", self._debug)
+        if debug:
             print(query)
+
+        self._make_current_connection()
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
@@ -270,16 +261,31 @@ class KqlDriver(DriverBase):
             if isinstance(result, pd.DataFrame):
                 return result, None
             if hasattr(result, "completion_query_info") and (
-                result.completion_query_info.get("StatusCode") == 0
+                int(result.completion_query_info.get("StatusCode", 1)) == 0
                 or result.completion_query_info.get("Text")
                 == "Query completed successfully"
             ):
                 data_frame = result.to_dataframe()
                 if result.is_partial_table:
                     print("Warning - query returned partial results.")
+                if debug:
+                    print("Query status:\n", "\n".join(self._get_query_status(result)))
                 return data_frame, result
 
         return self._raise_query_failure(query, result)
+
+    def _make_current_connection(self):
+        """Switch to the current connection (self.current_connection)."""
+        try:
+            self.connect(self.current_connection)
+        except MsticpyKqlConnectionError:
+            self._connected = False
+        if not self.connected:
+            raise MsticpyNotConnectedError(
+                "Please run the connect() method before running a query.",
+                title=f"not connected to a {self._connect_target}",
+                help_uri=MsticpyKqlConnectionError.DEF_HELP_URI,
+            )
 
     def _load_kql_magic(self):
         """Load KqlMagic if not loaded."""
@@ -303,6 +309,10 @@ class KqlDriver(DriverBase):
         if self.environment == DataEnvironment.MSSentinel:
             return "Workspace"
         return "Kusto cluster"
+
+    @staticmethod
+    def _get_query_status(result) -> List[str]:
+        return [f"{key}: '{value}'" for key, value in result.completion_query_info]
 
     @staticmethod
     def _get_schema() -> Dict[str, Dict]:

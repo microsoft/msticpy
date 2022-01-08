@@ -9,11 +9,10 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from .proc_tree_schema import (
-    ProcSchema,
-)
-from ..data.query_defns import ensure_df_datetimes
 from .._version import VERSION
+from ..data.query_defns import ensure_df_datetimes
+from .proc_tree_schema import ProcSchema
+from .proc_tree_schema import ColNames as Col
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -39,8 +38,6 @@ _MDE_TIMESTAMP_COLS = [
 ]
 
 TS_FMT_STRING = "%Y-%m-%d %H:%M:%S.%f"
-PARENT_KEY = "parent_key"
-PROC_KEY = "proc_key"
 
 
 def extract_process_tree(data: pd.DataFrame, debug: bool = False) -> pd.DataFrame:
@@ -121,7 +118,7 @@ def _extract_missing_parents(
     # add process key
     _add_proc_key(
         data,
-        PROC_KEY,
+        Col.proc_key,
         "CreatedProcessName",
         "CreatedProcessId",
         "CreatedProcessCreationTime",
@@ -134,7 +131,7 @@ def _extract_missing_parents(
     # Create parent key
     _add_proc_key(
         data,
-        PARENT_KEY,
+        Col.parent_key,
         "InitiatingProcessName",
         "InitiatingProcessId",
         "InitiatingProcessCreationTime",
@@ -151,8 +148,8 @@ def _extract_missing_parents(
         regex="Initiating.*|parent_key|src_index"
     ).merge(  # parents
         data.filter(non_par_cols),  # created_procs
-        left_on=PARENT_KEY,
-        right_on=PROC_KEY,
+        left_on=Col.parent_key,
+        right_on=Col.proc_key,
         suffixes=("_child", "_par"),
         how="left",
     )
@@ -163,7 +160,7 @@ def _extract_missing_parents(
     missing_parents = (
         missing_parents.dropna(axis=1, how="all")
         .rename(columns=col_mapping)
-        .rename(columns={"parent_key_child": PROC_KEY})
+        .rename(columns={"parent_key_child": Col.proc_key})
         .drop(columns=["InitiatingProcessFileName"])
     )
     missing_parents["CreatedProcessFilePath"] = (
@@ -178,7 +175,7 @@ def _extract_missing_parents(
         found_parents = merged_parents[~merged_parents["CreatedProcessParentId"].isna()]
         print("existing parent procs", len(found_parents))
         mpar_uniq_test = (
-            missing_parents.drop(columns="src_index").groupby("proc_key").nunique()
+            missing_parents.drop(columns="src_index").groupby(Col.proc_key).nunique()
         )
         if not mpar_uniq_test[mpar_uniq_test > 1].dropna(how="all").empty:
             print("Error - some extracted parents have duplicate keys")
@@ -199,7 +196,7 @@ def _get_unique_parents(data, debug=False):
         print("unique:", missing_par_uniq.shape, "original:", data.shape)
     _add_proc_key(
         missing_par_uniq,
-        PARENT_KEY,
+        Col.parent_key,
         "InitiatingProcessName",
         "CreatedProcessParentId",
         "CreatedProcessParentCreationTimeUtc",
@@ -255,7 +252,7 @@ def _extract_missing_gparents(data):
     )
     _add_proc_key(
         missing_gps,
-        "proc_key",
+        Col.proc_key,
         "CreatedProcessName",
         "CreatedProcessId",
         "CreatedProcessCreationTime",
