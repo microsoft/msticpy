@@ -159,7 +159,9 @@ def test_mp_config_controls_defn(mp_conf_ctrl):
             check.is_instance(item_def, dict)
             for s_name, s_item_def in item_def.items():
                 print(s_name, s_item_def)
-                check.is_in(s_name, ("ApiID", "AuthKey"))
+                check.is_in(s_name, ("ApiID", "AuthKey", "UseVT3PrivateAPI"))
+                if s_name == "UseVT3PrivateAPI":
+                    continue
                 i_type, i_opts = get_defn_or_default(s_item_def)
                 check.equal(i_type, "cred_key")
                 ck_defn = i_opts.get("defn")
@@ -174,7 +176,7 @@ def test_mp_config_controls_defn(mp_conf_ctrl):
         if name == "Primary":
             i_type, i_opts = get_defn_or_default(item_def)
             check.equal(i_type, "bool")
-            check.is_true(i_opts["default"])
+            check.is_in(i_opts["default"], (True, False))
 
 
 TEST_PATH_WS3 = "AzureSentinel.Workspaces.TestWS2"

