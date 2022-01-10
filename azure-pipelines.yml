@@ -25,6 +25,12 @@ resources:
   - repository: self
     type: git
     ref: main
+variables:
+  - name: prSource
+    ${{ if variables['System.PullRequest.IsFork'] }}:
+      value: fork
+    ${{ if not(variables['System.PullRequest.IsFork']) }}:
+      value: internal
 stages:
 - stage: PythonTests
   displayName: Python build and tests
@@ -92,7 +98,10 @@ stages:
       condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Prepare test dummy data - Windows'
     - script: |
-        echo Using $MSTICPYCONFIG or %MSTICPYCONFIG%
+        echo MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
+        echo Env $MSTICPYCONFIG or %MSTICPYCONFIG%
+        echo Build source: $(prSource)
+        echo Env $MSTICPY_BUILD_SOURCE or %MSTICPY_BUILD_SOURCE%
         python -m pip install --upgrade pytest pytest-azurepipelines
         python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
@@ -104,6 +113,7 @@ stages:
         MAXMIND_AUTH: $(keys.maxmind_auth)
         IPSTACK_AUTH: $(keys.ipstack_auth)
         MSTICPY_TEST_NOSKIP: 1
+        MSTICPY_BUILD_SOURCE: $(prSource)
       condition: succeededOrFailed()
       continueOnError: true
     - task: PublishTestResults@2
@@ -203,8 +213,7 @@ stages:
     # Credscan must be run on Windows
     pool:
       vmImage: windows-latest
-    variables:
-      python.version: '$(python.version)'
+      python.version: '3.8'
     steps:
     - task: CredScan@2
       displayName: 'Run CredScan'
@@ -272,6 +281,7 @@ stages:
       inputs:
         CredScan: true
         PoliCheck: true
+      condition: not(variables['System.PullRequest.IsFork'])
     - task: dependency-check-build-task@5
       displayName: 'OWASP Dependency Check'
       inputs:
