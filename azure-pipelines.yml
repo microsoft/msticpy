@@ -213,8 +213,7 @@ stages:
     # Credscan must be run on Windows
     pool:
       vmImage: windows-latest
-    variables:
-      python.version: '$(python.version)'
+      python.version: '3.8'
     steps:
     - task: CredScan@2
       displayName: 'Run CredScan'
