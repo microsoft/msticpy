@@ -577,23 +577,20 @@ class TILookup:
 
         """
         if providers:
-            selected_providers = {
+            return {
                 prov_name: prov
                 for prov_name, prov in self._all_providers.items()
                 if prov_name in providers
             }
-        else:
-            if prov_scope == "all":
-                selected_providers = self._all_providers  # type: ignore
-            elif prov_scope == "primary":
-                selected_providers = self._providers
-            else:
-                selected_providers = self._secondary_providers
-        return selected_providers
+        if prov_scope == "all":
+            return dict(self._all_providers)
+        if prov_scope == "primary":
+            return self._providers
+        return self._secondary_providers
 
-    @staticmethod
+    @classmethod
     def browse_results(
-        data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+        cls, data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
     ):
         """
         Return TI Results list browser.
@@ -611,7 +608,7 @@ class TILookup:
         Other Parameters
         ----------------
         kwargs :
-            passed to SelectItem constuctor.
+            passed to SelectItem constructor.
 
         Returns
         -------
@@ -619,6 +616,14 @@ class TILookup:
             SelectItem browser for TI Data.
 
         """
+        if not isinstance(data, pd.DataFrame):
+            try:
+                data = cls.result_to_df(data)
+            # pylint: disable=broad-except
+            except Exception:
+                print("Input data is in an unexpected format.")
+                return None
+            # pylint: enable=broad-except
         return browse_results(data=data, severities=severities, **kwargs)
 
     browse = browse_results
