@@ -56,9 +56,11 @@ def test_geoip_notebook():
         del os.environ["MSTICPY_SKIP_IPSTACK_TEST"]
 
 
-@pytest.mark.skipif(
-    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-)
+# @pytest.mark.skipif(
+#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+# )
+# Make into integration tests
+@pytest.mark.skip
 def test_geoiplite_download(tmp_path):
     """Test forced download of GeoIPLite DB."""
     test_folder = tmp_path / "test_geolite_data"
