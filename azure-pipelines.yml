@@ -43,15 +43,12 @@ stages:
       matrix:
         linux:
           imageName: "ubuntu-latest"
-          python.version: '3.6'
+          python.version: '3.8'
         mac:
           imageName: "macos-latest"
           python.version: '3.8'
         windows-py36:
           imageName: "windows-latest"
-          python.version: '3.6'
-        linux-py38:
-          imageName: "ubuntu-latest"
           python.version: '3.8'
       maxParallel: 4
     pool:
@@ -80,8 +77,26 @@ stages:
         python -m pip install -r $(Build.SourcesDirectory)/docs/requirements.txt
         make html
       workingDirectory: docs
-      condition: eq(variables['imageName'], 'windows-latest')
+      condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Sphinx Read the Docs build'
+    - script: |
+        mkdir ~/.msticpy
+        mkdir ~/.msticpy/mordor
+        cp $(Build.SourcesDirectory)/tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
+        touch ~/.msticpy/GeoLite2-City.mmdb
+        cp -r $(Build.SourcesDirectory)/tests/testdata/mordor/* ~/.msticpy/mordor
+        touch ~/.msticpy/mordor/mitre_tact_cache.pkl
+        touch ~/.msticpy/mordor/mitre_tech_cache.pkl
+        touch ~/.msticpy/mordor/mordor_cache.pkl
+      condition: ne(variables.imageName, 'windows-latest')
+      displayName: 'Prepare test dummy data - Linux'
+    - script: |
+        mkdir %USERPROFILE%\.msticpy
+        mkdir %USERPROFILE%\.msticpy\mordor
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\geolite\GeoLite2-City.mmdb %USERPROFILE%\.msticpy
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor\* %USERPROFILE%\.msticpy\mordor
+      condition: eq(variables.imageName, 'windows-latest')
+      displayName: 'Prepare test dummy data - Windows'
     - script: |
         echo MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
         echo Env $MSTICPYCONFIG or %MSTICPYCONFIG%
@@ -90,7 +105,8 @@ stages:
         python -m pip install --upgrade pytest pytest-azurepipelines
         python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
-        pytest tests --junitxml=junit/test-$(imageName)-$(python.version)-results.xml --cov=msticpy --cov-report=xml
+        python -m pip install "pandas>=1.3.0"
+        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml -n auto --cov=msticpy --cov-report=xml
       displayName: pytest
       env:
         MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
