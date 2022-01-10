@@ -48,12 +48,21 @@ jobs:
         python -m pip install pytest pytest-cov pytest-xdist pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
         python -m pip install "pandas>=1.3.0"
+    - name: Prepare test dummy data
+      run: |
+        mkdir ~/.msticpy
+        mkdir ~/.msticpy/mordor
+        cp ./tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
+        touch ~/.msticpy/GeoLite2-City.mmdb
+        cp -r ./tests/testdata/mordor/* ~/.msticpy/mordor
+        touch ~/.msticpy/mordor/mitre_tact_cache.pkl
+        touch ~/.msticpy/mordor/mitre_tech_cache.pkl
+        touch ~/.msticpy/mordor/mordor_cache.pkl
     - name: Pytest
       env:
         MAXMIND_AUTH: ${{ secrets.MAXMIND_AUTH }}
         IPSTACK_AUTH: ${{ secrets.IPSTACK_AUTH }}
         MSTICPYCONFIG: ./tests/msticpyconfig-test.yaml
-        MSTICPY_TEST_NOSKIP: 1
       run: |
         pytest tests -n auto --junitxml=junit/test-${{ matrix.python-version }}-results.xml --cov=msticpy --cov-report=xml
       if: ${{ always() }}
