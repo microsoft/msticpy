@@ -1,0 +1,33 @@
+[
+  {
+    "type": "url",
+    "id": "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8",
+    "context_attributes": {
+      "url": "http://218.54.47.77/"
+    }
+  },
+  {
+    "type": "url",
+    "id": "19e1199c6aa6e817845cc025cd7c8979cec22f8c94bc7416ff16b8808706cd54",
+    "context_attributes": {
+      "url": "http://218.54.47.76/"
+    },
+    "attributes": {
+      "attrib1": "value1",
+      "last_analysis_stats": {
+        "malicious": 10,
+        "other": 15
+      }
+    }
+  },
+  {
+    "type": "url",
+    "id": "03283ca11f82c0e152c6f3751f2484289437462afdd14115cd859eef23bead1f",
+    "context_attributes": {
+      "url": "http://218.54.47.74/"
+    },
+    "attributes": {
+      "attrib1": "value1"
+    }
+  }
+]
