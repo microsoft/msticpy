@@ -3,7 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""."""
+"""Mordor/OTRF Security datasets driver."""
+import json
+import pickle  # nosec
 import zipfile
 from collections import defaultdict
 from datetime import datetime
@@ -41,6 +43,10 @@ _MTR_TECH_CAT_URI = "https://attack.mitre.org/techniques/{cat}/"
 MITRE_TECHNIQUES: pd.DataFrame = None
 MITRE_TACTICS: pd.DataFrame = None
 
+_MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
+_MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
+_MORDOR_CACHE = "mordor_cache.json"
+
 
 # pylint: disable=too-many-instance-attributes
 class MordorDriver(DriverBase):
@@ -65,6 +71,7 @@ class MordorDriver(DriverBase):
         self.save_folder = kwargs.pop(
             "save_folder", mdr_settings.get("save_folder", ".")
         )
+        self.save_folder = _resolve_cache_folder(self.save_folder)
         self.silent = kwargs.pop("silent", False)
 
         self._loaded = True
@@ -82,15 +89,19 @@ class MordorDriver(DriverBase):
 
         """
         global MITRE_TECHNIQUES, MITRE_TACTICS
+        cache_folder = self.save_folder if self.use_cached else None
         print("Retrieving Mitre data...")
 
         if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
-            MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
+            MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories(
+                cache_folder=cache_folder
+            )
         self.mitre_techniques = MITRE_TECHNIQUES
         self.mitre_tactics = MITRE_TACTICS
 
         print("Retrieving Mordor data...")
-        self.mordor_data = _GET_MORDOR_METADATA()
+
+        self.mordor_data = _GET_MORDOR_METADATA(cache_folder=cache_folder)
         self.mdr_idx_tech, self.mdr_idx_tact = _build_mdr_indexes(self.mordor_data)
 
         self._connected = True
@@ -134,6 +145,7 @@ class MordorDriver(DriverBase):
             raise self._create_not_connected_err()
         use_cached = kwargs.pop("used_cached", self.use_cached)
         save_folder = kwargs.pop("save_folder", self.save_folder)
+        save_folder = _resolve_cache_folder(save_folder)
         silent = kwargs.pop("silent", self.silent)
         result_df = download_mdr_file(
             file_uri=query,
@@ -255,6 +267,14 @@ class MordorDriver(DriverBase):
             title="not connected to Mordor.",
             help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
         )
+
+
+def _resolve_cache_folder(cache_path: str):
+    """Expand and optionally creates cache folder."""
+    cache_folder = Path(cache_path).expanduser()
+    if not cache_folder.is_dir():
+        cache_folder.mkdir(parents=True, exist_ok=True)
+    return str(cache_folder)
 
 
 # pylint: enable=too-many-instance-attributes
@@ -559,10 +579,10 @@ def _get_mdr_file(gh_file):
 def _create_mdr_metadata_cache():
     md_metadata: Dict[str, MordorEntry] = {}
 
-    def _get_mdr_metadata():
+    def _get_mdr_metadata(cache_folder: Optional[str] = None):
         nonlocal md_metadata
         if not md_metadata:
-            md_metadata = _fetch_mdr_metadata()
+            md_metadata = _fetch_mdr_metadata(cache_folder=cache_folder)
         return md_metadata
 
     return _get_mdr_metadata
@@ -571,11 +591,19 @@ def _create_mdr_metadata_cache():
 # Create closure
 _GET_MORDOR_METADATA = _create_mdr_metadata_cache()
 
+_LAST_UPDATE_KEY = "mp_last_updated"
+_DEFAULT_TS = pd.Timestamp(pd.Timestamp.utcnow() - pd.Timedelta(days=60))
+
 
 # pylint: disable=global-statement
-def _fetch_mdr_metadata() -> Dict[str, MordorEntry]:
+def _fetch_mdr_metadata(cache_folder: Optional[str] = None) -> Dict[str, MordorEntry]:
     """
     Return full metadata for Mordor datasets.
+
+    Parameters
+    ----------
+    cache_folder : Optional[str]
+        Folder to search for mordor cache, by default None
 
     Returns
     -------
@@ -587,18 +615,59 @@ def _fetch_mdr_metadata() -> Dict[str, MordorEntry]:
 
     if MITRE_TECHNIQUES is None or MITRE_TACTICS is None:
         MITRE_TECHNIQUES, MITRE_TACTICS = _get_mitre_categories()
-
     md_metadata: Dict[str, MordorEntry] = {}
+
+    md_cached_metadata = _read_mordor_cache(cache_folder)
     mdr_md_paths = list(get_mdr_data_paths("metadata"))
-    for y_file in tqdm(mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"):
-        gh_file_content = _get_mdr_file(y_file)
-        yaml_doc = yaml.safe_load(gh_file_content)
-        doc_id = yaml_doc.get("id")
-        md_metadata[doc_id] = MordorEntry(**yaml_doc)
+    for filename in tqdm(
+        mdr_md_paths, unit=" files", desc="Downloading Mordor metadata"
+    ):
+        cache_valid = False
+        if filename in md_cached_metadata:
+            metadata_doc = md_cached_metadata[filename]
+            last_timestamp = pd.Timestamp(
+                metadata_doc.get(_LAST_UPDATE_KEY, _DEFAULT_TS)
+            )
+            cache_valid = (pd.Timestamp.utcnow() - last_timestamp).days < 30
+
+        if not cache_valid:
+            gh_file_content = _get_mdr_file(filename)
+            try:
+                metadata_doc = yaml.safe_load(gh_file_content)
+            except yaml.error.YAMLError:
+                continue
+            metadata_doc[_LAST_UPDATE_KEY] = pd.Timestamp.utcnow().isoformat()
+            md_cached_metadata[filename] = metadata_doc
+        doc_id = metadata_doc.get("id")
+        mdr_entry = metadata_doc.copy()
+        mdr_entry.pop(_LAST_UPDATE_KEY, None)
+        md_metadata[doc_id] = MordorEntry(**mdr_entry)
+
+    _write_mordor_cache(md_cached_metadata, cache_folder)
     return md_metadata
 
 
 # pylint: enable=global-statement
+
+
+def _read_mordor_cache(cache_folder) -> Dict[str, Any]:
+    """Return dictionary of cached metadata if cached_folder is a valid path."""
+    md_cached_metadata: Dict[str, Any] = {}
+    mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
+    if _valid_cache(mordor_cache):
+        try:
+            md_json = Path(mordor_cache).read_text(encoding="utf-8")
+            md_cached_metadata = json.loads(md_json)
+        except json.JSONDecodeError:
+            pass
+    return md_cached_metadata
+
+
+def _write_mordor_cache(md_cached_metadata, cache_folder):
+    """Write dictionary of cached metadata if cached_folder is a valid path."""
+    mordor_cache = Path(cache_folder).joinpath(_MORDOR_CACHE)
+    json_text = json.dumps(md_cached_metadata, indent=4)
+    Path(mordor_cache).write_text(json_text, encoding="utf-8")
 
 
 def _build_mdr_indexes(
@@ -814,14 +883,16 @@ def _reshape_mitre_df(data):
     )
 
 
-def _get_mitre_categories() -> Tuple[pd.DataFrame, pd.DataFrame]:
+def _get_mitre_categories(
+    cache_folder: Optional[str] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Download and return Mitre techniques and tactics.
 
     Parameters
     ----------
-    uri_template : str
-        URI to fetch MITRE category from.
+    cache_folder : Optional[str]
+        Folder to search for mordor cache, by default None
 
     Returns
     -------
@@ -830,6 +901,16 @@ def _get_mitre_categories() -> Tuple[pd.DataFrame, pd.DataFrame]:
         descriptions.
 
     """
+    if cache_folder:
+        tech_cache = Path(cache_folder).joinpath(_MITRE_TECH_CACHE)
+        tactics_cache = Path(cache_folder).joinpath(_MITRE_TACTICS_CACHE)
+        if _valid_cache(tech_cache) and _valid_cache(tactics_cache):
+            try:
+                tech_df = pd.read_pickle(tech_cache)
+                tactics_df = pd.read_pickle(tactics_cache)
+                return tech_df, tactics_df
+            except pickle.PickleError:
+                pass
     resp = requests.get(_MITRE_JSON_URL)
     mitre = pd.json_normalize(resp.json()["objects"])
 
@@ -839,5 +920,16 @@ def _get_mitre_categories() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     tech_df = _reshape_mitre_df(mitre[mitre.type == "attack-pattern"])
     tactics_df = _reshape_mitre_df(mitre[mitre.type == "x-mitre-tactic"])
+    if cache_folder:
+        tech_df.to_pickle(tech_cache)
+        tactics_df.to_pickle(tactics_cache)
 
     return tech_df, tactics_df
+
+
+def _valid_cache(path: Path, expired_days=30):
+    """Return True if the file exists and is younger than `expired_days`."""
+    if not path.is_file():
+        return False
+    days_old = (datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)).days
+    return days_old < expired_days
