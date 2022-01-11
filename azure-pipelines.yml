@@ -276,12 +276,13 @@ stages:
         WebScout: false
     - task: notice@0
       displayName: NOTICE File Generator
+      # This fails for external forks
+      condition: not(variables['System.PullRequest.IsFork'])
     - task: PostAnalysis@1
       displayName: Post Analysis
       inputs:
         CredScan: true
         PoliCheck: true
-      condition: not(variables['System.PullRequest.IsFork'])
     - task: dependency-check-build-task@5
       displayName: 'OWASP Dependency Check'
       inputs:
