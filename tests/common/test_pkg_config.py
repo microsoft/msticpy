@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import warnings
 
+import pytest
 import yaml
 
 from msticpy.common import pkg_config
@@ -89,7 +90,7 @@ class TestPkgConfig(unittest.TestCase):
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
         with custom_mp_config(test_config1):
 
-            with open(test_config1) as f_handle:
+            with open(test_config1, encoding="utf-8") as f_handle:
                 config_settings = yaml.safe_load(f_handle)
             conf_dbpath = (
                 config_settings.get("OtherProviders", {})
@@ -111,6 +112,10 @@ class TestPkgConfig(unittest.TestCase):
             ipstack = IPStackLookup()
             self.assertEqual(ipstack._api_key, "987654321-222")
 
+    @pytest.mark.skipif(
+        os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork",
+        reason="External fork.",
+    )
     def test_validate_config(self):
         """Test config validation function."""
         test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
