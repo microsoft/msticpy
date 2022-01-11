@@ -33,9 +33,9 @@ class MicrosoftSentinel(
 
     def __init__(
         self,
+        res_id: str = None,
         connect: bool = False,
         cloud: str = None,
-        res_id: str = None,
         sub_id: str = None,
         res_grp: str = None,
         ws_name: str = None,
@@ -45,15 +45,15 @@ class MicrosoftSentinel(
 
         Parameters
         ----------
+        res_id : str, optional
+            Set the Sentinel workspace resource ID you want to use, if not specified
+            defaults will be looked for or details can be passed seperately with functions.
         connect : bool, optional
             Set true if you want to connect to API on initialization, by default False
         cloud : str, optional
             Specify cloud to use, overriding any configuration value.
             Default is to use configuration setting or public cloud if no
             configuration setting is available.
-        res_id : str, optional
-            Set the Sentinel workspace resource ID you want to use, if not specified
-            defaults will be looked for or details can be passed seperately with functions.
         sub_id : str, optional
             If not specifying a resource ID the Subscription ID of the Sentinel Workspace
             by default None
