@@ -14,6 +14,7 @@ from azure.common.exceptions import CloudError
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConfigError
+from ...common.azure_auth_core import AzureCloudConfig
 from ...common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers
 
@@ -32,12 +33,15 @@ _PATH_MAPPING = {
 }
 
 
+# pylint: disable=too-few-public-methods
 class SentinelUtilsMixin:
+    """Mixin class for Sentinel core feature integrations."""
+
     def _get_items(self, url: str, params: str = "2020-01-01") -> requests.Response:
         """Get items from the API."""
         return requests.get(
             url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params={"api-version": params},
         )
 
@@ -70,7 +74,7 @@ class SentinelUtilsMixin:
             If a valid result is not returned.
 
         """
-        item_url = self.url + _PATH_MAPPING[item_type]
+        item_url = self.url + _PATH_MAPPING[item_type]  # type: ignore
         if appendix:
             item_url = item_url + appendix
         response = self._get_items(item_url, api_version)
@@ -96,7 +100,7 @@ class SentinelUtilsMixin:
 
         """
         config_items = {}
-        if not self.config:
+        if not self.config:  # type: ignore
             self.config = WorkspaceConfig()  # type: ignore
         for item in items:
             if item in self.config:  # type: ignore
@@ -162,7 +166,7 @@ class SentinelUtilsMixin:
 
         """
         if not base_url:
-            base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager
+            base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager  # type: ignore
         res_info = {
             "subscription_id": res_id.split("/")[2],
             "resource_group": res_id.split("/")[4],

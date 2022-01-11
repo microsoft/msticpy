@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Incident Features."""
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
 import pandas as pd
@@ -24,6 +24,8 @@ __author__ = "Pete Bryan"
 
 
 class SentinelIncidentsMixin:
+    """Mixin class for Sentinel Incidents feature integrations."""
+
     def get_incident(
         self,
         incident: str,
@@ -60,8 +62,8 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = self._get_incident_id(incident)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"
-        response = self._get_items(incident_url)
+        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
+        response = self._get_items(incident_url)  # type: ignore
         if response.status_code != 200:
             raise CloudError(response=response)
 
@@ -97,11 +99,11 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = self._get_incident_id(incident)
-        entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"
+        entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
         ent_parameters = {"api-version": "2019-01-01-preview"}
         ents = requests.post(
             entities_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=ent_parameters,
         )
         return (
@@ -126,11 +128,11 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = self._get_incident_id(incident)
-        alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"
+        alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
         alerts_parameters = {"api-version": "2021-04-01"}
         alerts_resp = requests.post(
             alerts_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=alerts_parameters,
         )
         return (
@@ -161,8 +163,8 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = self._get_incident_id(incident)
-        comments_url = self.sent_urls["incidents"] + f"/{incident_id}/comments"
-        comments_response = self._get_items(comments_url, "2021-04-01")
+        comments_url = self.sent_urls["incidents"] + f"/{incident_id}/comments"  # type: ignore
+        comments_response = self._get_items(comments_url, "2021-04-01")  # type: ignore
         comment_details = comments_response.json()
         return (
             [
@@ -193,8 +195,8 @@ class SentinelIncidentsMixin:
         """
         bookmarks_list = []
         incident_id = self._get_incident_id(incident)
-        relations_url = self.sent_urls["incidents"] + f"/{incident_id}/relations"
-        relations_response = self._get_items(relations_url, "2021-04-01")
+        relations_url = self.sent_urls["incidents"] + f"/{incident_id}/relations"  # type: ignore
+        relations_response = self._get_items(relations_url, "2021-04-01")  # type: ignore
         if relations_response.status_code == 200 and relations_response.json()["value"]:
             for relationship in relations_response.json()["value"]:
                 if (
@@ -202,7 +204,7 @@ class SentinelIncidentsMixin:
                     == "Microsoft.SecurityInsights/Bookmarks"
                 ):
                     bkmark_id = relationship["properties"]["relatedResourceName"]
-                    bookmarks_df = self.list_bookmarks()
+                    bookmarks_df = self.list_bookmarks()  # type: ignore
                     bookmark = bookmarks_df[bookmarks_df["name"] == bkmark_id].iloc[0]
                     bookmarks_list.append(
                         {
@@ -236,7 +238,7 @@ class SentinelIncidentsMixin:
 
         """
         incident_dets = self.get_incident(incident_id)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"
+        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
         if "title" not in update_items.keys():
             update_items["title"] = incident_dets.iloc[0]["properties.title"]
@@ -245,7 +247,7 @@ class SentinelIncidentsMixin:
         data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
         response = requests.put(
             incident_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -296,7 +298,7 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = uuid4()
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"
+        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
         data_items = {
             "title": title,
@@ -315,7 +317,7 @@ class SentinelIncidentsMixin:
         data = _build_sent_data(data_items, props=True)
         response = requests.put(
             incident_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -324,15 +326,15 @@ class SentinelIncidentsMixin:
         if bookmarks:
             for mark in bookmarks:
                 relation_id = uuid4()
-                bookmark_id = self._get_bookmark_id(mark)
-                mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+                bookmark_id = self._get_bookmark_id(mark)  # type: ignore
+                mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
                 relations_url = incident_url + f"/relations/{relation_id}"
                 bkmark_data_items = {"relatedResourceId": mark_res_id}
                 data = _build_sent_data(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
                 response = requests.put(
                     relations_url,
-                    headers=get_api_headers(self.token),
+                    headers=get_api_headers(self.token),  # type: ignore
                     params=params,
                     data=str(data),
                 )
@@ -401,12 +403,14 @@ class SentinelIncidentsMixin:
             If message could not be posted.
 
         """
-        comment_url = self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"
+        comment_url = (
+            self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
+        )
         params = {"api-version": "2020-01-01"}
         data = _build_sent_data({"message": comment})
         response = requests.put(
             comment_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -432,9 +436,9 @@ class SentinelIncidentsMixin:
 
         """
         incident_id = self._get_incident_id(incident)
-        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"
-        bookmark_id = self._get_bookmark_id(bookmark)
-        mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+        incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
+        bookmark_id = self._get_bookmark_id(bookmark)  # type: ignore
+        mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         relations_id = uuid4()
         bookmark_url = incident_url + f"/relations/{relations_id}"
         bkmark_data_items = {"relatedResourceId": mark_res_id}
@@ -442,7 +446,7 @@ class SentinelIncidentsMixin:
         params = {"api-version": "2021-04-01"}
         response = requests.put(
             bookmark_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -465,6 +469,6 @@ class SentinelIncidentsMixin:
             If incidents could not be retrieved.
 
         """
-        return self._list_items(item_type="incidents")
+        return self._list_items(item_type="incidents")  # type: ignore
 
     get_incidents = list_incidents

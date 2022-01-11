@@ -22,6 +22,8 @@ __author__ = "Pete Bryan"
 
 
 class SentinelHuntingMixin:
+    """Mixin class for Sentinel Hunting feature integrations."""
+
     def list_hunting_queries(self) -> pd.DataFrame:
         """
         Return all hunting queries in a Microsoft Sentinel workspace.
@@ -32,7 +34,7 @@ class SentinelHuntingMixin:
             A table of the hunting queries.
 
         """
-        saved_query_df = self._list_items(
+        saved_query_df = self._list_items(  # type: ignore
             item_type="alert_rules", api_version="2017-04-26-preview"
         )
         return saved_query_df[
@@ -43,6 +45,8 @@ class SentinelHuntingMixin:
 
 
 class SentinelAnalyticsMixin:
+    """Mixin class for Sentinel Analytics feature integrations."""
+
     def list_alert_rules(self) -> pd.DataFrame:
         """
         Return all Microsoft Sentinel alert rules for a workspace.
@@ -53,7 +57,7 @@ class SentinelAnalyticsMixin:
             A table of the workspace's alert rules.
 
         """
-        return self._list_items(item_type="alert_rules")
+        return self._list_items(item_type="alert_rules")  # type: ignore
 
     def _get_template_id(
         self,
@@ -183,7 +187,7 @@ class SentinelAnalyticsMixin:
             )
 
         rule_id = uuid4()
-        analytic_url = self.sent_urls["alert_rules"] + f"/{rule_id}"
+        analytic_url = self.sent_urls["alert_rules"] + f"/{rule_id}"  # type: ignore
         data_items = {
             "displayName": name,
             "query": query,
@@ -203,7 +207,7 @@ class SentinelAnalyticsMixin:
         params = {"api-version": "2020-01-01"}
         response = requests.put(
             analytic_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -269,11 +273,11 @@ class SentinelAnalyticsMixin:
 
         """
         analytic_id = self._get_analytic_id(analytic_rule)
-        analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"
+        analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
         response = requests.delete(
             analytic_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
         )
         if response.status_code != 200:
@@ -295,7 +299,7 @@ class SentinelAnalyticsMixin:
             If a valid result is not returned.
 
         """
-        return self._list_items(item_type="alert_template")
+        return self._list_items(item_type="alert_template")  # type: ignore
 
     get_alert_rules = list_alert_rules
     list_analytic_rules = list_alert_rules
