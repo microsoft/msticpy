@@ -22,6 +22,8 @@ __author__ = "Pete Bryan"
 
 
 class SentinelWatchlistsMixin:
+    """Mixin class for Sentinel Watchlist feature integrations."""
+
     def list_watchlists(self) -> pd.DataFrame:
         """
         List Deployed Watchlists.
@@ -37,7 +39,7 @@ class SentinelWatchlistsMixin:
             If a valid result is not returned.
 
         """
-        return self._list_items(
+        return self._list_items(  # type: ignore
             item_type="watchlists",
             api_version="2021-04-01",
         )
@@ -83,7 +85,7 @@ class SentinelWatchlistsMixin:
         """
         if not self._check_watchlist_exists(watchlist_name):
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
-        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"
+        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
         params = {"api-version": "2021-04-01"}
         data_items = {
             "displayName": watchlist_name,
@@ -99,7 +101,7 @@ class SentinelWatchlistsMixin:
         request_data = _build_sent_data(data_items, props=True)
         response = requests.put(
             watchlist_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(request_data),
         )
@@ -132,7 +134,7 @@ class SentinelWatchlistsMixin:
 
         """
         watchlist_name_str = f"/{watchlist_name}/watchlistItems"
-        return self._list_items(
+        return self._list_items(  # type: ignore
             item_type="watchlists",
             api_version="2021-04-01",
             appendix=watchlist_name_str,
@@ -192,7 +194,7 @@ class SentinelWatchlistsMixin:
         for new_item in new_items:
             # See if item already exists, if it does get the item ID
             current_df, item_series = current_items_values.align(
-                pd.Series(new_item), axis=1, copy=False
+                pd.Series(new_item), axis=1, copy=False  # type: ignore
             )
             if (current_df == item_series).all(axis=1).any() and overwrite:
                 watchlist_id = current_items[
@@ -207,12 +209,12 @@ class SentinelWatchlistsMixin:
                 )
 
             watchlist_url = (
-                self.sent_urls["watchlists"]
+                self.sent_urls["watchlists"]  # type: ignore
                 + f"/{watchlist_name}/watchlistItems/{watchlist_id}"
             )
             response = requests.put(
                 watchlist_url,
-                headers=get_api_headers(self.token),
+                headers=get_api_headers(self.token),  # type: ignore
                 params={"api-version": "2021-04-01"},
                 data=str({"properties": {"itemsKeyValue": item}}),
             )
@@ -244,11 +246,11 @@ class SentinelWatchlistsMixin:
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
-        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"
+        watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
         params = {"api-version": "2021-04-01"}
         response = requests.delete(
             watchlist_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
         )
         if response.status_code != 200:

@@ -19,7 +19,7 @@ from .sentinel_watchlists import SentinelWatchlistsMixin
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-# pylint: disable=too-many-lines
+
 class MicrosoftSentinel(
     SentinelAnalyticsMixin,
     SentinelHuntingMixin,
@@ -28,7 +28,7 @@ class MicrosoftSentinel(
     SentinelUtilsMixin,
     SentinelWatchlistsMixin,
     AzureData,
-):  # pylint: disable=too-many-public-methods
+):
     """Class for returning key Microsoft Sentinel elements."""
 
     def __init__(
@@ -66,7 +66,7 @@ class MicrosoftSentinel(
 
         """
         super().__init__(connect=connect, cloud=cloud)
-        self.config = None
+        self.config = None  # type: ignore
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
@@ -74,7 +74,7 @@ class MicrosoftSentinel(
         if not res_id:
             res_id = self._build_sent_res_id(sub_id, res_grp, ws_name)
         res_id = validate_res_id(res_id)
-        self.url = self._build_sent_paths(res_id, self.base_url)
+        self.url = self._build_sent_paths(res_id, self.base_url)  # type: ignore
         self.sent_urls = {
             "bookmarks": self.url + _PATH_MAPPING["bookmarks"],
             "incidents": self.url + _PATH_MAPPING["incidents"],

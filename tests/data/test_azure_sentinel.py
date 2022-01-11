@@ -281,8 +281,7 @@ def test_azuresent_updates(azs_loader):
         status=200,
     )
     azs_loader.post_comment(
-        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
-        comment="test"
+        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84", comment="test"
     )
 
 
@@ -303,5 +302,5 @@ def test_azuresent_comments(azs_loader):
     )
     azs_loader.update_incident(
         incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
-        update_items={"severity": "High"}
+        update_items={"severity": "High"},
     )

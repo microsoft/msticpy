@@ -16,12 +16,15 @@ from azure.common.exceptions import CloudError
 from ..._version import VERSION
 from .azure_data import get_api_headers
 from .sentinel_utils import _build_sent_data
+from ...common.exceptions import MsticpyUserError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
 class SentinelBookmarksMixin:
+    """Mixin class with Sentinel Bookmark integrations."""
+
     def list_bookmarks(self) -> pd.DataFrame:
         """
         Return a list of Bookmarks from a Sentinel workspace.
@@ -32,7 +35,7 @@ class SentinelBookmarksMixin:
             A set of bookmarks.
 
         """
-        return self._list_items(item_type="bookmarks")
+        return self._list_items(item_type="bookmarks")  # type: ignore
 
     def create_bookmark(
         self,
@@ -66,7 +69,7 @@ class SentinelBookmarksMixin:
         """
         # Generate or use resource ID
         bkmark_id = str(uuid4())
-        bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"
+        bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"  # type: ignore
         data_items = {
             "displayName": name,
             "query": query,
@@ -81,7 +84,7 @@ class SentinelBookmarksMixin:
         params = {"api-version": "2020-01-01"}
         response = requests.put(
             bookmark_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             data=str(data),
         )
@@ -109,11 +112,11 @@ class SentinelBookmarksMixin:
 
         """
         bookmark_id = self._get_bookmark_id(bookmark)
-        bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"
+        bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
         response = requests.delete(
             bookmark_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
         )
         if response.status_code == 200:
