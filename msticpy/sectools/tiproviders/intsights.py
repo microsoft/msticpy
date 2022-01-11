@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """
 Intsights Provider.
+
 Input can be a single IoC observable or a pandas DataFrame containing
 multiple observables. Processing may require a an API key and
 processing performance may be limited to a specific number of
@@ -92,16 +93,19 @@ class IntSights(HttpProvider):
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
         """
         Return the details of the response.
+
         Parameters
         ----------
         response : LookupResult
             The returned data response
+
         Returns
         -------
         Tuple[bool, TISeverity, Any]
             bool = positive or negative hit
             TISeverity = enumeration of severity
             Object with match details
+
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, TISeverity.information, "Not found."
@@ -131,13 +135,13 @@ class IntSights(HttpProvider):
         }
 
         severity = (
-                TISeverity.information
-                if sev == "Low"
-                else TISeverity.warning
-                if sev == "Medium"
-                else TISeverity.high
-                if sev == "High"
-                else TISeverity.unknown
-            )
+            TISeverity.information
+            if sev == "Low"
+            else TISeverity.warning
+            if sev == "Medium"
+            else TISeverity.high
+            if sev == "High"
+            else TISeverity.unknown
+        )
 
         return True, severity, result_dict
