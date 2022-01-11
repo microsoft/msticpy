@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 import responses
 from azure.core.exceptions import ClientAuthenticationError
-from msticpy.data.azure_data import AzureData
-from msticpy.data.azure_sentinel import AzureSentinel
+from msticpy.data.azure import AzureData
+from msticpy.data.azure import MicrosoftSentinel
 
 # pylint: disable=redefined-outer-name
 
@@ -170,23 +170,23 @@ _INCIDENT = {
 
 def test_azuresent_init():
     """Test class initalization."""
-    azs = AzureSentinel()
-    assert isinstance(azs, AzureSentinel)
+    azs = MicrosoftSentinel()
+    assert isinstance(azs, MicrosoftSentinel)
 
 
 def test_azuresent_connect_exp():
     """Test connect failure."""
     with pytest.raises(ClientAuthenticationError):
-        azs = AzureSentinel()
+        azs = MicrosoftSentinel()
         azs.connect(auth_methods=["env"])
 
 
 @pytest.fixture(scope="module")
-@patch(AzureSentinel.__module__ + ".AzureSentinel.connect")
+@patch(MicrosoftSentinel.__module__ + ".MicrosoftSentinel.connect")
 def azs_loader(mock_creds):
-    """Generate AzureSentinel for testing."""
+    """Generate MicrosoftSentinel for testing."""
     mock_creds.return_value = None
-    azs = AzureSentinel()
+    azs = MicrosoftSentinel()
     azs.connect()
     azs.token = "123"
     return azs

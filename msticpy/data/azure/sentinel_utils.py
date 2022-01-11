@@ -14,6 +14,7 @@ from azure.common.exceptions import CloudError
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyAzureConfigError
+from ...common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers
 
 __version__ = VERSION

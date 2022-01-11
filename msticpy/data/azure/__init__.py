@@ -7,3 +7,4 @@
 
 from .azure_data import AzureData
 from .sentinel_core import MicrosoftSentinel
+from .azure_blob_storage import AzureBlobStorage
