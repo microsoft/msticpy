@@ -9,6 +9,7 @@ markdown>=3.3.4
 mccabe>=0.6.1
 mypy>=0.821
 nbdime>=2.1.0
+pandas>=1.2.5
 pep8-naming>=0.10.0
 pep8>=1.7.1
 pipreqs>=0.4.9

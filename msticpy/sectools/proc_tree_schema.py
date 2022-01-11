@@ -214,11 +214,28 @@ MDE_EVENT_SCH = ProcSchema(
     event_id_identifier="ProcessCreated",
 )
 
+# Sysmon Process Create
+SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
+    time_stamp="UtcTime",
+    process_name="Image",
+    process_id="ProcessId",
+    parent_name="ParentImage",
+    parent_id="ParentProcessId",
+    logon_id="LogonId",
+    cmd_line="CommandLine",
+    user_name="User",
+    path_separator="\\",
+    event_id_column="EventID",
+    event_id_identifier=1,
+    host_name_column="Computer",
+)
+
 SUPPORTED_SCHEMAS = (
     WIN_EVENT_SCH,
     LX_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     MDE_EVENT_SCH,
+    SYSMON_PROCESS_CREATE_EVENT_SCH,
 )
 
 
