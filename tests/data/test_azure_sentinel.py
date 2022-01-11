@@ -186,7 +186,7 @@ def test_azuresent_connect_exp():
 def azs_loader(mock_creds):
     """Generate MicrosoftSentinel for testing."""
     mock_creds.return_value = None
-    azs = MicrosoftSentinel()
+    azs = MicrosoftSentinel(sub_id="123", res_grp="RG", ws_name="WSName")
     azs.connect()
     azs.token = "123"
     return azs
@@ -212,7 +212,7 @@ def test_azuresent_hunting_queries(azs_loader):
         json=_HUNTING_QUERIES,
         status=200,
     )
-    hqs = azs_loader.get_hunting_queries(sub_id="123", res_grp="RG", ws_name="WSName")
+    hqs = azs_loader.get_hunting_queries()
     assert isinstance(hqs, pd.DataFrame)
     assert hqs["properties.Query"].iloc[0] == "QueryText"
 
@@ -226,7 +226,7 @@ def test_azuresent_alert_rules(azs_loader):
         json=_ALERT_RULES,
         status=200,
     )
-    alerts = azs_loader.get_alert_rules(sub_id="123", res_grp="RG", ws_name="WSName")
+    alerts = azs_loader.get_alert_rules()
     assert isinstance(alerts, pd.DataFrame)
     assert alerts["properties.query"].iloc[0] == "AlertText"
 
@@ -240,7 +240,7 @@ def test_azuresent_bookmarks(azs_loader):
         json=_BOOKMARK,
         status=200,
     )
-    bkmarks = azs_loader.get_bookmarks(sub_id="123", res_grp="RG", ws_name="WSName")
+    bkmarks = azs_loader.get_bookmarks()
     assert isinstance(bkmarks, pd.DataFrame)
     print(bkmarks.columns)
     assert bkmarks["name"].iloc[0] == "Bookmark Test"
@@ -255,14 +255,11 @@ def test_azuresent_incidents(azs_loader):
         json=_INCIDENT,
         status=200,
     )
-    incidents = azs_loader.get_incidents(sub_id="123", res_grp="RG", ws_name="WSName")
+    incidents = azs_loader.get_incidents()
     assert isinstance(incidents, pd.DataFrame)
     assert incidents["name"].iloc[0] == "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84"
     incident = azs_loader.get_incident(
-        incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
-        sub_id="123",
-        res_grp="RG",
-        ws_name="WSName",
+        incident="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
     )
     assert isinstance(incident, pd.DataFrame)
     assert incident["name"].iloc[0] == "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84"
@@ -285,10 +282,7 @@ def test_azuresent_updates(azs_loader):
     )
     azs_loader.post_comment(
         incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
-        comment="test",
-        sub_id="123",
-        res_grp="RG",
-        ws_name="WSName",
+        comment="test"
     )
 
 
@@ -309,8 +303,5 @@ def test_azuresent_comments(azs_loader):
     )
     azs_loader.update_incident(
         incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
-        update_items={"severity": "High"},
-        sub_id="123",
-        res_grp="RG",
-        ws_name="WSName",
+        update_items={"severity": "High"}
     )
