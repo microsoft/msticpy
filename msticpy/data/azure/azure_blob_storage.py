@@ -16,8 +16,8 @@ from azure.core.exceptions import (
 )
 from azure.storage.blob import BlobServiceClient, generate_blob_sas
 
-from ..common.azure_auth import az_connect
-from ..common.azure_auth_core import AzCredentials
+from ...common.azure_auth import az_connect
+from ...common.azure_auth_core import AzCredentials
 
 
 class AzureBlobStorage:

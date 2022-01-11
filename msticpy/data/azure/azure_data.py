@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from collections import Counter
 from typing import Optional, Dict, Tuple, List
 import datetime
 
@@ -15,15 +14,15 @@ import numpy as np
 from azure.mgmt.subscription import SubscriptionClient
 from azure.common.exceptions import CloudError
 
-from ..common.azure_auth import (
+from ...common.azure_auth import (
     az_connect,
     AzCredentials,
     AzureCloudConfig,
     only_interactive_cred,
 )
-from ..common.cloud_mappings import get_all_endpoints
+from ...common.cloud_mappings import get_all_endpoints
 
-from ..common.exceptions import (
+from ...common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyNotConnectedError,
     MsticpyResourceException,
@@ -48,7 +47,7 @@ except ImportError as imp_err:
         extra="azure",
     ) from imp_err
 
-from .._version import VERSION
+from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -849,35 +848,20 @@ def get_api_headers(token: str) -> Dict:
     }
 
 
-def validate_res_id(res_id):
-    """Validate a Resource ID String and fix if needed."""
-    valid = _validator(res_id)
-    if not valid:
-        res_id = _fix_res_id(res_id)
-        valid = _validator(res_id)
-    if not valid:
-        raise MsticpyAzureConfigError("The Resource ID provided is not valid.")
+def get_token(credential: AzCredentials) -> str:
+    """
+    Extract token from a azure.identity object.
 
-    return res_id
+    Parameters
+    ----------
+    credential : AzCredentials
+        Azure OAuth credentials.
 
+    Returns
+    -------
+    str
+        A token to be used in API calls.
 
-def _validator(res_id):
-    """Check Resource ID string matches pattern expected."""
-    counts = Counter(res_id)
-    return bool(
-        res_id.startswith("/") and counts["/"] == 8 and not res_id.endswith("/")
-    )
-
-
-def _fix_res_id(res_id):
-    """Try to fix common issues with Resource ID string."""
-    if res_id.startswith("https:"):
-        res_id = "/".join(res_id.split("/")[5:])
-    if not res_id.startswith("/"):
-        res_id = "/" + res_id
-    if res_id.endswith("/"):
-        res_id = res_id[:-1]
-    counts = Counter(res_id)
-    if counts["/"] > 8:
-        res_id = "/".join(res_id.split("/")[:9])
-    return res_id
+    """
+    token = credential.modern.get_token(AzureCloudConfig().token_uri)
+    return token.token
