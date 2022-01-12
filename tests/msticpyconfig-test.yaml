@@ -14,6 +14,9 @@ QueryDefinitions:
 Azure:
   cloud: "global"
   auth_methods: ["env", "cli", "msi", "interactive"]
+  subscription_id: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+  resource_group: "MyRG"
+  workspace_name: "MyWorkspace"
 TIProviders:
   OTX:
     Args:
