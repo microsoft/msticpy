@@ -24,10 +24,7 @@ __version__ = VERSION
 __author__ = "Florian Bracq"
 
 
-_DEF_HEADERS = {
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-}
+_DEF_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 
 # pylint: disable=too-few-public-methods
@@ -49,43 +46,43 @@ class IntSights(HttpProvider):
         "ipv4": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "ipv6": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "dns": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "url": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "md5_hash": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "sha1_hash": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "sha256_hash": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
+            headers=_DEF_HEADERS,
         ),
         "email": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},
-            headers=_DEF_HEADERS
-        )
+            headers=_DEF_HEADERS,
+        ),
     }
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
@@ -124,14 +121,14 @@ class IntSights(HttpProvider):
             "sources": response.raw_result["Sources"],
             "score": response.raw_result["Score"],
             "first_seen": dt.datetime.strptime(
-                response.raw_result["FirstSeen"], '%Y-%m-%dT%H:%M:%S.%fZ'
+                response.raw_result["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_seen": dt.datetime.strptime(
-                response.raw_result["LastSeen"], '%Y-%m-%dT%H:%M:%S.%fZ'
+                response.raw_result["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_update": dt.datetime.strptime(
-                response.raw_result["LastUpdate"], '%Y-%m-%dT%H:%M:%S.%fZ'
-            )
+                response.raw_result["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+            ),
         }
 
         severity = (
