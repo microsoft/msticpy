@@ -127,7 +127,7 @@ class QuerySource:
         Parameters
         ----------
         key : str
-            The hiearchical path to the property (e.g. `source.description`)
+            The hierarchical path to the property (e.g. `source.description`)
 
         """
         path_elems = key.split(".")

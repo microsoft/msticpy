@@ -4,8 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data Providers Component Edit."""
+import re
+from typing import Optional
+
+import ipywidgets as widgets
+
 from .._version import VERSION
+from .ce_common import TEXT_LAYOUT
 from .ce_provider_base import CEProviders, HELP_URIS
+from .mp_config_control import MpConfigControls
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -22,6 +29,16 @@ class CEDataProviders(CEProviders):
         "Data Providers": (
             "https://msticpy.readthedocs.io/en/latest/" + "DataAcquisition.html"
         ),
+        "Spunk": (
+            "https://msticpy.readthedocs.io/en/latest/data_acquisition/SplunkProvider.html"
+        ),
+        "Sumologic": (
+            "https://github.com/microsoft/msticpy/blob/main/docs/notebooks/"
+            "Sumologic-DataConnector.ipynb"
+        ),
+        "Security Datasets (aka Mordor)": (
+            "https://msticpy.readthedocs.io/en/latest/data_acquisition/MordorData.html"
+        ),
         **HELP_URIS,
     }
 
@@ -29,4 +46,81 @@ class CEDataProviders(CEProviders):
     <p><b>LocalData provider <i>data_paths</i></b>
     Enter one or more data paths, separated by new lines
     </p>
+
     """
+
+    def __init__(self, mp_controls: MpConfigControls):
+        """
+        Initialize an instance of the component.
+
+        Parameters
+        ----------
+        mp_controls : MpConfigControls
+            The config/controls/settings database
+
+        """
+        self.text_prov_instance = widgets.Text(
+            description="Provider instance",
+            placeholder="(optional) instance name for provider",
+            **TEXT_LAYOUT,
+        )
+        super().__init__(mp_controls)
+        self._last_instance_path: Optional[str] = None
+
+    @property
+    def _current_path(self):
+        if self._current_instance_name:
+            return f"{self._COMP_PATH}.{self._prov_ctrl_name}-{self._current_instance_name}"
+        return f"{self._COMP_PATH}.{self._prov_ctrl_name}"
+
+    @property
+    def _prov_name(self) -> str:
+        if self.text_prov_instance.value:
+            return f"{super()._prov_name}-{self.text_prov_instance.value}"
+        return super()._prov_name
+
+    @property
+    def _prov_ctrl_name(self):
+        """Return the provider generic name (minus instance suffix)."""
+        return super()._prov_name
+
+    @property
+    def _prov_instance_name(self):
+        """Return the provider instance name (minus instance suffix)."""
+        if "-" in super()._prov_name:
+            return super()._prov_name.split("-", maxsplit=1)[1]
+        return self.text_prov_instance.value
+
+    @property
+    def _current_instance_name(self):
+        """Return the current instance name."""
+        return self.text_prov_instance.value.strip()
+
+    def _populate_edit_ctrls(self, control_name: Optional[str] = None):
+        super()._populate_edit_ctrls(control_name=control_name)
+        # add the instance text box
+        self.edit_ctrls.children = [
+            self.text_prov_instance,
+            *(self.edit_ctrls.children),
+        ]
+        self.edit_frame.children = [self.edit_ctrls]
+
+    def _select_provider(self, change):
+        super()._select_provider(change)
+        self.text_prov_instance.value = self._prov_instance_name
+        self._last_instance_path = self._current_path
+
+    def _save_provider(self, btn):
+        if self._current_instance_name:
+            if not re.match(r"^[\w._:]+$", self._current_instance_name):
+                self.set_status(
+                    "Error: instance name can only contain alphanumeric and '._:'"
+                )
+                return
+            # The instance name may have changed, which alters the path
+            self.mp_controls.rename_path(self._last_instance_path, self._current_path)
+        super()._save_provider(btn)
+        # refresh the item list and re-select the current item
+        edited_provider = self._prov_name
+        self.select_item.options = self._get_select_opts()
+        self.select_item.label = edited_provider

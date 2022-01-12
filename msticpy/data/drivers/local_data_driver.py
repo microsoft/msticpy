@@ -50,6 +50,7 @@ class LocalDataDriver(DriverBase):
         self._schema: Dict[str, Any] = {}
         self._loaded = True
         self._connected = True
+        self.current_connection = "; ".join(self._paths)
 
     def _get_data_paths(self) -> Dict[str, str]:
         """Read files in data paths."""
