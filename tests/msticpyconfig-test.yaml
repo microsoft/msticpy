@@ -13,7 +13,7 @@ QueryDefinitions:
     - "testdata"
 Azure:
   cloud: "global"
-  auth_methods: ["env", "cli", "msi", "interactive"]
+  auth_methods: ["cli", "msi", "interactive"]
 TIProviders:
   OTX:
     Args:
@@ -40,13 +40,6 @@ TIProviders:
       AuthKey: ""
     Primary: True
     Provider: "Greynoise"
-  AzureSentinel:
-    Args:
-      # TBD
-      WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
-      TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
-    Primary: False
-    Provider: "AzSTI"
   OpenPageRank:
     Args:
       AuthKey:
@@ -81,3 +74,6 @@ DataProviders:
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
       ClientSecret:
         EnvironmentVar: "IPSTACK_AUTH"
+  Mordor:
+    save_folder: ~/.msticpy/mordor
+    use_cached: true

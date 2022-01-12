@@ -58,6 +58,18 @@ def _parse_time_unit(unit_str: str) -> TimeUnit:
     return TimeUnit.minute
 
 
+class IPyDisplayMixin:
+    """IPython display mixin class."""
+
+    def display(self):
+        """Display the interactive widgets."""
+        display(self.layout)
+
+    def _ipython_display_(self):
+        """Display in IPython."""
+        self.display()
+
+
 _WIDGET_REG: WeakValueDictionary = WeakValueDictionary()
 
 
@@ -138,7 +150,7 @@ class RegisteredWidget(ABC):
 
 
 @export
-class Lookback:
+class Lookback(IPyDisplayMixin):
     """Time lookback slider."""
 
     # pylint: disable=too-many-arguments
@@ -214,10 +226,6 @@ class Lookback:
         """Return underlying widget."""
         return self._lookback_wgt
 
-    def display(self):
-        """Display the interactive widgets."""
-        display(self._lookback_wgt)
-
     @property
     def lookback(self):
         """Return current widget lookback value."""
@@ -233,10 +241,6 @@ class Lookback:
         self.start = self.origin_time - timedelta(
             0, self._lookback_wgt.value * self._time_unit.value
         )
-
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
 
 
 def _default_max_buffer(max_default, default, unit) -> int:
@@ -265,7 +269,7 @@ def _default_before_after(default, unit) -> int:
 
 # pylint: disable=too-many-instance-attributes
 @export
-class QueryTime(RegisteredWidget):
+class QueryTime(RegisteredWidget, IPyDisplayMixin):
     """
     QueryTime.
 
@@ -449,10 +453,6 @@ class QueryTime(RegisteredWidget):
             ]
         )
 
-    def display(self):
-        """Display the interactive widgets."""
-        display(self.layout)
-
     def _change_time_unit(self, change):
         """Reset before/after and max buffers to defaults."""
         unit = change["new"]
@@ -566,14 +566,10 @@ class QueryTime(RegisteredWidget):
         """Return the timespan as a TimeSpan object."""
         return self.timespan
 
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
-
 
 # pylint: disable=too-many-instance-attributes
 @export
-class SelectAlert:
+class SelectAlert(IPyDisplayMixin):
     """
     Alert Selector.
 
@@ -694,7 +690,7 @@ class SelectAlert:
 
     def display(self):
         """Display the interactive widgets."""
-        display(self.layout)
+        super().display()
         display(HTML("<hr>"))
         self._select_top_alert()
 
@@ -793,10 +789,6 @@ class SelectAlert:
         for disp_obj in self._disp_elems:
             disp_obj.update(HTML(""))
 
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
-
 
 # pylint: disable=too-many-instance-attributes
 @deprecated(
@@ -882,7 +874,7 @@ class AlertSelector(SelectAlert):
 
 
 @export
-class GetEnvironmentKey(RegisteredWidget):
+class GetEnvironmentKey(RegisteredWidget, IPyDisplayMixin):
     """
     GetEnvironmentKey.
 
@@ -969,23 +961,15 @@ class GetEnvironmentKey(RegisteredWidget):
         """Return underlying widget collection."""
         return self._hbox
 
-    def display(self):
-        """Display the interactive widgets."""
-        display(self._hbox)
-
     def _on_save_button_clicked(self, button):
         del button
         self._value = self.value
         if self._w_check_save.value:
             os.environ[self._name] = self.value
 
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
-
 
 @export
-class GetText(RegisteredWidget):
+class GetText(RegisteredWidget, IPyDisplayMixin):
     """
     GetEnvironmentKey.
 
@@ -1052,15 +1036,11 @@ class GetText(RegisteredWidget):
         """Display the interactive widgets."""
         if self._value:
             self._w_text.value = self._value
-        display(self.layout)
-
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
+        super().display()
 
 
 @export
-class SelectItem:
+class SelectItem(IPyDisplayMixin):
     """
     Selection list from list or dict.
 
@@ -1231,7 +1211,7 @@ class SelectItem:
 
     def display(self):
         """Display the interactive widget."""
-        display(self.layout)
+        super().display()
         display(HTML("<hr>"))
         self._show_top_item()
 
@@ -1239,10 +1219,6 @@ class SelectItem:
         """Run action on the first item by default."""
         if self.item_action is not None and self.value is not None:
             self._run_action()
-
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
 
 
 @deprecated(reason="Superceded by SelectItem. Please use that version", version="0.5.2")
@@ -1334,7 +1310,7 @@ class SelectString(SelectItem):
 
 
 @export
-class SelectSubset:
+class SelectSubset(IPyDisplayMixin):
     """Class to select a subset from an input list."""
 
     def __init__(
@@ -1508,17 +1484,9 @@ class SelectSubset:
         del button
         self._select_list.options = []
 
-    def display(self):
-        """Display the control."""
-        display(self.layout)
-
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
-
 
 @export
-class Progress:
+class Progress(IPyDisplayMixin):
     """UI Progress bar."""
 
     def __init__(self, completed_len: int, visible: bool = True):
@@ -1610,16 +1578,8 @@ class Progress:
         self._progress.layout = vis_layout
         self._done_label.layout = vis_layout
 
-    def display(self):
-        """Display the control."""
-        display(self.layout)
 
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()
-
-
-class OptionButtons:
+class OptionButtons(IPyDisplayMixin):
     """
     OptionButtons creates a sequence of buttons to choose from.
 
@@ -1768,11 +1728,3 @@ class OptionButtons:
         self._fut_val = asyncio.ensure_future(self._await_widget())
         self._debug_out("future returned\n")
         self._debug_out(str(self._fut_val) + "\n")
-
-    def display(self):
-        """Display widget in simple sync mode."""
-        display(self.layout)
-
-    def _ipython_display_(self):
-        """Display in IPython."""
-        self.display()

@@ -3,7 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""datq query test class."""
+"""dataprovider query test class."""
+import contextlib
+import io
 import unittest
 import warnings
 from datetime import datetime
@@ -12,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+import pytest_check as check
 from msticpy.common.exceptions import MsticpyException
 from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
 from msticpy.data.query_source import QuerySource
@@ -113,8 +116,8 @@ class TestDataQuery(unittest.TestCase):
 
         # pick one item and check properties
         get_alert_q = q_sources["SecurityAlert"]["get_alert"]
-        self.assertEqual(len(get_alert_q.default_params), 7)
-        self.assertEqual(len(get_alert_q.params), 8)
+        self.assertEqual(len(get_alert_q.default_params), 3)
+        self.assertEqual(len(get_alert_q.params), 4)
         self.assertEqual(len(get_alert_q.required_params), 1)
         self.assertEqual(len(get_alert_q.metadata), 6)
         self.assertIn("data_families", get_alert_q.metadata)
@@ -237,7 +240,7 @@ class TestDataQuery(unittest.TestCase):
 
         self.assertEqual(before_queries + 3, len(list(la_provider.list_queries())))
 
-    def test_load_hierchical_q_paths(self):
+    def test_load_hierarchical_q_paths(self):
         """Test use of hierarchical query paths."""
         la_provider = self.la_provider
         file_path = Path(_TEST_DATA, "data_q_hierarchy.yaml")
@@ -382,3 +385,77 @@ class TestDataQuery(unittest.TestCase):
             self.assertIn(e_time.isoformat(sep="T") + "Z", queries[idx])
         self.assertIn(start.isoformat(sep="T") + "Z", queries[0])
         self.assertIn(end.isoformat(sep="T") + "Z", queries[-1])
+
+    def test_split_queries_err(self):
+        """Test queries split error conditions."""
+        la_provider = self.la_provider
+
+        mssg = io.StringIO()
+        with contextlib.redirect_stdout(mssg):
+            result_queries = la_provider.all_queries.get_alert(
+                "print", system_alert_id="test", split_query_by="1H"
+            )
+        queries = result_queries.split("\n\n")
+        # if no start and end - provider prints message and returns None
+        self.assertEqual(len(queries), 1)
+        self.assertIn("Cannot split a query that", mssg.getvalue())
+
+        # With invalid split_query_by value it will default to 1D
+        start = datetime.utcnow() - pd.Timedelta("5D")
+        end = datetime.utcnow() + pd.Timedelta("5min")
+
+        result_queries = la_provider.all_queries.list_alerts(
+            "print", start=start, end=end, split_query_by="Invalid"
+        )
+        queries = result_queries.split("\n\n")
+        self.assertEqual(len(queries), 5)
+
+
+_LOCAL_DATA_PATHS = [str(get_test_data_path().joinpath("localdata"))]
+
+
+def test_add_provider():
+    """Test adding connection instance to provider."""
+    prov_args = dict(query_paths=_LOCAL_DATA_PATHS, data_paths=_LOCAL_DATA_PATHS)
+    # create local provider and run a query
+    local_prov = QueryProvider("LocalData", **prov_args)
+    single_results = local_prov.Azure.list_all_signins_geo()
+
+    # add another connection (to same folder)
+    local_prov.add_connection(alias="SecondInst", **prov_args)
+    connections = local_prov.list_connections()
+    # verify second connection is listed
+    check.equal(len(connections), 2)
+    check.is_in("Default:", connections[0])
+    check.is_in("SecondInst:", connections[1])
+
+    # run query again
+    multi_results = local_prov.Azure.list_all_signins_geo()
+    # verify len of result is 2x single_result
+    check.equal(single_results.shape[0] * 2, multi_results.shape[0])
+    # verify columns/schema is the same.
+    check.equal(list(single_results.columns), list(multi_results.columns))
+
+
+def test_query_prov_properties():
+    """Test basic properties of QueryProvider instance."""
+    prov_args = dict(query_paths=_LOCAL_DATA_PATHS, data_paths=_LOCAL_DATA_PATHS)
+    # create local provider
+    local_prov = QueryProvider("LocalData", **prov_args)
+    local_prov.connect()
+
+    check.is_not_none(local_prov.connection_string)
+    check.is_not_none(local_prov.schema_tables)
+
+    qry_help = io.StringIO()
+    with contextlib.redirect_stdout(qry_help):
+        local_prov.query_help("LinuxSyslog.linux_events")
+    check.is_in("List Linux Events", qry_help.getvalue())
+    check.is_not_none(local_prov.browse_queries())
+    check.is_not_none(local_prov.query_time)
+
+    data_envs = QueryProvider.list_data_environments()
+    check.greater(len(data_envs), 5)
+    check.is_in("M365D", data_envs)
+    check.is_in("LocalData", data_envs)
+    check.is_in("ResourceGraph", data_envs)
