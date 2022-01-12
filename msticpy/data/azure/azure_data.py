@@ -11,7 +11,7 @@ import attr
 import pandas as pd
 import numpy as np
 
-from azure.mgmt.subscription import SubscriptionClient
+from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.common.exceptions import CloudError
 
 from ...common.azure_auth import (
