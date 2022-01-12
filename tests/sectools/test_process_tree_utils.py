@@ -146,6 +146,7 @@ testdf_win_mde = pd.read_csv(
 
 
 def test_build_win_tree():
+    """Test building process tree - no plotting."""
     p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
     assert pt_util.get_summary_info(p_tree) == {
         "Processes": 1010,
@@ -158,6 +159,7 @@ def test_build_win_tree():
 
 
 def test_build_lx_tree():
+    """Test building process tree - no plotting."""
     p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
     assert pt_util.get_summary_info(p_tree_l) == {
         "Processes": 1029,
@@ -170,6 +172,7 @@ def test_build_lx_tree():
 
 
 def test_build_win_tree_dict_schema():
+    """Test building process tree with custom schema - no plotting."""
     schema = dict(
         time_stamp="TimeGenerated",
         process_name="NewProcessName",
@@ -200,6 +203,7 @@ def test_build_win_tree_dict_schema():
 
 
 def test_tree_utils_win():
+    """Test process tree utils."""
     p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
 
     assert len(pt_util.get_roots(p_tree)) == 10
@@ -245,6 +249,7 @@ def test_tree_utils_win():
 
 
 def test_tree_utils_lx():
+    """Test process tree utils."""
     p_tree_l = pt_build.build_process_tree(testdf_lx, show_summary=False, debug=True)
     assert len(pt_util.get_roots(p_tree_l)) == 29
     t_root = pt_util.get_roots(p_tree_l).iloc[0]
@@ -288,13 +293,23 @@ def test_tree_utils_lx():
     assert pt_build.infer_schema(p_tree_l) == LX_EVENT_SCH
 
 
-def test_build_process_tree():
+def test_build_and_plot_process_tree_win():
+    """Test build and plot process tree."""
     build_and_show_process_tree(testdf_win, legend_col="NewProcessName")
+
+
+def test_build_and_plot_process_tree_lx():
+    """Test build and plot process tree."""
     build_and_show_process_tree(testdf_lx, legend_col="NewProcessName")
+
+
+def test_build_and_plot_process_tree_mde():
+    """Test build and plot process tree."""
     build_and_show_process_tree(testdf_mde_pub, legend_col="FileName")
 
 
 def test_build_mde_win_tree_dict_schema():
+    """Test build MDE process tree."""
     schema = dict(
         time_stamp="CreatedProcessCreationTime",
         process_name="CreatedProcessName",
@@ -332,9 +347,10 @@ _NB_NAME = "ProcessTree.ipynb"
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_process_tree_notebook():
+    """Run process tree notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
-    with open(nb_path) as f:
+    with open(nb_path, encoding="utf-8") as f:
         nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 

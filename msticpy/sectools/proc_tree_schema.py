@@ -214,9 +214,42 @@ MDE_EVENT_SCH = ProcSchema(
     event_id_identifier="ProcessCreated",
 )
 
+# Sysmon Process Create
+SYSMON_PROCESS_CREATE_EVENT_SCH = ProcSchema(
+    time_stamp="UtcTime",
+    process_name="Image",
+    process_id="ProcessId",
+    parent_name="ParentImage",
+    parent_id="ParentProcessId",
+    logon_id="LogonId",
+    cmd_line="CommandLine",
+    user_name="User",
+    path_separator="\\",
+    event_id_column="EventID",
+    event_id_identifier=1,
+    host_name_column="Computer",
+)
+
 SUPPORTED_SCHEMAS = (
     WIN_EVENT_SCH,
     LX_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     MDE_EVENT_SCH,
+    SYSMON_PROCESS_CREATE_EVENT_SCH,
 )
+
+
+# pylint: disable=too-few-public-methods
+class ColNames:
+    """Class to hold constant column names."""
+
+    proc_key = "proc_key"
+    parent_key = "parent_key"
+    new_process_lc = "new_process_lc"
+    parent_proc_lc = "parent_proc_lc"
+    timestamp_orig_par = "timestamp_orig_par"
+    EffectiveLogonId = "EffectiveLogonId"
+    source_index = "source_index"
+    source_index_par = "source_index_par"
+    new_process_lc_par = "new_process_lc_par"
+    EffectiveLogonId_par = "EffectiveLogonId_par"

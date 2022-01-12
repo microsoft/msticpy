@@ -87,32 +87,35 @@ class TestQuerySource(unittest.TestCase):
     def test_date_formatters_datetime(self):
         """Test date formatting standard date."""
         # standard date
-        test_dt = datetime.utcnow()
-        check_dt_str = test_dt.isoformat(sep="T") + "Z"
+        test_end = datetime.utcnow()
+        test_start = test_end - timedelta(days=1)
+        check_dt_str = test_start.isoformat(sep="T") + "Z"
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start=test_dt)
+        query = q_src.create_query(start=test_start, end=test_end)
         self.assertIn(check_dt_str, query)
 
     def test_date_formatters_datestring(self):
         """Test date formatting ISO date string."""
-        test_dt = datetime.utcnow()
-        check_dt_str = test_dt.isoformat(sep="T") + "Z"
-        start = test_dt.isoformat()
+        test_end = datetime.utcnow()
+        test_start = test_end - timedelta(days=1)
+        check_dt_str = test_start.isoformat(sep="T") + "Z"
+        start = test_start.isoformat()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start=start)
+        query = q_src.create_query(start=start, end=test_end)
         self.assertIn(check_dt_str, query)
 
-        start = str(test_dt)
-        query = q_src.create_query(start=start)
+        start = str(test_start)
+        query = q_src.create_query(start=start, end=test_end)
         self.assertIn(check_dt_str, query)
 
     def test_date_formatters_off_1day(self):
         """Test date formatting Offset -1 day."""
-        test_dt = datetime.utcnow()
+        test_end = datetime.utcnow()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start=-1)
-        check_date = test_dt - timedelta(1)
+        query = q_src.create_query(start=-1, end=0)
+        check_date = test_end - timedelta(1)
         check_date_str = check_date.isoformat(sep="T") + "Z"
+        # check that date + hours are correct
         check_date_str = check_date_str.split(":", 1)[0]
         self.assertIn(check_date_str, query)
 
@@ -120,7 +123,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting Offset -1 day as string."""
         test_dt = datetime.utcnow()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start="-1d")
+        query = q_src.create_query(start="-1d", end=test_dt)
         check_date = test_dt - timedelta(1)
         check_date_str = check_date.isoformat(sep="T") + "Z"
         check_date_str = check_date_str.split(":", 1)[0]
@@ -130,7 +133,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting Offset -1 week."""
         test_dt = datetime.utcnow()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start="-1w")
+        query = q_src.create_query(start="-1w", end=test_dt)
         check_date = test_dt - timedelta(7)
         check_date_str = check_date.isoformat(sep="T") + "Z"
         check_date_str = check_date_str.split(":", 1)[0]
@@ -140,7 +143,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting Offset -1 week rounded to day."""
         test_dt = datetime.utcnow()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start="-1w@d")
+        query = q_src.create_query(start="-1w@d", end=test_dt)
         check_date = test_dt - timedelta(7)
         check_date_str = check_date.isoformat(sep="T") + "Z"
         check_date_str = check_date_str.split("T", 1)[0] + "T00:00:00"
@@ -150,7 +153,7 @@ class TestQuerySource(unittest.TestCase):
         """Test date formatting Offset +1 week rounded to day."""
         test_dt = datetime.utcnow()
         q_src = self.query_sources["SecurityAlert"]["list_related_alerts"]
-        query = q_src.create_query(start="1w@d")
+        query = q_src.create_query(start="1w@d", end=test_dt)
         check_date = test_dt + timedelta(7 + 1)
         check_date_str = check_date.isoformat(sep="T") + "Z"
         check_date_str = check_date_str.split("T", 1)[0] + "T00:00:00"
@@ -158,19 +161,27 @@ class TestQuerySource(unittest.TestCase):
 
     def test_list_formatter(self):
         """Test for default list formatting."""
+        test_end = datetime.utcnow()
+        test_start = test_end - timedelta(days=1)
         q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
         ip_address_list = ["192.168.0.1", "192.168.0.2", "192.168.0.3"]
-        query = q_src.create_query(ip_address_list=ip_address_list)
+        query = q_src.create_query(
+            ip_address_list=ip_address_list, start=test_start, end=test_end
+        )
 
         check_list = ",".join([f"'{ip}'" for ip in ip_address_list])
         self.assertIn(check_list, query)
 
         ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
-        query = q_src.create_query(ip_address_list=ip_address_list)
+        query = q_src.create_query(
+            ip_address_list=ip_address_list, start=test_start, end=test_end
+        )
         self.assertIn(check_list, query)
 
         int_list = [1, 2, 3, 4]
-        query = q_src.create_query(ip_address_list=int_list)
+        query = q_src.create_query(
+            ip_address_list=int_list, start=test_start, end=test_end
+        )
         check_list = ",".join([str(i) for i in int_list])
         self.assertIn(check_list, query)
 
@@ -181,22 +192,36 @@ class TestQuerySource(unittest.TestCase):
             "list": kql_driver.KqlDriver._format_list,
         }
 
-        test_dt = datetime.utcnow()
+        test_end = datetime.utcnow()
+        test_start = test_end - timedelta(days=1)
         ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
-        check_dt_str = test_dt.isoformat(sep="T") + "Z"
+        check_dt_str = test_start.isoformat(sep="T") + "Z"
         q_src = self.query_sources["Azure"]["list_azure_activity_for_ip"]
         query = q_src.create_query(
-            formatters=kql_fmt, start=test_dt, ip_address_list=ip_address_list
+            formatters=kql_fmt,
+            start=test_start,
+            end=test_end,
+            ip_address_list=ip_address_list,
         )
         self.assertIn(check_dt_str, query)
 
-        query = q_src.create_query(formatters=kql_fmt, ip_address_list=ip_address_list)
+        query = q_src.create_query(
+            formatters=kql_fmt,
+            ip_address_list=ip_address_list,
+            start=test_start,
+            end=test_end,
+        )
         check_list = ",".join([f"'{ip.strip()}'" for ip in ip_address_list.split(",")])
         self.assertIn(check_list, query)
 
         int_list = [1, 2, 3, 4]
-        query = q_src.create_query(formatters=kql_fmt, ip_address_list=int_list)
+        query = q_src.create_query(
+            formatters=kql_fmt,
+            ip_address_list=int_list,
+            start=test_start,
+            end=test_end,
+        )
         check_list = ",".join([str(i) for i in int_list])
         self.assertIn(check_list, query)
 
@@ -217,31 +242,42 @@ def test_cust_formatters_splunk():
         "list": splunk_driver.SplunkDriver._format_list,
     }
 
-    test_dt = datetime.utcnow()
+    test_end = datetime.utcnow()
+    test_start = test_end - timedelta(days=1)
     ip_address_list = "192.168.0.1, 192.168.0.2, 192.168.0.3"
 
-    check_dt_str = test_dt.isoformat(sep=" ")
+    check_dt_str = test_start.isoformat(sep=" ")
     # Using an Azure Sentinel query here since we want something
     # that requires a list parameter
     q_src = query_sources["Azure"]["list_azure_activity_for_ip"]
     query = q_src.create_query(
-        formatters=splunk_fmt, start=test_dt, ip_address_list=ip_address_list
+        formatters=splunk_fmt,
+        start=test_start,
+        end=test_end,
+        ip_address_list=ip_address_list,
     )
     check.is_in(check_dt_str, query)
 
-    query = q_src.create_query(formatters=splunk_fmt, ip_address_list=ip_address_list)
+    query = q_src.create_query(
+        formatters=splunk_fmt,
+        start=test_start,
+        end=test_end,
+        ip_address_list=ip_address_list,
+    )
     # Double-quote list elements
     check_list = ",".join([f'"{ip.strip()}"' for ip in ip_address_list.split(",")])
     check.is_in(check_list, query)
 
     int_list = [1, 2, 3, 4]
-    query = q_src.create_query(formatters=splunk_fmt, ip_address_list=int_list)
+    query = q_src.create_query(
+        formatters=splunk_fmt, start=test_start, end=test_end, ip_address_list=int_list
+    )
     # Always quoted strings
     check_list = ",".join([f'"{i}"' for i in int_list])
     check.is_in(check_list, query)
 
     # Use a splunk query to verify timeformat parameter and datetime formatting
     q_src = splunk_query_sources["SplunkGeneral"]["get_events_parameterized"]
-    query = q_src.create_query(formatters=splunk_fmt, start=test_dt, end=test_dt)
+    query = q_src.create_query(formatters=splunk_fmt, start=test_start, end=test_end)
     check.is_in('timeformat="%Y-%m-%d %H:%M:%S.%6N"', query)
     check.is_in(f'earliest="{check_dt_str}"', query)

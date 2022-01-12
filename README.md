@@ -62,6 +62,14 @@ or for the latest dev build
 
 `pip install git+https://github.com/microsoft/msticpy`
 
+## Upgrading
+
+To upgrade msticpy to the latest public non-beta release, run:
+
+`pip install --upgrade msticpy`
+
+Note it is good practice to copy your msticpyconfig.yaml and store it on your disk but outside of your msticpy folder, referencing it in an environment variable. This prevents you from losing your configurations every time you update your msticpy installation. 
+
 ## Documentation
 
 Full documentation is at [ReadTheDocs](https://msticpy.readthedocs.io/en/latest/)

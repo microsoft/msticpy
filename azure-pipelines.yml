@@ -25,6 +25,12 @@ resources:
   - repository: self
     type: git
     ref: main
+variables:
+  - name: prSource
+    ${{ if variables['System.PullRequest.IsFork'] }}:
+      value: fork
+    ${{ if not(variables['System.PullRequest.IsFork']) }}:
+      value: internal
 stages:
 - stage: PythonTests
   displayName: Python build and tests
@@ -37,15 +43,12 @@ stages:
       matrix:
         linux:
           imageName: "ubuntu-latest"
-          python.version: '3.6'
+          python.version: '3.8'
         mac:
           imageName: "macos-latest"
           python.version: '3.8'
         windows-py36:
           imageName: "windows-latest"
-          python.version: '3.6'
-        linux-py38:
-          imageName: "ubuntu-latest"
           python.version: '3.8'
       maxParallel: 4
     pool:
@@ -66,7 +69,7 @@ stages:
         path: $(PIP_CACHE_DIR)
         restoreKeys: python
     - script: |
-        python -m pip install --upgrade pip wheel setuptools
+        python -m pip install --upgrade pip wheel setuptools==56.0.0
         python -m pip install -r requirements-all.txt
         python -m pip install -e .
       displayName: 'Install package and dependencies'
@@ -77,17 +80,40 @@ stages:
       condition: eq(variables.imageName, 'windows-latest')
       displayName: 'Sphinx Read the Docs build'
     - script: |
-        echo Using $MSTICPYCONFIG or %MSTICPYCONFIG%
+        mkdir ~/.msticpy
+        mkdir ~/.msticpy/mordor
+        cp $(Build.SourcesDirectory)/tests/testdata/geolite/GeoLite2-City.mmdb ~/.msticpy
+        touch ~/.msticpy/GeoLite2-City.mmdb
+        cp -r $(Build.SourcesDirectory)/tests/testdata/mordor/* ~/.msticpy/mordor
+        touch ~/.msticpy/mordor/mitre_tact_cache.pkl
+        touch ~/.msticpy/mordor/mitre_tech_cache.pkl
+        touch ~/.msticpy/mordor/mordor_cache.pkl
+      condition: ne(variables.imageName, 'windows-latest')
+      displayName: 'Prepare test dummy data - Linux'
+    - script: |
+        mkdir %USERPROFILE%\.msticpy
+        mkdir %USERPROFILE%\.msticpy\mordor
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\geolite\GeoLite2-City.mmdb %USERPROFILE%\.msticpy
+        copy /Y $(Build.SourcesDirectory)\tests\testdata\mordor\* %USERPROFILE%\.msticpy\mordor
+      condition: eq(variables.imageName, 'windows-latest')
+      displayName: 'Prepare test dummy data - Windows'
+    - script: |
+        echo MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
+        echo Env $MSTICPYCONFIG or %MSTICPYCONFIG%
+        echo Build source: $(prSource)
+        echo Env $MSTICPY_BUILD_SOURCE or %MSTICPY_BUILD_SOURCE%
         python -m pip install --upgrade pytest pytest-azurepipelines
         python -m pip install --upgrade pytest-cov pytest-check aiohttp nbconvert jupyter_contrib_nbextensions
         python -m pip install --upgrade Pygments responses pytest-xdist markdown beautifulsoup4 Pillow
-        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml --cov=msticpy --cov-report=xml
+        python -m pip install "pandas>=1.3.0"
+        pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml -n auto --cov=msticpy --cov-report=xml
       displayName: pytest
       env:
         MSTICPYCONFIG: $(Build.SourcesDirectory)/tests/msticpyconfig-test.yaml
         MAXMIND_AUTH: $(keys.maxmind_auth)
         IPSTACK_AUTH: $(keys.ipstack_auth)
         MSTICPY_TEST_NOSKIP: 1
+        MSTICPY_BUILD_SOURCE: $(prSource)
       condition: succeededOrFailed()
       continueOnError: true
     - task: PublishTestResults@2
@@ -124,7 +150,7 @@ stages:
           path: $(PIP_CACHE_DIR)
           restoreKeys: python
       - script: |
-          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade pip wheel setuptools==56.0.0
           python -m pip install -r requirements-all.txt
           python -m pip install -e .
         displayName: 'Install package and dependencies'
@@ -187,8 +213,7 @@ stages:
     # Credscan must be run on Windows
     pool:
       vmImage: windows-latest
-    variables:
-      python.version: '$(python.version)'
+      python.version: '3.8'
     steps:
     - task: CredScan@2
       displayName: 'Run CredScan'
@@ -251,6 +276,8 @@ stages:
         WebScout: false
     - task: notice@0
       displayName: NOTICE File Generator
+      # This fails for external forks
+      condition: not(variables['System.PullRequest.IsFork'])
     - task: PostAnalysis@1
       displayName: Post Analysis
       inputs:
@@ -285,7 +312,7 @@ stages:
     variables:
       python.version: '$(python.version)'
     steps:
-    - script: 'pip install --upgrade setuptools wheel'
+    - script: 'pip install --upgrade setuptools==56.0.0 wheel'
       displayName: 'Install setuptools'
     - script: 'python setup.py sdist bdist_wheel'
       displayName: 'Build sdist and wheel'
