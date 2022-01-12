@@ -463,10 +463,110 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._dbfolder = db_folder
         if self._dbfolder is None:
             self._dbfolder = self.settings.args.get("DBFolder", self._DB_HOME)
-
         self._dbfolder = str(Path(self._dbfolder).expanduser())  # type: ignore
         self._force_update = force_update
         self._auto_update = auto_update
+        self._dbpath: Optional[str] = None
+        self._reader: Any = None
+
+    def close(self):
+        """Close an open GeoIP DB."""
+        if self._reader:
+            try:
+                self._reader.close()
+            except Exception as err:  # pylint: disable=broad-except
+                print(f"Exception when trying to close GeoIP DB {err}")
+
+    def lookup_ip(
+        self,
+        ip_address: str = None,
+        ip_addr_list: Iterable = None,
+        ip_entity: IpAddress = None,
+    ) -> Tuple[List[Any], List[IpAddress]]:
+        """
+        Lookup IP location from GeoLite2 data created by MaxMind.
+
+        Parameters
+        ----------
+        ip_address : str, optional
+            a single address to look up (the default is None)
+        ip_addr_list : Iterable, optional
+            a collection of addresses to lookup (the default is None)
+        ip_entity : IpAddress, optional
+            an IpAddress entity (the default is None) - any existing
+            data in the Location property will be overwritten
+
+        Returns
+        -------
+        Tuple[List[Any], List[IpAddress]]
+            raw geolocation results and same results as IpAddress entities with
+            populated Location property.
+
+        """
+        self._check_db_open()
+        if ip_address and isinstance(ip_address, str):
+            ip_list = [ip_address.strip()]
+        elif ip_addr_list:
+            ip_list = [ip.strip() for ip in ip_addr_list]
+        elif ip_entity:
+            ip_list = [ip_entity.Address]
+        else:
+            raise ValueError("No valid ip addresses were passed as arguments.")
+
+        output_raw = []
+        output_entities = []
+        ip_cache: Dict[str, Any] = {}
+        for ip_input in ip_list:
+            geo_match = None
+            try:
+                geo_match = ip_cache.get(ip_input, self._reader.city(ip_input).raw)
+            except (AddressNotFoundError, AttributeError, ValueError):
+                continue
+            if geo_match:
+                output_raw.append(geo_match)
+                output_entities.append(
+                    self._create_ip_entity(ip_input, geo_match, ip_entity)
+                )
+
+        return output_raw, output_entities
+
+    @staticmethod
+    def _create_ip_entity(
+        ip_address: str, geo_match: Mapping[str, Any], ip_entity: IpAddress = None
+    ) -> IpAddress:
+        if not ip_entity:
+            ip_entity = IpAddress()
+            ip_entity.Address = ip_address
+        geo_entity = GeoLocation()
+        geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
+        geo_entity.CountryName = (
+            geo_match.get("country", {}).get("names", {}).get("en", None)
+        )
+        subdivs = geo_match.get("subdivisions", [])
+        if subdivs:
+            geo_entity.State = subdivs[0].get("names", {}).get("en", None)
+        geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
+        geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)
+        geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
+        ip_entity.Location = geo_entity
+        return ip_entity
+
+    def _pr_debug(self, *args):
+        """Print out debug info."""
+        if self._debug:
+            print(*args)
+
+    @staticmethod
+    def _geolite_warn(mssg):
+        warnings.warn(
+            f"GeoIpLookup: {mssg}",
+            UserWarning,
+        )
+
+    def _check_db_open(self):
+        """Check if DB reader open with a valid database."""
+        if self._reader:
+            return
         self._check_and_update_db(self._dbfolder, self._force_update, self._auto_update)
         self._dbpath = self._get_geoip_dbpath(self._dbfolder)
         if self._debug:
@@ -507,14 +607,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 title="Maxmind GeoIP database not found",
             )
         self._reader = geoip2.database.Reader(self._dbpath)
-
-    def close(self):
-        """Close an open GeoIP DB."""
-        if self._reader:
-            try:
-                self._reader.close()
-            except Exception as err:  # pylint: disable=broad-except
-                print(f"Exception when trying to close GeoIP DB {err}")
 
     def _check_and_update_db(
         self,
@@ -741,91 +833,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             return None
 
         return latest_db_path
-
-    def lookup_ip(
-        self,
-        ip_address: str = None,
-        ip_addr_list: Iterable = None,
-        ip_entity: IpAddress = None,
-    ) -> Tuple[List[Any], List[IpAddress]]:
-        """
-        Lookup IP location from GeoLite2 data created by MaxMind.
-
-        Parameters
-        ----------
-        ip_address : str, optional
-            a single address to look up (the default is None)
-        ip_addr_list : Iterable, optional
-            a collection of addresses to lookup (the default is None)
-        ip_entity : IpAddress, optional
-            an IpAddress entity (the default is None) - any existing
-            data in the Location property will be overwritten
-
-        Returns
-        -------
-        Tuple[List[Any], List[IpAddress]]
-            raw geolocation results and same results as IpAddress entities with
-            populated Location property.
-
-        """
-        if ip_address and isinstance(ip_address, str):
-            ip_list = [ip_address.strip()]
-        elif ip_addr_list:
-            ip_list = [ip.strip() for ip in ip_addr_list]
-        elif ip_entity:
-            ip_list = [ip_entity.Address]
-        else:
-            raise ValueError("No valid ip addresses were passed as arguments.")
-
-        output_raw = []
-        output_entities = []
-        ip_cache: Dict[str, Any] = {}
-        for ip_input in ip_list:
-            geo_match = None
-            try:
-                geo_match = ip_cache.get(ip_input, self._reader.city(ip_input).raw)
-            except (AddressNotFoundError, AttributeError, ValueError):
-                continue
-            if geo_match:
-                output_raw.append(geo_match)
-                output_entities.append(
-                    self._create_ip_entity(ip_input, geo_match, ip_entity)
-                )
-
-        return output_raw, output_entities
-
-    @staticmethod
-    def _create_ip_entity(
-        ip_address: str, geo_match: Mapping[str, Any], ip_entity: IpAddress = None
-    ) -> IpAddress:
-        if not ip_entity:
-            ip_entity = IpAddress()
-            ip_entity.Address = ip_address
-        geo_entity = GeoLocation()
-        geo_entity.CountryCode = geo_match.get("country", {}).get("iso_code", None)
-        geo_entity.CountryName = (
-            geo_match.get("country", {}).get("names", {}).get("en", None)
-        )
-        subdivs = geo_match.get("subdivisions", [])
-        if subdivs:
-            geo_entity.State = subdivs[0].get("names", {}).get("en", None)
-        geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
-        geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)
-        geo_entity.Latitude = geo_match.get("location", {}).get("latitude", None)
-        ip_entity.Location = geo_entity
-        return ip_entity
-
-    def _pr_debug(self, *args):
-        """Print out debug info."""
-        if self._debug:
-            print(*args)
-
-    @staticmethod
-    def _geolite_warn(mssg):
-        warnings.warn(
-            f"GeoIpLookup: {mssg}",
-            UserWarning,
-        )
 
 
 def _get_geoip_provider_settings(provider_name: str) -> ProviderSettings:
