@@ -41,21 +41,26 @@ __author__ = "Pete Bryan"
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
 
-def default_auth_methods() -> List[str]:
-    """Get the default (all) authentication options."""
+def get_azure_config_value(key, default):
+    """Get a config value from Azure section."""
     try:
         az_settings = config.get_config("Azure")
-        if az_settings and "auth_methods" in az_settings:
-            return az_settings["auth_methods"]
+        if az_settings and key in az_settings:
+            return az_settings[key]
     except KeyError:
         pass  # no Azure section in config
-    return ["cli", "msi", "interactive"]
+    return default
+
+
+def default_auth_methods() -> List[str]:
+    """Get the default (all) authentication options."""
+    return get_azure_config_value("auth_methods", ["cli", "msi", "interactive"])
 
 
 class AzureCloudConfig:
     """Azure Cloud configuration."""
 
-    def __init__(self, cloud: str = None, tenant_id: str = None):
+    def __init__(self, cloud: str = None, tenant_id: Optional[str] = None):
         """
         Initialize AzureCloudConfig from `cloud` or configuration.
 
@@ -74,32 +79,14 @@ class AzureCloudConfig:
         if cloud:
             self.cloud = cloud
         else:
-            self.cloud = "global"
-            try:
-                az_settings = config.get_config("Azure")
-                if az_settings and "cloud" in az_settings:
-                    self.cloud = az_settings["cloud"]
-            except KeyError:
-                pass  # no Azure section in config
+            self.cloud = get_azure_config_value("cloud", "global")
 
         if tenant_id:
             self.tenant_id = tenant_id
         else:
-            self.tenant_id = None
-            try:
-                az_settings = config.get_config("Azure")
-                if az_settings and "tenant_id" in az_settings:
-                    self.tenant_id = az_settings["tenant_id"]
-            except KeyError:
-                pass  # no Azure section in config
+            self.tenant_id = get_azure_config_value("tenant_id", None)
 
         self.auth_methods = default_auth_methods()
-        try:
-            self.auth_methods = config.get_config("Azure").get(
-                "auth_methods", default_auth_methods()
-            )
-        except KeyError:
-            pass  # no Azure section in config
 
     @property
     def cloud_names(self) -> List[str]:
