@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 from abc import ABC
+from typing import Optional
 
 import ipywidgets as widgets
 
@@ -83,11 +84,6 @@ class CEProviders(CEItemsBase, ABC):
             The config/controls/settings database
 
         """
-        if hasattr(self, "_COMPONENT_HELP"):
-            # pylint: disable=invalid-name
-            self._HELP_TEXT = getattr(self, "_COMPONENT_HELP")
-            # pylint: enable=invalid-name
-
         super().__init__(mp_controls)
 
         get_or_create_mpc_section(self.mp_controls, self._COMP_PATH)
@@ -106,46 +102,66 @@ class CEProviders(CEItemsBase, ABC):
         )
         self.items_frame.children = [*(self.items_frame.children), self.prov_options]
 
-        prov_name = self.select_item.label
-        self.edit_ctrls = _get_prov_ctrls(prov_name, self.mp_controls, self._COMP_PATH)
-        self.edit_frame.children = [self.edit_ctrls]
+        self._populate_edit_ctrls()
 
         self.edit_buttons.btn_del.on_click(self._del_provider)
         self.edit_buttons.btn_add.on_click(self._add_provider)
         self.edit_buttons.btn_save.on_click(self._save_provider)
 
     @property
-    def _current_path(self):
+    def _current_path(self) -> str:
+        """Return current settings path."""
         return f"{self._COMP_PATH}.{self.select_item.label}"
+
+    @property
+    def _prov_name(self) -> str:
+        """Return current provider instance name."""
+        prov_name = self.select_item.label or ""
+        return prov_name.strip()
+
+    @property
+    def _prov_ctrl_name(self) -> str:
+        """Return current provider control name."""
+        return self._prov_name
 
     def _get_select_opts(self):
         """Get provider options to populate select list."""
         provs = self.mp_controls.get_value(self._COMP_PATH)
         self.prov_settings_map = _get_map(provs)
-        existing_provs = list(provs.keys())
-        return [(val, idx) for idx, val in enumerate(sorted(existing_provs))]
+        return [(val, idx) for idx, val in enumerate(sorted(provs.keys()))]
+
+    def _populate_edit_ctrls(self, control_name: Optional[str] = None):
+        self.edit_ctrls = _get_prov_ctrls(
+            control_name or self._prov_ctrl_name, self.mp_controls, self._COMP_PATH
+        )
+        self.edit_frame.children = [self.edit_ctrls]
 
     def _select_provider(self, change):
-        prov_name = change.get("new")
-        self.edit_ctrls = _get_prov_ctrls(prov_name, self.mp_controls, self._COMP_PATH)
-        self.edit_frame.children = [self.edit_ctrls]
-        self.mp_controls.populate_ctrl_values(f"{self._COMP_PATH}.{prov_name}")
+        """Update based on new selection in current providers."""
+        del change
+        self._populate_edit_ctrls()
+        self.mp_controls.populate_ctrl_values(
+            f"{self._COMP_PATH}.{self.select_item.label}"
+        )
 
     def _add_provider(self, btn):
+        """Add a new provider from prov_options."""
         del btn
-        new_provider = self.prov_options.label
-        if new_provider in dict(self.select_item.options):
-            self.set_status(f"This provider already exists: {new_provider}")
+        if self.prov_options.label in dict(self.select_item.options):
+            self.set_status(f"This provider already exists: {self.prov_options.label}")
             return
-        if not new_provider:
+        if not self.prov_options.label:
             self.set_status("Error: please select a provider name to add.")
             return
-        _get_prov_ctrls(new_provider, self.mp_controls, self._COMP_PATH)
-        self.mp_controls.save_ctrl_values(f"{self._COMP_PATH}.{new_provider}")
+        self._populate_edit_ctrls(control_name=self.prov_options.label)
+        self.mp_controls.save_ctrl_values(
+            f"{self._COMP_PATH}.{self.prov_options.label}"
+        )
         self.select_item.options = self._get_select_opts()
-        self.select_item.label = new_provider
+        self.select_item.label = self.prov_options.label
 
     def _del_provider(self, btn):
+        """Delete the currently selected provider."""
         del btn
         if not self.select_item.label:
             return
@@ -156,6 +172,7 @@ class CEProviders(CEItemsBase, ABC):
             self.select_item.label = remaining_opts[-1][0]
 
     def _save_provider(self, btn):
+        """Save/update the currently edited provider settings."""
         del btn
         if not self.select_item.label:
             return

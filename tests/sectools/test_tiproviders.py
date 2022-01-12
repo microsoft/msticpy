@@ -551,7 +551,7 @@ class TestTIProviders(unittest.TestCase):
         letters = string.ascii_letters
         str_length = random.randint(4, 20)
         dom = ""
-        for _ in range(0, 2):
+        for _ in range(2):
             dom_part = "".join(random.choice(letters) for i in range(str_length))
             dom = dom + "." + dom_part if dom else dom_part
         suffix = random.choice(dom_suffixes)
@@ -564,7 +564,7 @@ class TestTIProviders(unittest.TestCase):
         # we can't use a fixed list since this changes all the time
         # so take a sample from the current list
         tor_prov = ti_lookup.loaded_providers["Tor"]
-        tor_nodes = random.sample(tor_prov._nodelist.keys(), 4)
+        tor_nodes = random.sample(list(tor_prov._nodelist.keys()), 4)
 
         other_ips = [
             "104.117.0.237",

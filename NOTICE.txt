@@ -17,11 +17,11 @@ required to debug changes to any libraries licensed under the GNU Lesser General
 
 ---------------------------------------------------------
 
-aiohttp 3.7.4.post0 - Apache-2.0
+aiosignal 1.2.0 - Apache-2.0
 
 
-Copyright Fedor Indutny.
-Copyright Joyent, Inc. and other Node contributors.
+copyright 2013-2019
+Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
 
 Apache License
 
@@ -125,7 +125,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-async-timeout 3.0.1 - Apache-2.0
+argcomplete 2.0.0 - Apache-2.0
 
 
 
@@ -231,7 +231,220 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-bleach 4.0.0 - Apache-2.0
+asynctest 0.13.0 - Apache-2.0
+
+
+Copyright 2015 Martin Richard
+
+Apache License
+
+Version 2.0, January 2004
+
+http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+
+
+      "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+
+
+      "Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+
+
+
+      "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+
+
+
+      "You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+
+
+      "Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+
+
+
+      "Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+
+
+
+      "Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+
+
+
+      "Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+
+
+
+      "Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+
+
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability. END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!) The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+
+distributed under the License is distributed on an "AS IS" BASIS,
+
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+
+limitations under the License.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+async-timeout 4.0.2 - Apache-2.0
+
+
+
+Apache License
+
+Version 2.0, January 2004
+
+http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+
+
+      "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+
+
+      "Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+
+
+
+      "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+
+
+
+      "You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+
+
+      "Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+
+
+
+      "Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+
+
+
+      "Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+
+
+
+      "Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+
+
+
+      "Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+
+
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability. END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!) The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+
+distributed under the License is distributed on an "AS IS" BASIS,
+
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+
+limitations under the License.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+bleach 4.1.0 - Apache-2.0
 
 
 Copyright (c) 2014-2017, Mozilla Foundation
@@ -339,7 +552,221 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-geoip2 4.2.0 - Apache-2.0
+dataclasses 0.8 - Apache-2.0
+
+
+
+Apache License
+
+Version 2.0, January 2004
+
+http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+
+
+      "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+
+
+      "Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+
+
+
+      "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+
+
+
+      "You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+
+
+      "Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+
+
+
+      "Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+
+
+
+      "Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+
+
+
+      "Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+
+
+
+      "Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+
+
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability. END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!) The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+
+distributed under the License is distributed on an "AS IS" BASIS,
+
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+
+limitations under the License.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+frozenlist 1.2.0 - Apache-2.0
+
+
+copyright 2013-2019
+Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
+
+Apache License
+
+Version 2.0, January 2004
+
+http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+
+
+      "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+
+
+      "Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+
+
+
+      "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+
+
+
+      "You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+
+
+      "Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+
+
+
+      "Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+
+
+
+      "Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+
+
+
+      "Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+
+
+
+      "Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+
+
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability. END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!) The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+
+distributed under the License is distributed on an "AS IS" BASIS,
+
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+
+limitations under the License.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+geoip2 4.5.0 - Apache-2.0
 
 
 (c) JS Foundation and other contributors
@@ -448,9 +875,117 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-importlib-metadata 3.10.1 - Apache-2.0
+importlib-metadata 4.10.0 - Apache-2.0
 
 
+Copyright 2017-2019 Jason R. Coombs, Barry Warsaw
+
+Apache License
+
+Version 2.0, January 2004
+
+http://www.apache.org/licenses/ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+
+
+      "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+
+
+      "Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+
+
+
+      "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+
+
+
+      "You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+
+
+      "Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+
+
+
+      "Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+
+
+
+      "Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+
+
+
+      "Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+
+
+
+      "Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+
+
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+      (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability. END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!) The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+
+distributed under the License is distributed on an "AS IS" BASIS,
+
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+See the License for the specific language governing permissions and
+
+limitations under the License.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+importlib-resources 5.4.0 - Apache-2.0
+
+
+Copyright 2017-2019 Brett Cannon, Barry Warsaw
 
 Apache License
 
@@ -662,7 +1197,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-maxminddb 2.0.3 - Apache-2.0
+maxminddb 2.2.0 - Apache-2.0
 
 
 (c) JS Foundation and other contributors
@@ -771,11 +1306,10 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-multidict 5.1.0 - Apache-2.0
+multidict 5.2.0 - Apache-2.0
 
 
 copyright 2016
-Copyright 2016-2017 Andrew Svetlov
 
 Apache License
 
@@ -879,10 +1413,9 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-prometheus-client 0.11.0 - Apache-2.0
+prometheus-client 0.12.0 - Apache-2.0
 
 
-Copyright 2015 The Prometheus Authors
 Copyright (c) 2005-2016, Michele Simionato
 
 Apache License
@@ -1101,7 +1634,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-requests 2.26.0 - Apache-2.0
+requests 2.27.1 - Apache-2.0
 
 
 Copyright 2019 Kenneth Reitz
@@ -1423,10 +1956,9 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-yarl 1.6.3 - Apache-2.0
+yarl 1.7.2 - Apache-2.0
 
 
-Copyright 2016-2018, Andrew Svetlov and aio-libs team
 copyright 2016-2018, Andrew Svetlov and aio-libs team
 
 Apache License
@@ -1531,7 +2063,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-cryptography 3.4.7 - Apache-2.0 AND BSD-3-Clause AND Python-2.0
+cryptography 36.0.1 - Apache-2.0 AND BSD-3-Clause AND Python-2.0
 
 
 Copyright (c) Individual contributors.
@@ -1544,7 +2076,19 @@ Apache-2.0 AND BSD-3-Clause AND Python-2.0
 
 ---------------------------------------------------------
 
-packaging 21.0 - Apache-2.0 OR (Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause)
+aiohttp 3.8.1 - Apache-2.0 AND MIT
+
+
+Copyright Fedor Indutny, 2018.
+copyright f'2013-2020, project
+
+Apache-2.0 AND MIT
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+packaging 21.3 - Apache-2.0 OR (Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause)
 
 
 copyright 2014-2019
@@ -1594,10 +2138,67 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-decorator 5.0.9 - BSD-2-Clause
+decorator 5.1.0 - BSD-2-Clause
 
 
 Copyright (c) 2005-2018, Michele Simionato
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+docutils 0.17.1 - BSD-2-Clause
+
+
+(c) Item C.
+(c) David Goodger.
+(c) 2003 John Gruber
+copyright by Mark Pilgrim
+(c) 2004, 2007 Chad Miller.
+Copyright (c) Gunter Milde.
+Copyright (c) Alex Fernandez
+u'copyright' copyright', u'v
+(c) 2005 Jens Jorgen Mortensen
+u'copyright' u'copyright', u'd
+Copyright (c) 2001 Mark Pilgrim
+Copyright (c) 2010 Gunter Milde.
+Copyright (c) 2011 Gunter Milde.
+Copyright (c) 2015 Gunter Milde.
+Copyright 2004 by Enthought, Inc.
+Copyright copy 2003, BogusMegaCorp
+u'copyright' copyright', u'dedicat
+Copyright u00a9 2003, BogusMegaCorp
+Copyright 2001-2004 by David Goodger
+Copyright copy 2003 by John Q. Public
+Copyright (c) 2009,2010 Alex Fernandez
+Copyright (c) 2009-2011 Alex Fernandez
+Copyright (c) 2011, 2017 Gunter Milde.
+Copyright copy 2003, BogusMegaCorp (TM)
+Copyright (c) 2005, 2009, 2015 Gunter Milde
+copyright by Free Software Foundation, Inc.
+copyright', u'Xian Ci dedication', u'Gai Yao
+Copyright (c) 2001 Python Software Foundation
+copyright', u'Xian Ci dedication', u'Zhai Yao
+Copyright (c) 2016 David Goodger, Gunter Milde
+Copyright (c) 2003-2017 Free Software Foundation, Inc.
+Copyright (c) 2010-2012 Free Software Foundation, Inc.
+Copyright (c) 2003 John Gruber (http://daringfireball.net/)
+Copyright 2004 by Enthought, Inc. <http://www.enthought.com>
+Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam
+Copyright (c) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+copyright' u'Ban Quan , dedication' u'Xian Ci , abstract' u'Zhai Yao
+Copyright (c) 1995-2001 Corporation for National Research Initiatives
+copyright' u'Zhu Zuo Quan , dedication' u'Xian Ci , abstract' u'Gai Yao
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -1651,15 +2252,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-ipykernel 6.0.3 - BSD-2-Clause
+ipykernel 6.6.1 - BSD-2-Clause
 
 
-Copyright (c) IPython Development Team.
-copyright 2015, IPython Development Team
-Copyright (c) 2015, IPython Development Team
-Copyright (c) 2012 The IPython Development Team
-Copyright (c) 2008-2011 The IPython Development Team
-Copyright (c) 2010-2011 The IPython Development Team.
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -1675,7 +2270,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-isodate 0.6.0 - BSD-2-Clause
+isodate 0.6.1 - BSD-2-Clause
 
 
 Copyright 2009, Gerhard Weis
@@ -1694,25 +2289,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-Jinja2 3.0.1 - BSD-2-Clause
-
-
-
-Copyright (c) <year> <owner> . All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------
-
----------------------------------------------------------
-
-jupyter-client 6.2.0 - BSD-2-Clause
+jupyter-client 7.1.0 - BSD-2-Clause
 
 
 Copyright (c) 2010 The IPython Team
@@ -1739,7 +2316,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-jupyter-core 4.7.1 - BSD-2-Clause
+jupyter-core 4.9.1 - BSD-2-Clause
 
 
 Copyright (c) IPython Development Team.
@@ -1761,16 +2338,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-kiwisolver 1.3.1 - BSD-2-Clause
+jupyterlab-widgets 1.0.2 - BSD-2-Clause
 
 
-Copyright (c) 2001. Addison-Wesley.
-Copyright (c) 2001 by Andrei Alexandrescu
-Copyright (c) 2013, Nucleic Development Team.
-Copyright (c) 2013-2017, Nucleic Development Team.
-Copyright (c) 2013-2019, Nucleic Development Team.
-Copyright (c) 2014-2018, Nucleic Development Team.
-Copyright 2000, 2004, 2005Adobe Systems Incorporated.
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -1786,34 +2356,45 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-lxml 4.6.3 - BSD-2-Clause
+kiwisolver 1.3.2 - BSD-2-Clause
 
 
-(c) ET. Where
-copyright Ian Bicking
-Copyright (c) 2004 Infrae.
-Copyright (c) ISO/IEC 2015
-(c) self.assertEqual http://ns1
-Copyright (c) 2004 Ian Bicking.
-Copyright (c) 2008 Rick Jelliffe
-copyright Shuttleworth Foundation.
-Copyright (c) 2004-2010 Rick Jellife
-copyright International Organization
-Copyright (c) 1999-2003 by Fredrik Lundh
-Copyright (c) 1999-2004 by Fredrik Lundh
-Copyright (c) 1999-2009 by Fredrik Lundh
-Copyright 2006-2009 by the Pygments team
-Copyright (c) 1999-2003 by Secret Labs AB
-Copyright (c) 2003-2004 by Fredrik Lundh.
-Copyright (c) 2003-2009 by Fredrik Lundh.
-Copyright (c) 2003 Shuttleworth Foundation
-copyrighted by the Free Software Foundation
-Copyright (c) Zope Corporation (tm) and Contributors.
-Copyright (c) 1989, 1991 Free Software Foundation, Inc.
-copyright Rick Jelliffe and Academia Sinica Computing Center
-Copyright (c) 2000,2001 Rick Jelliffe and Academia Sinica Computing Center
-Copyright (c) 2000-2008 Rick Jelliffe and Academia Sinica Computing Center
-Copyright (c) 2001, 2006 Rick Jelliffe and Academia Sinica Computing Center
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+lxml 4.7.1 - BSD-2-Clause
+
+
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+markupsafe 2.0.1 - BSD-2-Clause
+
+
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -1870,7 +2451,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-nbclient 0.5.3 - BSD-2-Clause
+nbclient 0.5.9 - BSD-2-Clause
 
 
 Copyright (c) IPython Development Team.
@@ -1891,7 +2472,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-nbconvert 6.1.0 - BSD-2-Clause
+nbconvert 6.4.0 - BSD-2-Clause
 
 
 Copyright 2011-2016 Twitter, Inc.
@@ -1941,7 +2522,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-nest-asyncio 1.5.1 - BSD-2-Clause
+nest-asyncio 1.5.4 - BSD-2-Clause
 
 
 
@@ -1959,7 +2540,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-numpy 1.21.1 - BSD-2-Clause
+numpy 1.22.0 - BSD-2-Clause
 
 
 
@@ -1977,7 +2558,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-pandas 1.3.1 - BSD-2-Clause
+pandas 1.3.5 - BSD-2-Clause
 
 
 
@@ -1995,7 +2576,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-prompt-toolkit 3.0.19 - BSD-2-Clause
+prompt-toolkit 3.0.24 - BSD-2-Clause
 
 
 Copyright (c) 2014, Jonathan Slenders
@@ -2014,7 +2595,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-Pygments 2.9.0 - BSD-2-Clause
+pygments 2.11.2 - BSD-2-Clause
 
 
 (c) 2014
@@ -2068,7 +2649,6 @@ Copyright (c) 2003, 04 by Johannes Barre
 Copyright (c) 2012-2013 Nenad Rakocevic.
 Copyright 2006-2019 by the Pygments team
 Copyright (c) 1998 the Initial Developer.
-Copyright (c) 2003 Sun Microsystems, Inc.
 Copyright 2012 Nokia Siemens Networks Oyj
 Copyright (c) 1993-2003 Yukihiro Matsumoto
 (c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
@@ -2101,7 +2681,6 @@ Copyright (c) 2009 The R Foundation for Statistical Computing
 Copyright 1996 Institut National de Recherche en Informatique
 (c) 2000-2003 by cYcnus visit www.cYcnus.de licenser@cYcnus.de
 Copyright (c) 2008 The Regents of the University of California.
-Copyright (c) 2006 Kashia Buch (kashia@vfemail.net), Fabian Buch
 Copyright (c) 1985-1986, 1992, 1994-1995, 1999-2015 Free Software
 Copyright (c) 2000 Information-technology Promotion Agency, Japan
 Copyright (c) 2000 Network Applied Communication Laboratory, Inc.
@@ -2142,24 +2721,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-pyzmq 22.2.1 - BSD-2-Clause
-
-
-
-Copyright (c) <year> <owner> . All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------
-
----------------------------------------------------------
-
 scandir 1.10.0 - BSD-2-Clause
 
 
@@ -2179,7 +2740,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-Send2Trash 1.8.0 - BSD-2-Clause
+send2trash 1.8.0 - BSD-2-Clause
 
 
 
@@ -2197,12 +2758,61 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-terminado 0.10.1 - BSD-2-Clause
+sphinx 4.3.2 - BSD-2-Clause
 
 
-Copyright (c) Jupyter Development Team
-Copyright (c) 2014-, Jupyter development team
-Copyright (c) 2014, Ramalingam Saravanan <sarava@sarava.net>
+(c) Ban Quan Suo
+copyright u'2016
+Copyright (c) 2012
+Copyright (c) 2013
+Copyright (c) 2015
+Copyright (c) 2018
+copyright 2006-2009
+(c) 2003 John Gruber
+(copyright)s. (c) Hak
+(copyright)s. (c) Sva
+Copyright Risk Ersatt
+(copyright)s.' (c) Hak
+(copyright)s.' (c) Sva
+(copyright)s. (c) Telif
+Copyright Fare Foreldet
+(copyright)s. (c) Autori
+(copyright)s.' (c) Telif
+Copyright Perill Obsolet
+(copyright)s.' (c) Autori
+Copyright Create Makefile
+Copyright Gefahr Veraltet
+Copyright Perigo Obsoleto
+(c) 2004, 2007 Chad Miller
+(copyright)s. (c) Derechos
+(copyright)s. (c) Ophavsret
+(copyright)s.' (c) Derechos
+Copyright 2008-2009, Haiku.
+Copyright Danger Deprecated
+copyright" Bu Neng Wei Kong
+(copyright)s.' (c) Ophavsret
+Copyright Pericolo Deprecato
+Copyright Arriskua Zaharkitua
+Copyright Error General Index
+copyright (c) 2010 Gunter Milde
+Copyright (copyright)s. Attention
+(copyright)s (copyright)s Makefile
+Copyright 2011-2014 by Sphinx team
+Copyright 2012-2014 by Sphinx team
+Copyright 2007-2019 by the Sphinx team
+Copyright (c) 2010, Georg Brandl & Team
+(c) JS Foundation and other contributors
+copyright 2010-2016, Georg Brandl & Team
+copyright' self.config.copyright, project
+Copyright 2001 by Vivake Gupta <v@nano.com>
+Copyright JS Foundation and other contributors
+Copyright (c) 2008 John Resig, https://jquery.com
+Copyright (c) 2009 Jeremy Ashkenas, DocumentCloud
+Copyright 2008 Societe des arts technologiques (SAT), https://sat.qc.ca
+Copyright (c) 2003 John Gruber (https://daringfireball.net/projects/smartypants/)
+(copyright)s. (copyright)s. pyversion <https://github.com/sphinx-doc/sphinx/issues>
+Copyright (c) 2008 Stefan van der Walt <stefan@mentat.za.net> , Pauli Virtanen <pav@iki.fi>
+Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Python Software Foundation
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -2218,9 +2828,52 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-traitlets 5.0.5 - BSD-2-Clause
+terminado 0.12.1 - BSD-2-Clause
 
 
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+tldextract 3.1.2 - BSD-2-Clause
+
+
+
+Copyright (c) <year> <owner> . All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+traitlets 5.1.1 - BSD-2-Clause
+
+
+Copyright (c) Enthought, Inc.
+Copyright (c) 2010 Doug Hellmann.
+Copyright 2007-2015 by the Sphinx team
+Copyright (c) IPython Development Team.
+Copyright (c) Jupyter Development Team.
+copyright 2015, The IPython Development Team
+Copyright (c) 2001-, IPython Development Team
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -2269,6 +2922,73 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
+bokeh 2.4.2 - BSD-2-Clause AND BSD-3-Clause
+
+
+(c) 2011 Gary Court.
+Copyright 2011 Gary Court.
+Copyright 2019 Google LLC.
+(c) 2009-2016 Michael Leibman
+Copyright 2010-2015 Mike Bostock
+Copyright (c) 2010 Three Dub Media
+Copyright (c) 2016 Jorik Tangelder
+Copyright 2011 The Closure Compiler
+Copyright (c) Microsoft Corporation.
+Copyright (c) 2014-2016, Jon Schlinkert.
+Copyright (c) 2014-2017, Jon Schlinkert.
+Copyright (c) 2012 - 2021, Anaconda, Inc.
+(c) <a href https://cartodb.com/attributions'>
+Copyright JS Foundation and other contributors
+Copyright (c) 2017, Battelle Memorial Institute
+Copyright (c) 2014 Ivan Nikulin <ifaaan@gmail.com>
+Copyright 2011 Mozilla Foundation and contributors
+Copyright 2014 Mozilla Foundation and contributors
+Copyright OpenJS Foundation and other contributors
+Copyright jQuery Foundation and other contributors
+Copyright Joyent, Inc. and other Node contributors.
+Copyright (c) 2012 - 2021, Anaconda, Inc., and Bokeh
+(c) <a href https://www.openstreetmap.org/copyright'>
+Copyright (c) 2012-2017 Kirollos Risk (http://kiro.me)
+Copyright 2012 (c) Mihai Bazon <mihai.bazon@gmail.com>
+Copyright 2009-2011 Mozilla Foundation and contributors
+Copyright (c) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2014 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+(c) 2019 Josh Johnson https://github.com/jshjohnson/Choices
+Copyright (c) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors
+(c) <a href http://downloads.esri.com/ArcGISOnline/docs/tou_summary.pdf'>
+Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+(c) <a href https://foundation.wikimedia.org/wiki/Maps_Terms_of_Use'> Wikimedia Maps
+Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
+(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
+(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
+(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
+Copyright (c) 2006-2009 Hampton Catlin, Natalie Weizenbaum, and Chris Eppstein // http://sass-lang.com
+Coproduc Cros , Cu CupCa Dagge De Delt , Diamon Differential DotEqua DoubleDo DoubleRightTe , DoubleVerticalBa DownArro DownLeftVecto DownRightVecto DownTe , Downarro Elemen EqualTild Equilibriu Exist , Exponential FilledVerySmallSquar ForAl Gamm
+
+BSD-2-Clause AND BSD-3-Clause
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+cycler 0.11.0 - BSD-2-Clause AND BSD-3-Clause
+
+
+copyright 2015, Matplotlib Developers
+Copyright (c) 2015, matplotlib project
+
+BSD-2-Clause AND BSD-3-Clause
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
 idna 2.10 - BSD-2-Clause AND BSD-3-Clause
 
 
@@ -2279,7 +2999,7 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-ipython 7.26.0 - BSD-2-Clause AND BSD-3-Clause
+ipython 7.31.0 - BSD-2-Clause AND BSD-3-Clause
 
 
 (c) Python and NumPy
@@ -2339,7 +3059,7 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-ipywidgets 7.6.3 - BSD-2-Clause AND BSD-3-Clause
+ipywidgets 7.6.5 - BSD-2-Clause AND BSD-3-Clause
 
 
 copyright 2017 Project
@@ -2353,23 +3073,12 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-jupyterlab-widgets 1.0.0 - BSD-2-Clause AND BSD-3-Clause
+jinja2 3.0.3 - BSD-2-Clause AND BSD-3-Clause
 
 
-Copyright 2010-2015 Mike Bostock
-Copyright (c) 2014 Jameson Little
-Copyright (c) 2014-2017, PhosphorJS
-Copyright (c) Jupyter Development Team.
-Copyright JS Foundation and other contributors
-Copyright (c) 2015 Project Jupyter Contributors
-Copyright (c) Isaac Z. Schlueter and Contributors
-Copyright jQuery Foundation and other contributors
-Copyright JS Foundation and other contributors, https://js.foundation
-Copyright jQuery Foundation and other contributors, https://jquery.org
-Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
-(c) 2010-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Backbone
-Copyright (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
+Copyright 2007 Pallets
+copyright 2007 Pallets
+(c) Copyright 2008 by <a href http://domain.invalid/'>
 
 BSD-2-Clause AND BSD-3-Clause
 
@@ -2377,7 +3086,7 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-networkx 2.6.2 - BSD-2-Clause AND BSD-3-Clause
+networkx 2.6.3 - BSD-2-Clause AND BSD-3-Clause
 
 
 Copyright (c) 2015 - Thomson Licensing, SAS
@@ -2392,11 +3101,10 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-notebook 6.4.2 - BSD-2-Clause AND BSD-3-Clause
+notebook 6.4.6 - BSD-2-Clause AND BSD-3-Clause
 
 
 Copyright (c) 2014
-copro Coproduc cop COP
 Copyright Dave Gandy 2016.
 Copyright (c) 2012 Google Inc.
 copyright (c) by Lennart Ochel
@@ -2406,6 +3114,7 @@ Copyright 2014-2019 Volker Sorge
 Copyright 2011-2019 Twitter, Inc.
 Copyright 2012-2013 Ulrich Sossou
 Copyright (c) 2011 Fabrice Bellard
+Copyright (c) 2014, Facebook, Inc.
 Copyright (c) Alexandru Marasteanu
 copyright (c) 2015 by Calin Barbat
 Copyright (c) 2019 RunningCoder.org
@@ -2456,10 +3165,21 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-pycparser 2.20 - BSD-2-Clause AND BSD-3-Clause
+pandocfilters 1.5.0 - BSD-2-Clause AND BSD-3-Clause
 
 
-Copyright (c) 2008-2017, Eli Bendersky
+Copyright (c) 2013 John MacFarlane
+Copyright (c) 2013, John MacFarlane
+
+BSD-2-Clause AND BSD-3-Clause
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+pycparser 2.21 - BSD-2-Clause AND BSD-3-Clause
+
+
 Copyright (c) 2001-2017 David M. Beazley
 David Beazley (http://www.dabeaz.com) Copyright (c) 2017
 
@@ -2481,36 +3201,74 @@ BSD-2-Clause AND BSD-3-Clause
 
 ---------------------------------------------------------
 
-tldextract 3.1.0 - BSD-2-Clause AND BSD-3-Clause
-
-
-
-BSD-2-Clause AND BSD-3-Clause
-
----------------------------------------------------------
-
----------------------------------------------------------
-
-widgetsnbextension 3.5.1 - BSD-2-Clause AND BSD-3-Clause
+widgetsnbextension 3.5.2 - BSD-2-Clause AND BSD-3-Clause
 
 
 Copyright (c) 2014 Dan Le
 Copyright (c) 2014 Adam Krebs
 Copyright (c) 2014-2017, PhosphorJS
+Copyright (c) 2014-2019, PhosphorJS
+Copyright (c) Microsoft Corporation.
 (c) 2015 Adam Krebs, Jimmy Yuen Ho Wong
 Copyright (c) IPython Development Team.
 Copyright (c) Jupyter Development Team.
 Copyright JS Foundation and other contributors
 Copyright (c) 2015 Project Jupyter Contributors
+Copyright OpenJS Foundation and other contributors
 Copyright jQuery Foundation and other contributors
-Copyright Joyent, Inc. and other Node contributors.
 Copyright (c) 2010-2015 Jeremy Ashkenas, DocumentCloud
 (c) 2010-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Backbone
-(c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
-Copyright Paul Johnston 2000 - 2002. Other contributors Greg Holt, Andrew Kepert, Ydnar, Lostinet
-Copyright Angel Marin, Paul Johnston 2000 - 2009. Other contributors Greg Holt, Andrew Kepert, Ydnar, Lostinet
 
 BSD-2-Clause AND BSD-3-Clause
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+pyzmq 22.3.0 - BSD-2-Clause AND BSD-3-Clause AND GPL-2.0-or-later AND LGPL-3.0-only AND NOASSERTION
+
+
+Copyright (c) 2016
+Copyright (c) 2018
+Copyright (c) 2019
+(c) PyZMQ Developers
+(c) iMatix Corporation
+Copyright (c) 2007-2016
+Copyright (c) 2007-2017
+Copyright (c) 2007-2018
+Copyright (c) 2007-2019
+Copyright (c) 2016-2017
+Copyright 2009 Facebook
+Copyright 2010 Facebook
+Copyright 2011 Facebook
+Copyright (c) 2010 Justin Riley
+Copyright (c) PyZMQ Developers.
+Copyright (c) 2010 Brian Granger
+Copyright (c) 2010 Lisandro Dalcin
+Copyright (c) 2010 The IPython Team
+Copyright (c) Stef van der Struijk.
+Copyright (c) 2011- PyZMQ Developers
+Copyright (c) 2011-2012 Travis Cline
+Copyright (c) 2012 Godefroid Chapelle
+Copyright (c) PyZMQ Development Team.
+Copyright (c) 2010 Andrew Gwozdziewycz
+Copyright (c) 2012 The ZeroMQ Authors.
+Copyright (c) 2007-2010 iMatix Corporation
+Copyright (c) 2010 Brian Granger, Fernando Perez
+Copyright (c) 2010-2011 IPython Development Team
+Copyright (c) 2010 Brian Granger, Min Ragan-Kelley
+Copyright (c) 2010 Min Ragan-Kelley, Brian Granger
+copyright u'Brian E. Granger & Min Ragan-Kelley. OMQ
+Copyright (c) 2010 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2013 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2010-2012 Brian Granger, Min Ragan-Kelley
+Copyright 2012-2018, Bert Belder <bertbelder@gmail.com>
+Copyright (c) 2009-2012, Brian Granger, Min Ragan-Kelley
+Copyright (c) 2010-2011 Brian E. Granger & Min Ragan-Kelley
+Copyright (c) 2003-2007 Robey Pointer <robeypointer@gmail.com>
+Copyright (c) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+
+BSD-2-Clause AND BSD-3-Clause AND GPL-2.0-or-later AND LGPL-3.0-only AND NOASSERTION
 
 ---------------------------------------------------------
 
@@ -2523,91 +3281,6 @@ copyright u'2014, Kenneth Reitz
 Copyright (c) 2014 Kenneth Reitz.
 
 BSD-2-Clause AND ISC
-
----------------------------------------------------------
-
----------------------------------------------------------
-
-bokeh 2.3.3 - BSD-3-Clause
-
-
-(c) P. name Color
-(c) 2011 Gary Court.
-Copyright 2011 Gary Court.
-Copyright 2019 Google LLC.
-(c) 2009-2016 Michael Leibman
-Copyright 2010-2015 Mike Bostock
-Copyright (c) 2010 Three Dub Media
-Copyright (c) 2016 Jorik Tangelder
-Copyright 2011 The Closure Compiler
-Copyright (c) Microsoft Corporation.
-Copyright (c) 2014-2016, Jon Schlinkert.
-Copyright (c) 2014-2017, Jon Schlinkert.
-Copyright (c) 2012 - 2021, Anaconda, Inc.
-(c) <a href https://cartodb.com/attributions'>
-Copyright JS Foundation and other contributors
-Copyright (c) 2017, Battelle Memorial Institute
-Copyright (c) 2014 Ivan Nikulin <ifaaan@gmail.com>
-Copyright 2011 Mozilla Foundation and contributors
-Copyright 2014 Mozilla Foundation and contributors
-Copyright jQuery Foundation and other contributors
-Copyright Joyent, Inc. and other Node contributors.
-Copyright (c) 2012 - 2021, Anaconda, Inc., and Bokeh
-Copyright (c) 2018, Andrea Giammarchi, WebReflection
-(c) <a href https://www.openstreetmap.org/copyright'>
-Copyright (c) 2012-2017 Kirollos Risk (http://kiro.me)
-Copyright 2012 (c) Mihai Bazon <mihai.bazon@gmail.com>
-Copyright 2009-2011 Mozilla Foundation and contributors
-Copyright (c) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
-Copyright (c) 2014 Yusuke Suzuki <utatane.tea@gmail.com>
-Copyright (c) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
-(c) 2019 Josh Johnson https://github.com/jshjohnson/Choices
-Copyright (c) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
-Copyright (c) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
-Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
-Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors
-(c) <a href http://downloads.esri.com/ArcGISOnline/docs/tou_summary.pdf'>
-Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
-Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-(c) <a href https://foundation.wikimedia.org/wiki/Maps_Terms_of_Use'> Wikimedia Maps
-Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
-(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Underscore
-(c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
-(c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors // Underscore
-Copyright (c) 2006-2009 Hampton Catlin, Natalie Weizenbaum, and Chris Eppstein // http://sass-lang.com
-
-Copyright (c) <year> <owner> . All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-   3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------
-
----------------------------------------------------------
-
-Cycler 0.10.0 - BSD-3-Clause
-
-
-
-Copyright (c) <year> <owner> . All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-   3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---------------------------------------------------------
 
@@ -2635,11 +3308,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-matplotlib-inline 0.1.2 - BSD-3-Clause
+matplotlib-inline 0.1.3 - BSD-3-Clause
 
 
-Copyright (c) 2019
-Copyright (c) IPython Development Team.
 
 Copyright (c) <year> <owner> . All rights reserved.
 
@@ -2657,7 +3328,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ---------------------------------------------------------
 
-debugpy 1.4.1 - EPL-1.0
+debugpy 1.5.1 - EPL-1.0
 
 
 
@@ -2753,7 +3424,7 @@ THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC LICE
 
 ---------------------------------------------------------
 
-Pillow 8.3.1 - HPND
+pillow 9.0.0 - HPND
 
 
 
@@ -3409,17 +4080,53 @@ That's all there is to it!
 
 ---------------------------------------------------------
 
-argon2-cffi 20.1.0 - MIT
+adal 1.2.7 - MIT
+
+
+Copyright (c) Microsoft Corporation.
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+argon2-cffi 21.3.0 - MIT
 
 
 Copyright (c) 2015
+copyright 2015, Hynek Schlawack
+Copyright (c) 2015 Hynek Schlawack
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+argon2-cffi-bindings 21.2.0 - MIT
+
+
 Copyright (c) 2015 Thomas Pornin
 copyright (c) 2015 Thomas Pornin
-copyright u'2015, Hynek Schlawack
-Copyright (c) 2015 Hynek Schlawack
 copyright (c) Samuel Neves, 2013-2015
 Copyright (c) 2001-2015 by Michael Shell
-Copyright (c) 2006-2013 Alexander Chemeris
 copyright (c) 2015 Daniel Dinu, Dmitry Khovratovich
 Copyright 2015 Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
 Copyright (c) 1993-2000 by Gerry Murray, Silvano Balemi, Jon Dixon, Peter N'uchter, Juergen von Hagen
@@ -3438,11 +4145,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-attrs 21.2.0 - MIT
+attrs 21.4.0 - MIT
 
 
 (c) N Revealed
-copyright u'2015, Hynek Schlawack
+Hynek Schlawack copyright f'2015
 Copyright (c) 2015 Hynek Schlawack
 
 MIT License
@@ -3477,7 +4184,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-core 1.17.0 - MIT
+azure-core 1.21.1 - MIT
 
 
 
@@ -3495,7 +4202,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-identity 1.6.0 - MIT
+azure-identity 1.7.1 - MIT
 
 
 
@@ -3549,7 +4256,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-mgmt-subscription 1.0.0 - MIT
+azure-mgmt-subscription 2.0.0 - MIT
 
 
 
@@ -3623,9 +4330,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-cffi 1.14.6 - MIT
+cffi 1.15.0 - MIT
 
 
+Copyright (c) 2002 Bo Thorsen
+Copyright (c) 2002 Roger Sayle
+Copyright (c) 2001 John Beniton
+Copyright (c) 1996 Red Hat, Inc.
+Copyright (c) 2002 Ranjit Mathew
+Copyright (c) 1996-2003 Red Hat, Inc.
+Copyright (c) 1996, 1998 Red Hat, Inc.
+Copyright (c) 2011, 2014 Anthony Green
+Copyright (c) 2009, 2010, 2011, 2012 ARM Ltd.
+Copyright (c) 1996-2003, 2007, 2008 Red Hat, Inc.
+Copyright (c) 1996, 1998, 1999, 2001 Red Hat, Inc.
+Copyright (c) 1996, 1998, 2001, 2002 Red Hat, Inc.
+copyright u'2012-2018, Armin Rigo, Maciej Fijalkowski
 
 MIT License
 
@@ -3641,11 +4361,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-charset-normalizer 2.0.4 - MIT
+charset-normalizer 2.0.10 - MIT
 
 
+copyright 2019, Ahmed TAHRI
 Copyright (c) 2019 TAHRI Ahmed R.
-(c) 2012 Denny Vrandecic (http://denny.vrandecic.de)
+Copyright (c) 2019 Ahmed TAHRI Ousret
+(c) 2012 Denny Vrandecic (http://simia.net/letters/)
 Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret).
 Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret). This project
 (c) https://stackoverflow.com/questions/3041986/apt-command-line-interface-like-yes-no-input
@@ -3664,7 +4386,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-configparser 5.0.2 - MIT
+configparser 5.2.0 - MIT
 
 
 Copyright Jason R. Coombs
@@ -3683,9 +4405,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-Deprecated 1.2.12 - MIT
+deprecated 1.2.13 - MIT
 
 
+(c) Laurent LAPORTE
+Copyright (c) 2017 Laurent LAPORTE
+copyright 2017, Marcos CARDOSO & Laurent LAPORTE
 
 MIT License
 
@@ -3722,7 +4447,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-folium 0.12.1 - MIT
+folium 0.12.1.post1 - MIT
+
+
+(c) 2014, Vladimir Agafonkin
+(c) http://openstreetmap.org'
+Copyright (c) 2013, Rob Story
+Copyright 2008-2016 Patrick Wied <heatmapjs@patrick-wied.at>
+Copyright (c) 2008-2016, Patrick Wied (https://www.patrick-wied.at)
+(c) http://www.openstreetmap.org/copyright' OpenStreetMap contributors
+(c) http://cartodb.com/attributions' CartoDB, CartoDB http://cartodb.com/attributions'
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+fonttools 4.28.5 - MIT
 
 
 
@@ -3761,12 +4511,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-jedi 0.18.0 - MIT
+jedi 0.18.1 - MIT
 
 
 Copyright (c) <2013>
 Copyright (c) Maxim Kurnikov.
-copyright (c) 2014 by Armin Ronacher.
 Copyright (c) 2015 Jukka Lehtosalo and contributors
 
 MIT License
@@ -3783,12 +4532,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-jsonschema 3.2.0 - MIT
+jsonschema 4.3.3 - MIT
 
 
+Julian Berman copyright 2013
 Copyright (c) 2012 Julian Berman
 Copyright (c) 2013 Julian Berman
-u'Julian Berman copyright u'2013
 Copyright (c) Twisted Matrix Laboratories.
 
 MIT License
@@ -3805,7 +4554,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-msal 1.13.0 - MIT
+msal 1.16.0 - MIT
 
 
 Copyright (c) Microsoft Corporation.
@@ -3824,9 +4573,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-msal-extensions 0.3.0 - MIT
+msal-extensions 0.3.1 - MIT
 
 
+Copyright (c) Microsoft Corporation.
 
 MIT License
 
@@ -3861,7 +4611,26 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-msticpy 1.3.0 - MIT
+msrestazure 0.6.4 - MIT
+
+
+Copyright (c) Microsoft Corporation.
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+msticpy 1.5.2 - MIT
 
 
 (c) Bv
@@ -3903,6 +4672,7 @@ msticpy 1.3.0 - MIT
 (c) AEB AdegeP
 (c) L FWaIoaXs
 (c) M1960~1980
+(c) N Revealed
 (c) uAe (c) PY
 (c) uu?i 2003A
 Copyright 2004
@@ -3920,6 +4690,7 @@ copyright 2019
 Copyright (c) AB
 copyright u'2001
 (c) 2014 (c) FSF.
+(c) P. name Color
 (c) Sindre Sorhus
 (c) aA'AE (c) 1AE
 (c) aAua$? (c) HH
@@ -3930,13 +4701,10 @@ copyright u'2001
 Copyright (c) 2005
 Copyright (c) 2006
 Copyright (c) 2016
-Copyright (c) 2018
-Copyright 2013 Ray
 (c) Au IUAEnCIeAEai
 (c) Laurent LAPORTE
 (c) OY H2 (c), 1998
 (c) Redirection URI
-Copyright 2013-2018
 (c) 2011 Gary Court.
 (c) ESSO!A (c) ESSOY
 (c) Python and NumPy
@@ -3951,9 +4719,7 @@ copyright Ian Bicking
 (c) I3 3QPAZP-'PSY Xao
 (c) aueU1nB 2006-01-02
 Copyright 2007 Pallets
-Copyright 2010 Pallets
 EAEvAACAEe (c) ,!C2001
-copyright 2007 Pallets
 copyright 2010 Pallets
 copyright 2017 Project
 (c) 2004 - 2005, Efendi
@@ -3967,8 +4733,6 @@ Copyright (c) 2007-2016
 Copyright (c) 2007-2017
 Copyright (c) 2007-2018
 Copyright (c) 2007-2019
-Copyright (c) 2008-2016
-Copyright 2010 Facebook
 Copyright 2011 Facebook
 Copyright 2013-2014 Ray
 (c) 2004 Foo Corporation
@@ -3998,7 +4762,9 @@ Copyright 2008 Google Inc.
 Copyright 2011 Gary Court.
 Copyright 2015 Google Inc.
 Copyright 2019 Google LLC.
+Copyright Dave Gandy 2016.
 copyright BBCHungarian.com
+(c) (c) O1981 (c) AAeAE WEd
 (c) ,oua http://sosa0sa.com
 (c) AUueAo AoY I PEdegdegAo
 (c) BJoel on SoftwareICgEaA
@@ -4040,6 +4806,7 @@ Copyright Paul McGuire, 2019
 copyright 2006, Paul McGuire
 (c) $?cAAAzEnPaEC/I (c) HAASS
 (c) 2009-2016 Michael Leibman
+(c) L FWaIoaXs (c) M1960~1980
 Copyright (c) 1991, 1992, Jos
 Copyright (c) 2008 Silken Web
 Copyright (c) 2013 Aaron Iles
@@ -4065,6 +4832,7 @@ Copyright, 2012 - Paul McGuire
 copyright (c) by Lennart Ochel
 copyright 2015, Thomas Kluyver
 copyright 2017, Thomas Kluyver
+copyright 2019 (c) CaAU Audegi
 copyright AtomicPages LLC 2014
 (c) http://blog.mlmaster.com/?p
 (c) http://susu.ac.ru/gerb2.gif
@@ -4079,7 +4847,6 @@ Copyright (c) 2015 Georg Brandl
 Copyright (c) 2015 Jose Padilla
 Copyright (c) 2016 Ville Vainio
 Copyright (c) 2017 ORGANIZATION
-Copyright (c) PyZMQ Developers.
 Copyright 2006, by Paul McGuire
 Copyright 2008, 280 North, Inc.
 Copyright 2008, by Paul McGuire
@@ -4117,6 +4884,7 @@ copyright (c) 2015 Thomas Pornin
 copyright u'2014, Thomas Kluyver
 (c) Copyright 2005, Sharks.co.il.
 (c) o1/4!Y http://artifact-jp.com
+(c) uu?i 1/41o 2003A Intel AOdegi
 Copyright (c) 2008 Gael Varoquaux
 Copyright (c) 2009 Gael Varoquaux
 Copyright (c) 2010 Damien Miller.
@@ -4127,10 +4895,12 @@ Copyright (c) 2014 Jameson Little
 Copyright (c) 2014 Kenneth Reitz.
 Copyright (c) 2017 Thomas Kluyver
 Copyright (c) 2017, Virgil Dupras
+Copyright (c) 2019 TAHRI Ahmed R.
 Copyright (c) Jean-Paul Calderone
 Copyright 2002-2018, Paul McGuire
 Copyright 2005-2006, Paul McGuire
 Copyright 2009, 2011 Paul McGuire
+Copyright 2010 Pallets EAEvAACAEe
 Copyright 2011-2016 Twitter, Inc.
 Copyright 2011-2019 Twitter, Inc.
 Copyright 2012-2013 Ulrich Sossou
@@ -4138,6 +4908,7 @@ Portions (c) 2009 by Robert Kern.
 copyright (c) 2004 by Andre Simon
 copyright 2007 by Armin Ronacher.
 copyright u'2015, Hynek Schlawack
+(c) ,!C2001 copyright 2007 Pallets
 (c) B OEo1/2, L-IEzIaAUCUe Ch bvEm
 Copyright (c) 2010 Lisandro Dalcin
 Copyright (c) 2010 Three Dub Media
@@ -4149,6 +4920,7 @@ Copyright (c) 2015 Hynek Schlawack
 Copyright (c) 2016 Jorik Tangelder
 Copyright (c) 2017 Johannes Holzl.
 Copyright (c) 2017 Laurent LAPORTE
+Copyright (c) 2017- Spyder Project
 Copyright (c) 2018 Paul T. McGuire
 Copyright (c) Alexandru Marasteanu
 Copyright 2007-2012 LassoSoft Inc.
@@ -4178,6 +4950,7 @@ Copyright 2007-2012 Steven Levithan
 Copyright 2011 The Closure Compiler
 Copyright 2011,2015 Paul T. McGuire
 (c) ,oua 1/2o+-o KM http://pm2.ww.to
+(c) PyZMQ Developers. Copyright 2006
 Copyright (c) 2003,2019 Paul McGuire
 Copyright (c) 2004-2010 Rick Jellife
 Copyright (c) 2005-2007 Terence Parr
@@ -4207,20 +4980,24 @@ Copyright (c) 2003,2016, Paul McGuire
 Copyright (c) 2004, 2006 Paul McGuire
 Copyright (c) 2004-2016, Paul McGuire
 Copyright (c) 2006-2016, Paul McGuire
+Copyright (c) 2007-2012 Michael Foord
 Copyright (c) 2010 by Armin Ronacher.
 Copyright (c) 2012 Godefroid Chapelle
 Copyright (c) 2014, Jonathan Slenders
 Copyright (c) 2015, Jonathan Slenders
 Copyright (c) 2015-2019 Martin Hensel
 Copyright (c) 2017, Intel Corporation
+Copyright (c) 2018 Copyright 2013 Ray
 Copyright (c) PyZMQ Development Team.
 Copyright 2012,2013 Alexander Peslyak
+Copyright 2015 The Prometheus Authors
 Copyright The Python Markdown Project
 copyright (c) 2014 by Armin Ronacher.
 copyright (c) HicknHack Software Gmbh
 copyright (c) Samuel Neves, 2013-2015
 (c) Name.Entity Copyright 2006 by Text
 (c) cao http://www.daihung.com/blog/?p
+Copyright (c) 2003-2013, Michael Foord
 Copyright (c) 2004, 2005, 2006 Aelitis
 Copyright (c) 2006, 2016, Paul McGuire
 Copyright (c) 2006-2016 Kirill Simonov
@@ -4239,6 +5016,7 @@ copyright The IPython Development Team
 (Copyright (c) 2017, Intel Corporation)
 (c) 2015 Adam Krebs, Jimmy Yuen Ho Wong
 (c) Holger Krekel and others, 2004-2014
+(c) Redirection URI Copyright 2013-2018
 Copyright (c) 2003-2019 Paul T. McGuire
 Copyright (c) 2006 Herczeg Jozsef Tamas
 Copyright (c) 2008 Slava Pestov Comment
@@ -4261,6 +5039,8 @@ Copyright (c) 1999-2009 by Fredrik Lundh
 Copyright (c) 2001-2015 by Michael Shell
 Copyright (c) 2003, 04 by Johannes Barre
 Copyright (c) 2004-2011 Paul T. McGuire.
+Copyright (c) 2005-2009, Jochen Kalmbach
+Copyright (c) 2005-2013, Jochen Kalmbach
 Copyright (c) 2012-2013 Nenad Rakocevic.
 Copyright (c) 2014-2015, Jon Schlinkert.
 Copyright (c) 2014-2016, Jon Schlinkert.
@@ -4268,6 +5048,7 @@ Copyright (c) 2014-2017, Jon Schlinkert.
 Copyright 2003, Greenline, Kazan, Russia
 Copyright 2005 Dow Jones & Company, Inc.
 Copyright 2006-2009 by the Pygments team
+Copyright 2006-2019 by the Pygments team
 copyright 2015, IPython Development Team
 copyright 2015, Jupyter Development Team
 Copyright (c) 1998 the Initial Developer.
@@ -4282,8 +5063,10 @@ Copyright (c) 2003-2009 by Fredrik Lundh.
 Copyright (c) 2005 the Initial Developer.
 Copyright (c) 2010-2019 Benjamin Peterson
 Copyright (c) 2012 - 2018, Anaconda, Inc.
+Copyright (c) 2012 - 2021, Anaconda, Inc.
 Copyright (c) 2013 (c) Noam Yorav-Raphael
 Copyright (c) 2014 - 2015, Hsiaoming Yang
+Copyright (c) 2014 copro Coproduc cop COP
 Copyright (c) 2019 The OAuthlib Community
 Copyright 2004, 2005, 2006 Yuri Takhteyev
 Copyright 2012 Nokia Siemens Networks Oyj
@@ -4345,6 +5128,7 @@ Copyright (c) 2014-, Jupyter development team
 Copyright (c) 2017, Jupyter Development Team.
 Copyright (c) 2020-, Jupyter Development Team
 Copyright (c) Thomas Kluyver and contributors
+Copyright 2005 (c) B Pool Game Copyright 2007
 (c) (c) AA+-C/IAtBGCg http://www.1affliate.com
 (c) +-,degO AIu?Ca http://deholexp.mizc.com/wp
 (c) <a href https://cartodb.com/attributions'>
@@ -4364,6 +5148,7 @@ Copyright (c) 2018 Marek Vasut <marex@denx.de>
 Copyright (c) 2019, threadpoolctl contributors
 Copyright 1997 University of Cambridge Comment
 Copyright 2001-2016 Python Software Foundation
+Copyright 2003-2006 Copyright (c) 1998 Comment
 Copyright 2006-2014, 2016 by the Pygments team
 Copyright 2006-2014, MetaQuotes Software Corp.
 Copyright 2009-2013, MetaQuotes Software Corp.
@@ -4377,6 +5162,7 @@ copyright 2006-2014, MetaQuotes Software Corp.
 (c) cIpibx http://www.mag2.com/m/0000103697.htm
 (c) http://www.acnnewswire.net/Article.Asp?lang
 Copyright (c) 2008 The IPython Development Team
+Copyright (c) 2008-2016 Copyright 2010 Facebook
 Copyright (c) 2010 Sofian Brabez <sbz@6dev.net>
 Copyright (c) 2010, Gary L. Cutler, GPL Comment
 Copyright (c) 2011 The IPython Development Team
@@ -4415,6 +5201,7 @@ copyright u'2013, Noah Spurrier and contributors
 (c) Copyright 2014-18 Enthought, Inc., Austin, TX
 (c) Copyright 2015-18 Enthought, Inc., Austin, TX
 (c) aIuOOINat < http://webryblog.biglobe.ne.jp/'>
+(c) lPi$?JotAAdege!A1962 (c) uu?i 1/41o 2003 CN1o
 Copyright (c) 2001-2015, IPython Development Team
 Copyright (c) 2005 Free Software Foundation, Inc.
 Copyright (c) 2005, CigarMinds Kft. 2006. 01. 04.
@@ -4482,6 +5269,7 @@ Copyright 2011 Alex Levenson <alex@isnotinvain.com>
 Copyright Joyent, Inc. and other Node contributors.
 Copyright jQuery Foundation and other contributors.
 copyright (c) 2015 Daniel Dinu, Dmitry Khovratovich
+(c) 2012 Denny Vrandecic (http://denny.vrandecic.de)
 (c) a http://www.greek.ru/ru/news/news_detail.php?ID
 (c) cC$?1/4I http://sasuga.biz/pages/index.php?refid
 (c) http://www.newsru.com/crime/03jan2006/minsk.html
@@ -4493,6 +5281,7 @@ Copyright (c) 2008-Present, IPython Development Team
 Copyright (c) 2009-2010, Gary L. Cutler, GPL Comment
 Copyright (c) 2009-2011 The IPython Development Team
 Copyright (c) 2012 - 2020, Anaconda, Inc., and Bokeh
+Copyright (c) 2012 - 2021, Anaconda, Inc., and Bokeh
 Copyright (c) 2015- - Paul Ganssle <paul@ganssle.io>
 Copyright (c) 2018, Andrea Giammarchi, WebReflection
 Copyright 2011 Reya Group <http://www.reyagroup.com>
@@ -4542,6 +5331,7 @@ Copyright (c) 2011-2018 Free Software Foundation, Inc.
 Copyright (c) 2012-2017 Kirollos Risk (http://kiro.me)
 Copyright (c) 2013 Brian E. Granger & Min Ragan-Kelley
 Copyright (c) 2014-2016 Ian Lee <IanLee1521@gmail.com>
+Copyright 2012 (c) Mihai Bazon <mihai.bazon@gmail.com>
 Copyright Petri Savolainen <firstname.lastname@iki.fi>
 copyright u'2010 (c) Ronny Pfannschmidt, Holger Krekel
 (c) 2006 Entrust, Inc. Label Entrust Root Certification
@@ -4585,7 +5375,6 @@ Copyright 2014 Donald Stufft and individual contributors
 Copyright 2016 Donald Stufft and individual contributors
 Copyright 2017 Donald Stufft and individual contributors
 Copyright 2018 Donald Stufft and individual contributors
-Copyright Tiago Serafim (https://www.tiagoserafim.com/).
 copyright f'2004- date.today().year, NetworkX Developers
 (c) EIC/~UcEC/B http://andore.com/mt/archives/003192.html
 (c) c http://itpro.nikkeibp.co.jp/free/NT/NEWS/20050225/1
@@ -4602,6 +5391,7 @@ Copyright (c) 2009-2014, Luke Maurits <luke@maurits.id.au>
 Copyright (c) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
 Copyright (c) 2013 Torsten Landschoff <torsten@debian.org>
 Copyright (c) 2018 - 2020 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2019 Copyright (c) IPython Development Team.
 copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
 (c) !x!O http://www.aozora.gr.jp/cards/000050/card1174.html
 (c) $?A3/4a$?2$?e http://club.h14m.org/kenji/diary/?200512b
@@ -4649,6 +5439,7 @@ Copyright (c) 2009 The R Foundation for Statistical Computing
 Copyright (c) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
 Copyright (c) 2013 by Christian Heimes <christian@python.org>
 Copyright (c) 2013-2014 Yusuke Suzuki <utatane.tea@gmail.com>
+Copyright (c) 2017 Copyright (c) 1993-2003 Yukihiro Matsumoto
 Copyright (c) 2017-???? Dave Halter <davidhalter88@gmail.com>
 Copyright 1996 Institut National de Recherche en Informatique
 Copyright 2013-2017 Donald Stufft and individual contributors
@@ -4708,8 +5499,10 @@ Copyright (c) 2016, Martin Packman <martin.packman@canonical.com>
 (c) Ac?I $?E$?I!C/ http://iriz.hanazono.ac.jp/frame/k_room_f1.html
 (c) Casper da Costa-Luis casperdcl (https://github.com/casperdcl).
 (c) Ivan Sagalaev <Maniac@SoftwareManiacs.Org> Adapted from GitHub
+(c) eEue1/2 http://px.a8.net/svt/ejp?a8mat (http://www.dabeaz.com)
 Copyright (c) 2005 Jorgen Stenarson <jorgen.stenarson@bostream.nu>
 Copyright (c) 2013-2017 by Christian Heimes <christian@python.org>
+Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret).
 Copyright 2009-2013, MetaQuotes Software Corp. http://www.mql4.com
 (c) (c) AA+-C/IAtBGCgxI j AaaAAEIieUu1/2B http://www.1affilaite.com
 (c) 3U!A http://furusatonoeki.cutegirl.jp/main/archives/001182.html
@@ -4775,6 +5568,7 @@ Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 (c) I'IauAWi http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
 (c) ID1UA1/2 http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
 Copyright (c) 2018 Isaac Muse <isaacmuse@gmail.com> The Python-Markdown Project
+Copyright (c) 2019 Ahmed TAHRI Ousret (https://github.com/Ousret). This project
 Copyright (c) 2014, 2015, 2016 Philip Withnall <philip.withnall@collabora.co.uk>
 Copyright 1996 Institut National de Recherche en Informatique et Comment Comment
 copyright 2006-2014, MetaQuotes Software Corp. property link http://www.mql4.com
@@ -4806,6 +5600,7 @@ Copyright (c) 2012-2013, Christopher Jeffrey (MIT License) https://github.com/ch
 (c) 2010-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors Backbone
 Copyright (c) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 Copyright (c) 2008 Stefan van der Walt <stefan@mentat.za.net> , Pauli Virtanen <pav@iki.fi>
+(c) https://stackoverflow.com/questions/3041986/apt-command-line-interface-like-yes-no-input
 (c) iC/C/ISSvAEvAAYAC/1/2n3/4aA http://www.nisshin.com/life/cm/tvcm_mama0915.html u't YIAfeB
 (c) iO http://10e.org/mt/archives/200512/280341.php http://anime.livedoor.com/theater/2.html
 (c) ieE ssStAEC/$?+-AEAAmeC/AEctOStEsA1/2BsA1/2II http://wa2.e-golf.co.jp/gp/nh/cb/cb133.htm
@@ -4831,6 +5626,7 @@ Copyright Paul Johnston 2000 - 2002. Other contributors Greg Holt, Andrew Kepert
 Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Python Software Foundation
 (c) cAFeedBurnerdgA1/2RSSzMEI AYUu1/2BSubscribe3eAeuI http://feeds.feedburner.com/BragZakatoHeadline
 (c) ?A$?I1/4Pedegi$?I EAI,oEaY iY $?Y o http://www.aivy.co.jp/BLOG_TEST/kobakoba/archives/003047.html
+(c) AaAaEC/EC/uAPIIAPS!OaAiAaeN A1/4+-ouA!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php
 (c) uAAa NAEoOuOE1/4th thInAEPS!?EOOE1OAxO1/4oOoAuIaooxo http://www.coverer.com/archives/000835.shtml
 Copyright (c) 1993-2000 by Gerry Murray, Silvano Balemi, Jon Dixon, Peter N'uchter, Juergen von Hagen
 (c) ?IuAAE1/2aPS!Eu3/4I2 auA3oOaNuuA1/2aUAE!PS ?? http://www.blogbus.com/blogbus/blog/index.php?blogid
@@ -4847,6 +5643,7 @@ Copyright Angel Marin, Paul Johnston 2000 - 2009. Other contributors Greg Holt, 
 (c) MSSUao$?ssAEFSSe(r)g!CSanwenji !O'2$?aPdegao'P3q,U /u1/4gak(3o,I!U$?FAn1/2O)!C http://sanwenji.blogspot.com
 Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Python Software Foundation
 (c) PaOOOON-APSE1/2!PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/304.htm
+Copyright Tiago Serafim (https://www.tiagoserafim.com/). copyright f'2004- date.today().year, NetworkX Developers
 (c) !x$?E$?$?$?A$??$?I$? <$?a$? $?i$?E$?$?!PS /> http://www.city.kyoto.jp/somu/rekishi/fm/ishibumi/html/sa043.html
 (c) ,, 1/43/4AI(Berkman Center for Internet & Society)?!1/4 AO+-U title http://cyber.law.harvard.edu/home/home?func
 (c) OAAauAblogPS!u < > ECEuODa-AAOssP1/4P(r)uAE1 http://www.cnblog.org/blog/archives/2004_08_22_cnblog_archive.html
@@ -4872,12 +5669,12 @@ Copyright (c) 2005 Fernando Perez <fperez@colorado.edu> Brian E Granger <ellison
 (c) PaOOxa2EEi1/4thIOOEOOA!PS br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/309.htm 1/4OIY DYID /a a http://www.softsea.net/cat/30912.htm
 (c) 3PS1ae1/4AEEa u2Ux/xOP- -1/2oDDIaA?uAuA3IDo br a http://www.softsea.net/cat/3.htm IuI31$?3/4ss /a a http://www.softsea.net/cat/305.htm IuI31UAi /a a http://www.softsea.net/cat/30506.htm
 (c) AaAaEC/EC/uAPIIAPS!OaAiAaeN A1/4+-ouA!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php Wiki 1/4o1/2e ! ?EOO2I?1/4!PSOU!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php
-<https://web.archive.org/web/20140626004012/http://www.picloud.com/> Nathaniel Gray <n8gray@caltech.edu> Fernando Perez <fperez@colorado.edu> Copyright 2010, Gael Varoquaux 2001-2004, Fernando Perez 2001 Nathaniel Gray
 (c) !C/ http://www.aozora.gr.jp/cards/001166/card43723.html !OE21/2n tha!x$?I1/2D,1/2 !C/ http://www.aozora.gr.jp/cards/001166/card43724.html A,$?Th$?iEN$?A$??AOoaIY uU !C/ http://www.aozora.gr.jp/cards/001166/card43726.html
 (c) Ae,A !x$?I!C/E!oI!uE$?E$?e$?eEYIo$?C$?C/$?e!PSY EY $?Y e!O http://www.aozora.gr.jp/cards/000009/card45340.html degA1aeEnAESS?I$?IAEae !x$?IEYIo1/4O$?I!C/ deg3/4a+-/ANuE!E http://www.aozora.gr.jp/index_pages/person726.html
 (c) 13/4!O http://www.aozora.gr.jp/cards/000275/card4715.html ,D,/Ac+-AE !x!C/IU21/4IYAIo!O http://www.aozora.gr.jp/cards/000120/card4702.html uthoaE1, <I? !x!C/IU21/4Io,1/4!O http://www.aozora.gr.jp/cards/000526/card4702.html'>
 (c) !E$?a$?A$?i$?odegaAA OAE$?ss'1$?'$?aIae$?A$?+-$?E!E $?E$?a!C/$?a$?A$?i$?o CoU$?u$?i$?AE$?$?$?e1/4I??$?IAae$?C$?a2 o1/2$?E'O$?1$?e$?a$?I$?I$?a$?A$?i$?o+-oA/$?C$?I$?E$?$?!PSCdeg$?I$??$?a!PS... http://blog.livedoor.jp/safe_food_of_asia
 (c) 2E$?I OP! !E!C/AIEO21$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000020/card44722.html E1/4 I$?E1/2/IY !E!C/E!AA+-N O$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000057/card43276.html 3/4a$?IE3/4A,3P !E!C/,PI+-'i$?!PS+-oiEE!E http://www.aozora.gr.jp/cards/000293/card4680.html
+1/4o1/2e ! ?EOO2I?1/4!PSOU!P http://ccca.nctu.edu.tw/~hlb/articles/archives/000662.php <https://web.archive.org/web/20140626004012/http://www.picloud.com/> Nathaniel Gray <n8gray@caltech.edu> Fernando Perez <fperez@colorado.edu> Copyright 2010, Gael Varoquaux 2001-2004, Fernando Perez 2001 Nathaniel Gray
 (c) !C/ http://www.aozora.gr.jp/cards/000160/card3344.html AEEEUAU3/4aI oiAi !C/ http://www.aozora.gr.jp/cards/000160/card3342.html $?I$?i$?I$?iE$?AAE$?IPAdegU !C/ http://www.aozora.gr.jp/cards/000160/card3345.html oPSAI$?D$?E$? Eu1cE1/4AA !C/ http://www.aozora.gr.jp/cards/000160/card3347.html Ai thI11O3o !C/ http://www.aozora.gr.jp/cards/000160/card3346.html
 (c) !x!C/!O http://www.aozora.gr.jp/cards/000160/card3344.html AEEEUAU3/4aI oiAi !x!C/!O http://www.aozora.gr.jp/cards/000160/card3342.html $?I$?i$?I$?iE$?AAE$?IPAdegU !x!C/!O http://www.aozora.gr.jp/cards/000160/card3345.html oPSAI$?D$?E$? Eu1cE1/4AA !x!C/!O http://www.aozora.gr.jp/cards/000160/card3347.html Ai thI11O3o !x!C/!O http://www.aozora.gr.jp/cards/000160/card3346.html
 
@@ -4895,7 +5692,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-parso 0.8.2 - MIT
+parso 0.8.3 - MIT
 
 
 Copyright (c) <2013-2017>
@@ -4964,7 +5761,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-py 1.10.0 - MIT
+py 1.11.0 - MIT
 
 
 copyright u'2010
@@ -4985,10 +5782,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-pyparsing 2.4.7 - MIT
+pyjwt 2.3.0 - MIT
+
+
+copyright 2015, Jose Padilla
+Copyright (c) 2015 Jose Padilla
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+pyparsing 3.0.6 - MIT
 
 
 Copyright 2004-2010
+Copyright Paul McGuire
 Copyright 2004, Paul McGuire
 Copyright 2006, Paul McGuire
 Copyright 2008, Paul McGuire
@@ -5008,7 +5826,6 @@ Copyright, 2012 - Paul McGuire
 Copyright 2006, by Paul McGuire
 Copyright 2008, by Paul McGuire
 Copyright 2012, Paul T. McGuire
-copyright 2018, Paul T. McGuire
 Copyright (c) 2003, Paul McGuire
 Copyright (c) 2004, Paul McGuire
 Copyright (c) 2006, Paul McGuire
@@ -5016,12 +5833,11 @@ Copyright (c) 2009 Zarko Zivanov
 Copyright (c) 2016, Paul McGuire
 Copyright 2010,2019 Paul McGuire
 Copyright, 2006, by Paul McGuire
-Copyright 2002-2018, Paul McGuire
 Copyright 2005-2006, Paul McGuire
 Copyright 2009, 2011 Paul McGuire
 Copyright (c) 2018 Paul T. McGuire
 Copyright Ellis & Grant, Inc. 2005
-Copyright 2003-2009 by Paul McGuire
+Copyright 2003-2019 by Paul McGuire
 Copyright 2011,2015 Paul T. McGuire
 Copyright (c) 2003,2019 Paul McGuire
 Copyright (c) 2006,2016 Paul McGuire
@@ -5029,13 +5845,12 @@ Copyright 2003, 2019 by Paul McGuire
 Copyright 2004-2016, by Paul McGuire
 Copyright 2007-2011, by Paul McGuire
 Copyright 2010, 2019 by Paul McGuire
+Copyright 2012, 2019 Paul T. McGuire
 Copyright (c) 2003,2016, Paul McGuire
 Copyright (c) 2004, 2006 Paul McGuire
 Copyright (c) 2004-2016, Paul McGuire
-Copyright (c) 2006-2016, Paul McGuire
 Copyright (c) 2006, 2016, Paul McGuire
-Copyright copy 2003-2013 Paul McGuire.
-Copyright (c) 2003-2019 Paul T. McGuire
+Copyright (c) 2006, 2019, Paul McGuire
 Copyright (c) 2004-2011 Paul T. McGuire.
 Copyright (c) 2006, Estrate, the Netherlands
 Copyright 1989 by Carnegie Mellon University
@@ -5076,7 +5891,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-pytz 2021.1 - MIT
+pytz 2021.3 - MIT
 
 
 Copyright (c) 2003-2019 Stuart Bishop <stuart@stuartbishop.net>
@@ -5095,7 +5910,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-pywinpty 1.1.3 - MIT
+pywinpty 1.1.6 - MIT
 
 
 Copyright (c) 2017 Spyder IDE
@@ -5117,10 +5932,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-PyYAML 5.4.1 - MIT
+pyyaml 6.0 - MIT
 
 
 Copyright (c) 2006-2016 Kirill Simonov
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+readthedocs-sphinx-ext 2.1.4 - MIT
+
+
+copyright u'2015
+Copyright (c) 2010-2019 Read the Docs, Inc & contributors
 
 MIT License
 
@@ -5154,7 +5989,45 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-tqdm 4.62.0 - MIT
+sphinx-rtd-theme 1.0.0 - MIT
+
+
+(c) Droits d'auteur
+(copyright)s. (c) Prawa
+(copyright)s. (c) Autori
+Copyright Downloads Edit
+(copyright)s. (c) Derechos
+(copyright)s. (c) Direitos
+Copyright Dave Gandy 2016.
+Copyright Downloads Bewerk
+Copyright Downloads Editar
+Copyright (copyright)s. Apie
+Copyright (copyright)s. Over
+Copyright Downloads Modifica
+Copyright (copyright)s. About
+Copyright (c) 2019 ORGANIZATION
+(copyright)s. (c) Droits d'auteur
+Copyright 2007-2013 by the Sphinx team
+Copyright Auf Bitbucket bearbeiten Auf GitHub
+Copyright (c) 2010-2015, Lukasz Dziedzic (dziedzic@typoland.com)
+Copyright (copyright)s. Nota sulla documentazione Realizzato con
+Copyright (c) 2013-2018 Dave Snider, Read the Docs, Inc. & contributors
+
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+tqdm 4.62.3 - MIT
 
 
 Copyright (c) 2013
@@ -5175,7 +6048,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-urllib3 1.26.6 - MIT
+urllib3 1.26.7 - MIT
 
 
 Copyright 2015 Google Inc.
@@ -5215,7 +6088,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-zipp 3.5.0 - MIT
+zipp 3.7.0 - MIT
 
 
 Copyright Jason R. Coombs
@@ -5234,7 +6107,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-certifi 2021.5.30 - MPL-2.0
+certifi 2021.10.8 - MPL-2.0
 
 
 (c) 2006 Entrust, Inc.
@@ -5413,7 +6286,7 @@ This Source Code Form is "Incompatible With Secondary Licenses", as defined by t
 
 ---------------------------------------------------------
 
-typing-extensions 3.10.0.0 - OTHER
+typing-extensions 4.0.1 - OTHER
 
 
 Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam
@@ -5436,9 +6309,82 @@ PSF-2.0
 
 ---------------------------------------------------------
 
-matplotlib 3.4.2 - PSF-2.0
+matplotlib 3.5.1 - PSF-2.0
 
 
+coprod 97
+(c) Tavmjong Bah
+(c) Tavmjung Bah
+(c) Frank Siegert 1996
+Copyright (c) 2007-2008
+Fonts are (c) Bitstream
+b'Copyright xa9 2017 No
+Copyright <http://www.ams.org>
+X11R4 release, copyright M.I.T.
+Copyright 2010-2012, Google Inc.
+Copyright (c) 2002 Hansruedi Baer
+Copyright (c) 2003 Hansruedi Baer
+Copyright (c) 2009 Pierre Raybaut
+Copyright (c) 2010 Doug Hellmann.
+Copyright (c) 2006 by Tavmjong Bah.
+Copyright (c) 2011 Ethan Schoonover
+Copyright xa9 2017 No one. FontBBox
+Copyright (c) 2002 by Kevin B. Kenny.
+Copyright (c) 2003 by Bitstream, Inc.
+Copyright (c) 2010, Bartosz Telenczuk
+copyright 2014, Matplotlib developers
+Copyright (c) 1994, Basil K. Malyshev.
+Copyright (c) 2002-2011 John D. Hunter
+ECopyright (c) 2003 by Bitstream, Inc.
+FCopyright (c) 2003 by Bitstream, Inc.
+hCopyright (c) 2003 by Bitstream, Inc.
+coproduct Comment Ascending 98, 99, 100
+Copyright (c) 2001-2004 by Fredrik Lundh
+Copyright (c) 2002-2005 Maxim Shemanarev
+Copyright 2004 John Gill and John Hunter
+Copyright The Matplotlib development team
+Copyright (c) 1993-1996 Lucent Technologies.
+Copyright (c) 1994, 1995, Basil K. Malyshev.
+Portions copyright (c) 1990 by Elsevier, Inc.
+Copyright (c) 1994-1998 Sun Microsystems, Inc.
+Copyright (c) 2012- Matplotlib Development Team
+Copyright (c) 2001-2005 by the STI Pub Companies
+Copyright (c) 2001-2010 by the STI Pub Companies
+1Copyright (c) 2001-2010 by the STI Pub Companies
+Copyright (c) 1997 American Mathematical Society.
+Copyright (c) 1998-2000 by Scriptics Corporation.
+Copyright 1995, Trinity College Computing Center.
+LCopyright (c) 2001-2010 by the STI Pub Companies
+Copyright (c) 2010-2013 by tyPoland Lukasz Dziedzic
+Copyright (c) 1989, 1991 Adobe Systems Incorporated.
+Copyright (c) 2005 Tony Juricic (tonygeek@yahoo.com)
+Portions copyright (c) 1998-2003 by MicroPress, Inc.
+Copyright (c) 1997, 2009 American Mathematical Society
+Copyright (c) Jeremy O'Donoghue & John Hunter, 2003-4.
+Copyright (c) 1985, 1987, 1988 Adobe Systems Incorporated.
+Copyright (c) 1989, 1990, 1991 Adobe Systems Incorporated.
+Copyright (c) 2009 John Horigan (http://www.antigrain.com)
+Copyright (c) 1989, 1990, 1991, Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1988, 1989 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1988, 1991 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1990 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1991 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1992 Adobe Systems Incorporated.
+Copyright (c) 1996. The Regents of the University of California.
+Copyright (c) 2002-2005 Maxim Shemanarev (http://antigrain.com/)
+Copyright (c) 2003-2004 Andrew Straw, Jeremy O'Donoghue and others
+Copyright (c) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
+Copyright (c) 1987-1994 The Regents of the University of California.
+Copyright (c) 1985, 1987, 1988, 1989, 1997 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1990, 1991 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1990, 1997 Adobe Systems Incorporated.
+Copyright (c) 1989, 1990, 1991, 1993, 1997 Adobe Systems Incorporated.
+Copyright (c) 1985, 1987, 1989, 1990, 1993, 1997 Adobe Systems Incorporated.
+Copyright (c) 1989, 1990, 1991, 1992, 1993, 1997 Adobe Systems Incorporated.
+Copyright (c) 1997, 2009, American Mathematical Society (http://www.ams.org).
+Copyright (c) 2002 Cynthia Brewer, Mark Harrower, and The Pennsylvania State University.
+copyrighted by the Regents of the University of California, Sun Microsystems, Inc., Scriptics Corporation
+copyright 2002 - 2012 John Hunter, Darren Dale, Eric Firing, Michael Droettboom and the Matplotlib development team f'2012 - sourceyear The Matplotlib development team
 
 PSF-2.0
 
@@ -5446,7 +6392,7 @@ PSF-2.0
 
 ---------------------------------------------------------
 
-pywin32 301 - PSF-2.0
+pywin32 303 - PSF-2.0
 
 
 
@@ -5596,9 +6542,10 @@ STICHTING MATHEMATISCH CENTRUM DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFT
 
 ---------------------------------------------------------
 
-filelock 3.0.12 - Unlicense
+filelock 3.4.2 - Unlicense
 
 
+copyright f'2014- date.today().year, company
 
 This is free and unencumbered software released into the public domain.
 

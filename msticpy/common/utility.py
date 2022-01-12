@@ -14,7 +14,18 @@ import uuid
 import warnings
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 from platform import python_version
 
 import pkg_resources
@@ -203,9 +214,9 @@ def check_and_install_missing_packages(  # noqa: MC0001
                     stderr=subprocess.PIPE,
                 )
             except subprocess.CalledProcessError as proc_err:
-                print(f"An Error has occured while installing {package}.")
-                print(f"Output: {str(proc_err.stdout)}")
-                print(f"Errs: {str(proc_err.stderr)}")
+                print(f"An Error has occurred while installing {package}.")
+                print(f"Output: {proc_err.stdout}")
+                print(f"Errs: {proc_err.stderr}")
                 pkg_success = False
         print(f"{package} installed.")
 
@@ -486,16 +497,41 @@ def valid_pyname(identifier: str) -> str:
     return identifier
 
 
-def enum_parse(enum_cls: type, value: str) -> Optional[Enum]:
-    """Try to parse a string value to an Enum member."""
-    if not issubclass(enum_cls, Enum):
+# Define generic type so enum_parse returns the same type as
+# passed in 'enum_class
+EnumType = TypeVar("EnumType")
+
+
+def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
+    """
+    Try to parse a string value to an Enum member.
+
+    Parameters
+    ----------
+    enum_cls : EnumType
+        The Enum type to check against
+    value : str
+        The enum value to parse
+
+    Returns
+    -------
+    Optional[EnumType]
+        The enumeration value matching `value` or None
+
+    Raises
+    ------
+    TypeError
+        If something other than an Enum subclass is passed.
+
+    """
+    if not issubclass(enum_cls, Enum):  # type: ignore
         raise TypeError("Can only be used with classes derived from enum.Enum.")
-    if value in enum_cls.__members__:
-        return enum_cls.__members__[value]
+    if value in enum_cls.__members__:  # type: ignore
+        return enum_cls.__members__[value]  # type: ignore
     val_lc = value.casefold()
-    val_map = {name.casefold(): name for name in enum_cls.__members__}
+    val_map = {name.casefold(): name for name in enum_cls.__members__}  # type: ignore
     if val_lc in val_map:
-        return enum_cls.__members__[val_map[val_lc]]
+        return enum_cls.__members__[val_map[val_lc]]  # type: ignore
     return None
 
 
