@@ -55,7 +55,7 @@ class SentinelBookmarksMixin:
         query : str
             The KQL query for the bookmark
         results : str, optional
-            The results of the query to include with the bookmark
+            The results of the query to include with the bookmark, by default None
         notes : str, optional
             Any notes you want associated with the bookmark, by default None
         labels : List[str], optional

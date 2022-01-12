@@ -131,7 +131,7 @@ class SentinelAnalyticsMixin:
         enabled : bool, optional
             Whether you want the analytic to be enabled once deployed, by default True
         query : str, optional
-            The query string to use in the anlaytic, by default None
+            The KQL query string to use in the anlaytic, by default None
         query_frequency : str, optional
             How often the query should run in ISO8601 format, by default "PT5H"
         query_period : str, optional
