@@ -7,7 +7,7 @@
 import warnings
 
 # flake8: noqa: F403, F401
-# pylint: disable=wildcard-import, unused-wildcard-import
+# pylint: disable=unused-import
 from .azure import AzureData
 
 WARN_MSSG = (
