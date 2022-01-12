@@ -480,6 +480,9 @@ class KqlDriver(DriverBase):
             - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
             - auth_methods: list of acceptable auth methods from ('msi', 'cli',
                 'env' or 'interactive')
+        mp_az_tenant_id: str, optional
+            Optional parameter specifying a Tenant ID for use by MSTICPy Azure
+            authentication.
 
         """
         print("Authenticating to Azure.")

@@ -78,6 +78,7 @@ class KustoDriver(KqlDriver):
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
+
         """
         self.current_connection = self._get_connection_string(
             connection_str=connection_str, **kwargs
