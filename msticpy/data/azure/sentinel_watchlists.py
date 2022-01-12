@@ -83,8 +83,8 @@ class SentinelWatchlistsMixin:
             If there is an issue creating the watchlist.
 
         """
-        if not self._check_watchlist_exists(watchlist_name):
-            raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
+        if self._check_watchlist_exists(watchlist_name):
+            raise MsticpyUserError(f"Watchlist {watchlist_name} already exist.")
         watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
         params = {"api-version": "2021-04-01"}
         data_items = {
