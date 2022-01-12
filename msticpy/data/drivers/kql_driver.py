@@ -128,6 +128,7 @@ class KqlDriver(DriverBase):
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
+
         """
         if not self._previous_connection:
             print("Connecting...", end=" ")

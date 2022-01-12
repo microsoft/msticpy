@@ -101,7 +101,8 @@ def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredential
     Parameters
     ----------
     tenant_id : str, optional
-        The tenant to authenticate against. If not supplied, the default tenant for the identity will be used.
+        The tenant to authenticate against. If not supplied, the default tenant for the
+        identity will be used.
     silent : bool, optional
         Whether you want the auth process to display any output, by default False
 
