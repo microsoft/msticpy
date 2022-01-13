@@ -17,9 +17,6 @@ QueryDefinitions:
 Azure:
   cloud: "global"
   auth_methods: ["cli", "msi", "interactive"]
-  subscription_id: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
-  resource_group: "MyRG"
-  workspace_name: "MyWorkspace"
 TIProviders:
   OTX:
     Args:
@@ -58,28 +55,24 @@ TIProviders:
 OtherProviders:
   GeoIPLite:
     Args:
-      AuthKey:
-        EnvironmentVar: "MAXMIND_AUTH"
+      AuthKey: 36b723b0-981d-447b-a094-e41369eaa5dc
       DBFolder: "~/.msticpy"
     Provider: "GeoLiteLookup"
   IPStack:
     Args:
-      AuthKey:
-        EnvironmentVar: "IPSTACK_AUTH"
+      AuthKey: 36b723b0-981d-447b-a094-e41369eaa5dc
     Provider: "IPStackLookup"
 DataProviders:
   MicrosoftDefender:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
-      ClientSecret:
-        EnvironmentVar: "IPSTACK_AUTH"
+      ClientSecret: 36b723b0-981d-447b-a094-e41369eaa5dc
   MicrosoftGraph:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
-      ClientSecret:
-        EnvironmentVar: "IPSTACK_AUTH"
+      ClientSecret: 36b723b0-981d-447b-a094-e41369eaa5dc
   Mordor:
     save_folder: ~/.msticpy/mordor
     use_cached: true
