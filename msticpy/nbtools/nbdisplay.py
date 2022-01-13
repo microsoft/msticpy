@@ -13,7 +13,7 @@ from bokeh.plotting import figure, from_networkx, show
 from bokeh.models import Circle, HoverTool, Label
 from deprecated.sphinx import deprecated
 import IPython
-from IPython.core.display import HTML, display
+from IPython.display import HTML, display
 from IPython.display import Javascript
 
 from .._version import VERSION

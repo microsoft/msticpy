@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 import pandas as pd
 import requests
-from IPython.core.display import display
+from IPython.display import display
 
 from azure.common.exceptions import CloudError
 
