@@ -55,24 +55,28 @@ TIProviders:
 OtherProviders:
   GeoIPLite:
     Args:
-      AuthKey: 36b723b0-981d-447b-a094-e41369eaa5dc
+      AuthKey:
+        EnvironmentVar: "MAXMIND_AUTH"
       DBFolder: "~/.msticpy"
     Provider: "GeoLiteLookup"
   IPStack:
     Args:
-      AuthKey: 36b723b0-981d-447b-a094-e41369eaa5dc
+      AuthKey:
+        EnvironmentVar: "IPSTACK_AUTH"
     Provider: "IPStackLookup"
 DataProviders:
   MicrosoftDefender:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
-      ClientSecret: 36b723b0-981d-447b-a094-e41369eaa5dc
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
   MicrosoftGraph:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
-      ClientSecret: 36b723b0-981d-447b-a094-e41369eaa5dc
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
   Mordor:
     save_folder: ~/.msticpy/mordor
     use_cached: true
