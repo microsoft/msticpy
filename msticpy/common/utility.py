@@ -30,7 +30,7 @@ from platform import python_version
 
 import pkg_resources
 from IPython import get_ipython
-from IPython.core.display import HTML, display, DisplayHandle
+from IPython.display import HTML, display, DisplayHandle
 from tqdm.auto import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
 
