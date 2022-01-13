@@ -102,6 +102,12 @@ TIProviders:
     Args:
       ApiID: str()
       AuthKey: *cred_key
+  IntSights:
+    Primary: bool(default=True)
+    Provider: "IntSights"
+    Args:
+      ApiID: str()
+      AuthKey: *cred_key
 OtherProviders:
   GeoIPLite:
     Args:
