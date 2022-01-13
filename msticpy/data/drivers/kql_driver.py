@@ -486,7 +486,6 @@ class KqlDriver(DriverBase):
             authentication.
 
         """
-        print("Authenticating to Azure.")
         # default to default auth methods
         az_config = AzureCloudConfig()
         auth_types = az_config.auth_methods

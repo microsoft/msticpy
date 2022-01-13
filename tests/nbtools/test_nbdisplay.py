@@ -3,12 +3,19 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import unittest
 import os
+import unittest
 from pathlib import Path
+
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+import pandas as pd
 import pytest
+import pytest_check as check
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
+
+from msticpy.nbtools.nbdisplay import display_logon_data
+
+from ..unit_test_lib import get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventClustering.ipynb"
@@ -37,3 +44,16 @@ class Testnbdisplay(unittest.TestCase):
             with open(nb_err, mode="w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
             raise
+
+
+def test_display_logon():
+    """Test Logon display code."""
+    win_logon_df = pd.read_csv(
+        str(get_test_data_path().joinpath("host_logons.csv")),
+        index_col=0,
+        parse_dates=["TimeGenerated"],
+    )
+
+    check.is_not_none(win_logon_df)
+    display_logon_data(win_logon_df)
+    display_logon_data(win_logon_df.iloc[0])
