@@ -20,7 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _KCS_CODE = "code;"
-_KCS_APP = "tenant='{tenant}';clientid='{clientid}';clientsecret='{clientsecret}';"
+_KCS_APP = "tenant='{tenant_id}';clientid='{client_id}';clientsecret='{clientsecret}';"
 _KCS_TEMPLATE = "azure_data-Explorer://{auth}cluster='{cluster}';database='{database}'"
 
 KustoClusterSettings = Dict[str, Dict[str, Union[str, ProviderArgs]]]
@@ -49,6 +49,7 @@ class KustoDriver(KqlDriver):
         self.environment = kwargs.get("data_environment", DataEnvironment.Kusto)
         self._connected = True
         self._kusto_settings: KustoClusterSettings = _get_kusto_settings()
+        self._cluster_uri = None
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
         """
@@ -74,14 +75,37 @@ class KustoDriver(KqlDriver):
             str: single auth method name ('msi', 'cli', 'env' or 'interactive')
             List[str]: list of acceptable auth methods from ('msi', 'cli',
             'env' or 'interactive')
+        mp_az_tenant_id: str, optional
+            Optional parameter specifying a Tenant ID for use by MSTICPy Azure
+            authentication.
 
         """
         self.current_connection = self._get_connection_string(
             connection_str=connection_str, **kwargs
         )
+
+        mp_az_auth = kwargs.pop("mp_az_auth", None)
+        mp_az_tenant_id = kwargs.pop("mp_az_tenant_id", None)
+
+        if (
+            self._cluster_uri
+        ):  # This should be set by _get_connection_string called above
+            cluster_settings = self._kusto_settings.get(self._cluster_uri.casefold())
+            if cluster_settings:
+                if mp_az_auth is None and cluster_settings["integrated_auth"]:
+                    mp_az_auth = "default"
+                if mp_az_tenant_id is None and cluster_settings["tenant_id"]:
+                    mp_az_tenant_id = cluster_settings["tenant_id"]
+
         kwargs.pop("cluster", None)
         kwargs.pop("database", None)
-        super().connect(connection_str=self.current_connection, **kwargs)
+
+        super().connect(
+            connection_str=self.current_connection,
+            mp_az_auth=mp_az_auth,
+            mp_az_tenant_id=mp_az_tenant_id,
+            **kwargs,
+        )
 
     def query(
         self, query: str, query_source: QuerySource = None, **kwargs
@@ -135,6 +159,7 @@ class KustoDriver(KqlDriver):
                 new_connection = self._create_connection(
                     cluster=cluster, database=database
                 )
+                self._cluster_uri = cluster
         if not new_connection and query_source:
             # try to get cluster and db from query_source metadata
             cluster = cluster or query_source.metadata.get("cluster")
@@ -151,6 +176,7 @@ class KustoDriver(KqlDriver):
                 qry_db = data_families[0]  # type: ignore
             database = database or qry_db
             new_connection = self._create_connection(cluster=cluster, database=database)
+            self._cluster_uri = cluster
         return new_connection
 
     def _create_connection(self, cluster, database):
@@ -219,6 +245,11 @@ class KustoDriver(KqlDriver):
                 return kusto_config["cluster"]
         return None
 
+    def _get_endpoint_uri(self):
+        if not self._cluster_uri.endswith("/"):
+            self._cluster_uri += "/"
+        return self._cluster_uri
+
 
 def _get_kusto_settings() -> KustoClusterSettings:
     kusto_settings: KustoClusterSettings = {}
@@ -237,9 +268,9 @@ def _get_kusto_settings() -> KustoClusterSettings:
                 title=f"No Cluster value for {prov_name}",
             )
         kusto_settings[cluster.casefold()] = {
-            "tenant": settings.args.get("TenantId"),  # type: ignore
+            "tenant_id": settings.args.get("TenantId"),  # type: ignore
             "integrated_auth": settings.args.get("IntegratedAuth"),  # type: ignore
-            "clientid": settings.args.get("ClientId"),  # type: ignore
+            "client_id": settings.args.get("ClientId"),  # type: ignore
             "args": settings.args,
             "cluster": cluster,
             "alias": instance,
