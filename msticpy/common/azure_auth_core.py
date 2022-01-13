@@ -270,8 +270,8 @@ class _AzCachedConnect:
 
 
 # externally callable function using the class above
-_AZ_CACHED_CONNECT = _AzCachedConnect()
-az_connect_core = _AZ_CACHED_CONNECT.connect
+# _AZ_CACHED_CONNECT = _AzCachedConnect()
+az_connect_core = _az_connect_core
 
 
 def only_interactive_cred(chained_cred: ChainedTokenCredential):

@@ -68,17 +68,21 @@ UserDefaults:
       connect: False
 """
 
+_NOTEBOOKLETS = False
+
 
 @pytest.fixture(scope="module")
 def mp_settings():
     """Return test settings."""
     settings_dict = yaml.safe_load(CONFIG_TEXT)
-    if not _NOTEBOOKLETS and settings_dict.get("LoadComponents", {}).get(
-        "Notebooklets"
+    if not _NOTEBOOKLETS and settings_dict["UserDefaults"].get(
+        "LoadComponents", {}
+    ).get("Notebooklets"):
+        del settings_dict["UserDefaults"]["LoadComponents"]["Notebooklets"]
+    if not _PIVOT and settings_dict["UserDefaults"].get("LoadComponents", {}).get(
+        "Pivot"
     ):
-        del settings_dict["LoadComponents"]["Notebooklets"]
-    if not _PIVOT and settings_dict.get("LoadComponents", {}).get("Pivot"):
-        del settings_dict["LoadComponents"]["Pivot"]
+        del settings_dict["UserDefaults"]["LoadComponents"]["Pivot"]
     return settings_dict
 
 

@@ -140,9 +140,11 @@ _NB_IMPORTS = [
     dict(pkg="pathlib", tgt="Path"),
     dict(pkg="matplotlib.pyplot", alias="plt"),
     dict(pkg="matplotlib", tgt="MatplotlibDeprecationWarning"),
-    dict(pkg="seaborn", alias="sns"),
     dict(pkg="numpy", alias="np"),
 ]
+if sns is not None:
+    _NB_IMPORTS.append(dict(pkg="seaborn", alias="sns"))
+
 _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
@@ -250,16 +252,15 @@ def init_notebook(
         exception hander. Any exceptions derived from MsticpyUserException
         are displayed but do not produce a stack trace, etc.
         Defaults to system/user settings if no value is supplied.
-    verbose : bool, optional
-        Display more verbose status, by default False
-        Deprecated - use `verbosity` parameter
+    verbose : Union[int, bool], optional
+        Controls amount if status output, by default 1
+        0 = No output
+        1 or False = Brief output (default)
+        2 or True = Detailed output
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
     verbosity : int, optional
-        0 = No output
-        1 = Brief output (default)
-        2 = Detailed output
-        1 is equivalent to verbose=False, 2 is equivalent to verbose=True
+
 
     Returns
     -------
@@ -290,8 +291,7 @@ def init_notebook(
     friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
 
-    verbosity: int = kwargs.pop("verbosity", 2 if kwargs.pop("verbose", False) else 1)
-    _VERBOSITY(verbosity)
+    _set_verbosity(**kwargs)
 
     _pr_output("<hr><h4>Starting Notebook initialization...</h4>")
     # Check Azure ML environment
@@ -332,6 +332,12 @@ def init_notebook(
             InteractiveShell.showtraceback
         )
 
+    # load pivots
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        _load_pivots(namespace=namespace)
+        _pr_output(stdout_cap.getvalue())
+
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
@@ -364,6 +370,17 @@ def _show_init_warnings(imp_ok, conf_ok):
         )
     md("This notebook may still run but with reduced functionality.")
     return False
+
+
+def _set_verbosity(**kwargs):
+    """Set verbosity of output from boolean or int `verbose` param."""
+    verbosity = 1
+    verb_param = kwargs.pop("verbose", kwargs.pop("verbosity", 1))
+    if isinstance(verb_param, bool):
+        verbosity = 2 if verb_param else 1
+    elif isinstance(verb_param, int):
+        verbosity = min(2, max(0, verb_param))
+    _VERBOSITY(verbosity)
 
 
 def list_default_imports():
@@ -411,7 +428,7 @@ def _get_aml_globals(namespace: Dict[str, Any]):
     return py_ver, mp_ver, extras
 
 
-def _global_imports(  # noqa: MC0001
+def _global_imports(
     namespace: Dict[str, Any],
     additional_packages: List[str] = None,
     user_install: bool = False,
@@ -419,22 +436,13 @@ def _global_imports(  # noqa: MC0001
     def_imports: str = "all",
 ):
     import_list = []
-    try:
-        if def_imports.casefold() in ["all", "nb"]:
-            for imp_pkg in _NB_IMPORTS:
-                if sns is None and imp_pkg.get("pkg") == "seaborn":
-                    continue
-                _imp_from_package(nm_spc=namespace, **imp_pkg)
-                import_list.append(_extract_pkg_name(imp_pkg))
-            _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
+    imports = _build_import_list(def_imports)
 
-        if def_imports.casefold() in ["all", "msticpy"]:
-            for imp_pkg in _MP_IMPORTS:
-                _imp_from_package(nm_spc=namespace, **imp_pkg)
-                import_list.append(_extract_pkg_name(imp_pkg))
-            for imp_pkg in _MP_IMPORT_ALL:
-                _imp_module_all(nm_spc=namespace, **imp_pkg)
-                import_list.append(_extract_pkg_name(imp_pkg))
+    try:
+        for imp_pkg in imports:
+            _imp_from_package(nm_spc=namespace, **imp_pkg)
+            import_list.append(_extract_pkg_name(imp_pkg))
+        _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
         if additional_packages:
             pkg_success = check_and_install_missing_packages(
@@ -453,12 +461,21 @@ def _global_imports(  # noqa: MC0001
                 _import_extras(nm_spc=namespace, extra_imports=extra_imports)
             )
 
-        if import_list:
-            _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
+        _pr_output("Imported:", ", ".join(imp for imp in import_list if imp))
         return True
     except ImportError as imp_err:
         display(HTML(_IMPORT_ERR_MSSG.format(err=imp_err)))
         return False
+
+
+def _build_import_list(def_imports: str) -> List[Dict[str, str]]:
+    imports = []
+    if def_imports.casefold() in ["all", "nb"]:
+        imports.extend(_NB_IMPORTS)
+    if def_imports.casefold() in ["all", "msticpy"]:
+        imports.extend(_MP_IMPORTS)
+        imports.extend(_MP_IMPORT_ALL)
+    return imports
 
 
 _AZ_SENT_ERRS = [
