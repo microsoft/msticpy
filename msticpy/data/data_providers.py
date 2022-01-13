@@ -251,16 +251,29 @@ class QueryProvider:
         return [env for env in DataEnvironment.__members__ if env != "Unknown"]
         # pylint: enable=not-an-iterable
 
-    def list_queries(self) -> List[str]:
+    def list_queries(self, substring: Optional[str] = None) -> List[str]:
         """
         Return list of family.query in the store.
 
+        Parameters
+        ----------
+        substring : Optional[str]
+            Optional pattern - will return only queries matching the pattern,
+            default None.
+
         Returns
         -------
-        Iterable[str]
+        List[str]
             List of queries
 
         """
+        if substring:
+            return list(
+                filter(
+                    lambda x: substring in x.lower(),  # type: ignore
+                    self.query_store.query_names,
+                )
+            )
         return list(self.query_store.query_names)
 
     def list_connections(self) -> List[str]:
