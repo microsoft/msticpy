@@ -7,7 +7,7 @@
 import textwrap
 from typing import Generator, Any
 
-from IPython.core.display import HTML
+from IPython.display import HTML
 
 from ..._version import VERSION
 from ...nbtools.nbwidgets import SelectItem
