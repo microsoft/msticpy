@@ -65,6 +65,7 @@ UserDefaults:
       connect: False
     AzureSentinelAPI:
       auth_methods: ['cli','interactive']
+      res_id: "subscriptions/bab8ff42-bb7b-42ca-873e-d13c5eb5ffb8/resourceGroups/TestRG/providers/Microsoft.OperationalInsights/workspaces/SentinelWorkspace"
       connect: False
 """
 
