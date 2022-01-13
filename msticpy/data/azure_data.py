@@ -13,6 +13,5 @@ from .azure import AzureData
 WARN_MSSG = (
     "This module has moved to msticpy.data.azure.azure_data\n"
     + "Please change your import to reflect this new location."
-
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)
