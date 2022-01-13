@@ -7,7 +7,7 @@
 import pprint
 from typing import List, Union
 import pandas as pd
-from IPython.core.display import HTML
+from IPython.display import HTML
 
 from .._version import VERSION
 from .nbwidgets import SelectItem
