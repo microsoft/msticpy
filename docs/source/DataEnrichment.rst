@@ -7,4 +7,4 @@ Enriching Data
    data_acquisition/TIProviders
    data_acquisition/GeoIPLookups
    data_acquisition/AzureData
-   data_acquisition/AzureSentinel
+   data_acquisition/Sentinel
