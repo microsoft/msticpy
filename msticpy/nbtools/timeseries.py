@@ -32,10 +32,13 @@ __version__ = VERSION
 __author__ = "Ashwin Patil"
 
 
+_TS_KWARGS = ["xgrid", "ygrid"]
+
+
 # pylint: disable=invalid-name, too-many-locals, too-many-statements
 # pylint: disable=too-many-branches, too-many-function-args, too-many-arguments
 @export  # noqa: C901, MC0001
-def display_timeseries_anomolies(
+def display_timeseries_anomalies(
     data: pd.DataFrame,
     y: str = "Total",
     time_column: str = "TimeGenerated",
@@ -50,12 +53,12 @@ def display_timeseries_anomolies(
     Parameters
     ----------
     data : pd.DataFrame
-        DataFrame as a time series data set retreived from KQL time series
+        DataFrame as a time series data set retrieved from KQL time series
         functions. Dataframe must have columns specified in `y`, `time_column`
         and `anomalies_column` parameters
     y : str, optional
         Name of column holding numeric values to plot against time series to
-        determine anomolies
+        determine anomalies
         (the default is 'Total')
     time_column : str, optional
         Name of the timestamp column
@@ -104,7 +107,7 @@ def display_timeseries_anomolies(
         The bokeh plot figure.
 
     """
-    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS)
+    check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + _TS_KWARGS)
 
     reset_output()
     output_notebook()
@@ -127,7 +130,7 @@ def display_timeseries_anomolies(
 
     source = ColumnDataSource(data)
 
-    series_count = int(len(data) / period)
+    series_count = len(data) // period
 
     # Filtering anomalies to create new dataframe
     source_columns = [col for col in data.columns if col not in [anomalies_column]]
@@ -137,12 +140,12 @@ def display_timeseries_anomolies(
     hover = HoverTool(tooltips=tooltips, formatters=formatters)
 
     # Create the Plot figure
-    title = title if title else "Time Series Anomalies Visualization"
+    title = title or "Time Series Anomalies Visualization"
     min_time = data[time_column].min()
     max_time = data[time_column].max()
     start_range = min_time - ((max_time - min_time) * 0.05)
     end_range = max_time + ((max_time - min_time) * 0.05)
-    height = height if height else _calc_auto_plot_height(series_count)
+    height = height or _calc_auto_plot_height(series_count)
 
     plot = figure(
         x_range=(start_range, end_range),
@@ -205,12 +208,12 @@ def display_timeseries_anomolies(
     )
 
     # setting the visualization types for anomalies based on user input to kind
-    if kind == "diamond_cross":
-        plot.diamond_cross(**arg_dict)
-    elif kind == "cross":
+    if kind == "cross":
         plot.cross(**arg_dict)
     elif kind == "diamond":
         plot.diamond(**arg_dict)
+    elif kind == "diamond_cross":
+        plot.diamond_cross(**arg_dict)
     else:
         plot.circle_x(**arg_dict)
 
@@ -240,3 +243,7 @@ def display_timeseries_anomolies(
 
     show(plot)
     return plot
+
+
+# Keep misspelled name for backward compatability
+display_timeseries_anomolies = display_timeseries_anomalies
