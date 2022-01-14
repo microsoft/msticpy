@@ -42,12 +42,14 @@ sources:
         {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
-        | where DeviceName has "{hostname}"
+        | where DeviceName has "{host_name}"
         {add_query_items}'
     parameters:
-      hostname:
+      host_name:
         description: Name of host
         type: str
+        aliases:
+          - hostname
   ip_connections:
     description: Lists alerts associated with a specified remote IP
     metadata:

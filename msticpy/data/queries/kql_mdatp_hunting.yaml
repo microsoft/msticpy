@@ -296,7 +296,7 @@ sources:
     metadata:
     args:
       query: '
-        let DeviceId = "{hostname}";
+        let DeviceId = "{host_name}";
         let timestamp = datetime({timestamp});
         let powershellCommands =
             DeviceEvents
@@ -311,9 +311,11 @@ sources:
         {add_query_items}'
       uri: "https://github.com/microsoft/WindowsDefenderATP-Hunting-Queries/blob/master/Execution/PowershellCommand%20-%20uncommon%20commands%20on%20machine.txt"
     parameters:
-      hostname:
+      host_name:
         description: hostname of computer to focus query on
         type: str
+        aliases:
+          - hostname
       timestamp:
         description: timestamp to base investigation scope on
         type: str

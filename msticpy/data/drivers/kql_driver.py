@@ -125,12 +125,22 @@ class KqlDriver(DriverBase):
             str: single auth method name ('msi', 'cli', 'env' or 'interactive')
             List[str]: list of acceptable auth methods from ('msi', 'cli',
             'env' or 'interactive')
+        mp_az_tenant_id: str, optional
+            Optional parameter specifying a Tenant ID for use by MSTICPy Azure
+            authentication.
 
         """
         if not self._previous_connection:
             print("Connecting...", end=" ")
+
+        mp_az_auth = kwargs.pop("mp_az_auth", "default")
+        mp_az_tenant_id = kwargs.pop("mp_az_tenant_id", None)
+
         if isinstance(connection_str, WorkspaceConfig):
+            if not mp_az_tenant_id and "tenant_id" in connection_str:
+                mp_az_tenant_id = connection_str["tenant_id"]
             connection_str = connection_str.code_connect_str
+
         if not connection_str:
             raise MsticpyKqlConnectionError(
                 f"A connection string is needed to connect to {self._connect_target}",
@@ -139,9 +149,10 @@ class KqlDriver(DriverBase):
         if "kqlmagic_args" in kwargs:
             connection_str = connection_str + " " + kwargs["kqlmagic_args"]
         # Default to using Azure Auth if possible.
-        mp_az_auth = kwargs.pop("mp_az_auth", "default")
+
         if mp_az_auth and "try_token" not in kwargs:
-            self._set_az_auth_option(mp_az_auth)
+            self._set_az_auth_option(mp_az_auth, mp_az_tenant_id)
+
         self.current_connection = connection_str
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
@@ -456,8 +467,7 @@ class KqlDriver(DriverBase):
         )
 
     def _set_az_auth_option(
-        self,
-        mp_az_auth: Union[bool, str, list, None],
+        self, mp_az_auth: Union[bool, str, list, None], mp_az_tenant_id: str = None
     ):
         """
         Build connection string with auth elements.
@@ -471,9 +481,11 @@ class KqlDriver(DriverBase):
             - auth_method: single auth method name ('msi', 'cli', 'env' or 'interactive')
             - auth_methods: list of acceptable auth methods from ('msi', 'cli',
                 'env' or 'interactive')
+        mp_az_tenant_id: str, optional
+            Optional parameter specifying a Tenant ID for use by MSTICPy Azure
+            authentication.
 
         """
-        print("Authenticating to Azure.")
         # default to default auth methods
         az_config = AzureCloudConfig()
         auth_types = az_config.auth_methods
@@ -483,19 +495,22 @@ class KqlDriver(DriverBase):
         elif isinstance(mp_az_auth, list):
             auth_types = mp_az_auth
         # get current credentials
-        creds = az_connect(auth_methods=auth_types)
+        creds = az_connect(auth_methods=auth_types, tenant_id=mp_az_tenant_id)
         if only_interactive_cred(creds.modern):
             print("Check your default browser for interactive sign-in prompt.")
 
-        la_uri = _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]
-        la_token_uri = f"{la_uri}.default"
-        # obtain token for Log Analytics
-        token = creds.modern.get_token(la_token_uri)
+        endpoint_uri = self._get_endpoint_uri()
+        endpoint_token_uri = f"{endpoint_uri}.default"
+        # obtain token for the endpoint
+        token = creds.modern.get_token(endpoint_token_uri)
         # set the token values in the namespace
 
-        la_token = {
+        endpoint_token = {
             "access_token": token.token,
             "token_type": "Bearer",
-            "resource": la_uri,
+            "resource": endpoint_uri,
         }
-        self._set_kql_option("try_token", la_token)
+        self._set_kql_option("try_token", endpoint_token)
+
+    def _get_endpoint_uri(self):
+        return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]
