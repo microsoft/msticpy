@@ -6,20 +6,18 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from azure.identity import InteractiveBrowserCredential
 import pytest
+from azure.identity import InteractiveBrowserCredential
 from msticpy.common import pkg_config
-from msticpy.common.provider_settings import get_provider_settings
-from msticpy.data.azure_data import AzureData
-
 from msticpy.common.azure_auth_core import (
+    AzCredentials,
     ChainedTokenCredential,
     CredentialWrapper,
-    AzCredentials,
 )
+from msticpy.common.provider_settings import get_provider_settings
+from msticpy.data.azure.azure_data import AzureData
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
-
 
 # pylint: disable=protected-access
 
