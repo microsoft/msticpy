@@ -113,7 +113,7 @@ class TestPkgConfig(unittest.TestCase):
             self.assertEqual(ipstack._api_key, "987654321-222")
 
     @pytest.mark.skipif(
-        os.environ.get("MSTICPY_BUILD_SOURCE").casefold() == "fork",
+        os.environ.get("MSTICPY_BUILD_SOURCE", "").casefold() == "fork",
         reason="External fork.",
     )
     def test_validate_config(self):

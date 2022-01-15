@@ -113,7 +113,7 @@ def add_pivot_functions(api_scope: Optional[str] = None):
                 func_new_name=func_name,
                 input_type="value",
                 entity_map={entity: _ENTITY_PROPS[entity]},
-                func_input_value_arg="id",
+                func_input_value_arg="entity_id",
                 can_iterate=True,
                 create_shortcut=True,
             )
