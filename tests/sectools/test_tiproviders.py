@@ -367,7 +367,7 @@ class mock_req_session:
             query = kwargs["params"]["query"]
             if is_benign_ioc(kwargs["params"]):
                 return MockResponse(None, 404)
-            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%d %H:%M:%S")
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ")
             mocked_result = {
                 "Value": "124.5.6.7",
                 "Type": "IpAddresses",
