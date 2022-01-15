@@ -211,4 +211,5 @@ UserDefaults:
       connect: bool(default=True)
     AzureSentinelAPI:
       auth_methods: m_enum(options=[env; msi; cli; interactive], default=["env"; "interactive"])
+      res_id: str(default=None)
       connect: bool(default=True)

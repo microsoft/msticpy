@@ -46,6 +46,11 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
 
     Other Parameters
     ----------------
+    time_column : str, optional
+        If the input data is not indexed on the time column, use this column
+        as the time index
+    data_column : str, optional
+        Use named column if the input data has more than one column.
     seasonal : int, optional
         Seasonality period of the input data required for STL.
         Must be an odd integer, and should normally be >= 7 (default).
@@ -71,9 +76,16 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     seasonal: int = kwargs.get("seasonal", 7)
     period: int = kwargs.get("period", 24)
     score_threshold: float = kwargs.get("score_threshold", 3.0)
+    time_column = kwargs.get("time_column")
+    data_column = kwargs.get("data_column")
 
     if not isinstance(data, pd.DataFrame):
         raise MsticpyException("input data should be a pandas dataframe")
+
+    if time_column:
+        data = data.set_index(time_column)
+    if data_column:
+        data = data[[data_column]]
 
     # STL method does Season-Trend decomposition using LOESS.
     # Accepts timeseries dataframe
@@ -103,8 +115,9 @@ def ts_anomalies_stl(data: pd.DataFrame, **kwargs) -> pd.DataFrame:
     result.loc[(result["score"] < score_threshold), "anomalies"] = 0
     # Datatype casting
     result["anomalies"] = result["anomalies"].astype("int64")
-    result = result.reset_index()
-    return result
+
+    time_index_name = data.index.name or "index"
+    return result.reset_index().sort_values(time_index_name, ascending=True)
 
 
 timeseries_anomalies_stl = ts_anomalies_stl
@@ -140,7 +153,7 @@ def extract_anomaly_periods(
 
     """
     # Resample data based on period - period is the granularity that
-    # we want to merge 2 adject samples on.
+    # we want to merge 2 adjacent samples on.
     anom_filter = [1] if pos_only else [1, -1]
     resampled = (
         data[(data["anomalies"].isin(anom_filter))]

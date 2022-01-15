@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """GeoLocation Entity class."""
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Tuple
 
 from ..._version import VERSION
 from ...common.utility import export
@@ -65,8 +65,8 @@ class GeoLocation(Entity, ContextObject):
         self.CountryName: Optional[str] = None
         self.State: Optional[str] = None
         self.City: Optional[str] = None
-        self.Longitude: Optional[str] = None
-        self.Latitude: Optional[str] = None
+        self.Longitude: Optional[float] = None
+        self.Latitude: Optional[float] = None
         self.Asn: Optional[str] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
@@ -79,6 +79,13 @@ class GeoLocation(Entity, ContextObject):
     def name_str(self) -> str:
         """Return Entity Name."""
         return self.CountryCode or self.__class__.__name__
+
+    @property
+    def coordinates(self) -> Tuple[float, float]:
+        """Return Latitude/Longitude as a tuple of floats."""
+        if self.Latitude and self.Longitude:
+            return self.Latitude, self.Longitude
+        return (0.0, 0.0)
 
     _entity_schema = {
         # str
