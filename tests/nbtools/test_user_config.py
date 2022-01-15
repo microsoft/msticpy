@@ -65,20 +65,25 @@ UserDefaults:
       connect: False
     AzureSentinelAPI:
       auth_methods: ['cli','interactive']
+      res_id: "subscriptions/bab8ff42-bb7b-42ca-873e-d13c5eb5ffb8/resourceGroups/TestRG/providers/Microsoft.OperationalInsights/workspaces/SentinelWorkspace"
       connect: False
 """
+
+_NOTEBOOKLETS = False
 
 
 @pytest.fixture(scope="module")
 def mp_settings():
     """Return test settings."""
     settings_dict = yaml.safe_load(CONFIG_TEXT)
-    if not _NOTEBOOKLETS and settings_dict.get("LoadComponents", {}).get(
-        "Notebooklets"
+    if not _NOTEBOOKLETS and settings_dict["UserDefaults"].get(
+        "LoadComponents", {}
+    ).get("Notebooklets"):
+        del settings_dict["UserDefaults"]["LoadComponents"]["Notebooklets"]
+    if not _PIVOT and settings_dict["UserDefaults"].get("LoadComponents", {}).get(
+        "Pivot"
     ):
-        del settings_dict["LoadComponents"]["Notebooklets"]
-    if not _PIVOT and settings_dict.get("LoadComponents", {}).get("Pivot"):
-        del settings_dict["LoadComponents"]["Pivot"]
+        del settings_dict["UserDefaults"]["LoadComponents"]["Pivot"]
     return settings_dict
 
 

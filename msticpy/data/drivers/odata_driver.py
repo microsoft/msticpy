@@ -82,14 +82,22 @@ class OData(DriverBase):
 
         """
 
-    def connect(self, connection_str: str = None, **kwargs):
+    def connect(
+        self,
+        connection_str: Optional[str] = None,
+        **kwargs,
+    ):
         """
         Connect to oauth data source.
 
         Parameters
         ----------
-        connection_str: str, optional
+        connection_str: Optional[str], optional
             Connect to a data source
+        instance : Optional[str], optional
+            Optional name of configuration instance - this
+            is added as a prefix to the driver configuration key name
+            when searching for configuration in the msticpyconfig.yaml
 
         Notes
         -----
@@ -106,7 +114,10 @@ class OData(DriverBase):
             self.current_connection = connection_str
             cs_dict = self._parse_connection_str(connection_str)
         else:
-            cs_dict = _get_driver_settings(self.CONFIG_NAME, self._ALT_CONFIG_NAMES)
+            instance = kwargs.pop("instance", None)
+            cs_dict = _get_driver_settings(
+                self.CONFIG_NAME, self._ALT_CONFIG_NAMES, instance
+            )
             # let user override config settings with function kwargs
             cs_dict.update(kwargs)
 
@@ -157,9 +168,7 @@ class OData(DriverBase):
         return json_response
 
     # pylint: disable=too-many-branches
-    def query_with_results(  # noqa: MC0001
-        self, query: str, **kwargs
-    ) -> Tuple[pd.DataFrame, Any]:  # noqa: MC0001
+    def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
         Execute query string and return DataFrame of results.
 
@@ -198,16 +207,8 @@ class OData(DriverBase):
             # self.request_uri set if self.connected
             req_url = self.request_uri + query  # type: ignore
             response = requests.get(url=req_url, headers=self.req_headers)
-        if response.status_code != requests.codes["ok"]:
-            print(response.json()["error"]["message"])
-            if response.status_code == 401:
-                raise ConnectionRefusedError(
-                    "Authentication failed - possible ", "timeout. Please re-connect."
-                )
-            # Raise an exception to handle hitting API limits
-            if response.status_code == 429:
-                raise ConnectionRefusedError("You have likely hit the API limit. ")
-            response.raise_for_status()
+
+        self._check_response_errors(response)
 
         json_response = response.json()
         if isinstance(json_response, int):
@@ -217,10 +218,7 @@ class OData(DriverBase):
             )
             return None, json_response
 
-        if "Results" in json_response:
-            result = json_response["Results"]
-        else:
-            result = json_response
+        result = json_response.get("Results", json_response)
 
         if not result:
             print("Warning - query did not return any results.")
@@ -228,6 +226,21 @@ class OData(DriverBase):
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
+
+    @staticmethod
+    def _check_response_errors(response):
+        """Check the response for possible errors."""
+        if response.status_code == requests.codes["ok"]:
+            return
+        print(response.json()["error"]["message"])
+        if response.status_code == 401:
+            raise ConnectionRefusedError(
+                "Authentication failed - possible ", "timeout. Please re-connect."
+            )
+        # Raise an exception to handle hitting API limits
+        if response.status_code == 429:
+            raise ConnectionRefusedError("You have likely hit the API limit. ")
+        response.raise_for_status()
 
     @staticmethod
     def _parse_connection_str(connection_str: str) -> Dict[str, str]:
@@ -290,16 +303,20 @@ def _map_config_dict_name(config_dict: Dict[str, str]):
     return mapped_dict
 
 
-def _get_driver_settings(config_name, alt_names) -> Dict[str, str]:
+def _get_driver_settings(
+    config_name: str, alt_names: Iterable[str], instance: Optional[str] = None
+) -> Dict[str, str]:
     """Try to retrieve config settings for OAuth drivers."""
-    drv_config = get_provider_settings("DataProviders").get(config_name)
+    config_key = f"{config_name}-{instance}" if instance else config_name
+    drv_config = get_provider_settings("DataProviders").get(config_key)
     app_config: Dict[str, str] = {}
     if drv_config:
         app_config = dict(drv_config.args)
     else:
         # Otherwise fall back on legacy settings location
         for alt_name in alt_names:
-            app_config = config.settings.get(alt_name, {}).get("Args")
+            alt_key = f"{alt_name}-{instance}" if instance else alt_name
+            app_config = config.settings.get(alt_key, {}).get("Args")
             if app_config:
                 break
 
