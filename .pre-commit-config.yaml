@@ -37,3 +37,9 @@ repos:
         pass_filenames: False
         language: python
         types: [python]
+  - repo: local
+    hooks:
+      - id: create_pip_lock
+        name: create_pip_lock
+        entry: pipenv lock
+        language: system
