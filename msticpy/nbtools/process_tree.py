@@ -347,6 +347,7 @@ def _pre_process_tree(
 
     # trim long commandlines
     max_cmd_len = 500 // len(levels)
+    proc_tree[schema.cmd_line] = proc_tree[schema.cmd_line].astype(str)
     long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
     proc_tree.loc[long_cmd, "__cmd_line$$"] = (
         proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."

@@ -83,6 +83,9 @@ class WorkspaceConfig:
 
     PKG_CONF_TENANT_KEY = "TenantId"
     PKG_CONF_WS_KEY = "WorkspaceId"
+    PKG_CONF_SUB_KEY = "SubscriptionId"
+    PKG_CONF_RES_GROUP_KEY = "ResourceGroup"
+    PKG_CONF_NAME_KEY = "WorkspaceName"
 
     CONF_WS_ID_KEY = "workspace_id"
     CONF_TENANT_ID_KEY = "tenant_id"
@@ -313,6 +316,18 @@ class WorkspaceConfig:
             )
             self._config[self.CONF_TENANT_ID_KEY] = selected_workspace.get(
                 self.PKG_CONF_TENANT_KEY
+            )
+        if self.PKG_CONF_SUB_KEY in selected_workspace:
+            self._config[self.CONF_SUB_ID_KEY] = selected_workspace.get(
+                self.PKG_CONF_SUB_KEY
+            )
+        if self.PKG_CONF_RES_GROUP_KEY in selected_workspace:
+            self._config[self.CONF_RES_GROUP_KEY] = selected_workspace.get(
+                self.PKG_CONF_RES_GROUP_KEY
+            )
+        if self.PKG_CONF_NAME_KEY in selected_workspace:
+            self._config[self.CONF_WS_NAME_KEY] = selected_workspace.get(
+                self.PKG_CONF_NAME_KEY
             )
         return {}
 

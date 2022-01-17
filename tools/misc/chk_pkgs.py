@@ -7,7 +7,7 @@
 import re
 
 KQL_REQUIRES = [
-    "ipython>=7.1.1",
+    "ipython>=7.23.1",
     "ipykernel>=5.1.1",
     "plotly>=3.10.0",
     "prettytable>=0.7.2",
