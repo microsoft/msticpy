@@ -1,0 +1,93 @@
+metadata:
+  version: 1
+  description: Splunk Queries
+  data_environments: [Splunk]
+  data_families: [SplunkDatamodel]
+  tags: ['process', 'account', 'network']
+defaults:
+  metadata:
+    data_source: 'bots'
+  parameters:
+    index:
+      description: 'Splunk index name'
+      type: str
+      default: '*'
+    source:
+      description: 'Splunk source type'
+      type: str
+      default: '*'
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    project_fields:
+      description: Project Field names
+      type: str
+      default: '| table TimeCreated, host, EventID, EventDescription, User, process, cmdline, Image, parent_process, ParentCommandLine, dest, Hashes'
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: '| head 100'
+    timeformat:
+      description: 'Datetime format to use in Splunk query'
+      type: str
+      default: '"%Y-%m-%d %H:%M:%S.%6N"'
+sources:
+  list_logons_for_host:
+    description: All logon events on a host
+    metadata:
+      data_families: [Authentication]
+      pivot:
+        short_name: logons
+        direct_func_entities:
+          - Host
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.dest={host_name}'
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
+
+  list_logons_for_source_ip:
+    description: All successful user logon events for source IP (all hosts)
+    metadata:
+      data_families: [Authentication]
+  
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.src={ip_address}'
+
+    parameters:
+      ip_address:
+        description: The source IP Address to search on
+        type: str
+
+
+  list_logon_failures:
+    description: All failed user logon events on any host
+    metadata:
+      data_families: [Authentication]
+  
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.action=failure'
+    parameters:
+    query_macros:
+      query_condition:
+        description: Null where clause
+        value: ""
+  
+  list_logons_for_account:
+    description: All successful user logon events for account (all hosts)
+    metadata:
+      data_families: [Authentication]  
+      pivot:
+        short_name: logons
+        direct_func_entities:
+          - Account
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.user={account_name}'
+    parameters:
+      account_name:
+        description: The account name to search on
+        type: str
