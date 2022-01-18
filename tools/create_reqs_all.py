@@ -10,10 +10,7 @@ from importlib import import_module
 from pathlib import Path
 import sys
 from typing import List
-import configparser
-import re
-import toml
-import json
+
 
 VERSION = "1.0.0"
 
@@ -89,48 +86,6 @@ def _compare_reqs(new, current):
 def _write_requirements(app_args, extras: List[str]):
     Path(app_args.out).write_text("\n".join(extras))
 
-
-def _write_pipfile(extras: List[str]):
-    """
-    Converts requirements file to Pipfile
-
-    Parameters
-    ----------
-    extras : List[str]
-        List of packages in traditional requirements.txt format
-
-    Notes
-    -----
-    Reads and writes Pipfile content, used to generate Pipfile.lock
-    """
-
-    # Regular expression to extract the required package version and extras
-    package_pattern = re.compile('^(?P<name>[\w\d\-_]*)(\[(?P<extras>[\w\d,-_]*)\])' \
-        '?(?P<requirements>(?P<condition>[\<\>=]{1,2})(?P<version>[\d\w\.]*))?')
-
-    # Populate a dictionary wheres the key is the package name and value the pinned version
-    pipfile_requirements = {}
-    for package in extras:
-        parsed_package_details = package_pattern.search(package)
-        package_name = parsed_package_details['name']
-
-        # Set the required version to latest (*) if no pinned version is found
-        required_version = '*'
-        if parsed_package_details['condition']:
-            required_version = f'{parsed_package_details["condition"]}{parsed_package_details["version"]}'
-
-        # Modify the requirement version if package extras are specified
-        if parsed_package_details['extras']:
-            package_extras = [extra for extra in parsed_package_details['extras'].split(',')]
-            required_version = {'version': required_version, 'extras': package_extras}
-        
-        pipfile_requirements[package_name] = required_version
-
-    # Save output to Pipfile (toml formatted)
-    load_toml = toml.load('Pipfile')
-    with open('Pipfile', 'w') as target_pipfile:
-        load_toml['packages'] = pipfile_requirements
-        target_pipfile.write(toml.dumps(load_toml))
 
 def _get_extras_from_setup(
     package_root: str,
@@ -217,5 +172,4 @@ if __name__ == "__main__":
             print("\n".join(diff.strip() for diff in diff_reqs))
         else:
             _write_requirements(app_args=args, extras=extra_reqs)
-            _write_pipfile(extra_reqs)
-    sys.exit(1)
+        sys.exit(1)
