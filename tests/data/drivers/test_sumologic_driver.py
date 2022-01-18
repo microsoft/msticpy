@@ -13,9 +13,8 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+import httpx
 import pytest_check as check
-from requests.exceptions import ConnectionError as ConnError
-from requests.exceptions import HTTPError
 
 from msticpy.common.exceptions import (
     MsticpyConnectionError,
@@ -43,10 +42,10 @@ def cli_connect(**kwargs):
     cause.reason = "Page not found."
     cause.headers = "One Two Three"
     if kwargs.get("host") == "AuthError":
-        raise ConnError(cause=cause, message="test AuthHeader")
+        raise httpx.ConnectError(cause=cause, message="test AuthHeader")
     if kwargs.get("host") == "HTTPError":
         cause.body = io.BytesIO(cause.body)
-        raise HTTPError(response=cause, _message="test HTTPError")
+        raise httpx.HTTPError(response=cause, _message="test HTTPError")
     return SumologicService()
 
 
@@ -93,9 +92,9 @@ class SumologicService(MagicMock):
 
     def _cli_connect(self, **kwargs):
         if kwargs["endpoint"] == "AuthError":
-            raise ConnError
+            raise httpx.ConnectError
         if kwargs["endpoint"] == "HTTPError":
-            raise HTTPError
+            raise httpx.HTTPError
         if kwargs["endpoint"] == "OtherError":
             raise Exception()
 
@@ -105,7 +104,7 @@ class SumologicService(MagicMock):
 
         self.status_check_count = 0
         if query == "Failjob":
-            raise HTTPError("job failed")
+            raise httpx.HTTPError("job failed")
         return self.SEARCH_JOBS.get(query, 0)
 
     def search_job_status(self, search_job):

@@ -10,7 +10,7 @@ from typing import Dict, Set, Tuple, Optional, List
 from urllib import parse
 
 import markdown
-import requests
+import httpx
 from bs4 import BeautifulSoup
 
 # pylint: disable=relative-beyond-top-level
@@ -41,7 +41,7 @@ def check_url(url: str) -> UrlResult:
 
     """
     try:
-        resp = requests.get(url)
+        resp = httpx.get(url)
         report = str(resp.status_code)
         if resp.history:
             history_status_codes = [str(h.status_code) for h in resp.history]
@@ -124,7 +124,7 @@ def check_site(  # noqa: MC0001
         print("already visited")
         return {}, {}
 
-    resp = requests.get(page_url)
+    resp = httpx.get(page_url)
     if resp.headers["Content-Type"] != "text/html":
         print(resp.headers["Content-Type"])
         return {}, {}
