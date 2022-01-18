@@ -34,8 +34,7 @@ def test_cluster_syslog_logons_df():
 
 
 @pytest.mark.skipif(
-    os.environ.get("MSTICPY_BUILD_SOURCE", "").casefold() == "fork",
-    reason="External fork.",
+    os.environ.get("MSTICPY_BUILD_SOURCE", "").casefold() == "fork", reason="External fork."
 )
 def test_host_data():
     test_config1 = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")

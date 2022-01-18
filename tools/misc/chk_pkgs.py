@@ -16,7 +16,7 @@ KQL_REQUIRES = [
     "adal>=1.2.1",
     "Pygments>=2.2.0",
     "seaborn>=0.9.0",
-    "requests>=2.21.0",
+    "httpx==0.18",
     "python-dateutil>=2.7.5",
     "traitlets>=4.3.2",
     "psutil>=5.4.7",

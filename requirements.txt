@@ -21,7 +21,7 @@ dnspython<=2.0.0 # <=2.0 required by ipwhois
 folium>=0.9.0
 geoip2>=2.9.0
 html5lib  # req by pandas for scraping
-idna<3 # req < 3 from requests
+httpx==0.18
 ipwhois>=1.1.0
 ipython>=7.23.1
 ipywidgets>=7.4.2
@@ -38,7 +38,6 @@ pygeohash>=1.2.0
 python-dateutil>=2.8.1  # pandas
 pytz>=2019.2  # pandas
 pyyaml>=3.13
-requests>=2.21.1
 # scikit-learn>=0.20.2  # scikit
 # scipy>=1.1.0  # timeseries
 # seaborn>=0.9.0
