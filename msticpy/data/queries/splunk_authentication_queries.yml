@@ -1,6 +1,6 @@
 metadata:
   version: 1
-  description: Splunk Queries
+  description: Splunk Authentication Queries (non-accelerated)
   data_environments: [Splunk]
   data_families: [SplunkDatamodel]
   tags: ['process', 'account', 'network']
