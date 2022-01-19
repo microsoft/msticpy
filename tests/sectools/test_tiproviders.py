@@ -364,7 +364,6 @@ class mock_req_session:
             }
             return MockResponse(mocked_result, 200)
         elif kwargs["url"].startswith("https://api.intsights.com"):
-            query = kwargs["params"]["query"]
             if is_benign_ioc(kwargs["params"]):
                 return MockResponse(None, 404)
             date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ")
