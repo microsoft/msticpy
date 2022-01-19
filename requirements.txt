@@ -17,7 +17,7 @@ azure-mgmt-subscription>=1.0.0
 bokeh>=1.4.0
 cryptography>=3.1
 deprecated>=1.2.4
-dnspython<=2.0.0 # <=2.0 required by ipwhois
+dnspython<3.0.0 # <=2.0 required by ipwhois
 folium>=0.9.0
 geoip2>=2.9.0
 html5lib  # req by pandas for scraping
