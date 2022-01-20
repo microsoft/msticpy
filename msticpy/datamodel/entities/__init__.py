@@ -58,6 +58,7 @@ Entity.ENTITY_NAME_MAP.update(
         "iotdevice": IoTDevice,
         "ip": IpAddress,
         "networkconnection": NetworkConnection,
+        "network-connection": NetworkConnection,
         "mailbox": Mailbox,
         "mail-message": MailMessage,
         "mailmessage": MailMessage,

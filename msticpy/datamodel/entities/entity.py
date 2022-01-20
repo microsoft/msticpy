@@ -509,11 +509,14 @@ class Entity(ABC, Node):
             The V3 serialized name.
 
         """
-        name = next(
-            iter(
-                (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+        try:
+            name = next(
+                iter(
+                    (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+                )
             )
-        )
+        except StopIteration:
+            name = None
         return name or "unknown"
 
     @property
