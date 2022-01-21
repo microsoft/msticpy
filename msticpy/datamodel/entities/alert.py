@@ -126,28 +126,6 @@ class Alert(Entity):
             self.Entities = self._create_entities(ents)
         self._add_additional_data(src_entity)
 
-    def _extract_entities(self, src_row):  # noqa: MC0001
-        input_entities = []
-        if isinstance(src_row.Entities, str):
-            try:
-                ext_props = json.loads(src_row["Entities"])
-                for item in ext_props:
-                    for k, v in item.items():
-                        if isinstance(v, dict) and "$ref" in v.keys():
-                            item[k] = [x for x in ext_props if x["$id"] == v["$ref"]][0]
-                    input_entities.append(item)
-            except json.JSONDecodeError:
-                pass
-        if isinstance(src_row.ExtendedProperties, str):
-            try:
-                ext_props = json.loads(src_row["ExtendedProperties"])
-                for ent, val in ext_props.items():
-                    if ent in ["IpAddress", "Username"]:
-                        input_entities.append({"Entity": val, "Type": ent})
-            except json.JSONDecodeError:
-                pass
-        return input_entities
-
     @property
     def description_str(self) -> str:
         """Return Entity Description."""
@@ -163,7 +141,6 @@ class Alert(Entity):
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""
-        entity_props = set(self.__dict__.keys()) | {"AlertDisplayName", "SystemAlertId"}
         if isinstance(src_entity, dict):
             prop_list = src_entity.items()
         elif type(src_entity).__name__ == "SecurityAlert":
@@ -176,21 +153,22 @@ class Alert(Entity):
             return
 
         for prop_name, prop in prop_list:
-            if prop_name not in entity_props:
+            if prop_name not in self._entity_schema:
                 self.AdditionalData[prop_name] = prop
+            elif prop_name not in self.__dict__:
+                self.__dict__[prop_name] = prop
+            else:
+                continue
 
     def _create_from_event(self, src_event):
         """Create Alert from an alert event."""
         self.TimeGenerated = src_event.get("StartTime", src_event.get("TimeGenerated"))
         self.DisplayName = src_event.get("DisplayName", src_event.get("Name"))
-        self.CompromisedEntity = src_event.get("CompromisedEntity")
         self.StartTimeUtc = src_event.get("StartTime")
         self.EndTimeUtc = src_event.get("EndTime")
         self.Severity = src_event.get("AlertSeverity")
         self.SystemAlertIds = src_event.get("SystemAlertId", src_event.get("ID"))
         self.AlertType = src_event.get("AlertType")
-        self.VendorName = src_event.get("VendorName")
-        self.ProviderName = src_event.get("ProviderName")
         if isinstance(src_event["Entities"], str):
             try:
                 ents = _extract_entities(json.loads(src_event["Entities"]))
@@ -199,6 +177,80 @@ class Alert(Entity):
         else:
             ents = _extract_entities(src_event["Entities"])
         self.Entities = self._create_entities(ents)
+        for ent in self._entity_schema:
+            if ent not in self.__dict__:
+                self.__dict__[ent] = src_event.get(ent)
+        if "ExtendedProperties" in src_event:
+            ext_props = json.loads(src_event["ExtendedProperties"])
+            self._add_additional_data(ext_props)
+
+    _entity_schema = {
+        # DisplayName (type System.String)
+        "DisplayName": None,
+        # CompromisedEntity (type System.String)
+        "CompromisedEntity": None,
+        # Count (type System.Nullable`1[System.Int32])
+        "Count": None,
+        # StartTimeUtc (type System.Nullable`1[System.DateTime])
+        "StartTimeUtc": None,
+        # EndTimeUtc (type System.Nullable`1[System.DateTime])
+        "EndTimeUtc": None,
+        # Severity (type System.Nullable`1
+        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Severity])
+        "Severity": None,
+        # SystemAlertIds (type System.Collections.Generic.List`1[System.String])
+        "SystemAlertId": None,
+        # AlertType (type System.String)
+        "AlertType": None,
+        # VendorName (type System.String)
+        "VendorName": None,
+        # ProviderName (type System.String)
+        "ProviderName": None,
+        # List of associated entities
+        "Entities": None,
+        # Time the alert was generated.
+        "TimeGenerated": None,
+        # The product that generated teh alert
+        "ProductName": None,
+        "ProductComponentName": None,
+        "ProductVersion": None,
+        "ProcessingEndTime": None,
+        "Status": None,
+        "ProviderAlertStatus": None,
+        "ConfidenceLevel": None,
+        "ConfidenceScore": None,
+        "ConfidenceScoreStatus": None,
+        "ConfidenceReasons": None,
+        "Intent": None,
+        "Techniques": None,
+        "SubTechniques": None,
+        "IsIncident": None,
+        "IsPreview": None,
+        "ProviderAlertId": None,
+        "CorrelationKey": None,
+        "InvestigationIds": None,
+        "AzureResourceId": None,
+        "WorkspaceId": None,
+        "WorkspaceSubscriptionId": None,
+        "WorkspaceResourceGroup": None,
+        "AgentId": None,
+        "CompromisedEntity": None,
+        "AlertDisplayName": None,
+        "AlertDisplayNameLocalizedKey": None,
+        "Description": None,
+        "DescriptionLocalizedKey": None,
+        "DescriptionArguments": None,
+        "SupportingEvidence": None,
+        "RemediationSteps": None,
+        "ExtendedProperties": None,
+        "ExtendedLinks": None,
+        "Metadata": None,
+        "Edges": None,
+        "AlertUri": None,
+        "UpdateMetadata": None,
+        "Anomaly": None,
+        "AlertPolicy": None,
+    }
 
     def _create_entities(self, entities):
         """Create alert entities from returned dicts."""
@@ -219,34 +271,6 @@ class Alert(Entity):
             )
             new_ents.append(ent_obj)
         return new_ents
-
-    _entity_schema = {
-        # DisplayName (type System.String)
-        "DisplayName": None,
-        # CompromisedEntity (type System.String)
-        "CompromisedEntity": None,
-        # Count (type System.Nullable`1[System.Int32])
-        "Count": None,
-        # StartTimeUtc (type System.Nullable`1[System.DateTime])
-        "StartTimeUtc": None,
-        # EndTimeUtc (type System.Nullable`1[System.DateTime])
-        "EndTimeUtc": None,
-        # Severity (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Severity])
-        "Severity": None,
-        # SystemAlertIds (type System.Collections.Generic.List`1[System.String])
-        "SystemAlertIds": None,
-        # AlertType (type System.String)
-        "AlertType": None,
-        # VendorName (type System.String)
-        "VendorName": None,
-        # ProviderName (type System.String)
-        "ProviderName": None,
-        # List of associated entities
-        "Entities": None,
-        # Time the alert was generated.
-        "TimeGenerated": None,
-    }
 
     def to_html(self, show_entities=False) -> str:
         """Return the item as HTML string."""
@@ -297,8 +321,11 @@ def _extract_entities(ents: list):
 
 def _find_og_ent(ent, base_ents):
     """Find the original entity referenced by $ref entity."""
-    id = ent["$ref"]
-    return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
+    try:
+        id = ent["$ref"]
+        return next(bent for bent in base_ents if ("$id" in bent) and bent["$id"] == id)
+    except StopIteration:
+        return ent
 
 
 def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
