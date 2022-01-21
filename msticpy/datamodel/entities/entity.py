@@ -512,7 +512,11 @@ class Entity(ABC, Node):
         try:
             name = next(
                 iter(
-                    (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+                    (
+                        key
+                        for key, val in cls.ENTITY_NAME_MAP.items()
+                        if val == entity_type
+                    )
                 )
             )
         except StopIteration:
