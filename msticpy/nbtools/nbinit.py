@@ -436,11 +436,14 @@ def _global_imports(
     def_imports: str = "all",
 ):
     import_list = []
-    imports = _build_import_list(def_imports)
+    imports, imports_all = _build_import_list(def_imports)
 
     try:
         for imp_pkg in imports:
             _imp_from_package(nm_spc=namespace, **imp_pkg)
+            import_list.append(_extract_pkg_name(imp_pkg))
+        for imp_pkg in imports_all:
+            _imp_module_all(nm_spc=namespace, **imp_pkg)
             import_list.append(_extract_pkg_name(imp_pkg))
         _check_and_reload_pkg(namespace, pd, _PANDAS_REQ_VERSION, "pd")
 
@@ -468,14 +471,17 @@ def _global_imports(
         return False
 
 
-def _build_import_list(def_imports: str) -> List[Dict[str, str]]:
+def _build_import_list(
+    def_imports: str,
+) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     imports = []
+    imports_all = []
     if def_imports.casefold() in ["all", "nb"]:
         imports.extend(_NB_IMPORTS)
     if def_imports.casefold() in ["all", "msticpy"]:
         imports.extend(_MP_IMPORTS)
-        imports.extend(_MP_IMPORT_ALL)
-    return imports
+        imports_all.extend(_MP_IMPORT_ALL)
+    return imports, imports_all
 
 
 _AZ_SENT_ERRS = [
