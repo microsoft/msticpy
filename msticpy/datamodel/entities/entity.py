@@ -424,7 +424,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith("_") and name != "edges"
+            if not name.startswith("_") and name != "edges" and value
         }
 
     @property
