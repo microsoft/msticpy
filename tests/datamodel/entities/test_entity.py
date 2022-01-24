@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 import json
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -29,8 +30,18 @@ def fixture_name():
 
 def test_entity_merge():
     """Entity comparison and merging."""
-    host1 = Host(HostName="host1", DnsDomain="contoso.com", OSFamily=OSFamily.Windows)
-    host2 = Host(HostName="host1", DnsDomain="contoso.com", IsDomainJoined=True)
+    host1 = Host(
+        HostName="host1",
+        DnsDomain="contoso.com",
+        OSFamily=OSFamily.Windows,
+        TimeGenerated=datetime(2022, 1, 24, 23, 5, 5, 728510),
+    )
+    host2 = Host(
+        HostName="host1",
+        DnsDomain="contoso.com",
+        IsDomainJoined=True,
+        TimeGenerated=datetime(2022, 1, 24, 23, 5, 5, 728510),
+    )
     host3 = Host(HostName="host3", DnsDomain="contoso.com")
 
     check.not_equal(host1, host2)
