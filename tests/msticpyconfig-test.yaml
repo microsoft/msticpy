@@ -52,6 +52,14 @@ TIProviders:
   TorExitNodes:
     Primary: True
     Provider: Tor
+  IntSights:
+    Args:
+      ApiID:
+        EnvironmentVar: "INTSIGHTS_ID"
+      AuthKey:
+        EnvironmentVar: "INTSIGHTS_AUTH"
+    Primary: True
+    Provider: IntSights
 OtherProviders:
   GeoIPLite:
     Args:

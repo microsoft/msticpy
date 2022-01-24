@@ -363,6 +363,33 @@ class mock_req_session:
                 ],
             }
             return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://api.intsights.com"):
+            if is_benign_ioc(kwargs["params"]):
+                return MockResponse(None, 404)
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ")
+            mocked_result = {
+                "Value": "124.5.6.7",
+                "Type": "IpAddresses",
+                "Score": 42,
+                "Severity": "Medium",
+                "Whitelist": False,
+                "FirstSeen": date,
+                "LastSeen": date,
+                "LastUpdate": date,
+                "Sources": [
+                    {"ConfidenceLevel": 2, "Name": "Source A"},
+                    {"ConfidenceLevel": 1, "Name": "Source B"},
+                    {"ConfidenceLevel": 1, "Name": "Source C"},
+                    {"ConfidenceLevel": 3, "Name": "Source D"},
+                ],
+                "SystemTags": ["bot", "malware related"],
+                "Geolocation": "FR",
+                "RelatedMalware": ["malware1"],
+                "RelatedCampaigns": ["Campaign A"],
+                "RelatedThreatActors": ["Threat Actor 00"],
+                "Tags": ["tag"],
+            }
+            return MockResponse(mocked_result, 200)
         return MockResponse(None, 404)
 
 
@@ -428,6 +455,9 @@ class TestTIProviders(unittest.TestCase):
     def test_riskiq(self):
         self.exercise_provider("RiskIQ")
 
+    def test_intsights(self):
+        self.exercise_provider("IntSights")
+
     def exercise_provider(self, provider_name):
         ti_lookup = self.ti_lookup
 
@@ -469,7 +499,10 @@ class TestTIProviders(unittest.TestCase):
     def verify_result(self, result):
         self.assertIsNotNone(result)
         for prov, lu_result in result[1]:
-            self.assertIn(prov, ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ"])
+            self.assertIn(
+                prov,
+                ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
+            )
             self.assertIsNotNone(lu_result.ioc)
             self.assertIsNotNone(lu_result.ioc_type)
             if lu_result.result:
