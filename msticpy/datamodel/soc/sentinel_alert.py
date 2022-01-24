@@ -77,6 +77,7 @@ class SentinelAlert(Alert):
         src_event : Mapping[str, Any], optional
             Create entity from event properties such as a Pandas Series
             (the default is None)
+
         """
         self._custom_query_params: Dict[str, Any] = {}
         super().__init__(src_entity, src_event, **kwargs)

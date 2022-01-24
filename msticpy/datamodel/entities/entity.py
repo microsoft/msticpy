@@ -7,6 +7,7 @@
 import json
 import pprint
 import typing
+from datetime import datetime
 from abc import ABC
 from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
@@ -82,7 +83,7 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
-        self.TimeGenerated = None
+        self.TimeGenerated = datetime.utcnow()
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknownentity" and "Type" in kwargs:
@@ -343,7 +344,7 @@ class Entity(ABC, Node):
             self.__dict__[prop] != other.__dict__[prop]
             and self.__dict__[prop]
             and other.__dict__[prop]
-            for prop in self.__dict__
+            for prop in self.__dict__  # pylint: disable=consider-using-dict-items
         )
 
     def merge(self, other: Any) -> "Entity":
