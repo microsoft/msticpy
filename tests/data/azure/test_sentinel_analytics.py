@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
+import respx
 from msticpy.data.azure import MicrosoftSentinel
 
 _HUNTING_QUERIES = {
@@ -87,45 +87,34 @@ def sent_loader(mock_creds):
     return sent
 
 
-@responses.activate
+@respx.mock
 def test_sent_hunting_queries(sent_loader):
     """Test Sentinel hunting feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_HUNTING_QUERIES,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_HUNTING_QUERIES
     )
     hqs = sent_loader.list_hunting_queries()
     assert isinstance(hqs, pd.DataFrame)
     assert hqs["properties.Query"].iloc[0] == "QueryText"
 
 
-@responses.activate
+@respx.mock
 def test_sent_alert_rules(sent_loader):
     """Test Sentinel alert feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_ALERT_RULES,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_ALERT_RULES
     )
     alerts = sent_loader.list_alert_rules()
     assert isinstance(alerts, pd.DataFrame)
     assert alerts["properties.query"].iloc[0] == "AlertText"
 
 
-@responses.activate
+@respx.mock
 def test_sent_analytic_create(sent_loader):
     """Test Sentinel analytics feature."""
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*/alertRules/.*"),
-        status=201,
-    )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/alertRuleTemplates"),
+    respx.put(re.compile("https://management.azure.com/.*/alertRules/.*")).respond(201)
+    respx.get(re.compile("https://management.azure.com/.*/alertRuleTemplates")).respond(
+        200,
         json={
             "value": [
                 {
@@ -144,19 +133,16 @@ def test_sent_analytic_create(sent_loader):
                 }
             ]
         },
-        status=200,
     )
     sent_loader.create_analytic_rule("508f3c50-f6d3-45b3-8321-fb674afe3478")
     sent_loader.create_analytic_rule("Test Bookmark")
     sent_loader.create_analytic_rule(name="Test Rule", query="SecurityAlert | take 10")
 
 
-@responses.activate
+@respx.mock
 def test_sent_analytics_delete(sent_loader):
     """Test Sentinel analytics feature."""
-    responses.add(
-        responses.DELETE,
-        re.compile("https://management.azure.com/.*/alertRules/.*"),
-        status=200,
+    respx.delete(re.compile("https://management.azure.com/.*/alertRules/.*")).respond(
+        200
     )
     sent_loader.delete_analytic_rule("508f3c50-f6d3-45b3-8321-fb674afe3478")

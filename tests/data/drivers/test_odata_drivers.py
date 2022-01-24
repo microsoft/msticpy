@@ -80,7 +80,7 @@ def _mde_post_checks(mde_drv, api, httpx):
         "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/token",
     )
     check.is_instance(
-        httpx.post.call_args[1]["data"],
+        httpx.post.call_args[1]["content"],
         bytes,
     )
     check.equal(mde_drv.request_uri, f"https://api.{api}.microsoft.com/api")
@@ -182,7 +182,7 @@ def test_security_graph_connect(httpx):
         "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/v2.0/token",
     )
     check.is_instance(
-        httpx.post.call_args[1]["data"],
+        httpx.post.call_args[1]["content"],
         bytes,
     )
     check.equal(sec_graph.request_uri, "https://graph.microsoft.com/v1.0")

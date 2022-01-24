@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 import pytest
 
-from httpx._models import Response
+from httpx import Response
 import pandas as pd
 
 from msticpy.data.uploaders.loganalytics_uploader import LAUploader
