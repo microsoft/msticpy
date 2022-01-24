@@ -68,7 +68,7 @@ To upgrade msticpy to the latest public non-beta release, run:
 
 `pip install --upgrade msticpy`
 
-Note it is good practice to copy your msticpyconfig.yaml and store it on your disk but outside of your msticpy folder, referencing it in an environment variable. This prevents you from losing your configurations every time you update your msticpy installation. 
+Note it is good practice to copy your msticpyconfig.yaml and store it on your disk but outside of your msticpy folder, referencing it in an environment variable. This prevents you from losing your configurations every time you update your msticpy installation.
 
 ## Documentation
 
@@ -140,7 +140,7 @@ module allows you to query incidents, retrieve detector and hunting
 queries. AzureBlogStorage lets you read and write data from blob storage.
 
 [Azure Resource APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html),
-[Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureSentinel.html),
+[Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/Sentinel.html),
 [Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureBlobStorage.html)
 ## Security Analysis
 

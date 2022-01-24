@@ -61,6 +61,12 @@ TIProviders:
     Args:
       ApiID: "user@host.com"
       AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
+  IntSights:
+    Args:
+      ApiID: "INTSIGHTS_ID"
+      AuthKey: "INTSIGHTS_KEY"
+    Primary: False
+    Provider: "IntSights"
 OtherProviders:
   GeoIPLite:
     Args:

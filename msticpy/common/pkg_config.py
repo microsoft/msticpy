@@ -280,6 +280,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         "GeoIPLite",
         "IPStack",
         "RiskIQ",
+        "IntSights",
     ]
     for conf_section in ["TIProviders", "OtherProviders", _DP_KEY]:
         prov_errors, prov_warn = _check_provider_settings(
