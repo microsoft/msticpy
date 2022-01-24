@@ -352,7 +352,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
                 )
-                response = httpx.get(submit_url)
+                response = client.get(submit_url)
                 if response.status_code == 200:
                     ip_loc_results.append((response.json(), response.status_code))
                 elif response:
@@ -724,7 +724,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 # Some other process is downloading
                 return True
             with httpx.stream("GET", url) as response:
-                response = httpx.stream("GET", url)
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):

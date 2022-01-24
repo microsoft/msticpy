@@ -734,10 +734,10 @@ def download_mdr_file(
     save_file = Path(save_folder).joinpath(save_path)
     if not use_cached or not save_file.is_file():
         # streamed download
-        resp = httpx.get(file_uri, stream=True)
         with open(str(save_file), "wb") as fdesc:
-            for chunk in resp.iter_bytes(chunk_size=1024):
-                fdesc.write(chunk)
+            with httpx.stream("GET", file_uri) as resp:
+                for chunk in resp.iter_bytes(chunk_size=1024):
+                    fdesc.write(chunk)
 
     try:
         with zipfile.ZipFile(str(save_file)) as zip_file:

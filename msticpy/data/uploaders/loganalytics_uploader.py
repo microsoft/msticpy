@@ -126,7 +126,7 @@ class LAUploader(UploaderBase):
             "x-ms-date": rfc1123date,
         }
         try:
-            response = httpx.post(uri, data=body, headers=headers)
+            response = httpx.post(uri, content=body, headers=headers)
         except httpx.ConnectError as req_err:
             raise MsticpyConnectionError(
                 "Unable to connect to workspace, ensure your Workspace ID is correct.",
