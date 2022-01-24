@@ -340,10 +340,10 @@ class Entity(ABC, Node):
         if not isinstance(other, Entity):
             return False
         return not any(
-            self.properties[prop] != other.properties[prop]
-            and self.properties[prop]
-            and other.properties[prop]
-            for prop in self.properties
+            self.__dict__[prop] != other.__dict__[prop]
+            and self.__dict__[prop]
+            and other.__dict__[prop]
+            for prop in self.__dict__
         )
 
     def merge(self, other: Any) -> "Entity":
@@ -369,7 +369,7 @@ class Entity(ABC, Node):
         for prop, value in other.properties.items():
             if not value:
                 continue
-            if not self.properties[prop]:
+            if not self.__dict__[prop]:
                 setattr(merged, prop, value)
             # Future (ianhelle) - cannot merge ID field
         if other.edges:

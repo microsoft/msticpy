@@ -38,7 +38,7 @@ _ID_PROPERTIES: List[str] = [
     "WorkspaceResourceGroup",
     "ProviderAlertId",
     "SystemAlertId",
-    "ResourceId",
+    "ResourceIdentifiers",
 ]
 
 _QUERY_PROPERTIES: List[str] = [
@@ -136,7 +136,7 @@ class SentinelAlert(Alert):
             try:
                 links = json.loads(self.__dict__["ExtendedLinks"])
                 for link in links:
-                    alert_links.update({link["Label"]: link["Href"]})
+                    alert_links[link["Label"]] = link["Href"]
             except json.JSONDecodeError:
                 pass
         return alert_links
@@ -151,8 +151,8 @@ class SentinelAlert(Alert):
     @property
     def analytic(self):
         """Return any Sentinel Analytics associated with the alert."""
-        analytic_details = {}
-        for query_property in _QUERY_PROPERTIES:
-            if query_property in self.__dict__:
-                analytic_details[query_property] = self.__dict__[query_property]
-        return analytic_details
+        return {
+            query_property: self.__dict__[query_property]
+            for query_property in _QUERY_PROPERTIES
+            if query_property in self.__dict__
+        }
