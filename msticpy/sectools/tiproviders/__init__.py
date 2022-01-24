@@ -17,6 +17,7 @@ from .ti_provider_base import (  # noqa:F401
 )
 from .tor_exit_nodes import Tor  # noqa:F401
 from .virustotal import VirusTotal  # noqa:F401
+from .intsights import IntSights  # noqa:F401
 
 try:
     from .riskiq import RiskIQ  # noqa:F401

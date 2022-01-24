@@ -301,7 +301,7 @@ For more information on using and configuring *msticpyconfig.yaml* see
 :doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
 
 The Azure Sentinel connection settings are stored in the
-`AzureSentinel\\Workspaces` section of the file.
+``AzureSentinel\\Workspaces`` section of the file.
 
 .. code:: yaml
 
