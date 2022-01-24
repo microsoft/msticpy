@@ -28,15 +28,15 @@ class Alert(Entity):
 
     Attributes
     ----------
-    DisplayName : str
+    AlertDisplayName : str
         Alert DisplayName
     CompromisedEntity : str
         Alert CompromisedEntity
     Count : int
         Alert Count
-    StartTime : datetime
+    StartTimeUtc : datetime
         Alert StartTime
-    EndTime : datetime
+    EndTimeUtc : datetime
         Alert EndTime
     Severity : str
         Alert Severity
@@ -95,7 +95,7 @@ class Alert(Entity):
         if src_entity:
             self._create_from_ent(src_entity)
 
-        if isinstance(src_event, pd.Series) or src_event:
+        if isinstance(src_event, pd.Series) and not src_event.empty:
             self._create_from_event(src_event)
 
     def _create_from_ent(self, src_entity):  # noqa: MC0001
@@ -163,12 +163,13 @@ class Alert(Entity):
     def _create_from_event(self, src_event):
         """Create Alert from an alert event."""
         self.TimeGenerated = src_event.get("StartTime", src_event.get("TimeGenerated"))
-        self.DisplayName = src_event.get("DisplayName", src_event.get("Name"))
-        self.StartTimeUtc = src_event.get("StartTime")
-        self.EndTimeUtc = src_event.get("EndTime")
-        self.Severity = src_event.get("AlertSeverity")
+        self.AlertDisplayName = src_event.get(
+            "AlertDisplayName", src_event.get("DisplayName", src_event.get("Name"))
+        )
+        self.StartTimeUtc = src_event.get("StartTimeUtc", src_event.get("StartTime"))
+        self.EndTimeUtc = src_event.get("EndTimeUtc", src_event.get("EndTime"))
+        self.Severity = src_event.get("Severity", src_event.get("AlertSeverity"))
         self.SystemAlertIds = src_event.get("SystemAlertId", src_event.get("ID"))
-        self.AlertType = src_event.get("AlertType")
         if isinstance(src_event["Entities"], str):
             try:
                 ents = _extract_entities(json.loads(src_event["Entities"]))
@@ -185,20 +186,17 @@ class Alert(Entity):
             self._add_additional_data(ext_props)
 
     _entity_schema = {
-        # DisplayName (type System.String)
-        "DisplayName": None,
-        # CompromisedEntity (type System.String)
+        # CompromisedEntity (type String)
         "CompromisedEntity": None,
-        # Count (type System.Nullable`1[System.Int32])
+        # Count (type Int)
         "Count": None,
-        # StartTimeUtc (type System.Nullable`1[System.DateTime])
+        # StartTimeUtc (type Datetime)
         "StartTimeUtc": None,
-        # EndTimeUtc (type System.Nullable`1[System.DateTime])
+        # EndTimeUtc (type Datetime)
         "EndTimeUtc": None,
-        # Severity (type System.Nullable`1
-        # [Microsoft.Azure.Security.Detection.AlertContracts.V3.Severity])
+        # Severity (type String)
         "Severity": None,
-        # SystemAlertIds (type System.Collections.Generic.List`1[System.String])
+        # SystemAlertIds (type String)
         "SystemAlertId": None,
         # AlertType (type System.String)
         "AlertType": None,
@@ -206,49 +204,73 @@ class Alert(Entity):
         "VendorName": None,
         # ProviderName (type System.String)
         "ProviderName": None,
-        # List of associated entities
+        # List of associated entities (type List)
         "Entities": None,
-        # Time the alert was generated.
+        # Time the alert was generated (type String)
         "TimeGenerated": None,
-        # The product that generated teh alert
+        # The product that generated the alert (type String)
         "ProductName": None,
+        # The product component that generated the alert (type String)
         "ProductComponentName": None,
+        # The version of the product generating the alert, if relevant (type String)
         "ProductVersion": None,
+        # The time the alert was made available for consumption (type String)
         "ProcessingEndTime": None,
+        # The life cycle status of the alert. This field is optional and all alerts would have the status (type String)
         "Status": None,
+        # The alert provider or product internal life cycle status (type String)
         "ProviderAlertStatus": None,
+        # The confidence level of this alert (type String)
         "ConfidenceLevel": None,
+        # The confidence score of the alert (type Float)
         "ConfidenceScore": None,
+        # The confidence score calculation status (type String)
         "ConfidenceScoreStatus": None,
+        # A list of reasons for the confidence level of this alert (type List)
         "ConfidenceReasons": None,
+        # The kill chain related intent behind the alert (type String)
         "Intent": None,
+        # The kill chain related techniques behind the alert (type List)
         "Techniques": None,
+        # The kill chain related sub-techniques behind the alert (type List)
         "SubTechniques": None,
+        # If the alert is an incident or a regular alert (type Bool)
         "IsIncident": None,
+        # If the alert is in preview (type Bool)
         "IsPreview": None,
+        # Unique id for the specific alert instance set by the provider (type String)
         "ProviderAlertId": None,
+        # Key to correlate multiple alerts together (type String)
         "CorrelationKey": None,
+        # Identifiers of the Investigations created by the provider for the Alert (type List)
         "InvestigationIds": None,
-        "AzureResourceId": None,
-        "WorkspaceId": None,
-        "WorkspaceSubscriptionId": None,
-        "WorkspaceResourceGroup": None,
-        "AgentId": None,
+        # The resource identifiers for this alert (type List)
+        "ResourceIdentifiers": None,
+        # Display name of the main entity being reported on (type String)
         "CompromisedEntity": None,
+        # The display name of the alert (type String)
         "AlertDisplayName": None,
-        "AlertDisplayNameLocalizedKey": None,
+        # Alert description (type String)
         "Description": None,
-        "DescriptionLocalizedKey": None,
+        # Description arguments to build up Description field in placeholders (type Dict)
         "DescriptionArguments": None,
+        # SupportingEvidence (type Dict)
         "SupportingEvidence": None,
+        # Manual action items to take to remediate the alert (type List)
         "RemediationSteps": None,
+        # A bag of fields which will be presented to the use (type Dict)
         "ExtendedProperties": None,
+        # A bag for all links related to the alert (type Dict)
         "ExtendedLinks": None,
+        # Metadata associated with the alert (type Dict)
         "Metadata": None,
+        # A list of edges contained in this alert (type Dict)
         "Edges": None,
+        # A direct link to view the specific alert in originating product portal (type String)
         "AlertUri": None,
-        "UpdateMetadata": None,
+        # Used to provide details about an anomaly in the data found by ML algorithms (type Dict)
         "Anomaly": None,
+        # Used to provide details about a policy assocaited with the alert (type Dict)
         "AlertPolicy": None,
     }
 
@@ -272,7 +294,7 @@ class Alert(Entity):
             new_ents.append(ent_obj)
         return new_ents
 
-    def to_html(self, show_entities=False) -> str:
+    def to_html(self) -> str:
         """Return the item as HTML string."""
         return (
             """
