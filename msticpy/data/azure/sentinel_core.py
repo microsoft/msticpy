@@ -104,7 +104,7 @@ class MicrosoftSentinel(
         """
         if not tenant_id:
             config = self._check_config(["tenant_id"])
-            tenant_id = config['tenant_id']
+            tenant_id = config["tenant_id"]
 
         super().connect(auth_methods=auth_methods, tenant_id=tenant_id, silent=silent)
         if "token" in kwargs:
