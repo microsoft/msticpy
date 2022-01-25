@@ -99,7 +99,7 @@ details with additional host details exposed via the Azure API. The AzureSentine
 module allows you to query incidents, retrieve detector and hunting
 queries. AzureBlogStorage lets you read and write data from blob storage.
 
-See :doc:`../data_acquisition/AzureData`, :doc:`../data_acquisition/AzureSentinel`
+See :doc:`../data_acquisition/AzureData`, :doc:`../data_acquisition/Sentinel`
 :doc:`../data_acquisition/AzureBlobStorage`
 
 
