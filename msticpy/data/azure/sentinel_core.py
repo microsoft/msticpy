@@ -82,7 +82,13 @@ class MicrosoftSentinel(
             "watchlists": self.url + _PATH_MAPPING["watchlists"],
         }
 
-    def connect(self, auth_methods: List = None, silent: bool = False, **kwargs):
+    def connect(
+        self,
+        auth_methods: List = None,
+        tenant_id: str = None,
+        silent: bool = False,
+        **kwargs,
+    ):
         """
         Authenticate with the SDK & API.
 
@@ -90,11 +96,17 @@ class MicrosoftSentinel(
         ----------
         auth_methods : List, optional
             list of preferred authentication methods to use, by default None
+        tenant_id : str, optional
+            Specify cloud tenant to use
         silent : bool, optional
             Set true to prevent output during auth process, by default False
 
         """
-        super().connect(auth_methods=auth_methods, silent=silent)
+        if not tenant_id:
+            config = self._check_config(["tenant_id"])
+            tenant_id = config['tenant_id']
+
+        super().connect(auth_methods=auth_methods, tenant_id=tenant_id, silent=silent)
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:
