@@ -3,5 +3,6 @@ include msticpy/msticpyconfig.yaml
 include msticpy/resources/*
 include requirements.txt
 include requirements-dev.txt
+include requirements-all.txt
 include README.md
 recursive-exclude tests *
