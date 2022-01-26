@@ -41,7 +41,7 @@ CONDA_PKG_EXCEPTIONS = {
 @pytest.fixture(scope="module")
 def extras_from_setup():
     """Read extras packages from setup.py."""
-    return get_extras_from_setup(PKG_ROOT, extra="all")
+    return get_extras_from_setup(extra="all")
 
 
 def test_missing_pkgs_req():
