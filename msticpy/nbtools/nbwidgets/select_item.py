@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 import random
-from typing import Any, Callable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, List, Dict, Optional, Tuple, Union
 
 import ipywidgets as widgets
 from deprecated.sphinx import deprecated
@@ -36,7 +36,7 @@ class SelectItem(IPyDisplayMixin):
     def __init__(
         self,
         description: str = "Select an item",
-        options: Union[List[str], Mapping[str, Any]] = None,
+        options: Union[List[str], Dict[str, Any]] = None,
         action: Callable[..., Optional[Tuple]] = None,
         value: str = "",
         **kwargs,
@@ -49,12 +49,12 @@ class SelectItem(IPyDisplayMixin):
         description : str, optional
             The widget label to display.
             (the default is 'Select an item')
-        options : Union[List[str], Mapping[str, Any]]
+        options : Union[List[str], Dict[str, Any]]
             Either:
             A `list` of items to select from (the default is None)
             A `dict` of items to select from. When using `item_dict`
-            the keys are displayed as the selectable items and value
-            corresponding to the selected key is set as the `value`
+            the values are displayed as the selectable items and key
+            corresponding to the selected value is set as the `value`
             property.
         action : Callable[..., Optional[Tuple[...]]], optional
             function to call when item selected (passed a single
@@ -69,7 +69,7 @@ class SelectItem(IPyDisplayMixin):
         ----------------
         item_list : List[str], optional
             A `list` of items to select from (the default is None)
-        item_dict : Mapping[str, str], optional
+        item_dict : Dict[str, str], optional
             A `dict` of items to select from. When using `item_dict`
             the keys are displayed as the selectable items and value
             corresponding to the selected key is set as the `value`
@@ -86,7 +86,8 @@ class SelectItem(IPyDisplayMixin):
 
         """
         self.options = options or kwargs.pop("item_list", [])
-        self.options = self.options or kwargs.pop("item_dict", [])
+        self.options = self.options or kwargs.pop("item_dict", {})
+
         if not self.options:
             raise ValueError("No options supplied for SelectItem.")
         auto_display = kwargs.pop("auto_display", False)
@@ -96,11 +97,14 @@ class SelectItem(IPyDisplayMixin):
 
         self.def_value = value
         if self.def_value not in self.options:
-            self.def_value = next(iter(self.options))
+            if isinstance(self.options, list):
+                self.def_value = next(iter(self.options))
+            else:
+                self.def_value = next(iter(self.options.values()))
 
         self._wgt_select = widgets.Select(
             value=self.def_value,
-            options=self.options,
+            options=self._get_filtered_options(),
             description=description,
             layout=Layout(width=width, height=height),
             style={"description_width": "initial"},
@@ -112,13 +116,13 @@ class SelectItem(IPyDisplayMixin):
         self._display_filter = display_filter
         if display_filter:
             self._w_filter = widgets.Text(
-                value=self.def_value,
+                value=self.label,
                 description="Filter:",
                 style={"description_width": "initial"},
             )
 
             # set up observer callbacks
-            self._w_filter.observe(self._update_options, names="value")
+            self._w_filter.observe(self._filter_options, names="value")
         self._wgt_select.observe(self._select_item, names="value")
 
         if action:
@@ -149,6 +153,19 @@ class SelectItem(IPyDisplayMixin):
         """Return the currently selected item."""
         return self._wgt_select.value
 
+    @value.setter
+    def value(self, value):
+        """Set to key or value of options."""
+        if value in self.options:
+            self._wgt_select.label = value
+        if isinstance(self.options, dict) and value in self.options.values():
+            self._wgt_select.value = value
+
+    @property
+    def label(self):
+        """Return current display item."""
+        return self._wgt_select.label
+
     def display(self):
         """Display the interactive widget."""
         super().display()
@@ -161,20 +178,25 @@ class SelectItem(IPyDisplayMixin):
         if self.item_action is not None:
             self._run_action()
 
-    def _update_options(self, change):
+    def _filter_options(self, change):
         """Filter the alert list by substring."""
         if change is None or "new" not in change:
             return
+        self._wgt_select.options = self._get_filtered_options(change["new"])
+
+    def _get_filtered_options(
+        self, substring: str = ""
+    ) -> List[Union[str, Tuple[str, str]]]:
+        """Return optionally filtered list of option tuples."""
+        if self.options is None:
+            return []
         if isinstance(self.options, list):
-            self._wgt_select.options = [
-                val for val in self.options if change["new"].lower() in val.lower()
-            ]
-        else:
-            self._wgt_select.options = {
-                lab: val
-                for lab, val in self.options.items()
-                if change["new"].lower() in lab.lower()
-            }
+            return [val for val in self.options if substring.casefold() in val.lower()]
+        return [
+            (lab, val)
+            for lab, val in self.options.items()
+            if substring.casefold() in lab.lower()
+        ]
 
     def _run_action(self, change=None):
         """Run any action function and display details, if any."""
@@ -229,7 +251,7 @@ class SelectString(SelectItem):
         description: str = "Select an item",
         item_list: List[str] = None,
         action: Callable[..., None] = None,
-        item_dict: Mapping[str, str] = None,
+        item_dict: Dict[str, str] = None,
         auto_display: bool = False,
         height: str = "100px",
         width: str = "50%",
@@ -245,7 +267,7 @@ class SelectString(SelectItem):
             (the default is 'Select an item')
         item_list : List[str], optional
             A `list` of items to select from (the default is None)
-        item_dict : Mapping[str, str], optional
+        item_dict : Dict[str, str], optional
             A `dict` of items to select from. When using `item_dict`
             the keys are displayed as the selectable items and value
             corresponding to the selected key is set as the `value`
