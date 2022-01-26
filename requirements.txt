@@ -1,27 +1,17 @@
-# adal>=1.2.2  # Kql
 attrs>=18.2.0
 azure-common>=1.1.18
 azure-core>=1.2.2
 azure-identity>=1.5.0
-# azure-keyvault-secrets>=4.0.0  # azure
-# azure-mgmt-compute>=4.6.2  # azure
-# azure-mgmt-core>=1.2.1  # installed by others
-# azure-mgmt-keyvault>=2.0.0  # azure
-# azure-mgmt-monitor>=1.0.1  # azure
-# azure-mgmt-network>=2.7.0  # azure
-# azure-mgmt-resource>=16.1.0  # azure
-# azure-mgmt-resourcegraph>=8.0.0  # azure
 azure-mgmt-subscription>=1.0.0
-# azure-storage-blob>=12.5.0  #
-# beautifulsoup4>=4.6.3  # move to dev
 bokeh>=1.4.0
 cryptography>=3.1
 deprecated>=1.2.4
-dnspython<=2.0.0 # <=2.0 required by ipwhois
+dnspython<=2.0.0
 folium>=0.9.0
 geoip2>=2.9.0
-html5lib  # req by pandas for scraping
 httpx==0.18
+html5lib
+idna<3 # req < 3 from requests
 ipwhois>=1.1.0
 ipython>=7.23.1
 ipywidgets>=7.4.2
