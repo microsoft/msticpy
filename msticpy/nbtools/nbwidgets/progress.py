@@ -33,7 +33,6 @@ class Progress(IPyDisplayMixin):
         self._progress = widgets.IntProgress(
             value=0,
             max=100,
-            step=1,
             description="Progress:",
             bar_style="info",
             orientation="horizontal",
