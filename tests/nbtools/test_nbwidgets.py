@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test module for nbwidgets."""
-import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -16,28 +15,25 @@ import pytest_check as check
 
 from msticpy.common.timespan import TimeSpan
 from msticpy.nbtools import nbwidgets as nbw
+from msticpy.nbtools.nbwidgets.core import parse_time_unit, default_max_buffer, TimeUnit
 
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name, protected-access
 
 
-@pytest.fixture(scope="module")
-def fixture_name():
-    """Fixture_docstring."""
-
-
 _PARSE_TIME_UNIT_TESTS = [
-    ("minute", nbw.TimeUnit.minute),
-    ("hour", nbw.TimeUnit.hour),
-    ("second", nbw.TimeUnit.second),
-    ("day", nbw.TimeUnit.day),
-    ("week", nbw.TimeUnit.week),
-    ("not_known", nbw.TimeUnit.minute),
+    ("minute", TimeUnit.MINUTE),
+    ("hour", TimeUnit.HOUR),
+    ("second", TimeUnit.SECOND),
+    ("day", TimeUnit.DAY),
+    ("week", TimeUnit.WEEK),
+    ("not_known", TimeUnit.MINUTE),
 ]
 
 
 def ptu_ids(tests):
+    """Return IDs for parse time unit tests."""
     return [item[0] for item in tests]
 
 
@@ -46,24 +42,25 @@ def ptu_ids(tests):
 )
 def test_parse_time_unit(test, expected):
     """Parse time unit."""
-    check.equal(nbw._parse_time_unit(test), expected)
+    check.equal(parse_time_unit(test), expected)
 
 
 _DEF_MAX_BUFFER_TESTS = [
-    ((40, 3, nbw.TimeUnit.minute), 40),
-    ((6, -3, nbw.TimeUnit.minute), 12),
-    ((None, 8, nbw.TimeUnit.day), 32),
-    ((None, 4, nbw.TimeUnit.day), 28),
-    ((None, 24, nbw.TimeUnit.hour), 96),
-    ((None, 4, nbw.TimeUnit.hour), 72),
-    ((None, 24, nbw.TimeUnit.week), 96),
-    ((None, 4, nbw.TimeUnit.week), 20),
-    ((None, 10.5, nbw.TimeUnit.week), 42),
-    ((None, 100, nbw.TimeUnit.minute), 400),
+    ((40, 3, TimeUnit.MINUTE), 40),
+    ((6, -3, TimeUnit.MINUTE), 12),
+    ((None, 8, TimeUnit.DAY), 32),
+    ((None, 4, TimeUnit.DAY), 28),
+    ((None, 24, TimeUnit.HOUR), 96),
+    ((None, 4, TimeUnit.HOUR), 72),
+    ((None, 24, TimeUnit.WEEK), 96),
+    ((None, 4, TimeUnit.WEEK), 20),
+    ((None, 10.5, TimeUnit.WEEK), 42),
+    ((None, 100, TimeUnit.MINUTE), 400),
 ]
 
 
 def _dmb_ids(tests):
+    """Return IDs for default max buffer tests."""
     return ["-".join(str(sub) for sub in item[0]) for item in tests]
 
 
@@ -72,7 +69,7 @@ def _dmb_ids(tests):
 )
 def test_default_max_buffer(test, expected):
     """Test max buffer function."""
-    check.equal(nbw._default_max_buffer(*test), expected)
+    check.equal(default_max_buffer(*test), expected)
 
 
 _END_TIME = datetime.utcnow()
@@ -104,6 +101,7 @@ _QT_PARAM_TESTS = [
 
 
 def _qtp_ids(tests):
+    """Return IDs for QueryTime params tests."""
     return ["-".join(item[0].keys()) for item in tests]
 
 
@@ -111,6 +109,7 @@ def _qtp_ids(tests):
     "test, expected", _QT_PARAM_TESTS, ids=_qtp_ids(_QT_PARAM_TESTS)
 )
 def test_query_time_params(test, expected):
+    """Test parameters for QueryTime widget."""
     qt = nbw.QueryTime(**test)
     for attr_name, attr_value in expected.items():
         attrib = getattr(qt, attr_name)
@@ -134,8 +133,8 @@ def test_query_time_events():
     check.equal(q_start - timedelta(1), qt.start)
     check.equal(q_end + timedelta(1), qt.end)
 
-    qt._w_time_unit.value = "hour"
-    check.equal(qt.units, "hour")
+    qt._w_time_unit.value = "Hour"
+    check.equal(qt.units, "Hour")
     check.equal(qt.before, 6)
     check.equal(qt.after, 6)
     check.equal(qt.max_before, 72)
@@ -149,32 +148,53 @@ def test_query_time_events():
 
 
 class _TestSelectAction:
+    """Mock action class."""
+
     value = "nothing"
 
     def action(self, value):
+        """Mock action method."""
         self.value = value
 
 
-def test_select_item():
-    """Test SelectItem events."""
+_SEL_ITEM_PARAMS = [
+    ({"item_list": ["one", "two", "three"]}, ("one", "two", ("two", "three"))),
+    ({"options": ["one", "two", "three"]}, ("one", "two", ("two", "three"))),
+    (
+        {"item_dict": {"one": "one-val", "two": "two-val", "three": "three-val"}},
+        ("one-val", "two-val", ("two", "three")),
+    ),
+    (
+        {"options": {"one": "one-val", "two": "two-val", "three": "three-val"}},
+        ("one-val", "two-val", ("two", "three")),
+    ),
+]
+
+
+@pytest.mark.parametrize("args, expected", _SEL_ITEM_PARAMS)
+def test_select_item(args, expected):
+    """Test SelectItem widget events."""
     act_obj = _TestSelectAction()
 
-    sel_item = nbw.SelectItem(item_list=["one", "two", "three"], action=act_obj.action)
-    check.equal(sel_item.value, "one")
+    sel_item = nbw.SelectItem(**args, action=act_obj.action)
+    check.equal(sel_item.value, expected[0])
 
-    sel_item._wgt_select.value = "two"
-    check.equal(sel_item.value, "two")
-    check.equal(act_obj.value, "two")
+    sel_item.value = "two"
+    check.equal(sel_item.value, expected[1])
+    check.equal(act_obj.value, expected[1])
 
     sel_item._w_filter.value = "t"
     for item in sel_item._wgt_select.options:
-        check.is_in(item, ("two", "three"))
+        if isinstance(item, tuple):
+            check.is_in(item[0], expected[2])
+        else:
+            check.is_in(item, expected[2])
 
     sel_item._ipython_display_()
 
 
 def test_select_subset():
-    """Test SelectItem events."""
+    """Test SelectSubset widget events."""
     src_items = ["one", "two", "three"]
     sel_subs = nbw.SelectSubset(source_items=src_items, default_selected=["one"])
     check.equal(sel_subs._select_list.options, ("one",))
@@ -212,6 +232,7 @@ _NBWIDGETS_ATTR_TEST = [
 
 
 def _nbw_ids(tests):
+    """Return IDs for widget attribute tests."""
     return [test[0].__name__ for test in tests]
 
 
@@ -221,6 +242,7 @@ def _nbw_ids(tests):
     ids=_nbw_ids(_NBWIDGETS_ATTR_TEST),
 )
 def test_widget_attribs(widget, w_props, w_funcs, args):
+    """Check widgets expected properties."""
     def_props = ["value", "layout"]
     def_funcs = ["display", "_ipython_display_"]
 
@@ -239,13 +261,14 @@ _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "NotebookWidgets.ipynb"
 
 
-@pytest.mark.skipif(
-    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-)
+# @pytest.mark.skipif(
+#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+# )
 def test_widgets_notebook():
+    """Run widgets notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
     abs_path = Path(_NB_FOLDER).absolute()
-    with open(nb_path) as f:
+    with open(nb_path, encoding="utf-8") as f:
         nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
