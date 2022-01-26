@@ -187,7 +187,8 @@ class SplunkDriver(DriverBase):
         kwargs :
             Are passed to Splunk oneshot method
             count=0 by default
-            mode=oneshot for oneshot (blocking) mode, defaults to async
+            oneshot=False by default for async query,
+                set to True for oneshot (blocking) mode
 
         Returns
         -------
@@ -206,9 +207,9 @@ class SplunkDriver(DriverBase):
         # Normal, oneshot or blocking searches. Defaults to non-blocking
         # Oneshot is blocking a blocking HTTP call which may cause time-outs
         # https://dev.splunk.com/enterprise/docs/python/sdk-python/howtousesplunkpython/howtorunsearchespython
-        query_mode = kwargs.get("mode", "normal")
+        is_oneshot = kwargs.get("oneshot", False)
 
-        if query_mode == "oneshot":
+        if is_oneshot == True:
             query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
             reader = sp_results.ResultsReader(query_results)
 
