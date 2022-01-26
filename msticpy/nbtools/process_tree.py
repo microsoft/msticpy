@@ -328,7 +328,7 @@ def _pre_process_tree(
 
     _validate_plot_schema(proc_tree, schema)
 
-    proc_tree = proc_tree.sort_values("path", ascending="True").reset_index()
+    proc_tree = proc_tree.sort_values("path", ascending=True).reset_index()
     n_rows = len(proc_tree)
     proc_tree["Row"] = proc_tree.index
     proc_tree["Row"] = n_rows - proc_tree["Row"]
