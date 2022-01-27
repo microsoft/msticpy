@@ -1,0 +1,72 @@
+metadata:
+  version: 1
+  description: Splunk Authentication Queries (non-accelerated)
+  data_environments: [Splunk]
+  data_families: [SplunkDatamodel]
+  tags: ['authentication', 'account', 'network']
+defaults:
+  metadata:
+    data_source: 'bots'
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    project_fields:
+      description: Project Field names
+      type: str
+      default: '| table _time, host, source, sourcetype, reason, signature, signature_id, src, dest, src_user, user, app, action'
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: '| head 100'
+    field_rename:
+      description: Renames fields which are prepended by datamodel name
+      type: str
+      default: '|rename "Authentication.*" as *'
+    timeformat:
+      description: 'Datetime format to use in Splunk query'
+      type: str
+      default: '"%Y-%m-%d %H:%M:%S.%6N"'
+sources:
+  list_logons_for_host:
+    description: All logon events on a host
+    metadata:
+      data_families: [Authentication]
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.dest={host_name} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
+
+  list_logons_for_source_ip:
+    description: All successful user logon events for source IP (all hosts)
+    metadata:
+      data_families: [Authentication]
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.src={ip_address} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      ip_address:
+        description: The source IP Address to search on
+        type: str
+
+  list_logon_failures:
+    description: All failed user logon events on any host
+    metadata:
+      data_families: [Authentication]
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.action=failure {field_rename} {project_fields} {add_query_items}'
+  
+  list_logons_for_account:
+    description: All successful user logon events for account (all hosts)
+    metadata:
+      data_families: [Authentication]  
+    args:
+      query: '|datamodel Authentication Authentication search | search Authentication.user={account_name} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      account_name:
+        description: The account name to search on
+        type: str
