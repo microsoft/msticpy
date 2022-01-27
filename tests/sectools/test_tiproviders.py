@@ -16,12 +16,12 @@ from pathlib import Path
 import pandas as pd
 
 from msticpy.common import pkg_config
-from msticpy.sectools.tilookup import TILookup
-from msticpy.sectools.tiproviders import (
+from msticpy.data.contextproviders.tilookup import TILookup
+from msticpy.data.contextproviders.tiproviders import (
     get_provider_settings,
     preprocess_observable,
 )
-from msticpy.sectools.tiproviders.ti_provider_base import (
+from msticpy.data.contextproviders.tiproviders.ti_provider_base import (
     TISeverity,
     _clean_url,
     generate_items,

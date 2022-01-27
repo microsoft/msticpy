@@ -9,10 +9,9 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
 from azure.core.exceptions import ClientAuthenticationError
-from msticpy.data.azure import AzureData
-from msticpy.data.azure import MicrosoftSentinel
+from msticpy.data.contextproviders.azure import AzureData
+from msticpy.data.contextproviders.azure import MicrosoftSentinel
 
 # pylint: disable=redefined-outer-name
 

@@ -13,7 +13,7 @@ import pytest
 import pytest_check as check
 from traitlets import TraitError
 
-from msticpy.nbtools.data_viewer import (
+from msticpy.data.browsers.data_viewer import (
     DataViewer,
     DataTableColumnChooser,
     DataTableFilter,

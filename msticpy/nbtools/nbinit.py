@@ -44,7 +44,7 @@ from ..config import MpConfigFile
 from ..datamodel.pivot import Pivot
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml
-from .user_config import load_user_defaults
+from ..data.common.user_config import load_user_defaults
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -9,7 +9,7 @@ import pandas as pd
 import pytest_check as check
 import pytest
 
-from msticpy.nbtools.ti_browser import get_ti_select_options, ti_details_display
+from msticpy.data.browsers.ti_browser import get_ti_select_options, ti_details_display
 
 from ..unit_test_lib import TEST_DATA_PATH
 

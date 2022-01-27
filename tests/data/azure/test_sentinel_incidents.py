@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import responses
-from msticpy.data.azure import MicrosoftSentinel
+from msticpy.data.contextproviders.azure import MicrosoftSentinel
 
 _INCIDENT = {
     "value": [

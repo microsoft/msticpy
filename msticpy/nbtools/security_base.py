@@ -14,7 +14,7 @@ import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import escape_windows_path, export
-from ..data.query_defns import DataEnvironment, QueryParamProvider
+from ..data.common.query_defns import DataEnvironment, QueryParamProvider
 from ..datamodel.entities import Account, Entity, Host, Process, OSFamily
 
 __version__ = VERSION

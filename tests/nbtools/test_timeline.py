@@ -17,8 +17,8 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 from ..unit_test_lib import TEST_DATA_PATH
 
 from msticpy.common.exceptions import MsticpyParameterError
-from msticpy.nbtools.timeline import display_timeline, display_timeline_values
-from msticpy.nbtools.timeline_duration import display_timeline_duration
+from msticpy.vis.timeline import display_timeline, display_timeline_values
+from msticpy.vis.timeline_duration import display_timeline_duration
 
 __author__ = "Ian Hellen"
 

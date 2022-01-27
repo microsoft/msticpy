@@ -16,8 +16,8 @@ from typing import Any, Dict, Iterable, Optional, Tuple, Union
 import pandas as pd
 import pytest_check as check
 from msticpy.common.exceptions import MsticpyException
-from msticpy.data.data_providers import DriverBase, QueryContainer, QueryProvider
-from msticpy.data.query_source import QuerySource
+from msticpy.data.common.data_providers import DriverBase, QueryContainer, QueryProvider
+from msticpy.data.common.query_source import QuerySource
 
 from ..unit_test_lib import get_test_data_path
 

@@ -12,11 +12,11 @@ import pytest
 from pytest import raises
 
 from msticpy.datamodel.entities import Host
-from msticpy.sectools import syslog_utils as ls
+from msticpy.analysis import syslog_utils as ls
 from msticpy.common.exceptions import MsticpyException
-from msticpy.sectools import cmd_line as cl
+from msticpy.analysis.data_processing import cmd_line as cl
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.sectools.geoip import GeoIPDatabaseException
+from msticpy.analysis.geoip import GeoIPDatabaseException
 
 from ..unit_test_lib import get_test_data_path, custom_mp_config
 

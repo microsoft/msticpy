@@ -13,7 +13,7 @@ import pytest
 import pytest_check as check
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
-from msticpy.data.query_container import QueryContainer
+from msticpy.data.common.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivot_data_queries import (
     PivotQueryFunctions,

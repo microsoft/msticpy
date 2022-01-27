@@ -17,7 +17,7 @@ import pytest_check as check
 from bokeh.layouts import LayoutDOM
 from vt.object import Object as VtObject
 
-from msticpy.sectools import vtlookupv3
+from msticpy.data.contextproviders.tiproviders import vtlookupv3
 
 from ..unit_test_lib import get_test_data_path
 

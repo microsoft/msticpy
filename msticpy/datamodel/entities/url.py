@@ -8,7 +8,7 @@ from typing import Any, Dict, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
-from ...sectools.domain_utils import url_components
+from ...analysis.domain_utils import url_components
 from .entity import Entity
 
 __version__ = VERSION

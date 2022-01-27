@@ -16,7 +16,7 @@ from ..common.exceptions import (
     MsticpyException,
     MsticpyUserError,
 )
-from ..data.query_container import QueryContainer
+from ..data.common.query_container import QueryContainer
 from . import entities
 from .pivot_register import PivotRegistration, create_pivot_func
 

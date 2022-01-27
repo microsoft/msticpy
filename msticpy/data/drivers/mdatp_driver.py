@@ -8,7 +8,7 @@ from typing import Union, Any
 import pandas as pd
 
 from .odata_driver import OData, QuerySource
-from ..query_defns import DataEnvironment, ensure_df_datetimes
+from ..common.query_defns import DataEnvironment, ensure_df_datetimes
 from ...common.azure_auth import AzureCloudConfig
 from ...common.utility import export
 from ..._version import VERSION

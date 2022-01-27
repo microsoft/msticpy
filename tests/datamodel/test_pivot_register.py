@@ -10,10 +10,11 @@ from collections import namedtuple
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.data.query_container import QueryContainer
+from msticpy.data.common.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivot import Pivot
-from msticpy.sectools import GeoLiteLookup, TILookup
+from msticpy.analysis.geoip import GeoLiteLookup
+from msticpy.data.contextproviders.tilookup import TILookup
 
 __author__ = "Ian Hellen"
 

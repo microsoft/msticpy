@@ -22,7 +22,7 @@ from tqdm.auto import tqdm
 from ..._version import VERSION
 from ...common.exceptions import MsticpyNotConnectedError, MsticpyUserError
 from ...common.pkg_config import settings
-from ..query_source import QuerySource
+from ..common.query_source import QuerySource
 from .driver_base import DriverBase
 
 __version__ = VERSION
