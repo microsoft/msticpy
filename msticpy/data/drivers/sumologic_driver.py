@@ -360,27 +360,36 @@ class SumologicDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Sumologic
-            days: Search the past X days.
-            start_time (or start): A datetime() object representing the start of the search
-                    window. If used without end_time, the end of the search
-                    window is the current time.
-            end_time (or end): A datetime() object representing the end of the search window.
-                  If used without start_time, the search start will be the earliest
-                  time in the index.
-            timeZone: timezone used for time range search
-            byReceiptTime:  if time reference should used _receiptTime (time when Sumologic
-                        got message) instead of _messageTime (time present in log message).
-            limit: An integer describing the max number of search results to return.
-            forceMessagesResults: Force results to be raw messages even if aggregated query.
-            verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
-            normalize: If set to True, fields containing structures (i.e. subfields)
-                   will be flattened such that each field has it's own column in
-                   the dataframe. If False, there will be a single column for the
-                   structure, with a JSON string encoding all the contents.
-            exporting: Export result to file.
-            export_path: file path for exporte results.
+        days: int
+            Search the past X days.
+        start_time (or start) : datetime
+            A datetime() object representing the start of the search
+            window. If used without end_time, the end of the search
+            window is the current time.
+        end_time (or end) : datetime
+            A datetime() object representing the end of the search window.
+            If used without start_time, the search start will be the earliest
+            time in the index.
+        timeZone: str
+            timezone used for time range search
+        byReceiptTime : datetime
+            if time reference should used _receiptTime (time when Sumologic
+            got message) instead of _messageTime (time present in log message).
+        limit : int
+            An integer describing the max number of search results to return.
+        forceMessagesResults : bool
+            Force results to be raw messages even if aggregated query.
+        verbosity : int
+            Provide more verbose state. from 0 least verbose to 4 most one.
+        normalize : bool
+            If set to True, fields containing structures (i.e. subfields)
+            will be flattened such that each field has it's own column in
+            the dataframe. If False, there will be a single column for the
+            structure, with a JSON string encoding all the contents.
+        exporting : bool
+            Export result to file.
+        export_path : str
+            file path for exporte results.
 
         Returns
         -------
