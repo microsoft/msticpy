@@ -11,9 +11,9 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from msticpy.data import QueryProvider
-from msticpy.data.data_providers import DriverBase
-from msticpy.sectools.tilookup import TILookup
-from msticpy.sectools.tiproviders import get_provider_settings, AzSTI
+from msticpy.data.common.data_providers import DriverBase
+from msticpy.data.contextproviders.tilookup import TILookup
+from msticpy.data.contextproviders.tiproviders import get_provider_settings, AzSTI
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

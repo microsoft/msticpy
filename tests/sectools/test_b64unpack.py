@@ -9,7 +9,7 @@ from os import path
 
 import pandas as pd
 
-from msticpy.sectools import base64unpack as b64
+from msticpy.analysis.data_processing import base64unpack as b64
 
 from ..unit_test_lib import TEST_DATA_PATH
 

@@ -10,9 +10,9 @@ from typing import Callable, Dict, Optional, Set, Tuple, Type
 import pandas as pd
 
 from .._version import VERSION
-from ..data.query_container import QueryContainer
-from ..sectools.tilookup import TILookup
-from ..sectools.tiproviders.ti_provider_base import TIPivotProvider
+from ..data.common.query_container import QueryContainer
+from ..data.contextproviders.tilookup import TILookup
+from ..data.contextproviders.tiproviders.ti_provider_base import TIPivotProvider
 from . import entities
 from .pivot_register import PivotRegistration, create_pivot_func
 

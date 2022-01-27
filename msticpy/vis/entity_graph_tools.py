@@ -22,8 +22,8 @@ from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
 from ..datamodel.soc.incident import Incident
 from ..nbtools.security_alert import SecurityAlert
-from ..nbtools.timeline import display_timeline
-from ..nbtools.timeline_duration import display_timeline_duration
+from ..vis.timeline import display_timeline
+from ..vis.timeline_duration import display_timeline_duration
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

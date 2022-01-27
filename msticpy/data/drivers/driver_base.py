@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
 import pandas as pd
 
 from ..._version import VERSION
-from ..query_source import QuerySource
+from ..common.query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

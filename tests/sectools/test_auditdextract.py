@@ -12,14 +12,14 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.sectools.auditdextract import (
+from msticpy.analysis.data_processing.auditdextract import (
     extract_events_to_df,
     get_event_subset,
     generate_process_tree,
     read_from_file,
 )
 
-from msticpy.sectools.process_tree_utils import get_summary_info
+from msticpy.analysis.data_processing.process_tree_utils import get_summary_info
 
 _CLUSTER_OK = False
 try:

@@ -14,7 +14,7 @@ from .._version import VERSION
 from ..common.timespan import TimeSpan
 from ..data import QueryProvider
 from ..nbtools.nbwidgets import QueryTime
-from ..sectools import TILookup
+from ..data.contextproviders.tilookup import TILookup
 
 # pylint: disable=unused-import
 from . import pivot_pd_accessor  # noqa: F401
