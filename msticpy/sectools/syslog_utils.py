@@ -91,16 +91,16 @@ def create_host_record(
         host_entity.ComputerEnvironment = host_hb["ComputerEnvironment"]  # type: ignore
         host_entity.OmsSolutions = [  # type: ignore
             sol.strip() for sol in host_hb["Solutions"].split(",")
-        ]  # type: ignore
+        ]
         host_entity.Applications = applications  # type: ignore
         host_entity.VMUUID = host_hb["VMUUID"]  # type: ignore
         ip_entity = IpAddress()
         ip_entity.Address = host_hb["ComputerIP"]
         geoloc_entity = GeoLocation()
-        geoloc_entity.CountryName = host_hb["RemoteIPCountry"]  # type: ignore
-        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]  # type: ignore
-        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]  # type: ignore
-        ip_entity.Location = geoloc_entity  # type: ignore
+        geoloc_entity.CountryName = host_hb["RemoteIPCountry"]
+        geoloc_entity.Longitude = host_hb["RemoteIPLongitude"]
+        geoloc_entity.Latitude = host_hb["RemoteIPLatitude"]
+        ip_entity.Location = geoloc_entity
         host_entity.IPAddress = ip_entity  # type: ignore
 
     # If Azure network data present add this to host record

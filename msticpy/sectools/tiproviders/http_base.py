@@ -83,7 +83,7 @@ class HttpProvider(TIProvider):
 
     # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
-    def lookup_ioc(  # type: ignore
+    def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> LookupResult:
         """

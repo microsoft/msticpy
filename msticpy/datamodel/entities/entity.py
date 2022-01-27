@@ -639,7 +639,7 @@ class Entity(ABC, Node):
         func_path = func_name.split(".") if "." in func_name else [func_name]
         curr_attr: Optional[Any] = cls
         for path in func_path:
-            curr_attr = getattr(curr_attr, path, None)  # type: ignore
+            curr_attr = getattr(curr_attr, path, None)
             if not curr_attr:
                 raise AttributeError(f"No function found for {func_name}")
         if not hasattr(curr_attr, "pivot_properties"):

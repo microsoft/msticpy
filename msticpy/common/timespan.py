@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Optional, Tuple, Union
 
 import pandas as pd
-from dateutil.parser import ParserError  # type: ignore
+from dateutil.parser import ParserError
 
 from .._version import VERSION
 

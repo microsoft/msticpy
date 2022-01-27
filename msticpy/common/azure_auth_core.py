@@ -225,7 +225,7 @@ def _az_connect_core(
     logging.basicConfig(level=logging.WARNING, handlers=[handler])
 
     # Create credentials and connect to the subscription client to validate
-    creds = ChainedTokenCredential(*auths)  # type: ignore
+    creds = ChainedTokenCredential(*auths)
     legacy_creds = CredentialWrapper(
         creds, resource_id=AzureCloudConfig(cloud).token_uri
     )
@@ -324,7 +324,7 @@ def _create_auth_options(cloud: str = None, tenant_id: str = None) -> dict:
     """Create auth options dict with correct cloud set."""
     az_config = AzureCloudConfig(cloud)
 
-    aad_uri = az_config.endpoints.active_directory  # type: ignore
+    aad_uri = az_config.endpoints.active_directory
 
     return {
         "env": EnvironmentCredential(),

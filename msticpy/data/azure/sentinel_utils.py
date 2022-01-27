@@ -101,10 +101,10 @@ class SentinelUtilsMixin:
         """
         config_items = {}
         if not self.config:  # type: ignore
-            self.config = WorkspaceConfig()  # type: ignore
+            self.config = WorkspaceConfig()
         for item in items:
-            if item in self.config:  # type: ignore
-                config_items[item] = self.config[item]  # type: ignore
+            if item in self.config:
+                config_items[item] = self.config[item]
             else:
                 raise MsticpyAzureConfigError(f"No {item} avaliable in config.")
 
@@ -231,7 +231,7 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key, _ in items.items():
         if key in ["severity", "status", "title", "message"] or props:
-            data_body["properties"].update({key: items[key]})  # type:ignore
+            data_body["properties"].update({key: items[key]})
         else:
             data_body[key] = items[key]
     if "etag" in kwargs:

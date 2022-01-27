@@ -314,7 +314,7 @@ class MitreAttack:
             )
         self.technique = attack.get("technique") if attack else technique
         self.sub_technique = attack.get("sub-technique") if attack else sub_technique
-        self.tactics = attack.get("tactics") if attack else tactics  # type: ignore
+        self.tactics = attack.get("tactics") if attack else tactics
 
         self._technique_name = None
         self._technique_desc = None

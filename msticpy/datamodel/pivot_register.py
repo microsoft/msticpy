@@ -431,7 +431,7 @@ def _create_input_df(input_value, pivot_reg, parent_kwargs):
     # to using the function input value arg.
     input_column = pivot_reg.func_df_col_param_name or pivot_reg.func_input_value_arg
     # If input_value is already a DF, this call just returns the original DF
-    input_df = _arg_to_dframe(input_value, input_column)  # type: ignore
+    input_df = _arg_to_dframe(input_value, input_column)
 
     if isinstance(input_value, pd.DataFrame):
         # If the original input_value is a DataFrame

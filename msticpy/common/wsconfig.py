@@ -200,7 +200,7 @@ class WorkspaceConfig:
         """
         ws_value = self._config.get(self.CONF_WS_ID_KEY, None)
         ten_value = self._config.get(self.CONF_TENANT_ID_KEY, None)
-        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)  # type: ignore
+        return is_valid_uuid(ws_value) and is_valid_uuid(ten_value)
 
     @property
     def code_connect_str(self) -> str:
@@ -297,7 +297,7 @@ class WorkspaceConfig:
         as_settings = pkg_config.settings.get("AzureSentinel")
         if not as_settings:
             return {}
-        ws_settings = as_settings.get("Workspaces")  # type: ignore
+        ws_settings = as_settings.get("Workspaces")
         if not ws_settings:
             return {}
         if workspace_name and workspace_name in ws_settings:

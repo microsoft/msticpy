@@ -70,7 +70,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
         ) or config.settings.get("Browshot")
         bs_api_key = None
         if bs_conf is not None:
-            bs_api_key = bs_conf.get("Args", {}).get("AuthKey")  # type: ignore
+            bs_api_key = bs_conf.get("Args", {}).get("AuthKey")
 
     if bs_api_key is None:
         raise MsticpyUserConfigError(
@@ -215,17 +215,13 @@ class DomainValidator:
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
             # pylint: disable=no-value-for-parameter
-            x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
-                cert.encode("ascii")
-            )
+            x509 = crypto.x509.load_pem_x509_certificate(cert.encode("ascii"))
             # pylint: enable=no-value-for-parameter
             cert_sha1 = x509.fingerprint(
-                crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
+                crypto.hazmat.primitives.hashes.SHA1()  # nosec
             )
             result = bool(
-                self.ssl_abuse_list["SHA1"]
-                .str.contains(cert_sha1.hex())
-                .any()  # type: ignore
+                self.ssl_abuse_list["SHA1"].str.contains(cert_sha1.hex()).any()
             )
         except Exception:  # pylint: disable=broad-except
             result = False

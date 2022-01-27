@@ -103,8 +103,8 @@ class FoliumMap:
         geo_entity.CountryName = "Unknown"
         geo_entity.State = "Unknown"
         geo_entity.City = "Unknown"
-        geo_entity.Longitude = 0.0  # type: ignore
-        geo_entity.Latitude = 0.0  # type: ignore
+        geo_entity.Longitude = 0.0
+        geo_entity.Latitude = 0.0
 
         for ip_entity in ip_entities:
             if ip_entity.Location is None:

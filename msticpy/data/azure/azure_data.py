@@ -125,7 +125,7 @@ class AzureData:
         self.monitoring_client: Optional[MonitorManagementClient] = None
         self.compute_client: Optional[ComputeManagementClient] = None
         self.cloud = cloud or AzureCloudConfig().cloud
-        self.endpoints = get_all_endpoints(self.cloud)  # type: ignore
+        self.endpoints = get_all_endpoints(self.cloud)
         if connect:
             self.connect()
 
@@ -203,7 +203,7 @@ class AzureData:
             self._legacy_auth("sub_client")
             sub_list = list(self.sub_client.subscriptions.list())  # type: ignore
 
-        for item in sub_list:  # type: ignore
+        for item in sub_list:
             subscription_ids.append(item.subscription_id)
             display_names.append(item.display_name)
             states.append(str(item.state))
@@ -486,7 +486,7 @@ class AzureData:
                 title="Please call connect() before continuing.",
             )
 
-        self._check_client("resource_client", sub_id)  # type: ignore
+        self._check_client("resource_client", sub_id)
 
         # Normalize elements depending on user input type
         if resource_id is not None:

@@ -524,12 +524,12 @@ def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
         If something other than an Enum subclass is passed.
 
     """
-    if not issubclass(enum_cls, Enum):  # type: ignore
+    if not issubclass(enum_cls, Enum):
         raise TypeError("Can only be used with classes derived from enum.Enum.")
-    if value in enum_cls.__members__:  # type: ignore
+    if value in enum_cls.__members__:
         return enum_cls.__members__[value]  # type: ignore
     val_lc = value.casefold()
-    val_map = {name.casefold(): name for name in enum_cls.__members__}  # type: ignore
+    val_map = {name.casefold(): name for name in enum_cls.__members__}
     if val_lc in val_map:
         return enum_cls.__members__[val_map[val_lc]]  # type: ignore
     return None
@@ -568,7 +568,7 @@ def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
 
 
 def collapse_dicts(*dicts: Dict[Any, Any]) -> Dict[Any, Any]:
-    """Merge multiple dictionaries - later dicts have higher precendence."""
+    """Merge multiple dictionaries - later dicts have higher precedence."""
     if len(dicts) < 2:
         return dicts[0] or {}
     out_dict = dicts[0]

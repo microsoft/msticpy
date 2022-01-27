@@ -95,8 +95,7 @@ class ResourceGraphDriver(DriverBase):
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.subscription_ids = [
-            sub.subscription_id
-            for sub in self.sub_client.subscriptions.list()  # type: ignore
+            sub.subscription_id for sub in self.sub_client.subscriptions.list()
         ]
 
         self._connected = True

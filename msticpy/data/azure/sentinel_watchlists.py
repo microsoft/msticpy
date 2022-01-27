@@ -194,7 +194,7 @@ class SentinelWatchlistsMixin:
         for new_item in new_items:
             # See if item already exists, if it does get the item ID
             current_df, item_series = current_items_values.align(
-                pd.Series(new_item), axis=1, copy=False  # type: ignore
+                pd.Series(new_item), axis=1, copy=False
             )
             if (current_df == item_series).all(axis=1).any() and overwrite:
                 watchlist_id = current_items[

@@ -107,7 +107,7 @@ class OPR(HttpProvider):
         results: List[pd.Series] = []
         if not domain_list:
             return pd.DataFrame(columns=LookupResult.column_map())
-        for item_result in self._lookup_bulk_request(domain_list):  # type: ignore
+        for item_result in self._lookup_bulk_request(domain_list):
             results.append(pd.Series(attr.asdict(item_result)))
 
         all_results = results + bad_requests

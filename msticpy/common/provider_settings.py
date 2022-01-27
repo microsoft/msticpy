@@ -48,7 +48,7 @@ class ProviderSettings:
     name: str
     description: str
     provider: Optional[str] = None
-    args: ProviderArgs = Factory(ProviderArgs)  # type: ignore
+    args: ProviderArgs = Factory(ProviderArgs)
     primary: bool = False
 
 
@@ -188,7 +188,7 @@ def _get_settings(
             try:
                 setting_dict[target_name] = _fetch_setting(
                     config_section, provider_name, arg_name, arg_value
-                )  # type: ignore
+                )
             except NotImplementedError:
                 warnings.warn(
                     f"Setting type for setting {arg_value} not yet implemented. "
@@ -227,7 +227,5 @@ def _fetch_setting(
             )
             return None
         config_path = [config_section, provider_name, "Args", arg_name]
-        return _SECRETS_CLIENT.get_secret_accessor(  # type:ignore
-            ".".join(config_path)
-        )
+        return _SECRETS_CLIENT.get_secret_accessor(".".join(config_path))
     return None

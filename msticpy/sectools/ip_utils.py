@@ -362,11 +362,11 @@ def create_ip_record(
     ]
     ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
     ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
-    geoloc_entity = GeoLocation()  # type: ignore
-    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
-    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
-    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
-    ip_entity.Location = geoloc_entity  # type: ignore
+    geoloc_entity = GeoLocation()
+    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]
+    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]
+    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]
+    ip_entity.Location = geoloc_entity
 
     # If Azure network data present add this to host record
     if az_net_df is not None and not az_net_df.empty:

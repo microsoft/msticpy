@@ -66,7 +66,7 @@ class AzureBlobStorage:
                 "Unable to connect check the Azure Blob Store account name"
             ) from err
         return (
-            _parse_returned_items(  # type:ignore
+            _parse_returned_items(
                 container_list, remove_list=["lease", "encryption_scope"]
             )
             if container_list
@@ -92,7 +92,7 @@ class AzureBlobStorage:
         try:
             new_container = self.abs_client.create_container(  # type: ignore
                 container_name, **kwargs
-            )  # type:ignore
+            )
         except ResourceExistsError as err:
             raise CloudError(f"Container {container_name} already exists.") from err
         properties = new_container.get_container_properties()

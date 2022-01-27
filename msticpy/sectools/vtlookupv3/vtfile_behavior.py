@@ -139,7 +139,7 @@ class VTFileBehavior:
             file_summary = file_summary.iloc[0]
         if isinstance(file_summary, pd.Series):
             file_summary = file_summary.to_dict()
-        self.file_summary = file_summary or {}  # type: ignore
+        self.file_summary = file_summary or {}
         self.file_id = file_id or self.file_summary.get("id")
 
         self._file_behavior: Dict[str, Any] = {}

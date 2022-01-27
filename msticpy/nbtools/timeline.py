@@ -923,7 +923,7 @@ def _get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
     else:
         ref_time = kwargs.get("ref_time", None)
         ref_label = "Ref time"
-    return ref_time, kwargs.get("ref_label", ref_label)  # type: ignore
+    return ref_time, kwargs.get("ref_label", ref_label)
 
 
 def _get_datetime_tooltip(col: str, dataset: pd.DataFrame):

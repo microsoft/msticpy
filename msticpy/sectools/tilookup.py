@@ -245,7 +245,7 @@ class TILookup:
     @classmethod
     def list_available_providers(
         cls, show_query_types=False, as_list: bool = False
-    ) -> Optional[List[str]]:  # type: ignore
+    ) -> Optional[List[str]]:
         """
         Print a list of builtin providers with optional usage.
 

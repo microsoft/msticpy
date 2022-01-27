@@ -32,10 +32,10 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
-import geoip2.database  # type: ignore
+import geoip2.database
 import pandas as pd
 import requests
-from geoip2.errors import AddressNotFoundError  # type: ignore
+from geoip2.errors import AddressNotFoundError
 from IPython import get_ipython
 from IPython.display import HTML, display
 from requests.exceptions import HTTPError

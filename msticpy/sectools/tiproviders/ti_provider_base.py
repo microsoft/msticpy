@@ -760,7 +760,7 @@ def _(data: pd.DataFrame, obs_col: str, ioc_type_col: Optional[str] = None):
             yield row[obs_col], row[ioc_type_col]
 
 
-@generate_items.register(dict)  # type: ignore
+@generate_items.register(dict)
 def _(data: dict, obs_col: Optional[str] = None, ioc_type_col: Optional[str] = None):
     for obs, ioc_type in data.items():
         if not ioc_type:

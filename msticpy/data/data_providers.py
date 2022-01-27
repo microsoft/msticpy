@@ -460,7 +460,7 @@ class QueryProvider:
         """Fetch queries from YAML files in specified paths."""
         settings: Dict[str, Any] = config.settings.get(  # type: ignore
             "QueryDefinitions"
-        )  # type: ignore
+        )
         all_query_paths = []
         for default_path in settings.get("Default"):  # type: ignore
             qry_path = self._resolve_package_path(default_path)
