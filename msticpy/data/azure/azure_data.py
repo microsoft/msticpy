@@ -129,7 +129,9 @@ class AzureData:
         if connect:
             self.connect()
 
-    def connect(self, auth_methods: List = None, silent: bool = False):
+    def connect(
+        self, auth_methods: List = None, tenant_id: str = None, silent: bool = False
+    ):
         """
         Authenticate to the Azure SDK.
 
@@ -137,6 +139,9 @@ class AzureData:
         ----------
         auth_methods : List, optional
             list of preferred authentication methods to use, by default None
+        tenant_id : str, optional
+            The tenant to authenticate against. If not supplied, the default
+            tenant for the identity will be used.
         silent : bool, optional
             Set true to prevent output during auth process, by default False
 
@@ -147,7 +152,10 @@ class AzureData:
 
         """
         auth_methods = auth_methods or self.az_cloud_config.auth_methods
-        self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
+        tenant_id = tenant_id or self.az_cloud_config.tenant_id
+        self.credentials = az_connect(
+            auth_methods=auth_methods, tenant_id=tenant_id, silent=silent
+        )
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
         self._check_client("sub_client")
