@@ -10,6 +10,11 @@ if "%SPHINXBUILD%" == "" (
 set SOURCEDIR=source
 set BUILDDIR=build
 
+REM Generate API source RST files
+echo Regenerating API source files...
+sphinx-apidoc --o %SOURCEDIR%/api ../msticpy
+del %SOURCEDIR%\api\modules.rst
+
 if "%1" == "" goto help
 
 %SPHINXBUILD% >NUL 2>NUL
