@@ -173,23 +173,35 @@ class SumologicDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Sumologic
-            days: Search the past X days.
-            start_time: A datetime() object representing the start of the search
-                    window. If used without end_time, the end of the search
-                    window is the current time.
-            end_time: A datetime() object representing the end of the search window.
-                  If used without start_time, the search start will be the earliest
-                  time in the index.
-            timezone: timezone used for time range search
-            byreceipttime:  if time reference should used _receiptTime (time when Sumologic
-                        got message) instead of _messageTime (time present in log message).
-            limit: An integer describing the max number of search results to return.
-            forcemessagesresults: Force results to be raw messages even if aggregated query.
-            verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
-            checkinterval: interval in seconds to check if results are gathered
-            timeout: timeout in seconds when gathering results
+        days : int
+            Search the past X days.
+        start : datetime
+            A datetime() object representing the start of the search
+            window. If used without end_time, the end of the search
+            window is the current time.
+        start_time : datetime
+            alias for `start`
+        end : datetime
+            A datetime() object representing the end of the search window.
+            If used without start_time, the search start will be the earliest
+            time in the index.
+        end_time:
+            alias for `end`
+        timezone : str
+            timezone used for time range search
+        byreceipttime : datetime
+            if time reference should used _receiptTime (time when Sumologic
+            got message) instead of _messageTime (time present in log message).
+        limit : int
+            An integer describing the max number of search results to return.
+        forcemessagesresults : bool
+            Force results to be raw messages even if aggregated query.
+        verbosity : int
+            Provide more verbose state. from 0 least verbose to 4 most one.
+        checkinterval : int
+            interval in seconds to check if results are gathered
+        timeout : int
+            timeout in seconds when gathering results
 
         Returns
         -------
@@ -362,15 +374,19 @@ class SumologicDriver(DriverBase):
         ----------------
         days: int
             Search the past X days.
-        start_time (or start) : datetime
+        start : datetime
             A datetime() object representing the start of the search
             window. If used without end_time, the end of the search
             window is the current time.
-        end_time (or end) : datetime
+        start_time : datetime
+            alias for `start`
+        end : datetime
             A datetime() object representing the end of the search window.
             If used without start_time, the search start will be the earliest
             time in the index.
-        timeZone: str
+        end_time : datetime
+            alias for `end`
+        timeZone : str
             timezone used for time range search
         byReceiptTime : datetime
             if time reference should used _receiptTime (time when Sumologic

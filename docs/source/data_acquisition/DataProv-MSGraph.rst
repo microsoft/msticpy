@@ -1,6 +1,6 @@
 
-Microsoft Graph API
-===================
+Microsoft Graph API Provider
+============================
 
 
 Connecting to the Security Graph API follows the same format as MS Defender
@@ -139,6 +139,6 @@ You can also specify these parameters as a connection string of the form:
 Other Microsoft Graph Documentation
 -----------------------------------
 
-Built-in MS Graph queries :ref:`DataQueries:Queries for MS Graph`.
+Built-in :ref:`data_acquisition/DataQueries:Queries for Microsoft Graph`.
 
 :py:mod:`Microsoft Graph driver API documentation<msticpy.data.drivers.security_graph_driver>`

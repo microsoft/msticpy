@@ -1,7 +1,7 @@
 Querying and Importing Data
 ===========================
 
-Querying Data Common Operations
+Common Data Provider Operations
 -------------------------------
 
 .. toctree::
@@ -9,8 +9,9 @@ Querying Data Common Operations
 
    data_acquisition/DataProviders
 
-Individual Data Environments/Drivers
-------------------------------------
+
+Individual Data Environments
+----------------------------
 
 .. toctree::
    :maxdepth: 2
@@ -24,6 +25,7 @@ Individual Data Environments/Drivers
    data_acquisition/MordorData
    data_acquisition/DataProv-Sumologic
    data_acquisition/DataProv-Kusto
+
 
 Built-in Data Queries
 ---------------------

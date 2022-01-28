@@ -28,11 +28,15 @@ class StateMatrix(dict):
             Either a dict representing counts or probabilities.
             Or a dict of dicts representing
             conditional counts or conditional probabilities.
-            E.g.
+            E.g.::
+
                 {'Set-Mailbox': 20,'##UNK##': 1}
-            or
+
+            or::
+
                 {'Set-Mailbox': {'Set-Mailbox': 5, '##UNK##': 1},
                 '##UNK##': {'Set-Mailbox': 1, '##UNK##': 1}}
+
         unk_token: str
             dummy token to signify an unseen command (e.g. "##UNK##").
             This token should be present in the `states` keys. And if `states`
@@ -82,11 +86,15 @@ class Cmd:
             name of the command. e.g. for Exchange online: "Set-Mailbox"
         params: Union[set, dict]
             set of accompanying params or dict of accompanying params and values.
-            e.g.
+            e.g.::
+
                 {'Identity', 'ForwardingEmailAddress'}
-            of
+
+            or::
+
                 {'Identity': 'some identity', 'ForwardingEmailAddress':
                  'an_email@email.com'}
+
 
         """
         self.name = name

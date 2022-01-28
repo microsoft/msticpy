@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: pylint
         args:
-          - --disable=E0401,W0511
+          - --disable=bad-continuation,duplicate-code,import-error
           - --ignore-patterns=test_
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2

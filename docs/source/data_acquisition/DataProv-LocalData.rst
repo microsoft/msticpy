@@ -199,9 +199,9 @@ Example usage of LocalData driver
     )
 
 Other LocalData Documentation
--------------------------------
+-----------------------------
 
 
-Built-in LocalData queries :ref:`queries`<DataQueries#queries-for-localdata>`_.
+Built-in :ref:`data_acquisition/DataQueries:Queries for Local Data`.
 
 :py:mod:`LocalData driver API documentation<msticpy.data.drivers.local_data_driver>`

@@ -1,7 +1,7 @@
 Open Threat Research Security Datasets data provider and browser
 ================================================================
 
-The `OTRF<https://github.com/OTRF>`__ Security Datasets
+The `OTRF <https://github.com/OTRF>`__ Security Datasets
 is a project to capture host and network log data
 that illustrates adversarial attack patterns. Mordor is part of the
 Open Threat Research Forge created by Roberto Rodriquez and Jose
@@ -29,8 +29,8 @@ The equivalent built-in queries for the Mordor provider return
 the entire set of data for that item.
 
 For more information on the OTRF data sets see the
-`OTRF Jupyter Book documentation<https://securitydatasets.com/introduction.html>`__
-and the `GitHub repository<https://github.com/OTRF/Security-Datasets>`__`.
+`OTRF Jupyter Book documentation <https://securitydatasets.com/introduction.html>`__
+and the `GitHub repository <https://github.com/OTRF/Security-Datasets>`__.
 
 
 For more information on Mitre ATT&CK Techniques and Tactics see

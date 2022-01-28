@@ -1,5 +1,5 @@
-Microsoft 365 Defender
-======================
+Microsoft 365 Defender Provider
+===============================
 
 This driver lets you query the Microsoft Defender APIs.
 
@@ -147,6 +147,6 @@ Other M365 Defender Documentation
 For examples of using the MS Defender provider, see the sample
 `M365 Defender Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MDATPQuery.ipynb>`
 
-Built-in M365 Defender queries :ref:`DataQueries:Queries for M365 Defender`.
+Built-in :ref:`data_acquisition/DataQueries:Queries for Microsoft 365 Defender`.
 
 :py:mod:`M365 Defender driver API documentation<msticpy.data.drivers.mdatp_driver>`
