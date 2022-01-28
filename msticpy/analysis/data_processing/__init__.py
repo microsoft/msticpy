@@ -7,4 +7,8 @@
 
 from ..._version import VERSION
 
+from .iocextract import IoCExtract
+from . import base64unpack as base64
+from . import process_tree_utils as ptree
+
 __version__ = VERSION

@@ -46,7 +46,7 @@ except ImportError:
 _IPSTACK_IMP_OK = False
 ip_stack_cls: Optional[type]
 try:
-    from msticpy.sectools import IPStackLookup as ip_stack_cls
+    from msticpy.analysis.geoip import IPStackLookup as ip_stack_cls
 
     _IPSTACK_IMP_OK = True
 except ImportError:

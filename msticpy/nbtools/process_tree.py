@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for observationlist.py."""
+"""Deprecated placeholder for process_tree.py."""
 import warnings
 from .._version import VERSION
 
@@ -13,10 +13,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.observationlist import *
+from ..vis.process_tree import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.observationlist\n"
+    "This module has moved to msticpy.vis.process_tree\n"
     + "Please change your import to reflect this new location."
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

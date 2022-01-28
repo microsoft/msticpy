@@ -15,7 +15,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def find_yaml_files(source_path: str, recursive: bool = False) -> Iterable[Path]:
+def find_yaml_files(source_path: str, recursive: bool = True) -> Iterable[Path]:
     """
     Return iterable of yaml files found in `source_path`.
 

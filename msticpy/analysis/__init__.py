@@ -7,4 +7,6 @@
 
 from .._version import VERSION
 
+from .geoip import GeoLiteLookup, IPStackLookup, geo_distance
+
 __version__ = VERSION

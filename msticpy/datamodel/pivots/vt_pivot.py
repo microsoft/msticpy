@@ -8,11 +8,11 @@ from enum import Flag, auto
 from functools import partial
 from typing import Dict, Optional, Tuple, Union
 
-from ....._version import VERSION
-from .vtlookupv3 import VTLookupV3
-from .....common.utility import enum_parse
-from .....common.provider_settings import get_provider_settings
-from .....datamodel.pivot import Pivot, PivotRegistration
+from ..._version import VERSION
+from ...data.contextproviders.tiproviders.vtlookupv3.vtlookupv3 import VTLookupV3
+from ...common.utility import enum_parse
+from ...common.provider_settings import get_provider_settings
+from ..pivot import Pivot, PivotRegistration
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
