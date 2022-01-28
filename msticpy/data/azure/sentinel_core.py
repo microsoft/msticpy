@@ -11,10 +11,6 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-# flake8: noqa: F403, F401
-# pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...data.contextproviders.azure.sentinel_core import *
-
 WARN_MSSG = (
     "This module has moved to msticpy.data.contextproviders.azure.sentinel_core\n"
     + "Please change your import to reflect this new location."
