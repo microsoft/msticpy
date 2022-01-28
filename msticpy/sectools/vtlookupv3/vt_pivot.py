@@ -13,10 +13,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...datamodel.pivots.vt_pivot import *
+from ...data.contextproviders.tiproviders.vtlookupv3.vt_pivot import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.contextproviders.tiproviders.vtlookupv3.vt_pivot\n"
+    """This module has moved to
+    msticpy.data.contextproviders.tiproviders.vtlookupv3.vt_pivot\n"""
     + "Please change your import to reflect this new location."
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

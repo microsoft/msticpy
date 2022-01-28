@@ -9,7 +9,7 @@ from ....._version import VERSION
 
 # pylint: disable=unused-import
 # flake8: noqa: F401
-from .....datamodel.pivots.vt_pivot import add_pivot_functions
+from .vt_pivot import add_pivot_functions
 from .vtfile_behavior import VTFileBehavior
 from .vtlookupv3 import VTLookupV3, VT_API_NOT_FOUND, MsticpyVTNoDataError
 from ....browsers.vtobject_browser import VTObjectBrowser

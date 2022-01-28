@@ -16,7 +16,8 @@ __author__ = "Pete Bryan"
 from ...data.contextproviders.tiproviders.vtlookupv3.vtfile_behavior import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.contextproviders.tiproviders.vtlookupv3.vtfile_behavior\n"
+    """This module has moved to
+    msticpy.data.contextproviders.tiproviders.vtlookupv3.vtfile_behavior\n"""
     + "Please change your import to reflect this new location."
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)
