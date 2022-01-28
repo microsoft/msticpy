@@ -14,7 +14,7 @@ which describes usage an functionality common to all of the
 data source drivers. Each provider (like Sentinel and Splunk)
 also has documentation covering specific usage of that
 data environment. These can be found in
-:ref:`Individual Data Environments\/Drivers<..DataAcquisition/Individual Data Environments\/Drivers>`__.
+:ref:`DataAcquisition:Individual Data Environments`.
 
 
 Creating a Query Provider
@@ -226,7 +226,7 @@ This will display:
 -  What Data Environment it is designed for
 -  A short description of what the query does
 -  What parameters the query can be passed
--  The raw (unparameterized) query that will be run
+-  The raw (un-parameterized) query that will be run
 
 
 .. code:: ipython3
@@ -292,176 +292,16 @@ reason an exception will be raised.
     alerts.head()
 
 
-.. raw:: html
+===================  =================================================  ==========  =================================================  =========================  ============  ================================================  ==========================================
+TimeGenerated        AlertDisplayName                                   Severity    Description                                        ProviderName               VendorName    ExtendedProperties                                Entities
+===================  =================================================  ==========  =================================================  =========================  ============  ================================================  ==========================================
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  Detection                  Microsoft     {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  Detection                  Microsoft     {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...
+2019-07-22 07:02:42  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  AdaptiveNetworkHardenings  Microsoft     {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...
+2019-07-26 06:03:16  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  AdaptiveNetworkHardenings  Microsoft     {\r\n "Destination Port": "22",\r\n "Protoco...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...
+2019-07-23 06:42:01  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  AdaptiveNetworkHardenings  Microsoft     {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...
+===================  =================================================  ==========  =================================================  =========================  ============  ================================================  ==========================================
 
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TenantId</th>
-          <th>TimeGenerated</th>
-          <th>AlertDisplayName</th>
-          <th>AlertName</th>
-          <th>Severity</th>
-          <th>Description</th>
-          <th>ProviderName</th>
-          <th>VendorName</th>
-          <th>VendorOriginalId</th>
-          <th>SystemAlertId</th>
-          <th>...</th>
-          <th>ExtendedProperties</th>
-          <th>Entities</th>
-          <th>SourceSystem</th>
-          <th>WorkspaceSubscriptionId</th>
-          <th>WorkspaceResourceGroup</th>
-          <th>ExtendedLinks</th>
-          <th>ProductName</th>
-          <th>ProductComponentName</th>
-          <th>Type</th>
-          <th>CompromisedEntity</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>2518385291989119899_8af9954d-f28d-40ff-a079-d9...</td>
-          <td>...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>5d60fff6-7dd2-4474-a4d0-4c8e3fa6fad6</td>
-          <td>...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 07:02:42</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>ba07c315-0af5-4568-9ecd-6c788f9267ae</td>
-          <td>b7adb73b-0778-4929-b46a-c0ed642bc61f</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "3389",\r\n  "Proto...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-26 06:03:16</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>c3144593-9bae-448e-87dd-b2d3c47de571</td>
-          <td>d89ad3b2-f7a7-4cff-b8a4-3f6fa58b4760</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "22",\r\n  "Protoco...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-23 06:42:01</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>4e4173a6-1a27-451f-8a3c-25d10b306c30</td>
-          <td>11813ab7-ab7c-4719-b0a1-ccb5d4a32223</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "3389",\r\n  "Proto...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-    <p>5 rows × 30 columns</p>
-    </div>
-
-|
 
 It is also possible to pass queries objects as arguments before defining
 keyword arguments. For example if I wanted to define query times as an
@@ -484,174 +324,15 @@ can use that when running a query to automatically supply the ``start`` and
     qry_prov.SecurityAlert.list_alerts(query_times)
 
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TenantId</th>
-          <th>TimeGenerated</th>
-          <th>AlertDisplayName</th>
-          <th>AlertName</th>
-          <th>Severity</th>
-          <th>Description</th>
-          <th>ProviderName</th>
-          <th>VendorName</th>
-          <th>VendorOriginalId</th>
-          <th>SystemAlertId</th>
-          <th>...</th>
-          <th>ExtendedProperties</th>
-          <th>Entities</th>
-          <th>SourceSystem</th>
-          <th>WorkspaceSubscriptionId</th>
-          <th>WorkspaceResourceGroup</th>
-          <th>ExtendedLinks</th>
-          <th>ProductName</th>
-          <th>ProductComponentName</th>
-          <th>Type</th>
-          <th>CompromisedEntity</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-26 06:03:16</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>c3144593-9bae-448e-87dd-b2d3c47de571</td>
-          <td>d89ad3b2-f7a7-4cff-b8a4-3f6fa58b4760</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "22",\r\n  "Protoco...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-23 06:42:01</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>4e4173a6-1a27-451f-8a3c-25d10b306c30</td>
-          <td>11813ab7-ab7c-4719-b0a1-ccb5d4a32223</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "3389",\r\n  "Proto...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>2518385291989119899_8af9954d-f28d-40ff-a079-d9...</td>
-          <td>...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>5d60fff6-7dd2-4474-a4d0-4c8e3fa6fad6</td>
-          <td>...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 07:02:42</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>ba07c315-0af5-4568-9ecd-6c788f9267ae</td>
-          <td>b7adb73b-0778-4929-b46a-c0ed642bc61f</td>
-          <td>...</td>
-          <td>{\r\n  "Destination Port": "3389",\r\n  "Proto...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-    <p>5 rows × 30 columns</p>
-    </div>
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
+TimeGenerated        AlertDisplayName                                   Severity    Description                                        ExtendedProperties                                Entities                                    SourceSystem
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
+2019-07-26 06:03:16  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "22",\r\n "Protoco...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+2019-07-23 06:42:01  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...  Detection
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...  Detection
+2019-07-22 07:02:42  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
 
 |
 
@@ -698,175 +379,15 @@ execute.
     query_test = qry_prov.exec_query(query=test_query)
     query_test.head()
 
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TenantId</th>
-          <th>TimeGenerated</th>
-          <th>DisplayName</th>
-          <th>AlertName</th>
-          <th>AlertSeverity</th>
-          <th>Description</th>
-          <th>ProviderName</th>
-          <th>VendorName</th>
-          <th>VendorOriginalId</th>
-          <th>SystemAlertId</th>
-          <th>...</th>
-          <th>RemediationSteps</th>
-          <th>ExtendedProperties</th>
-          <th>Entities</th>
-          <th>SourceSystem</th>
-          <th>WorkspaceSubscriptionId</th>
-          <th>WorkspaceResourceGroup</th>
-          <th>ExtendedLinks</th>
-          <th>ProductName</th>
-          <th>ProductComponentName</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>2518385291989119899_8af9954d-f28d-40ff-a079-d9...</td>
-          <td>...</td>
-          <td>[\r\n  "1. Enforce the use of strong passwords...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 06:35:13</td>
-          <td>Suspicious authentication activity</td>
-          <td>Suspicious authentication activity</td>
-          <td>Medium</td>
-          <td>Although none of them succeeded, some of them ...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>8af9954d-f28d-40ff-a079-d9d4cc5a5268</td>
-          <td>5d60fff6-7dd2-4474-a4d0-4c8e3fa6fad6</td>
-          <td>...</td>
-          <td>[\r\n  "1. Enforce the use of strong passwords...</td>
-          <td>{\r\n  "Activity start time (UTC)": "2019/07/2...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "HostName":...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td>[\r\n  {\r\n    "Href": "https://interflowwebp...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-22 07:02:42</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>ba07c315-0af5-4568-9ecd-6c788f9267ae</td>
-          <td>b7adb73b-0778-4929-b46a-c0ed642bc61f</td>
-          <td>...</td>
-          <td>[\r\n  "1. Review the IP addresses and determi...</td>
-          <td>{\r\n  "Destination Port": "3389",\r\n  "Proto...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-07-26 06:03:16</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Traffic from unrecommended IP addresses was de...</td>
-          <td>Low</td>
-          <td>Azure security center has detected incoming tr...</td>
-          <td>AdaptiveNetworkHardenings</td>
-          <td>Microsoft</td>
-          <td>c3144593-9bae-448e-87dd-b2d3c47de571</td>
-          <td>d89ad3b2-f7a7-4cff-b8a4-3f6fa58b4760</td>
-          <td>...</td>
-          <td>[\r\n  "1. Review the IP addresses and determi...</td>
-          <td>{\r\n  "Destination Port": "22",\r\n  "Protoco...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "ResourceId...</td>
-          <td>Detection</td>
-          <td></td>
-          <td></td>
-          <td>[\r\n  {\r\n    "DetailBladeInputs": "protecte...</td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>b1315f05-4a7a-45b4-811f-73e715f7c122</td>
-          <td>2019-06-27 00:31:35</td>
-          <td>Security incident with shared process detected</td>
-          <td>Security incident with shared process detected</td>
-          <td>High</td>
-          <td>The incident which started on 2019-06-25 21:24...</td>
-          <td>Detection</td>
-          <td>Microsoft</td>
-          <td>be88b671-2572-4373-af4a-323849b1da1d</td>
-          <td>2518408029550429999_be88b671-2572-4373-af4a-32...</td>
-          <td>...</td>
-          <td>[\r\n  "1. Escalate the alert to the informati...</td>
-          <td>{\r\n  "isincident": "true",\r\n  "Detected Ti...</td>
-          <td>[\r\n  {\r\n    "$id": "4",\r\n    "DisplayNam...</td>
-          <td>Detection</td>
-          <td>3b701f84-d04b-4479-89b1-fa8827eb537e</td>
-          <td>sentineltest</td>
-          <td></td>
-          <td>Azure Security Center</td>
-          <td></td>
-          <td>SecurityAlert</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>5 rows × 29 columns</p>
-    </div>
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
+TimeGenerated        AlertDisplayName                                   Severity    Description                                        ExtendedProperties                                Entities                                    SourceSystem
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
+2019-07-26 06:03:16  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "22",\r\n "Protoco...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+2019-07-23 06:42:01  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...  Detection
+2019-07-22 06:35:13  Suspicious authentication activity                 Medium      Although none of them succeeded, some of them ...  {\r\n "Activity start time (UTC)": "2019/07/2...  [\r\n {\r\n "$id": "4",\r\n "HostName":...  Detection
+2019-07-22 07:02:42  Traffic from unrecommended IP addresses was de...  Low         Azure security center has detected incoming tr...  {\r\n "Destination Port": "3389",\r\n "Proto...   [\r\n {\r\n "$id": "4",\r\n "ResourceId...  Detection
+===================  =================================================  ==========  =================================================  ================================================  ==========================================  ==============
 
 
 Splitting Query Execution into Chunks

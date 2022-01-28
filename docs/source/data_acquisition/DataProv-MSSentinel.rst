@@ -226,6 +226,6 @@ Other MS Sentinel Documentation
 For examples of using the MS Defender provider, see the sample
 `M365 Defender Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb>`
 
-Built-in Microsoft Sentinel queries :ref:`DataQueries:Queries for Microsoft Sentinel`.
+Built-in :ref:`data_acquisition/DataQueries:Queries for Microsoft Sentinel`.
 
 :py:mod:`Sentinel KQL driver API documentation<msticpy.data.drivers.kql_driver>`

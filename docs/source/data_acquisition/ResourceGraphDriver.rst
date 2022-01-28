@@ -1,8 +1,5 @@
-Resource Graph Explorer Data Provider
-=====================================
-
-Description
------------
+Azure Resource Graph Provider
+=============================
 
 This data provider allows for a connection to the `Azure Resource
 Graph <https://docs.microsoft.com/en-us/azure/governance/resource-graph/overview>`__
@@ -19,19 +16,36 @@ queries on various aspects of resources and returns data in a very
 structured format. This makes it much more effective and efficient than
 getting resource specific details via the resource API.
 
-More details about data providers in MSTICPy can be found in `the
-documentation <https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html>`__
+More details about data providers in MSTICPy can be found in
+:doc:`the documentation <DataProviders>`.
 
-Installation
-~~~~~~~~~~~~
+Azure Resource Graph Configuration
+----------------------------------
 
-Installation of this data connector requires that MSTICPy be installed
-with the Azure extras: ``pip install msticpy['azure']``
+The provider uses the Azure configuration specified in
+the Azure section of the *msticpyconfig.yaml*.
 
-For more details on MSTICPy installation please refer to [the documentation](https://msticpy.readthedocs.io/en/latest/getting_started/Installing.html).
+These settings affect all Azure components.
 
-Initialization
-~~~~~~~~~~~~~~
+For more information on using and configuring *msticpyconfig.yaml* see
+:doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
+and :doc:`MSTICPy Settings Editor<../getting_started/SettingsEditor>`
+
+An example.
+
+.. code:: yaml
+
+    Azure:
+      auth_methods:
+      - cli
+      - interactive
+      cloud: global
+
+See :ref:`getting_started/SettingsEditor:Azure Cloud and Authentication Settings`
+
+
+Loading a Query Provider for Azure Resource Graph
+-------------------------------------------------
 
 The provider for the Azure Resource Graph is named ``ResourceGraph``
 
@@ -40,22 +54,18 @@ The provider for the Azure Resource Graph is named ``ResourceGraph``
     from msticpy.data.data_providers import QueryProvider
     qry_prov = QueryProvider("ResourceGraph")
 
-Authentication
-~~~~~~~~~~~~~~
+Connecting to Azure Resource Graph
+----------------------------------
 
 Once initialized the first step in using the data provider is to
-authenticate. The Resource Graph provider uses MSTICPy’s `Azure
+authenticate. The Resource Graph provider uses MSTICPy's :ref:`Azure
 authentication
-features <https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html?highlight=azure#instantiating-and-connecting-with-an-azure-data-connector>`__
+features <data_acquisition/AzureData:Instantiating and Connecting with an Azure Data Connector>`
 and you can provide a set of authentication methods when connecting. By
 default the provider will attempt to authenticate using credentials
 stored in msticpyconfig.yaml (or as environment variables) and an Azure
-CLI connection but this can be customized with the ‘auth_methods’
+CLI connection but this can be customized with the 'auth_methods'
 keyword.
-
-If storing details in msticpyconfig.yaml they must be under the
-``AzureCLI`` DataProviders section - for more details see `this
-documentation <https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html>`__.
 
 Once successfully connected you will be presented with a “Connected”
 message.
@@ -80,8 +90,7 @@ this provider. Once connected you can view the available queries with
 Alternatively you can view query details in an interactive widget with
 ``QUERY_PROVIDER.browse_queries()``
 
-For more information, refer documentation : `Listing available
-queries <https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html#listing-available-queries>`__.
+For more information, see: :ref:`data_acquisition/DataProviders:Listing Available Queries`.
 
 .. code:: ipython3
 
@@ -105,16 +114,16 @@ Running pre-defined query
 -------------------------
 
 In order to run pre-defined query, execute with the query name,
-e.g. ``QUERY_PROVIDER.ResoruceGraph.QUERY_NAME()``. You can pass
+e.g. ``QUERY_PROVIDER.ResourceGraph.QUERY_NAME()``. You can pass
 parameters to these queries to customize them, however they will also
 run with default parameters if none as provider. The query browser will
-provide details as to what parameters are avaliable with each query.
+provide details as to what parameters are available with each query.
 
 As with other data providers data is returned to you in a Pandas
 DataFrame.
 
-For more information , refer documentation - `Running an pre-defined
-query <https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html#running-an-pre-defined-query>`__
+For more information , refer documentation - :ref:`Running a pre-defined
+query <data_acquisition/DataProviders:Running a pre-defined query>`
 
 .. code:: ipython3
 
@@ -138,8 +147,6 @@ Running an ad-hoc query
 You can also define a your own KQL query for the Resource Graph and run
 with ``QUERY_PROVIDER.exec_query(QUERY)``
 
-For more information, see the documentation on `Running an Ad-hoc
-Query <https://msticpy.readthedocs.io/en/latest/data_acquisition/DataProviders.html#running-an-ad-hoc-query>`__
 
 .. code:: ipython3
 
@@ -217,8 +224,12 @@ vmId                                                                            
 =================================================================================================================================  ==========  ============  ======================================================================================================================================  ======================================================================================================================================  =================
 
 
-References
-----------
+Other Azure Resource Graph Documentation
+----------------------------------------
+
+Built-in :ref:`data_acquisition/DataQueries:Queries for Azure Resource Graph`.
+
+:py:mod:`Azure Resource Graph driver API documentation<msticpy.data.drivers.resource_graph_driver>`
 
 -  Azure Resource Graph:
    https://docs.microsoft.com/en-us/azure/governance/resource-graph/overview

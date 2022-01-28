@@ -278,8 +278,7 @@ class SentinelIncidentsMixin:
                Informational, Low, Medium, High
         status : str, optional
             The status to assign the incident, by default "New"
-            Options are:
-                New, Active, Closed
+            Options are: New, Active, Closed
         description : str, optional
             A description of the incident, by default None
         first_activity_time : datetime, optional

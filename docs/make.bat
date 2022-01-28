@@ -12,8 +12,12 @@ set BUILDDIR=build
 
 REM Generate API source RST files
 echo Regenerating API source files...
-sphinx-apidoc --o %SOURCEDIR%/api ../msticpy
+sphinx-apidoc --o %SOURCEDIR%/api --force ../msticpy
 del %SOURCEDIR%\api\modules.rst
+
+REM generate query list
+echo Generating query list documentation
+python -m generate_query_docs doc --file source\data_acquisition\DataQueries.rst
 
 if "%1" == "" goto help
 

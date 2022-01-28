@@ -1,105 +1,151 @@
-Splunk - Data Connector
-=======================
+Splunk Provider
+===============
 
-Description
------------
-
-The data provider module of msticpy provides functions to allow for the
-defining of data sources, connectors to them and queries for them as
-well as the ability to return query result from the defined data
-sources.
-
-For more information on Data Propviders, check the documentation :doc:`DataProviders`
-
-In this notebooks we will demonstrate Splunk data connector feature of
-msticpy. This feature is built on-top of the [Splunk Enterprise SDK for
-Python]
-(https://dev.splunk.com/enterprise/docs/devtools/python/sdk-python/)
+In this document we describe the Splunk data connector feature of
+MSTICPy. This feature is built on-top of the
+`Splunk Enterprise SDK for Python <https://dev.splunk.com/enterprise/docs/devtools/python/sdk-python/>`__
 with some customizations and enhancements.
 
-Installation
-~~~~~~~~~~~~
+Splunk Configuration
+--------------------
+
+Splunk SDK Installation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The Splunk SDK is an optional dependency of MSTICPy. To install it,
+run the following:
 
 .. code:: ipython3
 
     # Only run first time to install/upgrade msticpy to latest version
     #!pip install --upgrade msticpy[splunk]
 
-Authentication
-~~~~~~~~~~~~~~
+Splunk Configuration in MSTICPy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can store your connection details in *msticpyconfig.yaml*.
+
+For more information on using and configuring *msticpyconfig.yaml* see
+:doc:`msticpy Package Configuration <../getting_started/msticpyconfig>`
+and :doc:`MSTICPy Settings Editor<../getting_started/SettingsEditor>`
+
+The settings in the file should look like the following:
+
+.. code:: yaml
+
+    DataProviders:
+      ...
+      Splunk:
+          Args:
+            host: splunk_host
+            port: 8089
+            username: splunk_user
+            password: [PLACEHOLDER]
+
+
+We strongly recommend storing the password secret value
+in Azure Key Vault. You can replace the text value with a referenced
+to a Key Vault secret using the MSTICPy configuration editor.
+
+.. code:: yaml
+
+    DataProviders:
+      ...
+      Splunk:
+          Args:
+            host: splunk_host
+            port: 8089
+            username: splunk_user
+            password:
+              KeyVault:
+
+Required connection parameters:
+
+===========  ===========================================================================================================================
+Parameter    Description
+===========  ===========================================================================================================================
+host         (string) The host name (the default is 'localhost').
+username     (string) The Splunk account username, which is used to authenticate the Splunk instance.
+password     (string) The password for the Splunk account.
+===========  ===========================================================================================================================
+
+
+Optional configuration parameters:
+
+===========  ===========================================================================================================================
+Parameter    Description
+===========  ===========================================================================================================================
+port         (integer) The port number (the default is 8089).
+http_scheme  ('https' or 'http') The scheme for accessing the service (the default is 'https').
+verify       (Boolean) Enable (True) or disable (False) SSL verification for https connections. (optional, the default is True)
+owner        (string) The owner context of the namespace (optional).
+app          (string) The app context of the namespace (optional).
+sharing      ('global', 'system', 'app', or 'user') The sharing mode for the namespace (the default is 'user').
+token        (string) The current session token (optional). Session tokens can be shared across multiple service instances.
+cookie       (string) A session cookie. When provided, you don’t need to call login(). This parameter is only supported for Splunk 6.2+.
+autologin    (boolean) When True, automatically tries to log in again if the session terminates.
+===========  ===========================================================================================================================
+
+
+
+Loading a QueryProvider for Splunk
+----------------------------------
+
+.. code:: ipython3
+
+        qry_prov = QueryProvider("Splunk")
+
+
+Connecting to Splunk
+--------------------
 
 Authentication for the Splunk data provider is handled by specifying
 credentials directly in the connect call or specifying the credentials
 in msticpy config file.
 
-For more information on how to create new user with approapriate roles
+For more information on how to create new user with appropriate roles
 and permissions, follow the Splunk documents:
-`Addandeditusers <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Addandeditusers>`__
+
+`Securing the Spunk platform <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Addandeditusers>`__
+
 and
-`Aboutusersandroles <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Aboutusersandroles>`__.
+
+`About users and roles <https://docs.splunk.com/Documentation/Splunk/8.0.5/Security/Aboutusersandroles>`__.
+
 The user should have permission to at least run its own searches or more
 depending upon the actions to be performed by user.
 
 Once you created user account with the appropriate roles, you will
-require the following details to specify while connecting - host =
-“localhost”(Splunk server FQDN hostname to connect, for locally
-installed splunk, you can specify localhost) - port = 8089 (Splunk REST
-API ) - username = “admin” (username to connect to Splunk instance) -
-password = “yourpassword” (password of the userspecified in username)
+require the following details to specify while connecting:
+
+- host = "localhost" (Splunk server FQDN hostname to connect, for locally
+  installed splunk, you can specify localhost)
+- port = 8089 (Splunk REST API )
+- username = "admin" (username to connect to Splunk instance)
+- password = "yourpassword" (password of the user specified in username)
 
 Once you have details, you can specify it in ``msticpyconfig.yaml`` as
-shown in below example
+described earlier.
 
-::
-
-   SplunkApp:
-     Args:
-       host: "{Splunk server FQDN or localhost}"
-       port: "{default 8089}"
-       username: "{username with search permissions to connect}"
-       password: "{password of the user specified}"
+Authenticate using the following, if you have stored your configuration
+in *msticpyconfig.yaml*
 
 .. code:: ipython3
 
-    #Check we are running Python 3.6
-    import sys
-    MIN_REQ_PYTHON = (3,6)
-    if sys.version_info < MIN_REQ_PYTHON:
-        print('Check the Kernel->Change Kernel menu and ensure that Python 3.6')
-        print('or later is selected as the active kernel.')
-        sys.exit("Python %s.%s or later is required.\n" % MIN_REQ_PYTHON)
+    qry_prov.connect()
 
-    #imports
-    import pandas as pd
-    import msticpy.nbtools as nbtools
+Or provide connection parameters explicitly. You can also have some
+of the required parameters stored in your configuration and
+specify others (e.g. password) at connect time, as a parameter to
+connect.
 
-    #data library imports
-    from msticpy.data.data_providers import QueryProvider
-
-    print('Imports Complete')
-
-
-.. parsed-literal::
-
-    Imports Complete
-
-
-Instantiating a query provider
-------------------------------
-
-You can instantiate a data provider for Splunk by specifying the
-credentials in connect or in msticpy config file. If the details are
-correct and authentication is successful, it will show connected.
+You can also use any of the optional parameters described earlier
+as parameters to connect.
 
 .. code:: ipython3
 
-    splunk_prov = QueryProvider('Splunk')
-    splunk_prov.connect(host=<hostname>, username=<username>, password=<password>)
+    qry_prov.connect(host=<hostname>, username=<username>, password=<password>)
 
-
-.. parsed-literal::
-
-    connected
 
 
 Listing available queries
@@ -119,7 +165,6 @@ as list datatypes, list saved searches, alerts, audittrail informaion.
 .. code:: ipython3
 
     splunk_prov.list_queries()
-
 
 
 
@@ -252,140 +297,21 @@ For more information , refer to the documentation
     )
 
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeCreated</th>
-          <th>host</th>
-          <th>EventID</th>
-          <th>EventDescription</th>
-          <th>User</th>
-          <th>process</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>2017-08-25T04:57:45.512440700Z</td>
-          <td>venus</td>
-          <td>3</td>
-          <td>Network Connect</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>powershell.exe</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2017-08-25T04:57:45.213738500Z</td>
-          <td>wrk-aturing</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>conhost.exe</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2017-08-25T04:57:45.213738500Z</td>
-          <td>wrk-aturing</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>cscript.exe</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>2017-08-25T04:57:45.088941700Z</td>
-          <td>wrk-aturing</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>conhost.exe</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>2017-08-25T04:57:45.088941700Z</td>
-          <td>wrk-aturing</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>cscript.exe</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th>95</th>
-          <td>2017-08-25T04:57:02.003800000Z</td>
-          <td>wrk-ghoppy</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>splunk-powershell.exe</td>
-        </tr>
-        <tr>
-          <th>96</th>
-          <td>2017-08-25T04:57:01.170335100Z</td>
-          <td>venus</td>
-          <td>3</td>
-          <td>Network Connect</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>powershell.exe</td>
-        </tr>
-        <tr>
-          <th>97</th>
-          <td>2017-08-25T04:57:01.941402000Z</td>
-          <td>wrk-ghoppy</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>splunk-winprintmon.exe</td>
-        </tr>
-        <tr>
-          <th>98</th>
-          <td>2017-08-25T04:57:01.863404500Z</td>
-          <td>wrk-ghoppy</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>splunk-netmon.exe</td>
-        </tr>
-        <tr>
-          <th>99</th>
-          <td>2017-08-25T04:57:01.754208000Z</td>
-          <td>wrk-ghoppy</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>splunk-powershell.exe</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>100 rows × 12 columns</p>
-    </div>
+==== ==============================  ===========  =========  ==================  ====================  ======================
+0    TimeCreated                     host         EventID    EventDescription    User                  process
+==== ==============================  ===========  =========  ==================  ====================  ======================
+0    2017-08-25T04:57:45.512440700Z  venus        3          Network Connect     NT AUTHORITY\\SYSTEM  powershell.exe
+1    2017-08-25T04:57:45.213738500Z  wrk-aturing  5          Process Terminate   nan                   conhost.exe
+2    2017-08-25T04:57:45.213738500Z  wrk-aturing  5          Process Terminate   nan                   cscript.exe
+3    2017-08-25T04:57:45.088941700Z  wrk-aturing  1          Process Create      NT AUTHORITY\\SYSTEM  conhost.exe
+4    2017-08-25T04:57:45.088941700Z  wrk-aturing  1          Process Create      NT AUTHORITY\\SYSTEM  cscript.exe
+...  ...                             ...          ...        ...                 ...                   ...
+95   2017-08-25T04:57:02.003800000Z  wrk-ghoppy   1          Process Create      NT AUTHORITY\\SYSTEM  splunk-powershell.exe
+96   2017-08-25T04:57:01.170335100Z  venus        3          Network Connect     NT AUTHORITY\\SYSTEM  powershell.exe
+97   2017-08-25T04:57:01.941402000Z  wrk-ghoppy   5          Process Terminate   nan                   splunk-winprintmon.exe
+98   2017-08-25T04:57:01.863404500Z  wrk-ghoppy   1          Process Create      NT AUTHORITY\\SYSTEM  splunk-netmon.exe
+99   2017-08-25T04:57:01.754208000Z  wrk-ghoppy   5          Process Terminate   nan                   splunk-powershell.exe
+==== ==============================  ===========  =========  ==================  ====================  ======================
 
 |
 
@@ -406,140 +332,21 @@ reset as shown in below example while retrieving all results.
     )
 
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeCreated</th>
-          <th>host</th>
-          <th>EventID</th>
-          <th>EventDescription</th>
-          <th>User</th>
-          <th>process</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>2017-08-25T04:57:45.512440700Z</td>
-          <td>venus</td>
-          <td>3</td>
-          <td>Network Connect</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>powershell.exe</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2017-08-25T04:57:45.213738500Z</td>
-          <td>wrk-aturing</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>conhost.exe</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2017-08-25T04:57:45.213738500Z</td>
-          <td>wrk-aturing</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>cscript.exe</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>2017-08-25T04:57:45.088941700Z</td>
-          <td>wrk-aturing</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>conhost.exe</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>2017-08-25T04:57:45.088941700Z</td>
-          <td>wrk-aturing</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>cscript.exe</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th>7923</th>
-          <td>2017-08-25T04:57:46.758125600Z</td>
-          <td>wrk-klagerf</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>splunk-admon.exe</td>
-        </tr>
-        <tr>
-          <th>7924</th>
-          <td>2017-08-25T04:57:46.695728800Z</td>
-          <td>wrk-klagerf</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>splunk-MonitorNoHandle.exe</td>
-        </tr>
-        <tr>
-          <th>7925</th>
-          <td>2017-08-25T04:57:46.570935200Z</td>
-          <td>wrk-klagerf</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>splunk-MonitorNoHandle.exe</td>
-        </tr>
-        <tr>
-          <th>7926</th>
-          <td>2017-08-25T04:57:46.539736800Z</td>
-          <td>wrk-klagerf</td>
-          <td>5</td>
-          <td>Process Terminate</td>
-          <td>NaN</td>
-          <td>splunk-powershell.exe</td>
-        </tr>
-        <tr>
-          <th>7927</th>
-          <td>2017-08-25T04:57:46.430542400Z</td>
-          <td>wrk-klagerf</td>
-          <td>1</td>
-          <td>Process Create</td>
-          <td>NT AUTHORITY\SYSTEM</td>
-          <td>splunk-powershell.exe</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>7928 rows × 12 columns</p>
-    </div>
+==== ==============================  ===========  =========  ==================  ====================  ======================
+0    TimeCreated                     host         EventID    EventDescription    User                  process
+==== ==============================  ===========  =========  ==================  ====================  ======================
+0    2017-08-25T04:57:45.512440700Z  venus        3          Network Connect     NT AUTHORITY\\SYSTEM  powershell.exe
+1    2017-08-25T04:57:45.213738500Z  wrk-aturing  5          Process Terminate   nan                   conhost.exe
+2    2017-08-25T04:57:45.213738500Z  wrk-aturing  5          Process Terminate   nan                   cscript.exe
+3    2017-08-25T04:57:45.088941700Z  wrk-aturing  1          Process Create      NT AUTHORITY\\SYSTEM  conhost.exe
+4    2017-08-25T04:57:45.088941700Z  wrk-aturing  1          Process Create      NT AUTHORITY\\SYSTEM  cscript.exe
+...  ...                             ...          ...        ...                 ...                   ...
+95   2017-08-25T04:57:02.003800000Z  wrk-ghoppy   1          Process Create      NT AUTHORITY\\SYSTEM  splunk-powershell.exe
+96   2017-08-25T04:57:01.170335100Z  venus        3          Network Connect     NT AUTHORITY\\SYSTEM  powershell.exe
+97   2017-08-25T04:57:01.941402000Z  wrk-ghoppy   5          Process Terminate   nan                   splunk-winprintmon.exe
+98   2017-08-25T04:57:01.863404500Z  wrk-ghoppy   1          Process Create      NT AUTHORITY\\SYSTEM  splunk-netmon.exe
+99   2017-08-25T04:57:01.754208000Z  wrk-ghoppy   5          Process Terminate   nan                   splunk-powershell.exe
+==== ==============================  ===========  =========  ==================  ====================  ======================
 
 
 
@@ -561,66 +368,26 @@ For more information, check documentation :ref:`data_acquisition/dataproviders:r
     df = splunk_prov.exec_query(splunk_query)
     df.head()
 
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeGenerated</th>
-          <th>TotalBytesSent</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>2020-07-02T10:00:00Z</td>
-          <td>27055</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2020-07-02T09:00:00Z</td>
-          <td>33777</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2020-07-02T08:00:00Z</td>
-          <td>27355</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>2020-07-02T07:00:00Z</td>
-          <td>25544</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>2020-07-02T06:00:00Z</td>
-          <td>11771</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+====  ====================  ================
+0     TimeGenerated           TotalBytesSent
+====  ====================  ================
+   0  2020-07-02T10:00:00Z             27055
+   1  2020-07-02T09:00:00Z             33777
+   2  2020-07-02T08:00:00Z             27355
+   3  2020-07-02T07:00:00Z             25544
+   4  2020-07-02T06:00:00Z             11771
+====  ====================  ================
 
 |
 
-References
-----------
+Other Splunk Documentation
+--------------------------
+
+
+Built-in :ref:`data_acquisition/DataQueries:Queries for Splunk`.
+
+:py:mod:`Splunk driver API documentation<msticpy.data.drivers.splunk_driver>`
+
 
 -  `Splunk Enterprise SDK for Python
    <https://dev.splunk.com/enterprise/docs/devtools/python/sdk-python/>`__
