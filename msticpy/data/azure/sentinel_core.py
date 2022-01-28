@@ -15,6 +15,7 @@ __author__ = "Pete Bryan"
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
 from ..contextproviders.azure.sentinel_core import *
 
+
 WARN_MSSG = (
     "This module has moved to msticpy.data.contextproviders.azure.sentinel_core\n"
     + "Please change your import to reflect this new location."
