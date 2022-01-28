@@ -7,6 +7,7 @@
 
 from .._version import VERSION
 
+# flake8: noqa: F401
 from .geoip import GeoLiteLookup, IPStackLookup, geo_distance
 
 __version__ = VERSION

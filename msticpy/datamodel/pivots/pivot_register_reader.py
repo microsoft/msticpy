@@ -10,14 +10,14 @@ import warnings
 
 import yaml
 
-from .._version import VERSION
-from ..common.exceptions import (
+from ..._version import VERSION
+from ...common.exceptions import (
     MsticpyUserConfigError,
     MsticpyException,
     MsticpyUserError,
 )
-from ..data.common.query_container import QueryContainer
-from . import entities
+from ...data.common.query_container import QueryContainer
+from .. import entities
 from .pivot_register import PivotRegistration, create_pivot_func
 
 __version__ = VERSION

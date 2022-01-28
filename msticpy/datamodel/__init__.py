@@ -1,1 +1,1 @@
-"""Package file for datamodel subpackage."""
+"""Package file for datamaodel subpackage."""

@@ -13,8 +13,8 @@ import yaml
 from attr import Factory
 from tqdm.auto import tqdm
 
-from .._version import VERSION
-from . import entities
+from ..._version import VERSION
+from .. import entities
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

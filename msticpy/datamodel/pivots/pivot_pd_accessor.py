@@ -17,7 +17,7 @@ import pandas as pd
 from IPython import get_ipython
 from IPython.display import HTML, display
 
-from .._version import VERSION
+from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
