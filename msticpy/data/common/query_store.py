@@ -207,7 +207,7 @@ class QueryStore:
     def import_files(  # noqa: MC0001
         cls,
         source_path: list,
-        recursive: bool = False,
+        recursive: bool = True,
         driver_query_filter: Optional[Dict[str, Set[str]]] = None,
     ) -> Dict[str, "QueryStore"]:
         """

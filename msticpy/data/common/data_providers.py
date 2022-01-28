@@ -613,7 +613,9 @@ class QueryProvider:
     def _resolve_package_path(cls, config_path: str) -> Optional[str]:
         """Resolve path relative to current package."""
         if not Path(config_path).is_absolute():
-            config_path = str(Path(__file__).resolve().parent.joinpath(config_path))
+            config_path = str(
+                Path(__file__).resolve().parent.parent.joinpath(config_path)
+            )
         if not Path(config_path).is_dir():
             print(f"Warning: Custom query definitions path {config_path} not found")
             return None
