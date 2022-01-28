@@ -12,7 +12,7 @@ __author__ = "Pete Bryan"
 
 
 # flake8: noqa: F403, F401
-# pylint: disable=unused-import
+# pylint: disable=unused-import, unused-wildcard-import, wildcard-import
 from ..data.contextproviders.tiproviders.vtlookupv3.vtlookup import *
 
 WARN_MSSG = (

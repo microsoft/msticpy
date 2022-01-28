@@ -223,7 +223,7 @@ def _load_notebooklets(comp_settings=None, **kwargs):
 
 def _load_pivot(comp_settings=None, **kwargs):
     del comp_settings
-    from ...datamodel.pivot import Pivot
+    from ...datamodel.pivots.pivot import Pivot
 
     namespace = kwargs.get("global_ns", {}).copy()
     namespace.update(kwargs.get("local_ns", {}))

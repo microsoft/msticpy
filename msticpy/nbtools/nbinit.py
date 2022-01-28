@@ -41,7 +41,7 @@ from ..common.utility import (
     unit_testing,
 )
 from ..config import MpConfigFile
-from ..datamodel.pivot import Pivot
+from ..datamodel.pivots.pivot import Pivot
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml
 from ..data.common.user_config import load_user_defaults
