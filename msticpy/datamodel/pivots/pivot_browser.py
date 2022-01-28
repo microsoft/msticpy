@@ -9,9 +9,9 @@ from typing import Dict, List
 from IPython import get_ipython
 from IPython.display import display
 import ipywidgets as widgets
-from . import entities
+from .. import entities
 
-from .._version import VERSION
+from ..._version import VERSION
 
 try:
     import pyperclip

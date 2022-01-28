@@ -12,7 +12,7 @@ from pkg_resources import parse_version
 import pandas as pd
 from pandas.errors import ParserError
 
-from .._version import VERSION
+from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

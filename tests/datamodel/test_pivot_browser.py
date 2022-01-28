@@ -16,8 +16,8 @@ try:
 except ImportError:
     _ENABLE_CLIP = False
 
-from msticpy.datamodel.pivot import Pivot
-from msticpy.datamodel.pivot_browser import PivotBrowser
+from msticpy.datamodel.pivots.pivot import Pivot
+from msticpy.datamodel.pivots.pivot_browser import PivotBrowser
 
 __author__ = "Ian Hellen"
 

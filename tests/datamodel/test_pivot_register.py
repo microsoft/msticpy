@@ -12,7 +12,7 @@ import pytest
 import pytest_check as check
 from msticpy.data.common.query_container import QueryContainer
 from msticpy.datamodel import entities
-from msticpy.datamodel.pivot import Pivot
+from msticpy.datamodel.pivots.pivot import Pivot
 from msticpy.analysis.geoip import GeoLiteLookup
 from msticpy.data.contextproviders.tilookup import TILookup
 
