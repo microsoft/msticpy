@@ -1,3 +1,8 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
 """TI Providers sub-package."""
 from ...._version import VERSION
 from ....common.provider_settings import (  # noqa:F401
