@@ -9,7 +9,7 @@ from functools import partial
 from typing import Dict, Optional, Tuple, Union
 
 from ....._version import VERSION
-from . import VTLookupV3
+from .vtlookupv3 import VTLookupV3
 from .....common.utility import enum_parse
 from .....common.provider_settings import get_provider_settings
 from .....datamodel.pivots.pivot import Pivot, PivotRegistration

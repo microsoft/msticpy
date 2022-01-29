@@ -14,7 +14,7 @@ import pytest_check as check
 from msticpy.data import QueryProvider
 from msticpy.data.common.query_container import QueryContainer
 from msticpy.datamodel import entities
-from msticpy.datamodel.pivot import Pivot
+from msticpy.datamodel.pivots.pivot import Pivot
 
 from ..unit_test_lib import get_test_data_path
 
