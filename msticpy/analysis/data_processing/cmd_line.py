@@ -38,7 +38,7 @@ def risky_cmd_line(
     log_type: str,
     detection_rules: str = str(
         Path(__file__)
-        .parent.parent.parent.parent.joinpath(_DETECTIONS_DEF_DIR)
+        .parent.parent.parent.joinpath(_DETECTIONS_DEF_DIR)
         .joinpath("cmd_line_rules.json")
     ),
     cmd_field: str = "Command",
