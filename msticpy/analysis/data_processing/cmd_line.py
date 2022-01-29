@@ -37,7 +37,7 @@ def risky_cmd_line(
     events: pd.DataFrame,
     log_type: str,
     detection_rules: str = str(
-        Path.cwd().parent.joinpath(_DETECTIONS_DEF_DIR).joinpath("cmd_line_rules.json")
+        Path.cwd().joinpath(_DETECTIONS_DEF_DIR).joinpath("cmd_line_rules.json")
     ),
     cmd_field: str = "Command",
 ) -> dict:
