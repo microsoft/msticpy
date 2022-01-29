@@ -12,7 +12,7 @@ import pytest_check as check
 import pandas as pd
 from msticpy.datamodel import entities
 from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress
-from msticpy.datamodel.pivot import Pivot
+from msticpy.datamodel.pivots.pivot import Pivot
 
 from ...unit_test_lib import get_test_data_path
 
