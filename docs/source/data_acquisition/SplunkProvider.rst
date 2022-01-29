@@ -18,7 +18,7 @@ run the following:
 .. code:: ipython3
 
     # Only run first time to install/upgrade msticpy to latest version
-    #!pip install --upgrade msticpy[splunk]
+    %pip install --upgrade msticpy[splunk]
 
 Splunk Configuration in MSTICPy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

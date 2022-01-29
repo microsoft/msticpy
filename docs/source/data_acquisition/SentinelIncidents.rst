@@ -43,7 +43,7 @@ as well as adding comments to an incident.
 To interact with an incident use `.post_comment` or `.update_incident`.
 
 To update the incident's features you need to pass `.update_incident` a dictionary of parameters and values to update.
-Details of what parameters can be updated can be found in the `Microsoft Sentinel documentation. <https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate>`_
+Details of what parameters can be updated can be found in the `Microsoft Sentinel documentation. <https://docs.microsoft.com/rest/api/securityinsights/incidents/createorupdate>`_
 
 .. note:: When modifying severity, status, or title there is no need to include the 'properties.' in the key name within the update_items dictionary
 
