@@ -2,9 +2,9 @@ Azure Resource Graph Provider
 =============================
 
 This data provider allows for a connection to the `Azure Resource
-Graph <https://docs.microsoft.com/en-us/azure/governance/resource-graph/overview>`__
+Graph <https://docs.microsoft.com/azure/governance/resource-graph/overview>`__
 and a way to query against the `Azure Resource Graph
-Explorer <https://docs.microsoft.com/en-us/azure/governance/resource-graph/first-query-portal>`__.
+Explorer <https://docs.microsoft.com/azure/governance/resource-graph/first-query-portal>`__.
 The data connector functions in the same way as other data connectors
 and uses the Kusto Query Language (KQL) and has with some subtle
 differences to other connectors in they way that authentication is
@@ -232,6 +232,6 @@ Built-in :ref:`data_acquisition/DataQueries:Queries for Azure Resource Graph`.
 :py:mod:`Azure Resource Graph driver API documentation<msticpy.data.drivers.resource_graph_driver>`
 
 -  Azure Resource Graph:
-   https://docs.microsoft.com/en-us/azure/governance/resource-graph/overview
+   https://docs.microsoft.com/azure/governance/resource-graph/overview
 -  Resource Graph Query Language:
-   https://docs.microsoft.com/en-us/azure/governance/resource-graph/concepts/query-language
+   https://docs.microsoft.com/azure/governance/resource-graph/concepts/query-language

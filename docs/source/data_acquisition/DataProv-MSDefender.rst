@@ -17,7 +17,7 @@ Creating a Client App for M365 Defender
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Details on registering an Azure AD application for MS 365 Defender can be found
-`here <https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
+`here <https://docs.microsoft.com/windows/security/threat-protection/microsoft-defender-atp/exposed-apis-create-app-webapp>`__.
 Once you have registered the application, you can use it to connect to
 the MS Defender API.
 

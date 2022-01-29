@@ -15,7 +15,7 @@ Creating a Client App for Microsoft Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Details for registering an application for the Microsoft Graph API can
-be found `here <https://docs.microsoft.com/en-us/graph/auth-register-app-v2?context=graph%2Fapi%2F1.0&view=graph-rest-1.0>`__.
+be found `here <https://docs.microsoft.com/graph/auth-register-app-v2?context=graph%2Fapi%2F1.0&view=graph-rest-1.0>`__.
 
 
 Microsoft Graph Configuration in MSTICPy

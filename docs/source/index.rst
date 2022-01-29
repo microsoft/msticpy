@@ -25,7 +25,7 @@ Background - Why we created *msticpy*
 -------------------------------------
 
 The package was originally built for authoring notebooks in
-`Azure Sentinel <https://azure.microsoft.com/en-us/services/azure-sentinel/>`__.
+`Azure Sentinel <https://azure.microsoft.com/services/azure-sentinel/>`__.
 While Azure Sentinel is still a big focus of our work, we are
 have extended the data query/acquisition components to pull log data from
 other sources (e.g. Splunk, Microsoft 365 Defender and Microsoft Graph,
