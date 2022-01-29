@@ -10,7 +10,7 @@ if "%SPHINXBUILD%" == "" (
 set SOURCEDIR=source
 set BUILDDIR=build
 
-if "%SPHINX_NOGEN%" != "" goto no_gen_files
+if /I "%SPHINX_NOGEN%" NEQ "" goto no_gen_files
 REM Generate API source RST files
 echo Regenerating API source files...
 sphinx-apidoc --o %SOURCEDIR%/api --force ../msticpy
