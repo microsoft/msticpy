@@ -13,10 +13,10 @@ Designed to support standard linux syslog for investigations where auditd
 is not avalaible.
 
 """
-import os
 import re
 import json
 
+from pathlib import Path
 import datetime as dt
 import numpy as np
 import pandas as pd
@@ -36,9 +36,10 @@ _DETECTIONS_DEF_DIR = "resources"
 def risky_cmd_line(
     events: pd.DataFrame,
     log_type: str,
-    detection_rules: str = os.path.join(
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), _DETECTIONS_DEF_DIR),
-        "cmd_line_rules.json",
+    detection_rules: str = str(
+        Path.cwd()
+        .parent.parent.joinpath(_DETECTIONS_DEF_DIR)
+        .joinpath("cmd_line_rules.json")
     ),
     cmd_field: str = "Command",
 ) -> dict:
