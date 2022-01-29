@@ -247,13 +247,13 @@ def _load_azure_data(comp_settings=None, **kwargs):
 
 def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
-    from ..data.azure_sentinel import AzureSentinel
+    from ..data.azure import MicrosoftSentinel
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:
-        az_sent = AzureSentinel(res_id=res_id)
+        az_sent = MicrosoftSentinel(res_id=res_id)
     else:
-        az_sent = AzureSentinel()
+        az_sent = MicrosoftSentinel()
     connect = comp_settings.pop("connect", True)
     connect_args = comp_settings
     if connect:
