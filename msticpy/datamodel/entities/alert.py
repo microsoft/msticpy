@@ -325,7 +325,7 @@ def _extract_entities(ents: list):
     out_ents = []
     for entity in ents:
         if isinstance(entity, dict) and "$ref" in entity:
-            out_ents.append(_find_og_ent(entity, base_ents))
+            out_ents.append(_find_original_entity(entity, base_ents))
         else:
             for k, val in entity.items():
                 if isinstance(val, (list, dict)):
@@ -333,15 +333,15 @@ def _extract_entities(ents: list):
                         nested_ents = []
                         for item in val:
                             if isinstance(item, dict) and "$ref" in item:
-                                nested_ents.append(_find_og_ent(item, base_ents))
+                                nested_ents.append(_find_original_entity(item, base_ents))
                                 entity[k] = nested_ents
                     elif isinstance(val, dict) and "$ref" in val:
-                        entity[k] = _find_og_ent(val, base_ents)
+                        entity[k] = _find_original_entity(val, base_ents)
             out_ents.append(entity)
     return out_ents
 
 
-def _find_og_ent(ent, base_ents):
+def _find_original_entity(ent, base_ents):
     """Find the original entity referenced by $ref entity."""
     try:
         id = ent["$ref"]
