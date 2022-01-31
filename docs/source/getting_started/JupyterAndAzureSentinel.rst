@@ -23,7 +23,7 @@ distribution since it contains the Jupyter packages and many others
 needed for the Azure Sentinel notebooks.
 
 Further reading: `Using Notebooks in Azure
-Sentinel <https://docs.microsoft.com/en-us/azure/sentinel/notebooks>`__
+Sentinel <https://docs.microsoft.com/azure/sentinel/notebooks>`__
 and .
 
 Open one of the Sample Notebooks
@@ -70,7 +70,7 @@ If you are using Notebooks for Azure using free computer, creating a new
 project is effectively starting a new environment (although there are
 ways to automate this setup). The exception to this is if you are using
 a dedicated Compute resource such as a `Data Science Virtual
-Machine <https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/>`__.
+Machine <https://azure.microsoft.com/services/virtual-machines/data-science-virtual-machines/>`__.
 Since this machine is persisted and linked to your Notebooks for Azure
 account, all the configuration will be there next time you come to use
 it.
@@ -144,7 +144,7 @@ notebook is started:
    can be frustrating if you are hopping between multiple notebooks.
 
 -  `AppId
-   authentication <https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal>`__
+   authentication <https://docs.microsoft.com/azure/active-directory/develop/howto-create-service-principal-portal>`__
    - this uses an App account, created in your Azure Active Directory
    tenant, and granted read access to your Log Analytics workspace. This
    is a smoother authentication experience but means that you need to
@@ -175,7 +175,7 @@ References
    Jupyter-friendly package developed by Azure's Michael Binstock.
 
 -  `Using Notebooks in Azure
-   Sentinel <https://docs.microsoft.com/en-us/azure/sentinel/notebooks>`__
+   Sentinel <https://docs.microsoft.com/azure/sentinel/notebooks>`__
    is the official documentation for using Jupyter notebooks in Azure
    Sentinel.
 
