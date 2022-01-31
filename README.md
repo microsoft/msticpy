@@ -269,7 +269,7 @@ user sessions containing suspicious activity.
 
 ### cmd_line
 
-A module to support he detection of known malicious command line activity or suspicious
+A module to support the detection of known malicious command line activity or suspicious
 patterns of command line activity.
 
 ### domain_utils
