@@ -51,5 +51,4 @@ sumologic-sdk>=0.1.11
 tldextract>=2.2.2
 tqdm>=4.36.1
 urllib3>=1.23
-vt-graph-api>=1.0.1
 vt-py>=0.6.1
