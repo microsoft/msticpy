@@ -333,7 +333,9 @@ def _extract_entities(ents: list):
                         nested_ents = []
                         for item in val:
                             if isinstance(item, dict) and "$ref" in item:
-                                nested_ents.append(_find_original_entity(item, base_ents))
+                                nested_ents.append(
+                                    _find_original_entity(item, base_ents)
+                                )
                                 entity[k] = nested_ents
                     elif isinstance(val, dict) and "$ref" in val:
                         entity[k] = _find_original_entity(val, base_ents)
