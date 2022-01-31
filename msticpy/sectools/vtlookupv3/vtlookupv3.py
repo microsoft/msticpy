@@ -12,8 +12,10 @@ from ...common.provider_settings import get_provider_settings
 
 try:
     import vt
-    from vt_graph_api import VTGraph
-    from vt_graph_api import errors as vt_graph_errs
+
+    # Removing dependency temporarily due to build break
+    # from vt_graph_api import VTGraph
+    # from vt_graph_api import errors as vt_graph_errs
     import nest_asyncio
     from .vtfile_behavior import VTFileBehavior
 except ImportError as imp_err:
@@ -23,6 +25,9 @@ except ImportError as imp_err:
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err
+
+
+# pylint: disable=too-many-lines
 
 
 class MsticpyVTNoDataError(Exception):
@@ -695,60 +700,61 @@ class VTLookupV3:
         finally:
             self._vt_client.close()
 
-    def create_vt_graph(
-        self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
-    ) -> str:
-        """
-        Create a VirusTotal Graph with a set of Relationship DataFrames.
+    # Temporarily disabled due to build break with vt_graph_api dependency
+    # def create_vt_graph(
+    #     self, relationship_dfs: List[pd.DataFrame], name: str, private: bool
+    # ) -> str:
+    #     """
+    #     Create a VirusTotal Graph with a set of Relationship DataFrames.
 
-        Parameters
-        ----------
-        relationship_dfs:
-            List of Relationship DataFrames
-        name:
-            New graph name
-        private
-            Indicates if the Graph is private or not.
+    #     Parameters
+    #     ----------
+    #     relationship_dfs:
+    #         List of Relationship DataFrames
+    #     name:
+    #         New graph name
+    #     private
+    #         Indicates if the Graph is private or not.
 
-        Returns
-        -------
-            Graph ID
+    #     Returns
+    #     -------
+    #         Graph ID
 
-        Raises
-        ------
-            ValueError when private is not indicated.
-            ValueError when there are no relationship DataFrames
-            MsticpyVTGraphSaveGraphError when Graph can not be saved
+    #     Raises
+    #     ------
+    #         ValueError when private is not indicated.
+    #         ValueError when there are no relationship DataFrames
+    #         MsticpyVTGraphSaveGraphError when Graph can not be saved
 
-        """
-        if not isinstance(private, bool):
-            raise ValueError("Please indicate if Graph is private or not")
+    #     """
+    #     if not isinstance(private, bool):
+    #         raise ValueError("Please indicate if Graph is private or not")
 
-        nodes, edges = self.relationships_to_graph(relationship_dfs)
-        graph = VTGraph(self._vt_key, name=name, private=private)
-        graph.add_nodes(nodes)
+    #     nodes, edges = self.relationships_to_graph(relationship_dfs)
+    #     graph = VTGraph(self._vt_key, name=name, private=private)
+    #     graph.add_nodes(nodes)
 
-        for edge in edges:
-            graph.add_link(**edge)
+    #     for edge in edges:
+    #         graph.add_link(**edge)
 
-        try:
-            graph.save_graph()
-        except vt_graph_errs.SaveGraphError as graph_err:
-            graph_mssg = (
-                [""]
-                if not private
-                else [
-                    "Please check you have Private Graph premium feature enabled in",
-                    "your subscription. It is possible to create public Graphs",
-                    "with 'private=False' input argument",
-                ]
-            )
-            raise MsticpyVTGraphSaveGraphError(
-                "Could not save Graph.",
-                *graph_mssg,
-            ) from graph_err
+    #     try:
+    #         graph.save_graph()
+    #     except vt_graph_errs.SaveGraphError as graph_err:
+    #         graph_mssg = (
+    #             [""]
+    #             if not private
+    #             else [
+    #                 "Please check you have Private Graph premium feature enabled in",
+    #                 "your subscription. It is possible to create public Graphs",
+    #                 "with 'private=False' input argument",
+    #             ]
+    #         )
+    #         raise MsticpyVTGraphSaveGraphError(
+    #             "Could not save Graph.",
+    #             *graph_mssg,
+    #         ) from graph_err
 
-        return graph.graph_id
+    #     return graph.graph_id
 
     def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
         """
