@@ -13,7 +13,7 @@ import requests
 from azure.common.exceptions import CloudError
 
 from ...._version import VERSION
-from ....common.exceptions import MsticpyAzureConfigError
+from ....common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ....common.azure_auth_core import AzureCloudConfig
 from ....common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers
@@ -39,11 +39,14 @@ class SentinelUtilsMixin:
 
     def _get_items(self, url: str, params: str = "2020-01-01") -> requests.Response:
         """Get items from the API."""
-        return requests.get(
-            url,
-            headers=get_api_headers(self.token),  # type: ignore
-            params={"api-version": params},
-        )
+        if self.connected:
+            return requests.get(
+                url,
+                headers=get_api_headers(self.token),  # type: ignore
+                params={"api-version": params},
+            )
+        else:
+            raise MsticpyAzureConnectionError("Ensure you run .connect before calling other functions.")
 
     def _list_items(
         self,

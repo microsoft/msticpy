@@ -217,6 +217,7 @@ def unpack_items(
     return None
 
 
+@export
 def unpack(
     input_string: str, trace: bool = False, utf16: bool = False
 ) -> Tuple[str, Optional[List[BinaryRecord]]]:
@@ -258,6 +259,7 @@ def unpack(
     return _decode_b64_string_recursive(input_string)
 
 
+@export
 def unpack_df(
     data: pd.DataFrame, column: str, trace: bool = False, utf16: bool = False
 ) -> pd.DataFrame:

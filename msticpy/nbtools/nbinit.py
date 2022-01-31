@@ -152,7 +152,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
-    dict(pkg="msticpy.datamodel.pivot", tgt="Pivot"),
+    dict(pkg="msticpy.datamodel.pivots.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
 ]

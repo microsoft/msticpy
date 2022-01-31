@@ -360,6 +360,9 @@ class SentinelIncidentsMixin:
             If incident can't be found or multiple matching incidents found.
 
         """
+        # In case full resource ID is passed in try and extract ID.
+        if "/" in incident:
+            incident = incident.split("/")[-1]
         try:
             UUID(incident)
             return incident
