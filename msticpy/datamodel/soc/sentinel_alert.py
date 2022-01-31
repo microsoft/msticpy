@@ -88,7 +88,7 @@ class SentinelAlert(Alert):
             )
             and not src_event.empty
         ):
-            self._add_sent_items(src_event)
+            self._add_sentinel_items(src_event)
             self._add_extended_sent_props()
         self._ids: Dict[str, str] = {}
         if self.__dict__ is not None:
@@ -109,7 +109,7 @@ class SentinelAlert(Alert):
                 if item_name not in self.__dict__:
                     self.__dict__[item_name] = value
 
-    def _add_sent_items(self, src_event):
+    def _add_sentinel_items(self, src_event):
         for feature in _FEATURES:
             if feature not in self.__dict__:
                 self.__dict__.update({feature: src_event.get(feature, "")})
