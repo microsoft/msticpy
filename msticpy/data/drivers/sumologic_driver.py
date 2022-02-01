@@ -11,8 +11,7 @@ from timeit import default_timer as timer
 from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
-from requests.exceptions import ConnectionError as ConnError
-from requests.exceptions import HTTPError
+import httpx
 from sumologic.sumologic import SumoLogic
 
 from ..._version import VERSION
@@ -103,14 +102,14 @@ class SumologicDriver(DriverBase):
                 accessKey=arg_dict["accesskey"],
                 endpoint=arg_dict["connection_str"],
             )
-        except ConnError as err:
+        except httpx.ConnectError as err:
             raise MsticpyConnectionError(
                 f"Authentication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
                 help_uri=_HELP_URI,
                 nb_uri=_SL_NB_URI,
             ) from err
-        except HTTPError as err:
+        except httpx.HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
@@ -173,23 +172,35 @@ class SumologicDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Sumologic
-            days: Search the past X days.
-            start_time: A datetime() object representing the start of the search
-                    window. If used without end_time, the end of the search
-                    window is the current time.
-            end_time: A datetime() object representing the end of the search window.
-                  If used without start_time, the search start will be the earliest
-                  time in the index.
-            timezone: timezone used for time range search
-            byreceipttime:  if time reference should used _receiptTime (time when Sumologic
-                        got message) instead of _messageTime (time present in log message).
-            limit: An integer describing the max number of search results to return.
-            forcemessagesresults: Force results to be raw messages even if aggregated query.
-            verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
-            checkinterval: interval in seconds to check if results are gathered
-            timeout: timeout in seconds when gathering results
+        days : int
+            Search the past X days.
+        start : datetime
+            A datetime() object representing the start of the search
+            window. If used without end_time, the end of the search
+            window is the current time.
+        start_time : datetime
+            alias for `start`
+        end : datetime
+            A datetime() object representing the end of the search window.
+            If used without start_time, the search start will be the earliest
+            time in the index.
+        end_time:
+            alias for `end`
+        timezone : str
+            timezone used for time range search
+        byreceipttime : datetime
+            if time reference should used _receiptTime (time when Sumologic
+            got message) instead of _messageTime (time present in log message).
+        limit : int
+            An integer describing the max number of search results to return.
+        forcemessagesresults : bool
+            Force results to be raw messages even if aggregated query.
+        verbosity : int
+            Provide more verbose state. from 0 least verbose to 4 most one.
+        checkinterval : int
+            interval in seconds to check if results are gathered
+        timeout : int
+            timeout in seconds when gathering results
 
         Returns
         -------
@@ -311,7 +322,7 @@ class SumologicDriver(DriverBase):
 
     @staticmethod
     def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
-        if isinstance(err, HTTPError):
+        if isinstance(err, httpx.HTTPError):
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title=f"Sumologic {mssg}",
@@ -360,27 +371,40 @@ class SumologicDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Sumologic
-            days: Search the past X days.
-            start_time (or start): A datetime() object representing the start of the search
-                    window. If used without end_time, the end of the search
-                    window is the current time.
-            end_time (or end): A datetime() object representing the end of the search window.
-                  If used without start_time, the search start will be the earliest
-                  time in the index.
-            timeZone: timezone used for time range search
-            byReceiptTime:  if time reference should used _receiptTime (time when Sumologic
-                        got message) instead of _messageTime (time present in log message).
-            limit: An integer describing the max number of search results to return.
-            forceMessagesResults: Force results to be raw messages even if aggregated query.
-            verbosity: Provide more verbose state. from 0 least verbose to 4 most one.
-            normalize: If set to True, fields containing structures (i.e. subfields)
-                   will be flattened such that each field has it's own column in
-                   the dataframe. If False, there will be a single column for the
-                   structure, with a JSON string encoding all the contents.
-            exporting: Export result to file.
-            export_path: file path for exporte results.
+        days: int
+            Search the past X days.
+        start : datetime
+            A datetime() object representing the start of the search
+            window. If used without end_time, the end of the search
+            window is the current time.
+        start_time : datetime
+            alias for `start`
+        end : datetime
+            A datetime() object representing the end of the search window.
+            If used without start_time, the search start will be the earliest
+            time in the index.
+        end_time : datetime
+            alias for `end`
+        timeZone : str
+            timezone used for time range search
+        byReceiptTime : datetime
+            if time reference should used _receiptTime (time when Sumologic
+            got message) instead of _messageTime (time present in log message).
+        limit : int
+            An integer describing the max number of search results to return.
+        forceMessagesResults : bool
+            Force results to be raw messages even if aggregated query.
+        verbosity : int
+            Provide more verbose state. from 0 least verbose to 4 most one.
+        normalize : bool
+            If set to True, fields containing structures (i.e. subfields)
+            will be flattened such that each field has it's own column in
+            the dataframe. If False, there will be a single column for the
+            structure, with a JSON string encoding all the contents.
+        exporting : bool
+            Export result to file.
+        export_path : str
+            file path for exporte results.
 
         Returns
         -------

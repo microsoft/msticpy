@@ -72,41 +72,41 @@ def _mde_pre_checks(mde_drv, api):
     check.equal(mde_drv.api_root, f"https://api.{api}.microsoft.com/")
 
 
-def _mde_post_checks(mde_drv, api, requests):
+def _mde_post_checks(mde_drv, api, httpx):
     check.equal(mde_drv.aad_token, _AUTH_RESP["access_token"])
-    requests.post.assert_called_once()
+    httpx.post.assert_called_once()
     check.equal(
-        requests.post.call_args[1]["url"],
+        httpx.post.call_args[1]["url"],
         "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/token",
     )
     check.is_instance(
-        requests.post.call_args[1]["data"],
+        httpx.post.call_args[1]["content"],
         bytes,
     )
     check.equal(mde_drv.request_uri, f"https://api.{api}.microsoft.com/api")
 
 
-def _mde_create_mock(requests):
+def _mde_create_mock(httpx):
     response = Mock()
     response.json.return_value = _AUTH_RESP.copy()
-    requests.post.return_value = response
+    httpx.post.return_value = response
 
 
 @pytest.mark.parametrize(
     "env, api",
     [("MDATP", "securitycenter"), ("MDE", "securitycenter"), ("M365D", "security")],
 )
-@patch("msticpy.data.drivers.odata_driver.requests")
-def test_mde_connect(requests, env, api):
+@patch("msticpy.data.drivers.odata_driver.httpx")
+def test_mde_connect(httpx, env, api):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
     with custom_mp_config(MP_PATH):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
-    _mde_create_mock(requests)
+    _mde_create_mock(httpx)
     with custom_mp_config(MP_PATH):
         mde_drv.connect()
-    _mde_post_checks(mde_drv, api, requests)
+    _mde_post_checks(mde_drv, api, httpx)
 
 
 _CONSTRING = "client_id=1234;tenant_id=8360dd21-0294-4240-9128-89611f415c53;client_secret=[PLACEHOLDER]"
@@ -118,17 +118,17 @@ _MDE_CONNECT_STR = [
 
 
 @pytest.mark.parametrize("env, api, con_str", _MDE_CONNECT_STR)
-@patch("msticpy.data.drivers.odata_driver.requests")
-def test_mde_connect_str(requests, env, api, con_str):
+@patch("msticpy.data.drivers.odata_driver.httpx")
+def test_mde_connect_str(httpx, env, api, con_str):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
     with custom_mp_config(MP_PATH):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
-    _mde_create_mock(requests)
+    _mde_create_mock(httpx)
     with custom_mp_config(MP_PATH):
         mde_drv.connect(con_str)
-    _mde_post_checks(mde_drv, api, requests)
+    _mde_post_checks(mde_drv, api, httpx)
 
 
 _PARAMS = {
@@ -144,24 +144,24 @@ _MDE_CONNECT_PARAMS = [
 
 
 @pytest.mark.parametrize("env, api, params", _MDE_CONNECT_PARAMS)
-@patch("msticpy.data.drivers.odata_driver.requests")
-def test_mde_connect_params(requests, env, api, params):
+@patch("msticpy.data.drivers.odata_driver.httpx")
+def test_mde_connect_params(httpx, env, api, params):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.parse(env))
     with custom_mp_config(MP_PATH):
         mde_drv = driver_cls(data_environment=DataEnvironment.parse(env))
     _mde_pre_checks(mde_drv=mde_drv, api=api)
-    _mde_create_mock(requests)
+    _mde_create_mock(httpx)
     with custom_mp_config(MP_PATH):
         mde_drv.connect(**params)
-    _mde_post_checks(mde_drv, api, requests)
+    _mde_post_checks(mde_drv, api, httpx)
 
 
 _AUTH_RESP = {"access_token": "123456789"}
 
 
-@patch("msticpy.data.drivers.odata_driver.requests")
-def test_security_graph_connect(requests):
+@patch("msticpy.data.drivers.odata_driver.httpx")
+def test_security_graph_connect(httpx):
     """Test security graph driver."""
     driver_cls = import_driver(DataEnvironment.SecurityGraph)
     with custom_mp_config(MP_PATH):
@@ -172,17 +172,17 @@ def test_security_graph_connect(requests):
 
     response = Mock()
     response.json.return_value = _AUTH_RESP.copy()
-    requests.post.return_value = response
+    httpx.post.return_value = response
     with custom_mp_config(MP_PATH):
         sec_graph.connect()
     check.equal(sec_graph.aad_token, _AUTH_RESP["access_token"])
-    requests.post.assert_called_once()
+    httpx.post.assert_called_once()
     check.equal(
-        requests.post.call_args[1]["url"],
+        httpx.post.call_args[1]["url"],
         "https://login.microsoftonline.com/8360dd21-0294-4240-9128-89611f415c53/oauth2/v2.0/token",
     )
     check.is_instance(
-        requests.post.call_args[1]["data"],
+        httpx.post.call_args[1]["content"],
         bytes,
     )
     check.equal(sec_graph.request_uri, "https://graph.microsoft.com/v1.0")

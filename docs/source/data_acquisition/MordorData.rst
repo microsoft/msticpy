@@ -1,10 +1,14 @@
-Mordor data provider and browser
-================================
+Open Threat Research Security Datasets data provider and browser
+================================================================
 
-Mordor is a project to capture host and network log data
+The `OTRF <https://github.com/OTRF>`__ Security Datasets
+is a project to capture host and network log data
 that illustrates adversarial attack patterns. Mordor is part of the
 Open Threat Research Forge created by Roberto Rodriquez and Jose
-Rodriguez.
+Rodriguez. It was originally named **Mordor** and the *MSTICPy*
+naming still uses that (which we are rather fond of). In
+this document we will use **Mordor** and **OTRF Security Datasets**
+interchangeably - they both refer to the same thing
 
 The Mordor project provides one of the most comprehensive
 libraries of attack logs - the captured logs contain not just the
@@ -19,15 +23,20 @@ This library allows you to browse through and query Mordor data sets
 and query individual data sets in a similar way to other MSTICPy
 data providers. Like the other providers, the Mordor provider
 returns results as a pandas DataFrame, allowing it to be used
-easily in Jupyter notebooks and other Python code.
+easily in Jupyter notebooks and other Python code. Unlike other
+providers, it does not support custom queries or a query language.
+The equivalent built-in queries for the Mordor provider return
+the entire set of data for that item.
 
-For more information on the Mordor data sets see the
-`Open Threat Research Forge Mordor GitHub repo <https://github.com/OTRF/mordor>`__.
+For more information on the OTRF data sets see the
+`OTRF Jupyter Book documentation <https://securitydatasets.com/introduction.html>`__
+and the `GitHub repository <https://github.com/OTRF/Security-Datasets>`__.
+
 
 For more information on Mitre ATT&CK Techniques and Tactics see
 `Mitre ATT&CK <https://attack.mitre.org/>`__.
 
-You can view a notebook that illustrates the use of the Mordor
+You can view a notebook that shows the use of the Mordor
 provider here
 `MordorData <https://github.com/microsoft/msticpy/blob/master/docs/notebooks/MordorData.ipynb>`__
 
@@ -149,7 +158,7 @@ aspects of the query operation.
    by default True. If you’ve previously downloaded a file, it will use
    this rather than downloading a new copy.
 -  **save_folder** : str, optional Path to output folder, by default
-   “.”. The path that downloaded and extracted files are saved to.
+   ".". The path that downloaded and extracted files are saved to.
 -  **silent** : bool If True, suppress feedback. By default, False.
 
 If you specify these when you initialize the data provider, the settings
@@ -220,9 +229,9 @@ metadata of the Mordor data sets. The search is case-sensitive.
 Search also supports some simple search term logic and AND and OR expressions:
 
 -  Substrings separated by commas will be treated as OR terms,
-   e.g. “a, b” == “a” or “b”.
+   e.g. "a, b" == "a" OR "b".
 -  Substrings separated by “+” will be treated as AND terms,
-   e.g. “a + b” == “a” and “b”
+   e.g. "a + b" == "a" AND "b"
 
 .. note:: You cannot combine "+" and "," in the same search.
    For this reason, grouping of expressions is not supported.
@@ -322,10 +331,10 @@ This uses the same syntax as the provider ``search_queries()`` function.
 
 -  Simple text string will find matches for datasets that contain this string
 -  Strings separated by “,” are treated as OR terms
-   i.e. it will match items that contain ANY of the substrings
+   i.e. it will match items that contain ANY of the substrings
 
 -  Strings separated by “+” are treated as AND terms
-   i.e. it will match items that contain ALL of the substrings
+   i.e. it will match items that contain ALL of the substrings
 
 Filtering by Mitre Categories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

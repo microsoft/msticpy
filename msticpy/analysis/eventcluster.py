@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-r"""
+"""
 eventcluster module.
 
 This module is intended to be used to summarize large numbers of events
@@ -12,8 +12,11 @@ often make it difficult to see unique and interesting items.
 
 The module contains functions to generate clusterable features from
 string data. For example, an administration command that does some
-maintenance on thousands of servers with a commandline such as:
-``install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback``\  can
+maintenance on thousands of servers with a commandline such as:::
+
+    install-update -hostname {host.fqdn} -tmp:/tmp/{GUID}/rollback
+
+can
 be collapsed into a single cluster pattern by ignoring the character
 values in the string and using delimiters or tokens to group the values.
 
@@ -396,7 +399,9 @@ def delim_count(value: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int
     value : str
         Data to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]')
+        delimiters to use. The default is::
+
+          [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------
@@ -418,7 +423,9 @@ def delim_hash(value: str, delim_list: str = r'[\s\-\\/\.,"\'|&:;%$()]') -> int:
     value : str
         Data to process
     delim_list : str, optional
-        delimiters to use. (the default is r'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]')
+        delimiters to use. The default is::
+
+            [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------
@@ -526,7 +533,9 @@ def delim_count_df(
     column : str
         The name of the column to process
     delim_list : str, optional
-        delimiters to use. (the default is r\'[\\s\\\\-\\\\\\\\/\.,"\\\\'|&:;%$()]\')
+        delimiters to use. The default is::
+
+            [\s\-\\/\.,"\'|&:;%$()]
 
     Returns
     -------
