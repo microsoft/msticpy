@@ -108,3 +108,9 @@ DataProviders:
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
       ClientSecret:
         EnvironmentVar: "IPSTACK_AUTH"
+  Cybereason:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
