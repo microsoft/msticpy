@@ -8,7 +8,7 @@ from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
 import pandas as pd
-import requests
+import httpx
 from IPython.display import display
 
 from azure.common.exceptions import CloudError
@@ -82,11 +82,11 @@ class SentinelBookmarksMixin:
             data_items["labels"] = labels
         data = _build_sent_data(data_items, props=True)
         params = {"api-version": "2020-01-01"}
-        response = requests.put(
+        response = httpx.put(
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code == 200:
             print("Bookmark created.")
@@ -114,7 +114,7 @@ class SentinelBookmarksMixin:
         bookmark_id = self._get_bookmark_id(bookmark)
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
-        response = requests.delete(
+        response = httpx.delete(
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
