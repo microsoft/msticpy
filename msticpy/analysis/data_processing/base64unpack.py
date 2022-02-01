@@ -31,16 +31,16 @@ import hashlib
 import io
 import re
 import tarfile
-
-# pylint: disable=unused-import
-from typing import Tuple, Any, Set, Optional, List, Iterable, Dict, Callable, Union
 import zipfile
 from collections import namedtuple
 
+# pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+
 import pandas as pd
 
-from ...common.utility import export
 from ..._version import VERSION
+from ...common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

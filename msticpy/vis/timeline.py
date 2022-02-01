@@ -5,13 +5,11 @@
 # --------------------------------------------------------------------------
 """Module for common display functions."""
 from datetime import datetime
-from typing import Any, Dict, Optional, List, Tuple, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype
-from pandas.errors import OutOfBoundsDatetime
 from bokeh.io import output_notebook, show
-from bokeh.models.annotations import LegendItem
+from bokeh.layouts import column
 from bokeh.models import (
     ColumnDataSource,
     DatetimeTickFormatter,
@@ -22,6 +20,7 @@ from bokeh.models import (
     RangeTool,
     Title,
 )
+from bokeh.models.annotations import LegendItem
 
 # pylint: disable=too-many-lines
 # pylint: disable=no-name-in-module
@@ -29,11 +28,12 @@ from bokeh.palettes import viridis
 
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure, reset_output
-from bokeh.layouts import column
+from pandas.api.types import is_datetime64_any_dtype
+from pandas.errors import OutOfBoundsDatetime
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
-from ..common.utility import export, check_kwargs
+from ..common.utility import check_kwargs, export
 from ..data.common.query_defns import ensure_df_datetimes
 
 # pylint: disable=unused-import
@@ -685,6 +685,7 @@ def _plot_series(data, plot, legend_pos):
         plot.add_layout(ext_legend, legend_pos)
 
 
+@export
 def check_df_columns(
     data: pd.DataFrame, req_columns: List[str], help_uri: str, plot_type: str
 ):

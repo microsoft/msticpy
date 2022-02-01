@@ -10,23 +10,24 @@ from typing import Iterable, List, Optional, Tuple, Union
 import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
+from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
 
 # pylint: enable=no-name-in-module
 from bokeh.plotting import figure, reset_output
-from bokeh.layouts import column
 from bokeh.transform import dodge
 
-from ..common.utility import check_kwargs
+from .._version import VERSION
+from ..common.utility import check_kwargs, export
 from ..data.common.query_defns import ensure_df_datetimes
 from .timeline import (
-    _create_tool_tips,
-    _create_range_tool,
     _calc_auto_plot_height,
-    _get_time_bounds,
-    _set_axes_and_grids,
+    _create_range_tool,
+    _create_tool_tips,
     _get_tick_formatter,
+    _get_time_bounds,
     _plot_ref_events,
+    _set_axes_and_grids,
     check_df_columns,
 )
 
@@ -36,7 +37,6 @@ from .timeline_pd_accessor import TimeLineAccessor  # noqa F401
 
 # pylint: enable=unused-import
 
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -47,6 +47,7 @@ _TIMELINE_HELP = (
 )
 
 
+@export
 @attr.s(auto_attribs=True)
 class PlotParams:
     """Plot params for time_duration."""
@@ -75,6 +76,7 @@ class PlotParams:
 # pylint: disable=too-many-locals
 
 
+@export
 def display_timeline_duration(
     data: pd.DataFrame,
     group_by: Union[Iterable[str], str],
