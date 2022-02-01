@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<testsuite errors="0" failures="0" name="mypy" skips="0" tests="1" time="0.970">
-  <testcase classname="mypy" file="mypy" line="1" name="mypy-py3_6-darwin" time="0.970">
-  </testcase>
-</testsuite>
