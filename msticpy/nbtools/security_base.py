@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import escape_windows_path, export
@@ -37,6 +38,7 @@ _ID_PROPERTIES: List[str] = [
 
 
 # pylint: disable=too-many-public-methods
+@deprecated(reason="Replaced by Alert entity in datamodel", version="1.7.0")
 @export
 class SecurityBase(QueryParamProvider):
     """

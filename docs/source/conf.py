@@ -37,7 +37,7 @@ copyright = "2019, (c) Microsoft Corporation."
 author = "Ian Hellen"
 
 
-with open("../../msticpy/_version.py", "r") as fd:
+with open("../../msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     _ver = v_match.group(1) if v_match else "no version"
 
@@ -234,6 +234,7 @@ autodoc_mock_imports = [
     "azure.mgmt.subscription",
     "azure.storage",
     "azure.storage.blob",
+    "IPython",
     "keyring",
     "Kqlmagic",
     "matplotlib",

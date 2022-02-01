@@ -3,7 +3,7 @@
 {'type':'umlshape', 'id':'TILookup', 'x':90, 'y':10, 'width':170, 'height':314, 'attrs': 'available_providers|_providers|provider_status|loaded_providers|_providers_to_load|_secondary_providers|configured_providers|_all_providers', 'meths': 'provider_usage|reload_providers|lookup_iocs|_select_providers|lookup_ioc|_load_providers|add_provider|__init__'}
 {'type':'umlshape', 'id':'_OTXParams', 'x':917, 'y':1086, 'width':162, 'height':90, 'attrs': 'headers', 'meths': '__attrs_post_init__'}
 {'type':'umlshape', 'id':'OTX', 'x':912, 'y':833, 'width':170, 'height':154, 'attrs': '_IOC_QUERIES|_BASE_URL|require_url_encoding|_REQUIRED_PARAMS', 'meths': 'parse_results|__init__'}
-{'type':'umlshape', 'id':'HttpProvider', 'x':555, 'y':499, 'width':146, 'height':138, 'attrs': '_requests_session|_request_params|_BASE_URL', 'meths': '_substitute_parms|__init__'}
+{'type':'umlshape', 'id':'HttpProvider', 'x':555, 'y':499, 'width':146, 'height':138, 'attrs': '_httpx_client|_request_params|_BASE_URL', 'meths': '_substitute_parms|__init__'}
 {'type':'umlshape', 'id':'IoCLookupParams', 'x':752, 'y':1005, 'width':160, 'height':28, 'attrs': '', 'meths': ''}
 {'type':'umlshape', 'id':'AzSTI', 'x':199, 'y':816, 'width':114, 'height':90, 'attrs': '_IOC_QUERIES', 'meths': 'parse_results'}
 {'type':'umlshape', 'id':'KqlTIProvider', 'x':247, 'y':498, 'width':186, 'height':154, 'attrs': '_query_provider|_CONNECT_STR', 'meths': '__init__|_create_query_provider|_get_query_and_params|lookup_iocs'}

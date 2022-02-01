@@ -7,6 +7,7 @@
 import json
 import pprint
 import typing
+from datetime import datetime
 from abc import ABC
 from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
@@ -82,7 +83,7 @@ class Entity(ABC, Node):
 
         """
         super().__init__()
-        self.TimeGenerated = None
+        self.TimeGenerated = datetime.utcnow()
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
         if self.Type == "unknownentity" and "Type" in kwargs:
@@ -340,10 +341,10 @@ class Entity(ABC, Node):
         if not isinstance(other, Entity):
             return False
         return not any(
-            self.properties[prop] != other.properties[prop]
-            and self.properties[prop]
-            and other.properties[prop]
-            for prop in self.properties
+            self.__dict__[prop] != other.__dict__[prop]
+            and self.__dict__[prop]
+            and other.__dict__[prop]
+            for prop in self.__dict__  # pylint: disable=consider-using-dict-items
         )
 
     def merge(self, other: Any) -> "Entity":
@@ -369,7 +370,7 @@ class Entity(ABC, Node):
         for prop, value in other.properties.items():
             if not value:
                 continue
-            if not self.properties[prop]:
+            if not self.__dict__[prop]:
                 setattr(merged, prop, value)
             # Future (ianhelle) - cannot merge ID field
         if other.edges:
@@ -424,7 +425,7 @@ class Entity(ABC, Node):
         return {
             name: value
             for name, value in self.__dict__.items()
-            if not name.startswith("_") and name != "edges"
+            if not name.startswith("_") and name != "edges" and value
         }
 
     @property
@@ -509,11 +510,18 @@ class Entity(ABC, Node):
             The V3 serialized name.
 
         """
-        name = next(
-            iter(
-                (key for key, val in cls.ENTITY_NAME_MAP.items() if val == entity_type)
+        try:
+            name = next(
+                iter(
+                    (
+                        key
+                        for key, val in cls.ENTITY_NAME_MAP.items()
+                        if val == entity_type
+                    )
+                )
             )
-        )
+        except StopIteration:
+            name = None
         return name or "unknown"
 
     @property
