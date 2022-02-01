@@ -15,7 +15,7 @@ from zipfile import BadZipFile, ZipFile
 
 import attr
 import pandas as pd
-import requests
+import httpx
 import yaml
 from tqdm.auto import tqdm
 
@@ -556,7 +556,7 @@ def _get_mdr_github_tree():
     def _get_mdr_tree(uri):
         nonlocal mordor_tree
         if mordor_tree is None:
-            resp = requests.get(uri)
+            resp = httpx.get(uri)
             mordor_tree = resp.json()
         return mordor_tree
 
@@ -572,7 +572,7 @@ def _get_mdr_file(gh_file):
     file_blob_uri = (
         f"https://raw.githubusercontent.com/OTRF/Security-Datasets/master/{gh_file}"
     )
-    file_resp = requests.get(file_blob_uri)
+    file_resp = httpx.get(file_blob_uri)
     return file_resp.content
 
 
@@ -734,10 +734,10 @@ def download_mdr_file(
     save_file = Path(save_folder).joinpath(save_path)
     if not use_cached or not save_file.is_file():
         # streamed download
-        resp = requests.get(file_uri, stream=True)
         with open(str(save_file), "wb") as fdesc:
-            for chunk in resp.iter_content(chunk_size=1024):
-                fdesc.write(chunk)
+            with httpx.stream("GET", file_uri) as resp:
+                for chunk in resp.iter_bytes(chunk_size=1024):
+                    fdesc.write(chunk)
 
     try:
         with zipfile.ZipFile(str(save_file)) as zip_file:
@@ -911,7 +911,7 @@ def _get_mitre_categories(
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass
-    resp = requests.get(_MITRE_JSON_URL)
+    resp = httpx.get(_MITRE_JSON_URL)
     mitre = pd.json_normalize(resp.json()["objects"])
 
     # remove deprecated items

@@ -71,7 +71,7 @@ pywinpty            0.5.7
 pyzmq               19.0.2
 qtconsole           5.0.1
 QtPy                1.9.0
-responses           0.12.1
+respx               0.17.1
 Send2Trash          1.5.0
 setuptools          47.1.0
 six                 1.15.0

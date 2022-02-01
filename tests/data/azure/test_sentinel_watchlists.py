@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
+import respx
 from msticpy.data.azure import MicrosoftSentinel
 
 _WATCHLISTS = {
@@ -94,14 +94,11 @@ def sent_loader(mock_creds):
     return sent
 
 
-@responses.activate
+@respx.mock
 def test_sent_watchlists(sent_loader):
     """Test Sentinel Watchlist feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_WATCHLISTS,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_WATCHLISTS
     )
     watchlists = sent_loader.list_watchlists()
     assert isinstance(watchlists, pd.DataFrame)
@@ -109,19 +106,12 @@ def test_sent_watchlists(sent_loader):
     assert watchlists["properties.provider"].iloc[0] == "Microsoft"
 
 
-@responses.activate
+@respx.mock
 def test_sent_watchlists_create(sent_loader):
     """Test Sentinel Watchlist feature."""
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*"),
-        status=200,
-    )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/watchlists"),
-        json=_WATCHLISTS,
-        status=200,
+    respx.put(re.compile("https://management.azure.com/.*")).respond(200)
+    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+        200, json=_WATCHLISTS
     )
     sent_loader.create_watchlist(
         watchlist_name="Test Watchlist",
@@ -130,31 +120,21 @@ def test_sent_watchlists_create(sent_loader):
     )
 
 
-@responses.activate
+@respx.mock
 def test_sent_watchlists_delete(sent_loader):
     """Test Sentinel Watchlist feature."""
-    responses.add(
-        responses.DELETE,
-        re.compile("https://management.azure.com/.*"),
-        status=200,
-    )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/watchlists"),
-        json=_WATCHLISTS,
-        status=200,
+    respx.delete(re.compile("https://management.azure.com/.*")).respond(200)
+    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+        200, json=_WATCHLISTS
     )
     sent_loader.delete_watchlist(watchlist_name="watchlist1")
 
 
-@responses.activate
+@respx.mock
 def test_sent_watchlists_items(sent_loader):
     """Test Sentinel Watchlist feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/watchlistItems"),
-        json=_WATCHLIST_ITEM,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*/watchlistItems")).respond(
+        200, json=_WATCHLIST_ITEM
     )
     watchlist_items = sent_loader.list_watchlist_items(watchlist_name="Test Watchlist")
     assert isinstance(watchlist_items, pd.DataFrame)
@@ -164,25 +144,17 @@ def test_sent_watchlists_items(sent_loader):
     )
 
 
-@responses.activate
+@respx.mock
 def test_sent_watchlists_items_add(sent_loader):
     """Test Sentinel Watchlist feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/watchlistItems"),
-        json=_WATCHLIST_ITEM,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*/watchlistItems")).respond(
+        200, json=_WATCHLIST_ITEM
     )
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*/watchlistItems/.*"),
-        status=200,
+    respx.put(re.compile("https://management.azure.com/.*/watchlistItems/.*")).respond(
+        200
     )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/watchlists"),
-        json=_WATCHLISTS,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+        200, json=_WATCHLISTS
     )
     sent_loader.add_watchlist_item(
         watchlist_name="watchlist1",

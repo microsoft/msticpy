@@ -8,7 +8,7 @@ from collections import Counter
 from typing import Dict, List
 
 import pandas as pd
-import requests
+import httpx
 
 from azure.common.exceptions import CloudError
 
@@ -37,9 +37,9 @@ _PATH_MAPPING = {
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: str = "2020-01-01") -> requests.Response:
+    def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
         """Get items from the API."""
-        return requests.get(
+        return httpx.get(
             url,
             headers=get_api_headers(self.token),  # type: ignore
             params={"api-version": params},
@@ -183,13 +183,13 @@ class SentinelUtilsMixin:
         )
 
 
-def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
+def _azs_api_result_to_df(response: httpx.Response) -> pd.DataFrame:
     """
     Convert API response to a Pandas dataframe.
 
     Parameters
     ----------
-    response : requests.Response
+    response : httpx.Response
         A response object from an Azure REST API call.
 
     Returns
