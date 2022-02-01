@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
+import respx
 from msticpy.data.azure import MicrosoftSentinel
 
 _INCIDENT = {
@@ -69,14 +69,11 @@ def sent_loader(mock_creds):
     return azs
 
 
-@responses.activate
+@respx.mock
 def test_sent_incidents(sent_loader):
     """Test Sentinel incidents feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_INCIDENT,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_INCIDENT
     )
     incidents = sent_loader.list_incidents()
     assert isinstance(incidents, pd.DataFrame)
@@ -88,40 +85,24 @@ def test_sent_incidents(sent_loader):
     assert incident["name"].iloc[0] == "13ffba29-971c-4d70-9cb4-ddd0ec1bbb84"
 
 
-@responses.activate
+@respx.mock
 def test_sent_updates(sent_loader):
     """Test Sentinel incident update feature."""
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*"),
-        json="",
-        status=201,
-    )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_INCIDENT,
-        status=200,
+    respx.put(re.compile("https://management.azure.com/.*")).respond(201, json="")
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_INCIDENT
     )
     sent_loader.post_comment(
         incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84", comment="test"
     )
 
 
-@responses.activate
+@respx.mock
 def test_sent_comments(sent_loader):
     """Test Sentinel comments feature."""
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*"),
-        json="",
-        status=200,
-    )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_INCIDENT,
-        status=200,
+    respx.put(re.compile("https://management.azure.com/.*")).respond(200, json="")
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_INCIDENT
     )
     sent_loader.update_incident(
         incident_id="13ffba29-971c-4d70-9cb4-ddd0ec1bbb84",
@@ -129,14 +110,11 @@ def test_sent_comments(sent_loader):
     )
 
 
-@responses.activate
+@respx.mock
 def test_sent_entities(sent_loader):
     """Test getting Entities from a Sentinel Incident."""
-    responses.add(
-        responses.POST,
-        re.compile("https://management.azure.com/.*"),
-        json={"entities": [{"kind": "ipv4", "properties": "13.67.128.10"}]},
-        status=200,
+    respx.post(re.compile("https://management.azure.com/.*")).respond(
+        200, json={"entities": [{"kind": "ipv4", "properties": "13.67.128.10"}]}
     )
     ents = sent_loader.get_entities("0c7d4a60-46b3-45d0-a966-3b51373faef0")
     assert isinstance(ents, List)
@@ -144,12 +122,11 @@ def test_sent_entities(sent_loader):
     assert ents[0][1] == "13.67.128.10"
 
 
-@responses.activate
+@respx.mock
 def test_sent_alerts(sent_loader):
     """Test getting alerts from a Sentinel Incident."""
-    responses.add(
-        responses.POST,
-        re.compile("https://management.azure.com/.*"),
+    respx.post(re.compile("https://management.azure.com/.*")).respond(
+        200,
         json={
             "value": [
                 {
@@ -160,7 +137,6 @@ def test_sent_alerts(sent_loader):
                 }
             ]
         },
-        status=200,
     )
     alerts = sent_loader.get_incident_alerts("0c7d4a60-46b3-45d0-a966-3b51373faef0")
     assert isinstance(alerts, List)
@@ -168,12 +144,11 @@ def test_sent_alerts(sent_loader):
     assert alerts[0]["Name"] == "Test Alert"
 
 
-@responses.activate
+@respx.mock
 def test_sent_comments(sent_loader):
     """Test getting alerts from a Sentinel Incident."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200,
         json={
             "value": [
                 {
@@ -184,7 +159,6 @@ def test_sent_comments(sent_loader):
                 }
             ]
         },
-        status=200,
     )
     alerts = sent_loader.get_incident_comments("0c7d4a60-46b3-45d0-a966-3b51373faef0")
     assert isinstance(alerts, List)
@@ -192,12 +166,11 @@ def test_sent_comments(sent_loader):
     assert alerts[0]["Author"] == "Test User"
 
 
-@responses.activate
+@respx.mock
 def test_sent_bookmarks(sent_loader):
     """Test getting bookmarks from a Sentinel Incident."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/relations"),
+    respx.get(re.compile("https://management.azure.com/.*/relations")).respond(
+        200,
         json={
             "value": [
                 {
@@ -208,11 +181,9 @@ def test_sent_bookmarks(sent_loader):
                 }
             ]
         },
-        status=200,
     )
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*/bookmarks"),
+    respx.get(re.compile("https://management.azure.com/.*/bookmarks")).respond(
+        200,
         json={
             "value": [
                 {
@@ -221,7 +192,6 @@ def test_sent_bookmarks(sent_loader):
                 }
             ]
         },
-        status=200,
     )
     alerts = sent_loader.get_incident_bookmarks("0c7d4a60-46b3-45d0-a966-3b51373faef0")
     assert isinstance(alerts, List)
@@ -229,11 +199,7 @@ def test_sent_bookmarks(sent_loader):
     assert alerts[0]["Bookmark Title"] == "Test Bookmark"
 
 
-@responses.activate
+@respx.mock
 def test_sent_incident_create(sent_loader):
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*"),
-        status=201,
-    )
+    respx.put(re.compile("https://management.azure.com/.*")).respond(201)
     sent_loader.create_incident(title="Test Incident", severity="Low")
