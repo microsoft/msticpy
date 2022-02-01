@@ -8,7 +8,7 @@ from collections import Counter
 from typing import Dict, List
 
 import pandas as pd
-import requests
+import httpx
 
 from azure.common.exceptions import CloudError
 
@@ -37,16 +37,17 @@ _PATH_MAPPING = {
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 
-    def _get_items(self, url: str, params: str = "2020-01-01") -> requests.Response:
+    def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
         """Get items from the API."""
-        if self.connected:
-            return requests.get(
-                url,
-                headers=get_api_headers(self.token),  # type: ignore
-                params={"api-version": params},
+        if not self.connected:
+            raise MsticpyAzureConnectionError(
+                "Ensure you run .connect before calling other functions."
             )
-        else:
-            raise MsticpyAzureConnectionError("Ensure you run .connect before calling other functions.")
+        return httpx.get(
+            url,
+            headers=get_api_headers(self.token),  # type: ignore
+            params={"api-version": params},
+        )
 
     def _list_items(
         self,
@@ -56,7 +57,6 @@ class SentinelUtilsMixin:
     ) -> pd.DataFrame:
         """
         Return lists of core resources from APIs.
-
         Parameters
         ----------
         item_type : str
@@ -65,17 +65,14 @@ class SentinelUtilsMixin:
             The API version to use, by default '2020-01-01'
         appendix: str, optional
             Any appendix that needs adding to the URI, default is None
-
         Returns
         -------
         pd.DataFrame
             A DataFrame containing the requested items.
-
         Raises
         ------
         CloudError
             If a valid result is not returned.
-
         """
         item_url = self.url + _PATH_MAPPING[item_type]  # type: ignore
         if appendix:
@@ -90,17 +87,14 @@ class SentinelUtilsMixin:
     def _check_config(self, items: List) -> Dict:
         """
         Get parameters from default config files.
-
         Parameters
         ----------
         items : List
             The items to get from the config.
-
         Returns
         -------
         Dict
             The config items.
-
         """
         config_items = {}
         if not self.config:  # type: ignore
@@ -118,7 +112,6 @@ class SentinelUtilsMixin:
     ) -> str:
         """
         Build a resource ID.
-
         Parameters
         ----------
         sub_id : str, optional
@@ -127,12 +120,10 @@ class SentinelUtilsMixin:
             Resource Group name to use, by default None
         ws_name : str, optional
             Workspace name to user, by default None
-
         Returns
         -------
         str
             The formatted resource ID.
-
         """
         if not sub_id or not res_grp or not ws_name:
             config = self._check_config(
@@ -151,7 +142,6 @@ class SentinelUtilsMixin:
     def _build_sent_paths(self, res_id: str, base_url: str = None) -> str:
         """
         Build an API URL from an Azure resource ID.
-
         Parameters
         ----------
         res_id : str
@@ -161,12 +151,10 @@ class SentinelUtilsMixin:
             Defaults to resource manager for configured cloud.
             If no cloud configuration, defaults to resource manager
             endpoint for public cloud.
-
         Returns
         -------
         str
             A URI to that resource.
-
         """
         if not base_url:
             base_url = AzureCloudConfig(self.cloud).endpoints.resource_manager  # type: ignore
@@ -186,25 +174,21 @@ class SentinelUtilsMixin:
         )
 
 
-def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
+def _azs_api_result_to_df(response: httpx.Response) -> pd.DataFrame:
     """
     Convert API response to a Pandas dataframe.
-
     Parameters
     ----------
-    response : requests.Response
+    response : httpx.Response
         A response object from an Azure REST API call.
-
     Returns
     -------
     pd.DataFrame
         The API response as a Pandas dataframe.
-
     Raises
     ------
     ValueError
         If the response is not valid JSON.
-
     """
     j_resp = response.json()
     if response.status_code != 200 or not j_resp:
@@ -217,19 +201,16 @@ def _azs_api_result_to_df(response: requests.Response) -> pd.DataFrame:
 def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
     """
     Build request data body from items.
-
     Parameters
     ----------
     items : dict
         A set pf items to be formated in the request body.
     props: bool, optional
         Whether all items are to be built as properities. Default is false.
-
     Returns
     -------
     dict
         The request body formatted for the API.
-
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key, _ in items.items():

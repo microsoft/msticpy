@@ -7,7 +7,7 @@
 from uuid import UUID, uuid4
 
 import pandas as pd
-import requests
+import httpx
 from IPython.display import display
 
 from azure.common.exceptions import CloudError
@@ -27,12 +27,10 @@ class SentinelHuntingMixin:
     def list_hunting_queries(self) -> pd.DataFrame:
         """
         Return all hunting queries in a Microsoft Sentinel workspace.
-
         Returns
         -------
         pd.DataFrame
             A table of the hunting queries.
-
         """
         saved_query_df = self._list_items(  # type: ignore
             item_type="alert_rules", api_version="2017-04-26-preview"
@@ -50,12 +48,10 @@ class SentinelAnalyticsMixin:
     def list_alert_rules(self) -> pd.DataFrame:
         """
         Return all Microsoft Sentinel alert rules for a workspace.
-
         Returns
         -------
         pd.DataFrame
             A table of the workspace's alert rules.
-
         """
         return self._list_items(item_type="alert_rules")  # type: ignore
 
@@ -65,24 +61,20 @@ class SentinelAnalyticsMixin:
     ) -> str:
         """
         Get an analytic template ID.
-
         Parameters
         ----------
         template : str
             Template ID or Name
         res_id : str
             Sentinel workspace to get template from
-
         Returns
         -------
         str
             Template ID
-
         Raises
         ------
         MsticpyUserError
             If template not found or multiple templates found.
-
         """
         try:
             UUID(template)
@@ -121,7 +113,6 @@ class SentinelAnalyticsMixin:
     ):
         """
         Create a Sentinel Analytics Rule.
-
         Parameters
         ----------
         template : str, optional
@@ -151,14 +142,12 @@ class SentinelAnalyticsMixin:
             A description of the analytic, by default None
         tactics : list, optional
             A list of MITRE ATT&CK tactics related to the analytic, by default None
-
         Raises
         ------
         MsticpyUserError
             If template provided isn't found.
         CloudError
             If the API returns an error.
-
         """
         if template:
             template_id = self._get_template_id(template)
@@ -205,11 +194,11 @@ class SentinelAnalyticsMixin:
         data = _build_sent_data(data_items, props=True)
         data["kind"] = "Scheduled"
         params = {"api-version": "2020-01-01"}
-        response = requests.put(
+        response = httpx.put(
             analytic_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -218,22 +207,18 @@ class SentinelAnalyticsMixin:
     def _get_analytic_id(self, analytic: str) -> str:
         """
         Get the GUID of an analytic rule.
-
         Parameters
         ----------
         analytic : str
             The GUID or name of the analytic
-
         Returns
         -------
         str
             The analytic GUID
-
         Raises
         ------
         MsticpyUserError
             If analytic not found or multiple matching analytics found
-
         """
         try:
             UUID(analytic)
@@ -260,22 +245,19 @@ class SentinelAnalyticsMixin:
     ):
         """
         Delete a deployed Analytic rule from a Sentinel workspace.
-
         Parameters
         ----------
         analytic_rule : str
             The GUID or name of the analytic.
-
         Raises
         ------
         CloudError
             If the API returns an error.
-
         """
         analytic_id = self._get_analytic_id(analytic_rule)
         analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
-        response = requests.delete(
+        response = httpx.delete(
             analytic_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
@@ -287,17 +269,14 @@ class SentinelAnalyticsMixin:
     def list_analytic_templates(self) -> pd.DataFrame:
         """
         List Analytic Templates.
-
         Returns
         -------
         pd.DataFrame
             A DataFrame containing the analytics templates
-
         Raises
         ------
         CloudError
             If a valid result is not returned.
-
         """
         return self._list_items(item_type="alert_template")  # type: ignore
 
