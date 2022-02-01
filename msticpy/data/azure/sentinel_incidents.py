@@ -9,7 +9,7 @@ from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
 import pandas as pd
-import requests
+import httpx
 from IPython.display import display
 
 from azure.common.exceptions import CloudError
@@ -101,7 +101,7 @@ class SentinelIncidentsMixin:
         incident_id = self._get_incident_id(incident)
         entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
         ent_parameters = {"api-version": "2019-01-01-preview"}
-        ents = requests.post(
+        ents = httpx.post(
             entities_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=ent_parameters,
@@ -130,7 +130,7 @@ class SentinelIncidentsMixin:
         incident_id = self._get_incident_id(incident)
         alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
         alerts_parameters = {"api-version": "2021-04-01"}
-        alerts_resp = requests.post(
+        alerts_resp = httpx.post(
             alerts_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=alerts_parameters,
@@ -245,11 +245,11 @@ class SentinelIncidentsMixin:
         if "status" not in update_items.keys():
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
         data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
-        response = requests.put(
+        response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -314,11 +314,11 @@ class SentinelIncidentsMixin:
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
         data = _build_sent_data(data_items, props=True)
-        response = requests.put(
+        response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -331,11 +331,11 @@ class SentinelIncidentsMixin:
                 bkmark_data_items = {"relatedResourceId": mark_res_id}
                 data = _build_sent_data(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
-                response = requests.put(
+                response = httpx.put(
                     relations_url,
                     headers=get_api_headers(self.token),  # type: ignore
                     params=params,
-                    data=str(data),
+                    content=str(data),
                 )
         print("Incident created.")
 
@@ -407,11 +407,11 @@ class SentinelIncidentsMixin:
         )
         params = {"api-version": "2020-01-01"}
         data = _build_sent_data({"message": comment})
-        response = requests.put(
+        response = httpx.put(
             comment_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -443,11 +443,11 @@ class SentinelIncidentsMixin:
         bkmark_data_items = {"relatedResourceId": mark_res_id}
         data = _build_sent_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}
-        response = requests.put(
+        response = httpx.put(
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)

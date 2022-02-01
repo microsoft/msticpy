@@ -14,7 +14,7 @@ import base64
 import re
 from pathlib import Path
 
-import requests
+import httpx
 from tqdm.notebook import tqdm
 import pandas as pd
 
@@ -126,8 +126,8 @@ class LAUploader(UploaderBase):
             "x-ms-date": rfc1123date,
         }
         try:
-            response = requests.post(uri, data=body, headers=headers)
-        except requests.ConnectionError as req_err:
+            response = httpx.post(uri, content=body, headers=headers)
+        except httpx.ConnectError as req_err:
             raise MsticpyConnectionError(
                 "Unable to connect to workspace, ensure your Workspace ID is correct.",
                 title="Unable to connect to Workspace",
