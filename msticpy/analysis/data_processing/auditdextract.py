@@ -16,9 +16,11 @@ line arguments into a single string). This is still a work-in-progress.
 import codecs
 import re
 from datetime import datetime
-from typing import Mapping, Any, Tuple, Dict, List, Optional, Set
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
+
 import pandas as pd
 
+from ...common.utility import export
 from .proc_tree_builder import build_process_tree
 
 try:
@@ -103,6 +105,7 @@ _FIELD_DEFS: Dict[str, Dict[str, Optional[str]]] = {
 }
 
 
+@export
 def unpack_auditd(audit_str: List[Dict[str, str]]) -> Mapping[str, Mapping[str, Any]]:
     """
     Unpack an Audit message and returns a dictionary of fields.
@@ -264,6 +267,7 @@ def _move_cols_to_front(data: pd.DataFrame, column_count: int = 1) -> pd.DataFra
     return data[list(data.columns[-column_count:]) + list(data.columns[:-column_count])]
 
 
+@export
 def extract_events_to_df(
     data: pd.DataFrame,
     input_column: str = "AuditdMessage",
@@ -360,6 +364,7 @@ def extract_events_to_df(
     return tmp_df
 
 
+@export
 def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
     """
     Return a subset of the events matching type event_type.
@@ -383,6 +388,7 @@ def get_event_subset(data: pd.DataFrame, event_type: str) -> pd.DataFrame:
     )
 
 
+@export
 def read_from_file(
     filepath: str, event_type: str = None, verbose: bool = False, dummy_sep: str = "\t"
 ) -> pd.DataFrame:
@@ -497,6 +503,7 @@ def _extract_timestamp(audit_str: str) -> str:
 
 
 # pylint: disable=too-many-branches
+@export
 def generate_process_tree(  # noqa: MC0001
     audit_data: pd.DataFrame, branch_depth: int = 4, processes: pd.DataFrame = None
 ) -> pd.DataFrame:

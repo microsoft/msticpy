@@ -61,6 +61,7 @@ def _get_geolite_lookup() -> Callable:
 _GET_IP_LOOKUP = _get_geolite_lookup()
 
 
+@export
 def convert_to_ip_entities(  # noqa: MC0001
     ip_str: Optional[str] = None,
     data: Optional[pd.DataFrame] = None,
@@ -176,6 +177,7 @@ def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
 
 
 # pylint: disable=invalid-name
+@export
 @lru_cache(maxsize=1024)
 def get_whois_info(
     ip: str = None, show_progress: bool = False, **kwargs
@@ -230,6 +232,7 @@ def get_whois_info(
 # pylint: enable=invalid-name
 
 
+@export
 def get_whois_df(
     data: pd.DataFrame,
     ip_column: str,
@@ -289,6 +292,7 @@ def get_whois_df(
 
 # pylint: disable=too-few-public-methods
 @pd.api.extensions.register_dataframe_accessor("mp_whois")
+@export
 class IpWhoisAccessor:
     """Pandas api extension for IP Whois lookup."""
 
@@ -326,6 +330,7 @@ class IpWhoisAccessor:
 
 
 @deprecated("Will be removed in a future version", version="1.4.0")
+@export
 def create_ip_record(
     heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
 ) -> IpAddress:

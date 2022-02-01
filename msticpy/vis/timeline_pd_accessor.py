@@ -5,11 +5,12 @@
 # --------------------------------------------------------------------------
 """Pandas accessor class for timeline functions."""
 from typing import Iterable, Optional, Union
-import pandas as pd
 
+import pandas as pd
 from bokeh.models import LayoutDOM
 
 from .._version import VERSION
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -17,6 +18,7 @@ __author__ = "Ian Hellen"
 # pylint: disable=unused-import, import-outside-toplevel, cyclic-import
 
 
+@export
 @pd.api.extensions.register_dataframe_accessor("mp_timeline")
 class TimeLineAccessor:
     """Pandas api extension for Timeline."""

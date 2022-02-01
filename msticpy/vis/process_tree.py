@@ -30,16 +30,15 @@ from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
 
 from .._version import VERSION
-from ..common.utility import check_kwargs
 from ..analysis.data_processing.proc_tree_builder import (
     build_process_tree,
     infer_schema,
 )
+from ..analysis.data_processing.proc_tree_schema import ColNames as Col
 from ..analysis.data_processing.proc_tree_schema import (
     ProcessTreeSchemaException,
     ProcSchema,
 )
-from ..analysis.data_processing.proc_tree_schema import ColNames as Col
 
 # pylint: disable=unused-import
 from ..analysis.data_processing.process_tree_utils import (  # noqa F401
@@ -56,6 +55,7 @@ from ..analysis.data_processing.process_tree_utils import (  # noqa F401
     get_summary_info,
     get_tree_depth,
 )
+from ..common.utility import check_kwargs, export
 
 # pylint: enable=unused-import
 
@@ -66,6 +66,7 @@ __author__ = "Ian Hellen"
 _DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
 
 
+@export
 def build_and_show_process_tree(
     data: pd.DataFrame,
     schema: ProcSchema = None,
@@ -133,6 +134,7 @@ def build_and_show_process_tree(
 
 
 # pylint: disable=too-many-locals, too-many-statements
+@export
 def plot_process_tree(  # noqa: MC0001
     data: pd.DataFrame,
     schema: ProcSchema = None,
@@ -561,6 +563,7 @@ def _check_proc_tree_schema(data):
 
 
 # pylint: disable=too-few-public-methods
+@export
 @pd.api.extensions.register_dataframe_accessor("mp_process_tree")
 class ProcessTreeAccessor:
     """Pandas api extension for Process Tree."""

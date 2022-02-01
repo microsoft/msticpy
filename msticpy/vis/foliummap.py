@@ -10,14 +10,14 @@ import warnings
 from typing import Iterable, List, Tuple
 
 import folium
-from folium.plugins import MarkerCluster, FeatureGroupSubGroup
 import pygeohash
+from folium.plugins import FeatureGroupSubGroup, MarkerCluster
 
 from .._version import VERSION
-from ..datamodel.entities import Entity, GeoLocation, IpAddress
 
 # pylint: enable=locally-disabled, unused-import
 from ..common.utility import export
+from ..datamodel.entities import Entity, GeoLocation, IpAddress
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -482,6 +482,7 @@ class FoliumMap:
         return FeatureGroupSubGroup(cluster, name=name)
 
 
+@export
 def decode_geo_hash(geohash: str) -> Tuple[float, float, float, float]:
     """
     Decode a geohash.
@@ -502,6 +503,7 @@ def decode_geo_hash(geohash: str) -> Tuple[float, float, float, float]:
     return pygeohash.decode_exactly(geohash)
 
 
+@export
 def decode_geohash_collection(geohashes: Iterable[str]):
     """
     Return collection of geohashes decoded into location coordinates.
@@ -526,6 +528,7 @@ def decode_geohash_collection(geohashes: Iterable[str]):
     return locations
 
 
+@export
 def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     """
     Calculate median point between Entity IP locations.
@@ -590,6 +593,7 @@ def _extract_locs_ip_entities(ip_entities: Iterable[IpAddress]):
     return [ip["Location"] for ip in ip_entities if bool(ip.Location)]
 
 
+@export
 def get_center_ip_entities(
     ip_entities: Iterable[IpAddress], mode: str = "median"
 ) -> Tuple[float, float]:
@@ -623,6 +627,7 @@ def _extract_coords_loc_entities(loc_entities: Iterable[GeoLocation]):
     ]
 
 
+@export
 def get_center_geo_locs(
     loc_entities: Iterable[GeoLocation], mode: str = "median"
 ) -> Tuple[float, float]:

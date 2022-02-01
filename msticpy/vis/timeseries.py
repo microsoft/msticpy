@@ -4,28 +4,28 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, Dict
 from itertools import zip_longest
+from typing import Any, Dict
 
 import pandas as pd
 from bokeh.io import output_notebook, show
-from bokeh.models import ColumnDataSource, NumeralTickFormatter, HoverTool
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
-from bokeh.layouts import column
 
 from .._version import VERSION
-from ..common.utility import export, check_kwargs
+from ..common.utility import check_kwargs, export
 from .timeline import (
-    _create_tool_tips,
-    _calc_auto_plot_height,
-    _create_range_tool,
-    _get_tick_formatter,
-    _add_ref_line,
-    _get_ref_event_time,
     _DEFAULT_KWARGS,
     _TL_VALUE_KWARGS,
+    _add_ref_line,
+    _calc_auto_plot_height,
+    _create_range_tool,
+    _create_tool_tips,
+    _get_ref_event_time,
+    _get_tick_formatter,
 )
 
 __version__ = VERSION

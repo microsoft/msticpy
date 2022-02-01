@@ -6,12 +6,14 @@
 """Morph Charts  class."""
 import json
 from pathlib import Path
+
+import pandas as pd
 import yaml
 from IPython.display import IFrame
-import pandas as pd
-from ..common.exceptions import MsticpyException
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyException
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -19,6 +21,7 @@ __author__ = "Pete Bryan"
 _CHART_FOLDER = "morph_charts"
 
 
+@export
 class MorphCharts:
     """Create Morph Charts package data and render Morph Charts site."""
 
