@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Deprecated placeholder for http_base.py."""
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

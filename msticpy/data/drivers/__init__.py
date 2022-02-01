@@ -29,6 +29,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.Sumologic: ("sumologic_driver", "SumologicDriver"),
     DataEnvironment.ResourceGraph: ("resource_graph_driver", "ResourceGraphDriver"),
     DataEnvironment.M365D: ("mdatp_driver", "MDATPDriver"),
+    DataEnvironment.Cybereason: ("cybereason_driver", "CybereasonDriver"),
 }
 
 

@@ -68,7 +68,7 @@ def mocked_session(*args, **kwargs):
     return mock_req_session()
 
 
-# This class will mock requests.Session()
+# This class will mock httpx.Client()
 class mock_req_session:
     def get(self, *args, **kwargs):
         class MockResponse:
@@ -462,8 +462,8 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers[provider_name]
-        saved_session = ti_provider._requests_session
-        ti_provider._requests_session = mock_req_session()
+        saved_session = ti_provider._httpx_client
+        ti_provider._httpx_client = mock_req_session()
 
         iocs = {
             "124.5.6.7": ("ipv4", None),
@@ -493,7 +493,7 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(20, len(results_df))
         self.assertEqual(17, len(results_df[results_df["Result"]]))
 
-        ti_provider._requests_session = saved_session
+        ti_provider._httpx_client = saved_session
 
     # pylint: disable=pointless-statement
     def verify_result(self, result):
@@ -523,7 +523,7 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        ti_provider._requests_session = mock_req_session()
+        ti_provider._httpx_client = mock_req_session()
         iocs = {
             "google.com": ("dns", None),
             "microsoft.com": ("dns", None),
@@ -567,7 +567,7 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        ti_provider._requests_session = mock_req_session()
+        ti_provider._httpx_client = mock_req_session()
 
         n_requests = 250
         gen_doms = {self._generate_rand_domain(): "dns" for i in range(n_requests)}

@@ -18,35 +18,6 @@ configuration and other actions on the Microsoft Sentinel Workspace
 
 :py:mod:`Microsoft Sentinel API documentation<msticpy.data.azure.sentinel_core.MicrosoftSentinel>`
 
-The first step in using this package is to install the msticpy package.
-
-.. code:: ipython3
-
-    !pip install msticpy --upgrade --user
-
-
-.. parsed-literal::
-
-    Collecting msticpy
-    Building wheels for collected packages: msticpy
-      Building wheel for msticpy (setup.py): started
-      Building wheel for msticpy (setup.py): finished with status 'done'
-    Successfully built msticpy
-    Installing collected packages: msticpy
-    Successfully installed msticpy-0.3.0
-
-
-.. code:: ipython3
-
-    #imports
-    from msticpy.data.azure.azure import AzureData, MicrosoftSentinel
-    print('Imports Complete')
-
-
-.. parsed-literal::
-
-    Imports Complete
-
 
 Instantiating and Connecting the Microsoft Sentinel API Connector
 -----------------------------------------------------------------

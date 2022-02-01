@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Deprecated placeholder for domain_utils.py."""
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

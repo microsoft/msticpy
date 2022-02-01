@@ -123,7 +123,7 @@ See :py:mod:`delete_blob<msticpy.data.azure_blob_storage.AzureBlobStorage.delete
 Generate a SAS Token for a Blob
 -------------------------------
 
-`get_sas_token` generates a `SAS token <https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview>`_ for the specified blob.
+`get_sas_token` generates a `SAS token <https://docs.microsoft.com/azure/storage/common/storage-sas-overview>`_ for the specified blob.
 By default the token generated is valid for read access for 7 days but permissions can be modified with the
 `permission` keyword, and validity time-frame with the `start` and `end` keywords.
 The returned string is a full URI for the blob, with the SAS token appended.

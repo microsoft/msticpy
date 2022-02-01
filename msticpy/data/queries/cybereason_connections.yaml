@@ -1,0 +1,95 @@
+metadata:
+  version: 1
+  description: Cybereason Queries
+  data_environments: [Cybereason]
+  data_families:
+    - Connection
+  tags: ["edr", "connections"]
+defaults:
+  metadata:
+    data_source: "hunting_queries"
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    timefield:
+      description: Field to use for time
+      type: str
+      default: creationTime
+    timeFeatureId:
+      description: Time boundary
+      type: str
+      default: startFeatureId
+    customFields:
+      description: List of fields to output
+      type: list
+      default:
+        - elementDisplayName
+        - direction
+        - ownerMachine
+        - ownerProcess
+        - serverPort
+        - serverAddress
+        - portType
+        - aggregatedReceivedBytesCount
+        - aggregatedTransmittedBytesCount
+        - remoteAddressCountryName
+        - dnsQuery
+        - accessedByMalwareEvidence
+        - domainName
+        - isExternalConnection
+        - remoteAddressInternalExternalLocal
+        - calculatedCreationTime
+        - endTime
+sources:
+  list_connections_from_process:
+    description: Search for process with a specific suspicion
+    metadata:
+    args:
+      query: |-
+        {{
+          "queryPath" : [
+              {{
+                  "requestedType": "Process",
+                  "filters":[
+                      {{
+                          "facetName": "applicablePid",
+                          "values":[ {pid} ],
+                          "filterType":"Equals"
+                      }},
+                      {{
+                          "facetName": "ownerMachine",
+                          "values":[ {hostname} ],
+                          "filterType":"Equals"
+                      }},
+                      {{
+                          "facetName": "{timefield}",
+                          "values": [ {start}, {end} ],
+                          "filterType":"Between"
+                      }}
+                  ],
+                  "connectionFeature": {{
+                    "elementInstanceType": "Process",
+                    "featureName": "connections"
+                  }}
+              }},
+              {{
+                  "requestedType": "Connection",
+                  "filters":[],
+                  "isResult": true
+              }}
+          ],
+          "customFields": [{customFields}]
+        }}
+    parameters:
+      pid:
+        description: Command to search for
+        type: list
+      hostname:
+        description: Hostname where the process is running
+        type: list
