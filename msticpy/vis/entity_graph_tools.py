@@ -196,7 +196,7 @@ class EntityGraph:
         if isinstance(incident, pd.DataFrame):
             for row in incident.iterrows():
                 if "name" in row[1]:
-                    inc = Incident(src_event=row[1])
+                    inc = Incident(src_event=row[1])  # type: ignore
                 elif "AlertName" in row[1]:
                     inc = Alert(src_event=row[1])  # type: ignore
                 self._add_incident_or_alert_node(inc)
