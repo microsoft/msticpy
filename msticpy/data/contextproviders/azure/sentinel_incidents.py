@@ -9,7 +9,7 @@ from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
 import pandas as pd
-import requests
+import httpx
 from IPython.display import display
 
 from azure.common.exceptions import CloudError
@@ -36,7 +36,6 @@ class SentinelIncidentsMixin:
     ) -> pd.DataFrame:
         """
         Get details on a specific incident.
-
         Parameters
         ----------
         incident : str
@@ -49,17 +48,14 @@ class SentinelIncidentsMixin:
              If True include all comments in the response. Default is False.
         bookmarks: bool, optional
              If True include all bookmarks in the response. Default is False.
-
         Returns
         -------
         pd.DataFrame
             Table containing incident details.
-
         Raises
         ------
         CloudError
             If incident could not be retrieved.
-
         """
         incident_id = self._get_incident_id(incident)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -86,22 +82,19 @@ class SentinelIncidentsMixin:
     def get_entities(self, incident: str) -> list:
         """
         Get the entities from an incident.
-
         Parameters
         ----------
         incident : str
             Incident GUID or Name .
-
         Returns
         -------
         list
             A list of entities.
-
         """
         incident_id = self._get_incident_id(incident)
         entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
         ent_parameters = {"api-version": "2019-01-01-preview"}
-        ents = requests.post(
+        ents = httpx.post(
             entities_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=ent_parameters,
@@ -115,22 +108,19 @@ class SentinelIncidentsMixin:
     def get_incident_alerts(self, incident: str) -> list:
         """
         Get the alerts from an incident.
-
         Parameters
         ----------
         incident : str
             Incident GUID or Name.
-
         Returns
         -------
         list
             A list of alerts.
-
         """
         incident_id = self._get_incident_id(incident)
         alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
         alerts_parameters = {"api-version": "2021-04-01"}
-        alerts_resp = requests.post(
+        alerts_resp = httpx.post(
             alerts_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=alerts_parameters,
@@ -150,17 +140,14 @@ class SentinelIncidentsMixin:
     def get_incident_comments(self, incident: str) -> list:
         """
         Get the comments from an incident.
-
         Parameters
         ----------
         incident : str
             Incident GUID or Name.
-
         Returns
         -------
         list
             A list of comments.
-
         """
         incident_id = self._get_incident_id(incident)
         comments_url = self.sent_urls["incidents"] + f"/{incident_id}/comments"  # type: ignore
@@ -181,17 +168,14 @@ class SentinelIncidentsMixin:
     def get_incident_bookmarks(self, incident: str) -> list:
         """
         Get the comments from an incident.
-
         Parameters
         ----------
         incident : str
             Incident GUID or name.
-
         Returns
         -------
         list
             A list of bookmarks.
-
         """
         bookmarks_list = []
         incident_id = self._get_incident_id(incident)
@@ -222,7 +206,6 @@ class SentinelIncidentsMixin:
     ):
         """
         Update properties of an incident.
-
         Parameters
         ----------
         incident_id : str
@@ -230,12 +213,10 @@ class SentinelIncidentsMixin:
         update_items : dict
             Dictionary of properties to update and their values.
             Ref: https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate
-
         Raises
         ------
         CloudError
             If incident could not be updated.
-
         """
         incident_dets = self.get_incident(incident_id)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -245,11 +226,11 @@ class SentinelIncidentsMixin:
         if "status" not in update_items.keys():
             update_items["status"] = incident_dets.iloc[0]["properties.status"]
         data = _build_sent_data(update_items, etag=incident_dets.iloc[0]["etag"])
-        response = requests.put(
+        response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -268,7 +249,6 @@ class SentinelIncidentsMixin:
     ):
         """
         Create a Sentinel Incident.
-
         Parameters
         ----------
         title : str
@@ -278,8 +258,7 @@ class SentinelIncidentsMixin:
                Informational, Low, Medium, High
         status : str, optional
             The status to assign the incident, by default "New"
-            Options are:
-                New, Active, Closed
+            Options are: New, Active, Closed
         description : str, optional
             A description of the incident, by default None
         first_activity_time : datetime, optional
@@ -290,12 +269,10 @@ class SentinelIncidentsMixin:
             Any labels to apply to the incident, by default None
         bookmarks : List, optional
             A list of bookmark GUIDS you want to associate with the incident
-
         Raises
         ------
         CloudError
             If the API returns an error
-
         """
         incident_id = uuid4()
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -315,11 +292,11 @@ class SentinelIncidentsMixin:
         if last_activity_time:
             data_items["lastActivityTimeUtc"] = last_activity_time.isoformat()
         data = _build_sent_data(data_items, props=True)
-        response = requests.put(
+        response = httpx.put(
             incident_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -332,37 +309,30 @@ class SentinelIncidentsMixin:
                 bkmark_data_items = {"relatedResourceId": mark_res_id}
                 data = _build_sent_data(bkmark_data_items, props=True)
                 params = {"api-version": "2021-04-01"}
-                response = requests.put(
+                response = httpx.put(
                     relations_url,
                     headers=get_api_headers(self.token),  # type: ignore
                     params=params,
-                    data=str(data),
+                    content=str(data),
                 )
         print("Incident created.")
 
     def _get_incident_id(self, incident: str) -> str:
         """
         Get an incident ID.
-
         Parameters
         ----------
         incident : str
             An incident identifier
-
         Returns
         -------
         str
             The Incident GUID
-
         Raises
         ------
         MsticpyUserError
             If incident can't be found or multiple matching incidents found.
-
         """
-        # In case full resource ID is passed in try and extract ID.
-        if "/" in incident:
-            incident = incident.split("/")[-1]
         try:
             UUID(incident)
             return incident
@@ -392,30 +362,27 @@ class SentinelIncidentsMixin:
     ):
         """
         Write a comment for an incident.
-
         Parameters
         ----------
         incident_id : str
             Incident ID GUID.
         comment : str
             Comment message to post.
-
         Raises
         ------
         CloudError
             If message could not be posted.
-
         """
         comment_url = (
             self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
         )
         params = {"api-version": "2020-01-01"}
         data = _build_sent_data({"message": comment})
-        response = requests.put(
+        response = httpx.put(
             comment_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -424,19 +391,16 @@ class SentinelIncidentsMixin:
     def add_bookmark_to_incident(self, incident: str, bookmark: str):
         """
         Add a bookmark to an incident.
-
         Parameters
         ----------
         incident : str
             Either an incident name or an incident GUID
         bookmark : str
             Either a bookmark name or bookmark GUID
-
         Raises
         ------
         CloudError
             If API returns error
-
         """
         incident_id = self._get_incident_id(incident)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -447,11 +411,11 @@ class SentinelIncidentsMixin:
         bkmark_data_items = {"relatedResourceId": mark_res_id}
         data = _build_sent_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}
-        response = requests.put(
+        response = httpx.put(
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -460,17 +424,14 @@ class SentinelIncidentsMixin:
     def list_incidents(self) -> pd.DataFrame:
         """
         Get a list of incident for a Sentinel workspace.
-
         Returns
         -------
         pd.DataFrame
             A table of incidents.
-
         Raises
         ------
         CloudError
             If incidents could not be retrieved.
-
         """
         return self._list_items(item_type="incidents")  # type: ignore
 
