@@ -233,7 +233,7 @@ to decompose time series to generate additional data points such as
 baseline, seasonal , trend etc.
 
 **KQL Reference Documentation:** -
-`series_decompose <https://docs.microsoft.com/en-us/azure/kusto/query/series-decomposefunction>`__
+`series_decompose <https://docs.microsoft.com/azure/kusto/query/series-decomposefunction>`__
 
 You can use available query
 ``qry_prov.MultiDataSource.plot_timeseries_datawithbaseline()`` to get
@@ -779,7 +779,7 @@ containing a series (dynamic numerical array) as input and extract
 anomalous points with scores.
 
 **KQL Reference Documentation:** -
-`series_decompose_anomalies <https://docs.microsoft.com/en-us/azure/kusto/query/series-decompose-anomaliesfunction>`__
+`series_decompose_anomalies <https://docs.microsoft.com/azure/kusto/query/series-decompose-anomaliesfunction>`__
 
 You can use available query
 ``qry_prov.MultiDataSource.get_timeseries_alerts()`` to get the similar
@@ -1124,7 +1124,7 @@ query in a particular way. In this case, we are using timechart which
 will display linegraph.
 
 **KQL Reference Documentation:** -
-`render <https://docs.microsoft.com/en-us/azure/kusto/query/renderoperator?pivots=azuremonitor>`__
+`render <https://docs.microsoft.com/azure/kusto/query/renderoperator?pivots=azuremonitor>`__
 
 .. code:: ipython3
 

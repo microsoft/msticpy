@@ -9,6 +9,7 @@ from json import JSONDecodeError
 from typing import Dict, Any, List
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..datamodel.entities import Entity, UnknownEntity
@@ -19,6 +20,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+@deprecated(reason="Replaced by Alert entity in datamodel", version="1.7.0")
 @export
 class SecurityAlert(SecurityBase):
     """

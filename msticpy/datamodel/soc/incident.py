@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Incident Entity class."""
-from datetime import datetime
 from typing import Any, List, Mapping, Optional, Dict
 import pandas as pd
 
@@ -53,7 +52,6 @@ class Incident(Entity):
             kw arguments.
 
         """
-        self.TimeGenerated: Optional[datetime] = None
         self.DisplayName: Optional[str] = None
         self.IncidentID: Optional[str] = None
         self.Severity: Optional[str] = None

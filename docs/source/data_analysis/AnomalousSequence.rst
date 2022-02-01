@@ -1058,7 +1058,7 @@ might start to sessionize + model some other types of logs. We
 demonstrate how to use KQL to sessionize directly.
 
 In order to do the sessionizing using KQL, we use the
-`row\_window\_session <https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/row-window-session-function>`__
+`row\_window\_session <https://docs.microsoft.com/azure/data-explorer/kusto/query/row-window-session-function>`__
 function.
 
 .. important:: Throughout this section, the decisions made about which
