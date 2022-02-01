@@ -875,7 +875,7 @@ limitations under the License.
 
 ---------------------------------------------------------
 
-httpx 0.18 - BSD-3-Clause "New" or "Revised" License
+httpx 0.21 - BSD-3-Clause "New" or "Revised" License
 
 
 Copyright © 2019, [Encode OSS Ltd](https://www.encode.io/).
