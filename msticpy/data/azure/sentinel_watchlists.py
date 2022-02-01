@@ -8,7 +8,7 @@ from typing import Dict, Union
 from uuid import uuid4
 
 import pandas as pd
-import requests
+import httpx
 
 from azure.common.exceptions import CloudError
 
@@ -99,11 +99,11 @@ class SentinelWatchlistsMixin:
             data_csv = data.to_csv(index=False)
             data_items["rawContent"] = str(data_csv)
         request_data = _build_sent_data(data_items, props=True)
-        response = requests.put(
+        response = httpx.put(
             watchlist_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(request_data),
+            content=str(request_data),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -212,11 +212,11 @@ class SentinelWatchlistsMixin:
                 self.sent_urls["watchlists"]  # type: ignore
                 + f"/{watchlist_name}/watchlistItems/{watchlist_id}"
             )
-            response = requests.put(
+            response = httpx.put(
                 watchlist_url,
                 headers=get_api_headers(self.token),  # type: ignore
                 params={"api-version": "2021-04-01"},
-                data=str({"properties": {"itemsKeyValue": item}}),
+                content=str({"properties": {"itemsKeyValue": item}}),
             )
             if response.status_code != 200:
                 raise CloudError(response=response)
@@ -248,7 +248,7 @@ class SentinelWatchlistsMixin:
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
         watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
         params = {"api-version": "2021-04-01"}
-        response = requests.delete(
+        response = httpx.delete(
             watchlist_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,

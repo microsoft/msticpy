@@ -6,7 +6,7 @@
 """Check current version against PyPI."""
 from pkg_resources import parse_version
 
-import requests
+import httpx
 
 from .._version import VERSION
 
@@ -20,7 +20,7 @@ def check_version():
 
     # fetch package metadata from PyPI
     pypi_url = "https://pypi.org/pypi/msticpy/json"
-    pkg_data = requests.get(pypi_url).json()
+    pkg_data = httpx.get(pypi_url).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
         latest_version = parse_version(latest_version)

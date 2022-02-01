@@ -15,7 +15,7 @@ https://stackoverflow.com/questions/58648739/how-to-check-if-python
 from distutils.version import LooseVersion
 from importlib_metadata import version
 
-import requests
+import httpx
 
 __author__ = "Ian Hellen, hoefling"
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # fetch package metadata from PyPI
     pypi_url = f"https://pypi.org/pypi/{name}/json"
-    pkg_data = requests.get(pypi_url).json()
+    pkg_data = httpx.get(pypi_url).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
         latest_version = LooseVersion(latest_version)
