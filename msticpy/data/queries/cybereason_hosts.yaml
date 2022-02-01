@@ -1,0 +1,71 @@
+metadata:
+  version: 1
+  description: EDR Queries
+  data_environments: [Cybereason]
+  data_families:
+    - Host
+  tags: ["host"]
+defaults:
+  metadata:
+    data_source: "hunting_queries"
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+      default: -1
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    timefield:
+      description: Field to use for time
+      type: str
+      default: creationTime
+    timeFeatureId:
+      description: Time boundary
+      type: str
+      default: startFeatureId
+    customFields:
+      description: List of fields to output
+      type: list
+      default:
+        - osVersionType
+        - platformArchitecture
+        - uptime
+        - isActiveProbeConnected
+        - lastSeenTimeStamp
+        - timeStampSinceLastConnectionTime
+        - mountPoints
+        - processes
+        - services
+        - elementDisplayName
+sources:
+  find_hosts:
+    description: Search for hosts by searching for a list of hostname
+    metadata:
+      pivot:
+        short_name: enrich
+        direct_func_entities:
+          - Dns
+    args:
+      query: |-
+        {{
+          "queryPath" : [
+              {{
+                  "requestedType": "Machine",
+                  "filters":[
+                      {{
+                          "facetName": "elementDisplayName",
+                          "values":[ {domain_list} ],
+                          "filterType":"MatchesToken"
+                      }}
+                  ],
+                  "isResult": true
+              }}
+          ],
+          "customFields": [{customFields}]
+        }}
+    parameters:
+      domain_list:
+        description: Hostnames to search for
+        type: list
