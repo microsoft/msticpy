@@ -223,6 +223,14 @@ class QueryTime(RegisteredWidget, IPyDisplayMixin):
         self._w_tm_range.value = (-self.before, self.after)
         self._w_tm_range.min = -self.max_before
         self._w_tm_range.max = self.max_after
+        self._query_start = self.origin_time + timedelta(
+            0, self._w_tm_range.value[0] * self._time_unit.value
+        )
+        self._query_end = self.origin_time + timedelta(
+            0, self._w_tm_range.value[1] * self._time_unit.value
+        )
+        self._w_start_time_txt.value = self._query_start.isoformat(sep=" ")
+        self._w_end_time_txt.value = self._query_end.isoformat(sep=" ")
 
     def _get_time_parameters(self, **kwargs):
         """Process different init time parameters."""

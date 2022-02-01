@@ -41,7 +41,7 @@ SPLUNK_CONNECT_ARGS = {
     "port": "(integer) The port number (the default is 8089).",
     "http_scheme": "('https' or 'http') The scheme for accessing the service "
     + "(the default is 'https').",
-    "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
+    "verify": "(Boolean) Enable (True) or disable (False) SSL verification for "
     + "https connections. (optional, the default is True)",
     "owner": "(string) The owner context of the namespace (optional).",
     "app": "(string) The app context of the namespace (optional).",
