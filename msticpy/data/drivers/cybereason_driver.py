@@ -172,7 +172,7 @@ class CybereasonDriver(DriverBase):
         result = CybereasonDriver._flatten_simple_values(simple_values)
 
         elt_value = entry.get("elementValues", {})  # List or Dict
-        result.update(**CybereasonDriver._flatten_simple_values(elt_value))
+        result.update(**CybereasonDriver._flatten_element_values(elt_value))
         return result
 
     @staticmethod
