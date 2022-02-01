@@ -21,7 +21,7 @@ from urllib.error import HTTPError, URLError
 import cryptography as crypto
 from cryptography.x509 import Certificate
 import pandas as pd
-import requests
+import httpx
 import tldextract
 
 # pylint: disable=no-name-in-module
@@ -44,7 +44,7 @@ __author__ = "Pete Bryan"
 
 
 @export
-def screenshot(url: str, api_key: str = None) -> requests.models.Response:
+def screenshot(url: str, api_key: str = None) -> httpx.Response:
     """
     Get a screenshot of a url with Browshot.
 
@@ -57,7 +57,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 
     Returns
     -------
-    image_data: requests.models.Response
+    image_data: httpx.Response
         The final screenshot request response data.
 
     """
@@ -86,7 +86,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
 
     # Request screenshot from Browshot and get request ID
     id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
-    id_data = requests.get(id_string)
+    id_data = httpx.get(id_string)
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
@@ -99,7 +99,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     ready = False
     while not ready:
         progress.value += 1
-        status_data = requests.get(status_string)
+        status_data = httpx.get(status_string)
         status = json.loads(status_data.content)["status"]
         if status == "finished":
             ready = True
@@ -108,7 +108,7 @@ def screenshot(url: str, api_key: str = None) -> requests.models.Response:
     progress.value = 40
 
     # Once ready get the screenshot
-    image_data = requests.get(image_string)
+    image_data = httpx.get(image_string)
 
     if image_data.status_code != 200:
         print(
