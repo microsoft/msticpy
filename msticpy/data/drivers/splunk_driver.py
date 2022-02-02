@@ -209,7 +209,7 @@ class SplunkDriver(DriverBase):
         # https://dev.splunk.com/enterprise/docs/python/sdk-python/howtousesplunkpython/howtorunsearchespython
         is_oneshot = kwargs.get("oneshot", False)
 
-        if is_oneshot == True:
+        if is_oneshot:
             query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
             reader = sp_results.ResultsReader(query_results)
 
@@ -222,10 +222,10 @@ class SplunkDriver(DriverBase):
             progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")
             while not query_job.is_done():
                 current_state = query_job.state()
-                progress =  float(current_state["content"]["doneProgress"]) * 100
+                progress = float(current_state["content"]["doneProgress"]) * 100
                 progress_bar.update(progress)
                 sleep(1)
-        
+
             # Update progress bar indicating completion and fetch results
             progress_bar.update(100)
             progress_bar.close()
