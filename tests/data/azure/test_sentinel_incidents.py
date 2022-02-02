@@ -66,6 +66,7 @@ def sent_loader(mock_creds):
         sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
     )
     azs.connect()
+    azs.connected = True
     azs.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
     return azs
 

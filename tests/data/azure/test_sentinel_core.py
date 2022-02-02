@@ -56,6 +56,7 @@ def azs_loader(mock_creds):
     mock_creds.return_value = None
     azs = MicrosoftSentinel(sub_id="123", res_grp="RG", ws_name="WSName")
     azs.connect()
+    azs.connected = True
     azs.token = "123"
     return azs
 
