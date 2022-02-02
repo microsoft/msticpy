@@ -109,10 +109,10 @@ msticpy.sectools.proc\_tree\_schema module
    :undoc-members:
    :show-inheritance:
 
-msticpy.sectools.process\_tree\_utils module
---------------------------------------------
+msticpy.sectools.proc\_tree\_utils module
+-----------------------------------------
 
-.. automodule:: msticpy.sectools.process_tree_utils
+.. automodule:: msticpy.sectools.proc_tree_utils
    :members:
    :undoc-members:
    :show-inheritance:

@@ -132,10 +132,10 @@ msticpy.nbtools.timeline module
    :undoc-members:
    :show-inheritance:
 
-msticpy.nbtools.timeline\_duration module
+msticpy.nbtools.timeline\_druation module
 -----------------------------------------
 
-.. automodule:: msticpy.nbtools.timeline_duration
+.. automodule:: msticpy.nbtools.timeline_druation
    :members:
    :undoc-members:
    :show-inheritance:
