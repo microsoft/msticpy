@@ -123,10 +123,12 @@ class VTLookupV3:
     def supported_vt_types(self) -> List[str]:
         """
         Return list of VirusTotal supported IoC type names.
+
         Returns
         -------
         List[str]:
             List of VirusTotal supported IoC type names.
+
         """
         return [str(i_type) for i_type in self._SUPPORTED_VT_TYPES]
 
@@ -183,11 +185,13 @@ class VTLookupV3:
     def __init__(self, vt_key: Optional[str] = None):
         """
         Create a new instance of VTLookupV3 class.
+
         Parameters
         ----------
         vt_key: str, optional
             VirusTotal API key, if not supplied, this is read from
             user configuration.
+
         """
         self._vt_key = vt_key or _get_vt_api_key()
         self._vt_client = vt.Client(apikey=self._vt_key)
@@ -199,6 +203,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look up and single IoC observable.
+
         Parameters
         ----------
         observable: str
@@ -207,13 +212,16 @@ class VTLookupV3:
             The VT entity type
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Attributes Pandas DataFrame with the properties of the entity
+
         Raises
         ------
         KeyError
             Unknown vt_type
+
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             # pylint: disable=no-member
@@ -240,6 +248,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look up and single IoC observable.
+
         Parameters
         ----------
         observable: str
@@ -248,13 +257,16 @@ class VTLookupV3:
             The VT entity type
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Attributes Pandas DataFrame with the properties of the entity
+
         Raises
         ------
         KeyError
             Unknown vt_type
+
         """
         try:
             return _make_sync(
@@ -272,6 +284,7 @@ class VTLookupV3:
     ):
         """
         Look up and multiple IoC observables.
+
         Parameters
         ----------
         observables_df: pd.DataFrame
@@ -282,13 +295,16 @@ class VTLookupV3:
             Type column of each observable
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Future Attributes Pandas DataFrame with the properties of the entities
+
         Raises
         ------
         KeyError
             Column not found in observables_df
+
         """
         _observables_df = observables_df.reset_index()
 
@@ -329,6 +345,7 @@ class VTLookupV3:
     ):
         """
         Look up and multiple IoC observables.
+
         Parameters
         ----------
         observables_df: pd.DataFrame
@@ -339,9 +356,11 @@ class VTLookupV3:
             Type column of each observable
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Attributes Pandas DataFrame with the properties of the entities
+
         """
         try:
             return _make_sync(
@@ -366,6 +385,7 @@ class VTLookupV3:
     ):
         """
         Look up and single IoC observable relationships.
+
         Parameters
         ----------
         observable: str
@@ -380,13 +400,16 @@ class VTLookupV3:
             If True, return all properties, by default False
         full_objects : bool, optional
             If True, return the full object rather than just ID links.
+
         Returns
         -------
             Future Relationship Pandas DataFrame with the relationships of the entity
+
         Raises
         ------
         KeyError
             Unknown vt_type
+
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             raise KeyError(f"Property type {vt_type} not supported")
@@ -472,6 +495,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look up single IoC observable relationship links.
+
         Parameters
         ----------
         observable: str
@@ -484,17 +508,21 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Relationship Pandas DataFrame with the relationships of the entity
+
         Notes
         -----
         This method returns relationship links rather than whole objects.
         That is, it will return the IDs of related items in the specified
         `relationship`, if any.
+
         See Also
         --------
         lookup_ioc_related : return the full related objects.
+
         """
         try:
             return _make_sync(
@@ -510,6 +538,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look single IoC observable related items.
+
         Parameters
         ----------
         observable: str
@@ -520,17 +549,21 @@ class VTLookupV3:
             Desired relationship
         limit: int
             Relations limit
+
         Returns
         -------
         pd.DataFrame
             Any objects with specified `relationship` to the entity
+
         Notes
         -----
         This method returns full related objects rather than ID links.
         It is less efficient than looking up ID links only.
+
         See Also
         --------
         lookup_ioc_relationships : return the related IDs.
+
         """
         try:
             return _make_sync(
@@ -557,6 +590,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
+
         Parameters
         ----------
         observables_df: pd.DataFrame
@@ -571,13 +605,16 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Future Relationship Pandas DataFrame with the relationships of each observable.
+
         Raises
         ------
         KeyError
             Column not found in observables_df
+
         """
         _observables_df = observables_df.reset_index()
 
@@ -627,6 +664,7 @@ class VTLookupV3:
     ) -> pd.DataFrame:
         """
         Look up and single IoC observable relationships.
+
         Parameters
         ----------
         observables_df: pd.DataFrame
@@ -641,9 +679,11 @@ class VTLookupV3:
             Relations limit
         all_props : bool, optional
             If True, return all properties, by default False
+
         Returns
         -------
             Relationship Pandas DataFrame with the relationships of each observable.
+
         """
         try:
             return _make_sync(
@@ -719,28 +759,33 @@ class VTLookupV3:
     def get_object(self, vt_id: str, vt_type: str) -> pd.DataFrame:
         """
         Return the full VT object as a DataFrame.
+
         Parameters
         ----------
         vt_id : str
             The ID of the object
         vt_type : str
             The type of object to query.
+
         Returns
         -------
         pd.DataFrame
             Single column DataFrame with attribute names as
             index and values as data column.
+
         Raises
         ------
         KeyError
             Unrecognized VT Type
         MsticpyVTNoDataError
             Error requesting data from VT.
+
         Notes
         -----
         This calls the underlying VT get_object API directly and
         returns all attributes for the object - hence a very wide
         DataFrame.
+
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
             # pylint: disable=no-member
@@ -785,6 +830,7 @@ class VTLookupV3:
     ) -> VTFileBehavior:
         """
         Return a VTFileBehavior object with file detonation results.
+
         Parameters
         ----------
         file_id : Optional[str], optional
@@ -794,9 +840,11 @@ class VTLookupV3:
         sandbox : str, optional
             Name of specific sandbox to retrieve, by default None
             If None, it will retrieve the behavior summary.
+
         Returns
         -------
         VTFileBehavior
+
         """
         vt_behavior = VTFileBehavior(
             self._vt_key, file_id=file_id, file_summary=file_summary
@@ -810,19 +858,23 @@ class VTLookupV3:
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Generate nodes and edges from relationships.
+
         Parameters
         ----------
         relationship_dfs : List[pd.DataFrame]
             List of relationship DataFrames
+
         Returns
         -------
         Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]
             List of nodes (node_id, node_type)
             List of edges (source_node, target_node, connection_type)
+
         Raises
         ------
         ValueError
             If an empty list is supplied.
+
         """
         if not relationship_dfs:
             raise ValueError("There are no relationship DataFrames")
@@ -886,6 +938,7 @@ class VTLookupV3:
     def render_vt_graph(graph_id: str, width: int = 800, height: int = 600):
         """
         Display a VTGraph in a Jupyter Notebook.
+
         Parameters
         ----------
         graph_id:
@@ -894,6 +947,7 @@ class VTLookupV3:
             Graph width.
         height
             Graph height
+
         """
         display(
             HTML(
@@ -903,6 +957,7 @@ class VTLookupV3:
                 width="{width}"
                 height="{height}">
               </iframe>
+
             """
             )
         )
