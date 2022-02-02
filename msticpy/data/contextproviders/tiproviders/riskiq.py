@@ -122,12 +122,12 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
     # pylint: disable=no-self-use
     @property
-    def _requests_session(self):
+    def _httpx_client(self):
         """Return the PT Analyzer session."""
         return ptanalyzer.api_clients["Cards"].session
 
-    @_requests_session.setter
-    def _requests_session(self, session):
+    @_httpx_client.setter
+    def _httpx_client(self, session):
         """Set the PT Analyzer session."""
         # pylint: disable=consider-using-dict-items
         for name in ptanalyzer.api_clients:
