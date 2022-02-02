@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 import pytest_check as check
 from msticpy.datamodel import entities
-from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress
+from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress, Alert
 from msticpy.datamodel.pivots.pivot import Pivot
 from msticpy.datamodel.soc.sentinel_alert import SentinelAlert
 
