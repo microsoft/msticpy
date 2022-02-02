@@ -6,10 +6,10 @@
 """Splunk Driver class."""
 from datetime import datetime
 from typing import Any, Tuple, Union, Dict, Iterable, Optional
+from time import sleep
 from tqdm import tqdm
 
 import pandas as pd
-from time import sleep
 from .driver_base import DriverBase, QuerySource
 from ..._version import VERSION
 from ...common.utility import export, check_kwargs
