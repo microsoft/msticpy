@@ -58,17 +58,21 @@ def get_query_list():
                 "Query": q_name,
                 "Description": qry.description,
                 "Req-Params": ", ".join(
-                    [
-                        f"{param} ({p_data.get('type')})"
-                        for param, p_data in qry.required_params.items()
-                    ]
+                    sorted(
+                        [
+                            f"{param} ({p_data.get('type')})"
+                            for param, p_data in qry.required_params.items()
+                        ]
+                    )
                 ),
                 # "OtherParams": ", ".join([f"{param}" for param in qry.default_params]),
                 "Table": q_table,
             }
             query_series.append(pd.Series(q_dict))
     print()
-    return pd.DataFrame(query_series)
+    return pd.DataFrame(query_series).sort_values(
+        ["Environment", "QueryGroup", "Query"]
+    )
 
 
 def generate_document(query_df):  # sourcery skip: identity-comprehension
