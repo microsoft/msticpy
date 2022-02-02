@@ -53,7 +53,8 @@ def compute_counts(  # noqa MC0001  # nosec
         Where the Cmd datatype has a name attribute (command name) and
         a params attribute (dict with the params and values associated
         with the command)
-        an example session:
+        an example session::
+
             [
                 Cmd(
                     name='Set-User',
@@ -64,6 +65,7 @@ def compute_counts(  # noqa MC0001  # nosec
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
                 )
             ]
+
     start_token: str
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
@@ -280,10 +282,12 @@ def compute_prob_setofparams_given_cmd(
         name of command (e.g. for Exchange powershell commands: "Set-Mailbox")
     params_with_vals: Union[dict, set]
         dict of accompanying params and values for the cmd
-        e.g for Exchange powershell commands:
+        e.g for Exchange powershell commands::
+
             {'Identity': 'an_identity' , 'ForwardingEmailAddress': 'email@email.com'}
-            If params is set to be a set, then an artificial dictionary will
-            be created with the set as the keys and Nones for the values.
+
+        If params is set to be a set, then an artificial dictionary will
+        be created with the set as the keys and Nones for the values.
     param_cond_cmd_probs: Union[StateMatrix, dict]
         computed probabilities of params conditional on the command
     value_cond_param_probs: Union[StateMatrix, dict]
@@ -351,12 +355,14 @@ def compute_likelihood_window(
     ----------
     window: List[Cmd]
         part or all of a session, where a session is a list the Cmd datatype
-        an example session:
+        an example session::
+
             [
                 Cmd(name='Set-User', params={'Identity': 'blahblah', 'Force': 'true'}),
                 Cmd(name='Set-Mailbox',
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'})
             ]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -458,7 +464,8 @@ def compute_likelihood_windows_in_session(
     ----------
     session: List[Cmd]
         list of Cmd datatype
-        an example session:
+        an example session::
+
             [
                 Cmd(
                     name='Set-User',
@@ -469,6 +476,7 @@ def compute_likelihood_windows_in_session(
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
                 )
             ]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -554,7 +562,8 @@ def rarest_window_session(
     ----------
     session: List[Cmd]
         list of Cmd datatype
-        an example session:
+        an example session::
+
             [
                 Cmd(
                     name='Set-User',
@@ -565,6 +574,7 @@ def rarest_window_session(
                     params={'Identity': 'blahblah', 'AuditEnabled': 'false'}
                 )
             ]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]

@@ -38,6 +38,7 @@ class DataFamily(Enum):
     Splunk = 8
     ResourceGraph = 9
     Sumologic = 10
+    Cybereason = 11
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
@@ -97,6 +98,7 @@ class DataEnvironment(Enum):
     ResourceGraph = 9
     Sumologic = 10
     M365D = 11
+    Cybereason = 12
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":

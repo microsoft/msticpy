@@ -26,7 +26,7 @@ from typing import List, Mapping, Any, Dict, Optional, Tuple
 from collections import namedtuple
 
 import pandas as pd
-import requests
+import httpx
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
@@ -795,9 +795,9 @@ class VTLookup:
                 headers[hdr] = val
 
         if vt_param.http_verb == "post":
-            response = requests.post(submit_url, data=params, headers=headers)
+            response = httpx.post(submit_url, data=params, headers=headers)
         else:
-            response = requests.get(submit_url, params=params, headers=headers)
+            response = httpx.get(submit_url, params=params, headers=headers)
         if response.status_code == 200:
             return response.json(), response.status_code
 

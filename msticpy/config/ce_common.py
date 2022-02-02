@@ -7,7 +7,7 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import ipywidgets as widgets
-import requests
+import httpx
 
 from ..common.azure_auth_core import AzureCloudConfig
 from .comp_edit import SettingsControl
@@ -178,7 +178,7 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
     get_tenant_url = (
         f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
     )
-    resp = requests.get(get_tenant_url.format(subscriptionid=sub_id))
+    resp = httpx.get(get_tenant_url.format(subscriptionid=sub_id))
     # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
     www_header = resp.headers.get("WWW-Authenticate")
     if not www_header:

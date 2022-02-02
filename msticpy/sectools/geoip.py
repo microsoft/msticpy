@@ -34,11 +34,10 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import geoip2.database  # type: ignore
 import pandas as pd
-import requests
+import httpx
 from geoip2.errors import AddressNotFoundError  # type: ignore
 from IPython import get_ipython
 from IPython.display import HTML, display
-from requests.exceptions import HTTPError
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
@@ -324,7 +323,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         submit_url = self._IPSTACK_API.format(
             iplist=",".join(ip_list), access_key=self._api_key
         )
-        response = requests.get(submit_url)
+        response = httpx.get(submit_url)
 
         if response.status_code == 200:
             results = response.json()
@@ -348,12 +347,12 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
     def _lookup_ip_list(self, ip_list: List[str]):
         """Lookup IP Addresses one-by-one."""
         ip_loc_results = []
-        with requests.Session() as session:
+        with httpx.Client() as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
                 )
-                response = session.get(submit_url)
+                response = client.get(submit_url)
                 if response.status_code == 200:
                     ip_loc_results.append((response.json(), response.status_code))
                 elif response:
@@ -724,16 +723,14 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             if list(Path(db_folder).glob(self._DB_ARCHIVE.format(rand="*"))):
                 # Some other process is downloading
                 return True
-            with requests.get(url, stream=True) as response:
-                response = requests.get(url, stream=True)
-                response.raise_for_status()
+            with httpx.stream("GET", url) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
-                    for chunk in response.iter_content(chunk_size=10000):
+                    for chunk in response.iter_bytes(chunk_size=10000):
                         file_hdl.write(chunk)
                         file_hdl.flush()
             self._pr_debug(f"Downloaded GeoLite DB: {db_archive_path}")
-        except HTTPError as http_err:
+        except httpx.HTTPError as http_err:
             self._pr_debug(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )

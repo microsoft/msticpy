@@ -20,7 +20,7 @@ from json import JSONDecodeError
 from typing import Any, Dict, List, Tuple
 
 import attr
-import requests
+import httpx
 from attr import Factory
 
 from ..._version import VERSION
@@ -62,7 +62,7 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
-        self._requests_session = requests.Session()
+        self._httpx_client = httpx.Client()
         self._request_params = {}
         if "ApiID" in kwargs:
             self._request_params["API_ID"] = kwargs.pop("ApiID")
@@ -136,7 +136,7 @@ class HttpProvider(TIProvider):
                 result.safe_ioc, result.ioc_type, query_type
             )
             if verb == "GET":
-                response = self._requests_session.get(**req_params)
+                response = self._httpx_client.get(**req_params)
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
             result.status = response.status_code

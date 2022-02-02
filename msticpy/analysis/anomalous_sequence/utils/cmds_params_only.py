@@ -47,9 +47,11 @@ def compute_counts(  # nosec
         each session is a list of the Cmd datatype. Where the Cmd datatype
         has a name attribute (command name) and a params attribute
         (set containing params associated with the command)
-        an example session:
+        an example session::
+
             [Cmd(name='Set-User', params={'Identity', 'Force'}),
              Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+
     start_token: str
         dummy command to signify the start of a session (e.g. "##START##")
     end_token: str
@@ -237,9 +239,11 @@ def compute_likelihood_window(
     ----------
     window: List[Cmd]
         part or all of a session, where a session is a list of the Cmd datatype
-        an example session:
+        an example session::
+
             [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
             params={'Identity', 'AuditEnabled'})]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -331,9 +335,11 @@ def compute_likelihood_windows_in_session(
     ----------
     session: List[Cmd]
         list of Cmd datatype
-        an example session:
+        an example session::
+
             [Cmd(name='Set-User', params={'Identity', 'Force'}),
             Cmd(name='Set-Mailbox', params={'Identity', 'AuditEnabled'})]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
@@ -418,9 +424,11 @@ def rarest_window_session(
     ----------
     session: List[Cmd]
         list of Cmd datatype
-        an example session:
+        an example session::
+
             [Cmd(name='Set-User', params={'Identity', 'Force'}), Cmd(name='Set-Mailbox',
             params={'Identity', 'AuditEnabled'})]
+
     prior_probs: Union[StateMatrix, dict]
         computed probabilities of individual commands
     trans_probs: Union[StateMatrix, dict]
