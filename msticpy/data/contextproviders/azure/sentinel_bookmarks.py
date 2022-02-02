@@ -28,10 +28,12 @@ class SentinelBookmarksMixin:
     def list_bookmarks(self) -> pd.DataFrame:
         """
         Return a list of Bookmarks from a Sentinel workspace.
+
         Returns
         -------
         pd.DataFrame
             A set of bookmarks.
+
         """
         return self._list_items(item_type="bookmarks")  # type: ignore
 
@@ -45,6 +47,7 @@ class SentinelBookmarksMixin:
     ):
         """
         Create a bookmark in the Sentinel Workpsace.
+
         Parameters
         ----------
         name : str
@@ -57,10 +60,12 @@ class SentinelBookmarksMixin:
             Any notes you want associated with the bookmark, by default None
         labels : List[str], optional
             Any labels you want associated with the bookmark, by default None
+
         Raises
         ------
         CloudError
             If API retunrs an error.
+
         """
         # Generate or use resource ID
         bkmark_id = str(uuid4())
@@ -94,14 +99,17 @@ class SentinelBookmarksMixin:
     ):
         """
         Delete the selected bookmark.
+
         Parameters
         ----------
         bookmark: str, optional
             The name or GIUD of the bookmark to delete.
+
         Raises
         ------
         CloudError
             If the API returns an error.
+
         """
         bookmark_id = self._get_bookmark_id(bookmark)
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
@@ -119,18 +127,22 @@ class SentinelBookmarksMixin:
     def _get_bookmark_id(self, bookmark: str) -> str:
         """
         Get the ID of a bookmark.
+
         Parameters
         ----------
         bookmark : str
             GUID or name of a bookmark
+
         Returns
         -------
         str
             Bookmark GUID
+
         Raises
         ------
         MsticpyUserError
             If Bookmark not found or multiple matching bookmarks found.
+
         """
         try:
             UUID(bookmark)
