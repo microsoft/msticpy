@@ -48,7 +48,7 @@ sources:
       ip_address:
         description: The source IP Address to search on
         type: str
-  
+
   list_alerts_for_dest_ip:
     description: Retrieves list of alerts with a common destination IP Address
     metadata:

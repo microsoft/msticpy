@@ -59,11 +59,11 @@ sources:
       data_families: [Authentication]
     args:
       query: '|datamodel Authentication Authentication search | search Authentication.action=failure {field_rename} {project_fields} {add_query_items}'
-  
+
   list_logons_for_account:
     description: All successful user logon events for account (all hosts)
     metadata:
-      data_families: [Authentication]  
+      data_families: [Authentication]
     args:
       query: '|datamodel Authentication Authentication search | search Authentication.user={account_name} {field_rename} {project_fields} {add_query_items}'
     parameters:
