@@ -36,6 +36,7 @@ class SentinelIncidentsMixin:
     ) -> pd.DataFrame:
         """
         Get details on a specific incident.
+
         Parameters
         ----------
         incident : str
@@ -48,14 +49,17 @@ class SentinelIncidentsMixin:
              If True include all comments in the response. Default is False.
         bookmarks: bool, optional
              If True include all bookmarks in the response. Default is False.
+
         Returns
         -------
         pd.DataFrame
             Table containing incident details.
+
         Raises
         ------
         CloudError
             If incident could not be retrieved.
+
         """
         incident_id = self._get_incident_id(incident)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -82,14 +86,17 @@ class SentinelIncidentsMixin:
     def get_entities(self, incident: str) -> list:
         """
         Get the entities from an incident.
+
         Parameters
         ----------
         incident : str
             Incident GUID or Name .
+
         Returns
         -------
         list
             A list of entities.
+
         """
         incident_id = self._get_incident_id(incident)
         entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
@@ -108,14 +115,17 @@ class SentinelIncidentsMixin:
     def get_incident_alerts(self, incident: str) -> list:
         """
         Get the alerts from an incident.
+
         Parameters
         ----------
         incident : str
             Incident GUID or Name.
+
         Returns
         -------
         list
             A list of alerts.
+
         """
         incident_id = self._get_incident_id(incident)
         alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
@@ -140,14 +150,17 @@ class SentinelIncidentsMixin:
     def get_incident_comments(self, incident: str) -> list:
         """
         Get the comments from an incident.
+
         Parameters
         ----------
         incident : str
             Incident GUID or Name.
+
         Returns
         -------
         list
             A list of comments.
+
         """
         incident_id = self._get_incident_id(incident)
         comments_url = self.sent_urls["incidents"] + f"/{incident_id}/comments"  # type: ignore
@@ -168,14 +181,17 @@ class SentinelIncidentsMixin:
     def get_incident_bookmarks(self, incident: str) -> list:
         """
         Get the comments from an incident.
+
         Parameters
         ----------
         incident : str
             Incident GUID or name.
+
         Returns
         -------
         list
             A list of bookmarks.
+
         """
         bookmarks_list = []
         incident_id = self._get_incident_id(incident)
@@ -206,6 +222,7 @@ class SentinelIncidentsMixin:
     ):
         """
         Update properties of an incident.
+
         Parameters
         ----------
         incident_id : str
@@ -213,10 +230,12 @@ class SentinelIncidentsMixin:
         update_items : dict
             Dictionary of properties to update and their values.
             Ref: https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate
+
         Raises
         ------
         CloudError
             If incident could not be updated.
+
         """
         incident_dets = self.get_incident(incident_id)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -249,6 +268,7 @@ class SentinelIncidentsMixin:
     ):
         """
         Create a Sentinel Incident.
+
         Parameters
         ----------
         title : str
@@ -269,10 +289,12 @@ class SentinelIncidentsMixin:
             Any labels to apply to the incident, by default None
         bookmarks : List, optional
             A list of bookmark GUIDS you want to associate with the incident
+
         Raises
         ------
         CloudError
             If the API returns an error
+
         """
         incident_id = uuid4()
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -320,18 +342,22 @@ class SentinelIncidentsMixin:
     def _get_incident_id(self, incident: str) -> str:
         """
         Get an incident ID.
+
         Parameters
         ----------
         incident : str
             An incident identifier
+
         Returns
         -------
         str
             The Incident GUID
+
         Raises
         ------
         MsticpyUserError
             If incident can't be found or multiple matching incidents found.
+
         """
         try:
             UUID(incident)
@@ -362,16 +388,19 @@ class SentinelIncidentsMixin:
     ):
         """
         Write a comment for an incident.
+
         Parameters
         ----------
         incident_id : str
             Incident ID GUID.
         comment : str
             Comment message to post.
+
         Raises
         ------
         CloudError
             If message could not be posted.
+
         """
         comment_url = (
             self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
@@ -391,16 +420,19 @@ class SentinelIncidentsMixin:
     def add_bookmark_to_incident(self, incident: str, bookmark: str):
         """
         Add a bookmark to an incident.
+
         Parameters
         ----------
         incident : str
             Either an incident name or an incident GUID
         bookmark : str
             Either a bookmark name or bookmark GUID
+
         Raises
         ------
         CloudError
             If API returns error
+
         """
         incident_id = self._get_incident_id(incident)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
@@ -424,14 +456,17 @@ class SentinelIncidentsMixin:
     def list_incidents(self) -> pd.DataFrame:
         """
         Get a list of incident for a Sentinel workspace.
+
         Returns
         -------
         pd.DataFrame
             A table of incidents.
+
         Raises
         ------
         CloudError
             If incidents could not be retrieved.
+
         """
         return self._list_items(item_type="incidents")  # type: ignore
 

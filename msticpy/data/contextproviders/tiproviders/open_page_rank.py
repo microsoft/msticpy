@@ -210,7 +210,7 @@ class OPR(HttpProvider):
 
         try:
             _, req_params = self._substitute_parms("dummy", "dns", None)
-            response = self._requests_session.get(
+            response = self._httpx_client.get(
                 url=req_url, headers=req_params["headers"]
             )
             result = LookupResult(ioc=",".join(ioc_list), ioc_type="dns")

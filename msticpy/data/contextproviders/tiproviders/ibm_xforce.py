@@ -135,16 +135,12 @@ class XForce(HttpProvider):
                     }
                 )
                 severity = TISeverity.high
-        if (
-            response.ioc_type
-            in [
-                "dns",
-                "ipv4",
-                "ipv6",
-                "hostname",
-            ]
-            and response.query_subtype in ["info", "passivedns", "whois"]
-        ):
+        if response.ioc_type in [
+            "dns",
+            "ipv4",
+            "ipv6",
+            "hostname",
+        ] and response.query_subtype in ["info", "passivedns", "whois"]:
             records = response.raw_result.get("total_rows", 0)
             contact = response.raw_result.get("contact", 0)
             if records:
