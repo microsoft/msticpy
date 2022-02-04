@@ -6588,31 +6588,6 @@ AwsApiCall
 Event Name
 ListObjects
 Request ID
-7B696C61CFD19D67
-Request User Agent
-python-requests/2.22.0
-User ID
-{'type': 'AWSAccount', 'principalId': '265534695827', 'accountId': '265534695827'}
-Request Parameters
-{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'max-keys': '1'}
-Alert #1 – 2020-02-07T23:02:39Z
-Event ID: 1d827e66-8887-4a5e-8c2c-a36f850941f1
-Event DateTime
-2020-02-07T23:02:39Z
-Alarm DateTime
-2020-02-07T23:05:58.224359+00:00
-Source IP
-131.107.147.62
-Request User Agent
-curl/7.58.0
-Repeated Attempts
-1
-AWS Request Details
-Event Type
-AwsApiCall
-Event Name
-ListObjects
-Request ID
 595967D05FC1EAAE
 Request User Agent
 curl/7.58.0
