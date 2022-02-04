@@ -16,7 +16,7 @@ from datetime import datetime
 from threading import Lock
 from typing import Tuple, Iterable, Dict, Any
 
-import requests
+import httpx
 
 from .ti_provider_base import TIProvider, LookupResult, TISeverity, TILookupStatus
 from ...common.utility import export
@@ -50,7 +50,7 @@ class Tor(TIProvider):
         now = datetime.utcnow()
         if not cls._nodelist or (now - cls._last_cached).days > 1:
             try:
-                resp = requests.get(cls._BASE_URL)
+                resp = httpx.get(cls._BASE_URL)
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))

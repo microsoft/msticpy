@@ -11,8 +11,7 @@ from timeit import default_timer as timer
 from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
-from requests.exceptions import ConnectionError as ConnError
-from requests.exceptions import HTTPError
+import httpx
 from sumologic.sumologic import SumoLogic
 
 from ..._version import VERSION
@@ -103,14 +102,14 @@ class SumologicDriver(DriverBase):
                 accessKey=arg_dict["accesskey"],
                 endpoint=arg_dict["connection_str"],
             )
-        except ConnError as err:
+        except httpx.ConnectError as err:
             raise MsticpyConnectionError(
                 f"Authentication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
                 help_uri=_HELP_URI,
                 nb_uri=_SL_NB_URI,
             ) from err
-        except HTTPError as err:
+        except httpx.HTTPError as err:
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title="Sumologic connection",
@@ -323,7 +322,7 @@ class SumologicDriver(DriverBase):
 
     @staticmethod
     def _raise_qry_except(err: Exception, mssg: str, action: Optional[str] = None):
-        if isinstance(err, HTTPError):
+        if isinstance(err, httpx.HTTPError):
             raise MsticpyConnectionError(
                 f"Communication error connecting to Sumologic: {err}",
                 title=f"Sumologic {mssg}",

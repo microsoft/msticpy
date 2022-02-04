@@ -1,0 +1,149 @@
+metadata:
+  version: 1
+  description: EDR Queries
+  data_environments: [Cybereason]
+  data_families:
+    - Process
+  tags: ["host"]
+defaults:
+  metadata:
+    data_source: "hunting_queries"
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+      default: -7
+    end:
+      description: Query end time
+      type: datetime
+      default: 0
+    timefield:
+      description: Field to use for time
+      type: str
+      default: creationTime
+    timeFeatureId:
+      description: Time boundary
+      type: str
+      default: startFeatureId
+    customFields:
+      description: List of fields to output
+      type: list
+      default:
+        - elementDisplayName
+        - creationTime
+        - endTime
+        - commandLine
+        - isImageFileSignedAndVerified
+        - imageFile.maliciousClassificationType
+        - productType
+        - children
+        - parentProcess
+        - ownerMachine
+        - calculatedUser
+        - imageFile
+        - imageFile.sha1String
+        - imageFile.md5String
+        - imageFile.companyName
+        - imageFile.productName
+        - executionPrevented
+        - isWhiteListClassification
+        - matchedWhiteListRuleId
+sources:
+  find_process_by_commandLine:
+    description: Search for process with a specific suspicion
+    metadata:
+    args:
+      query: |-
+        {{
+          "queryPath" : [
+              {{
+                  "requestedType": "Process",
+                  "filters":[
+                      {{
+                          "facetName": "commandLine",
+                          "values": [ "{command}" ],
+                          "filterType":"ContainsIgnoreCase"
+                      }},
+                      {{
+                          "facetName": "{timefield}",
+                          "values": [ {start}, {end} ],
+                          "filterType":"Between"
+                      }}
+                  ],
+                  "isResult": true
+              }}
+          ],
+          "customFields": [{customFields}]
+        }}
+    parameters:
+      command:
+        description: Command to search for
+        type: string
+  find_process_by_suspicions:
+    description: Search for process with a specific suspicion
+    metadata:
+    args:
+      query: |-
+        {{
+          "queryPath" : [
+              {{
+                  "requestedType": "Process",
+                  "filters":[
+                      {{
+                          "facetName": "{suspicion}",
+                          "values": [ true ],
+                          "filterType":"Equals"
+                      }},
+                      {{
+                          "facetName": "{timefield}",
+                          "values": [ {start}, {end} ],
+                          "filterType":"Between"
+                      }}
+                  ],
+                  "isResult": true
+              }}
+          ],
+          "customFields": [{customFields}]
+        }}
+    parameters:
+      suspicion:
+        description: Suspicion that the process should have
+        type: string
+  find_process_by_pid:
+    description: Search for a process by pid and hostname
+    metadata:
+    args:
+      query: |-
+        {{
+          "queryPath" : [
+              {{
+                  "requestedType": "Process",
+                  "filters":[
+                      {{
+                          "facetName": "applicablePid",
+                          "values":[ {pid} ],
+                          "filterType":"Equals"
+                      }},
+                      {{
+                          "facetName": "ownerMachine",
+                          "values":[ {hostname} ],
+                          "filterType":"ContainsIgnoreCase"
+                      }},
+                      {{
+                          "facetName": "{timefield}",
+                          "values": [ {start}, {end} ],
+                          "filterType":"Between"
+                      }}
+                  ],
+                  "isResult": true
+              }}
+          ],
+          "customFields": [{customFields}]
+        }}
+    parameters:
+      pid:
+        description: Process Id to search for
+        type: list
+      hostname:
+        description: Hostname where the process is running
+        type: list

@@ -7,7 +7,7 @@
 from uuid import UUID, uuid4
 
 import pandas as pd
-import requests
+import httpx
 from IPython.display import display
 
 from azure.common.exceptions import CloudError
@@ -205,11 +205,11 @@ class SentinelAnalyticsMixin:
         data = _build_sent_data(data_items, props=True)
         data["kind"] = "Scheduled"
         params = {"api-version": "2020-01-01"}
-        response = requests.put(
+        response = httpx.put(
             analytic_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
-            data=str(data),
+            content=str(data),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -275,7 +275,7 @@ class SentinelAnalyticsMixin:
         analytic_id = self._get_analytic_id(analytic_rule)
         analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
-        response = requests.delete(
+        response = httpx.delete(
             analytic_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
