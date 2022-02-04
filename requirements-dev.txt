@@ -23,7 +23,7 @@ pyroma>=3.1
 pytest-check>=1.0.1
 pytest-cov>=2.11.1
 pytest>=5.0.1
-respx==0.17.1
+respx==0.19.2
 sphinx>=2.1.2
 sphinx_rtd_theme>=0.5.1
 virtualenv
