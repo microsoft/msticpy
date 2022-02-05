@@ -23,10 +23,11 @@ geoip2>=2.9.0
 html5lib  # req by pandas for scraping
 idna<3 # req < 3 from requests
 ipwhois>=1.1.0
-ipython>=7.23.1
+ipython >= 7.23.1; python_version >= "3.8"
+ipython >= 7.1.1; python_version < "3.8"
 ipywidgets>=7.4.2
 # keyring>=13.2.1  # azure
-KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114.dev26
+KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114
 lxml>=4.6.3
 matplotlib>=3.0.0
 msrest>=0.6.0
