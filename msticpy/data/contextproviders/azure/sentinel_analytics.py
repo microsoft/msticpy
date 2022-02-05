@@ -35,10 +35,10 @@ class SentinelHuntingMixin:
 
         """
         saved_query_df = self._list_items(  # type: ignore
-            item_type="alert_rules", api_version="2017-04-26-preview"
+            item_type="ss_path", api_version="2020-08-01"
         )
         return saved_query_df[
-            saved_query_df["properties.Category"] == "Hunting Queries"
+            saved_query_df["properties.category"] == "Hunting Queries"
         ]
 
     get_hunting_queries = list_hunting_queries
