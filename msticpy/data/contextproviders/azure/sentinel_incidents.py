@@ -100,7 +100,7 @@ class SentinelIncidentsMixin:
         """
         incident_id = self._get_incident_id(incident)
         entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
-        ent_parameters = {"api-version": "2019-01-01-preview"}
+        ent_parameters = {"api-version": "2021-04-01"}
         ents = httpx.post(
             entities_url,
             headers=get_api_headers(self.token),  # type: ignore
