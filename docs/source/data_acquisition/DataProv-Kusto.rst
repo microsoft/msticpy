@@ -264,4 +264,8 @@ as query parameters.
 Other Kusto Documentation
 -----------------------------------
 
+For examples of using the Kusto provider, see the samples
+`Kusto Analysis Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Analysis.ipynb>`
+and `Kusto Ingest Notebook<https://github.com/microsoft/msticpy/blob/master/docs/notebooks/Kusto-Ingest.ipynb>`
+
 :py:mod:`Kusto driver API documentation<msticpy.data.drivers.kusto_driver>`
