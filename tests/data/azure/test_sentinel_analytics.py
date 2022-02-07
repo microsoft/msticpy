@@ -20,7 +20,7 @@ _HUNTING_QUERIES = {
             "id": "subscriptions/123/resourceGroups/RG/providers/Microsoft.OperationalInsights/workspaces/WSNAME/savedSearches/123",
             "etag": "Tag",
             "properties": {
-                "Category": "Hunting Queries",
+                "category": "Hunting Queries",
                 "DisplayName": "HuntingQuery",
                 "Query": "QueryText",
                 "Tags": [
