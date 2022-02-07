@@ -1,0 +1,6604 @@
+Breach Insider can help detect your business's next data breach.
+We know when your most critical asset – your customers' information – has made it into the wrong hands.
+
+Find Out How
+🍯
+microsoft-devtest
+Created: 2020-02-07 23:02 UTC
+
+Alert #264 – 2022-01-31T18:21:55Z
+Event ID: eb33cdca-78ea-42c1-a008-0176b61d2ddf
+Event DateTime
+2022-01-31T18:21:55Z
+Alarm DateTime
+2022-01-31T18:26:33.633682+00:00
+Source IP
+212.83.184.13
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+DBHD1NBK6P65FE8B
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #263 – 2022-01-31T14:38:27Z
+Event ID: 7e75ac66-2d6f-4a2c-8921-489be88c65b1
+Event DateTime
+2022-01-31T14:38:27Z
+Alarm DateTime
+2022-01-31T14:39:09.605190+00:00
+Source IP
+212.83.184.14
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+YRJ65RPXZNGK7VQH
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #262 – 2022-01-31T03:54:25Z
+Event ID: 155a578b-56df-4159-84de-df7d57ddf26c
+Event DateTime
+2022-01-31T03:54:25Z
+Alarm DateTime
+2022-01-31T03:58:26.275480+00:00
+Source IP
+88.218.82.128
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+JYSHBKCE4J9DS8K5
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #261 – 2022-01-30T18:28:31Z
+Event ID: 42dd41f1-93cb-4085-8342-c7b4ec499a79
+Event DateTime
+2022-01-30T18:28:31Z
+Alarm DateTime
+2022-01-30T18:29:57.302040+00:00
+Source IP
+212.83.184.16
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+66PHY3JF14ANGJH8
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #260 – 2022-01-30T14:28:44Z
+Event ID: 33143f5e-4d85-4827-b1c8-1900763febba
+Event DateTime
+2022-01-30T14:28:44Z
+Alarm DateTime
+2022-01-30T14:32:14.020955+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+PCM2P7FSY5DFW99M
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #259 – 2022-01-29T18:03:13Z
+Event ID: dff8e5ab-baa3-43ff-8023-596064565ef4
+Event DateTime
+2022-01-29T18:03:13Z
+Alarm DateTime
+2022-01-29T18:07:30.430153+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+WG5VSCJGKNMSGAB1
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #258 – 2022-01-29T10:17:05Z
+Event ID: 7257a33b-49e5-4cfa-b7d9-42752c3f5d47
+Event DateTime
+2022-01-29T10:17:05Z
+Alarm DateTime
+2022-01-29T10:17:38.056491+00:00
+Source IP
+178.171.64.79
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AJSV600QTFDHPDMG
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #257 – 2022-01-28T20:23:12Z
+Event ID: 61834495-ba78-45bb-8a14-984a71dfaf4b
+Event DateTime
+2022-01-28T20:23:12Z
+Alarm DateTime
+2022-01-28T20:25:28.643731+00:00
+Source IP
+212.83.184.16
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+9D35KMY9TBAYQJ1V
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #256 – 2022-01-28T18:14:30Z
+Event ID: d491a923-cdcf-44f1-959f-bf28738443b0
+Event DateTime
+2022-01-28T18:14:30Z
+Alarm DateTime
+2022-01-28T18:16:16.761142+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+KKWMFG2764XR0SFS
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #255 – 2022-01-28T14:27:26Z
+Event ID: fb93460d-8ad8-4d3c-b954-0ac6090bc16e
+Event DateTime
+2022-01-28T14:27:26Z
+Alarm DateTime
+2022-01-28T14:28:53.819606+00:00
+Source IP
+212.83.184.14
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+SA4KVFRSECFH3AFF
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #254 – 2022-01-27T14:25:48Z
+Event ID: 41a8df3e-019d-4a46-be9e-ecce1a8b9bd8
+Event DateTime
+2022-01-27T14:25:48Z
+Alarm DateTime
+2022-01-27T14:26:41.377133+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+JAVY2M41RRSVP641
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #253 – 2022-01-26T18:53:06Z
+Event ID: 98163f86-a75c-4960-8123-5871517e0943
+Event DateTime
+2022-01-26T18:53:06Z
+Alarm DateTime
+2022-01-26T18:53:42.151123+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+6BG8G3874RVMDNAR
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #252 – 2022-01-25T18:00:40Z
+Event ID: 0204cb10-49e6-4888-bc8b-81f547ab7dc6
+Event DateTime
+2022-01-25T18:00:40Z
+Alarm DateTime
+2022-01-25T18:05:53.225747+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+J5E2EGJFZ32FE0YK
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #251 – 2022-01-25T14:21:57Z
+Event ID: 1d4cc626-0744-4695-96f9-f4471ccb5d68
+Event DateTime
+2022-01-25T14:21:57Z
+Alarm DateTime
+2022-01-25T14:23:15.395250+00:00
+Source IP
+212.83.184.14
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+JWTG8N17A4GV7CKZ
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #250 – 2022-01-25T09:57:28Z
+Event ID: 38234bff-bd20-4279-a4f9-759d259fb1ae
+Event DateTime
+2022-01-25T09:57:28Z
+Alarm DateTime
+2022-01-25T09:59:55.218341+00:00
+Source IP
+158.46.187.197
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+QV0GPG49ZNMMTGWA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #249 – 2022-01-24T18:16:24Z
+Event ID: d1ebd994-b4b2-4a99-8105-c5a718140926
+Event DateTime
+2022-01-24T18:16:24Z
+Alarm DateTime
+2022-01-24T18:19:13.285508+00:00
+Source IP
+212.83.184.16
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+NYHTGYBJDND4V2W7
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #248 – 2022-01-23T18:14:38Z
+Event ID: e07a5f12-683e-4ada-ae9d-60398fcc2896
+Event DateTime
+2022-01-23T18:14:38Z
+Alarm DateTime
+2022-01-23T18:17:47.883681+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+FC1E886CPEFH09G6
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #247 – 2022-01-23T14:13:30Z
+Event ID: 9ffab7f4-6396-4fb1-bc43-68a974491c12
+Event DateTime
+2022-01-23T14:13:30Z
+Alarm DateTime
+2022-01-23T14:15:05.887989+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+GDAFSRTGYRTFTKR9
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #246 – 2022-01-22T18:02:22Z
+Event ID: 1fd7acc4-49cb-4c53-a490-295f0e6f40b5
+Event DateTime
+2022-01-22T18:02:22Z
+Alarm DateTime
+2022-01-22T18:05:54.225417+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+B42BGXAKZ0MC1ZE9
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #245 – 2022-01-21T14:17:55Z
+Event ID: ae0c2cfa-3610-41ed-8e10-985c47de561b
+Event DateTime
+2022-01-21T14:17:55Z
+Alarm DateTime
+2022-01-21T14:18:34.948525+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+64DHCS2EGAGN9ZJ2
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #244 – 2022-01-21T09:40:56Z
+Event ID: 95d50e77-487e-4768-8cfb-b9e079ae59d4
+Event DateTime
+2022-01-21T09:40:56Z
+Alarm DateTime
+2022-01-21T09:44:45.538024+00:00
+Source IP
+193.160.78.222
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+55VV8JSWHX5FTNZW
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #243 – 2022-01-21T03:54:12Z
+Event ID: cb1bd434-93b4-42a0-8b58-cf1ac63e8613
+Event DateTime
+2022-01-21T03:54:12Z
+Alarm DateTime
+2022-01-21T03:55:31.304704+00:00
+Source IP
+103.14.106.229
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2SJ198M1H8PK412B
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #242 – 2022-01-20T17:35:10Z
+Event ID: 3b546723-e753-4483-ab73-65fbba2ec84f
+Event DateTime
+2022-01-20T17:35:10Z
+Alarm DateTime
+2022-01-20T17:37:51.568695+00:00
+Source IP
+212.83.184.14
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+97Y9A6GFEXFXA8RG
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #241 – 2022-01-20T14:22:24Z
+Event ID: 367577bf-8e0d-4e80-b075-044a3e2d5463
+Event DateTime
+2022-01-20T14:22:24Z
+Alarm DateTime
+2022-01-20T14:26:40.750969+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+7EWZY48TVY9NCG8H
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #240 – 2022-01-20T08:14:18Z
+Event ID: 80c17ba8-de47-4c2c-97ba-2ef2a3b0380a
+Event DateTime
+2022-01-20T08:14:18Z
+Alarm DateTime
+2022-01-20T08:14:37.062785+00:00
+Source IP
+64.15.129.118
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+2JWBMWDXC4MJDKE6
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #239 – 2022-01-20T08:14:18Z
+Event ID: 091c8f11-2ad5-4573-a6a8-702eb580f4ce
+Event DateTime
+2022-01-20T08:14:18Z
+Alarm DateTime
+2022-01-20T08:14:36.686930+00:00
+Source IP
+72.55.136.199
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+2JW257JBAER308RN
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #238 – 2022-01-19T14:37:14Z
+Event ID: 36246934-0009-4999-ae5d-ab4e74469bac
+Event DateTime
+2022-01-19T14:37:14Z
+Alarm DateTime
+2022-01-19T14:40:22.536970+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+Q6KHCNF0NHR15X0D
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #237 – 2022-01-18T14:20:29Z
+Event ID: d5fdc203-f34e-4ac0-bc84-113e8f632322
+Event DateTime
+2022-01-18T14:20:29Z
+Alarm DateTime
+2022-01-18T14:23:09.012375+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+JFNRGPSD68R1V9V8
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #236 – 2022-01-17T14:21:18Z
+Event ID: 94c446eb-97c7-4cd5-b1d8-03b9e3664e62
+Event DateTime
+2022-01-17T14:21:18Z
+Alarm DateTime
+2022-01-17T14:25:53.538704+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+68ZQEY8EMRQSMBTG
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #235 – 2022-01-17T09:45:37Z
+Event ID: 5abb472c-0436-4a36-b833-b0edd5699996
+Event DateTime
+2022-01-17T09:45:37Z
+Alarm DateTime
+2022-01-17T09:47:01.730496+00:00
+Source IP
+185.96.134.222
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2KBZE0A5PB99GTEF
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #234 – 2022-01-16T14:48:29Z
+Event ID: e3ba025c-1dde-467c-9ae0-09069d426a9f
+Event DateTime
+2022-01-16T14:48:29Z
+Alarm DateTime
+2022-01-16T14:49:58.037932+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+CVY3A8FS79VJ45D8
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #233 – 2022-01-15T14:28:21Z
+Event ID: 40e3df73-e07c-48e8-a2d5-c01a2363e654
+Event DateTime
+2022-01-15T14:28:21Z
+Alarm DateTime
+2022-01-15T14:32:45.668128+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+NWV5BWXV4KRF2BCE
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #232 – 2022-01-14T15:01:06Z
+Event ID: 60139cb9-0e38-4391-ba14-82d194a0804d
+Event DateTime
+2022-01-14T15:01:06Z
+Alarm DateTime
+2022-01-14T15:06:21.902734+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+XP1SB1ZA5C9GA3M2
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #231 – 2022-01-14T12:56:16Z
+Event ID: 1490c690-e05e-4086-8f75-7e4af33867f0
+Event DateTime
+2022-01-14T12:56:16Z
+Alarm DateTime
+2022-01-14T12:57:58.157047+00:00
+Source IP
+34.140.248.32
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+RNRPM63R8YPYHN83
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #230 – 2022-01-14T09:05:58Z
+Event ID: 3f5ee428-9e60-4121-8040-dfbc0f307de1
+Event DateTime
+2022-01-14T09:05:58Z
+Alarm DateTime
+2022-01-14T09:10:35.933221+00:00
+Source IP
+34.79.33.178
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+PH8G0R5WAVM5S9M6
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #229 – 2022-01-13T21:31:43Z
+Event ID: 33aa6c77-dfa4-4d2f-bbac-e8222f723f55
+Event DateTime
+2022-01-13T21:31:43Z
+Alarm DateTime
+2022-01-13T21:32:56.290803+00:00
+Source IP
+93.100.136.232
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+DSSSRWV4QXGR8QM7
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #228 – 2022-01-13T15:39:44Z
+Event ID: d6bf18e3-a988-4f07-9a23-c6b407afc60e
+Event DateTime
+2022-01-13T15:39:44Z
+Alarm DateTime
+2022-01-13T15:41:37.022472+00:00
+Source IP
+212.83.184.17
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+1R14Q0CNRZTS08CR
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #227 – 2022-01-12T14:22:07Z
+Event ID: e2e3c29e-9bef-4716-b3e0-5c3b3cf4dba9
+Event DateTime
+2022-01-12T14:22:07Z
+Alarm DateTime
+2022-01-12T14:24:14.509171+00:00
+Source IP
+212.83.184.15
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+QBDEQ3T1A9X0PH53
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #226 – 2022-01-11T04:07:22Z
+Event ID: cc2b9740-9308-4aa1-b1d3-57bc2d8757ab
+Event DateTime
+2022-01-11T04:07:22Z
+Alarm DateTime
+2022-01-11T04:10:13.656495+00:00
+Source IP
+103.241.53.142
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+G4PMS0FCSGBTKT9E
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #225 – 2022-01-09T09:44:45Z
+Event ID: d41b6133-ddef-420b-85c9-c36fe9ac6acd
+Event DateTime
+2022-01-09T09:44:45Z
+Alarm DateTime
+2022-01-09T09:47:43.027727+00:00
+Source IP
+92.240.200.208
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+7WQYYMZH82HSPEQF
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #224 – 2022-01-05T09:42:43Z
+Event ID: ac650e5e-d0b3-4a7a-b5a3-0a6de04f802e
+Event DateTime
+2022-01-05T09:42:43Z
+Alarm DateTime
+2022-01-05T09:47:03.850083+00:00
+Source IP
+45.154.121.25
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+F7HB4KY9K6N0MSR8
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #223 – 2022-01-04T06:20:48Z
+Event ID: 719e943c-e97e-476f-8d0c-3d8ba7383028
+Event DateTime
+2022-01-04T06:20:48Z
+Alarm DateTime
+2022-01-04T06:22:14.843757+00:00
+Source IP
+95.216.202.243
+Request User Agent
+aws-sdk-go/1.40.9 (go1.13.8; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+1GZ4CSG8J9D8Z4ZN
+Request User Agent
+aws-sdk-go/1.40.9 (go1.13.8; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #222 – 2022-01-04T06:20:47Z
+Event ID: 852644ce-e78c-41de-a342-57060022fdc8
+Event DateTime
+2022-01-04T06:20:47Z
+Alarm DateTime
+2022-01-04T06:22:14.488039+00:00
+Source IP
+95.216.202.243
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+EB557AMWC11YMP4E
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #221 – 2022-01-02T08:00:56Z
+Event ID: 534b048f-876e-41fe-a2b6-a1680c6bbce6
+Event DateTime
+2022-01-02T08:00:56Z
+Alarm DateTime
+2022-01-02T08:06:07.531043+00:00
+Source IP
+3.238.137.12
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+QTRXHDP956CNZTQF
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #220 – 2022-01-01T09:47:53Z
+Event ID: 399e9053-18da-473b-8b0b-1789cb7689ca
+Event DateTime
+2022-01-01T09:47:53Z
+Alarm DateTime
+2022-01-01T09:53:03.660182+00:00
+Source IP
+43.228.237.167
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+TXNP8VY10AQ23PYG
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #219 – 2022-01-01T03:53:03Z
+Event ID: d58db9be-9fd5-41a7-8194-50b0a57785f6
+Event DateTime
+2022-01-01T03:53:03Z
+Alarm DateTime
+2022-01-01T03:56:35.333638+00:00
+Source IP
+185.201.131.135
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+V2JTE4PNSWXMH7T3
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #218 – 2021-12-31T03:54:42Z
+Event ID: 10ed408e-85b8-49ff-acf1-21aa63d879d9
+Event DateTime
+2021-12-31T03:54:42Z
+Alarm DateTime
+2021-12-31T03:59:54.023992+00:00
+Source IP
+212.80.200.26
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PQQ0F5T59YS2TD0F
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #217 – 2021-12-29T09:47:45Z
+Event ID: 270b96e0-9e9c-46ec-ab2e-276ce2d992a5
+Event DateTime
+2021-12-29T09:47:45Z
+Alarm DateTime
+2021-12-29T09:51:59.334166+00:00
+Source IP
+178.171.97.163
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+A5WSXVZMV9643BB1
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #216 – 2021-12-27T12:01:15Z
+Event ID: 40cca9ad-af36-40ef-bf76-e619e143297d
+Event DateTime
+2021-12-27T12:01:15Z
+Alarm DateTime
+2021-12-27T12:06:29.178038+00:00
+Source IP
+3.238.137.11
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+V2004K2280Y0RGP3
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #215 – 2021-12-25T09:55:48Z
+Event ID: 83b99f58-6c5a-408e-86d9-c10ac8cef816
+Event DateTime
+2021-12-25T09:55:48Z
+Alarm DateTime
+2021-12-25T09:56:31.152032+00:00
+Source IP
+178.171.30.217
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+TTAKM6ZXFS0WVSKJ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #214 – 2021-12-25T02:17:25Z
+Event ID: fdd39ed3-62e2-448a-bf9a-6f3c4f98f085
+Event DateTime
+2021-12-25T02:17:25Z
+Alarm DateTime
+2021-12-25T02:21:33.799375+00:00
+Source IP
+35.233.62.116
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+2K3K05Y3X1HXSKZ4
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #213 – 2021-12-24T15:05:44Z
+Event ID: 674c1cb2-66b2-42f4-bca6-cb1f398d3e77
+Event DateTime
+2021-12-24T15:05:44Z
+Alarm DateTime
+2021-12-24T15:09:55.051784+00:00
+Source IP
+212.83.184.13
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+26TA2M57QK8K8RP6
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #212 – 2021-12-24T01:52:43Z
+Event ID: c7a3ff8d-50c4-4b41-9b5d-29757bd2289c
+Event DateTime
+2021-12-24T01:52:43Z
+Alarm DateTime
+2021-12-24T01:54:05.365484+00:00
+Source IP
+130.211.54.158
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+YEZ5N9D090PBP79Q
+Request User Agent
+Boto3/1.20.24 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.24 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #211 – 2021-12-23T15:15:13Z
+Event ID: 62df9797-58d6-4c93-82d0-07d0ce8ae9e5
+Event DateTime
+2021-12-23T15:15:13Z
+Alarm DateTime
+2021-12-23T15:18:27.334684+00:00
+Source IP
+212.83.184.13
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+5CBG2KDKZEQV2XHF
+Request User Agent
+Boto3/1.17.40 Python/3.6.12 Linux/3.10.0-1160.6.1.el7.x86_64 Botocore/1.20.112
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #210 – 2021-12-21T09:24:34Z
+Event ID: b7db9128-b6c9-4cf1-84c0-ca65f4829c5a
+Event DateTime
+2021-12-21T09:24:34Z
+Alarm DateTime
+2021-12-21T09:28:59.090039+00:00
+Source IP
+212.80.223.84
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+XTBHJY2JK0TXWCPW
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #209 – 2021-12-21T04:04:23Z
+Event ID: ab1ef35e-4405-4864-9f7f-885d2e91a875
+Event DateTime
+2021-12-21T04:04:23Z
+Alarm DateTime
+2021-12-21T04:08:35.938343+00:00
+Source IP
+202.181.20.126
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+RRHZN40WPNMKPV6Q
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #208 – 2021-12-17T09:28:00Z
+Event ID: 02683098-4087-4335-b1d2-c0e5b4d2b20d
+Event DateTime
+2021-12-17T09:28:00Z
+Alarm DateTime
+2021-12-17T09:32:18.724463+00:00
+Source IP
+93.113.53.146
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+W9NHVDTAGE43AGM8
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #207 – 2021-12-13T09:52:34Z
+Event ID: a3605d9e-2b62-41d1-b5cd-a286cbcfd736
+Event DateTime
+2021-12-13T09:52:34Z
+Alarm DateTime
+2021-12-13T09:57:07.826696+00:00
+Source IP
+104.227.135.183
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+JF9FG799KXJ5CD8R
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #206 – 2021-12-11T03:54:01Z
+Event ID: cf844ed8-e078-48ae-a9c5-12acb7efbb28
+Event DateTime
+2021-12-11T03:54:01Z
+Alarm DateTime
+2021-12-11T03:58:23.003957+00:00
+Source IP
+178.171.58.152
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+FEMTTFYGB25P8KAR
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #205 – 2021-12-09T09:56:13Z
+Event ID: c84fb843-134c-4c4c-a005-69fca308a33a
+Event DateTime
+2021-12-09T09:56:13Z
+Alarm DateTime
+2021-12-09T09:56:39.116575+00:00
+Source IP
+158.46.187.236
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+CMVM32EJT6AHCSFB
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #204 – 2021-12-05T09:47:00Z
+Event ID: c2cb35c8-d336-4825-8a49-25927cfe2430
+Event DateTime
+2021-12-05T09:47:00Z
+Alarm DateTime
+2021-12-05T09:50:23.587556+00:00
+Source IP
+158.46.171.238
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+KYTABQTAGHSDBNME
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #203 – 2021-12-02T00:14:12Z
+Event ID: d131db09-62e8-4242-b021-613c1920ade7
+Event DateTime
+2021-12-02T00:14:12Z
+Alarm DateTime
+2021-12-02T00:17:28.026266+00:00
+Source IP
+192.175.111.231
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+4ATN3PBP3HGKBS7F
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #202 – 2021-12-02T00:14:12Z
+Event ID: 051c29f2-2a84-4163-98ad-937b347003e6
+Event DateTime
+2021-12-02T00:14:12Z
+Alarm DateTime
+2021-12-02T00:17:27.653682+00:00
+Source IP
+64.15.129.119
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+4ATN6HT8N8FZZF85
+Request User Agent
+Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #201 – 2021-12-01T09:40:48Z
+Event ID: ee676815-64e9-4739-b9c7-d7ea36fbdf87
+Event DateTime
+2021-12-01T09:40:48Z
+Alarm DateTime
+2021-12-01T09:42:51.212254+00:00
+Source IP
+178.171.114.9
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+R94T2E7RJ44306RN
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #200 – 2021-12-01T03:53:51Z
+Event ID: 99e214cc-8032-406d-b6da-00abb8dd6c73
+Event DateTime
+2021-12-01T03:53:51Z
+Alarm DateTime
+2021-12-01T03:56:36.534901+00:00
+Source IP
+178.171.112.62
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+0THP0SEGEET5RKNJ
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #199 – 2021-11-30T08:22:10Z
+Event ID: 568d86fe-e70f-4268-b630-47910b5df288
+Event DateTime
+2021-11-30T08:22:10Z
+Alarm DateTime
+2021-11-30T08:23:33.654717+00:00
+Source IP
+35.233.62.116
+Request User Agent
+Boto3/1.20.12 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.12 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+FYEYA3CHQC1FASSQ
+Request User Agent
+Boto3/1.20.12 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.12 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #198 – 2021-11-29T09:38:34Z
+Event ID: f5ba1d38-173d-4acf-aaf4-45f34ce0c2dc
+Event DateTime
+2021-11-29T09:38:34Z
+Alarm DateTime
+2021-11-29T09:41:07.964133+00:00
+Source IP
+178.171.66.249
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+63EAB29MXNB27K9J
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #197 – 2021-11-29T03:08:37Z
+Event ID: 767ff251-234d-4f6f-b5b0-bf157b860359
+Event DateTime
+2021-11-29T03:08:37Z
+Alarm DateTime
+2021-11-29T03:13:30.461029+00:00
+Source IP
+130.211.54.158
+Request User Agent
+Boto3/1.20.12 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.12 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+NVJK8X8Y1JCYPZMF
+Request User Agent
+Boto3/1.20.12 Python/3.9.9 Linux/5.4.0-1051-gke Botocore/1.23.12 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #196 – 2021-11-25T10:10:51Z
+Event ID: 93a054c8-0f69-4ce8-a4af-bbbb5c35596e
+Event DateTime
+2021-11-25T10:10:51Z
+Alarm DateTime
+2021-11-25T10:15:39.791789+00:00
+Source IP
+158.46.168.82
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+0P9KQZVDJT3N6XQ7
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #195 – 2021-11-21T09:24:50Z
+Event ID: cd4fdb57-e46c-4b4b-a997-6182a679afe7
+Event DateTime
+2021-11-21T09:24:50Z
+Alarm DateTime
+2021-11-21T09:26:58.544612+00:00
+Source IP
+155.254.103.238
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+WEF6MBE93FDNGTAV
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #194 – 2021-11-21T03:52:47Z
+Event ID: f0e9ed05-9bea-428f-a06d-9ec0dc61827d
+Event DateTime
+2021-11-21T03:52:47Z
+Alarm DateTime
+2021-11-21T03:56:09.673487+00:00
+Source IP
+212.80.200.75
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+9NFMPRD53G3QQ7V0
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #193 – 2021-11-17T09:25:35Z
+Event ID: 8ce26f0e-32ad-416b-b668-ce0fdf7eadfb
+Event DateTime
+2021-11-17T09:25:35Z
+Alarm DateTime
+2021-11-17T09:30:06.304889+00:00
+Source IP
+178.171.30.160
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+WXFK9MTRWQVYRPAQ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #192 – 2021-11-13T09:22:15Z
+Event ID: 3c8eb1f5-ed79-40e4-aded-257cdd247712
+Event DateTime
+2021-11-13T09:22:15Z
+Alarm DateTime
+2021-11-13T09:23:14.549888+00:00
+Source IP
+185.201.129.99
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+GF3TWQGH0GWRPCB2
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #191 – 2021-11-11T03:52:45Z
+Event ID: ec2b7c6c-085b-4aed-a17a-982be871c1b8
+Event DateTime
+2021-11-11T03:52:45Z
+Alarm DateTime
+2021-11-11T03:54:05.120493+00:00
+Source IP
+157.119.42.107
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+GBJXDPSVMRQTN9K7
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #190 – 2021-11-09T09:33:04Z
+Event ID: 2383d50d-3abb-48e8-97a9-2278ec1f0749
+Event DateTime
+2021-11-09T09:33:04Z
+Alarm DateTime
+2021-11-09T09:36:39.512526+00:00
+Source IP
+181.214.209.242
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+C31RDJRGWXDKMCF7
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #189 – 2021-11-05T19:21:49Z
+Event ID: b155b55e-e5b1-40af-9c11-35bf8ecbd6b0
+Event DateTime
+2021-11-05T19:21:49Z
+Alarm DateTime
+2021-11-05T19:24:25.906903+00:00
+Source IP
+103.14.105.15
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+QGHTAC0Z3FNN2V21
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #188 – 2021-11-01T09:49:16Z
+Event ID: 49c20140-366e-4fd0-9017-33d2ded723da
+Event DateTime
+2021-11-01T09:49:16Z
+Alarm DateTime
+2021-11-01T09:54:00.332355+00:00
+Source IP
+91.241.164.199
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+QJQTZ9PGZ3DEVT4R
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #187 – 2021-11-01T03:55:34Z
+Event ID: f05681c6-40fd-465e-890e-27185a1a0717
+Event DateTime
+2021-11-01T03:55:34Z
+Alarm DateTime
+2021-11-01T03:57:32.105214+00:00
+Source IP
+191.101.84.113
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+MZ4BVQHA7EQN2HYM
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #186 – 2021-10-31T03:55:42Z
+Event ID: 23e77b18-9023-480c-9fb7-0388851cb4a7
+Event DateTime
+2021-10-31T03:55:42Z
+Alarm DateTime
+2021-10-31T04:00:50.466093+00:00
+Source IP
+158.46.170.59
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+5QPZV70TG58ZFN5H
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #185 – 2021-10-31T01:41:52Z
+Event ID: 2a90f2a7-3c40-4267-aadc-763d63dcc2ca
+Event DateTime
+2021-10-31T01:41:52Z
+Alarm DateTime
+2021-10-31T01:46:29.402141+00:00
+Source IP
+95.217.154.203
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+VFDVCKG22ZWKQ3S3
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #184 – 2021-10-31T01:41:52Z
+Event ID: 2b1c7e79-076a-45b5-b828-faa07931be25
+Event DateTime
+2021-10-31T01:41:52Z
+Alarm DateTime
+2021-10-31T01:46:29.059462+00:00
+Source IP
+95.217.154.203
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+VFDWTXWQF9QSKGQX
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #183 – 2021-10-29T14:58:31Z
+Event ID: 9e874ccc-9b34-455b-8f7e-bae13e172bc8
+Event DateTime
+2021-10-29T14:58:31Z
+Alarm DateTime
+2021-10-29T14:58:51.657380+00:00
+Source IP
+158.46.165.241
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2XHWW2VH8TP8J5CM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #182 – 2021-10-25T12:17:12Z
+Event ID: 27967fe0-8750-4876-8b84-275ae0050402
+Event DateTime
+2021-10-25T12:17:12Z
+Alarm DateTime
+2021-10-25T12:18:24.720511+00:00
+Source IP
+192.175.111.241
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+T66218H1J6C2PS5M
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #181 – 2021-10-25T12:17:12Z
+Event ID: 2eae1c92-bad8-4a84-a8e4-d880e7b41a65
+Event DateTime
+2021-10-25T12:17:12Z
+Alarm DateTime
+2021-10-25T12:18:24.406186+00:00
+Source IP
+64.15.129.116
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+T6620BD5WM0H8ARV
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #180 – 2021-10-25T08:58:42Z
+Event ID: fcdd9e45-fbc2-4f01-9640-172de502682c
+Event DateTime
+2021-10-25T08:58:42Z
+Alarm DateTime
+2021-10-25T09:02:03.466449+00:00
+Source IP
+158.46.166.23
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+N950X0QPY66QC8N6
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #179 – 2021-10-25T00:22:13Z
+Event ID: 6748442d-1448-491e-b22c-a75ca93c901e
+Event DateTime
+2021-10-25T00:22:13Z
+Alarm DateTime
+2021-10-25T00:25:14.622794+00:00
+Source IP
+64.15.129.102
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+YRP47D348GTS5TKZ
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #178 – 2021-10-21T14:11:18Z
+Event ID: 6a112f1a-0930-4428-9420-0c5787eeb50c
+Event DateTime
+2021-10-21T14:11:18Z
+Alarm DateTime
+2021-10-21T14:15:24.292060+00:00
+Source IP
+109.70.66.36
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+N5TDJAS4MEDZQPB6
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #177 – 2021-10-21T02:56:27Z
+Event ID: 635e3202-b592-4941-9b4b-9206a03fc8a8
+Event DateTime
+2021-10-21T02:56:27Z
+Alarm DateTime
+2021-10-21T02:58:29.406261+00:00
+Source IP
+178.171.46.157
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2Y04CGT3KSME5RYW
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #176 – 2021-10-20T05:36:29Z
+Event ID: 6d24f466-067e-4b00-9119-f54c33b27ed8
+Event DateTime
+2021-10-20T05:36:29Z
+Alarm DateTime
+2021-10-20T05:37:21.476837+00:00
+Source IP
+35.205.104.93
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+T8SES0NBQFCXW059
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #175 – 2021-10-19T01:10:31Z
+Event ID: 50ef0760-2622-48d7-a1e7-9e4b3881babf
+Event DateTime
+2021-10-19T01:10:31Z
+Alarm DateTime
+2021-10-19T01:12:01.493877+00:00
+Source IP
+34.140.248.32
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+F8PQS4MM82BWREKA
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #174 – 2021-10-17T18:07:26Z
+Event ID: 1efc53ff-dc41-43d0-8114-8d4117623ef2
+Event DateTime
+2021-10-17T18:07:26Z
+Alarm DateTime
+2021-10-17T18:11:41.752017+00:00
+Source IP
+104.155.101.3
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+B18803Y74VKX7BVJ
+Request User Agent
+Boto3/1.18.53 Python/3.9.7 Linux/5.4.0-1049-gke Botocore/1.21.53 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #173 – 2021-10-16T09:39:55Z
+Event ID: d7f15c3a-19d6-450c-ab89-05278d9586c6
+Event DateTime
+2021-10-16T09:39:55Z
+Alarm DateTime
+2021-10-16T09:43:32.810011+00:00
+Source IP
+178.171.102.26
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+S1385HNZHSDKXW1Y
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #172 – 2021-10-13T08:49:53Z
+Event ID: f736b8ea-6d14-4875-b60d-d973f1445360
+Event DateTime
+2021-10-13T08:49:53Z
+Alarm DateTime
+2021-10-13T08:54:14.631183+00:00
+Source IP
+43.228.237.217
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+SBFNE5G5XJPJ9H80
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #171 – 2021-10-11T02:57:29Z
+Event ID: 40074595-3b9f-4e57-8ba3-76ed251b5b4e
+Event DateTime
+2021-10-11T02:57:29Z
+Alarm DateTime
+2021-10-11T02:57:44.427724+00:00
+Source IP
+207.230.120.121
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+ZDX6QCWXMH657F7M
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #170 – 2021-10-10T21:25:10Z
+Event ID: 5ea15005-fc70-47db-b01d-0482dead621b
+Event DateTime
+2021-10-10T21:25:10Z
+Alarm DateTime
+2021-10-10T21:26:51.738416+00:00
+Source IP
+89.185.78.12
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4QWF7Y5R6GKQ14NH
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #169 – 2021-10-07T16:34:58Z
+Event ID: 38518a65-cfd0-47cf-b733-0acff3ce5ef9
+Event DateTime
+2021-10-07T16:34:58Z
+Alarm DateTime
+2021-10-07T16:37:26.970479+00:00
+Source IP
+212.80.200.96
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+GBE01ZASSKFRSXR4
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #168 – 2021-10-04T08:50:20Z
+Event ID: 6e218107-2cb1-4ca0-9ea9-79b75b391d65
+Event DateTime
+2021-10-04T08:50:20Z
+Alarm DateTime
+2021-10-04T08:52:27.361804+00:00
+Source IP
+181.214.24.232
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+HGRKSP5MWQNVX0P9
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #167 – 2021-10-01T08:57:58Z
+Event ID: c8948b66-d758-4c0b-ba5f-fbba94ee80e6
+Event DateTime
+2021-10-01T08:57:58Z
+Alarm DateTime
+2021-10-01T09:02:29.696904+00:00
+Source IP
+2.59.1.174
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PSJW886Y5JZ6CAYJ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #166 – 2021-10-01T02:58:36Z
+Event ID: 88469d35-0565-4485-846a-0ca3f376935c
+Event DateTime
+2021-10-01T02:58:36Z
+Alarm DateTime
+2021-10-01T03:00:50.865196+00:00
+Source IP
+83.172.62.153
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PNY69VAB7H98403B
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #165 – 2021-09-30T20:17:38Z
+Event ID: a56e2a0c-7ccf-4104-8b47-ca467f47b977
+Event DateTime
+2021-09-30T20:17:38Z
+Alarm DateTime
+2021-09-30T20:22:52.079945+00:00
+Source IP
+89.238.150.174
+Request User Agent
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+HDFKZHYBVNZYCP7H
+Request User Agent
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #164 – 2021-09-30T18:49:04Z
+Event ID: ef8f0368-30e1-413c-9165-b0dc3ac7e21d
+Event DateTime
+2021-09-30T18:49:04Z
+Alarm DateTime
+2021-09-30T18:50:01.289835+00:00
+Source IP
+192.175.111.231
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+7G3G10A4A84NV2KZ
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #163 – 2021-09-29T14:17:05Z
+Event ID: d8349de3-d772-426f-a6db-c97df2f99991
+Event DateTime
+2021-09-29T14:17:05Z
+Alarm DateTime
+2021-09-29T14:19:25.080643+00:00
+Source IP
+192.175.111.228
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+SCXCX8DWZP7V90CF
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #162 – 2021-09-29T09:21:20Z
+Event ID: b42e5242-a5d4-4383-801a-40e4f8459426
+Event DateTime
+2021-09-29T09:21:20Z
+Alarm DateTime
+2021-09-29T09:24:53.850916+00:00
+Source IP
+178.171.47.169
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+X7AM3WSQW5MAYWAF
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #161 – 2021-09-28T20:09:11Z
+Event ID: 4e6f2a2b-36ba-433f-8ec7-06fc9f96570f
+Event DateTime
+2021-09-28T20:09:11Z
+Alarm DateTime
+2021-09-28T20:14:12.774842+00:00
+Source IP
+192.175.111.228
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+G74P1WCEGBQ60WR8
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #160 – 2021-09-27T20:46:39Z
+Event ID: 300b0c88-7c46-4ca1-bcac-e98a0f074970
+Event DateTime
+2021-09-27T20:46:39Z
+Alarm DateTime
+2021-09-27T20:48:37.299015+00:00
+Source IP
+72.55.136.154
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+HBSDF827MVSRBV26
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #159 – 2021-09-26T18:30:48Z
+Event ID: 32c7be41-e6bb-4877-98c6-4d9d072b1530
+Event DateTime
+2021-09-26T18:30:48Z
+Alarm DateTime
+2021-09-26T18:33:47.614882+00:00
+Source IP
+45.84.81.202
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+FH5KDHCW27XTPVWQ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #158 – 2021-09-25T09:10:33Z
+Event ID: 38a1c553-e442-4b39-a037-bd3fa9cd87cc
+Event DateTime
+2021-09-25T09:10:33Z
+Alarm DateTime
+2021-09-25T09:13:59.353813+00:00
+Source IP
+78.138.1.222
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AP86H2E9K6FFCA6F
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #157 – 2021-09-22T07:56:27Z
+Event ID: 177e5156-8650-42b9-b3f4-a8f71700eafa
+Event DateTime
+2021-09-22T07:56:27Z
+Alarm DateTime
+2021-09-22T07:58:05.367785+00:00
+Source IP
+213.182.200.51
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+KNSJATVRVPST9RXG
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #156 – 2021-09-21T20:25:58Z
+Event ID: 9b38979f-ff57-4df4-bae2-73fc62d2a44e
+Event DateTime
+2021-09-21T20:25:58Z
+Alarm DateTime
+2021-09-21T20:30:37.285548+00:00
+Source IP
+45.156.224.52
+Request User Agent
+Java/1.8.0_201
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+80FSYM99Y08HAVTR
+Request User Agent
+Java/1.8.0_201
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #155 – 2021-09-21T02:14:25Z
+Event ID: cd08663a-b9c0-472c-b08e-bdaae0a94ff2
+Event DateTime
+2021-09-21T02:14:25Z
+Alarm DateTime
+2021-09-21T02:15:05.104234+00:00
+Source IP
+95.216.151.196
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+AYDTRVN5JYDZHVV2
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #154 – 2021-09-21T02:14:24Z
+Event ID: f5213ab9-6ead-45b4-9f64-dcf3835ab010
+Event DateTime
+2021-09-21T02:14:24Z
+Alarm DateTime
+2021-09-21T02:15:04.796297+00:00
+Source IP
+95.216.151.196
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+NEEMQX7SPGHF4EZD
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #153 – 2021-09-19T17:41:53Z
+Event ID: 48fb306e-555f-464b-8bf8-38f78d14b7ad
+Event DateTime
+2021-09-19T17:41:53Z
+Alarm DateTime
+2021-09-19T17:46:58.847344+00:00
+Source IP
+178.171.108.161
+Request User Agent
+Java/11.0.11
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+3C8QVAWJY38S8ZPC
+Request User Agent
+Java/11.0.11
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #152 – 2021-09-19T11:16:48Z
+Event ID: d9a61cdb-7753-4e6b-a3d9-c8bdc3b5795c
+Event DateTime
+2021-09-19T11:16:48Z
+Alarm DateTime
+2021-09-19T11:19:25.335676+00:00
+Source IP
+193.31.75.86
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+EXA32VXQQZEK80J1
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #151 – 2021-09-16T10:40:29Z
+Event ID: f670eb2f-6341-4e0b-bccb-5e986b4036c7
+Event DateTime
+2021-09-16T10:40:29Z
+Alarm DateTime
+2021-09-16T10:42:10.968735+00:00
+Source IP
+45.134.107.174
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+ETVMRFQRACC8C5QM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #150 – 2021-09-14T10:37:41Z
+Event ID: 4ef06a74-7bcb-45c5-9721-cb0a63134eed
+Event DateTime
+2021-09-14T10:37:41Z
+Alarm DateTime
+2021-09-14T10:38:43.720618+00:00
+Source IP
+95.216.194.138
+Request User Agent
+aws-sdk-go/1.40.9 (go1.16.3; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+CDDHJGFZ9KF3F591
+Request User Agent
+aws-sdk-go/1.40.9 (go1.16.3; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #149 – 2021-09-13T08:14:18Z
+Event ID: ae73bee1-c3e2-48b9-ac64-bb238831f562
+Event DateTime
+2021-09-13T08:14:18Z
+Alarm DateTime
+2021-09-13T08:16:33.560409+00:00
+Source IP
+181.215.2.134
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4AC526CGVZNS493V
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #148 – 2021-09-12T07:56:43Z
+Event ID: 7aaca457-2f2e-4187-ab4c-d08e7acec638
+Event DateTime
+2021-09-12T07:56:43Z
+Alarm DateTime
+2021-09-12T08:00:31.790500+00:00
+Source IP
+65.108.62.141
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+MMQSP0XM7V7ZPG77
+Request User Agent
+aws-sdk-go/1.40.9 (go1.15.8; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #147 – 2021-09-10T09:48:21Z
+Event ID: 890ac512-94f6-4251-856d-f2632f220e2b
+Event DateTime
+2021-09-10T09:48:21Z
+Alarm DateTime
+2021-09-10T09:50:48.296942+00:00
+Source IP
+178.171.108.216
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+V3Z28HSFZJ19S63F
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #146 – 2021-09-07T08:04:41Z
+Event ID: 3173c720-7368-498d-9fcb-9f589af05099
+Event DateTime
+2021-09-07T08:04:41Z
+Alarm DateTime
+2021-09-07T08:08:30.883808+00:00
+Source IP
+213.182.198.73
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+8WH5B2C26N3S74F4
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #145 – 2021-09-06T00:19:46Z
+Event ID: 326fe210-3a71-4f2c-a125-c521ce57b6c7
+Event DateTime
+2021-09-06T00:19:46Z
+Alarm DateTime
+2021-09-06T00:19:55.073275+00:00
+Source IP
+34.78.120.99
+Request User Agent
+Boto3/1.18.18 Python/3.9.4 Linux/5.4.0-1044-gke Botocore/1.21.18 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+YDN8PYAGAWQGPEX6
+Request User Agent
+Boto3/1.18.18 Python/3.9.4 Linux/5.4.0-1044-gke Botocore/1.21.18 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #144 – 2021-09-04T07:50:07Z
+Event ID: 63120734-77dc-4c30-be39-07a9d99818ba
+Event DateTime
+2021-09-04T07:50:07Z
+Alarm DateTime
+2021-09-04T07:51:11.872633+00:00
+Source IP
+158.46.186.99
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AYPEJVAF9NPRSV9H
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #143 – 2021-09-01T12:56:20Z
+Event ID: a317e0b8-83db-408a-919c-53b4d951d5ff
+Event DateTime
+2021-09-01T12:56:20Z
+Alarm DateTime
+2021-09-01T12:58:39.859756+00:00
+Source IP
+213.182.203.63
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+NB5GKJHV0PWF60C2
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #142 – 2021-08-31T12:05:58Z
+Event ID: 8f131c4a-b26c-44f2-86d5-e46c07289301
+Event DateTime
+2021-08-31T12:05:58Z
+Alarm DateTime
+2021-08-31T12:08:48.686382+00:00
+Source IP
+92.240.204.192
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+GAG8NR55WTZ1MS28
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #141 – 2021-08-28T08:32:46Z
+Event ID: 91dc71e2-df8d-4718-84d0-58524b5a30cb
+Event DateTime
+2021-08-28T08:32:46Z
+Alarm DateTime
+2021-08-28T08:35:46.770487+00:00
+Source IP
+178.171.58.85
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+GTX8V2S8Y7N0A92Q
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #140 – 2021-08-27T18:29:46Z
+Event ID: 310b2e12-46c8-4c7c-a82c-e1e1f8822e10
+Event DateTime
+2021-08-27T18:29:46Z
+Alarm DateTime
+2021-08-27T18:33:22.597911+00:00
+Source IP
+34.79.107.251
+Request User Agent
+Boto3/1.18.18 Python/3.9.4 Linux/5.4.0-1044-gke Botocore/1.21.18 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+C2J6YVR3B3P0ZBKE
+Request User Agent
+Boto3/1.18.18 Python/3.9.4 Linux/5.4.0-1044-gke Botocore/1.21.18 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #139 – 2021-08-25T12:08:28Z
+Event ID: e229ac90-efa1-4f4f-9fcd-1b6472c0b61f
+Event DateTime
+2021-08-25T12:08:28Z
+Alarm DateTime
+2021-08-25T12:12:38.102071+00:00
+Source IP
+176.105.249.66
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+KS94JPJWTB04BR5N
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #138 – 2021-08-22T13:57:08Z
+Event ID: b36d26fc-650c-4f7a-a71d-3b29e70f4203
+Event DateTime
+2021-08-22T13:57:08Z
+Alarm DateTime
+2021-08-22T14:02:16.298183+00:00
+Source IP
+181.214.46.151
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+7PZCECP9BYDCA2EH
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #137 – 2021-08-16T08:29:13Z
+Event ID: 8cc7ede6-b5e0-4b84-ab82-edaa15cbb883
+Event DateTime
+2021-08-16T08:29:13Z
+Alarm DateTime
+2021-08-16T08:30:47.996330+00:00
+Source IP
+178.171.66.228
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+20YBWK0JZ8BMX7XA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #136 – 2021-08-13T07:59:06Z
+Event ID: f837aa57-8f86-4c11-bb26-8c07e6ea838e
+Event DateTime
+2021-08-13T07:59:06Z
+Alarm DateTime
+2021-08-13T08:02:20.951045+00:00
+Source IP
+45.84.82.31
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+RJ5JV6RQ7Z6Y2PC5
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #135 – 2021-08-10T12:29:51Z
+Event ID: 86b220bc-3074-4f50-8ecc-4eda5754f30b
+Event DateTime
+2021-08-10T12:29:51Z
+Alarm DateTime
+2021-08-10T12:32:05.152088+00:00
+Source IP
+158.115.242.234
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+EY2CJSRQP2YWX2CZ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #134 – 2021-08-07T08:17:24Z
+Event ID: 9e6d249e-6756-42be-b5a8-15eea634f5dd
+Event DateTime
+2021-08-07T08:17:24Z
+Alarm DateTime
+2021-08-07T08:22:16.659432+00:00
+Source IP
+178.171.44.27
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+3Q356N4BTSZ8AJ4Q
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #133 – 2021-08-06T13:05:57Z
+Event ID: 8d8d4fec-c7f7-4bf3-8d9b-b30305789168
+Event DateTime
+2021-08-06T13:05:57Z
+Alarm DateTime
+2021-08-06T13:09:54.914843+00:00
+Source IP
+185.254.59.24
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+D13BY9ERKHGRVA1Z
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #132 – 2021-08-04T10:01:32Z
+Event ID: 8a940de5-9639-472e-82b8-b5128964b87e
+Event DateTime
+2021-08-04T10:01:32Z
+Alarm DateTime
+2021-08-04T10:06:18.136780+00:00
+Source IP
+178.171.109.42
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+9Z4MPCYZKTCQJ9JT
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #131 – 2021-08-01T07:55:31Z
+Event ID: 32ab1dc6-d8f3-4bee-9884-75e71fa2300d
+Event DateTime
+2021-08-01T07:55:31Z
+Alarm DateTime
+2021-08-01T07:59:14.750729+00:00
+Source IP
+185.158.103.41
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+WJZ9NCAM0281AX9Y
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #130 – 2021-07-31T07:56:05Z
+Event ID: c503ad1a-093e-45e6-b579-bcb61483b5be
+Event DateTime
+2021-07-31T07:56:05Z
+Alarm DateTime
+2021-07-31T07:57:29.835086+00:00
+Source IP
+194.242.27.218
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4M198B4JV87G2JCP
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #129 – 2021-07-28T18:41:36Z
+Event ID: 50273390-3b1d-48e0-be7d-c869a3fcd241
+Event DateTime
+2021-07-28T18:41:36Z
+Alarm DateTime
+2021-07-28T18:41:44.903301+00:00
+Source IP
+83.172.62.87
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+5N4WWF6W7C0SK0SC
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #128 – 2021-07-28T09:43:18Z
+Event ID: 22d8c575-2554-4cd7-95ab-58926ff80150
+Event DateTime
+2021-07-28T09:43:18Z
+Alarm DateTime
+2021-07-28T09:45:05.816698+00:00
+Source IP
+45.89.118.7
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+BSX0WXE5GF3PXBKM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #127 – 2021-07-26T12:22:20Z
+Event ID: 99193b30-f020-4292-8dfc-533ac234f56f
+Event DateTime
+2021-07-26T12:22:20Z
+Alarm DateTime
+2021-07-26T12:22:35.838761+00:00
+Source IP
+104.155.101.3
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+AG7GNHAT58NB712Y
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #126 – 2021-07-25T12:14:34Z
+Event ID: 71138157-749a-48f4-8de7-47ae4459f177
+Event DateTime
+2021-07-25T12:14:34Z
+Alarm DateTime
+2021-07-25T12:16:08.026537+00:00
+Source IP
+158.46.186.190
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+DDQ1XYTT4PJYBFGX
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #125 – 2021-07-23T10:50:58Z
+Event ID: 843ef0bc-83f7-44f4-83a7-791009ff7454
+Event DateTime
+2021-07-23T10:50:58Z
+Alarm DateTime
+2021-07-23T10:52:42.759701+00:00
+Source IP
+185.254.59.25
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+CGMKK8TEJRR0BR3T
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #124 – 2021-07-22T19:13:30Z
+Event ID: aee1e237-f565-4265-9085-0838de70e5ac
+Event DateTime
+2021-07-22T19:13:30Z
+Alarm DateTime
+2021-07-22T19:15:39.701135+00:00
+Source IP
+45.82.99.70
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+3JTGWHD04AEF2NRW
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #123 – 2021-07-22T09:04:56Z
+Event ID: de7a4c04-ff08-4e96-819c-360c1872bd63
+Event DateTime
+2021-07-22T09:04:56Z
+Alarm DateTime
+2021-07-22T09:06:01.432231+00:00
+Source IP
+185.158.100.24
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AFWE41NYRT2PC8WA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #122 – 2021-07-19T09:37:20Z
+Event ID: 08d0c515-dc6b-49c2-909c-c1209f00d1d2
+Event DateTime
+2021-07-19T09:37:20Z
+Alarm DateTime
+2021-07-19T09:38:43.815728+00:00
+Source IP
+178.171.38.37
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+10DD9HZDV3F7FH0G
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #121 – 2021-07-19T08:25:16Z
+Event ID: 2fc165b7-7df3-4abf-8499-1afc0307f988
+Event DateTime
+2021-07-19T08:25:16Z
+Alarm DateTime
+2021-07-19T08:25:37.069036+00:00
+Source IP
+74.208.160.165
+Request User Agent
+Boto3/1.17.76 Python/3.7.3 Linux/4.19.0-16-amd64 Botocore/1.20.105 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+E373WF0Q9NDZTXJY
+Request User Agent
+Boto3/1.17.76 Python/3.7.3 Linux/4.19.0-16-amd64 Botocore/1.20.105 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAIYBE736TYLBM3THMU', 'accountId': '385485039111'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'encoding-type': 'url'}
+Alert #120 – 2021-07-19T08:18:31Z
+Event ID: 24e1149f-0ba6-4d99-b234-bbdaf2a41cb5
+Event DateTime
+2021-07-19T08:18:31Z
+Alarm DateTime
+2021-07-19T08:20:25.896473+00:00
+Source IP
+34.79.107.251
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+D71J30P1E28JRZ7A
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #119 – 2021-07-16T18:08:18Z
+Event ID: ed135804-d886-4f1f-9401-99f06ae04fda
+Event DateTime
+2021-07-16T18:08:18Z
+Alarm DateTime
+2021-07-16T18:09:09.351220+00:00
+Source IP
+34.79.68.246
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+5AF0R2QA61KSEVK2
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1036-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #118 – 2021-07-16T15:53:21Z
+Event ID: 7b23e9dd-ac86-4f8b-aa2a-d15ace43335a
+Event DateTime
+2021-07-16T15:53:21Z
+Alarm DateTime
+2021-07-16T15:54:54.608152+00:00
+Source IP
+84.22.148.70
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+QXQ2Q5A9W7DRVJHA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #117 – 2021-07-15T01:03:20Z
+Event ID: d56745bd-2bd9-474f-aa9e-e8936684bfbe
+Event DateTime
+2021-07-15T01:03:20Z
+Alarm DateTime
+2021-07-15T01:03:37.189358+00:00
+Source IP
+95.217.207.120
+Request User Agent
+aws-sdk-go/1.35.1 (go1.14.4; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+N8EHAM21SPDQDSWF
+Request User Agent
+aws-sdk-go/1.35.1 (go1.14.4; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #116 – 2021-07-13T07:59:52Z
+Event ID: 29bb787f-cc45-415c-8842-e44585846d58
+Event DateTime
+2021-07-13T07:59:52Z
+Alarm DateTime
+2021-07-13T08:03:47.901978+00:00
+Source IP
+178.171.44.221
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+V5AJRGKPYAMG2B7X
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #115 – 2021-07-10T08:05:11Z
+Event ID: fd448675-6fd2-4c24-b920-b934bbf63ae3
+Event DateTime
+2021-07-10T08:05:11Z
+Alarm DateTime
+2021-07-10T08:05:43.824324+00:00
+Source IP
+178.171.108.49
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+R5XYE3R1FS8E6YS1
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #114 – 2021-07-07T07:55:47Z
+Event ID: 674c9773-5720-43f8-ab4b-76177423e8a6
+Event DateTime
+2021-07-07T07:55:47Z
+Alarm DateTime
+2021-07-07T07:59:04.827151+00:00
+Source IP
+178.171.29.34
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+WT1V9TD9EGRJ9AQM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #113 – 2021-07-04T11:53:52Z
+Event ID: 82401021-d6fd-44bf-a053-ed1218eb3448
+Event DateTime
+2021-07-04T11:53:52Z
+Alarm DateTime
+2021-07-04T11:56:53.552593+00:00
+Source IP
+92.240.207.83
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+YRGKF375BHXZH6Y0
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #112 – 2021-07-01T20:54:55Z
+Event ID: 42783764-6404-468d-aa21-41cfdfed35bf
+Event DateTime
+2021-07-01T20:54:55Z
+Alarm DateTime
+2021-07-01T20:59:32.196320+00:00
+Source IP
+178.171.102.244
+Request User Agent
+Java/11.0.11
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+XQ9HQAE6FGFMNZYG
+Request User Agent
+Java/11.0.11
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #111 – 2021-07-01T08:38:00Z
+Event ID: 470e90fa-549b-4b14-b2fb-576f0ce7d01c
+Event DateTime
+2021-07-01T08:38:00Z
+Alarm DateTime
+2021-07-01T08:40:22.203433+00:00
+Source IP
+91.132.126.103
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+J2S1SN6QQQF2CJPM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #110 – 2021-06-28T09:16:24Z
+Event ID: d8d301c9-5afc-41f7-93a0-192965f872b8
+Event DateTime
+2021-06-28T09:16:24Z
+Alarm DateTime
+2021-06-28T09:19:44.594178+00:00
+Source IP
+178.171.41.180
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+3D0XWR7SC3S6H2JG
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #109 – 2021-06-25T08:12:29Z
+Event ID: e19d08ac-2ca9-44f3-a571-9c906edc0062
+Event DateTime
+2021-06-25T08:12:29Z
+Alarm DateTime
+2021-06-25T08:12:53.406788+00:00
+Source IP
+212.80.201.37
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+V7KQKGT0B2VBFW44
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #108 – 2021-06-22T09:15:54Z
+Event ID: 80cff293-beaf-4729-ac8b-824335da9824
+Event DateTime
+2021-06-22T09:15:54Z
+Alarm DateTime
+2021-06-22T09:16:14.136702+00:00
+Source IP
+194.110.89.234
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PTCJARHP5VQ8KF3P
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #107 – 2021-06-19T09:07:39Z
+Event ID: a42de006-5f65-44d5-97ce-63fd3618b533
+Event DateTime
+2021-06-19T09:07:39Z
+Alarm DateTime
+2021-06-19T09:08:19.729342+00:00
+Source IP
+178.171.38.242
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2201FKAJ5CMK5FVB
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #106 – 2021-06-16T08:11:20Z
+Event ID: b403f2c5-9c01-4116-b0e4-c785529093d7
+Event DateTime
+2021-06-16T08:11:20Z
+Alarm DateTime
+2021-06-16T08:13:07.332208+00:00
+Source IP
+178.171.117.167
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4T9VF12DW6SA1WD2
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #105 – 2021-06-13T08:19:35Z
+Event ID: bb2a49bd-b423-4943-ad9b-5d8e865aaa29
+Event DateTime
+2021-06-13T08:19:35Z
+Alarm DateTime
+2021-06-13T08:20:53.324427+00:00
+Source IP
+103.119.108.71
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+WF2NKATGQQBCNRG5
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #104 – 2021-06-10T08:01:55Z
+Event ID: 21bbf65f-b38f-4435-b80c-88ae51d6febb
+Event DateTime
+2021-06-10T08:01:55Z
+Alarm DateTime
+2021-06-10T08:04:38.920400+00:00
+Source IP
+167.100.107.28
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+G1GF5GXWQV46ZNDM
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #103 – 2021-06-08T12:01:07Z
+Event ID: 61c94560-5c7c-4d88-9fe2-7c576880696c
+Event DateTime
+2021-06-08T12:01:07Z
+Alarm DateTime
+2021-06-08T12:05:37.440784+00:00
+Source IP
+35.195.57.216
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+K9W25ZMR33V897P3
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #102 – 2021-06-07T07:59:58Z
+Event ID: efc2aea7-ace6-4fae-8989-2cf39ca80364
+Event DateTime
+2021-06-07T07:59:58Z
+Alarm DateTime
+2021-06-07T08:04:30.770416+00:00
+Source IP
+92.240.200.69
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+MPY9TKW1V9HWBXSR
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #101 – 2021-06-05T17:17:05Z
+Event ID: 3cbf3f4c-f1a7-4ee8-b74f-17e648aae007
+Event DateTime
+2021-06-05T17:17:05Z
+Alarm DateTime
+2021-06-05T17:19:28.468603+00:00
+Source IP
+35.195.57.216
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+DEBRB0DV2T3CSPKP
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #100 – 2021-06-04T13:06:09Z
+Event ID: 75a38179-9104-4251-b8fc-624cb46c4fc9
+Event DateTime
+2021-06-04T13:06:09Z
+Alarm DateTime
+2021-06-04T13:07:45.535901+00:00
+Source IP
+178.171.65.44
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+HQGEZTZD7RAVTX9C
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #99 – 2021-06-04T03:03:18Z
+Event ID: 4a05ea31-67c2-4f92-b448-37caef16ab1a
+Event DateTime
+2021-06-04T03:03:18Z
+Alarm DateTime
+2021-06-04T03:07:36.467035+00:00
+Source IP
+34.78.249.119
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+0BGRYCRGR9ZP9K5W
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #98 – 2021-06-02T01:56:28Z
+Event ID: 698f4cc0-e50f-4c2a-99b6-42d346aa285b
+Event DateTime
+2021-06-02T01:56:28Z
+Alarm DateTime
+2021-06-02T01:58:56.529802+00:00
+Source IP
+178.171.66.118
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+RYQFBJY97NJHXVR1
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #97 – 2021-05-27T07:03:37Z
+Event ID: 54929397-7c5f-4acc-8675-ddacbafefe34
+Event DateTime
+2021-05-27T07:03:37Z
+Alarm DateTime
+2021-05-27T07:07:52.259238+00:00
+Source IP
+34.77.163.42
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+M5FHXJ3BMB7FGMVJ
+Request User Agent
+Boto3/1.17.68 Python/3.9.4 Linux/5.4.0-1033-gke Botocore/1.20.68 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #96 – 2021-05-25T07:51:46Z
+Event ID: a45517fc-ab99-4a00-8825-cd8f60fa03ad
+Event DateTime
+2021-05-25T07:51:46Z
+Alarm DateTime
+2021-05-25T07:56:33.533779+00:00
+Source IP
+84.22.149.33
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+8K7FTJPKZGFPBTEF
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #95 – 2021-05-22T07:52:31Z
+Event ID: d4a24f0d-c5b2-4fb5-9e71-f5632ecad378
+Event DateTime
+2021-05-22T07:52:31Z
+Alarm DateTime
+2021-05-22T07:55:22.299779+00:00
+Source IP
+158.46.216.148
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PJFBFVAEG9W10VMA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #94 – 2021-05-19T09:50:32Z
+Event ID: fa3e6156-97bc-4d7f-bbf5-c321b697daba
+Event DateTime
+2021-05-19T09:50:32Z
+Alarm DateTime
+2021-05-19T09:54:29.254909+00:00
+Source IP
+91.202.233.169
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+KWZ2T14JNWGC22C7
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #93 – 2021-05-16T14:44:21Z
+Event ID: 345b61bd-e54d-494d-b6c9-bb991296139d
+Event DateTime
+2021-05-16T14:44:21Z
+Alarm DateTime
+2021-05-16T14:48:40.776640+00:00
+Source IP
+95.217.207.120
+Request User Agent
+aws-sdk-go/1.35.1 (go1.14.4; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+8NHDADYDRK0BW0ZA
+Request User Agent
+aws-sdk-go/1.35.1 (go1.14.4; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #92 – 2021-05-16T08:45:39Z
+Event ID: a6ad1a7c-c6c1-4c5a-91e4-d25911b61c86
+Event DateTime
+2021-05-16T08:45:39Z
+Alarm DateTime
+2021-05-16T08:47:07.750580+00:00
+Source IP
+178.171.102.15
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+EF69GEJDQMJ59T8H
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #91 – 2021-05-13T08:49:58Z
+Event ID: 4f4199b8-2f0e-4c1d-a800-4c4aadb7ae66
+Event DateTime
+2021-05-13T08:49:58Z
+Alarm DateTime
+2021-05-13T08:52:16.452460+00:00
+Source IP
+191.101.95.198
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+JKZ3CTYNCC0RWCAP
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #90 – 2021-05-10T08:58:37Z
+Event ID: ba42971a-7d66-4f98-98b6-42fba7a24dc8
+Event DateTime
+2021-05-10T08:58:37Z
+Alarm DateTime
+2021-05-10T09:02:39.793486+00:00
+Source IP
+92.240.200.226
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+3N0WADKP18C7AZPY
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #89 – 2021-05-07T14:11:47Z
+Event ID: 4cb8b0d3-e4e9-426e-90af-dae7ae4265f6
+Event DateTime
+2021-05-07T14:11:47Z
+Alarm DateTime
+2021-05-07T14:13:27.613193+00:00
+Source IP
+213.182.203.165
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+SWV39R1WN1WKYJ31
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #88 – 2021-05-06T00:08:59Z
+Event ID: 370105db-3ca9-45db-8200-d73f80ec8d68
+Event DateTime
+2021-05-06T00:08:59Z
+Alarm DateTime
+2021-05-06T00:13:37.136056+00:00
+Source IP
+92.240.204.122
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+SHZWDPY0E2JFZ787
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #87 – 2021-05-04T17:19:46Z
+Event ID: fef7f721-a3d2-407d-8bdb-df126902aaf6
+Event DateTime
+2021-05-04T17:19:46Z
+Alarm DateTime
+2021-05-04T17:23:35.410158+00:00
+Source IP
+213.182.198.93
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+PD5ABY08YCDKXPEG
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #86 – 2021-05-03T11:42:00Z
+Event ID: 418a7b85-f733-4a7e-8b4f-c3e8372cedac
+Event DateTime
+2021-05-03T11:42:00Z
+Alarm DateTime
+2021-05-03T11:45:14.725628+00:00
+Source IP
+185.201.130.54
+Request User Agent
+Java/11.0.11
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4JH5CD4W079M7S93
+Request User Agent
+Java/11.0.11
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #85 – 2021-05-01T13:56:51Z
+Event ID: c9af6d65-efd8-4b62-87f9-6315378aeceb
+Event DateTime
+2021-05-01T13:56:51Z
+Alarm DateTime
+2021-05-01T14:00:11.575553+00:00
+Source IP
+185.15.179.150
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AHPT9XWM29H1BP0X
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #84 – 2021-04-28T08:19:53Z
+Event ID: 48962aa6-c980-4cb7-a55d-bd156aca5d53
+Event DateTime
+2021-04-28T08:19:53Z
+Alarm DateTime
+2021-04-28T08:24:00.548942+00:00
+Source IP
+109.70.66.18
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+F3JCAD3DMBB28YTN
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #83 – 2021-04-25T10:26:20Z
+Event ID: 43d4c92a-0306-4830-a5b2-47b031eb97d9
+Event DateTime
+2021-04-25T10:26:20Z
+Alarm DateTime
+2021-04-25T10:30:10.559718+00:00
+Source IP
+194.5.0.12
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+K2HTSCVVM4DPAZR6
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #82 – 2021-04-22T08:20:37Z
+Event ID: 0c683f46-a0a3-4b7d-bcf2-9e86a24ffdec
+Event DateTime
+2021-04-22T08:20:37Z
+Alarm DateTime
+2021-04-22T08:24:14.874317+00:00
+Source IP
+107.181.71.104
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+C4SDZ5BG90NRP7MK
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #81 – 2021-04-19T09:19:07Z
+Event ID: 831d840d-d927-43d1-944e-0259dd18a81d
+Event DateTime
+2021-04-19T09:19:07Z
+Alarm DateTime
+2021-04-19T09:20:28.097335+00:00
+Source IP
+91.132.126.83
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+A3TD29FP51CWTVGB
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #80 – 2021-04-16T09:02:10Z
+Event ID: 3e474de8-0a8f-4601-b8df-f442fbcbaf42
+Event DateTime
+2021-04-16T09:02:10Z
+Alarm DateTime
+2021-04-16T09:04:48.611101+00:00
+Source IP
+158.46.186.178
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+XYMCVFMHB5X84W51
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #79 – 2021-04-15T08:17:40Z
+Event ID: 356ec7a6-3c0c-4a85-8bd6-6169a571fd3b
+Event DateTime
+2021-04-15T08:17:40Z
+Alarm DateTime
+2021-04-15T08:21:32.554937+00:00
+Source IP
+34.77.163.42
+Request User Agent
+Boto3/1.17.48 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.48 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+14WYG0FC0F1CJXWH
+Request User Agent
+Boto3/1.17.48 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.48 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #78 – 2021-04-14T19:44:06Z
+Event ID: b73f2904-9f5c-44ed-b672-42d88d8bd1be
+Event DateTime
+2021-04-14T19:44:06Z
+Alarm DateTime
+2021-04-14T19:45:26.062642+00:00
+Source IP
+34.77.163.42
+Request User Agent
+Boto3/1.17.48 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.48 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+2S3W4E1G070Z37YV
+Request User Agent
+Boto3/1.17.48 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.48 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #77 – 2021-04-14T06:25:32Z
+Event ID: f490129c-1a92-471b-9bab-73b02e37b303
+Event DateTime
+2021-04-14T06:25:32Z
+Alarm DateTime
+2021-04-14T06:29:24.032642+00:00
+Source IP
+34.78.120.99
+Request User Agent
+Boto3/1.17.49 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.49 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+K1CZEW7AVXN905RW
+Request User Agent
+Boto3/1.17.49 Python/3.7.1 Linux/5.4.0-1032-gke Botocore/1.20.49 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #76 – 2021-04-13T13:14:30Z
+Event ID: 9fecb2e1-17ba-4a26-96d7-ed12d9c34ab1
+Event DateTime
+2021-04-13T13:14:30Z
+Alarm DateTime
+2021-04-13T13:16:05.627990+00:00
+Source IP
+91.202.233.41
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+B4FEG7K6F8S6V8NZ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #75 – 2021-04-13T06:14:14Z
+Event ID: 06589a43-7ed2-4b6f-8154-ef9d475dbf56
+Event DateTime
+2021-04-13T06:14:14Z
+Alarm DateTime
+2021-04-13T06:17:32.363548+00:00
+Source IP
+91.241.164.237
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+8NRZRADH5VE0WAYZ
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #74 – 2021-04-10T08:41:43Z
+Event ID: d7b08efe-99e6-473d-bca7-8d38cdebd455
+Event DateTime
+2021-04-10T08:41:43Z
+Alarm DateTime
+2021-04-10T08:42:59.209423+00:00
+Source IP
+109.70.67.168
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+9R3MCTF3VN0XYDEW
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #73 – 2021-04-09T18:54:30Z
+Event ID: 07555d3c-f112-4905-ad7e-3d5a03696be0
+Event DateTime
+2021-04-09T18:54:30Z
+Alarm DateTime
+2021-04-09T18:56:06.776155+00:00
+Source IP
+109.70.66.130
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+RM69JPQWJ262MSDA
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #72 – 2021-04-08T17:26:30Z
+Event ID: 0632b1a5-72ea-45a3-afa1-ed4f9df2cf29
+Event DateTime
+2021-04-08T17:26:30Z
+Alarm DateTime
+2021-04-08T17:28:08.005849+00:00
+Source IP
+158.46.187.198
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+5EYSMZKDC108SJ7A
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #71 – 2021-04-07T13:16:24Z
+Event ID: 2e7ba000-87c2-4a72-bb9c-91596465348f
+Event DateTime
+2021-04-07T13:16:24Z
+Alarm DateTime
+2021-04-07T13:21:39.388121+00:00
+Source IP
+185.201.130.113
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+9DTPG4DF584K37T6
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #70 – 2021-04-04T08:05:44Z
+Event ID: 05da143e-b16e-486b-a65e-a880f85ae6d5
+Event DateTime
+2021-04-04T08:05:44Z
+Alarm DateTime
+2021-04-04T08:10:53.878080+00:00
+Source IP
+178.171.60.126
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+14MTA7Q5SV0017JF
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #69 – 2021-04-01T08:30:30Z
+Event ID: 280cb77c-cafa-4fbc-9483-06eb32fde6f6
+Event DateTime
+2021-04-01T08:30:30Z
+Alarm DateTime
+2021-04-01T08:35:43.140239+00:00
+Source IP
+158.46.181.53
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+DFND7KHVKA1VMC3D
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #68 – 2021-03-31T07:47:14Z
+Event ID: 92dbb959-c482-4548-ac55-16c0885655b7
+Event DateTime
+2021-03-31T07:47:14Z
+Alarm DateTime
+2021-03-31T07:49:23.973032+00:00
+Source IP
+158.46.175.236
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+7DM5S9WQVRQWFS04
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #67 – 2021-03-28T10:05:34Z
+Event ID: 4e62ee78-10f2-4956-820e-f5166b183caa
+Event DateTime
+2021-03-28T10:05:34Z
+Alarm DateTime
+2021-03-28T10:06:05.051601+00:00
+Source IP
+178.171.44.63
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+JJBWWWBBMJC6H018
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #66 – 2021-03-25T10:12:59Z
+Event ID: f2bf6374-4a99-4c28-9eef-d91d10ba666a
+Event DateTime
+2021-03-25T10:12:59Z
+Alarm DateTime
+2021-03-25T10:18:06.761191+00:00
+Source IP
+178.171.12.187
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+6SPY2Z10D55NKZBX
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #65 – 2021-03-23T10:52:25Z
+Event ID: dc8b0f41-dc44-48dd-b77b-0b2f07b57249
+Event DateTime
+2021-03-23T10:52:25Z
+Alarm DateTime
+2021-03-23T10:57:37.755873+00:00
+Source IP
+107.20.76.90
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.57
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+M3XZJWHRDVJ7MPKJ
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.57
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAZTADS5TQBDY2MAAOH', 'accountId': '659285011680'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'max-keys': '500', 'encoding-type': 'url', 'x-amz-request-payer': 'requester', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #64 – 2021-03-22T16:02:57Z
+Event ID: 9a2bcb2c-9e9a-44ce-84ce-07151187786c
+Event DateTime
+2021-03-22T16:02:57Z
+Alarm DateTime
+2021-03-22T16:07:17.581050+00:00
+Source IP
+178.171.67.25
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+P1SVP33QCJYPASVR
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #63 – 2021-03-22T11:19:54Z
+Event ID: 623430d3-0004-434c-84c2-40a130d83ebc
+Event DateTime
+2021-03-22T11:19:54Z
+Alarm DateTime
+2021-03-22T11:23:48.696077+00:00
+Source IP
+83.150.220.134
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+FD0TDJXT9N74JV9J
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #62 – 2021-03-21T15:53:35Z
+Event ID: 3d6235eb-81fa-4f88-91eb-09a5f9c3ca37
+Event DateTime
+2021-03-21T15:53:35Z
+Alarm DateTime
+2021-03-21T15:53:51.597932+00:00
+Source IP
+103.70.198.81
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+PutObject
+Request ID
+X1CZNX4ZS3MYTZ86
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Error Code
+AccessDenied
+Error Message
+Access Denied
+User ID
+{'type': 'AWSAccount', 'principalId': '960312529846', 'accountId': '960312529846'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'key': 'writeable_bucket.txt'}
+Alert #61 – 2021-03-20T23:58:15Z
+Event ID: 0933b559-6e8c-46ec-9bf1-dfd91155a9cb
+Event DateTime
+2021-03-20T23:58:15Z
+Alarm DateTime
+2021-03-21T00:00:02.516503+00:00
+Source IP
+172.85.105.122
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2XHV3WKD3FS7AX9N
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #60 – 2021-03-19T18:13:42Z
+Event ID: d9848d45-b3d9-427e-ba6c-455c526ab0b4
+Event DateTime
+2021-03-19T18:13:42Z
+Alarm DateTime
+2021-03-19T18:15:16.774408+00:00
+Source IP
+8.38.148.231
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+PutObject
+Request ID
+1YYWQ5F7GCPH9KMR
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Error Code
+AccessDenied
+Error Message
+Access Denied
+User ID
+{'type': 'AWSAccount', 'principalId': '960312529846', 'accountId': '960312529846'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'key': 'writeable_bucket.txt'}
+Alert #59 – 2021-03-18T23:18:46Z
+Event ID: 96605dd7-971e-427c-86e3-8d6b86905b5b
+Event DateTime
+2021-03-18T23:18:46Z
+Alarm DateTime
+2021-03-18T23:21:06.037596+00:00
+Source IP
+188.40.66.118
+Request User Agent
+aws-sdk-go/1.35.1 (go1.15.6; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+DVGFQSWYVT9C28QQ
+Request User Agent
+aws-sdk-go/1.35.1 (go1.15.6; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #58 – 2021-03-10T16:49:53Z
+Event ID: 9d7186c5-21ea-4171-b55c-a8ae497afc16
+Event DateTime
+2021-03-10T16:49:53Z
+Alarm DateTime
+2021-03-10T16:51:16.671907+00:00
+Source IP
+163.47.101.126
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+9EA977C99A3F9866
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #57 – 2021-03-09T09:01:32Z
+Event ID: 0c9b9816-9424-4097-8a4a-026809563758
+Event DateTime
+2021-03-09T09:01:32Z
+Alarm DateTime
+2021-03-09T09:05:51.431791+00:00
+Source IP
+89.185.78.65
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AJ3W7MDY3HDTFN6R
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #56 – 2021-03-07T21:52:31Z
+Event ID: 4f883d21-dd3c-466b-8175-d849c79a9f21
+Event DateTime
+2021-03-07T21:52:31Z
+Alarm DateTime
+2021-03-07T21:57:17.175387+00:00
+Source IP
+91.241.164.109
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+6B3408413E99C467
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #55 – 2021-03-05T15:33:11Z
+Event ID: c3a91d5d-f024-454b-95a8-39003020ef01
+Event DateTime
+2021-03-05T15:33:11Z
+Alarm DateTime
+2021-03-05T15:35:43.327629+00:00
+Source IP
+43.229.90.11
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+PutObject
+Request ID
+32FFEDF7A3562D7C
+Request User Agent
+Boto3/1.9.85 Python/2.7.15 Darwin/17.7.0 Botocore/1.12.253 Resource
+Error Code
+AccessDenied
+Error Message
+Access Denied
+User ID
+{'type': 'AWSAccount', 'principalId': '960312529846', 'accountId': '960312529846'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'key': 'writeable_bucket.txt'}
+Alert #54 – 2021-03-05T15:18:56Z
+Event ID: ead7f64c-3c11-4814-a449-58aafd314def
+Event DateTime
+2021-03-05T15:18:56Z
+Alarm DateTime
+2021-03-05T15:20:12.042959+00:00
+Source IP
+35.205.104.93
+Request User Agent
+Boto3/1.17.17 Python/3.7.1 Linux/5.3.0-1038-gke Botocore/1.20.17 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+5020814F298297FB
+Request User Agent
+Boto3/1.17.17 Python/3.7.1 Linux/5.3.0-1038-gke Botocore/1.20.17 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #53 – 2021-03-04T08:07:01Z
+Event ID: e85a07d2-5311-4cce-8dd0-2ce5792e0363
+Event DateTime
+2021-03-04T08:07:01Z
+Alarm DateTime
+2021-03-04T08:10:39.751790+00:00
+Source IP
+35.205.104.93
+Request User Agent
+Boto3/1.17.17 Python/3.7.1 Linux/5.3.0-1038-gke Botocore/1.20.17 Resource
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+A8EF440E57CBB71F
+Request User Agent
+Boto3/1.17.17 Python/3.7.1 Linux/5.3.0-1038-gke Botocore/1.20.17 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #52 – 2021-03-02T08:56:25Z
+Event ID: 89cc72bf-db57-4fa5-af37-b8d4b8227247
+Event DateTime
+2021-03-02T08:56:25Z
+Alarm DateTime
+2021-03-02T08:59:37.071198+00:00
+Source IP
+178.171.90.92
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+AE6ED0BCC2500501
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #51 – 2021-02-28T22:08:43Z
+Event ID: 808d5f4c-3f46-46b3-b442-f74c8fc0813d
+Event DateTime
+2021-02-28T22:08:43Z
+Alarm DateTime
+2021-02-28T22:11:04.122303+00:00
+Source IP
+5.182.125.98
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+D61EDB696011BCF3
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #50 – 2021-02-28T18:05:31Z
+Event ID: dc30c9d4-42a3-46be-ab1d-3b25c1dfb020
+Event DateTime
+2021-02-28T18:05:31Z
+Alarm DateTime
+2021-02-28T18:08:21.812264+00:00
+Source IP
+178.171.46.232
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+67C67600553884B1
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #49 – 2021-02-28T14:35:49Z
+Event ID: a176ffdc-308d-4903-8c2e-28165bf6df1a
+Event DateTime
+2021-02-28T14:35:49Z
+Alarm DateTime
+2021-02-28T14:36:49.303375+00:00
+Source IP
+216.74.109.144
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+E3D1E8B294312C47
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #48 – 2021-02-27T16:42:24Z
+Event ID: 74914aa1-2502-4a9e-a14b-d325d48a26c2
+Event DateTime
+2021-02-27T16:42:24Z
+Alarm DateTime
+2021-02-27T16:45:45.874377+00:00
+Source IP
+158.46.181.168
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+75A6770598739C12
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #47 – 2021-02-26T23:28:34Z
+Event ID: a1c575fd-962a-44e3-b7db-edaef7ccef2b
+Event DateTime
+2021-02-26T23:28:34Z
+Alarm DateTime
+2021-02-26T23:32:58.020827+00:00
+Source IP
+178.171.91.196
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+9915D2C3DB002D1F
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #46 – 2021-02-26T21:03:55Z
+Event ID: cb3b907b-d252-4775-97bb-9f9377aa82af
+Event DateTime
+2021-02-26T21:03:55Z
+Alarm DateTime
+2021-02-26T21:07:46.314371+00:00
+Source IP
+178.171.60.228
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+0692694174ECE065
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #45 – 2021-02-25T20:57:04Z
+Event ID: 34756452-ecd7-46f0-999a-d80b893289d5
+Event DateTime
+2021-02-25T20:57:04Z
+Alarm DateTime
+2021-02-25T20:59:31.269863+00:00
+Source IP
+92.240.207.254
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+3
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+32B124D75DC6ACF2
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #44 – 2021-02-24T20:55:23Z
+Event ID: cffaacd2-9126-4955-a3a4-6c1693f960e1
+Event DateTime
+2021-02-24T20:55:23Z
+Alarm DateTime
+2021-02-24T21:00:36.741786+00:00
+Source IP
+45.77.197.72
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+7A1C2D79454691EB
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #43 – 2021-02-24T20:33:40Z
+Event ID: 7aa4d8aa-34f6-4ac0-94e3-00e4050cac36
+Event DateTime
+2021-02-24T20:33:40Z
+Alarm DateTime
+2021-02-24T20:34:16.422799+00:00
+Source IP
+192.241.243.106
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+00C49ABA5491E036
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #42 – 2021-02-23T22:12:28Z
+Event ID: 2dfb370c-f643-429e-bed9-642101fc9c72
+Event DateTime
+2021-02-23T22:12:28Z
+Alarm DateTime
+2021-02-23T22:16:08.492213+00:00
+Source IP
+161.123.153.55
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+0B1DB29B93A35916
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #41 – 2021-02-20T01:59:38Z
+Event ID: fe62de5b-7940-4e62-a15f-f5861cb6398d
+Event DateTime
+2021-02-20T01:59:38Z
+Alarm DateTime
+2021-02-20T02:01:05.586001+00:00
+Source IP
+163.47.101.125
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+1C128B9625E3D140
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'Microsoft-devtest.s3.amazonaws.com'}
+Alert #40 – 2021-01-31T14:51:46Z
+Event ID: 3a028a54-9bb3-42ae-a13c-96c4db857e09
+Event DateTime
+2021-01-31T14:51:46Z
+Alarm DateTime
+2021-01-31T14:55:26.850448+00:00
+Source IP
+35.187.190.226
+Request User Agent
+Boto3/1.16.59 Python/3.7.1 Linux/5.3.0-1036-gke Botocore/1.19.59 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+D87C9044AD02FEBA
+Request User Agent
+Boto3/1.16.59 Python/3.7.1 Linux/5.3.0-1036-gke Botocore/1.19.59 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #39 – 2021-01-29T10:36:15Z
+Event ID: a3919851-3dbc-4e75-8f30-f97380d26864
+Event DateTime
+2021-01-29T10:36:15Z
+Alarm DateTime
+2021-01-29T10:38:37.977723+00:00
+Source IP
+35.195.244.166
+Request User Agent
+Boto3/1.16.59 Python/3.7.1 Linux/5.3.0-1036-gke Botocore/1.19.59 Resource
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+5Z8R6M7NCGCQ5X5R
+Request User Agent
+Boto3/1.16.59 Python/3.7.1 Linux/5.3.0-1036-gke Botocore/1.19.59 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAJNSTHWDY27F2QAMTM', 'accountId': '271169583898'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #38 – 2021-01-14T14:34:33Z
+Event ID: b1e3d3c8-d5a6-4cfa-8fd3-85c9975ab0d3
+Event DateTime
+2021-01-14T14:34:33Z
+Alarm DateTime
+2021-01-14T14:35:30.768605+00:00
+Source IP
+178.171.108.46
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4C274F746AA71392
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #37 – 2021-01-13T14:04:29Z
+Event ID: ba86e8b3-2c1c-4dfa-8470-e659d3d42d98
+Event DateTime
+2021-01-13T14:04:29Z
+Alarm DateTime
+2021-01-13T14:06:58.841025+00:00
+Source IP
+135.181.113.95
+Request User Agent
+aws-sdk-go/1.35.1 (go1.15.3; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+B684601B44C71909
+Request User Agent
+aws-sdk-go/1.35.1 (go1.15.3; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #36 – 2021-01-03T16:31:03Z
+Event ID: 6230689b-14e9-4ae4-bd46-2468953fb269
+Event DateTime
+2021-01-03T16:31:03Z
+Alarm DateTime
+2021-01-03T16:36:09.920120+00:00
+Source IP
+172.85.105.134
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+610B05B0673F7420
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #35 – 2020-12-29T21:19:27Z
+Event ID: 4714d029-1600-40bf-b0c9-bb0b321aa900
+Event DateTime
+2020-12-29T21:19:27Z
+Alarm DateTime
+2020-12-29T21:19:48.502393+00:00
+Source IP
+178.171.90.189
+Request User Agent
+Java/11.0.9.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+C2CE59A5E04A8D8D
+Request User Agent
+Java/11.0.9.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #34 – 2020-12-23T01:51:39Z
+Event ID: 863a6bce-2a4f-432e-8fe8-680d3a7cc29c
+Event DateTime
+2020-12-23T01:51:39Z
+Alarm DateTime
+2020-12-23T01:56:53.592554+00:00
+Source IP
+82.223.107.58
+Request User Agent
+Apache-HttpClient/4.5.2 (Java/1.8.0_121)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+EBB98B38D2A73B72
+Request User Agent
+Apache-HttpClient/4.5.2 (Java/1.8.0_121)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #33 – 2020-12-19T00:09:12Z
+Event ID: ba31542d-c0ef-4c70-93db-21240139e0ee
+Event DateTime
+2020-12-19T00:09:12Z
+Alarm DateTime
+2020-12-19T00:11:52.514674+00:00
+Source IP
+3.82.211.72
+Request User Agent
+Boto3/1.16.39 Python/3.8.5 Linux/5.4.0-1029-aws Botocore/1.19.39
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+63DAD520193B0BC5
+Request User Agent
+Boto3/1.16.39 Python/3.8.5 Linux/5.4.0-1029-aws Botocore/1.19.39
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAZTADS5TQBDY2MAAOH', 'accountId': '659285011680'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'max-keys': '0', 'encoding-type': 'url', 'x-amz-request-payer': 'requester', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #32 – 2020-12-18T01:43:08Z
+Event ID: af77599c-6256-46db-9e12-f46951d3fb48
+Event DateTime
+2020-12-18T01:43:08Z
+Alarm DateTime
+2020-12-18T01:48:11.758199+00:00
+Source IP
+34.78.227.165
+Request User Agent
+Boto3/1.16.18 Python/3.5.6 Linux/5.3.0-1036-gke Botocore/1.19.18 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+369570D50347CD11
+Request User Agent
+Boto3/1.16.18 Python/3.5.6 Linux/5.3.0-1036-gke Botocore/1.19.18 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #31 – 2020-12-11T22:40:50Z
+Event ID: 1208321e-d954-40dd-a834-36462d1e62d0
+Event DateTime
+2020-12-11T22:40:50Z
+Alarm DateTime
+2020-12-11T22:46:01.640493+00:00
+Source IP
+35.187.190.226
+Request User Agent
+Boto3/1.16.18 Python/3.5.6 Linux/5.3.0-1036-gke Botocore/1.19.18 Resource
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+931900BA8CD6B1CF
+Request User Agent
+Boto3/1.16.18 Python/3.5.6 Linux/5.3.0-1036-gke Botocore/1.19.18 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAJNSTHWDY27F2QAMTM', 'accountId': '271169583898'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #30 – 2020-11-18T20:48:56Z
+Event ID: 5765d534-3cb2-4d72-8d4d-da15e4c6b529
+Event DateTime
+2020-11-18T20:48:56Z
+Alarm DateTime
+2020-11-18T20:52:38.507571+00:00
+Source IP
+73.33.205.136
+Request User Agent
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+7290DAE44DA4FFF5
+Request User Agent
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #29 – 2020-11-13T15:37:35Z
+Event ID: b8192630-3720-443d-aaaa-7c871378b42c
+Event DateTime
+2020-11-13T15:37:35Z
+Alarm DateTime
+2020-11-13T15:41:44.554773+00:00
+Source IP
+3.94.59.56
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+Repeated Attempts
+62
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+54DDF75C1D7576E6
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'max-keys': '1000', 'prefix': 'a'}
+Alert #28 – 2020-11-03T08:12:29Z
+Event ID: 1fb6c0e1-f558-434d-92f3-72e8410bb043
+Event DateTime
+2020-11-03T08:12:29Z
+Alarm DateTime
+2020-11-03T08:17:19.440088+00:00
+Source IP
+34.77.197.251
+Request User Agent
+Boto3/1.15.15 Python/3.5.6 Linux/4.19.112+ Botocore/1.18.15 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+572177466D794A28
+Request User Agent
+Boto3/1.15.15 Python/3.5.6 Linux/4.19.112+ Botocore/1.18.15 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #27 – 2020-10-31T06:42:18Z
+Event ID: 28980596-9037-4954-86e6-afd639bcfddf
+Event DateTime
+2020-10-31T06:42:18Z
+Alarm DateTime
+2020-10-31T06:47:34.775614+00:00
+Source IP
+94.130.64.229
+Request User Agent
+aws-sdk-go/1.35.1 (go1.13; linux; amd64)
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+632B25DA4FC7BD94
+Request User Agent
+aws-sdk-go/1.35.1 (go1.13; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 's3.eu-west-1.amazonaws.com'}
+Alert #26 – 2020-10-29T22:26:21Z
+Event ID: 882287b3-e1d5-4358-a73e-1070cba4ca50
+Event DateTime
+2020-10-29T22:26:21Z
+Alarm DateTime
+2020-10-29T22:30:14.227956+00:00
+Source IP
+34.76.78.209
+Request User Agent
+Boto3/1.15.15 Python/3.5.6 Linux/4.19.112+ Botocore/1.18.15 Resource
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+1JCYFZDVBS5MAS7W
+Request User Agent
+Boto3/1.15.15 Python/3.5.6 Linux/4.19.112+ Botocore/1.18.15 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #25 – 2020-10-26T14:35:16Z
+Event ID: a4b7d103-7704-4a9d-9247-e4e38ba64b02
+Event DateTime
+2020-10-26T14:35:16Z
+Alarm DateTime
+2020-10-26T14:40:13.457782+00:00
+Source IP
+78.46.106.254
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+5A39FE3E8D920764
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #24 – 2020-10-05T12:46:05Z
+Event ID: 5cb02e56-cacf-4f33-8165-58e8d09201fa
+Event DateTime
+2020-10-05T12:46:05Z
+Alarm DateTime
+2020-10-05T12:46:34.230013+00:00
+Source IP
+54.175.203.19
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+Repeated Attempts
+58
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+AB2DDC40BFFD9CB8
+Request User Agent
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'max-keys': '1000', 'prefix': 'd'}
+Alert #23 – 2020-09-30T18:43:36Z
+Event ID: 2c2c2118-4f3f-4d00-9478-7f2fe0c76f0d
+Event DateTime
+2020-09-30T18:43:36Z
+Alarm DateTime
+2020-09-30T18:48:35.562815+00:00
+Source IP
+174.248.16.174
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:52.0) Gecko/20100101 Firefox/52.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+243031B57C7D93F1
+Request User Agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:52.0) Gecko/20100101 Firefox/52.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #22 – 2020-09-24T11:17:08Z
+Event ID: d7ed6975-bf18-4a9f-b317-34636714dfc4
+Event DateTime
+2020-09-24T11:17:08Z
+Alarm DateTime
+2020-09-24T11:17:23.775892+00:00
+Source IP
+151.210.145.223
+Request User Agent
+Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+3C661964FC814803
+Request User Agent
+Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #21 – 2020-09-24T00:03:31Z
+Event ID: 1f44dd39-87c3-47a3-b6ba-11bb2c01ae32
+Event DateTime
+2020-09-24T00:03:31Z
+Alarm DateTime
+2020-09-24T00:07:45.905394+00:00
+Source IP
+104.199.36.222
+Request User Agent
+Boto3/1.14.11 Python/3.5.6 Linux/4.19.112+ Botocore/1.17.11 Resource
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+411CE657F75C3A57
+Request User Agent
+Boto3/1.14.11 Python/3.5.6 Linux/4.19.112+ Botocore/1.17.11 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com', 'encoding-type': 'url'}
+Alert #20 – 2020-09-22T07:00:40Z
+Event ID: 247ddc10-669f-4207-8666-47b097452240
+Event DateTime
+2020-09-22T07:00:40Z
+Alarm DateTime
+2020-09-22T07:01:44.864188+00:00
+Source IP
+98.198.86.25
+Request User Agent
+Boto3/1.14.52 Python/3.8.3 Windows/10 Botocore/1.17.52
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+FHDZ3J1N5P3X2X0M
+Request User Agent
+Boto3/1.14.52 Python/3.8.3 Windows/10 Botocore/1.17.52
+User ID
+{'type': 'AWSAccount', 'principalId': 'AIDAZTADS5TQBDY2MAAOH', 'accountId': '659285011680'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'max-keys': '0', 'encoding-type': 'url', 'x-amz-request-payer': 'requester', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #19 – 2020-09-16T11:44:49Z
+Event ID: cc17820e-967d-40d8-b024-856280e8d362
+Event DateTime
+2020-09-16T11:44:49Z
+Alarm DateTime
+2020-09-16T11:49:32.895864+00:00
+Source IP
+34.76.78.209
+Request User Agent
+Boto3/1.14.11 Python/3.5.6 Linux/4.19.112+ Botocore/1.17.11 Resource
+Repeated Attempts
+2
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+4C27E62890E2D151
+Request User Agent
+Boto3/1.14.11 Python/3.5.6 Linux/4.19.112+ Botocore/1.17.11 Resource
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #18 – 2020-08-29T18:24:49Z
+Event ID: 0cdf1fec-ae63-43a0-bf29-944454d5f76f
+Event DateTime
+2020-08-29T18:24:49Z
+Alarm DateTime
+2020-08-29T18:25:53.140643+00:00
+Source IP
+188.40.66.118
+Request User Agent
+aws-sdk-go/1.34.2 (go1.10.4; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+44F06AC4F084B0D0
+Request User Agent
+aws-sdk-go/1.34.2 (go1.10.4; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #17 – 2020-08-27T22:04:19Z
+Event ID: 9340067b-1fc8-4973-9372-6f189f4d87ae
+Event DateTime
+2020-08-27T22:04:19Z
+Alarm DateTime
+2020-08-27T22:08:52.180928+00:00
+Source IP
+188.40.66.118
+Request User Agent
+aws-sdk-go/1.34.2 (go1.10.4; linux; amd64)
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+53AC11E4DC63A5B3
+Request User Agent
+aws-sdk-go/1.34.2 (go1.10.4; linux; amd64)
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #16 – 2020-08-11T12:31:12Z
+Event ID: d53b0167-72c8-4fc4-9dc8-c7264927f551
+Event DateTime
+2020-08-11T12:31:12Z
+Alarm DateTime
+2020-08-11T12:31:44.746865+00:00
+Source IP
+166.48.252.110
+Request User Agent
+Java/11.0.8
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+EFF139CD77AB6D2C
+Request User Agent
+Java/11.0.8
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #15 – 2020-08-03T03:50:23Z
+Event ID: ebdaadbc-5fbd-4b19-a5c6-d6407a444c67
+Event DateTime
+2020-08-03T03:50:23Z
+Alarm DateTime
+2020-08-03T03:51:17.108891+00:00
+Source IP
+161.35.201.205
+Request User Agent
+Boto3/1.14.28 Python/3.6.9 Linux/4.15.0-66-generic Botocore/1.17.28
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+90455AEEE2A35503
+Request User Agent
+Boto3/1.14.28 Python/3.6.9 Linux/4.15.0-66-generic Botocore/1.17.28
+User ID
+{'type': 'AWSAccount', 'principalId': '725677763773', 'accountId': '725677763773'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'encoding-type': 'url', 'prefix': '*'}
+Alert #14 – 2020-07-29T08:33:22Z
+Event ID: 37fb4d82-98f1-4239-9698-b7d83d02a5bf
+Event DateTime
+2020-07-29T08:33:22Z
+Alarm DateTime
+2020-07-29T08:37:39.916609+00:00
+Source IP
+134.122.57.211
+Request User Agent
+Boto3/1.14.28 Python/3.6.9 Linux/4.15.0-66-generic Botocore/1.17.28
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+EXCH8ZCJFW2T7J3R
+Request User Agent
+Boto3/1.14.28 Python/3.6.9 Linux/4.15.0-66-generic Botocore/1.17.28
+User ID
+{'type': 'AWSAccount', 'principalId': '725677763773', 'accountId': '725677763773'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'encoding-type': 'url', 'prefix': '*'}
+Alert #13 – 2020-07-28T00:15:29Z
+Event ID: 6ccd6e5a-a422-4e11-bc78-0f720c7855d1
+Event DateTime
+2020-07-28T00:15:29Z
+Alarm DateTime
+2020-07-28T00:20:20.072635+00:00
+Source IP
+34.71.42.209
+Request User Agent
+python-requests/2.22.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+86125A202F68E346
+Request User Agent
+python-requests/2.22.0
+User ID
+{'type': 'AWSAccount', 'principalId': '541646178081', 'accountId': '541646178081'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #12 – 2020-07-28T00:15:26Z
+Event ID: b67eefa4-f589-406f-bd21-cc2aa160b064
+Event DateTime
+2020-07-28T00:15:26Z
+Alarm DateTime
+2020-07-28T00:20:19.599691+00:00
+Source IP
+34.71.42.209
+Request User Agent
+python-requests/2.22.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+C0B759DF827B2656
+Request User Agent
+python-requests/2.22.0
+User ID
+{'type': 'AWSAccount', 'principalId': '541646178081', 'accountId': '541646178081'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #11 – 2020-07-26T12:25:54Z
+Event ID: c3cb60c3-f5ec-43a4-ae0c-e68debe4c78a
+Event DateTime
+2020-07-26T12:25:54Z
+Alarm DateTime
+2020-07-26T12:30:02.784328+00:00
+Source IP
+43.229.90.220
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+4A7096611A68FACD
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #10 – 2020-07-12T20:20:07Z
+Event ID: dc3fa14b-1e5d-4707-8943-43841a015b1c
+Event DateTime
+2020-07-12T20:20:07Z
+Alarm DateTime
+2020-07-12T20:25:18.710961+00:00
+Source IP
+43.251.92.37
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+PutObject
+Request ID
+A04CA4F1EB7E5317
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+Error Code
+AccessDenied
+Error Message
+Access Denied
+User ID
+{'type': 'AWSAccount', 'principalId': '451083579297', 'accountId': '451083579297'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com', 'key': 'hello.txt'}
+Alert #9 – 2020-07-12T20:19:53Z
+Event ID: b2d4a398-1f06-486b-8c24-aca2ffa76c64
+Event DateTime
+2020-07-12T20:19:53Z
+Alarm DateTime
+2020-07-12T20:20:08.693484+00:00
+Source IP
+43.251.92.37
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+ARBH5K4X2HDKEZ4Y
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+User ID
+{'type': 'AWSAccount', 'principalId': '451083579297', 'accountId': '451083579297'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'encoding-type': 'url', 'prefix': '', 'delimiter': '/', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #8 – 2020-07-12T20:19:41Z
+Event ID: 710b36d9-2c81-4292-be3a-dffb402e757b
+Event DateTime
+2020-07-12T20:19:41Z
+Alarm DateTime
+2020-07-12T20:20:08.364653+00:00
+Source IP
+43.251.92.37
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+348644DD6869082F
+Request User Agent
+aws-cli/1.17.9 Python/3.6.0 Windows/10 botocore/1.14.9
+User ID
+{'type': 'AWSAccount', 'principalId': '451083579297', 'accountId': '451083579297'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'encoding-type': 'url', 'prefix': '', 'delimiter': '/', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #7 – 2020-07-12T17:05:38Z
+Event ID: 980443ff-f467-493d-afd1-9635f56315d4
+Event DateTime
+2020-07-12T17:05:38Z
+Alarm DateTime
+2020-07-12T17:06:10.563655+00:00
+Source IP
+43.251.92.37
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+08AE7D4AEDCDD68C
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #6 – 2020-06-24T10:20:33Z
+Event ID: a5bf4395-0fab-4a84-8e40-af32934af16a
+Event DateTime
+2020-06-24T10:20:33Z
+Alarm DateTime
+2020-06-24T10:24:38.947419+00:00
+Source IP
+95.217.6.207
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+8B34F0356E55002A
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #5 – 2020-06-24T10:16:51Z
+Event ID: 19f47d30-805c-47cb-9969-1a0be04544eb
+Event DateTime
+2020-06-24T10:16:51Z
+Alarm DateTime
+2020-06-24T10:19:28.685202+00:00
+Source IP
+95.217.6.207
+Request User Agent
+Go-http-client/1.1
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+HeadBucket
+Request ID
+2EB6066EEB3D5337
+Request User Agent
+Go-http-client/1.1
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #4 – 2020-05-01T14:28:11Z
+Event ID: acede642-8510-4366-8c75-e0643e7d3654
+Event DateTime
+2020-05-01T14:28:11Z
+Alarm DateTime
+2020-06-14T11:42:47.545142+00:00
+Source IP
+103.73.151.226
+Request User Agent
+Ruby
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+CD5DFA0584AAC93D
+Request User Agent
+Ruby
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.amazonaws.com'}
+Alert #3 – 2020-02-11T03:33:15Z
+Event ID: ccfe0554-89cf-42c8-931a-ac1e5ee6b30c
+Event DateTime
+2020-02-11T03:33:15Z
+Alarm DateTime
+2020-02-11T03:35:42.025640+00:00
+Source IP
+34.68.153.199
+Request User Agent
+python-requests/2.22.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+2C1C8CAAC2744B7A
+Request User Agent
+python-requests/2.22.0
+User ID
+{'type': 'AWSAccount', 'principalId': '541646178081', 'accountId': '541646178081'}
+Request Parameters
+{'list-type': '2', 'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3.eu-west-1.amazonaws.com'}
+Alert #2 – 2020-02-11T03:33:11Z
+Event ID: 5da928bc-0bea-412a-964d-a8eee8a18214
+Event DateTime
+2020-02-11T03:33:11Z
+Alarm DateTime
+2020-02-11T03:35:40.412063+00:00
+Source IP
+34.68.153.199
+Request User Agent
+python-requests/2.22.0
+Repeated Attempts
+1
+AWS Request Details
+Event Type
+AwsApiCall
+Event Name
+ListObjects
+Request ID
+595967D05FC1EAAE
+Request User Agent
+curl/7.58.0
+User ID
+{'type': 'AWSAccount', 'principalId': '', 'accountId': 'ANONYMOUS_PRINCIPAL'}
+Request Parameters
+{'bucketName': 'microsoft-devtest', 'Host': 'microsoft-devtest.s3-eu-west-1.amazonaws.com'}
+Blog
+Contact
+Privacy
+Terms
+Facebook
+Twitter
+© 2021 Breach Insider Ltd. All rights reserved.
