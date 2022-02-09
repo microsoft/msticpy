@@ -118,6 +118,7 @@ class BHKeyVaultClient:
                 "Could not get TenantId from function parameters or configuration.",
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
+                azcli_uri="https://docs.microsoft.com/cli/azure/authenticate-azure-cli",
             )
         self.authn_type = kwargs.pop(
             "authn_type", self.settings.get("authntype", "interactive")
