@@ -52,6 +52,14 @@ TIProviders:
   TorExitNodes:
     Primary: True
     Provider: Tor
+  IntSights:
+    Args:
+      ApiID:
+        EnvironmentVar: "INTSIGHTS_ID"
+      AuthKey:
+        EnvironmentVar: "INTSIGHTS_AUTH"
+    Primary: True
+    Provider: IntSights
 OtherProviders:
   GeoIPLite:
     Args:
@@ -80,3 +88,9 @@ DataProviders:
   Mordor:
     save_folder: ~/.msticpy/mordor
     use_cached: true
+  Cybereason:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 1234
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"

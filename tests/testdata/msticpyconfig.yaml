@@ -61,6 +61,12 @@ TIProviders:
     Args:
       ApiID: "user@host.com"
       AuthKey: "aaaa-bbbb-cccc-dddd-eeee"
+  IntSights:
+    Args:
+      ApiID: "INTSIGHTS_ID"
+      AuthKey: "INTSIGHTS_KEY"
+    Primary: False
+    Provider: "IntSights"
 OtherProviders:
   GeoIPLite:
     Args:
@@ -97,6 +103,12 @@ DataProviders:
       ClientSecret:
         EnvironmentVar: "IPSTACK_AUTH"
   MicrosoftGraph:
+    Args:
+      TenantId: 8360dd21-0294-4240-9128-89611f415c53
+      ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+      ClientSecret:
+        EnvironmentVar: "IPSTACK_AUTH"
+  Cybereason:
     Args:
       TenantId: 8360dd21-0294-4240-9128-89611f415c53
       ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa

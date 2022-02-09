@@ -68,7 +68,7 @@ def mocked_session(*args, **kwargs):
     return mock_req_session()
 
 
-# This class will mock requests.Session()
+# This class will mock httpx.Client()
 class mock_req_session:
     def get(self, *args, **kwargs):
         class MockResponse:
@@ -363,6 +363,33 @@ class mock_req_session:
                 ],
             }
             return MockResponse(mocked_result, 200)
+        elif kwargs["url"].startswith("https://api.intsights.com"):
+            if is_benign_ioc(kwargs["params"]):
+                return MockResponse(None, 404)
+            date = dt.datetime.strftime(dt.datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ")
+            mocked_result = {
+                "Value": "124.5.6.7",
+                "Type": "IpAddresses",
+                "Score": 42,
+                "Severity": "Medium",
+                "Whitelist": False,
+                "FirstSeen": date,
+                "LastSeen": date,
+                "LastUpdate": date,
+                "Sources": [
+                    {"ConfidenceLevel": 2, "Name": "Source A"},
+                    {"ConfidenceLevel": 1, "Name": "Source B"},
+                    {"ConfidenceLevel": 1, "Name": "Source C"},
+                    {"ConfidenceLevel": 3, "Name": "Source D"},
+                ],
+                "SystemTags": ["bot", "malware related"],
+                "Geolocation": "FR",
+                "RelatedMalware": ["malware1"],
+                "RelatedCampaigns": ["Campaign A"],
+                "RelatedThreatActors": ["Threat Actor 00"],
+                "Tags": ["tag"],
+            }
+            return MockResponse(mocked_result, 200)
         return MockResponse(None, 404)
 
 
@@ -428,12 +455,15 @@ class TestTIProviders(unittest.TestCase):
     def test_riskiq(self):
         self.exercise_provider("RiskIQ")
 
+    def test_intsights(self):
+        self.exercise_provider("IntSights")
+
     def exercise_provider(self, provider_name):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers[provider_name]
-        saved_session = ti_provider._requests_session
-        ti_provider._requests_session = mock_req_session()
+        saved_session = ti_provider._httpx_client
+        ti_provider._httpx_client = mock_req_session()
 
         iocs = {
             "124.5.6.7": ("ipv4", None),
@@ -463,13 +493,16 @@ class TestTIProviders(unittest.TestCase):
         self.assertEqual(20, len(results_df))
         self.assertEqual(17, len(results_df[results_df["Result"]]))
 
-        ti_provider._requests_session = saved_session
+        ti_provider._httpx_client = saved_session
 
     # pylint: disable=pointless-statement
     def verify_result(self, result):
         self.assertIsNotNone(result)
         for prov, lu_result in result[1]:
-            self.assertIn(prov, ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ"])
+            self.assertIn(
+                prov,
+                ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
+            )
             self.assertIsNotNone(lu_result.ioc)
             self.assertIsNotNone(lu_result.ioc_type)
             if lu_result.result:
@@ -490,7 +523,7 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        ti_provider._requests_session = mock_req_session()
+        ti_provider._httpx_client = mock_req_session()
         iocs = {
             "google.com": ("dns", None),
             "microsoft.com": ("dns", None),
@@ -534,7 +567,7 @@ class TestTIProviders(unittest.TestCase):
         ti_lookup = self.ti_lookup
 
         ti_provider = ti_lookup.loaded_providers["OPR"]
-        ti_provider._requests_session = mock_req_session()
+        ti_provider._httpx_client = mock_req_session()
 
         n_requests = 250
         gen_doms = {self._generate_rand_domain(): "dns" for i in range(n_requests)}

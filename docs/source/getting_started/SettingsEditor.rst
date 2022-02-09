@@ -576,7 +576,7 @@ or when using multiple notebooks.
 
 If the host running your notebook kernel does not have Azure CLI
 installed you can install it from
-`here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`__.
+`here <https://docs.microsoft.com/cli/azure/install-azure-cli>`__.
 
 To log in using Azure CLI enter the following:
 

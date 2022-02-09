@@ -474,7 +474,7 @@ class QuerySource:
         """
         req_source_items = {"args"}
         # match items surrounded by single {} but not double
-        param_pattern = r"(?!{{){([^}]+)}(?!})"
+        param_pattern = r"{(?<!{{)(?!{)([^}]+)}(?!})(?<!}})"
 
         valid_failures = []
 

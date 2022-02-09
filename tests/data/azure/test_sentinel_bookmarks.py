@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
+import respx
 from msticpy.data.azure import MicrosoftSentinel
 
 _BOOKMARK = {
@@ -64,29 +64,21 @@ def sent_loader(mock_creds):
     return sent
 
 
-@responses.activate
+@respx.mock
 def test_sent_bookmarks(sent_loader):
     """Test Sentinel bookmarks feature."""
-    responses.add(
-        responses.GET,
-        re.compile("https://management.azure.com/.*"),
-        json=_BOOKMARK,
-        status=200,
+    respx.get(re.compile("https://management.azure.com/.*")).respond(
+        200, json=_BOOKMARK
     )
     bkmarks = sent_loader.list_bookmarks()
     assert isinstance(bkmarks, pd.DataFrame)
     assert bkmarks["name"].iloc[0] == "Bookmark Test"
 
 
-@responses.activate
+@respx.mock
 def test_sent_bookmark_create(sent_loader):
     """Test Sentinel bookmark creation."""
-    responses.add(
-        responses.PUT,
-        re.compile("https://management.azure.com/.*"),
-        json={},
-        status=200,
-    )
+    respx.put(re.compile("https://management.azure.com/.*")).respond(200, json={})
     sent_loader.create_bookmark(
         name="Test Bookmark",
         query="SecurityAlert | take 10",
@@ -96,13 +88,8 @@ def test_sent_bookmark_create(sent_loader):
     )
 
 
-@responses.activate
+@respx.mock
 def test_sent_bookmark_delete(sent_loader):
     """Test Sentinel bookmark deletion."""
-    responses.add(
-        responses.DELETE,
-        re.compile("https://management.azure.com/.*"),
-        json={},
-        status=200,
-    )
+    respx.delete(re.compile("https://management.azure.com/.*")).respond(200, json={})
     sent_loader.delete_bookmark("a55463ed-dce0-4ba4-83ca-6f6d0e5d5acf")

@@ -7,6 +7,7 @@
 from typing import List, Dict, Any
 
 import pandas as pd
+from deprecated.sphinx import deprecated
 
 from ..datamodel.entities import (
     Entity,
@@ -24,6 +25,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+@deprecated(reason="Replaced by datamodel entitis", version="1.7.0")
 @export
 class SecurityEvent(SecurityBase):
     """SecurityEvent class."""

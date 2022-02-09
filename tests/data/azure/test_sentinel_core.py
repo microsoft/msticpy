@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
+import respx
 from azure.core.exceptions import ClientAuthenticationError
 from msticpy.data.azure import AzureData
 from msticpy.data.azure import MicrosoftSentinel

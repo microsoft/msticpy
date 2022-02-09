@@ -4,18 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
-from pathlib import Path
 import sys
 from importlib import import_module
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 import warnings
 
 import pkg_resources
 import networkx as nx
 
+from . import VERSION
+
 # pylint: disable=relative-beyond-top-level
 from .ast_parser import analyze
-from . import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -88,7 +89,7 @@ def get_setup_reqs(
     setup_pkgs = _extract_pkg_specs(req_list)
     if not skip_setup and not extras:
         try:
-            extras = get_extras_from_setup(package_root=package_root, extra="all")
+            extras = get_extras_from_setup(extra="all")
             extra_pkgs = _extract_pkg_specs(extras)
             setup_pkgs = setup_pkgs | extra_pkgs
         except ImportError:
@@ -124,8 +125,6 @@ def get_setup_reqs(
 
 
 def get_extras_from_setup(
-    package_root: str,
-    setup_py: str = "setup.py",
     extra: str = "all",
     include_base: bool = False,
 ) -> List[str]:
@@ -134,10 +133,6 @@ def get_extras_from_setup(
 
     Parameters
     ----------
-    package_root : str
-        The root folder of the package
-    setup_py : str, optional
-        The name of the setup file to process, by default "setup.py"
     extra : str, optiona
         The name of the extra to return, by default "all"
     include_base : bool, optional
@@ -149,42 +144,14 @@ def get_extras_from_setup(
         List of package requirements.
 
     """
-    setup_py = str(Path(package_root) / setup_py)
-
-    setup_txt = None
-    with open(setup_py, "r", encoding="utf-8") as f_handle:
-        setup_txt = f_handle.read()
-
-    srch_txt = "setuptools.setup("
-    repl_txt = [
-        "def fake_setup(*args, **kwargs):",
-        "    pass",
-        "",
-        "fake_setup(",
-    ]
-    setup_txt = setup_txt.replace(srch_txt, "\n".join(repl_txt))
-
-    neut_setup_py = Path(package_root) / "neut_setup.py"
-    try:
-        neut_setup_py.write_text(setup_txt)
-
-        setup_mod = import_module("neut_setup")
-        extras = getattr(setup_mod, "EXTRAS").get(extra)
-        if include_base:
-            base_install = getattr(setup_mod, "INSTALL_REQUIRES")
-            extras.extend(
-                [req.strip() for req in base_install if not req.strip().startswith("#")]
-            )
-        return sorted(list(set(extras)), key=str.casefold)
-    finally:
-        try:
-            if neut_setup_py.is_file():
-                try:
-                    neut_setup_py.unlink()
-                except (FileNotFoundError, PermissionError) as err:
-                    warnings.warn(f"Unable to remove {neut_setup_py}. Error {err}")
-        except PermissionError:
-            print(f"could not remove temp file {neut_setup_py}")
+    setup_mod = import_module("setup")
+    extras = getattr(setup_mod, "EXTRAS").get(extra)
+    if include_base:
+        base_install = getattr(setup_mod, "INSTALL_REQUIRES")
+        extras.extend(
+            [req.strip() for req in base_install if not req.strip().startswith("#")]
+        )
+    return sorted(list(set(extras)), key=str.casefold)
 
 
 def _extract_pkg_specs(pkg_specs: List[str]):

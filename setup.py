@@ -4,37 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Setup script for msticpy."""
-import os
 import re
 import setuptools
 
-
-def install_requires_rtd(install_list: list) -> list:
-    """Return modified install list if installing for ReadtheDocs."""
-    rtd_exceptions = [
-        "Kqlmagic",
-        "azure-cli-core",
-        "matplotlib",
-        "statsmodels",
-        "scipy",
-        "splunk-sdk",
-        "seaborn",
-    ]
-    return [
-        pkg
-        for pkg in install_list
-        if not any(excl_pkg for excl_pkg in rtd_exceptions if excl_pkg in pkg)
-    ]
-
-
-with open("README.md", "r", encoding="utf-8") as fh:
-    LONG_DESC = fh.read()
-
-# pylint: disable=locally-disabled, invalid-name
 with open("msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
     __version__ = v_match.group(1) if v_match else "no version"
-# pylint: enable=locally-disabled, invalid-name
 
 with open("requirements.txt", "r", encoding="utf-8") as fh:
     INSTALL_REQUIRES = fh.readlines()
@@ -52,7 +27,7 @@ def _combine_extras(extras: list) -> list:
 # Extras definitions
 EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
-    "vt3": ["vt-py>=0.6.1", "vt-graph-api>=1.0.1", "nest_asyncio>=1.4.0"],
+    "vt3": ["vt-py>=0.6.1", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114"],
@@ -88,64 +63,10 @@ EXTRAS["azure"] = sorted(_combine_extras(["_azure_core", "keyvault"]))
 EXTRAS["test"] = sorted(_combine_extras(["all", "dev"]))
 EXTRAS["azsentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
 EXTRAS["azuresentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
+EXTRAS["sentinel"] = sorted(_combine_extras(["azure", "kql", "keyvault"]))
 
-# If ReadTheDocs build, remove a couple of problematic packages
-# (we ask Sphinx to mock these in the import)
-if os.environ.get("MP_RTD_BUILD"):
-    INSTALL_REQUIRES = install_requires_rtd(INSTALL_REQUIRES)
 
-setuptools.setup(
-    name="msticpy",
-    version=__version__,
-    author="Ian Hellen",
-    author_email="ianhelle@microsoft.com",
-    description="MSTIC Security Tools",
-    license="MIT License",
-    long_description=LONG_DESC,
-    long_description_content_type="text/markdown",
-    url="https://github.com/microsoft/msticpy",
-    project_urls={
-        "Documentation": "https://msticpy.readthedocs.io",
-        "Code": "https://github.com/microsoft/msticpy",
-        "Issue tracker": "https://github.com/microsoft/msticpy/issues",
-    },
-    python_requires=">=3.6",
-    packages=setuptools.find_packages(exclude=["tests", "tests.*", "*.tests.*"]),
-    classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Development Status :: 5 - Production/Stable",
-        "Framework :: IPython",
-        "Framework :: Jupyter",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Information Technology",
-        "Topic :: Security",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-    ],
-    install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS,
-    keywords=[
-        "security",
-        "azure",
-        "sentinel",
-        "mstic",
-        "cybersec",
-        "infosec",
-        "cyber",
-        "cybersecurity",
-        "jupyter",
-        "notebooks",
-        "SOC",
-        "hunting",
-    ],
-    zip_safe=False,
-    include_package_data=True,
-)
+if __name__ == "__main__":
+    setuptools.setup(
+        install_requires=INSTALL_REQUIRES, extras_require=EXTRAS, version=__version__
+    )
