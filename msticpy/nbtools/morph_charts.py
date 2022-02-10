@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for morph_charts.py."""
+"""
+Deprecated - module morph_charts.py has moved.
+
+See :py:mod:`msticpy.vis.morph_charts`
+"""
 import warnings
 from .._version import VERSION
 
@@ -17,6 +21,7 @@ from ..vis.morph_charts import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.vis.morph_charts\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

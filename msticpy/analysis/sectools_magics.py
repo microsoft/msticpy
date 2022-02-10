@@ -23,8 +23,8 @@ try:
 except ImportError:
     _BS_AVAILABLE = False
 
-from .data_processing import base64unpack as base64
-from .data_processing.iocextract import IoCExtract
+from .data import base64unpack as base64
+from .data.iocextract import IoCExtract
 
 from .._version import VERSION
 

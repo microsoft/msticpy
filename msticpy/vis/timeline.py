@@ -34,7 +34,7 @@ from pandas.errors import OutOfBoundsDatetime
 from .._version import VERSION
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import check_kwargs, export
-from ..data.common.query_defns import ensure_df_datetimes
+from ..data.core.query_defns import ensure_df_datetimes
 
 # pylint: disable=unused-import
 # Importing to activate pandas accessors

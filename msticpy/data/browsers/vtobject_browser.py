@@ -12,7 +12,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...nbtools.nbwidgets import IPyDisplayMixin
-from ..contextproviders.tiproviders.vtlookupv3.vtlookupv3 import (
+from ..context.tiproviders.vtlookupv3.vtlookupv3 import (
     VTLookupV3,
     timestamps_to_utcdate,
 )

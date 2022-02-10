@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for query_container.py."""
+"""
+Deprecated - module query_container.py has moved.
+
+See :py:mod:`msticpy.data.core.query_container`
+"""
 import warnings
 from .._version import VERSION
 
@@ -13,10 +17,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from .common.query_container import *
+from .core.query_container import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.common.query_container\n"
-    + "Please change your import to reflect this new location."
+    "This module has moved to msticpy.data.core.query_container\n"
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

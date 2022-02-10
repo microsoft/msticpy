@@ -13,9 +13,9 @@ import pandas as pd
 import pytest
 
 from msticpy.vis.process_tree import build_and_show_process_tree
-from msticpy.analysis.data_processing import process_tree_utils as pt_util
-from msticpy.analysis.data_processing import proc_tree_builder as pt_build
-from msticpy.analysis.data_processing.proc_tree_schema import (
+from msticpy.analysis.data import process_tree_utils as pt_util
+from msticpy.analysis.data import proc_tree_builder as pt_build
+from msticpy.analysis.data.proc_tree_schema import (
     LX_EVENT_SCH,
     WIN_EVENT_SCH,
 )

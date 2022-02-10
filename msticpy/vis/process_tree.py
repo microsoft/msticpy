@@ -9,6 +9,7 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from deprecated.sphinx import deprecated
 from bokeh.io import output_notebook, reset_output, show
 
 # pylint: enable=no-name-in-module
@@ -30,18 +31,18 @@ from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
 
 from .._version import VERSION
-from ..analysis.data_processing.proc_tree_builder import (
+from ..analysis.data.proc_tree_builder import (
     build_process_tree,
     infer_schema,
 )
-from ..analysis.data_processing.proc_tree_schema import ColNames as Col
-from ..analysis.data_processing.proc_tree_schema import (
+from ..analysis.data.proc_tree_schema import ColNames as Col
+from ..analysis.data.proc_tree_schema import (
     ProcessTreeSchemaException,
     ProcSchema,
 )
 
 # pylint: disable=unused-import
-from ..analysis.data_processing.process_tree_utils import (  # noqa F401
+from ..analysis.data.process_tree_utils import (  # noqa F401
     get_ancestors,
     get_children,
     get_descendents,
@@ -563,7 +564,7 @@ def _check_proc_tree_schema(data):
 
 
 # pylint: disable=too-few-public-methods
-@export
+@deprecated("Will be removed in version 2.0.0", version="1.7.0")
 @pd.api.extensions.register_dataframe_accessor("mp_process_tree")
 class ProcessTreeAccessor:
     """Pandas api extension for Process Tree."""

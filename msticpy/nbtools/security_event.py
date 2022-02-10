@@ -25,7 +25,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-@deprecated(reason="Replaced by datamodel entitis", version="1.7.0")
+@deprecated(reason="Replaced by datamodel entities", version="1.7.0")
 @export
 class SecurityEvent(SecurityBase):
     """SecurityEvent class."""
