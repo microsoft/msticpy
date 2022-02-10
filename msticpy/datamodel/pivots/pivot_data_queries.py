@@ -15,9 +15,9 @@ import pandas as pd
 from .pivot_register import join_result, get_join_params
 from ...common.timespan import TimeSpan
 from ..._version import VERSION
-from ...data.common.data_providers import QueryProvider
-from ...data.common.query_container import QueryContainer
-from ...data.common.query_source import QuerySource
+from ...data.core.data_providers import QueryProvider
+from ...data.core.query_container import QueryContainer
+from ...data.core.query_source import QuerySource
 from .. import entities
 
 __version__ = VERSION

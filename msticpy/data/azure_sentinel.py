@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated path for data.azure."""
+"""
+Deprecated - module azure_sentinel.py has moved.
+
+See :py:mod:`msticpy.data.context.azure.azure_sentinel`
+"""
 import warnings
 
 # flake8: noqa: F403, F401
@@ -12,6 +16,7 @@ from .azure import MicrosoftSentinel as AzureSentinel
 
 WARN_MSSG = (
     "This module has moved to msticpy.data.azure.sentinel_core\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

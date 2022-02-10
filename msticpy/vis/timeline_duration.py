@@ -19,7 +19,7 @@ from bokeh.transform import dodge
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
-from ..data.common.query_defns import ensure_df_datetimes
+from ..data.core.query_defns import ensure_df_datetimes
 from .timeline import (
     _calc_auto_plot_height,
     _create_range_tool,

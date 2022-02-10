@@ -11,7 +11,7 @@ import yaml
 
 import msticpy
 from msticpy.data import QueryProvider
-from msticpy.data.common import user_config
+from msticpy.nbtools import user_config
 from msticpy.common.pkg_config import settings
 
 # pylint: disable=redefined-outer-name, unused-import, ungrouped-imports

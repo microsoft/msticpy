@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for cmd_line.py."""
+"""
+Deprecated - module cmd_line.py has moved.
+
+See :py:mod:`msticpy.analysis.data.cmd_line`
+"""
 import warnings
 from .._version import VERSION
 
@@ -13,10 +17,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data_processing.cmd_line import *
+from ..analysis.data.cmd_line import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.data_processing.cmd_line\n"
-    + "Please change your import to reflect this new location."
+    "This module has moved to msticpy.analysis.data.cmd_line\n"
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

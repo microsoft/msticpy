@@ -14,7 +14,7 @@ import pytest_check as check
 
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from msticpy.analysis.geoip import GeoLiteLookup, IPStackLookup
+from msticpy.data.context.geoip import GeoLiteLookup, IPStackLookup
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

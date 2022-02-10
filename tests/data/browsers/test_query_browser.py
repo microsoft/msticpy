@@ -9,7 +9,7 @@ from functools import partial
 import pytest_check as check
 import pytest
 
-from msticpy.data.common.query_container import QueryContainer
+from msticpy.data.core.query_container import QueryContainer
 from msticpy.data import QueryProvider
 from msticpy.data.browsers.query_browser import _query_display_func
 

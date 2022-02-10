@@ -13,7 +13,7 @@ import pytest
 import yaml
 
 from msticpy.common import pkg_config
-from msticpy.analysis.geoip import IPStackLookup, GeoLiteLookup
+from msticpy.data.context.geoip import IPStackLookup, GeoLiteLookup
 
 from ..unit_test_lib import get_test_data_path, custom_mp_config
 

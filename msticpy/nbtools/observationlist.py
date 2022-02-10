@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for observationlist.py."""
+"""
+Deprecated - module observationlist.py has moved.
+
+See :py:mod:`msticpy.analysis.observationlist`
+"""
 import warnings
 from .._version import VERSION
 
@@ -17,6 +21,7 @@ from ..analysis.observationlist import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.observationlist\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

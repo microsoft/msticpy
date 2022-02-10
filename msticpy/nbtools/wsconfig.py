@@ -13,6 +13,7 @@ from ..common.wsconfig import WorkspaceConfig
 
 WARN_MSSG = (
     "This module has moved to msticpy.common.wsconfig\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

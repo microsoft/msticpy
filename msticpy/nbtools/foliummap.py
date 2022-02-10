@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for foliummap.py."""
+"""
+Deprecated - module foliummap.py has moved.
+
+See :py:mod:`msticpy.vis.foliummap`
+"""
 import warnings
 from .._version import VERSION
 
@@ -17,6 +21,7 @@ from ..vis.foliummap import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.vis.foliummap\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

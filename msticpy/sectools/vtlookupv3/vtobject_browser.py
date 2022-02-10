@@ -3,7 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Deprecated placeholder for vtobject_browser.py."""
+"""
+Deprecated - module vtobject_browser.py has moved.
+
+See :py:mod:`msticpy.data.browsers.vtobject_browser`
+"""
 import warnings
 from ..._version import VERSION
 
@@ -16,8 +20,9 @@ __author__ = "Pete Bryan"
 from ...data.browsers.vtobject_browser import *
 
 WARN_MSSG = (
-    """This module has moved to
-    msticpy.data.contextproviders.tiproviders.vtlookupv3.vtobject_browser\n"""
-    + "Please change your import to reflect this new location."
+    "This module has moved to "
+    "msticpy.data.context.tiproviders.vtlookupv3.vtobject_browser\n"
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)
