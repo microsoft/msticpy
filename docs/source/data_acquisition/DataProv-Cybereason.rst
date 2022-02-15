@@ -1,25 +1,14 @@
-Splunk - Data Connector
-=======================
+Cybereason Provider
+===================
 
-Description
------------
+This driver provides functions to allow you to query a Cybereason instance.
 
-The data provider module of msticpy provides functions to allow for the
-defining of data sources, connectors to them and queries for them as
-well as the ability to return query result from the defined data
-sources.
-
-For more information on Data Providers, check the documentation :doc:`DataProviders`
-
-In this notebooks we will demonstrate Cybereason data connector feature of
-msticpy.
-
-Authentication
-~~~~~~~~~~~~~~
+Cybereason Configuration
+------------------------
 
 Authentication for the Cybereason data provider is handled by specifying
 credentials directly in the connect call or specifying the credentials
-in msticpy config file.
+in MSTICPy config file.
 
 For more information on how to create new user with approapriate roles
 and permissions, follow the product documentation:
@@ -27,9 +16,12 @@ and permissions, follow the product documentation:
 and
 `API Guide <https://nest.cybereason.com/documentation/api-documentation/all-versions/cybereason-api-guide>`__.
 
+Cybereason Configuration in MSTICPy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Once you created user account with the appropriate roles, you will
 require the following details to specify while connecting:
-- TenantId = "instance". As this is a cloud-based solution, each customer has its dedicated instance. FQDN will be formatted as: "<instance>.cybereason.net" 
+- TenantId = "instance". As this is a cloud-based solution, each customer has its dedicated instance. FQDN will be formatted as: "<instance>.cybereason.net"
 - ClientId = "account" (account to connect to Cybereason instance)
 - ClientSecret = "yoursecret" (secret for the client specified in ClientId)
 
@@ -44,12 +36,12 @@ shown in below example
       ClientId: account
       ClientSecret: yoursecret
 
-Instantiating a query provider
-------------------------------
+Loading and Connecting a QueryProvider for Cybereason
+-----------------------------------------------------
 
 You can instantiate a data provider for Cybereason by specifying the
-credentials in connect or in msticpy config file. If the details are
-correct and authentication is successful, it will show connected.
+credentials in connect or if left blank details from your MSTICPy config file will be used.
+If the details are correct and authentication is successful, it will show connected.
 
 .. code:: ipython3
 
@@ -85,11 +77,11 @@ as list datatypes, list saved searches, alerts, audittrail informaion.
 
 .. parsed-literal::
 
-['Connection.list_connections_from_process',
- 'Host.find_hosts',
- 'Process.find_process_by_commandLine',
- 'Process.find_process_by_pid',
- 'Process.find_process_by_suspicions']
+  ['Connection.list_connections_from_process',
+  'Host.find_hosts',
+  'Process.find_process_by_commandLine',
+  'Process.find_process_by_pid',
+  'Process.find_process_by_suspicions']
 
 
 
@@ -107,7 +99,7 @@ For more information, see
 .. parsed-literal::
 
     Query:  list_connections_from_process
-    Data source:  Splunk
+    Data source:  Cybereason
     Search for process with a specific suspicion
 
     Parameters
@@ -251,8 +243,9 @@ use below example
 Running pre-defined queries
 ---------------------------
 
-In order to run pre-defined query , execute with the name either by
-setting values for arguments if available or run with default arguments.
+In order to run pre-defined query, call the provider followed by the query name.
+Pre-defined queries can be run with either values specified as arguments
+or run with default arguments.
 
 For more information , refer to the documentation
 :ref:`Running a pre-defined query <data_acquisition/dataproviders:running a pre-defined query>`
@@ -334,10 +327,10 @@ For more information , refer to the documentation
 
 
 
-Running an ad hoc Splunk query
-------------------------------
+Running an ad-hoc Cybereason query
+----------------------------------
 
-You can also create your own query and run it via the Splunk
+You can also create your own query and run it via the Cybereason
 provider using this syntax:
 ``QUERY_PROVIDER.exec_query(<query_text>)``
 
@@ -425,8 +418,8 @@ For more information, check documentation :ref:`data_acquisition/dataproviders:r
 
 |
 
-References
-----------
+Other Cybereason Documentation
+------------------------------
 
 -  `Cybereason Documentation
    <https://nest.cybereason.com/documentation/product-documentation/202/cybereason-202-documentation>`__
