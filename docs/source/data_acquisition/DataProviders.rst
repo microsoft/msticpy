@@ -46,7 +46,8 @@ the available options.
     'Mordor',
     'ResourceGraph',
     'Sumologic',
-    'M365D']
+    'M365D',
+    'Cybereason']
 
 .. note:: New providers are being added regularly so this list
     may look a little different. Also some items in this list
