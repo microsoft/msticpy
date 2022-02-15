@@ -11,9 +11,6 @@ repos:
     hooks:
       - id: black
         language: python
-        args:
-          - -t
-          - py36
   - repo: https://github.com/PyCQA/pylint
     rev: v2.12.2
     hooks:

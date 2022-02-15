@@ -8,7 +8,7 @@ import base64
 import json
 from typing import Any, List
 
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import ResourceNotFoundError, ClientAuthenticationError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
 
 from azure.mgmt.keyvault import KeyVaultManagementClient
@@ -24,16 +24,30 @@ from azure.mgmt.keyvault.models import (
     VaultProperties,
 )
 
+from IPython.display import display, HTML
 from msrestazure.azure_exceptions import CloudError
 
 from .._version import VERSION
 from .azure_auth_core import az_connect_core
-from .exceptions import MsticpyKeyVaultConfigError, MsticpyKeyVaultMissingSecretError
+from .exceptions import (
+    MsticpyKeyVaultConfigError,
+    MsticpyKeyVaultMissingSecretError,
+    MsticpyUserConfigError,
+)
 from .keyvault_settings import KeyVaultSettings
-from .utility import export
+from .utility import export, is_ipython
 
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"
+
+_KV_CLIENT_AUTH_ERROR = [
+    "Please use Azure CLI authentication:",
+    "1. Add 'cli' to the list of authentication methods in Azure/auth_methods"
+    " in msticpyconfig.yaml ",
+    "2. run 'az login` at the start of your session.",
+    "3. Re-run the MSTICPy function that failed with this error.",
+    "",
+]
 
 
 @export
@@ -64,9 +78,9 @@ class BHKeyVaultClient:
         auth_methods : List[str]
             The authentication methods to use for Key Vault auth
             Possible values are:
-            - "env" - to get authentication details from environment varibales
+            - "env" - to get authentication details from environment variables
             - "cli" - to use Azure CLI authentication details
-            - "msi" - to user Managed Service Indenity details
+            - "msi" - to user Managed Service Identity details
             - "interactive" - to prompt for interactive login
         authn_type : str, optional
             [deprecated - use auth_methods]
@@ -104,6 +118,7 @@ class BHKeyVaultClient:
                 "Could not get TenantId from function parameters or configuration.",
                 "Please add this to the KeyVault section of msticpyconfig.yaml",
                 title="missing tenant ID value.",
+                azcli_uri="https://docs.microsoft.com/cli/azure/authenticate-azure-cli",
             )
         self.authn_type = kwargs.pop(
             "authn_type", self.settings.get("authntype", "interactive")
@@ -120,6 +135,44 @@ class BHKeyVaultClient:
             authority_uri=kwargs.get("authority_uri"), tenant=self.tenant_id
         )
 
+        self._vault_name, self.vault_uri = self._get_vault_name_and_uri(
+            vault_name, vault_uri
+        )
+        self.kv_client = self._get_secret_client()
+
+    def _get_secret_client(self):
+        """Return the Secrets primed with credentials."""
+        # Create a secret client
+        return self._test_working_credentials()
+
+    def _test_working_credentials(self):
+        """Try to access Key Vault to establish usable authentication method."""
+        for idx, auth_method in enumerate(self.auth_methods):
+            _print_status(
+                f"Attempting connection to Key Vault using {auth_method} credentials...",
+                newline=False,
+            )
+            credentials = az_connect_core(auth_methods=[auth_method])
+            kv_client = SecretClient(self.vault_uri, credentials.modern)
+            try:
+                # need to list to force iterator to run
+                list(kv_client.list_properties_of_secrets())
+                _print_status("done")
+                return kv_client
+            except ClientAuthenticationError as client_err:
+                _print_status(f"Could not obtain access token using {auth_method}.")
+                if idx + 1 < len(self.auth_methods):
+                    continue
+                raise MsticpyUserConfigError(
+                    "No configured authentication methods found with credentials "
+                    f"with access the Key Vault '{self._vault_name}'",
+                    *_KV_CLIENT_AUTH_ERROR,
+                    title="Key Vault authentication configuration failed.",
+                ) from client_err
+        return None
+
+    def _get_vault_name_and_uri(self, vault_name, vault_uri):
+        """Validate and return vault name and URI."""
         if not vault_uri and not vault_name:
             if "vaultname" in self.settings:
                 vault_name = self.settings["vaultname"]
@@ -129,12 +182,10 @@ class BHKeyVaultClient:
                     + " in your configuration",
                     title="Key Vault vault name not found.",
                 )
-        if vault_uri:
-            self.vault_uri = vault_uri
-        else:
+        if not vault_uri:
             vault_uri = self.settings.keyvault_uri
             if vault_uri:
-                self.vault_uri = vault_uri.format(vault=vault_name)
+                vault_uri = vault_uri.format(vault=vault_name)
             else:
                 cloud = self.settings.cloud
                 raise MsticpyKeyVaultConfigError(
@@ -144,15 +195,16 @@ class BHKeyVaultClient:
                     title="no Key Vault URI for national cloud",
                 )
         if self.debug:
-            print(f"Using Vault URI {self.vault_uri}")
+            print(f"Using Vault URI {vault_uri}")
+        return vault_name, vault_uri
 
-        self.kv_client = self._get_secret_client()
-
-    def _get_secret_client(self):
-        credentials = az_connect_core(auth_methods=self.auth_methods)
-
-        # Create a secret client
-        return SecretClient(self.vault_uri, credentials.modern)
+    @property
+    def vault_name(self) -> str:
+        """Return the Key Vault name."""
+        return (
+            self._vault_name
+            or self.vault_uri.replace("https://", "").split(".", maxsplit=1)[0]
+        )
 
     @property
     def secrets(self):
@@ -421,3 +473,12 @@ def _get_parsed_token_data(token) -> Any:
     tok_data = tok_data.split(".")[1]
     tok_data += "=" * ((4 - len(tok_data) % 4) % 4)
     return json.loads(base64.b64decode(tok_data))
+
+
+def _print_status(message, newline=True):
+    if is_ipython():
+        line_break = "<br>" if newline else ""
+        display(HTML(f"{message}{line_break}"))
+    else:
+        line_break = "\n" if newline else ""
+        print(message, end=line_break)
