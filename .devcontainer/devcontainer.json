@@ -1,0 +1,78 @@
+﻿	{
+	"name": "Msticpy Python Development Container",
+	"build": { 
+		"context": "..",
+		"dockerfile": "Dockerfile"
+	},
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": { 
+		"python.defaultInterpreterPath": "/opt/conda/bin/python",
+		"python.linting.enabled": true,
+		"python.linting.flake8Path": "/opt/conda/bin/flake8",
+		"python.formatting.provider": "black",
+		"python.linting.pycodestylePath": "/opt/conda/bin/pycodestyle",
+		"python.linting.pydocstylePath": "/opt/conda/bin/pydocstyle",
+		"python.linting.pylintPath": "/opt/conda/bin/pylint",
+		"files.autoSave": "afterDelay",
+		"team.showWelcomeMessage": false,
+		"python.linting.pylintEnabled": true,
+		"python.linting.pydocstyleArgs": [""],
+		"python.linting.pep8Enabled": true,
+		"python.linting.pep8Args": ["--ignore=E501,E251,W503,E701"],
+		"python.linting.flake8Enabled": true,
+		"python.linting.flake8Args": ["--max-line-length=90"], 
+		"python.linting.pydocstyleEnabled": true,
+		"python.linting.mypyEnabled": true,
+		"python.linting.pylintUseMinimalCheckers": false,
+		"python.linting.prospectorEnabled": true,
+		"python.linting.banditEnabled": true,
+		"python.linting.ignorePatterns": [
+		".vscode/*.py",
+		"**/site-packages/**/*.py",
+		"**/tests/test_*.py",
+		"docs/**",
+		"docs/source/**",
+		"docs/build/**"
+		],
+		"editor.tabSize": 4,
+		"editor.suggestSelection": "first",
+		"vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+		"autoDocstring.docstringFormat": "numpy",
+		"git.autofetch": true,
+		"python.terminal.activateEnvironment": false,
+		"restructuredtext.linter.extraArgs": [
+		"--ignore D002",
+		"--ignore D004"
+		],
+		"[python]": {
+		},
+		"python.testing.pyTestArgs": [
+		"tests"
+		],
+		"python.testing.unittestEnabled": false,
+		"python.testing.nosetestsEnabled": false,
+		"python.testing.pyTestEnabled": true,
+	},
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"eamodio.gitlens",
+		"lextudio.restructuredtext",
+		"mohsen1.prettify-json",
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"njpwerner.autodocstring",
+		"vscode-icons-team.vscode-icons",
+		"github.vscode-pull-request-github"
+	],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "python --version",
+
+	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode"
+}
