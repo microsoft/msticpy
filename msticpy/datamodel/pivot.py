@@ -9,6 +9,7 @@ Deprecated - module pivot.py has moved.
 See :py:mod:`msticpy.datamodel.pivots.pivot`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

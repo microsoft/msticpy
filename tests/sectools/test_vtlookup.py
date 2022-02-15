@@ -7,13 +7,10 @@
 import unittest
 from os import path
 
-from msticpy.data.context.tiproviders.ti_provider_base import (
-    preprocess_observable,
-)
+from msticpy.data.context.tiproviders.ti_provider_base import preprocess_observable
 from msticpy.data.context.tiproviders.vtlookupv3.vtlookup import VTLookup
 
 from ..unit_test_lib import TEST_DATA_PATH
-
 
 # pylint: disable=protected-access
 

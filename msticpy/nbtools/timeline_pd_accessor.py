@@ -9,6 +9,7 @@ Deprecated - module timeline_pd_accessor.py has moved.
 See :py:mod:`msticpy.vis.timeline_pd_accessor`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

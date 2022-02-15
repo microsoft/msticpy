@@ -9,6 +9,7 @@ Deprecated - module vtlookupv3.py has moved.
 See :py:mod:`msticpy.data.context.tiproviders.vtlookupv3.vtlookupv3`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

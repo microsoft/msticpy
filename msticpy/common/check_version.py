@@ -4,9 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Check current version against PyPI."""
-from pkg_resources import parse_version
-
 import httpx
+from pkg_resources import parse_version
 
 from .._version import VERSION
 

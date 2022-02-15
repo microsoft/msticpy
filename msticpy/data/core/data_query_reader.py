@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data query definition reader."""
-from typing import Tuple, Dict, Iterable, Any
 from pathlib import Path
+from typing import Any, Dict, Iterable, Tuple
+
 import yaml
 
-from .query_defns import DataEnvironment
 from ..._version import VERSION
+from .query_defns import DataEnvironment
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

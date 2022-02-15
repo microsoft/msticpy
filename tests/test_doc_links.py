@@ -4,13 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """test documentation links."""
-import sys
 import os
+import sys
 from pathlib import Path
 
 import pytest
-
-from tools.toollib.url_checker import check_md_document, check_html_docs
+from tools.toollib.url_checker import check_html_docs, check_md_document
 from tools.toollib.url_checker_async import check_docs
 
 DOC_ROOT = "docs."

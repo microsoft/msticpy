@@ -4,14 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """MDATP OData Driver class."""
-from typing import Union, Any
+from typing import Any, Union
+
 import pandas as pd
 
-from .odata_driver import OData, QuerySource
-from ..core.query_defns import DataEnvironment, ensure_df_datetimes
+from ..._version import VERSION
 from ...common.azure_auth import AzureCloudConfig
 from ...common.utility import export
-from ..._version import VERSION
+from ..core.query_defns import DataEnvironment, ensure_df_datetimes
+from .odata_driver import OData, QuerySource
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

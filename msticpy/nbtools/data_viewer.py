@@ -9,6 +9,7 @@ Deprecated - module data_viewer.py has moved.
 See :py:mod:`msticpy.data.browsers.data_viewer`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

@@ -13,11 +13,11 @@ requests per minute for the account type that you have.
 
 """
 import abc
-from abc import ABC, abstractmethod
 import collections
 import math  # noqa
 import pprint
 import re
+from abc import ABC, abstractmethod
 from collections import Counter, namedtuple
 from enum import Enum
 from functools import lru_cache, singledispatch, total_ordering
@@ -31,8 +31,8 @@ from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from ...._version import VERSION
-from ....common.utility import export
 from ....analysis.data.iocextract import IoCExtract, IoCType
+from ....common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

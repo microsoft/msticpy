@@ -6,15 +6,14 @@
 """Miscellaneous data provider driver tests."""
 import re
 
-import respx
 import pandas as pd
 import pytest
 import pytest_check as check
+import respx
 
 from msticpy.data.drivers.cybereason_driver import CybereasonDriver
 
-from ...unit_test_lib import get_test_data_path, custom_mp_config
-
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 MP_PATH = str(get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"))
 # pylint: disable=protected-access

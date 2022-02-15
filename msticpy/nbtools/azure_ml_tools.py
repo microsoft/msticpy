@@ -11,11 +11,10 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import parse_version, WorkingSet, Requirement, DistInfoDistribution
+from pkg_resources import DistInfoDistribution, Requirement, WorkingSet, parse_version
 
 from .._version import VERSION
 from ..common.pkg_config import refresh_config
-
 
 __version__ = VERSION
 

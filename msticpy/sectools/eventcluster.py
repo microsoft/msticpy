@@ -9,6 +9,7 @@ Deprecated - module eventcluster.py has moved.
 See :py:mod:`msticpy.analysis.eventcluster`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

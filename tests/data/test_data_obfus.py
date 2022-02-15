@@ -11,10 +11,10 @@ from typing import Dict, Iterable
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data import data_obfus
 
 from ..unit_test_lib import TEST_DATA_PATH
-
 
 _TEST_DATA: Dict[str, Iterable] = {
     "hash_string": [("string", True), ("42424", True), (["42424"], True)],

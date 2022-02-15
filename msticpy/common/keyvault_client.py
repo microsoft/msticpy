@@ -10,7 +10,6 @@ from typing import Any, List
 
 from azure.core.exceptions import ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
-
 from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
@@ -23,7 +22,6 @@ from azure.mgmt.keyvault.models import (
     VaultCreateOrUpdateParameters,
     VaultProperties,
 )
-
 from msrestazure.azure_exceptions import CloudError
 
 from .._version import VERSION

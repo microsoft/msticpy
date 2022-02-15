@@ -9,6 +9,7 @@ Deprecated - module morph_charts.py has moved.
 See :py:mod:`msticpy.vis.morph_charts`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

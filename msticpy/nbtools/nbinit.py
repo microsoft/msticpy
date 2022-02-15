@@ -28,7 +28,7 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
-from ..common.azure_auth_core import check_cli_credentials, AzureCliStatus
+from ..common.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
 from ..common.pkg_config import get_config, validate_config

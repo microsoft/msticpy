@@ -4,34 +4,32 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Azure Python SDK to collect and return details related to Azure."""
-from typing import Optional, Dict, Tuple, List
 import datetime
+from typing import Dict, List, Optional, Tuple
 
 import attr
-import pandas as pd
 import numpy as np
-
-from azure.mgmt.resource.subscriptions import SubscriptionClient
+import pandas as pd
 from azure.common.exceptions import CloudError
+from azure.mgmt.resource.subscriptions import SubscriptionClient
 
 from ....common.azure_auth import (
-    az_connect,
     AzCredentials,
     AzureCloudConfig,
+    az_connect,
     only_interactive_cred,
 )
 from ....common.cloud_mappings import get_all_endpoints
-
 from ....common.exceptions import (
     MsticpyAzureConfigError,
+    MsticpyImportExtraError,
     MsticpyNotConnectedError,
     MsticpyResourceException,
-    MsticpyImportExtraError,
 )
 
 try:
-    from azure.mgmt.resource import ResourceManagementClient
     from azure.mgmt.network import NetworkManagementClient
+    from azure.mgmt.resource import ResourceManagementClient
 
     try:
         # Try new version but keep backward compat with 1.0.1

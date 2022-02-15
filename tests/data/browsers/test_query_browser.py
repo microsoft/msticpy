@@ -6,12 +6,12 @@
 """test Query browser."""
 from functools import partial
 
-import pytest_check as check
 import pytest
+import pytest_check as check
 
-from msticpy.data.core.query_container import QueryContainer
 from msticpy.data import QueryProvider
 from msticpy.data.browsers.query_browser import _query_display_func
+from msticpy.data.core.query_container import QueryContainer
 
 # pylint: disable=redefined-outer-name
 

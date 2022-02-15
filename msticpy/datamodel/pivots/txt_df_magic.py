@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 """Text to DataFrame IPython magic."""
 from IPython.core.magic import needs_local_scope, register_cell_magic
-from .pivot_magic_core import run_txt2df
 
 from ..._version import VERSION
+from .pivot_magic_core import run_txt2df
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

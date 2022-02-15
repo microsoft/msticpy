@@ -9,6 +9,7 @@ Deprecated - module txt_df_magic.py has moved.
 See :py:mod:`msticpy.datamodel.pivots.txt_df_magic`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

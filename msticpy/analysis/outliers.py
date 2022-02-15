@@ -16,11 +16,11 @@ data and another on which to predict outliers.
 import math
 from typing import List, Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from ..common.exceptions import MsticpyImportExtraError
 from .._version import VERSION
+from ..common.exceptions import MsticpyImportExtraError
 
 try:
     import matplotlib.pyplot as plt

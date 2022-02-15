@@ -47,15 +47,13 @@ Configuration:
 import os
 
 # flake8: noqa: F403
-from .nbtools.nbinit import init_notebook, current_providers
+from . import analysis, data, nbtools, sectools
+from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
-from . import sectools
-from . import nbtools
-from . import data
-from . import analysis
+from .common.utility import search_name as search
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
-from ._version import VERSION
+from .nbtools.nbinit import current_providers, init_notebook
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"

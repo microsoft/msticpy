@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 import pytest_check as check
+
 from msticpy.common.exceptions import MsticpyException
 from msticpy.data.core.data_providers import DriverBase, QueryContainer, QueryProvider
 from msticpy.data.core.query_source import QuerySource

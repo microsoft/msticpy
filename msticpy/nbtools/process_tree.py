@@ -9,6 +9,7 @@ Deprecated - module process_tree.py has moved.
 See :py:mod:`msticpy.vis.process_tree`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

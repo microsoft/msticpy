@@ -4,16 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """MP Config Control Class."""
-from collections import namedtuple
 import pkgutil
 import re
+from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ipywidgets as widgets
 import yaml
 
-from ..common.utility import is_valid_uuid
 from .._version import VERSION
+from ..common.utility import is_valid_uuid
 from .ce_common import print_debug, py_to_widget, widget_to_py
 from .comp_edit import SettingsControl
 

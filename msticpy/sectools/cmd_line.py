@@ -9,6 +9,7 @@ Deprecated - module cmd_line.py has moved.
 See :py:mod:`msticpy.analysis.data.cmd_line`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

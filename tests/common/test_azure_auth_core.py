@@ -10,11 +10,12 @@ from unittest.mock import patch
 import pytest
 import pytest_check as check
 from msrestazure import azure_cloud
+
 from msticpy.common.azure_auth_core import (
-    AzureCloudConfig,
-    default_auth_methods,
-    check_cli_credentials,
     AzureCliStatus,
+    AzureCloudConfig,
+    check_cli_credentials,
+    default_auth_methods,
 )
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path

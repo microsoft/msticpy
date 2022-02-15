@@ -22,8 +22,8 @@ import pytz
 from .._version import VERSION
 from ..common.exceptions import MsticpyException
 from ..common.utility import export
-from ..datamodel.entities import GeoLocation, Host, IpAddress
 from ..data.context.ip_utils import convert_to_ip_entities
+from ..datamodel.entities import GeoLocation, Host, IpAddress
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

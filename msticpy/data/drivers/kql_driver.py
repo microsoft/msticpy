@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import pandas as pd
 from IPython import get_ipython
 
-from ...common.azure_auth import AzureCloudConfig, only_interactive_cred, az_connect
+from ...common.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
@@ -22,16 +22,16 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
-from ...common.wsconfig import WorkspaceConfig
 from ...common.utility import export
+from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
 try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
-    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.kql_proxy import KqlResponse
+    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(

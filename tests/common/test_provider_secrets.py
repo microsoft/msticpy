@@ -4,33 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
-from copy import deepcopy
-from collections import namedtuple
-import unittest
-from unittest.mock import patch, MagicMock
 import os
-from pathlib import Path
+import unittest
 import warnings
+from collections import namedtuple
+from copy import deepcopy
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import keyring
-
 from azure.core.exceptions import ResourceNotFoundError
 
-from msticpy.common import secret_settings
-from msticpy.common.keyvault_client import (
-    # AuthClient,
-    # KeyringAuthClient,
+from msticpy.common import pkg_config, secret_settings
+from msticpy.common.keyvault_client import (  # AuthClient,; KeyringAuthClient,
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
 )
-from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.common.utility import set_unit_testing
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 

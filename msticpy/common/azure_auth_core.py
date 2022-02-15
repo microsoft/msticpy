@@ -11,8 +11,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Tuple
 
-from azure.common.exceptions import CloudError
 from azure.common.credentials import get_cli_profile
+from azure.common.exceptions import CloudError
 from azure.identity import (
     AzureCliCredential,
     ChainedTokenCredential,
@@ -24,15 +24,15 @@ from dateutil import parser
 from msrestazure import azure_cloud
 
 from .._version import VERSION
-from .cred_wrapper import CredentialWrapper
-from .exceptions import MsticpyAzureConnectionError
 from ..common import pkg_config as config
 from .cloud_mappings import (
-    get_all_endpoints,
-    get_all_suffixes,
     CLOUD_ALIASES,
     CLOUD_MAPPING,
+    get_all_endpoints,
+    get_all_suffixes,
 )
+from .cred_wrapper import CredentialWrapper
+from .exceptions import MsticpyAzureConnectionError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

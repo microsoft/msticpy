@@ -7,9 +7,8 @@
 from typing import Dict, Union
 from uuid import uuid4
 
-import pandas as pd
 import httpx
-
+import pandas as pd
 from azure.common.exceptions import CloudError
 
 from ...._version import VERSION

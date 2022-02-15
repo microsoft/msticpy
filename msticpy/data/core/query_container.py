@@ -7,8 +7,8 @@
 from functools import partial
 from typing import Any, Dict, Optional, Type
 
-from ...common.utility import check_kwarg
 from ..._version import VERSION
+from ...common.utility import check_kwarg
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -9,6 +9,7 @@ Deprecated - module timeline_duration.py has moved.
 See :py:mod:`msticpy.vis.timeline_duration`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

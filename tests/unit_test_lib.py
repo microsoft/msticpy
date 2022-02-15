@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Unit test common utilities."""
-from contextlib import contextmanager
-from pathlib import Path
 import os
-from os import getcwd, chdir
-from typing import Union, Dict, Any, Generator
+from contextlib import contextmanager
+from os import chdir, getcwd
+from pathlib import Path
+from typing import Any, Dict, Generator, Union
 
 from filelock import FileLock
+
 from msticpy.common import pkg_config
 
 __author__ = "Ian Hellen"

@@ -19,7 +19,7 @@ from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
 from ...nbtools.nbwidgets import QueryTime
 from ..browsers.query_browser import browse_queries
-from ..drivers import import_driver, DriverBase
+from ..drivers import DriverBase, import_driver
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment

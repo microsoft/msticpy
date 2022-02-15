@@ -8,11 +8,10 @@ from datetime import datetime
 from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
-import pandas as pd
 import httpx
-from IPython.display import display
-
+import pandas as pd
 from azure.common.exceptions import CloudError
+from IPython.display import display
 
 from ...._version import VERSION
 from ....common.exceptions import MsticpyUserError

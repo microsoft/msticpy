@@ -16,7 +16,7 @@ from deprecated.sphinx import deprecated
 from .._version import VERSION
 from ..common.utility import escape_windows_path, export
 from ..data.core.query_defns import DataEnvironment, QueryParamProvider
-from ..datamodel.entities import Account, Entity, Host, Process, OSFamily
+from ..datamodel.entities import Account, Entity, Host, OSFamily, Process
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

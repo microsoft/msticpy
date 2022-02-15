@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Security Graph OData Driver class."""
-from typing import Union, Any
+from typing import Any, Union
+
 import pandas as pd
 
-from .odata_driver import OData, QuerySource
+from ..._version import VERSION
 from ...common.azure_auth_core import AzureCloudConfig
 from ...common.utility import export
-from ..._version import VERSION
+from .odata_driver import OData, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

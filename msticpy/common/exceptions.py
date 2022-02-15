@@ -9,8 +9,8 @@ from typing import List, Tuple, Union
 
 from IPython.display import display
 
-from .utility import is_ipython
 from .._version import VERSION
+from .utility import is_ipython
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -10,6 +10,7 @@ import networkx as nx
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.datamodel import entities
 from msticpy.nbtools.nbdisplay import format_alert

@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 import pytest_check as check
 import yaml
-from msticpy.config.comp_edit import CompEditStatusMixin
+
 from msticpy.config.ce_azure import CEAzure
 from msticpy.config.ce_azure_sentinel import CEAzureSentinel, _validate_ws
 from msticpy.config.ce_common import get_def_tenant_id
@@ -20,6 +20,7 @@ from msticpy.config.ce_keyvault import CEKeyVault
 from msticpy.config.ce_other_providers import CEOtherProviders
 from msticpy.config.ce_ti_providers import CETIProviders
 from msticpy.config.ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
+from msticpy.config.comp_edit import CompEditStatusMixin
 from msticpy.config.compound_ctrls import ArgControl
 from msticpy.config.mp_config_control import MpConfigControls, get_mpconfig_definitions
 
