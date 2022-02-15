@@ -13,10 +13,10 @@ requests per minute for the account type that you have.
 
 """
 import abc
+import warnings
 from collections import defaultdict
 from functools import lru_cache
-from typing import Any, Dict, Tuple, Union, Iterable, DefaultDict, Set, List, Callable
-import warnings
+from typing import Any, Callable, DefaultDict, Dict, Iterable, List, Set, Tuple, Union
 
 import pandas as pd
 
@@ -27,10 +27,10 @@ from ....common.wsconfig import WorkspaceConfig
 from ....data import QueryProvider
 from .ti_provider_base import (
     LookupResult,
-    TIProvider,
-    generate_items,
-    TISeverity,
     TILookupStatus,
+    TIProvider,
+    TISeverity,
+    generate_items,
 )
 
 __version__ = VERSION

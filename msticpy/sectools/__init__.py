@@ -4,11 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-MSTICy sectools
+MSTICy sectools.
 
-This sub-package is deprecated.
-All functionality has been removed from this sub-package and moved
-to other sub-packages:
+.. warning: This sub-package is deprecated.
+   All functionality has been removed from this sub-package and moved
+   to other sub-packages:
 
 - TI providers -> msticpy.data.context.tiproviders
   (including vtlookup and vtlookupv3)
@@ -32,19 +32,20 @@ The sectools sub-package will be removed in version 2.0.0
 
 """
 
+# from . import process_tree_utils as ptree
+from .._version import VERSION
+from ..analysis.data import base64unpack as base64
+
 # flake8: noqa: F403
 # pylint: disable=W0401
 from ..analysis.data.iocextract import IoCExtract
 from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
 from ..data.context.tilookup import TILookup
 from ..data.context.tiproviders.vtlookupv3.vtlookup import VTLookup
-from ..analysis.data import base64unpack as base64
-
-# from . import process_tree_utils as ptree
-from .._version import VERSION
 
 try:
     from IPython import get_ipython
+
     from .analysis import sectools_magics
 except ImportError as err:
     pass

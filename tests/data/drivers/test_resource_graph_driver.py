@@ -8,13 +8,12 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-
 from azure.identity import InteractiveBrowserCredential
 
 from msticpy.common.azure_auth_core import (
+    AzCredentials,
     ChainedTokenCredential,
     CredentialWrapper,
-    AzCredentials,
 )
 from msticpy.data.drivers.resource_graph_driver import ResourceGraphDriver
 

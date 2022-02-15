@@ -13,9 +13,9 @@ https://stackoverflow.com/questions/58648739/how-to-check-if-python
 
 # import sys
 from distutils.version import LooseVersion
-from importlib_metadata import version
 
 import httpx
+from importlib_metadata import version
 
 __author__ = "Ian Hellen, hoefling"
 

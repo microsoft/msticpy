@@ -8,16 +8,13 @@ from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
+import ipywidgets as widgets
 import pytest
 import pytest_check as check
 import yaml
-import ipywidgets as widgets
-from msticpy.config.comp_edit import (
-    CEItemsBase,
-    CompEditItems,
-    CompEditStatusMixin,
-)
+
 from msticpy.config.ce_simple_settings import CESimpleSettings
+from msticpy.config.comp_edit import CEItemsBase, CompEditItems, CompEditStatusMixin
 from msticpy.config.mp_config_edit import MpConfigEdit
 from msticpy.config.mp_config_file import MpConfigFile
 

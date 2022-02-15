@@ -9,6 +9,7 @@ Deprecated - module proc_tree_schema.py has moved.
 See :py:mod:`msticpy.analysis.data.proc_tree_schema`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

@@ -6,12 +6,12 @@
 """QueryStore class - holds a collection of QuerySources."""
 from collections import defaultdict
 from os import path
-from typing import Any, Dict, Iterable, Set, Union, Optional, List
+from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
-from ...common.exceptions import MsticpyUserConfigError
 from ..._version import VERSION
-from .query_defns import DataEnvironment, DataFamily
+from ...common.exceptions import MsticpyUserConfigError
 from .data_query_reader import find_yaml_files, read_query_def_file
+from .query_defns import DataEnvironment, DataFamily
 from .query_source import QuerySource
 
 __version__ = VERSION

@@ -5,15 +5,15 @@
 # --------------------------------------------------------------------------
 """Reads pivot registration config files."""
 import importlib
-from typing import Any, Callable, Dict, Type
 import warnings
+from typing import Any, Callable, Dict, Type
 
 import yaml
 
 from ..._version import VERSION
 from ...common.exceptions import (
-    MsticpyUserConfigError,
     MsticpyException,
+    MsticpyUserConfigError,
     MsticpyUserError,
 )
 from ...data.core.query_container import QueryContainer

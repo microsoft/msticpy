@@ -9,6 +9,7 @@ Deprecated - module foliummap.py has moved.
 See :py:mod:`msticpy.vis.foliummap`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

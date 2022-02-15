@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
 import random
-from typing import Any, Callable, List, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import ipywidgets as widgets
 from deprecated.sphinx import deprecated

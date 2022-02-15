@@ -9,6 +9,7 @@ Deprecated - module syslog_utils.py has moved.
 See :py:mod:`msticpy.analysis.syslog_utils`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

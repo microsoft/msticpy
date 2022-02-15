@@ -33,16 +33,16 @@ from time import sleep
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import geoip2.database  # type: ignore
-import pandas as pd
 import httpx
+import pandas as pd
 from geoip2.errors import AddressNotFoundError  # type: ignore
 from IPython import get_ipython
 from IPython.display import HTML, display
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
-from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.pkg_config import current_config_path
+from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import export
 from ...datamodel.entities import GeoLocation, IpAddress
 

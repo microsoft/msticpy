@@ -9,6 +9,7 @@ Deprecated - module query_defns.py has moved.
 See :py:mod:`msticpy.data.core.query_defns`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

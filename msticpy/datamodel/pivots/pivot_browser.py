@@ -6,12 +6,12 @@
 """Pivot browser widget."""
 from typing import Dict, List
 
+import ipywidgets as widgets
 from IPython import get_ipython
 from IPython.display import display
-import ipywidgets as widgets
-from .. import entities
 
 from ..._version import VERSION
+from .. import entities
 
 try:
     import pyperclip

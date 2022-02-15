@@ -11,9 +11,9 @@ from typing import Any, List, Optional
 from .._version import VERSION
 from . import pkg_config as config
 from .azure_auth_core import AzureCloudConfig
+from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
 from .exceptions import MsticpyKeyVaultConfigError
 from .utility import export
-from .cloud_mappings import create_cloud_ep_dict, create_cloud_suf_dict
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

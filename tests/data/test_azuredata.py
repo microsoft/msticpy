@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from azure.identity import InteractiveBrowserCredential
+
 from msticpy.common import pkg_config
 from msticpy.common.azure_auth_core import (
     AzCredentials,

@@ -7,8 +7,8 @@
 import ipywidgets as widgets
 
 from .._version import VERSION
+from .ce_common import get_or_create_mpc_section, get_wgt_ctrl
 from .comp_edit import CompEditSimple
-from .ce_common import get_wgt_ctrl, get_or_create_mpc_section
 from .mp_config_control import MpConfigControls
 
 __version__ = VERSION

@@ -4,27 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, Mapping, Union, Tuple, List
+from typing import Any, List, Mapping, Tuple, Union
 
+import IPython
 import networkx as nx
 import pandas as pd
 from bokeh.io import output_notebook
-from bokeh.plotting import figure, from_networkx, show
 from bokeh.models import Circle, HoverTool, Label
+from bokeh.plotting import figure, from_networkx, show
 from deprecated.sphinx import deprecated
-import IPython
-from IPython.display import HTML, display
-from IPython.display import Javascript
+from IPython.display import HTML, Javascript, display
 
 from .._version import VERSION
-from .security_alert import SecurityAlert
-
-# pylint: disable=unused-import
-from ..vis.timeline import display_timeline, display_timeline_values  # noqa
-from ..vis.process_tree import build_and_show_process_tree, plot_process_tree  # noqa
-
-# pylint: enable=unused-import
 from ..common.utility import export
+from .security_alert import SecurityAlert
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -95,25 +88,6 @@ def format_alert(
         return HTML(title), pd.DataFrame(alert)
 
     raise ValueError("Unrecognized alert object type " + str(type(alert)))
-
-
-@export
-def display_process_tree(process_tree: pd.DataFrame):
-    """
-    Display process tree data frame. (Deprecated).
-
-    Parameters
-    ----------
-    process_tree : pd.DataFrame
-        Process tree DataFrame
-
-    The display module expects the columns NodeRole and Level to
-    be populated. NoteRole is one of: 'source', 'parent', 'child'
-    or 'sibling'. Level indicates the 'hop' distance from the 'source'
-    node.
-
-    """
-    build_and_show_process_tree(process_tree)
 
 
 @export

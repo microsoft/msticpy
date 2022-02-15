@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable
 
 import ipywidgets as widgets
 import pandas as pd
-from IPython.display import display, HTML
+from IPython.display import HTML, display
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyException

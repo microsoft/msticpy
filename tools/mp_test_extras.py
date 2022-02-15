@@ -1,9 +1,8 @@
 """Test runs for different extras."""
 import argparse
-from datetime import datetime
 import os
 import subprocess  # nosec
-
+from datetime import datetime
 
 # pylint: disable=subprocess-run-check
 

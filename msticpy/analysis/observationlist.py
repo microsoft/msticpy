@@ -5,11 +5,11 @@
 # --------------------------------------------------------------------------
 """Observation summary collector."""
 from collections import OrderedDict
-from typing import Mapping, Any, Optional, List, Dict
+from typing import Any, Dict, List, Mapping, Optional
 
 import attr
 from attr import Factory
-from IPython.display import display, Markdown
+from IPython.display import Markdown, display
 
 from .._version import VERSION
 

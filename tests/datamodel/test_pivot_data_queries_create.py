@@ -11,14 +11,15 @@ from functools import partial
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
 from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivots.pivot_data_queries import (
     PivotQueryFunctions,
-    add_queries_to_entities,
     _create_pivot_func,
+    add_queries_to_entities,
 )
 
 _KQL_IMP_OK = False

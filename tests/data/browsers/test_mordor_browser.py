@@ -7,8 +7,8 @@
 import os
 from pathlib import Path
 
-import pytest
 import nbformat
+import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 __author__ = "Ian Hellen"

@@ -4,11 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """VirusTotal File Behavior functions."""
+import re
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from pprint import pformat
-import re
 from typing import Any, Dict, List, Optional, Union
 
 import attr
@@ -17,10 +17,9 @@ import numpy as np
 import pandas as pd
 
 from ....._version import VERSION
-
+from .....analysis.data.proc_tree_builder import ProcSchema, build_proc_tree
 from .....common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from .....vis.process_tree import plot_process_tree
-from .....analysis.data.proc_tree_builder import ProcSchema, build_proc_tree
 
 try:
     import vt

@@ -26,7 +26,8 @@ from msticpy.data.context.tiproviders.ti_provider_base import (
     _clean_url,
     generate_items,
 )
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 

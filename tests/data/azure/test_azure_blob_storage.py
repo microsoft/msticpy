@@ -4,14 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure Sentinel unit tests."""
-from collections import namedtuple
 import datetime
+from collections import namedtuple
 from unittest.mock import patch
 
 import pandas as pd
 
 from msticpy.data.context.azure import AzureBlobStorage
-
 
 _CONTAINERS = [
     {

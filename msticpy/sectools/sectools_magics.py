@@ -9,6 +9,7 @@ Deprecated - module sectools_magics.py has moved.
 See :py:mod:`msticpy.analysis.sectools_magics`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

@@ -9,13 +9,13 @@ from pathlib import Path
 
 import ipywidgets as widgets
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pytest
 import pytest_check as check
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common.timespan import TimeSpan
 from msticpy.nbtools import nbwidgets as nbw
-from msticpy.nbtools.nbwidgets.core import parse_time_unit, default_max_buffer, TimeUnit
+from msticpy.nbtools.nbwidgets.core import TimeUnit, default_max_buffer, parse_time_unit
 
 __author__ = "Ian Hellen"
 

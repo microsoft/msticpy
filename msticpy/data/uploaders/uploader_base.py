@@ -6,6 +6,7 @@
 """Data uploader base class."""
 import abc
 from abc import ABC
+
 import pandas as pd
 
 from ..._version import VERSION

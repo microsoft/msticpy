@@ -9,6 +9,7 @@ Deprecated - module sentinel_bookmarks.py has moved.
 See :py:mod:`msticpy.data.context.azure.sentinel_bookmarks`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

@@ -7,16 +7,15 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-
 import ipywidgets as widgets
 from ipywidgets import Layout
 
 from ..._version import VERSION
 from .core import (
     IPyDisplayMixin,
-    parse_time_unit,
     default_before_after,
     default_max_buffer,
+    parse_time_unit,
 )
 
 __version__ = VERSION

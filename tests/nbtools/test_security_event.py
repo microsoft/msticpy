@@ -4,13 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Security Event test class."""
-import unittest
 import os
+import unittest
 
 import pandas as pd
 
 from msticpy.nbtools.security_event import SecurityEvent
-
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/tests/testdata")

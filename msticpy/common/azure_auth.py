@@ -16,8 +16,8 @@ from .._version import VERSION
 # pylint: disable=unused-import
 from .azure_auth_core import (  # noqa: F401
     AzCredentials,
-    az_connect_core,
     AzureCloudConfig,
+    az_connect_core,
     only_interactive_cred,
 )
 

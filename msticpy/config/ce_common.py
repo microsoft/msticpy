@@ -6,12 +6,12 @@
 """Component edit utility functions."""
 from typing import Any, Dict, Optional, Tuple, Union
 
-import ipywidgets as widgets
 import httpx
+import ipywidgets as widgets
 
+from .._version import VERSION
 from ..common.azure_auth_core import AzureCloudConfig
 from .comp_edit import SettingsControl
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -9,6 +9,7 @@ Deprecated - module iocextract.py has moved.
 See :py:mod:`msticpy.analysis.data.iocextract`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

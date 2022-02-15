@@ -6,11 +6,11 @@
 """morph_charts test class."""
 import os
 from pathlib import Path
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
-import pytest
 import IPython
 import pandas as pd
+import pytest
 
 from msticpy.common.exceptions import MsticpyException
 from msticpy.vis.morph_charts import MorphCharts

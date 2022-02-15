@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data import QueryProvider
 from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities

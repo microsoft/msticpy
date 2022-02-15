@@ -8,17 +8,16 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import nbformat
 import pandas as pd
 import pytest
-import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-
-
-from ..unit_test_lib import TEST_DATA_PATH
 
 from msticpy.common.exceptions import MsticpyParameterError
 from msticpy.vis.timeline import display_timeline, display_timeline_values
 from msticpy.vis.timeline_duration import display_timeline_duration
+
+from ..unit_test_lib import TEST_DATA_PATH
 
 __author__ = "Ian Hellen"
 
@@ -139,11 +138,11 @@ def test_timeline(data, data_net, param, expected):
             print(params)
             if isinstance(expect_result, bool):
                 display_timeline(data, **params)
-                data.mp_timeline.plot(**params)
+                data.mp_plot.timeline(**params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline(data, **params)
-                    data.mp_timeline.plot(**params)
+                    data.mp_plot.timeline(**params)
 
 
 TIME_LINE_REF_ARGS = [
@@ -217,11 +216,11 @@ def test_timeline_values(data, param, expected):
             print("params:", params)
             if isinstance(expect_result, bool):
                 display_timeline_values(data, value_col="EventID", **params)
-                data.mp_timeline.plot_values(value_col="EventID", **params)
+                data.mp_plot.timeline_values(value_col="EventID", **params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline_values(data, value_col="EventID", **params)
-                    data.mp_timeline.plot_values(value_col="EventID", **params)
+                    data.mp_plot.timeline_values(value_col="EventID", **params)
 
 
 TIMELINE_DURATION_ARGS: List[Tuple[Dict[str, List[Any]], List[Any]]] = [
@@ -251,11 +250,11 @@ def test_timeline_duration(data, param, expected):
             print("params:", params)
             if isinstance(expect_result, bool):
                 display_timeline_duration(data, group_by="Account", **params)
-                data.mp_timeline.plot_duration(group_by="Account", **params)
+                data.mp_plot.timeline_duration(group_by="Account", **params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline_duration(data, value_col="Account", **params)
-                    data.mp_timeline.plot_duration(group_by="Account", **params)
+                    data.mp_plot.timeline_duration(group_by="Account", **params)
 
 
 _NB_FOLDER = "docs/notebooks"

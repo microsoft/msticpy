@@ -5,9 +5,10 @@
 # --------------------------------------------------------------------------
 """test TI Browser."""
 from pathlib import Path
+
 import pandas as pd
-import pytest_check as check
 import pytest
+import pytest_check as check
 
 from msticpy.data.browsers.ti_browser import get_ti_select_options, ti_details_display
 

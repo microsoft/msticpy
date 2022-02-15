@@ -9,7 +9,7 @@ from typing import Dict, List, Union
 
 import ipywidgets as widgets
 import pandas as pd
-from bokeh.io import push_notebook, show, output_notebook
+from bokeh.io import output_notebook, push_notebook, show
 from bokeh.models import (
     BooleanFilter,
     CDSView,
@@ -20,9 +20,8 @@ from bokeh.models import (
 )
 from IPython.display import display
 
-from ...nbtools import nbwidgets
-
 from ..._version import VERSION
+from ...nbtools import nbwidgets
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

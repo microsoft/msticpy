@@ -1,7 +1,7 @@
 import unittest
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
 from msticpy.analysis.anomalous_sequence.model import Model
+from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
 from msticpy.common.exceptions import MsticpyException
 
 

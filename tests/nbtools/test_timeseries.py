@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from collections import Counter
 import os
 import unittest
+from collections import Counter
 from pathlib import Path
 
 import nbformat
@@ -14,10 +14,10 @@ import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.analysis.timeseries import (
-    timeseries_anomalies_stl,
-    extract_anomaly_periods,
     create_time_period_kqlfilter,
+    extract_anomaly_periods,
     set_new_anomaly_threshold,
+    timeseries_anomalies_stl,
 )
 
 _NB_FOLDER = "docs/notebooks"

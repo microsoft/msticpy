@@ -9,6 +9,7 @@ Deprecated - module vtobject_browser.py has moved.
 See :py:mod:`msticpy.data.browsers.vtobject_browser`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

@@ -5,13 +5,12 @@
 # --------------------------------------------------------------------------
 """GeoIP provider unit tests."""
 import os
-from pathlib import Path
 import socket
+from pathlib import Path
 
 import nbformat
 import pytest
 import pytest_check as check
-
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.data.context.geoip import GeoLiteLookup, IPStackLookup

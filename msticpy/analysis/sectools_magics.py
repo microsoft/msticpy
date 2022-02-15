@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """msticpy IPython magics."""
 import re
-from typing import Tuple, List
+from typing import List, Tuple
 
 # pylint: disable=unused-import
 # flake8: noqa: F403
@@ -14,7 +14,7 @@ import pandas as pd
 # pylint: enable=unused-import
 from IPython import get_ipython
 from IPython.core import magic_arguments
-from IPython.core.magic import line_cell_magic, Magics, magics_class
+from IPython.core.magic import Magics, line_cell_magic, magics_class
 
 try:
     from bs4 import BeautifulSoup
@@ -23,10 +23,9 @@ try:
 except ImportError:
     _BS_AVAILABLE = False
 
+from .._version import VERSION
 from .data import base64unpack as base64
 from .data.iocextract import IoCExtract
-
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

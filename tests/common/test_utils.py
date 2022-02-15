@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """vtlookup test class."""
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import pytest_check as check
 

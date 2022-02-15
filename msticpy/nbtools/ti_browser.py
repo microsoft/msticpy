@@ -9,6 +9,7 @@ Deprecated - module ti_browser.py has moved.
 See :py:mod:`msticpy.data.browsers.ti_browser`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

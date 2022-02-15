@@ -24,6 +24,7 @@ from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
 
 try:
     from IPython import get_ipython
+
     from . import sectools_magics
 except ImportError as err:
     pass

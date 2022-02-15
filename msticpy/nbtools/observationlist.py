@@ -9,6 +9,7 @@ Deprecated - module observationlist.py has moved.
 See :py:mod:`msticpy.analysis.observationlist`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

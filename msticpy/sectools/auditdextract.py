@@ -9,6 +9,7 @@ Deprecated - module auditdextract.py has moved.
 See :py:mod:`msticpy.analysis.data.auditdextract`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

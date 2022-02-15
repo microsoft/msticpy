@@ -15,8 +15,8 @@ requests per minute for the account type that you have.
 from typing import Any, Tuple
 
 from ...._version import VERSION
-from .ti_provider_base import LookupResult, TISeverity
 from .http_base import HttpProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, TISeverity
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

@@ -11,7 +11,6 @@ import warnings
 from ..common.utility import *
 from ..common.utility import md, md_warn
 
-
 WARN_MSSG = (
     "This module has moved to msticpy.common.utility\n"
     "Please change your import to reflect this new location."

@@ -4,12 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
-import re
 import json
-from json import JSONDecodeError
-from datetime import datetime
-from numbers import Number
+import re
 import warnings
+from datetime import datetime
+from json import JSONDecodeError
+from numbers import Number
 from typing import Callable, Dict, Iterable, Set, Union
 
 import numpy as np

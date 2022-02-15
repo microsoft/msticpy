@@ -7,16 +7,16 @@ import pandas as pd
 from IPython.display import HTML, display
 
 from .....common.exceptions import MsticpyImportExtraError
-from .....common.utility import is_ipython
 from .....common.provider_settings import get_provider_settings
+from .....common.utility import is_ipython
 
 try:
-    import vt
-
     # Removing dependency temporarily due to build break
     # from vt_graph_api import VTGraph
     # from vt_graph_api import errors as vt_graph_errs
     import nest_asyncio
+    import vt
+
     from .vtfile_behavior import VTFileBehavior
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
