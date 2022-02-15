@@ -8,7 +8,6 @@ import sys
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
-import warnings
 
 import pkg_resources
 import networkx as nx
