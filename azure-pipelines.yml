@@ -165,7 +165,7 @@ stages:
         condition: succeededOrFailed()
       - script: |
           python -m pip install --upgrade black
-          black -t py36 --diff --check --exclude venv .
+          black --diff --check --exclude venv .
         displayName: Black
         continueOnError: true
         condition: succeededOrFailed()

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Morder dataset browser."""
 from pprint import pformat
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 import ipywidgets as widgets
 import pandas as pd
@@ -13,6 +13,7 @@ from IPython.display import display, HTML
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyException
+from ...common.pkg_config import settings
 from ..drivers.mordor_driver import (
     MordorDriver,
     MordorEntry,
@@ -27,20 +28,23 @@ __author__ = "Ian Hellen"
 class MordorBrowser:
     """Mordor browser widget."""
 
-    def __init__(self, save_folder: str = ".", use_cached: bool = True):
+    def __init__(self, save_folder: Optional[str] = None, use_cached: bool = True):
         """
         Initialize MordorBrowser control.
 
         Parameters
         ----------
         save_folder : str, optional
-            Folder to save downloaded files, by default "."
+            Folder to save downloaded files, by default reads the value
+            from settings or defaults to "."
         use_cached : bool, optional
             If true, downloaded files are not deleted after
             download and are used as a local cache, by default True
 
         """
-        self._save_folder = save_folder
+        mdr_settings = settings.get("DataProviders", {}).get("Mordor", {})
+        self._save_folder = save_folder or mdr_settings.get("save_folder", ".")
+
         self._use_cached = use_cached
         self.mordor_driver = MordorDriver()
         self.mordor_driver.connect()
@@ -226,11 +230,13 @@ class MordorBrowser:
                 value = None
 
             if field_attrs["type"] == "text":
-                self.fields[field].value = str(value)
+                self.fields[field].value = str(value) if value else ""
             elif field_attrs["type"] == "list":
-                self.fields[field].value = ", ".join([str(item) for item in value])
+                self.fields[field].value = (
+                    ", ".join([str(item) for item in value]) if value else ""
+                )
             elif field_attrs["type"] == "raw":
-                self.fields[field].value = pformat(value)
+                self.fields[field].value = pformat(value) if value else ""
             elif field == "attacks":
                 field_data = mdr_item.get_attacks()
                 self.fields[field].value = _format_attacks(field_data)
