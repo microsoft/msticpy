@@ -39,7 +39,7 @@ class SentinelUtilsMixin:
 
     def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
         """Get items from the API."""
-        self.check_connected()
+        self.check_connected()  # type: ignore
         return httpx.get(
             url,
             headers=get_api_headers(self.token),  # type: ignore
