@@ -41,7 +41,7 @@ from ..common.utility import (
     unit_testing,
 )
 from ..config import MpConfigFile
-from ..datamodel.pivot import Pivot
+from ..datamodel.pivots.pivot import Pivot
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml
 from .user_config import load_user_defaults
@@ -152,7 +152,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
-    dict(pkg="msticpy.datamodel.pivot", tgt="Pivot"),
+    dict(pkg="msticpy.datamodel.pivots.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
 ]

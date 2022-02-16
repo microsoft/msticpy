@@ -11,9 +11,13 @@ set SOURCEDIR=source
 set BUILDDIR=build
 
 if /I "%SPHINX_NOGEN%" NEQ "" goto no_gen_files
+if /I "%1" EQU "clean" goto no_gen_files
+
 REM Generate API source RST files
 echo Regenerating API source files...
-sphinx-apidoc --o %SOURCEDIR%/api --force ../msticpy
+del /Q %SOURCEDIR%\api\*
+set APIDOC_OPTS=--force --module-first --separate
+sphinx-apidoc --o %SOURCEDIR%/api %APIDOC_OPTS% ../msticpy ../msticpy/sectools
 del %SOURCEDIR%\api\modules.rst
 
 REM generate query list

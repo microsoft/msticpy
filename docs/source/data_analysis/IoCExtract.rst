@@ -114,7 +114,7 @@ Instantiate an IoCExtract instance and pass the string to the extract() method.
 .. code:: ipython3
 
     # Instantiate an IoCExtract object
-    from msticpy.sectools import IoCExtract
+    from msticpy.analysis.data import IoCExtract
     ioc_extractor = IoCExtract()
 
     # any IoCs in the string?
@@ -170,7 +170,7 @@ parameter to specify which column or columns that you want to search.
     You can also use the ``ioc_types`` parameter to explicitly list the
     ioc_types that you want to search for. This should be a list of
     strings of valid types.
-    See :py:meth:`ioc_types<msticpy.sectools.ioc_extractor.IoCExtract.ioc_types>`
+    See :py:meth:`ioc_types<msticpy.analysis.data.ioc_extractor.IoCExtract.ioc_types>`
 
 
 .. code:: ipython3
@@ -290,8 +290,8 @@ parameter to specify which column or columns that you want to search.
 IoCExtractor API
 ----------------
 
-See :py:class:`IoCExtract<msticpy.sectools.ioc_extractor.IoCExtract>`
-and See :py:func:`IoCExtract<msticpy.sectools.ioc_extractor.IoCExtract.extract>`
+See :py:class:`IoCExtract<msticpy.analysis.data.ioc_extractor.IoCExtract>`
+and See :py:func:`IoCExtract<msticpy.analysis.data.ioc_extractor.IoCExtract.extract>`
 
 
 Predefined Regex Patterns
@@ -375,7 +375,7 @@ Adding your own pattern(s)
 --------------------------
 
 
-See :py:func:`add_ioc_type<msticpy.sectools.ioc_extractor.IoCExtract.add_ioc_type>`
+See :py:func:`add_ioc_type<msticpy.analysis.data.ioc_extractor.IoCExtract.add_ioc_type>`
 
 
 Add an IoC type and regular expression to use to the built-in set.

@@ -12,9 +12,9 @@ from bokeh.plotting import figure
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
-from ..nbtools.process_tree import build_and_show_process_tree
-from ..nbtools.timeline import display_timeline, display_timeline_values
-from ..nbtools.timeline_duration import display_timeline_duration
+from ..vis.process_tree import build_and_show_process_tree
+from ..vis.timeline import display_timeline, display_timeline_values
+from ..vis.timeline_duration import display_timeline_duration
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .matrix_plot import plot_matrix
 

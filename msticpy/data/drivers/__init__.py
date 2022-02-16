@@ -7,7 +7,7 @@
 import importlib
 from typing import Union
 
-from ..query_defns import DataEnvironment
+from ..core.query_defns import DataEnvironment
 
 # flake8: noqa: F403
 from .driver_base import DriverBase

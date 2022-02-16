@@ -10,7 +10,7 @@ import pandas as pd
 from pytest import raises
 
 from msticpy.common.exceptions import MsticpyException
-from msticpy.sectools import cmd_line as cl
+from msticpy.analysis.data import cmd_line as cl
 
 from ..unit_test_lib import TEST_DATA_PATH
 

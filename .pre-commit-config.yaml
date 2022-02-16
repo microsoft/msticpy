@@ -29,6 +29,14 @@ repos:
           - --extend-ignore=E0401,E501
           - --max-line-length=90
           - --exclude=tests,test*.py
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.10.1
+  #   hooks:
+  #     - id: isort
+  #       name: isort (python)
+  #       args:
+  #         - --profile
+  #         - black
   - repo: local
     hooks:
       - id: check_reqs_all

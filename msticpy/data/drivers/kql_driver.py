@@ -24,7 +24,7 @@ from ...common.exceptions import (
 )
 from ...common.wsconfig import WorkspaceConfig
 from ...common.utility import export
-from ..query_defns import DataEnvironment
+from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
 try:

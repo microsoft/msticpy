@@ -9,7 +9,7 @@ import pandas as pd
 import pytest_check as check
 
 
-from msticpy.data.query_defns import ensure_df_datetimes
+from msticpy.data.core.query_defns import ensure_df_datetimes
 
 from ..unit_test_lib import get_test_data_path
 

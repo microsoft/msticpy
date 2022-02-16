@@ -3,8 +3,29 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""MSTIC Analysis Tools."""
+"""
+MSTICPy Analysis Tools.
+
+This sub-package has a few classes of analysis tools:
+
+- data - this sub-package contains data-processing
+  tools for dealing with tranforming data (e.g. auditd, process tree)
+  or extracting specific data formats (iocextract, b64, cmdline)
+- other items are miscellaneous analysis modules such anomalous
+  sequence, time series, eventcluster.
+
+"""
 
 from .._version import VERSION
+
+# flake8: noqa: F403
+# pylint: disable=W0401
+from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
+
+try:
+    from IPython import get_ipython
+    from . import sectools_magics
+except ImportError as err:
+    pass
 
 __version__ = VERSION

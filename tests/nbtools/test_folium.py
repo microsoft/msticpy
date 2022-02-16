@@ -16,7 +16,7 @@ import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.datamodel.entities import GeoLocation, Host, IpAddress
-from msticpy.nbtools.foliummap import (
+from msticpy.vis.foliummap import (
     FoliumMap,
     get_center_geo_locs,
     get_center_ip_entities,

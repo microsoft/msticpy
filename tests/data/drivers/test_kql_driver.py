@@ -27,7 +27,7 @@ from msticpy.common.exceptions import (
     MsticpyDataQueryError,
 )
 from msticpy.data.drivers import import_driver
-from msticpy.data.query_defns import DataEnvironment
+from msticpy.data.core.query_defns import DataEnvironment
 
 KqlDriver = import_driver(DataEnvironment.AzureSentinel)
 

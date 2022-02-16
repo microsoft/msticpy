@@ -8,7 +8,7 @@
 import unittest
 import os
 
-from msticpy.nbtools.observationlist import Observation, Observations
+from msticpy.analysis.observationlist import Observation, Observations
 from msticpy._version import VERSION
 
 __version__ = VERSION

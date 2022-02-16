@@ -12,9 +12,10 @@ import pandas as pd
 import pytest
 import pytest_check as check
 from msticpy.datamodel import entities
-from msticpy.datamodel.entities import Alert, Host, IpAddress, OSFamily, Url
-from msticpy.datamodel.pivot import Pivot
+from msticpy.datamodel.entities import Host, OSFamily, Url, IpAddress, Alert
+from msticpy.datamodel.pivots.pivot import Pivot
 from msticpy.datamodel.soc.sentinel_alert import SentinelAlert
+
 
 from ...unit_test_lib import get_test_data_path
 

@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 import respx
 from azure.core.exceptions import ClientAuthenticationError
-from msticpy.data.azure import AzureData
-from msticpy.data.azure import MicrosoftSentinel
+from msticpy.data.context.azure import AzureData
+from msticpy.data.context.azure import MicrosoftSentinel
 
 # pylint: disable=redefined-outer-name
 
@@ -56,6 +56,7 @@ def azs_loader(mock_creds):
     mock_creds.return_value = None
     azs = MicrosoftSentinel(sub_id="123", res_grp="RG", ws_name="WSName")
     azs.connect()
+    azs.connected = True
     azs.token = "123"
     return azs
 
