@@ -36,7 +36,8 @@ from ..analysis.data.proc_tree_schema import ColNames as Col
 from ..analysis.data.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
 
 # pylint: disable=unused-import
-from ..analysis.data.process_tree_utils import (  # noqa F401
+# flake8: noqa F401
+from ..analysis.data.process_tree_utils import (
     get_ancestors,
     get_children,
     get_descendents,
