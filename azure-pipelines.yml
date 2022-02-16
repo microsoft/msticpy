@@ -13,6 +13,7 @@ pr:
   branches:
     include:
     - main
+    - release/*
 schedules:
 - cron: 0 4 * * 1
   branches:

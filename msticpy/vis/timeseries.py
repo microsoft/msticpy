@@ -14,6 +14,7 @@ from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 
 # pylint: disable=no-name-in-module
 from bokeh.plotting import figure, reset_output
+from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
@@ -246,4 +247,11 @@ def display_timeseries_anomalies(
 
 
 # Keep misspelled name for backward compatability
-display_timeseries_anomolies = display_timeseries_anomalies
+@export
+@deprecated(
+    "Will be removed in version 2.0.0. Please use display_timeseries_anomalies",
+    version="1.7.0",
+)
+def display_timeseries_anomolies(*args, **kwargs):
+    """Call display_timeseries_anomalies."""
+    return display_timeseries_anomalies(*args, **kwargs)

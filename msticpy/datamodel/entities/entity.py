@@ -521,8 +521,8 @@ class Entity(ABC, Node):
                 )
             )
         except StopIteration:
-            name = None
-        return name or "unknown"
+            name = "unknown"
+        return name
 
     @property
     def node_properties(self) -> Dict[str, Any]:

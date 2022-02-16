@@ -87,10 +87,14 @@ def test_connect(driver):
 @respx.mock
 def test_query(driver):
     """Test query calling returns data in expected format."""
+    connect = respx.post(re.compile(r"https://.*.cybereason.net/login.html")).respond(
+        200
+    )
     query = respx.post(
         re.compile(r"https://.*.cybereason.net/rest/visualsearch/query/simple")
     ).respond(200, json=_CR_RESULT)
     with custom_mp_config(MP_PATH):
         data = driver.query('{"test": "test"}')
+        check.is_true(connect.called or driver.connected)
         check.is_true(query.called)
         check.is_instance(data, pd.DataFrame)

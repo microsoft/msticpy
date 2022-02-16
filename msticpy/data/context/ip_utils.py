@@ -329,7 +329,7 @@ class IpWhoisAccessor:
         return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
 
 
-@deprecated("Will be removed in a future version", version="1.4.0")
+@deprecated("Will be removed in version 2.0.0", version="1.4.0")
 @export
 def create_ip_record(
     heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
