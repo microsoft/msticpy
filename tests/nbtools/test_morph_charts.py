@@ -13,7 +13,7 @@ import IPython
 import pandas as pd
 
 from msticpy.common.exceptions import MsticpyException
-from msticpy.nbtools.morph_charts import MorphCharts
+from msticpy.vis.morph_charts import MorphCharts
 
 from ..unit_test_lib import get_test_data_path
 

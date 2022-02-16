@@ -10,7 +10,8 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import respx
-from msticpy.data.azure import MicrosoftSentinel
+from msticpy.data.context.azure import MicrosoftSentinel
+
 
 _WATCHLISTS = {
     "value": [
@@ -90,6 +91,7 @@ def sent_loader(mock_creds):
         sub_id="fd09863b-5cec-4833-ab9c-330ad07b0c1a", res_grp="RG", ws_name="WSName"
     )
     sent.connect()
+    sent.connected = True
     sent.token = "fd09863b-5cec-4833-ab9c-330ad07b0c1a"
     return sent
 

@@ -23,7 +23,7 @@ except ImportError:
     _NOTEBOOKLETS = False
 
 try:
-    from msticpy.datamodel.pivot import Pivot  # noqa: F401
+    from msticpy.datamodel.pivots.pivot import Pivot  # noqa: F401
 
     _PIVOT = True
 except ImportError:

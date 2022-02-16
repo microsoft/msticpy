@@ -13,10 +13,11 @@ import pytest
 import pytest_check as check
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
-from msticpy.data.query_container import QueryContainer
+from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities
-from msticpy.datamodel.pivot import Pivot
-from msticpy.sectools import GeoLiteLookup, TILookup
+from msticpy.datamodel.pivots.pivot import Pivot
+from msticpy.data.context.geoip import GeoLiteLookup
+from msticpy.data.context.tilookup import TILookup
 
 __author__ = "Ian Hellen"
 
@@ -45,7 +46,7 @@ except ImportError:
 _IPSTACK_IMP_OK = False
 ip_stack_cls: Optional[type]
 try:
-    from msticpy.sectools import IPStackLookup as ip_stack_cls
+    from msticpy.data.context.geoip import IPStackLookup as ip_stack_cls
 
     _IPSTACK_IMP_OK = True
 except ImportError:

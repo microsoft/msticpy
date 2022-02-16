@@ -17,7 +17,7 @@ import pytest_check as check
 from bokeh.layouts import LayoutDOM
 from vt.object import Object as VtObject
 
-from msticpy.sectools import vtlookupv3
+from msticpy.data.context.tiproviders import vtlookupv3
 
 from ..unit_test_lib import get_test_data_path
 
@@ -33,8 +33,10 @@ VTBrowser = vtlookupv3.VTObjectBrowser
 
 __author__ = "Ian Hellen"
 
+_VT_MODULE_PATH = "msticpy.data.context.tiproviders.vtlookupv3"
 
-@patch("msticpy.sectools.vtlookupv3.vtlookupv3.vt")
+
+@patch(f"{_VT_MODULE_PATH}.vtlookupv3.vt")
 def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
@@ -46,7 +48,7 @@ def create_vt_client(vt_lib) -> VTLookupV3:
 @pytest.fixture
 def vt_client(monkeypatch):
     """Return a VTLookup instance."""
-    vt_lib_fb = sys.modules["msticpy.sectools.vtlookupv3.vtfile_behavior"]
+    vt_lib_fb = sys.modules[f"{_VT_MODULE_PATH}.vtfile_behavior"]
     vt = getattr(vt_lib_fb, "vt")
     monkeypatch.setattr(vt, "Client", VTClient)
     monkeypatch.setattr(vt, "APIError", VTAPIError)

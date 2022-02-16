@@ -44,9 +44,7 @@ TechCommunity blog posts
 
     # msticpy imports
     from msticpy.data import QueryProvider
-    from msticpy.nbtools import *
-    from msticpy.sectools import *
-    from msticpy.nbtools.wsconfig import WorkspaceConfig
+    from msticpy.common.wsconfig import WorkspaceConfig
     from msticpy.nbtools.timeseries import display_timeseries_anomolies
 
     WIDGET_DEFAULTS = {

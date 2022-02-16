@@ -251,7 +251,7 @@ class SelectAlert(IPyDisplayMixin):
 
 # pylint: disable=too-many-instance-attributes
 @deprecated(
-    reason="Superceded by SelectAlert. Please use that version", version="0.5.2"
+    reason="Superceded by SelectAlert. Will be removed in v2.0.0.", version="0.5.2"
 )
 class AlertSelector(SelectAlert):
     """

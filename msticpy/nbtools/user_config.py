@@ -52,7 +52,7 @@ from typing import Any, Dict, Tuple
 from .._version import VERSION
 from ..common.pkg_config import settings
 from ..common.wsconfig import WorkspaceConfig
-from ..data.data_providers import QueryProvider
+from ..data.core.data_providers import QueryProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -170,7 +170,7 @@ def _load_provider(prov_name: str, qry_prov_entry: Dict[str, Any]) -> Tuple[str,
 # pylint: disable=import-outside-toplevel
 def _load_ti_lookup(comp_settings=None, **kwargs):
     del comp_settings, kwargs
-    from ..sectools.tilookup import TILookup
+    from ..data.context.tilookup import TILookup
 
     return "ti_lookup", TILookup()
 
@@ -181,11 +181,11 @@ def _load_geoip_lookup(comp_settings=None, **kwargs):
         comp_settings.get("provider") if isinstance(comp_settings, dict) else None
     )
     if provider == "GeoLiteLookup":
-        from ..sectools.geoip import GeoLiteLookup
+        from ..data.context.geoip import GeoLiteLookup
 
         return "geoip", GeoLiteLookup()
     if provider == "IpStackLookup":
-        from ..sectools.geoip import IPStackLookup
+        from ..data.context.geoip import IPStackLookup
 
         return "geoip", IPStackLookup()
     return None, None
@@ -223,7 +223,7 @@ def _load_notebooklets(comp_settings=None, **kwargs):
 
 def _load_pivot(comp_settings=None, **kwargs):
     del comp_settings
-    from ..datamodel.pivot import Pivot
+    from ..datamodel.pivots.pivot import Pivot
 
     namespace = kwargs.get("global_ns", {}).copy()
     namespace.update(kwargs.get("local_ns", {}))
@@ -234,7 +234,7 @@ def _load_pivot(comp_settings=None, **kwargs):
 
 def _load_azure_data(comp_settings=None, **kwargs):
     del kwargs
-    from ..data.azure_data import AzureData
+    from ..data.context.azure.azure_data import AzureData
 
     az_data = AzureData()
     connect = comp_settings.pop("connect", True)
@@ -247,7 +247,7 @@ def _load_azure_data(comp_settings=None, **kwargs):
 
 def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
-    from ..data.azure import MicrosoftSentinel
+    from ..data.context.azure import MicrosoftSentinel
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:

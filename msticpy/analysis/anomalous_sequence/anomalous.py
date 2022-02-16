@@ -11,7 +11,7 @@ In particular, this module is for both modelling and visualising your session da
 
 import pandas as pd
 
-from ...nbtools import timeline
+from ...vis import timeline
 from .model import Model
 from ...common.exceptions import MsticpyException
 

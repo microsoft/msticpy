@@ -12,19 +12,35 @@ Requires Python 3.6 or later.
 
 To quickly import common modules into a notebook run:
 
->>> from msticpy import init_notebook
->>> init_notebook(globals())
+>>> import msticpy
+>>> msticpy.init_notebook(globals())
 
 For more options:
->>> help(init_notebook)
+>>> help(msticpy.init_notebook)
 
 -----------------------------------------------
 
 Full documentation is available at:
-    https://msticpy.readthedocs.io
+https://msticpy.readthedocs.io
 
 GitHub repo:
-    https://github.com/microsoft/msticpy
+https://github.com/microsoft/msticpy
+
+
+Package structure:
+
+- analysis - analysis and data processing functions
+- common - utility functions, authentication, secrets
+- config - configuration tool
+- data - queries, data access, context functions
+- datamodel - entities and pivot functions
+- nbtools - notebook initialization and tools
+- vis - visualizations
+
+Configuration:
+
+- set MSTICPYCONFIG environment variable to point to the path
+  of your `msticpyconfig.yaml` file.
 
 """
 
@@ -37,6 +53,7 @@ from .common.check_version import check_version
 from . import sectools
 from . import nbtools
 from . import data
+from . import analysis
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
 from ._version import VERSION
 

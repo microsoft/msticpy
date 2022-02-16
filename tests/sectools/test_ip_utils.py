@@ -8,7 +8,7 @@ import os
 import unittest
 
 import pandas as pd
-from msticpy.sectools.ip_utils import get_ip_type, get_whois_df, get_whois_info
+from msticpy.data.context.ip_utils import get_ip_type, get_whois_df, get_whois_info
 
 from ..unit_test_lib import TEST_DATA_PATH
 

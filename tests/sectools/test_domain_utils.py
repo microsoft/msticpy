@@ -6,7 +6,7 @@
 """domain_utilstes extract test class."""
 import pytest_check as check
 
-from msticpy.sectools import domain_utils
+from msticpy.data.context import domain_utils
 
 
 def test_validate_domain():

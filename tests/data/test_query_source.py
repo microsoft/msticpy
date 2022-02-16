@@ -14,8 +14,8 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.data.data_providers import DriverBase, QueryProvider
-from msticpy.data.query_source import QuerySource
+from msticpy.data.core.data_providers import DriverBase, QueryProvider
+from msticpy.data.core.query_source import QuerySource
 from msticpy.data.drivers import kql_driver
 
 _SPLUNK_IMP_OK = False

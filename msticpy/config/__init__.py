@@ -3,7 +3,15 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""MSTICPY Config modules."""
+"""
+MSTICPY Config modules.
+
+This sub-package contains settings UI management tools
+for interactively managing settings in Jupyter notebooks.
+
+It use the ipywidgets package.
+
+"""
 
 # flake8: noqa: F403
 from .mp_config_edit import MpConfigEdit

@@ -14,6 +14,7 @@ from ..common.utility import md, md_warn
 
 WARN_MSSG = (
     "This module has moved to msticpy.common.utility\n"
-    + "Please change your import to reflect this new location."
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.0.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

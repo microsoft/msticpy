@@ -25,8 +25,6 @@ class SelectItem(IPyDisplayMixin):
 
     Attributes
     ----------
-    value : Any
-        The selected value.
     item_action : Callable[..., Optional[Tuple]]
         Action to call for each selection.
 
@@ -155,7 +153,7 @@ class SelectItem(IPyDisplayMixin):
 
     @value.setter
     def value(self, value):
-        """Set to key or value of options."""
+        """Set current selected value of widget."""
         if value in self.options:
             self._wgt_select.label = value
         if isinstance(self.options, dict) and value in self.options.values():
@@ -231,19 +229,11 @@ class SelectItem(IPyDisplayMixin):
             self._run_action()
 
 
-@deprecated(reason="Superceded by SelectItem. Please use that version", version="0.5.2")
+@deprecated(
+    reason="Superceded by SelectItem. Will be removed in v2.0.0.", version="0.5.2"
+)
 class SelectString(SelectItem):
-    """
-    Selection list from list or dict.
-
-    Attributes
-    ----------
-    value : Any
-        The selected value.
-    item_action : Callable[..., None]
-        Action to call for each selection.
-
-    """
+    """Selection list from list or dict."""
 
     # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(

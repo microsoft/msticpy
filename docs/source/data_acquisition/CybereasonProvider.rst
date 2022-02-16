@@ -29,7 +29,7 @@ and
 
 Once you created user account with the appropriate roles, you will
 require the following details to specify while connecting:
-- TenantId = "instance". As this is a cloud-based solution, each customer has its dedicated instance. FQDN will be formatted as: "<instance>.cybereason.net" 
+- TenantId = "instance". As this is a cloud-based solution, each customer has its dedicated instance. FQDN will be formatted as: "<instance>.cybereason.net"
 - ClientId = "account" (account to connect to Cybereason instance)
 - ClientSecret = "yoursecret" (secret for the client specified in ClientId)
 
@@ -85,11 +85,11 @@ as list datatypes, list saved searches, alerts, audittrail informaion.
 
 .. parsed-literal::
 
-['Connection.list_connections_from_process',
- 'Host.find_hosts',
- 'Process.find_process_by_commandLine',
- 'Process.find_process_by_pid',
- 'Process.find_process_by_suspicions']
+    ['Connection.list_connections_from_process',
+    'Host.find_hosts',
+    'Process.find_process_by_commandLine',
+    'Process.find_process_by_pid',
+    'Process.find_process_by_suspicions']
 
 
 

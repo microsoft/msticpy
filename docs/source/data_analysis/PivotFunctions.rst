@@ -241,7 +241,7 @@ instance of TILookup beforehand.
 .. parsed-literal::
 
     {'AzureSentinel': <msticpy.data.data_providers.QueryProvider at 0x2741dfd4408>,
-     'TILookup': <msticpy.sectools.tilookup.TILookup at 0x2741e114888>}
+     'TILookup': <msticpy.data.context.tilookup.TILookup at 0x2741e114888>}
 
 
 
@@ -1420,7 +1420,7 @@ no suffix and one for each individual TI provider with a corresponding
 suffix. This is a convenience to let you use a specific provider more
 quickly. You can still use the generic function (``lookup_ipv4``) and
 supply a providers parameter to indicate which providers you want to
-use. See :py:meth:`lookup_iocs<msticpy.sectools.tilookup.TILookup.lookup_iocs>`
+use. See :py:meth:`lookup_iocs<msticpy.data.context.tilookup.TILookup.lookup_iocs>`
 for more details.
 
 **IPv4 and IPv6**
@@ -2118,7 +2118,7 @@ Example from the *MSTICPy* ip_utils ``who_is`` function
    pivot_providers:
      ...
      who_is:
-      src_module: msticpy.sectools.ip_utils
+      src_module: msticpy.data.context.ip_utils
       src_func_name: get_whois_df
       func_new_name: whois
       input_type: dataframe
