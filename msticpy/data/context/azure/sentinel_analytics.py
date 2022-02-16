@@ -160,6 +160,7 @@ class SentinelAnalyticsMixin:
             If the API returns an error.
 
         """
+        self.check_connected()
         if template:
             template_id = self._get_template_id(template)
             templates = self.list_analytic_templates()
@@ -272,6 +273,7 @@ class SentinelAnalyticsMixin:
             If the API returns an error.
 
         """
+        self.check_connected()
         analytic_id = self._get_analytic_id(analytic_rule)
         analytic_url = self.sent_urls["alert_rules"] + f"/{analytic_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}

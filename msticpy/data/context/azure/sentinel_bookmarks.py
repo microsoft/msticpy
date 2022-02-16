@@ -67,6 +67,7 @@ class SentinelBookmarksMixin:
             If API retunrs an error.
 
         """
+        self.check_connected()
         # Generate or use resource ID
         bkmark_id = str(uuid4())
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bkmark_id}"  # type: ignore
@@ -111,6 +112,7 @@ class SentinelBookmarksMixin:
             If the API returns an error.
 
         """
+        self.check_connected()
         bookmark_id = self._get_bookmark_id(bookmark)
         bookmark_url = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}

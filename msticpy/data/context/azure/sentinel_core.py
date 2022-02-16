@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 
@@ -126,52 +126,6 @@ class MicrosoftSentinel(
                 f"Subscriptions found: {', '.join(subs_df['Subscription ID'].values)}"
             )
 
-    def list_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
-        """
-        Return a list of Microsoft Sentinel workspaces in a Subscription.
-
-        Parameters
-        ----------
-        sub_id : str
-            The subscription ID to get a list of workspaces from.
-            If not provided it will attempt to get sub_id from config files.
-
-        Returns
-        -------
-        Dict
-            A dictionary of workspace names and ids
-
-        """
-        # If a subscription ID isn't provided try and get one from config files.
-        sub_id = sub_id or self.default_subscription
-        if not sub_id:
-            config = self._check_config(["subscription_id"])
-            sub_id = config["subscription_id"]
-
-        print("Finding Microsoft Sentinel Workspaces...")
-        res = self.get_resources(sub_id=sub_id)  # type: ignore
-        # handle no results
-        if isinstance(res, pd.DataFrame) and not res.empty:
-            sentinel = res[
-                (res["resource_type"] == "Microsoft.OperationsManagement/solutions")
-                & (res["name"].str.startswith("SecurityInsights"))
-            ]
-            workspaces = []
-            for wrkspace in sentinel["resource_id"]:
-                res_details = self.get_resource_details(
-                    sub_id=sub_id, resource_id=wrkspace  # type: ignore
-                )
-                workspaces.append(res_details["properties"]["workspaceResourceId"])
-
-            workspaces_dict = {}
-            for wrkspace in workspaces:
-                name = wrkspace.split("/")[-1]
-                workspaces_dict[name] = wrkspace
-            return workspaces_dict
-
-        print(f"No Microsoft Sentinel workspaces in {sub_id}")
-        return {}
-
     def set_default_workspace(
         self, sub_id: Optional[str], workspace: Optional[str] = None
     ):
@@ -219,9 +173,6 @@ class MicrosoftSentinel(
 
         """
         return self._list_items(item_type="data_connectors")
-
-    # Get > List Aliases
-    get_sentinel_workspaces = list_sentinel_workspaces
 
 
 # Alias for old class name
