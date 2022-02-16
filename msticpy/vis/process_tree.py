@@ -9,7 +9,6 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from deprecated.sphinx import deprecated
 from bokeh.io import output_notebook, reset_output, show
 
 # pylint: enable=no-name-in-module
@@ -29,20 +28,16 @@ from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
 from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.transform import dodge, factor_cmap, linear_cmap
+from deprecated.sphinx import deprecated
 
 from .._version import VERSION
-from ..analysis.data.proc_tree_builder import (
-    build_process_tree,
-    infer_schema,
-)
+from ..analysis.data.proc_tree_builder import build_process_tree, infer_schema
 from ..analysis.data.proc_tree_schema import ColNames as Col
-from ..analysis.data.proc_tree_schema import (
-    ProcessTreeSchemaException,
-    ProcSchema,
-)
+from ..analysis.data.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
 
 # pylint: disable=unused-import
-from ..analysis.data.process_tree_utils import (  # noqa F401
+# flake8: noqa F401
+from ..analysis.data.process_tree_utils import (
     get_ancestors,
     get_children,
     get_descendents,
