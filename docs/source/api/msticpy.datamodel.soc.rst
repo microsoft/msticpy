@@ -12,6 +12,14 @@ msticpy.datamodel.soc.incident module
    :undoc-members:
    :show-inheritance:
 
+msticpy.datamodel.soc.sentinel\_alert module
+--------------------------------------------
+
+.. automodule:: msticpy.datamodel.soc.sentinel_alert
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

@@ -68,6 +68,14 @@ msticpy.nbtools.nbinit module
    :undoc-members:
    :show-inheritance:
 
+msticpy.nbtools.nbmagics module
+-------------------------------
+
+.. automodule:: msticpy.nbtools.nbmagics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 msticpy.nbtools.observationlist module
 --------------------------------------
 

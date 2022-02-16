@@ -85,14 +85,6 @@ msticpy.datamodel.pivot\_ti\_provider module
    :undoc-members:
    :show-inheritance:
 
-msticpy.datamodel.txt\_df\_magic module
----------------------------------------
-
-.. automodule:: msticpy.datamodel.txt_df_magic
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

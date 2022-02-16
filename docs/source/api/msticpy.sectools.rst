@@ -117,14 +117,6 @@ msticpy.sectools.process\_tree\_utils module
    :undoc-members:
    :show-inheritance:
 
-msticpy.sectools.sectools\_magics module
-----------------------------------------
-
-.. automodule:: msticpy.sectools.sectools_magics
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 msticpy.sectools.syslog\_utils module
 -------------------------------------
 
