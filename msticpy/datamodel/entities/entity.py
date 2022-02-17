@@ -7,9 +7,9 @@
 import json
 import pprint
 import typing
-from datetime import datetime
 from abc import ABC
 from copy import deepcopy
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -86,7 +86,7 @@ class Entity(ABC, Node):
         self.TimeGenerated = datetime.utcnow()
         self.Type = self._get_entity_type_name(type(self))
         # If we have an unknown entity see if we a type passed in
-        if self.Type == "unknownentity" and "Type" in kwargs:
+        if self.Type == "unknown" and "Type" in kwargs:
             self.Type = kwargs["Type"]
         # Make sure Type is in the class schema dictionary
         self._entity_schema["Type"] = None
