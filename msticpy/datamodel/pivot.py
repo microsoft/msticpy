@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 import pkg_resources
-from IPython import get_ipython
 
 from .._version import VERSION
 from ..common.timespan import TimeSpan
@@ -29,11 +28,6 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DEF_PIVOT_REG_FILE = "resources/mp_pivot_reg.yaml"
-
-
-# Import IPython magic if in an IPython environment
-if get_ipython():
-    from . import txt_df_magic  # noqa: F401
 
 
 class Pivot:

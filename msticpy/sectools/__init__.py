@@ -15,10 +15,4 @@ from . import base64unpack as base64
 from . import process_tree_utils as ptree
 from .._version import VERSION
 
-try:
-    from IPython import get_ipython
-    from . import sectools_magics
-except ImportError as err:
-    pass
-
 __version__ = VERSION
