@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Display code with with highlighting."""
-from typing import List
+from typing import List, Optional
 
 from IPython.display import HTML, display, DisplayHandle
 from pygments import highlight, lexers, styles, formatters
@@ -15,9 +15,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-def to_html(
-    code: str, language: str, style: str = "stata-dark", full: bool = True
-) -> str:
+def to_html(code: str, language: str, style: str = "default", full: bool = True) -> str:
     """
     Return Pygments-highlighted code for specified language.
 
@@ -28,7 +26,7 @@ def to_html(
     language : str
         The language name or alias.
     style : str, optional
-        The pygments style to use, by default "stata-dark"
+        The pygments style to use, by default "default"
     full : bool, optional
         By default this function will return a complete HTML document,
         to only return the formatted code snippet (minus styles), set
@@ -38,6 +36,10 @@ def to_html(
     -------
     str
        HTML document with pygments formatting.
+
+    See Also
+    --------
+    list_pygments_styles - list the available styles use
 
     """
     pygments_lexer = lexers.get_lexer_by_name(language)
@@ -61,8 +63,12 @@ def list_pygments_styles() -> List[str]:
 
 
 def display_html(
-    code: str, language: str, style: str = "stata-dark", full: bool = True
-) -> DisplayHandle:
+    code: str,
+    language: str,
+    style: str = "stata-dark",
+    full: bool = True,
+    display_handle: bool = False,
+) -> Optional[DisplayHandle]:
     """
     Display pygments-formatted code.
 
@@ -78,10 +84,13 @@ def display_html(
         By default this function will return a complete HTML document,
         to only return the formatted code snippet (minus styles), set
         full=False.
+    display_handle : bool, optional
+        If True, will return an IPython DisplayHandle for the display
+        object created.
 
     Returns
     -------
-    DisplayHandle:
+    Optional[DisplayHandle] :
         Handle to the IPython display object.
 
     See Also
@@ -90,4 +99,7 @@ def display_html(
 
     """
     html = to_html(code, language, style, full)
-    return display(HTML(html), display_id=True)
+    if display_handle:
+        return display(HTML(html), display_id=True)
+    display(HTML(html))
+    return None
