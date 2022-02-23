@@ -221,7 +221,7 @@ class SplunkDriver(DriverBase):
             # Initiate progress bar and start while loop, waiting for async query to complete
             progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")
             while not query_job.is_done():
-                current_state = query_job.state()
+                current_state = query_job.state
                 progress = float(current_state["content"]["doneProgress"]) * 100
                 progress_bar.update(progress)
                 sleep(1)
