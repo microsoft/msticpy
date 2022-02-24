@@ -288,7 +288,7 @@ class SecretsClient:
 
     def refresh_keyring(self):
         """Reload keyring values from Key Vault."""
-        if not self.use_keyring or not self._keyring_client.is_keyring_available():
+        if not self._use_keyring or not self._keyring_client.is_keyring_available():
             return
         for kv_client in self.kv_vaults.values():
             for secret_name in kv_client.secrets:
@@ -296,17 +296,15 @@ class SecretsClient:
                     continue
                 self._keyring_client.set_secret(
                     secret_name=secret_name,
-                    secret_value=kv_client.get_secret(secret_name)
+                    secret_value=kv_client.get_secret(secret_name),
                 )
 
     def clear_keyring_secrets(self):
         """Clear any cached secrets from keyring."""
-        if not self.use_keyring or not self._keyring_client.is_keyring_available():
+        if not self._use_keyring or not self._keyring_client.is_keyring_available():
             return
         for kv_client in self.kv_vaults.values():
             for secret_name in kv_client.secrets:
                 if not self._keyring_client.get_secret(secret_name):
                     continue
-                self._keyring_client.delete_secret(
-                    secret_name=secret_name
-                )
+                self._keyring_client.delete_secret(secret_name=secret_name)
