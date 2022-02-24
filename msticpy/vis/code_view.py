@@ -57,7 +57,8 @@ def list_pygments_styles() -> List[str]:
     Returns
     -------
     List[str]
-        _description_
+        The list of pygments style names.
+
     """
     return list(styles.STYLE_MAP)
 

@@ -34,6 +34,7 @@ def format_powershell(code: str) -> str:
     See Also
     --------
     msticpy.vis.code_view
+
     """
     # pre-process: change to lowercase and remove redundant string concat
     cleaned_str = code.casefold().replace("'+'", "")
