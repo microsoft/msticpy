@@ -11,7 +11,13 @@ from ..._version import VERSION
 # flake8: noqa: F401
 from .vt_pivot import add_pivot_functions
 from .vtfile_behavior import VTFileBehavior
-from .vtlookupv3 import VTLookupV3, VT_API_NOT_FOUND, MsticpyVTNoDataError
+from .vtlookupv3 import (
+    VTLookupV3,
+    VT_API_NOT_FOUND,
+    MsticpyVTNoDataError,
+    VTEntityType,
+    VTObjectProperties,
+)
 from .vtobject_browser import VTObjectBrowser
 
 __version__ = VERSION

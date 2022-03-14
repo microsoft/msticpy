@@ -8,13 +8,13 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 import pkg_resources
-from IPython import get_ipython
 
 from ..._version import VERSION
 from ...common.timespan import TimeSpan
 from ...data import QueryProvider
-from ...nbtools.nbwidgets import QueryTime
 from ...data.context.tilookup import TILookup
+from ...nbtools.nbwidgets import QueryTime
+from .. import entities
 
 # pylint: disable=unused-import
 from . import pivot_pd_accessor  # noqa: F401
@@ -23,17 +23,11 @@ from .pivot_data_queries import add_data_queries_to_entities
 from .pivot_register import PivotRegistration
 from .pivot_register_reader import add_unbound_pivot_function, register_pivots
 from .pivot_ti_provider import add_ioc_queries_to_entities, register_ti_pivot_providers
-from .. import entities
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DEF_PIVOT_REG_FILE = "resources/mp_pivot_reg.yaml"
-
-
-# Import IPython magic if in an IPython environment
-if get_ipython():
-    from . import txt_df_magic  # noqa: F401
 
 
 class Pivot:

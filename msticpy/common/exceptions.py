@@ -65,13 +65,15 @@ class MsticpyUserError(MsticpyException):
 
         Other Parameters
         ----------------
-        title : str
+        title : str, optional
             If a `title` keyword argument is supplied it will be used
             to create the title line.
-        *_uri : str
+        *_uri : str, optional
             Additional keyword arguments who's names end in "_uri"
             will be used to create a list of references in addition to
             the primary `help_uri`
+        display : bool, optional
+            Display the exception when created. By default, True
 
         Notes
         -----
@@ -95,6 +97,7 @@ class MsticpyUserError(MsticpyException):
             Union[str, Tuple[str, str], Tuple[Tuple[str, str], str]]
         ] = []
         title = kwargs.pop("title", "we've hit an error while running")
+        disp_exception = kwargs.pop("display", True)
         self._output.append((f"{self.__class__.__name__} - {title}", "title"))
 
         self._output.extend(args)
@@ -111,7 +114,7 @@ class MsticpyUserError(MsticpyException):
             self._output.append("You can find other related help here:")
             for uri in help_args:
                 self._output.append((uri, "uri"))
-        if _get_config("msticpy.FriendlyExceptions"):
+        if _get_config("msticpy.FriendlyExceptions") and disp_exception:
             self._display_exception()
 
         # add the extra elements to the the exception standard args.

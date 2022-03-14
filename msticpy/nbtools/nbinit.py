@@ -28,7 +28,7 @@ except ImportError:
     sns = None
 
 from .._version import VERSION
-from ..common.azure_auth_core import check_cli_credentials, AzureCliStatus
+from ..common.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
 from ..common.pkg_config import get_config, validate_config
@@ -154,6 +154,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
     dict(pkg="msticpy.datamodel.pivots.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
+    dict(pkg="msticpy.nbtools", tgt="nbmagics"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
 ]
 _MP_IMPORT_ALL = [
