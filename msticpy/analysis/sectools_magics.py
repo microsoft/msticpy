@@ -52,6 +52,13 @@ class Base64Magic(Magics):
         help="Print decoded string with no formatting",
         action="store_true",
     )
+    @magic_arguments.argument(
+        "--utf16",
+        "-u",
+        help="Decode to UTF-16.",
+        default=False,
+        action="store_true",
+    )
     def b64(self, line: str = "", cell: str = None) -> str:
         """
         Base64 IPython magic extension.
@@ -70,11 +77,11 @@ class Base64Magic(Magics):
 
         """
         if cell is None:
-            results, df_results = base64.unpack(line)
+            results, _ = base64.unpack(line)
+            return results
 
-        else:
-            results, df_results = base64.unpack(cell)
         args = magic_arguments.parse_argstring(self.b64, line)
+        results, df_results = base64.unpack(cell, utf16=args.utf16)
 
         if args.clean:
             results = re.sub(self._STRIP_TAGS, "", results)
