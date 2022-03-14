@@ -25,7 +25,7 @@ Individual Data Environments
    data_acquisition/MordorData
    data_acquisition/DataProv-Sumologic
    data_acquisition/DataProv-Kusto
-   data_acquisition/CybereasonProvider
+   data_acquisition/DataProv-Cybereason
 
 
 Built-in Data Queries

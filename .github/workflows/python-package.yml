@@ -79,7 +79,7 @@ jobs:
       if: ${{ always() }}
     - name: black
       run: |
-        black -t py36 --diff --check --exclude venv .
+        black --diff --check --exclude venv .
       if: ${{ always() }}
     - name: flake8
       run: |

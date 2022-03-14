@@ -5,7 +5,7 @@ Sentinel Configuration
 ----------------------
 
 You can store configuration for your workspace (or workspaces) in either
-your ``msticpconfig.yaml`` or a ``config.json`` file. The latter
+your ``msticpyconfig.yaml`` or a ``config.json`` file. The latter
 file is auto-created in your Azure Machine Learning (AML) workspace when
 you launch a notebook from the Sentinel portal. It can however, only
 store details for a single workspace.
@@ -42,20 +42,20 @@ The MS Sentinel connection settings are stored in the
           TenantId: 335b56ab-67a2-4118-ac14-6eb454f350af
           ResourceGroup: soc
           SubscriptionId: a5b24e23-a96a-4472-b729-9e5310c83e20
-          Workspace Name: Workspace1
+          WorkspaceName: Workspace1
         # To use these launch with an explicit name - WorkspaceConfig(workspace_name="Workspace2")
         Workspace1:
           WorkspaceId: "c88dd3c2-d657-4eb3-b913-58d58d811a41"
           TenantId: "335b56ab-67a2-4118-ac14-6eb454f350af"
           ResourceGroup: soc
           SubscriptionId: a5b24e23-a96a-4472-b729-9e5310c83e20
-          Workspace Name: Workspace1
+          WorkspaceName: Workspace1
         TestWorkspace:
           WorkspaceId: "17e64332-19c9-472e-afd7-3629f299300c"
           TenantId: "4ea41beb-4546-4fba-890b-55553ce6003a"
           ResourceGroup: soc
           SubscriptionId: a5b24e23-a96a-4472-b729-9e5310c83e20
-          Workspace Name: Workspace2
+          WorkspaceName: Workspace2
 
 If you only use a single workspace, you only need to create a ``Default`` entry and
 add the values for your *WorkspaceID* and *TenantID*. You can add other entries here,

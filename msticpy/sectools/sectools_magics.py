@@ -9,6 +9,7 @@ Deprecated - module sectools_magics.py has moved.
 See :py:mod:`msticpy.analysis.sectools_magics`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION
@@ -17,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.sectools_magics import *
+from ..nbtools import nbmagics
 
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.sectools_magics\n"

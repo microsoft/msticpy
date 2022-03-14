@@ -14,6 +14,7 @@ import uuid
 import warnings
 from enum import Enum
 from pathlib import Path
+from platform import python_version
 from typing import (
     Any,
     Callable,
@@ -26,11 +27,10 @@ from typing import (
     TypeVar,
     Union,
 )
-from platform import python_version
 
 import pkg_resources
 from IPython import get_ipython
-from IPython.display import HTML, display, DisplayHandle
+from IPython.display import HTML, DisplayHandle, display
 from tqdm.auto import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
 
@@ -338,9 +338,15 @@ _F_STYLES = {
 
 
 @export
-def is_ipython() -> bool:
+def is_ipython(notebook: bool = False) -> bool:
     """
     Return True if running in IPython environment.
+
+    Parameters
+    ----------
+    notebook : bool, optional
+        If notebook is true this will only return true if running
+        in a Jupyter notebook.
 
     Returns
     -------
@@ -349,7 +355,9 @@ def is_ipython() -> bool:
         otherwise False
 
     """
-    return bool(get_ipython())
+    if not notebook:
+        return bool(get_ipython())
+    return get_ipython() and type(get_ipython()).__name__.startswith("ZMQ")
 
 
 def check_kwarg(arg_name: str, legal_args: List[str]):

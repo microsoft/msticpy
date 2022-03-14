@@ -8,11 +8,12 @@ import importlib
 import re
 import sys
 from pathlib import Path
+import pkg_resources
 
 import pytest
 import pytest_check as check
 
-from tools.toollib.import_analyzer import analyze_imports, get_extras_from_setup
+from tools.toollib.import_analyzer import analyze_imports, get_setup_reqs
 
 PKG_ROOT = "."
 PKG_NAME = "msticpy"
@@ -41,7 +42,7 @@ CONDA_PKG_EXCEPTIONS = {
 @pytest.fixture(scope="module")
 def extras_from_setup():
     """Read extras packages from setup.py."""
-    return get_extras_from_setup(extra="all")
+    return get_setup_reqs(PKG_ROOT, skip_setup=False)[1]
 
 
 def test_missing_pkgs_req():
@@ -80,51 +81,60 @@ def test_missing_pkgs_req():
 
 def test_conda_reqs(extras_from_setup):
     """Test conda requirements files match main file."""
-    main_reqs_file = Path(PKG_ROOT) / REQS_FILE
     conda_reqs_file = Path(PKG_ROOT) / "conda/conda-reqs.txt"
     conda_reqs_pip_file = Path(PKG_ROOT) / "conda/conda-reqs-pip.txt"
 
-    main_reqs_dict = _get_reqs_from_file(main_reqs_file)
-    # Add extras
-    for item in [re.split(REQS_OP_RGX, line) for line in extras_from_setup]:
-        main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
+    # main_reqs_dict = _get_reqs_from_file(main_reqs_file)
+    # # Add extras
+    # for item in [re.split(REQS_OP_RGX, line) for line in extras_from_setup]:
+    #     main_reqs_dict[item[0].strip()] = item[1].strip() if len(item) > 1 else None
 
     conda_reqs_dict = _get_reqs_from_file(conda_reqs_file)
     conda_reqs_pip_dict = _get_reqs_from_file(conda_reqs_pip_file)
 
-    for key, val in main_reqs_dict.items():
+    for pkg_name, pkg_specifier in extras_from_setup.items():
         # print(f"Checking {key} in conda-reqs.txt", bool(key in conda_reqs_dict))
         # print(f"Checking {key} in conda-reqs-pip.txt", bool(key in conda_reqs_pip_dict))
 
         if (
-            key not in conda_reqs_dict
-            and key not in conda_reqs_pip_dict
-            and key not in CONDA_PKG_EXCEPTIONS
+            pkg_name not in conda_reqs_dict
+            and pkg_name not in conda_reqs_pip_dict
+            and pkg_name not in CONDA_PKG_EXCEPTIONS
         ):
-            print(f"Test Error - no conda package equiv for {key}=={val}")
+            print(
+                f"Test Error - no conda package equiv for {pkg_name}=={pkg_specifier}"
+            )
         check.is_true(
-            key in conda_reqs_dict
-            or key in conda_reqs_pip_dict
-            or key in CONDA_PKG_EXCEPTIONS,
+            pkg_name in conda_reqs_dict
+            or pkg_name in conda_reqs_pip_dict
+            or pkg_name in CONDA_PKG_EXCEPTIONS,
         )
-        if key in conda_reqs_dict:
-            if conda_reqs_dict[key]:
-                if val != conda_reqs_dict[key]:
+        if pkg_name in conda_reqs_dict:
+            if conda_reqs_dict[pkg_name]:
+                if pkg_specifier != conda_reqs_dict[pkg_name]:
                     print(
-                        f"{key} version mismatch - setup: {val}: {conda_reqs_dict[key]}",
+                        f"{pkg_name} version mismatch - setup: {pkg_specifier}: {conda_reqs_dict[pkg_name]}",
                         "in conda-reqs.txt",
                     )
-                check.equal(val, conda_reqs_dict[key], f"{key} in condas reqs")
-            conda_reqs_dict.pop(key)
-        if key in conda_reqs_pip_dict:
-            if conda_reqs_pip_dict[key]:
-                if val != conda_reqs_pip_dict[key]:
+                check.equal(
+                    pkg_specifier,
+                    conda_reqs_dict[pkg_name],
+                    f"{pkg_name} in condas reqs",
+                )
+            conda_reqs_dict.pop(pkg_name)
+        if pkg_name in conda_reqs_pip_dict:
+            if conda_reqs_pip_dict[pkg_name]:
+                if pkg_specifier != conda_reqs_pip_dict[pkg_name]:
                     print(
-                        f"{key} version mismatch - setup: {val}: {conda_reqs_pip_dict[key]}",
+                        f"{pkg_name} version mismatch - setup: {pkg_specifier}: {conda_reqs_pip_dict[pkg_name]}",
                         "in conda-reqs-pip.txt",
                     )
-                check.equal(val, conda_reqs_pip_dict[key], f"{key} in condas pip reqs")
-            conda_reqs_pip_dict.pop(key)
+                check.equal(
+                    pkg_specifier,
+                    conda_reqs_pip_dict[pkg_name],
+                    f"{pkg_name} in condas pip reqs",
+                )
+            conda_reqs_pip_dict.pop(pkg_name)
 
     if conda_reqs_dict:
         print("Extra items found in conda-reqs.txt", conda_reqs_pip_dict)
@@ -135,12 +145,11 @@ def test_conda_reqs(extras_from_setup):
 
 
 def _get_reqs_from_file(reqs_file):
-    conda_reqs_dict = {}
     with open(str(reqs_file), "r") as f_hdl:
-        reqs = f_hdl.readlines()
-        lines = [line for line in reqs if not line.strip().startswith("#")]
-        for item in [re.split(REQS_OP_RGX, line) for line in lines]:
-            conda_reqs_dict[item[0].strip()] = (
-                item[1].strip() if len(item) > 1 else None
-            )
-    return conda_reqs_dict
+        reqs_lines = f_hdl.readlines()
+    reqs = [
+        pkg_resources.Requirement.parse(req)
+        for req in reqs_lines
+        if req.strip() and not req.strip().startswith("#")
+    ]
+    return {req.name.casefold(): req.specifier for req in reqs}
