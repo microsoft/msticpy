@@ -4,9 +4,9 @@ from collections import defaultdict
 from msticpy.analysis.anomalous_sequence.utils import laplace_smooth
 from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
 
-START_TOKEN = "##START##"
-END_TOKEN = "##END##"
-UNK_TOKEN = "##UNK##"
+START_TOKEN = "##START##"  # nosec B105
+END_TOKEN = "##END##"  # nosec B105
+UNK_TOKEN = "##UNK##"  # nosec B105
 
 
 class TestLaplaceSmooth(unittest.TestCase):
