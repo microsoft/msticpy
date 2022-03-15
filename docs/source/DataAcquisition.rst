@@ -48,3 +48,10 @@ Other Data Modules and Functions
    data_acquisition/AzureBlobStorage
    data_acquisition/SqlToKql
    data_acquisition/CybereasonProvider
+
+Contributing a Data Provider
+----------------------------
+.. toctree::
+   :maxdepth: 2
+
+   data_acquisition/WritingADataProvider
