@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """datq query test class."""
 import io
+from os import stat
 
 from unittest.mock import patch, MagicMock
 import pytest
@@ -70,6 +71,27 @@ class _MockAlert:
         self.count = count
 
 
+class _MockAsyncResponse:
+    def __init__(self, query):
+        self.query = query
+
+    def results(self):
+        return self.query
+
+    def is_done(self):
+        return True
+
+
+class _MockSplunkCall:
+    def create(query, **kwargs):
+        del kwargs
+        return _MockAsyncResponse(query)
+
+    def oneshot(query, **kwargs):
+        del kwargs
+        return query
+
+
 class _MockSplunkService(MagicMock):
     """Splunk service mock."""
 
@@ -81,7 +103,7 @@ class _MockSplunkService(MagicMock):
             _MockSplunkSearch("query2", "get stuff from somewhere"),
         ]
         self.jobs = MagicMock()
-        self.jobs.oneshot = self._query_response
+        self.jobs = _MockSplunkCall
 
     @property
     def saved_searches(self):
@@ -97,11 +119,6 @@ class _MockSplunkService(MagicMock):
             _MockAlert("alert3", 10),
             _MockAlert("alert4", 10),
         ]
-
-    @staticmethod
-    def _query_response(query, **kwargs):
-        del kwargs
-        return query
 
 
 def _results_reader(query_result):
@@ -251,6 +268,14 @@ def test_splunk_query_success(splunk_client, splunk_results):
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
     sp_driver.connect(host="localhost", username="ian", password=_FAKE_STRING)  # nosec
     check.is_true(sp_driver.connected)
+
+    df_result = sp_driver.query("some query", oneshot=True)
+    check.is_instance(df_result, pd.DataFrame)
+    check.equal(len(df_result), 10)
+
+    response = sp_driver.query("zero query", oneshot=True)
+    check.is_not_instance(response, pd.DataFrame)
+    check.equal(len(response), 0)
 
     df_result = sp_driver.query("some query")
     check.is_instance(df_result, pd.DataFrame)
