@@ -97,6 +97,21 @@ class KeyringClient:
         self._secret_names.add(secret_name)
         keyring.set_password(self.keyring, secret_name, secret_value)
 
+    def delete_secret(self, secret_name: str):
+        """
+        Delete a secret in the keyring group.
+
+        Parameters
+        ----------
+        secret_name : str
+            Name of the secret
+
+        """
+        if self.debug:
+            print(f"Deleting {secret_name} from keyring {self.keyring}")
+        self._secret_names.remove(secret_name)
+        keyring.delete_password(self.keyring, secret_name)
+
     @staticmethod
     def is_keyring_available() -> bool:
         """
@@ -181,7 +196,7 @@ class SecretsClient:
         """
         vault_name, secret_name = self._get_kv_vault_and_name(setting_path)
         if vault_name is None or secret_name is None:
-            return lambda: secret_name if secret_name else ""
+            return lambda: secret_name or ""
         return self._get_secret_func(secret_name, vault_name)
 
     def _add_key_vault(self, vault_name: str, secret_name: str):
@@ -269,6 +284,27 @@ class SecretsClient:
             The secret value
 
         """
-        if callable(secret_object):
-            return secret_object()
-        return secret_object
+        return secret_object() if callable(secret_object) else secret_object
+
+    def refresh_keyring(self):
+        """Reload keyring values from Key Vault."""
+        if not self._use_keyring or not self._keyring_client.is_keyring_available():
+            return
+        for kv_client in self.kv_vaults.values():
+            for secret_name in kv_client.secrets:
+                if not self._keyring_client.get_secret(secret_name):
+                    continue
+                self._keyring_client.set_secret(
+                    secret_name=secret_name,
+                    secret_value=kv_client.get_secret(secret_name),
+                )
+
+    def clear_keyring_secrets(self):
+        """Clear any cached secrets from keyring."""
+        if not self._use_keyring or not self._keyring_client.is_keyring_available():
+            return
+        for kv_client in self.kv_vaults.values():
+            for secret_name in kv_client.secrets:
+                if not self._keyring_client.get_secret(secret_name):
+                    continue
+                self._keyring_client.delete_secret(secret_name=secret_name)

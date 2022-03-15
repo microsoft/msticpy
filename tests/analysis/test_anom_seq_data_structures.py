@@ -3,9 +3,9 @@ import unittest
 from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix
 from msticpy.common.exceptions import MsticpyException
 
-START_TOKEN = "##START##"
-END_TOKEN = "##END##"
-UNK_TOKEN = "##UNK##"
+START_TOKEN = "##START##"  # nosec B105
+END_TOKEN = "##END##"  # nosec B105
+UNK_TOKEN = "##UNK##"  # nosec B105
 
 
 class TestDataStructures(unittest.TestCase):
