@@ -6,9 +6,9 @@ import numpy as np
 from msticpy.analysis.anomalous_sequence.utils import cmds_params_values
 from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd, StateMatrix
 
-START_TOKEN = "##START##"
-END_TOKEN = "##END##"
-UNK_TOKEN = "##UNK##"
+START_TOKEN = "##START##"  # nosec B105
+END_TOKEN = "##END##"  # nosec B105
+UNK_TOKEN = "##UNK##"  # nosec B105
 
 
 class TestCmdsParamsValues(unittest.TestCase):
@@ -34,9 +34,9 @@ class TestCmdsParamsValues(unittest.TestCase):
     """
 
     def setUp(self):
-        self.data1 = dict()
-        self.data2 = dict()
-        self.data3 = dict()
+        self.data1 = {}
+        self.data2 = {}
+        self.data3 = {}
 
         # populate data1
         self.data1["sessions"] = []

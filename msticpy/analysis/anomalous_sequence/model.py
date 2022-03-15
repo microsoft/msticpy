@@ -72,9 +72,9 @@ class Model:
                     "should contain at least one command"
                 )
 
-        self.start_token = "##START##"
-        self.end_token = "##END##"
-        self.unk_token = "##UNK##"
+        self.start_token = "##START##"  # nosec B105
+        self.end_token = "##END##"  # nosec B105
+        self.unk_token = "##UNK##"  # nosec B105
 
         self.sessions = sessions
         self.session_type = None
