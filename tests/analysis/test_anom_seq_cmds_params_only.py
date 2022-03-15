@@ -6,9 +6,9 @@ import numpy as np
 from msticpy.analysis.anomalous_sequence.utils import cmds_params_only
 from msticpy.analysis.anomalous_sequence.utils.data_structures import StateMatrix, Cmd
 
-START_TOKEN = "##START##"
-END_TOKEN = "##END##"
-UNK_TOKEN = "##UNK##"
+START_TOKEN = "##START##"  # nosec B105
+END_TOKEN = "##END##"  # nosec B105
+UNK_TOKEN = "##UNK##"  # nosec B105
 
 
 class TestCmdsParamsOnly(unittest.TestCase):
