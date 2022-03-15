@@ -122,6 +122,18 @@ def reload_settings():
     config.refresh_config()
 
 
+def refresh_keyring():
+    """Refresh local keyring secrets cache from Key Vault."""
+    if _SECRETS_ENABLED and _SECRETS_CLIENT:
+        _SECRETS_CLIENT.refresh_keyring()
+
+
+def clear_keyring():
+    """Delete local keyring secrets cache."""
+    if _SECRETS_ENABLED and _SECRETS_CLIENT:
+        _SECRETS_CLIENT.clear_keyring_secrets()
+
+
 def _get_setting_args(
     config_section: str, provider_name: str, prov_args: Optional[Dict[str, Any]]
 ) -> ProviderArgs:
