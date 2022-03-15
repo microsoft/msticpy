@@ -82,6 +82,7 @@ class SentinelWatchlistsMixin:
             If there is an issue creating the watchlist.
 
         """
+        self.check_connected()  # type: ignore
         if self._check_watchlist_exists(watchlist_name):
             raise MsticpyUserError(f"Watchlist {watchlist_name} already exist.")
         watchlist_url = self.sent_urls["watchlists"] + f"/{watchlist_name}"  # type: ignore
@@ -168,6 +169,7 @@ class SentinelWatchlistsMixin:
             If the API returns an error.
 
         """
+        self.check_connected()  # type: ignore
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")
@@ -242,6 +244,7 @@ class SentinelWatchlistsMixin:
             If the API returns an error.
 
         """
+        self.check_connected()  # type: ignore
         # Check requested watchlist actually exists
         if not self._check_watchlist_exists(watchlist_name):
             raise MsticpyUserError(f"Watchlist {watchlist_name} does not exist.")

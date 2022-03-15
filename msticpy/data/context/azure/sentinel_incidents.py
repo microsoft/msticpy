@@ -97,6 +97,7 @@ class SentinelIncidentsMixin:
             A list of entities.
 
         """
+        self.check_connected()  # type: ignore
         incident_id = self._get_incident_id(incident)
         entities_url = self.sent_urls["incidents"] + f"/{incident_id}/entities"  # type: ignore
         ent_parameters = {"api-version": "2021-04-01"}
@@ -126,6 +127,7 @@ class SentinelIncidentsMixin:
             A list of alerts.
 
         """
+        self.check_connected()  # type: ignore
         incident_id = self._get_incident_id(incident)
         alerts_url = self.sent_urls["incidents"] + f"/{incident_id}/alerts"  # type: ignore
         alerts_parameters = {"api-version": "2021-04-01"}
@@ -236,6 +238,7 @@ class SentinelIncidentsMixin:
             If incident could not be updated.
 
         """
+        self.check_connected()  # type: ignore
         incident_dets = self.get_incident(incident_id)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
@@ -295,6 +298,7 @@ class SentinelIncidentsMixin:
             If the API returns an error
 
         """
+        self.check_connected()  # type: ignore
         incident_id = uuid4()
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         params = {"api-version": "2020-01-01"}
@@ -401,6 +405,7 @@ class SentinelIncidentsMixin:
             If message could not be posted.
 
         """
+        self.check_connected()  # type: ignore
         comment_url = (
             self.sent_urls["incidents"] + f"/{incident_id}/comments/{uuid4()}"  # type: ignore
         )
@@ -433,6 +438,7 @@ class SentinelIncidentsMixin:
             If API returns error
 
         """
+        self.check_connected()  # type: ignore
         incident_id = self._get_incident_id(incident)
         incident_url = self.sent_urls["incidents"] + f"/{incident_id}"  # type: ignore
         bookmark_id = self._get_bookmark_id(bookmark)  # type: ignore

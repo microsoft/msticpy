@@ -38,10 +38,7 @@ class SentinelUtilsMixin:
 
     def _get_items(self, url: str, params: str = "2020-01-01") -> httpx.Response:
         """Get items from the API."""
-        if not self.connected:  # type: ignore
-            raise MsticpyAzureConnectionError(
-                "Ensure you run .connect before calling other functions."
-            )
+        self.check_connected()  # type: ignore
         return httpx.get(
             url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -184,6 +181,13 @@ class SentinelUtilsMixin:
                 f"/{res_info['workspace_name']}",
             ]
         )
+
+    def check_connected(self):
+        """Check that Sentinel workspace is connected."""
+        if not self.connected:
+            raise MsticpyAzureConnectionError(
+                "Not connected to Sentinel, ensure you run `.connect` before calling functions."
+            )
 
 
 def _azs_api_result_to_df(response: httpx.Response) -> pd.DataFrame:
