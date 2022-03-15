@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data provider sub-package."""
-
 # flake8: noqa: F401
-from .azure_data import AzureData
-from .sentinel_core import MicrosoftSentinel
-from .azure_blob_storage import AzureBlobStorage
+# pylint: disable=W0401
+from ..context.azure.azure_blob_storage import AzureBlobStorage
+from ..context.azure.azure_data import AzureData
+from ..context.azure.sentinel_core import MicrosoftSentinel

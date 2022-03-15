@@ -5,19 +5,19 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 from datetime import datetime
-from typing import Any, Tuple, Union, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 
-from .driver_base import DriverBase, QuerySource
-from ..query_defns import Formatters
 from ..._version import VERSION
-from ...common.utility import export, check_kwargs
 from ...common.exceptions import (
     MsticpyConnectionError,
-    MsticpyUserConfigError,
     MsticpyImportExtraError,
+    MsticpyUserConfigError,
 )
+from ...common.utility import check_kwargs, export
+from ..core.query_defns import Formatters
+from .driver_base import DriverBase, QuerySource
 
 try:
     import splunklib.client as sp_client

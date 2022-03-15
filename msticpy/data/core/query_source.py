@@ -9,14 +9,14 @@ import re
 # from collections import ChainMap
 from datetime import datetime, timedelta
 from numbers import Number
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
-from dateutil.parser import parse, ParserError  # type: ignore
 
+from ..._version import VERSION
+from ...common.utility import collapse_dicts
 from .query_defns import Formatters
-from ..common.utility import collapse_dicts
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -269,32 +269,32 @@ class QuerySource:
                 param_dict[p_name] = self._convert_datetime(param_dict[p_name])
             if settings["type"] == "list":
                 param_dict[p_name] = self._parse_param_list(param_dict[p_name])
-
-            # The parameter may need custom formatting
-            fmt_template = settings.get("format", None)
-            if fmt_template:
-                # custom formatting template in the query definition
-                param_dict[p_name] = fmt_template.format(param_dict[p_name])
-            elif settings["type"] == "datetime" and isinstance(
-                param_dict[p_name], datetime
-            ):
-                if formatters and Formatters.DATETIME in formatters:
-                    param_dict[p_name] = formatters[Formatters.DATETIME](
-                        param_dict[p_name]
-                    )
-                else:
-                    param_dict[p_name] = self._format_datetime_default(
-                        param_dict[p_name]
-                    )
-            elif settings["type"] == "list":
-                if formatters and Formatters.LIST in formatters:
-                    param_dict[p_name] = formatters[Formatters.LIST](param_dict[p_name])
-                else:
-                    param_dict[p_name] = self._format_list_default(param_dict[p_name])
+            self._format_parameter(p_name, param_dict, settings, formatters)
 
         if formatters and Formatters.PARAM_HANDLER in formatters:
             return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
         return self._query.format(**param_dict)
+
+    def _format_parameter(self, p_name, param_dict, param_settings, formatters):
+        # The parameter may need custom formatting
+        fmt_template = param_settings.get("format", None)
+        if fmt_template:
+            # custom formatting template in the query definition
+            param_dict[p_name] = fmt_template.format(param_dict[p_name])
+        elif param_settings["type"] == "datetime" and isinstance(
+            param_dict[p_name], datetime
+        ):
+            # format datetime using driver formatter or default formatter
+            if formatters and Formatters.DATETIME in formatters:
+                param_dict[p_name] = formatters[Formatters.DATETIME](param_dict[p_name])
+            else:
+                param_dict[p_name] = self._format_datetime_default(param_dict[p_name])
+        elif param_settings["type"] == "list":
+            # format list using driver formatter or default formatter
+            if formatters and Formatters.LIST in formatters:
+                param_dict[p_name] = formatters[Formatters.LIST](param_dict[p_name])
+            else:
+                param_dict[p_name] = self._format_list_default(param_dict[p_name])
 
     def _convert_datetime(self, param_value: Any) -> datetime:
         if isinstance(param_value, datetime):

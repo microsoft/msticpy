@@ -6,8 +6,8 @@
 """Display code with with highlighting."""
 from typing import List, Optional
 
-from IPython.display import HTML, display, DisplayHandle
-from pygments import highlight, lexers, styles, formatters
+from IPython.display import HTML, DisplayHandle, display
+from pygments import formatters, highlight, lexers, styles
 
 from .._version import VERSION
 
@@ -43,11 +43,13 @@ def to_html(code: str, language: str, style: str = "default", full: bool = True)
 
     """
     pygments_lexer = lexers.get_lexer_by_name(language)
+    # pylint: disable=no-member
     return highlight(
         code,
         pygments_lexer,
         formatters.HtmlFormatter(style=style, full=full, nobackground=True),
     )
+    # pylint: enable=no-member
 
 
 def list_pygments_styles() -> List[str]:

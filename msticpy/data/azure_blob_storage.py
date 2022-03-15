@@ -12,7 +12,7 @@ import warnings
 
 # flake8: noqa: F403, F401
 # pylint: disable=unused-import
-from .azure.azure_blob_storage import AzureBlobStorage
+from .context.azure.azure_blob_storage import AzureBlobStorage
 
 WARN_MSSG = (
     "This module has moved to msticpy.data.azure.azure_blob_storage\n"
