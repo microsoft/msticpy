@@ -70,18 +70,18 @@ class AzureResource(Entity):
         return self.ResourceId or self.__class__.__name__
 
     @property
-    def SubscriptionId(self):  # noqa
-        """Return the subscription Id or None."""
+    def SubscriptionId(self):  # noqa: N802
+        """Return the subscription Id or None."""  # noqa: N802
         return self.ResourceIdParts.get("subscriptions")
 
     @property
-    def ResourceGroup(self):  # noqa
-        """Return the ResourceGroup name or None."""
+    def ResourceGroup(self):  # noqa: N802
+        """Return the ResourceGroup name or None."""  # noqa: N802
         return self.ResourceIdParts.get("resourceGroups")
 
     @property
-    def Provider(self):  # noqa
-        """Return the Provider name or None."""
+    def Provider(self):  # noqa: N802
+        """Return the Provider name or None."""  # noqa: N802
         return self.ResourceIdParts.get("providers")
 
     _entity_schema = {

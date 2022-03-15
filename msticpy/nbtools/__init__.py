@@ -31,6 +31,13 @@ from .security_alert import SecurityAlert
 from .security_alert_graph import *
 from .security_event import SecurityEvent
 
+try:
+    from IPython import get_ipython
+
+    from . import nbmagics
+except ImportError as err:
+    pass
+
 # pylint: enable=W0401
 
 

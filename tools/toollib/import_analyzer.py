@@ -4,12 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
-import re
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
+import pkg_resources
 import networkx as nx
 
 from . import VERSION
@@ -54,12 +54,34 @@ _PKG_RENAME_NAME = {
 }
 
 
-def _get_setup_reqs(
+def get_setup_reqs(
     package_root: str,
     req_file="requirements.txt",
     extras: Optional[List[str]] = None,
     skip_setup=True,
-):
+) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    """
+    Return list of extras from setup.py.
+
+    Parameters
+    ----------
+    package_root : str
+        The root folder of the package
+    req_file
+        Requirements file
+    extras : Optional[List[str]], optional
+        Optional list of extras to process in place of reading
+        from setup CFG
+    skip_setup : bool, optional
+        If True, process the setup file, by default True
+
+    Returns
+    -------
+    Tuple[Dict[str, SpecifierSet], Dict[str, str]]
+        Tuple of Dict[pkg_name_lower, pkg_name], Dict[pkg_name, version_spec]
+        of package requirements.
+
+    """
     with open(Path(package_root).joinpath(req_file), "r", encoding="utf-8") as req_f:
         req_list = req_f.readlines()
 
@@ -71,8 +93,16 @@ def _get_setup_reqs(
             setup_pkgs = setup_pkgs | extra_pkgs
         except ImportError:
             print("Could not process modifed 'setup.py'")
-    setup_versions = {key[0].casefold(): key for key in setup_pkgs}
-    setup_reqs = {key[0].casefold(): key[0] for key in setup_pkgs}
+    setup_versions = {
+        req.name.casefold(): req.specifier
+        for req in setup_pkgs
+        if req.marker is None or req.marker.evaluate()
+    }
+    setup_reqs = {
+        req.name.casefold(): req.name
+        for req in setup_pkgs
+        if req.marker is None or req.marker.evaluate()
+    }
 
     # for packages that do not match top-level names
     # add the mapping
@@ -125,9 +155,9 @@ def get_extras_from_setup(
 
 def _extract_pkg_specs(pkg_specs: List[str]):
     return {
-        re.match(PKG_TOKENS, item).groups()  # type: ignore
-        for item in pkg_specs
-        if re.match(PKG_TOKENS, item) and not item.strip().startswith("#")
+        pkg_resources.Requirement.parse(req)  # type: ignore
+        for req in pkg_specs
+        if (req and not req.strip().startswith("#"))
     }
 
 
@@ -275,7 +305,7 @@ def analyze_imports(
         A dictionary of modules and imports
 
     """
-    setup_reqs, _ = _get_setup_reqs(
+    setup_reqs, _ = get_setup_reqs(
         package_root, req_file, extras, skip_setup=(not process_setup_py)
     )
     pkg_root = Path(package_root) / package_name

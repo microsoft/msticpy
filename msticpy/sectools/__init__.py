@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-MSTICy sectools.
+MSTICPy sectools.
 
 .. warning: This sub-package is deprecated.
    All functionality has been removed from this sub-package and moved
@@ -25,7 +25,7 @@ MSTICy sectools.
 - proc_tree_build_winlx -> msticpy.analysis.data
 - proc_tree_schema -> msticpy.analysis.data
 - proc_tree_utils -> msticpy.analysis.data
-- sectools_magics -> msticpy.analysis
+- sectools_magics -> msticpy.nbtools.nbmagics
 - syslog_utils -> msticpy.analysis
 
 The sectools sub-package will be removed in version 2.0.0
@@ -46,7 +46,7 @@ from ..data.context.tiproviders.vtlookupv3.vtlookup import VTLookup
 try:
     from IPython import get_ipython
 
-    from .analysis import sectools_magics
+    from ..nbtools import nbmagics as sectool_magics
 except ImportError as err:
     pass
 
