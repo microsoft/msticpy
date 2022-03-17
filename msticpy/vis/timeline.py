@@ -32,9 +32,9 @@ from pandas.api.types import is_datetime64_any_dtype
 from pandas.errors import OutOfBoundsDatetime
 
 from .._version import VERSION
+from ..common.data_utils import ensure_df_datetimes
 from ..common.exceptions import MsticpyParameterError
 from ..common.utility import check_kwargs, export
-from ..data.core.query_defns import ensure_df_datetimes
 
 # pylint: disable=unused-import
 # Importing to activate pandas accessors

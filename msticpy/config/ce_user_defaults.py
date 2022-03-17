@@ -149,9 +149,9 @@ class CEAutoLoadQProvs(CEItemsBase):
             opt_list = []
         opt_list.extend(
             {
-                DataEnvironment.parse(prov).name
-                for prov in DataEnvironment.__members__
-                if prov not in ("Unknown", "Kusto", "AzureSentinel", "LogAnalytics")
+                prov.name
+                for prov in DataEnvironment
+                if prov.name not in ("Unknown", "MSSentinel")
             }
         )
         return opt_list

@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 
 from ..._version import VERSION
-from ...data.core.query_defns import ensure_df_datetimes
-from .proc_tree_schema import ProcSchema
+from ...common.data_utils import ensure_df_datetimes
 from .proc_tree_schema import ColNames as Col
+from .proc_tree_schema import ProcSchema
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

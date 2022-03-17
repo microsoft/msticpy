@@ -6,19 +6,17 @@
 """Pivot query functions class."""
 import itertools
 import warnings
-from collections import defaultdict, namedtuple, abc
+from collections import abc, defaultdict, namedtuple
 from functools import wraps
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pandas as pd
 
-from .pivot_register import join_result, get_join_params
-from ...common.timespan import TimeSpan
 from ..._version import VERSION
-from ...data.core.data_providers import QueryProvider
+from ...common.timespan import TimeSpan
 from ...data.core.query_container import QueryContainer
-from ...data.core.query_source import QuerySource
 from .. import entities
+from .pivot_register import get_join_params, join_result
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -56,7 +54,11 @@ class PivotQueryFunctions:
 
     current = None
 
-    def __init__(self, query_provider: QueryProvider, ignore_reqd: List[str] = None):
+    def __init__(
+        self,
+        query_provider: "QueryProvider",  # noqa: F821
+        ignore_reqd: List[str] = None,
+    ):
         """
         Instantiate PivotQueryFunctions class.
 
@@ -111,7 +113,9 @@ class PivotQueryFunctions:
                     table=q_source.params.get("table", {}),
                 )
 
-    def get_query_settings(self, family: str, query: str) -> QuerySource:
+    def get_query_settings(
+        self, family: str, query: str
+    ) -> "QuerySource":  # noqa: F821
         """
         Get the QuerySource for the named `family` and `query`.
 
@@ -300,7 +304,7 @@ PARAM_ENTITY_MAP["url_list"] = PARAM_ENTITY_MAP["url"]
 
 
 def add_data_queries_to_entities(
-    provider: QueryProvider, get_timespan: Callable[[], TimeSpan]
+    provider: "QueryProvider", get_timespan: Callable[[], TimeSpan]  # noqa: F821
 ):
     """
     Add data queries from `provider` to entities.

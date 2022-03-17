@@ -5,14 +5,15 @@
 # --------------------------------------------------------------------------
 """Module docstring."""
 import os
+
 import pytest
 import pytest_check as check
 import yaml
 
 import msticpy
+from msticpy.common.pkg_config import settings
 from msticpy.data import QueryProvider
 from msticpy.nbtools import user_config
-from msticpy.common.pkg_config import settings
 
 # pylint: disable=redefined-outer-name, unused-import, ungrouped-imports
 try:
@@ -96,10 +97,10 @@ def test_user_config(mp_settings):
 
     check.is_in("qry_asi", prov_dict)
     check.is_instance(prov_dict["qry_asi"], QueryProvider)
-    check.equal(prov_dict["qry_asi"].environment, "AzureSentinel")
+    check.equal(prov_dict["qry_asi"].environment, "MSSentinel")
     check.is_in("qry_soc", prov_dict)
     check.is_instance(prov_dict["qry_soc"], QueryProvider)
-    check.equal(prov_dict["qry_asi"].environment, "AzureSentinel")
+    check.equal(prov_dict["qry_asi"].environment, "MSSentinel")
     check.is_in("qry_splunk", prov_dict)
     check.is_instance(prov_dict["qry_splunk"], QueryProvider)
     check.equal(prov_dict["qry_splunk"].environment, "Splunk")

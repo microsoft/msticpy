@@ -17,9 +17,10 @@ from ..._version import VERSION
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
+from ...datamodel.pivots.pivot_data_queries import add_data_queries_to_entities
 from ...nbtools.nbwidgets import QueryTime
 from ..browsers.query_browser import browse_queries
-from ..drivers import import_driver, DriverBase
+from ..drivers import DriverBase, import_driver
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
 from .query_defns import DataEnvironment
@@ -76,9 +77,9 @@ class QueryProvider:
                 data_environment = data_env
             else:
                 raise TypeError(f"Unknown data environment {data_environment}")
-
         self.environment = data_environment.name
-        self._driver_kwargs = kwargs
+
+        self._driver_kwargs = kwargs.copy()
         if driver is None:
             self.driver_class = import_driver(data_environment)
             if issubclass(self.driver_class, DriverBase):
@@ -104,6 +105,7 @@ class QueryProvider:
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
+        add_data_queries_to_entities(self, lambda: self._query_time.timespan)
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -135,6 +137,7 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
+            add_data_queries_to_entities(self, lambda: self._query_time.timespan)
 
     def add_connection(
         self,
@@ -456,16 +459,24 @@ class QueryProvider:
             }
         return query_options
 
+    def _get_query_folder_for_env(self, root_path: str, environment: str) -> Path:
+        """Return query folder for current environment."""
+        environment = "MDE" if environment == "M365D" else environment
+        return self._resolve_package_path(root_path).joinpath(environment.casefold())
+
     def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
         """Fetch queries from YAML files in specified paths."""
         settings: Dict[str, Any] = config.settings.get(  # type: ignore
             "QueryDefinitions"
         )  # type: ignore
         all_query_paths = []
-        for default_path in settings.get("Default"):  # type: ignore
-            qry_path = self._resolve_package_path(default_path)
-            if qry_path:
-                all_query_paths.append(qry_path)
+        for qry_default_path in settings.get("Default"):  # type: ignore
+            # only read queries from environment folder
+            qry_path = self._get_query_folder_for_env(
+                qry_default_path, self.environment
+            )
+            if qry_path and qry_path.is_dir():
+                all_query_paths.append(str(qry_path))
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
@@ -478,16 +489,14 @@ class QueryProvider:
                 if qry_path:
                     all_query_paths.append(qry_path)
 
-        if not all_query_paths:
-            raise RuntimeError(
-                "No valid query definition files found. ",
-                "Please check your msticpyconfig.yaml settings.",
+        if all_query_paths:
+            return QueryStore.import_files(
+                source_path=all_query_paths,
+                recursive=True,
+                driver_query_filter=self._query_provider.query_attach_spec,
             )
-        return QueryStore.import_files(
-            source_path=all_query_paths,
-            recursive=True,
-            driver_query_filter=self._query_provider.query_attach_spec,
-        )
+        # if no queries - just return an empty store
+        return {self.environment: QueryStore(self.environment)}
 
     def _add_query_functions(self):
         """Add queries to the module as callable methods."""
@@ -610,16 +619,11 @@ class QueryProvider:
         return ranges
 
     @classmethod
-    def _resolve_package_path(cls, config_path: str) -> Optional[str]:
+    def _resolve_package_path(cls, config_path: str) -> Path:
         """Resolve path relative to current package."""
         if not Path(config_path).is_absolute():
-            config_path = str(
-                Path(__file__).resolve().parent.parent.joinpath(config_path)
-            )
-        if not Path(config_path).is_dir():
-            print(f"Warning: Custom query definitions path {config_path} not found")
-            return None
-        return config_path
+            return Path(__file__).resolve().parent.parent.joinpath(config_path)
+        return Path(config_path)
 
     @classmethod
     def _resolve_path(cls, config_path: str) -> Optional[str]:

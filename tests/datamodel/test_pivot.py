@@ -11,13 +11,14 @@ from typing import Optional
 
 import pytest
 import pytest_check as check
+
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
+from msticpy.data.context.geoip import GeoLiteLookup
+from msticpy.data.context.tilookup import TILookup
 from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivots.pivot import Pivot
-from msticpy.data.context.geoip import GeoLiteLookup
-from msticpy.data.context.tilookup import TILookup
 
 __author__ = "Ian Hellen"
 
@@ -62,7 +63,7 @@ def data_providers():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
         if _KQL_IMP_OK:
-            prov_dict["az_sent_prov"] = QueryProvider("AzureSentinel")
+            prov_dict["az_sent_prov"] = QueryProvider("MSSentinel")
         prov_dict["mdatp_prov"] = QueryProvider("MDE")
         if _SPLUNK_IMP_OK:
             prov_dict["splunk_prov"] = QueryProvider("Splunk")
@@ -81,20 +82,18 @@ def _reset_entities():
 
 PivotTestCase = namedtuple("PivotTestCase", "entity, container, funcs")
 _ENTITY_FUNCS = [
-    pytest.param(PivotTestCase("Host", "AzureSentinel", 25), id="Host-AzureSentinel"),
+    pytest.param(PivotTestCase("Host", "MSSentinel", 25), id="Host-MSSentinel"),
     pytest.param(PivotTestCase("Host", "MDE", 2), id="Host-MDE"),
     pytest.param(PivotTestCase("Host", "util", 3), id="Host-util"),
     pytest.param(
-        PivotTestCase("IpAddress", "AzureSentinel", 15), id="IpAddress-AzureSentinel"
+        PivotTestCase("IpAddress", "MSSentinel", 15), id="IpAddress-MSSentinel"
     ),
     pytest.param(PivotTestCase("IpAddress", "MDE", 2), id="IpAddress-MDE"),
     pytest.param(PivotTestCase("IpAddress", "ti", 8), id="IpAddress-ti"),
     pytest.param(PivotTestCase("IpAddress", "util", 4), id="IpAddress-util"),
-    pytest.param(
-        PivotTestCase("Account", "AzureSentinel", 16), id="Account-AzureSentinel"
-    ),
+    pytest.param(PivotTestCase("Account", "MSSentinel", 16), id="Account-MSSentinel"),
     pytest.param(PivotTestCase("Account", "MDE", 4), id="Account-MDE"),
-    pytest.param(PivotTestCase("Url", "AzureSentinel", 2), id="Url-AzureSentinel"),
+    pytest.param(PivotTestCase("Url", "MSSentinel", 2), id="Url-MSSentinel"),
     pytest.param(PivotTestCase("Url", "MDE", 2), id="Url-MDE"),
     pytest.param(PivotTestCase("Url", "ti", 4), id="Url-ti"),
     pytest.param(PivotTestCase("Url", "util", 5), id="Url-util"),
@@ -132,7 +131,7 @@ def test_pivot_providers(_create_pivot_list, test_case):
 #     """Function_docstring."""
 #     for entity_name in ("Host", "IpAddress", "Account", "Url"):
 #         entity = getattr(entities, entity_name)
-#         for container in ("AzureSentinel", "Splunk", "MDE", "ti", "util"):
+#         for container in ("MSSentinel", "Splunk", "MDE", "ti", "util"):
 #             query_contr = getattr(entity, container, None)
 #             if not query_contr:
 #                 continue
@@ -217,7 +216,7 @@ def test_pivot_time(data_providers):
     # Make sure the values provided to queries match.
     _fake_provider_connected(data_providers["az_sent_prov"])
 
-    query = entities.Host.AzureSentinel.wevt_processes(host_name="test", print=True)
+    query = entities.Host.MSSentinel.wevt_processes(host_name="test", print=True)
     check.is_in(start.isoformat(), query)
     check.is_in(end.isoformat(), query)
 
@@ -228,7 +227,7 @@ _ENTITY_QUERIES = [
         EntityQuery(
             "Host",
             dict(HostName="testhost", DnsDomain="contoso.com"),
-            "AzureSentinel",
+            "MSSentinel",
             "wevt_processes",
             'Computer has "testhost.contoso.com"',
         ),
@@ -238,7 +237,7 @@ _ENTITY_QUERIES = [
         EntityQuery(
             "Account",
             dict(Name="testacct"),
-            "AzureSentinel",
+            "MSSentinel",
             "wevt_logons",
             'where Account has "testacct"',
         ),
@@ -248,7 +247,7 @@ _ENTITY_QUERIES = [
         EntityQuery(
             "IpAddress",
             dict(Address="192.168.1.2"),
-            "AzureSentinel",
+            "MSSentinel",
             "hb_heartbeat",
             '| where ComputerIP == "192.168.1.2"',
         ),
@@ -263,7 +262,7 @@ def test_entity_attr_funcs(_create_pivot_ns, test_case):
     # Test entity
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(test_case.args)
-    _fake_provider_connected(_create_pivot_ns.get_provider("AzureSentinel"))
+    _fake_provider_connected(_create_pivot_ns.get_provider("MSSentinel"))
     func = getattr(getattr(entity, test_case.provider), test_case.pivot_func)
     query = func(entity, print_query=True)
     check.is_in(test_case.expected, query)
