@@ -470,24 +470,24 @@ class QueryProvider:
             "QueryDefinitions"
         )  # type: ignore
         all_query_paths = []
-        for qry_default_path in settings.get("Default"):  # type: ignore
+        for def_qry_path in settings.get("Default"):  # type: ignore
             # only read queries from environment folder
-            qry_path = self._get_query_folder_for_env(
-                qry_default_path, self.environment
+            builtin_qry_path = self._get_query_folder_for_env(
+                def_qry_path, self.environment
             )
-            if qry_path and qry_path.is_dir():
-                all_query_paths.append(str(qry_path))
+            if builtin_qry_path and builtin_qry_path.is_dir():
+                all_query_paths.append(str(builtin_qry_path))
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
+                custom_qry_path = self._resolve_path(custom_path)
+                if custom_qry_path:
+                    all_query_paths.append(custom_qry_path)
         if query_paths:
-            for custom_path in query_paths:
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
-                    all_query_paths.append(qry_path)
+            for param_path in query_paths:
+                param_qry_path = self._resolve_path(param_path)
+                if param_qry_path:
+                    all_query_paths.append(param_qry_path)
 
         if all_query_paths:
             return QueryStore.import_files(

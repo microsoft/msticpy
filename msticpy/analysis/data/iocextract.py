@@ -33,7 +33,6 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import check_kwargs, export
-from ...data.context.domain_utils import DomainValidator
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -180,6 +179,11 @@ class IoCExtract:
         self.add_ioc_type(IoCType.sha1_hash.name, self.SHA1_REGEX, 1, "hash")
         self.add_ioc_type(IoCType.sha256_hash.name, self.SHA256_REGEX, 1, "hash")
 
+        # inline import due to circular dependency
+        # pylint: disable=import-outside-toplevel
+        from ...data.context.domain_utils import DomainValidator
+
+        # pylint: enable=import-outside-toplevel
         self._dom_validator = DomainValidator()
         self._ignore_tld = False
 

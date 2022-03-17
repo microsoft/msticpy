@@ -56,7 +56,7 @@ class PivotQueryFunctions:
 
     def __init__(
         self,
-        query_provider: "QueryProvider",  # noqa: F821
+        query_provider: "QueryProvider",  # type: ignore  # noqa: F821
         ignore_reqd: List[str] = None,
     ):
         """
@@ -115,7 +115,7 @@ class PivotQueryFunctions:
 
     def get_query_settings(
         self, family: str, query: str
-    ) -> "QuerySource":  # noqa: F821
+    ) -> "QuerySource":  # type: ignore  # noqa: F821
         """
         Get the QuerySource for the named `family` and `query`.
 
@@ -304,7 +304,7 @@ PARAM_ENTITY_MAP["url_list"] = PARAM_ENTITY_MAP["url"]
 
 
 def add_data_queries_to_entities(
-    provider: "QueryProvider", get_timespan: Callable[[], TimeSpan]  # noqa: F821
+    provider: "QueryProvider", get_timespan: Callable[[], TimeSpan]  # type: ignore  # noqa: F821
 ):
     """
     Add data queries from `provider` to entities.
