@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Setup script for msticpy."""
 import re
+
 import setuptools
 
 with open("msticpy/_version.py", "r", encoding="utf-8") as fd:
@@ -27,7 +28,7 @@ def _combine_extras(extras: list) -> list:
 # Extras definitions
 EXTRAS = {
     "dev": INSTALL_DEV_REQUIRES,
-    "vt3": ["vt-py>=0.6.1", "nest_asyncio>=1.4.0"],
+    "vt3": ["vt-py>=0.6.1", "vt-graph-api>=2.0", "nest_asyncio>=1.4.0"],
     "splunk": ["splunk-sdk>=1.6.0"],
     "sumologic": ["sumologic-sdk>=0.1.11", "openpyxl>=3.0"],
     "kql": ["KqlmagicCustom[jupyter-extended]>=0.1.114"],

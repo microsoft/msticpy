@@ -33,16 +33,16 @@ from time import sleep
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import geoip2.database  # type: ignore
-import pandas as pd
 import httpx
+import pandas as pd
 from geoip2.errors import AddressNotFoundError  # type: ignore
 from IPython import get_ipython
 from IPython.display import HTML, display
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
-from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.pkg_config import current_config_path
+from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ...common.utility import export
 from ...datamodel.entities import GeoLocation, IpAddress
 
@@ -556,9 +556,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             print(*args)
 
     @staticmethod
-    def _geolite_warn(mssg):
+    def _geolite_warn(messages: List[str]):
+        warn_message = "\n".join(messages)
         warnings.warn(
-            f"GeoIpLookup: {mssg}",
+            f"GeoIpLookup: warnings detected: {warn_message}",
             UserWarning,
         )
 
@@ -644,38 +645,42 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 f"Attempting to downloading new database to {db_folder}",
             )
             self._download_and_extract_archive(url, db_folder)
-        else:
-            # Create a reader object to retrive db info and build date
-            # to check age from build_epoch property.
-            with geoip2.database.Reader(geoip_db_path) as reader:
-                last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
+            return
 
-            # Check for out of date DB file according to db_age
-            db_age = datetime.utcnow() - last_mod_time
-            db_updated = True
-            if db_age > timedelta(30) and auto_update:
-                print(
-                    "Latest local Maxmind City Database present is older than 30 days.",
-                    f"Attempting to download new database to {db_folder}",
-                )
-                if not self._download_and_extract_archive(url, db_folder):
-                    self._pr_debug("DB download failed")
-                    self._geolite_warn("DB download failed")
-                    db_updated = False
-            elif force_update:
-                print(
-                    "force_update is set to True.",
-                    f"Attempting to download new database to {db_folder}",
-                )
-                if not self._download_and_extract_archive(url, db_folder):
-                    self._pr_debug("DB download failed")
-                    self._geolite_warn("DB download failed")
-                    db_updated = False
-            if not db_updated:
-                self._pr_debug("Continuing with cached database.")
-                self._geolite_warn(
-                    "Continuing with cached database. Results may inaccurate."
-                )
+        warn_messages: List[str] = []
+        # Create a reader object to retrive db info and build date
+        # to check age from build_epoch property.
+        with geoip2.database.Reader(geoip_db_path) as reader:
+            last_mod_time = datetime.utcfromtimestamp(reader.metadata().build_epoch)
+
+        # Check for out of date DB file according to db_age
+        db_age = datetime.utcnow() - last_mod_time
+        db_updated = True
+        if db_age > timedelta(30) and auto_update:
+            print(
+                "Latest local Maxmind City Database present is older than 30 days.",
+                f"Attempting to download new database to {db_folder}",
+            )
+            if not self._download_and_extract_archive(url, db_folder):
+                self._pr_debug("DB download failed")
+                warn_messages.append("DB download failed")
+                db_updated = False
+        elif force_update:
+            print(
+                "force_update is set to True.",
+                f"Attempting to download new database to {db_folder}",
+            )
+            if not self._download_and_extract_archive(url, db_folder):
+                self._pr_debug("DB download failed")
+                warn_messages.append("DB download failed")
+                db_updated = False
+        if not db_updated:
+            self._pr_debug("Continuing with cached database.")
+            warn_messages.append(
+                "Continuing with cached database. Results may inaccurate."
+            )
+        if warn_messages:
+            self._geolite_warn(warn_messages)
 
     # pylint: disable=too-many-branches
     def _download_and_extract_archive(  # noqa: MC0001
@@ -708,6 +713,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         if db_folder is None:
             db_folder = self._DB_HOME
 
+        warn_messages: List[str] = []
+
         if not Path(db_folder).exists():
             # using makedirs to create intermediate-level dirs to contain the leaf dir
             Path(db_folder).mkdir(exist_ok=True, parents=True)
@@ -734,13 +741,13 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             self._pr_debug(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
-            self._geolite_warn(
+            warn_messages.append(
                 f"HTTP error occurred trying to download GeoLite DB: {http_err}"
             )
         # pylint: disable=broad-except
         except Exception as err:
             self._pr_debug(f"Other error occurred trying to download GeoLite DB: {err}")
-            self._geolite_warn(
+            warn_messages.append(
                 f"Other error occurred trying to download GeoLite DB: {err}"
             )
         # pylint: enable=broad-except
@@ -755,7 +762,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._pr_debug(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}"
                 )
-                self._geolite_warn(
+                warn_messages.append(
                     f"Cannot overwrite GeoIP DB file: {db_archive_path}."
                     + " The file may be in use or you do not have"
                     + f" permission to overwrite.\n - {err}"
@@ -766,13 +773,15 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._pr_debug(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}"
                 )
-                self._geolite_warn(
+                warn_messages.append(
                     f"Error writing GeoIP DB file: {db_archive_path} - {err}"
                 )
         finally:
             if db_archive_path.is_file():
                 self._pr_debug(f"Removing temp file {db_archive_path}")
                 db_archive_path.unlink()
+            if warn_messages:
+                self._geolite_warn(warn_messages)
         return False
 
     # pylint: enable=too-many-branches

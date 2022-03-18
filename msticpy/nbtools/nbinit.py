@@ -148,7 +148,7 @@ if sns is not None:
 _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
-    dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
+    dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),

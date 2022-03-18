@@ -9,13 +9,14 @@ import re
 # from collections import ChainMap
 from datetime import datetime, timedelta
 from numbers import Number
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
-from dateutil.parser import parse, ParserError  # type: ignore
 
-from ...common.utility import collapse_dicts
 from ..._version import VERSION
+from ...common.utility import collapse_dicts
+from .query_defns import Formatters
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -215,7 +216,9 @@ class QuerySource:
         """
         return self.metadata["data_families"]
 
-    def create_query(self, formatters: Dict[str, Callable] = None, **kwargs) -> str:
+    def create_query(
+        self, formatters: Dict[str, Callable] = None, **kwargs
+    ) -> str:  # noqa: MC0001
         """
         Return query with values from kwargs and defaults substituted.
 
@@ -266,28 +269,32 @@ class QuerySource:
                 param_dict[p_name] = self._convert_datetime(param_dict[p_name])
             if settings["type"] == "list":
                 param_dict[p_name] = self._parse_param_list(param_dict[p_name])
+            self._format_parameter(p_name, param_dict, settings, formatters)
 
-            # The parameter may need custom formatting
-            fmt_template = settings.get("format", None)
-            if fmt_template:
-                # custom formatting template in the query definition
-                param_dict[p_name] = fmt_template.format(param_dict[p_name])
-            elif settings["type"] == "datetime" and isinstance(
-                param_dict[p_name], datetime
-            ):
-                if formatters and "datetime" in formatters:
-                    param_dict[p_name] = formatters["datetime"](param_dict[p_name])
-                else:
-                    param_dict[p_name] = self._format_datetime_default(
-                        param_dict[p_name]
-                    )
-            elif settings["type"] == "list":
-                if formatters and "list" in formatters:
-                    param_dict[p_name] = formatters["list"](param_dict[p_name])
-                else:
-                    param_dict[p_name] = self._format_list_default(param_dict[p_name])
-
+        if formatters and Formatters.PARAM_HANDLER in formatters:
+            return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
         return self._query.format(**param_dict)
+
+    def _format_parameter(self, p_name, param_dict, param_settings, formatters):
+        # The parameter may need custom formatting
+        fmt_template = param_settings.get("format", None)
+        if fmt_template:
+            # custom formatting template in the query definition
+            param_dict[p_name] = fmt_template.format(param_dict[p_name])
+        elif param_settings["type"] == "datetime" and isinstance(
+            param_dict[p_name], datetime
+        ):
+            # format datetime using driver formatter or default formatter
+            if formatters and Formatters.DATETIME in formatters:
+                param_dict[p_name] = formatters[Formatters.DATETIME](param_dict[p_name])
+            else:
+                param_dict[p_name] = self._format_datetime_default(param_dict[p_name])
+        elif param_settings["type"] == "list":
+            # format list using driver formatter or default formatter
+            if formatters and Formatters.LIST in formatters:
+                param_dict[p_name] = formatters[Formatters.LIST](param_dict[p_name])
+            else:
+                param_dict[p_name] = self._format_list_default(param_dict[p_name])
 
     def _convert_datetime(self, param_value: Any) -> datetime:
         if isinstance(param_value, datetime):
@@ -333,19 +340,20 @@ class QuerySource:
             for p_name, p_prop in self.params.items()
             if "aliases" in p_prop
         }
-        for param, props in aliased_params.items():
-            if alias in props["aliases"]:
-                return param
-        return None
+        return next(
+            (
+                param
+                for param, props in aliased_params.items()
+                if alias in props["aliases"]
+            ),
+            None,
+        )
 
     @classmethod
     def _calc_timeoffset(cls, time_offset: str) -> datetime:
         """Calculate date from offset specification."""
         delta = time_offset.split("@")[0]
-        rounding = None
-        if "@" in time_offset:
-            rounding = time_offset.split("@")[1].casefold()
-
+        rounding = time_offset.split("@")[1].casefold() if "@" in time_offset else None
         # Calculate the raw offset
         t_delta = cls._parse_timedelta(delta)
         result_date = datetime.utcnow() + t_delta
@@ -445,12 +453,17 @@ class QuerySource:
                 optional = " (optional)"
                 def_value = p_props["default"]
                 if isinstance(def_value, str) and len(def_value) > 50:
-                    def_value = def_value[:50] + "..."
+                    def_value = f"{def_value[:50]}..."
             else:
                 optional = ""
                 def_value = None
-            param_block.append(f'{p_name}: {p_props.get("type", "Any")}{optional}')
-            param_block.append(f'    {p_props.get("description", "no description")}')
+            param_block.extend(
+                (
+                    f'{p_name}: {p_props.get("type", "Any")}{optional}',
+                    f'    {p_props.get("description", "no description")}',
+                )
+            )
+
             if def_value:
                 param_block.append(f"    (default value is: {def_value})")
             if "aliases" in p_props:
