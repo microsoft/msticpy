@@ -195,7 +195,7 @@ class MsticpyUserError(MsticpyException):
         print(self._get_exception_text())
 
     def _get_exception_text(self) -> str:
-        out_lines = []
+        out_lines: List[str] = []
         for line in self._output:
             if isinstance(line, tuple):
                 l_content, l_type = line
@@ -218,7 +218,7 @@ class MsticpyUserError(MsticpyException):
 
     @staticmethod
     def _format_exception_context(stack, frame_locals):
-        context_lines = ["Stack:", *stack, "---", "Locals:"]
+        context_lines: List[str] = ["Stack:", *stack, "---", "Locals:"]
         context_lines.extend(
             f"{var} ({type(val).__name__}) = {val}" for var, val in frame_locals.items()
         )
