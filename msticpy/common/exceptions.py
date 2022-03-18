@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Miscellaneous helper methods for Jupyter Notebooks."""
 import contextlib
+import sys
+import traceback
 from typing import List, Tuple, Union
 
 from IPython.display import display
@@ -112,8 +114,11 @@ class MsticpyUserError(MsticpyException):
         ]
         if help_args:
             self._output.append("You can find other related help here:")
-            for uri in help_args:
-                self._output.append((uri, "uri"))
+            self._output.extend((uri, "uri") for uri in help_args)
+        self._context = self._format_exception_context(
+            stack=traceback.format_stack(limit=5),
+            frame_locals=sys._getframe(1).f_locals,
+        )
         if _get_config("msticpy.FriendlyExceptions") and disp_exception:
             self._display_exception()
 
@@ -137,7 +142,7 @@ class MsticpyUserError(MsticpyException):
     def _display_exception(self):
         if not self._display_exceptions:
             return
-        if is_ipython():
+        if is_ipython(notebook=True):
             display(self)
         else:
             self._display_txt_exception()
@@ -149,6 +154,7 @@ class MsticpyUserError(MsticpyException):
             div.solid {border: thin solid black; padding:10px;}
             p.title {background-color:Tomato; padding:5px;}
             ul.circle {list-style-type: circle;}
+            div.indent {text-indent: 20px; padding: 0px}
         </style>
         """
         div_tmplt = "<div class='solid'>{content}</div>"
@@ -172,6 +178,16 @@ class MsticpyUserError(MsticpyException):
                 text_line = line.replace("\n", "<br>")
                 content.append(f"{text_line}<br>")
 
+        if self._context:
+            context = [f"<div class='indent'>{line}</div>" for line in self._context]
+            content.extend(
+                (
+                    "<summary>Additional context<details>",
+                    *context,
+                    "</details></summary>",
+                )
+            )
+
         return "".join((ex_style, div_tmplt.format(content="".join(content))))
 
     def _display_txt_exception(self):
@@ -186,9 +202,9 @@ class MsticpyUserError(MsticpyException):
                 if isinstance(l_content, tuple):
                     l_content = l_content[0]
                 if l_type == "title":
-                    out_lines.append("-" * len(l_content))
-                    out_lines.append(l_content)
-                    out_lines.append("-" * len(l_content))
+                    out_lines.extend(
+                        ("-" * len(l_content), l_content, "-" * len(l_content))
+                    )
                 elif l_type == "uri":
                     if isinstance(l_content, tuple):
                         out_lines.append(f" - {': '.join(l_content)}")
@@ -196,7 +212,26 @@ class MsticpyUserError(MsticpyException):
                         out_lines.append(f" - {l_content}")
             else:
                 out_lines.append(line)
+        if self._context:
+            out_lines.extend(["", "Exception context:", *self._context])
         return "\n".join(out_lines)
+
+    @staticmethod
+    def _format_exception_context(stack, frame_locals):
+        context_lines = ["Stack:", *stack, "---", "Locals:"]
+        context_lines.extend(
+            f"{var} ({type(val).__name__}) = {val}" for var, val in frame_locals.items()
+        )
+        ex_type, ex_value, ex_traceback = sys.exc_info()
+        if ex_traceback:
+            context_lines.extend(
+                (
+                    "---",
+                    "Exception was raised by:",
+                    *(traceback.format_exception(ex_type, ex_value, ex_traceback)),
+                )
+            )
+        return context_lines
 
 
 class MsticpyUserConfigError(MsticpyUserError):

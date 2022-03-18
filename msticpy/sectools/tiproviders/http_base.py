@@ -197,7 +197,7 @@ class HttpProvider(TIProvider):
         """
         req_params = {"observable": ioc}
         req_params.update(self._request_params)
-        ioc_key = ioc_type + "-" + query_type if query_type else ioc_type
+        ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         src = self._IOC_QUERIES.get(ioc_key, None)
         if not src:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
