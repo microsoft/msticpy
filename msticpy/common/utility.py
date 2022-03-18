@@ -698,3 +698,30 @@ def search_name(pattern: str) -> None:
         for mod, uri in mod_uris.items()
     ]
     display(HTML(table_template.format(rows="\n".join(rows), pattern=pattern)))
+
+
+class ImportPlaceholder:
+    """Placeholder class for optional imports."""
+
+    def __init__(self, name: str, required_pkgs: List[str]):
+        """Initialize class with imported item name and reqd. packages."""
+        self.name = name
+        self.required_pkgs = required_pkgs
+        self.message = (
+            f"{self.name} cannot be loaded without the following packages"
+            f" installed: {', '.join(self.required_pkgs)}"
+        )
+
+    def _print_req_packages(self):
+        print(self.message, "\nPlease install and restart the notebook.")
+
+    def __getattr__(self, name):
+        """When any attribute is accessed, print requirements."""
+        self._print_req_packages()
+        raise ImportError(self.name)
+
+    def __call__(self, *args, **kwargs):
+        """If object is called, print requirements."""
+        del args, kwargs
+        self._print_req_packages()
+        raise ImportError(self.name)

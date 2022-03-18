@@ -17,7 +17,6 @@ from sumologic.sumologic import SumoLogic
 from ..._version import VERSION
 from ...common.exceptions import (
     MsticpyConnectionError,
-    MsticpyNotConnectedError,
     MsticpyUserConfigError,
     MsticpyUserError,
 )
@@ -132,7 +131,7 @@ class SumologicDriver(DriverBase):
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
-        settings, cs_is_instance_name = self._get_config_settings(connection_str)
+        settings, cs_is_instance_name = self._get_sumologic_settings(connection_str)
         cs_dict.update(settings)
         # If a connection string - parse this and add to config
         if connection_str and not cs_is_instance_name:
@@ -211,7 +210,7 @@ class SumologicDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("SumoLogic")
 
         verbosity = kwargs.pop("verbosity", 0)
         timezone = kwargs.pop("timezone", "UTC")
@@ -467,7 +466,9 @@ class SumologicDriver(DriverBase):
 
     # Read values from configuration
     @staticmethod
-    def _get_config_settings(instance_name: str = None) -> Tuple[Dict[str, Any], bool]:
+    def _get_sumologic_settings(
+        instance_name: str = None,
+    ) -> Tuple[Dict[str, Any], bool]:
         """Get config from msticpyconfig."""
         data_provs = get_provider_settings(config_section="DataProviders")
         sl_settings = {
@@ -485,12 +486,3 @@ class SumologicDriver(DriverBase):
             sumologic_settings = sl_settings.get("Sumologic")
             is_instance_name = False
         return getattr(sumologic_settings, "args", {}), is_instance_name
-
-    @staticmethod
-    def _create_not_connected_err():
-        return MsticpyNotConnectedError(
-            "Please run the connect() method before running this method.",
-            title="not connected to Sumologic.",
-            help_uri=_HELP_URI,
-            notebook_uri=_SL_NB_URI,
-        )

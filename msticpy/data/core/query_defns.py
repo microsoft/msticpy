@@ -39,6 +39,7 @@ class DataFamily(Enum):
     ResourceGraph = 9
     Sumologic = 10
     Cybereason = 11
+    Elastic = 14
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataFamily":
@@ -61,10 +62,14 @@ class DataFamily(Enum):
             except KeyError:
                 # match to value if case is incorrect
                 # pylint: disable=no-member
-                for e_name, e_val in cls.__members__.items():
-                    if e_name.upper() == value.upper():
-                        return e_val
-                return cls.Unknown
+                return next(
+                    (
+                        e_val
+                        for e_name, e_val in cls.__members__.items()
+                        if e_name.upper() == value.upper()
+                    ),
+                    cls.Unknown,
+                )
                 # pylint: enable=no-member
         if isinstance(value, int):
             try:
@@ -100,6 +105,7 @@ class DataEnvironment(Enum):
     Sumologic = 10
     M365D = 11
     Cybereason = 12
+    Elastic = 14
 
     @classmethod
     def parse(cls, value: Union[str, int]) -> "DataEnvironment":
@@ -201,3 +207,11 @@ def ensure_df_datetimes(
                 "UTC", ambiguous="infer", nonexistent="shift_forward"
             )
     return converted_data
+
+
+class Formatters:
+    """Names of custom format handlers specified by driver."""
+
+    DATETIME = "datetime"
+    LIST = "list"
+    PARAM_HANDLER = "custom_param_handler"

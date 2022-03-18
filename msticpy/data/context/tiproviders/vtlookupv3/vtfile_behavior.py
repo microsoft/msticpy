@@ -19,7 +19,6 @@ import pandas as pd
 from ....._version import VERSION
 from .....analysis.data.proc_tree_builder import ProcSchema, build_proc_tree
 from .....common.exceptions import MsticpyImportExtraError, MsticpyUserError
-from .....vis.process_tree import plot_process_tree
 
 try:
     import vt
@@ -251,8 +250,7 @@ class VTFileBehavior:
             return None
         if self.process_tree_df is None:
             self.process_tree_df = _build_process_tree(self.categories)
-        plot, _ = plot_process_tree(
-            data=self.process_tree_df,
+        plot, _ = self.process_tree_df.mp_plot.process_tree(
             schema=VT_PROCSCHEMA,
             legend_col="name",
             hide_legend=True,
