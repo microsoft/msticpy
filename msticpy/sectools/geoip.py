@@ -347,7 +347,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
     def _lookup_ip_list(self, ip_list: List[str]):
         """Lookup IP Addresses one-by-one."""
         ip_loc_results = []
-        with httpx.Client() as client:
+        with httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0)) as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
