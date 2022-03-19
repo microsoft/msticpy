@@ -26,7 +26,7 @@ Known limitations
 """
 import random
 import re
-from typing import List, Tuple, Any, Union, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..common.exceptions import MsticpyImportExtraError
 

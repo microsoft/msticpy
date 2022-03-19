@@ -4,12 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """Parameter extractor helper functions for use with IPython/Juptyer queries."""
-from typing import List, Dict, Mapping, Tuple, Any
+from typing import Any, Dict, List, Mapping, Tuple
 
-from .query_store import QuerySource
+from ..._version import VERSION
 from ...common.utility import export
 from .query_defns import QueryParamProvider
-from ..._version import VERSION
+from .query_store import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

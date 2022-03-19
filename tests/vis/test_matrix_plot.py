@@ -5,13 +5,13 @@
 # --------------------------------------------------------------------------
 """Test module for matrix_plot."""
 from typing import Any, Dict
+
 import pandas as pd
 import pytest
 
-from msticpy.vis.matrix_plot import plot_matrix
-
 # pylint: disable=unused-import
 from msticpy.vis import mp_pandas_plot  # noqa: F401
+from msticpy.vis.matrix_plot import plot_matrix
 
 from ..unit_test_lib import get_test_data_path
 

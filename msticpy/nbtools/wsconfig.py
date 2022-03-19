@@ -10,7 +10,6 @@ import warnings
 # pylint: disable=unused-import
 from ..common.wsconfig import WorkspaceConfig
 
-
 WARN_MSSG = (
     "This module has moved to msticpy.common.wsconfig\n"
     "Please change your import to reflect this new location."

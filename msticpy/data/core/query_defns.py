@@ -6,12 +6,12 @@
 """Query helper definitions."""
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Union, List
+from typing import List, Union
 
 import pandas as pd
 
-from ...common.utility import export
 from ..._version import VERSION
+from ...common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -95,8 +95,9 @@ class DataEnvironment(Enum):
     Kusto = 2
     AzureSecurityCenter = 3
     SecurityGraph = 4
-    MDE = 5  # alias of MDATP
-    MDATP = 5
+    MSGraph = 4
+    MDE = 5
+    MDATP = 5  # alias of MDE
     LocalData = 6
     Splunk = 7
     Mordor = 8

@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """Helper module for laplace smoothing counts."""
 
-from typing import Tuple, List, DefaultDict
 import copy
+from typing import DefaultDict, List, Tuple
 
 
 def laplace_smooth_cmd_counts(

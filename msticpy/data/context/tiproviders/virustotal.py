@@ -13,12 +13,12 @@ requests per minute for the account type that you have.
 
 """
 import datetime as dt
-from typing import Any, Tuple, Dict
+from typing import Any, Dict, Tuple
 
-from .ti_provider_base import LookupResult, TISeverity
-from .http_base import HttpProvider, IoCLookupParams
-from ....common.utility import export
 from ...._version import VERSION
+from ....common.utility import export
+from .http_base import HttpProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

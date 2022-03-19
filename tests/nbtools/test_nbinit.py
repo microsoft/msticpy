@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.nbtools.nbinit import _get_or_create_config, _imp_module_all, init_notebook
 
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config

@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from typing import Any, Dict, Optional, Tuple, Union
 
-import pandas as pd
 import httpx
+import pandas as pd
 from sumologic.sumologic import SumoLogic
 
 from ..._version import VERSION

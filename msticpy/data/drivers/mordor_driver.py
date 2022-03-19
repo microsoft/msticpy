@@ -14,8 +14,8 @@ from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, U
 from zipfile import BadZipFile, ZipFile
 
 import attr
-import pandas as pd
 import httpx
+import pandas as pd
 import yaml
 from tqdm.auto import tqdm
 

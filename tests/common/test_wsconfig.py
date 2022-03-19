@@ -12,7 +12,7 @@ from pathlib import Path
 from msticpy.common import pkg_config
 from msticpy.common.wsconfig import WorkspaceConfig
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 

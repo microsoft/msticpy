@@ -30,7 +30,7 @@ defaults:
       add_query_items:
         description: Additional query clauses
         type: str
-        default: '' 
+        default: ''
       groupbycolumn:
         description: Group by field to aggregate results
         type: str
@@ -70,8 +70,8 @@ sources:
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn})
-            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(double), seasonal to typeof(double), trend to typeof(long), residual to typeof(long) 
-            {add_query_items}'  
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(double), seasonal to typeof(double), trend to typeof(long), residual to typeof(long)
+            {add_query_items}'
   get_timeseries_anomalies:
     description: Time Series filtered anomalies detected using built-in KQL time series function-series_decompose_anomalies
     args:
@@ -83,7 +83,7 @@ sources:
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
             | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
-            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long) 
+            | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
             | extend score = round(score,2)
             {add_query_items}'
   plot_timeseries_datawithbaseline:
@@ -91,12 +91,12 @@ sources:
     args:
       query: '
             {table}
-            {where_clause} 
+            {where_clause}
             | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})
             | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn}
-            | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn}) 
+            | extend (baseline,seasonal,trend,residual) = series_decompose({aggregatecolumn})
             | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime), baseline to typeof(long), seasonal to typeof(long), trend to typeof(long), residual to typeof(long)
             | project {timestampcolumn}, {aggregatecolumn}, baseline
             | render timechart with (title="Time Series Decomposition - Baseline vs Observed TimeChart")
@@ -106,7 +106,7 @@ sources:
     args:
       query: '
             {table}
-            {where_clause} 
+            {where_clause}
             | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
             | where {timestampcolumn} >= datetime({start})
             | where {timestampcolumn} <= datetime({end})

@@ -11,9 +11,9 @@ UNK_TOKEN = "##UNK##"  # nosec B105
 
 class TestLaplaceSmooth(unittest.TestCase):
     def setUp(self):
-        self.data1 = dict()
-        self.data2 = dict()
-        self.data3 = dict()
+        self.data1 = {}
+        self.data2 = {}
+        self.data3 = {}
 
         # populate data1
         self.data1["sessions"] = []

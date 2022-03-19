@@ -4,33 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """datq query test class."""
-from copy import deepcopy
-from collections import namedtuple
-import unittest
-from unittest.mock import patch, MagicMock
 import os
-from pathlib import Path
+import unittest
 import warnings
+from collections import namedtuple
+from copy import deepcopy
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import keyring
-
 from azure.core.exceptions import ResourceNotFoundError
 
-from msticpy.common import secret_settings
-from msticpy.common.keyvault_client import (
-    # AuthClient,
-    # KeyringAuthClient,
+from msticpy.common import pkg_config, secret_settings
+from msticpy.common.keyvault_client import (  # AuthClient,; KeyringAuthClient,
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
 )
-from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.common.utility import set_unit_testing
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -179,11 +175,11 @@ class TestSecretsConfig(unittest.TestCase):
     def test_config_load(self):
         """Test loading configuration from msticpyconfig."""
         expected = {
-            "TenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
-            "SubscriptionId": "40dcc8bf-0478-4f3b-b275-ed0a94f2c013",
-            "ResourceGroup": "ASIHuntOMSWorkspaceRG",
+            "TenantId": "57e3d15e-594c-4ff2-a87b-e8f7f1b78dbb",
+            "SubscriptionId": "923f2cea-a10b-4652-9a61-88835a5b0187",
+            "ResourceGroup": "MyResGroup",
             "AzureRegion": "East US",
-            "VaultName": "mstic-ianhelle",
+            "VaultName": "myvault",
             "UseKeyring": True,
             "Authority": "global",
         }
@@ -197,7 +193,7 @@ class TestSecretsConfig(unittest.TestCase):
         self.assertEqual(kv_settings.authority_uri, "https://login.microsoftonline.com")
         self.assertEqual(
             kv_settings.get_tenant_authority_uri(),
-            "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47",
+            "https://login.microsoftonline.com/57e3d15e-594c-4ff2-a87b-e8f7f1b78dbb",
         )
         self.assertEqual(
             kv_settings.get_tenant_authority_uri(tenant="myorg.com"),
@@ -205,7 +201,7 @@ class TestSecretsConfig(unittest.TestCase):
         )
         self.assertEqual(
             kv_settings.get_tenant_authority_host(),
-            "login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47",
+            "login.microsoftonline.com/57e3d15e-594c-4ff2-a87b-e8f7f1b78dbb",
         )
         self.assertEqual(
             kv_settings.get_tenant_authority_host(tenant="myorg.com"),

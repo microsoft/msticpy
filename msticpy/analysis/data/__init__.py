@@ -4,11 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTIC Data Processing Tools."""
-
-from ..._version import VERSION
-
 # flake8: noqa: F401
-from .iocextract import IoCExtract
+from ..._version import VERSION
 from . import base64unpack as base64
 from . import process_tree_utils as ptree
 

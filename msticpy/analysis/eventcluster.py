@@ -31,24 +31,24 @@ add_process_features: derives numerical features from text features such as
 commandline and process path.
 
 """
+import re
 from binascii import crc32
 from functools import lru_cache
-from math import log10, floor
-import re
-from typing import List, Any, Tuple, Union
+from math import floor, log10
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
+from .._version import VERSION
 from ..common.exceptions import MsticpyImportExtraError
 from ..common.utility import export
-from .._version import VERSION
 
 try:
-    from sklearn.cluster import DBSCAN
-    from sklearn.preprocessing import Normalizer
     import matplotlib.pyplot as plt
     from matplotlib import cm
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import Normalizer
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without Sklearn and matplotlib installed",

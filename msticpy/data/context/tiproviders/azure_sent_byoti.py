@@ -18,8 +18,8 @@ import pandas as pd
 
 from ...._version import VERSION
 from ....common.utility import export
-from .ti_provider_base import LookupResult, TISeverity
 from .kql_base import KqlTIProvider
+from .ti_provider_base import LookupResult, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

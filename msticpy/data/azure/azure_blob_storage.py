@@ -9,6 +9,7 @@ Deprecated - module azure_blob_storage.py has moved.
 See :py:mod:`msticpy.data.context.azure.azure_blob_storage`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

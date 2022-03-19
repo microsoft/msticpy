@@ -16,6 +16,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import pytest_check as check
+
 from msticpy.data import QueryProvider
 from msticpy.data.drivers.mordor_driver import (
     _MITRE_TACTICS_CACHE,

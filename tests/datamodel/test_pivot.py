@@ -11,13 +11,14 @@ from typing import Optional
 
 import pytest
 import pytest_check as check
+
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
+from msticpy.data.context.geoip import GeoLiteLookup
+from msticpy.data.context.tilookup import TILookup
 from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivots.pivot import Pivot
-from msticpy.data.context.geoip import GeoLiteLookup
-from msticpy.data.context.tilookup import TILookup
 
 __author__ = "Ian Hellen"
 

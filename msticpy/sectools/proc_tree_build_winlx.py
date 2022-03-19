@@ -9,6 +9,7 @@ Deprecated - module proc_tree_build_winlx.py has moved.
 See :py:mod:`msticpy.analysis.data.proc_tree_build_winlx`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

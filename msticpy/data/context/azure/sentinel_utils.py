@@ -7,14 +7,13 @@
 from collections import Counter
 from typing import Dict, List
 
-import pandas as pd
 import httpx
-
+import pandas as pd
 from azure.common.exceptions import CloudError
 
 from ...._version import VERSION
-from ....common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ....common.azure_auth_core import AzureCloudConfig
+from ....common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ....common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers
 

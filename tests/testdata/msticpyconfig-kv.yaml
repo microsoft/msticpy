@@ -7,23 +7,23 @@ AzureSentinel:
       WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
 KeyVault:
-  TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db47"
-  SubscriptionId: 40dcc8bf-0478-4f3b-b275-ed0a94f2c013
-  ResourceGroup: ASIHuntOMSWorkspaceRG
+  TenantId: 57e3d15e-594c-4ff2-a87b-e8f7f1b78dbb
+  SubscriptionId: 923f2cea-a10b-4652-9a61-88835a5b0187
+  ResourceGroup: MyResGroup
   AzureRegion: East US
-  VaultName: "mstic-ianhelle"
+  VaultName: "myvault"
   UseKeyring: True
   Authority: global
 QueryDefinitions:
   Default:
-    - 'queries'
+    - "queries"
   Custom:
-    - 'testdata'
+    - "testdata"
 TIProviders:
   OTX:
     Args:
       AuthKey:
-        KeyVault: mstic-ianhelle/OTX_AuthKey
+        KeyVault: myvault/OTX_AuthKey
     Primary: True
     Provider: "OTX" # Explicitly name provider to override
   VirusTotal:

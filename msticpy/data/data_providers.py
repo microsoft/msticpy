@@ -9,6 +9,7 @@ Deprecated - module data_providers.py has moved.
 See :py:mod:`msticpy.data.core.data_providers`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

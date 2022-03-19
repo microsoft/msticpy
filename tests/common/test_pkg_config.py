@@ -4,18 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pkg_config test class."""
-import unittest
 import os
-from pathlib import Path
+import unittest
 import warnings
+from pathlib import Path
 
 import pytest
 import yaml
 
 from msticpy.common import pkg_config
-from msticpy.data.context.geoip import IPStackLookup, GeoLiteLookup
+from msticpy.data.context.geoip import GeoLiteLookup, IPStackLookup
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 

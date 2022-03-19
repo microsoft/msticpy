@@ -103,7 +103,7 @@ class Host(Entity):
 
     @property
     def FullName(self) -> Optional[str]:  # noqa: N802
-        """Return the full name of the host - either FQDN or Netbiosname."""
+        """Return the full name of the host - either FQDN or Netbiosname."""  # noqa: N802
         if self.DnsDomain:
             return f"{self.HostName or self.NetBiosName}.{self.DnsDomain}"
         if self.NTDomain:

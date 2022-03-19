@@ -8,17 +8,14 @@ import os
 from pathlib import Path
 
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from msticpy.vis.process_tree import build_and_show_process_tree
-from msticpy.analysis.data import process_tree_utils as pt_util
 from msticpy.analysis.data import proc_tree_builder as pt_build
-from msticpy.analysis.data.proc_tree_schema import (
-    LX_EVENT_SCH,
-    WIN_EVENT_SCH,
-)
+from msticpy.analysis.data import process_tree_utils as pt_util
+from msticpy.analysis.data.proc_tree_schema import LX_EVENT_SCH, WIN_EVENT_SCH
+from msticpy.vis.process_tree import build_and_show_process_tree
 
 from ..unit_test_lib import TEST_DATA_PATH
 

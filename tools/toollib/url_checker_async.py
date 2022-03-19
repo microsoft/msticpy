@@ -4,16 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
+import asyncio
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, Set, Optional, Iterable
+from typing import Dict, Iterable, Optional, Set
 from urllib import parse
 
-import asyncio
 import markdown
+from aiohttp import ClientConnectionError, ClientResponseError, ClientSession
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession, ClientResponseError, ClientConnectionError
-
 
 # pylint: disable=relative-beyond-top-level
 # from . import VERSION

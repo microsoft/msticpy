@@ -13,7 +13,8 @@ It use the ipywidgets package.
 
 """
 
+from .mp_config_control import MpConfigControls
+
 # flake8: noqa: F403
 from .mp_config_edit import MpConfigEdit
 from .mp_config_file import MpConfigFile
-from .mp_config_control import MpConfigControls

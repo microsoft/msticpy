@@ -4,12 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Unit test class for Observations class."""
-# imports
-import unittest
 import os
 
-from msticpy.analysis.observationlist import Observation, Observations
+# imports
+import unittest
+
 from msticpy._version import VERSION
+from msticpy.analysis.observationlist import Observation, Observations
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

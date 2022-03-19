@@ -9,10 +9,10 @@ from functools import partial
 from typing import Dict, Optional, Tuple, Union
 
 from ....._version import VERSION
-from .vtlookupv3 import VTLookupV3
-from .....common.utility import enum_parse
 from .....common.provider_settings import get_provider_settings
+from .....common.utility import enum_parse
 from .....datamodel.pivots.pivot import Pivot, PivotRegistration
+from .vtlookupv3 import VTLookupV3
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

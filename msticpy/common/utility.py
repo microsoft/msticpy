@@ -576,7 +576,7 @@ def arg_to_list(arg: Union[str, List[str]], delims=",; ") -> List[str]:
 
 
 def collapse_dicts(*dicts: Dict[Any, Any]) -> Dict[Any, Any]:
-    """Merge multiple dictionaries - later dicts have higher precendence."""
+    """Merge multiple dictionaries - later dicts have higher precedence."""
     if len(dicts) < 2:
         return dicts[0] or {}
     out_dict = dicts[0]
@@ -627,6 +627,77 @@ def search_for_file(
         if found_files:
             return str(found_files[0])
     return None
+
+
+def search_module(pattern: str) -> Dict[str, str]:
+    """
+    Return MSTICPy modules that match `pattern`.
+
+    Parameters
+    ----------
+    pattern : str
+        Substring or regular expression
+
+    Returns
+    -------
+    Dict[str, str]
+        Dict of module name and help URI of matching modules
+
+    """
+    pkg_path = Path(resolve_pkg_path(""))
+    deprec_pattern = "Deprecated - .* has moved"
+    html_tmplt = "https://msticpy.readthedocs.io/en/latest/api/{mod_name}.html"
+
+    def _format_module(path, root):
+        stem = str(path).replace(str(root), "")
+        stem = stem[1:] if stem[0] in ("\\", "/") else stem
+        return stem.replace(".py", "").replace("/", ".").replace("\\", ".")
+
+    module_list = {
+        _format_module(file, pkg_path.parent)
+        for file in Path(pkg_path).rglob("*.py")
+        if not str(file).endswith("__init__.py")
+        and re.search(pattern, str(file))
+        and not re.search(deprec_pattern, file.read_text())
+    }
+    return {module: html_tmplt.format(mod_name=module) for module in module_list}
+
+
+def search_name(pattern: str) -> None:
+    """
+    Display matching modules as list or HTML table.
+
+    Parameters
+    ----------
+    pattern : str
+        Substring or regular expression
+
+    """
+    mod_uris = search_module(pattern)
+    if not is_ipython():
+        print("\n".join(f"{mod}:\t{uri}" for mod, uri in mod_uris.items()))
+        return
+
+    table_template = """
+    <style>
+        .table_mod {{border-collapse: collapse; width: 50%;}}
+        .cell_mod {{border: 1px solid #ddd !important;
+            text-align: left !important; padding: 15px !important;}}
+    </style>
+    <h4>Modules matching '{pattern}'</h4>
+    <table class='table_mod'>
+    <tr class='cell_mod'><th>Module</th><th>Help</th></tr>
+    {rows}
+    </table>
+    """
+    rows = [
+        (
+            f"<tr class='cell_mod'><td>{mod}</td><td>"
+            f"<a href={uri} target='_blank'>{mod}</a></td></tr>"
+        )
+        for mod, uri in mod_uris.items()
+    ]
+    display(HTML(table_template.format(rows="\n".join(rows), pattern=pattern)))
 
 
 class ImportPlaceholder:

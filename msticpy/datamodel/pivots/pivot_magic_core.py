@@ -8,9 +8,9 @@ import argparse
 import io
 from typing import Dict, Union
 
-from pkg_resources import parse_version
 import pandas as pd
 from pandas.errors import ParserError
+from pkg_resources import parse_version
 
 from ..._version import VERSION
 

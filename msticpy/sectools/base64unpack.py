@@ -9,6 +9,7 @@ Deprecated - module base64unpack.py has moved.
 See :py:mod:`msticpy.analysis.data.base64unpack`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

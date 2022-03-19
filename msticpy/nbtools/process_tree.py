@@ -17,8 +17,8 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
+from ..analysis.data.process_tree_utils import get_ancestors  # noqa F401
 from ..analysis.data.process_tree_utils import (
-    get_ancestors,  # noqa F401
     get_children,
     get_descendents,
     get_parent,
@@ -31,7 +31,6 @@ from ..analysis.data.process_tree_utils import (
     get_summary_info,
     get_tree_depth,
 )
-
 from ..vis.process_tree import *
 from ..vis.process_tree import build_process_tree, infer_schema
 

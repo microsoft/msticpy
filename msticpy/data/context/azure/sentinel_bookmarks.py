@@ -7,16 +7,15 @@
 from typing import Dict, List, Union
 from uuid import UUID, uuid4
 
-import pandas as pd
 import httpx
+import pandas as pd
+from azure.common.exceptions import CloudError
 from IPython.display import display
 
-from azure.common.exceptions import CloudError
-
 from ...._version import VERSION
+from ....common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
 from .sentinel_utils import _build_sent_data
-from ....common.exceptions import MsticpyUserError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

@@ -25,7 +25,7 @@ try:
 except ImportError:
     _KEYVAULT = False
 from ..common.pkg_config import refresh_config, validate_config
-from .comp_edit import CompEditStatusMixin, CompEditDisplayMixin
+from .comp_edit import CompEditDisplayMixin, CompEditStatusMixin
 from .file_browser import FileBrowser
 
 __version__ = VERSION

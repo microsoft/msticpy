@@ -9,6 +9,7 @@ Deprecated - module vt_pivot.py has moved.
 See :py:mod:`msticpy.data.context.tiproviders.vtlookupv3.vt_pivot`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION
