@@ -219,18 +219,25 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         super().__init__()
 
         self.settings = _get_geoip_provider_settings("IPStack")
-        self._api_key = api_key or self.settings.args.get("AuthKey")
-        if not self._api_key:
-            raise MsticpyUserConfigError(
-                self._NO_API_KEY_MSSG,
-                help_uri=(
-                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-                    + "GeoIPLookups.html#ipstack-geo-lookup-class"
-                ),
-                service_uri="https://ipstack.com/product",
-                title="IPStack API key not found",
-            )
+        self._api_key = (
+            api_key or self.settings.args.get("AuthKey") if self.settings else None
+        )
         self.bulk_lookup = bulk_lookup
+
+    def _check_valid_config(self):
+        """Return True if valid API key available."""
+        if self._api_key:
+            return True
+
+        raise MsticpyUserConfigError(
+            self._NO_API_KEY_MSSG,
+            help_uri=(
+                "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+                + "GeoIPLookups.html#ipstack-geo-lookup-class"
+            ),
+            service_uri="https://ipstack.com/product",
+            title="IPStack API key not found",
+        )
 
     def lookup_ip(
         self,
@@ -684,7 +691,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
     # pylint: disable=too-many-branches
     def _download_and_extract_archive(  # noqa: MC0001
-        self, url: str = None, db_folder: str = None
+        self, url: str = None, db_folder: str = None  # noqa: MC0001
     ) -> bool:
         r"""
         Download file from the given URL and extract if it is archive.
