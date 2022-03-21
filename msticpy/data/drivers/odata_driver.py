@@ -230,7 +230,7 @@ class OData(DriverBase):
     @staticmethod
     def _check_response_errors(response):
         """Check the response for possible errors."""
-        if response.status_code == httpx.codes["ok"]:
+        if response.status_code == httpx.codes.OK:
             return
         print(response.json()["error"]["message"])
         if response.status_code == 401:

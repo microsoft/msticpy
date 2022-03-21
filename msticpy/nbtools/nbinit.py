@@ -598,21 +598,6 @@ def _load_pivots(namespace):
         pivot = Pivot()
         namespace["pivot"] = pivot
 
-    vt_pivot = None
-    try:
-        get_config("TIProviders.VirusTotal")
-        try:
-            vt_pivot = importlib.import_module("msticpy.sectools.vtlookupv3.vt_pivot")
-            namespace["vt_pivot"] = vt_pivot
-        except ImportError:
-            # Importing Vt3 libraries failed.
-            pass
-    except KeyError:
-        # No VT settings detected
-        pass
-    if vt_pivot:
-        vt_pivot.add_pivot_functions()
-
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
     added_imports = []
