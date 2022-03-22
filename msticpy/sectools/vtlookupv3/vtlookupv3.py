@@ -17,7 +17,6 @@ try:
     # from vt_graph_api import VTGraph
     # from vt_graph_api import errors as vt_graph_errs
     import nest_asyncio
-    from .vtfile_behavior import VTFileBehavior
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
         "Cannot use this feature without vt-py, vt-graph-api and",
@@ -25,7 +24,7 @@ except ImportError as imp_err:
         title="Error importing VirusTotal modules.",
         extra="vt3",
     ) from imp_err
-
+from .vtfile_behavior import VTFileBehavior
 
 # pylint: disable=too-many-lines
 

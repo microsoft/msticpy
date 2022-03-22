@@ -66,7 +66,7 @@ def convert_to_ip_entities(  # noqa: MC0001
     data: Optional[pd.DataFrame] = None,
     ip_col: Optional[str] = None,
     geo_lookup: bool = True,
-) -> List[IpAddress]:
+) -> List[IpAddress]:  # noqa: MC0001
     """
     Take in an IP Address string and converts it to an IP Entity.
 

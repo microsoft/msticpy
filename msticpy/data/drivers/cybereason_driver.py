@@ -53,7 +53,7 @@ class CybereasonDriver(DriverBase):
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded = True
-        self.client = httpx.Client(follow_redirects=True)
+        self.client = httpx.Client(follow_redirects=True, timeout=httpx.Timeout(30))
         self.formatters = {
             "datetime": self._format_datetime,
             "list": self._format_list,

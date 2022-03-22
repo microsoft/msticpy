@@ -219,18 +219,25 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         super().__init__()
 
         self.settings = _get_geoip_provider_settings("IPStack")
-        self._api_key = api_key or self.settings.args.get("AuthKey")
-        if not self._api_key:
-            raise MsticpyUserConfigError(
-                self._NO_API_KEY_MSSG,
-                help_uri=(
-                    "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
-                    + "GeoIPLookups.html#ipstack-geo-lookup-class"
-                ),
-                service_uri="https://ipstack.com/product",
-                title="IPStack API key not found",
-            )
+        self._api_key = (
+            api_key or self.settings.args.get("AuthKey") if self.settings else None
+        )
         self.bulk_lookup = bulk_lookup
+
+    def _check_valid_config(self):
+        """Return True if valid API key available."""
+        if self._api_key:
+            return True
+
+        raise MsticpyUserConfigError(
+            self._NO_API_KEY_MSSG,
+            help_uri=(
+                "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
+                + "GeoIPLookups.html#ipstack-geo-lookup-class"
+            ),
+            service_uri="https://ipstack.com/product",
+            title="IPStack API key not found",
+        )
 
     def lookup_ip(
         self,
@@ -266,6 +273,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             on free tier API key)
 
         """
+        self._check_valid_config()
         if ip_address and isinstance(ip_address, str):
             ip_list = [ip_address.strip()]
         elif ip_addr_list:
@@ -323,7 +331,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         submit_url = self._IPSTACK_API.format(
             iplist=",".join(ip_list), access_key=self._api_key
         )
-        response = httpx.get(submit_url)
+        response = httpx.get(submit_url, timeout=httpx.Timeout(10.0, connect=30.0))
 
         if response.status_code == 200:
             results = response.json()
@@ -347,7 +355,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
     def _lookup_ip_list(self, ip_list: List[str]):
         """Lookup IP Addresses one-by-one."""
         ip_loc_results = []
-        with httpx.Client() as client:
+        with httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0)) as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
@@ -679,8 +687,8 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
     # pylint: disable=too-many-branches
     def _download_and_extract_archive(  # noqa: MC0001
-        self, url: str = None, db_folder: str = None
-    ) -> bool:
+        self, url: str = None, db_folder: str = None  # noqa: MC0001
+    ) -> bool:  # noqa: MC0001
         r"""
         Download file from the given URL and extract if it is archive.
 
@@ -723,7 +731,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             if list(Path(db_folder).glob(self._DB_ARCHIVE.format(rand="*"))):
                 # Some other process is downloading
                 return True
-            with httpx.stream("GET", url) as response:
+            with httpx.stream(
+                "GET", url, timeout=httpx.Timeout(10.0, connect=30.0)
+            ) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):
