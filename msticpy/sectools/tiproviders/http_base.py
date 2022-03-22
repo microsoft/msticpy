@@ -62,7 +62,7 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
-        self._httpx_client = httpx.Client()
+        self._httpx_client = httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0))
         self._request_params = {}
         if "ApiID" in kwargs:
             self._request_params["API_ID"] = kwargs.pop("ApiID")
@@ -197,7 +197,7 @@ class HttpProvider(TIProvider):
         """
         req_params = {"observable": ioc}
         req_params.update(self._request_params)
-        ioc_key = ioc_type + "-" + query_type if query_type else ioc_type
+        ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         src = self._IOC_QUERIES.get(ioc_key, None)
         if not src:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")

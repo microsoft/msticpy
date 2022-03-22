@@ -152,7 +152,7 @@ class OData(DriverBase):
                 f"Could not obtain access token - {json_response['error_description']}"
             )
 
-        self.req_headers["Authorization"] = "Bearer " + self.aad_token
+        self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)
         if not self.api_root:
             raise ValueError(
@@ -230,12 +230,12 @@ class OData(DriverBase):
     @staticmethod
     def _check_response_errors(response):
         """Check the response for possible errors."""
-        if response.status_code == httpx.codes["ok"]:
+        if response.status_code == httpx.codes.OK:
             return
         print(response.json()["error"]["message"])
         if response.status_code == 401:
             raise ConnectionRefusedError(
-                "Authentication failed - possible ", "timeout. Please re-connect."
+                "Authentication failed - possible timeout. Please re-connect."
             )
         # Raise an exception to handle hitting API limits
         if response.status_code == 429:
