@@ -61,13 +61,13 @@ def _get_geolite_lookup() -> Callable:
 _GET_IP_LOOKUP = _get_geolite_lookup()
 
 
-@export
+@export  # noqa: MC0001
 def convert_to_ip_entities(  # noqa: MC0001
     ip_str: Optional[str] = None,
     data: Optional[pd.DataFrame] = None,
     ip_col: Optional[str] = None,
     geo_lookup: bool = True,
-) -> List[IpAddress]:
+) -> List[IpAddress]:  # noqa: MC0001
     """
     Take in an IP Address string and converts it to an IP Entity.
 
