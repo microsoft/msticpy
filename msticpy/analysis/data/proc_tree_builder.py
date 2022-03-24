@@ -13,14 +13,14 @@ from . import proc_tree_build_mde as mde
 from . import proc_tree_build_winlx as winlx
 
 # pylint: disable=unused-import
+from .proc_tree_schema import ProcSchema  # noqa: F401
 from .proc_tree_schema import (  # noqa: F401
     LX_EVENT_SCH,
     MDE_EVENT_SCH,
     MDE_INT_EVENT_SCH,
     SUPPORTED_SCHEMAS,
-    WIN_EVENT_SCH,
     SYSMON_PROCESS_CREATE_EVENT_SCH,
-    ProcSchema,
+    WIN_EVENT_SCH,
 )
 from .proc_tree_schema import ColNames as Col
 from .process_tree_utils import get_summary_info

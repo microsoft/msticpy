@@ -9,6 +9,7 @@ Deprecated - module query_container.py has moved.
 See :py:mod:`msticpy.data.core.query_container`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

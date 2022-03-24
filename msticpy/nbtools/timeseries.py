@@ -9,6 +9,7 @@ Deprecated - module timeseries.py has moved.
 See :py:mod:`msticpy.vis.timeseries`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

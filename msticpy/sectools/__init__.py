@@ -4,11 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-MSTICy sectools
+MSTICPy sectools.
 
-This sub-package is deprecated.
-All functionality has been removed from this sub-package and moved
-to other sub-packages:
+.. warning: This sub-package is deprecated.
+   All functionality has been removed from this sub-package and moved
+   to other sub-packages:
 
 - TI providers -> msticpy.data.context.tiproviders
   (including vtlookup and vtlookupv3)
@@ -25,12 +25,13 @@ to other sub-packages:
 - proc_tree_build_winlx -> msticpy.analysis.data
 - proc_tree_schema -> msticpy.analysis.data
 - proc_tree_utils -> msticpy.analysis.data
-- sectools_magics -> msticpy.analysis
+- sectools_magics -> msticpy.nbtools.nbmagics
 - syslog_utils -> msticpy.analysis
 
 The sectools sub-package will be removed in version 2.0.0
 
 """
+import contextlib
 
 # from . import process_tree_utils as ptree
 from .._version import VERSION
@@ -41,6 +42,9 @@ from ..analysis.data import base64unpack as base64
 from ..analysis.data.iocextract import IoCExtract
 from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
 from ..data.context.tilookup import TILookup
-from ..data.context.tiproviders.vtlookupv3.vtlookup import VTLookup
 
+with contextlib.suppress(ImportError):
+    from IPython import get_ipython
+
+    from ..nbtools import nbmagics as sectool_magics
 __version__ = VERSION

@@ -6,10 +6,11 @@
 """Module docstring."""
 import json
 from pathlib import Path
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import pytest_check as check
+
 from msticpy.config.comp_edit import CompEditStatusMixin
 from msticpy.config.mp_config_file import MpConfigFile
 

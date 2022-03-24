@@ -13,11 +13,11 @@ Designed to support standard linux syslog for investigations where auditd
 is not avalaible.
 
 """
-import re
-import json
-
-from pathlib import Path
 import datetime as dt
+import json
+import re
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 

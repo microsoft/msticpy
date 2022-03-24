@@ -8,7 +8,7 @@ import os
 import unittest
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Tuple, Union, Optional
+from typing import Any, Optional, Tuple, Union
 
 import pandas as pd
 import pytest

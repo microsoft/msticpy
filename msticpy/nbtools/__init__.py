@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-nbtools module
+nbtools module - Notebook Security Tools.
 
 This is a collection of modules with functionality (mostly) specific to
 notebooks. It also houses some visualization modules that will migrate
@@ -12,29 +12,25 @@ to the vis sub-package.
 
 - nbinit - notebook initialization
 - azure_ml_tools - configuration and helpers for AML workspaces
-- nbwidgets -
+- nbwidgets - ipywidgets-based UI components for infosec notebooks
 - nbdisplay - miscellaneous display functions TBM to vis
--
 
-Notebook Security Tools.
 """
 # flake8: noqa: F403
-
 # pylint: disable=W0401
-from . import nbwidgets
-
-# from ..datamodel import entities
-from .security_alert import SecurityAlert
-from .security_event import SecurityEvent
-from .security_alert_graph import *
+from .._version import VERSION
 from ..common import utility as utils
-
-from .observationlist import Observations
 from ..common.wsconfig import WorkspaceConfig
-from . import nbdisplay
+from . import nbdisplay, nbwidgets
+
+try:
+    from IPython import get_ipython
+
+    from . import nbmagics
+except ImportError as err:
+    pass
 
 # pylint: enable=W0401
 
-from .._version import VERSION
 
 __version__ = VERSION

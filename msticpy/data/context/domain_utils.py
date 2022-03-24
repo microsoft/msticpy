@@ -10,23 +10,23 @@ Includes functions to conduct common investigation steps when dealing
 with a domain or url, such as getting a screenshot or validating the TLD.
 
 """
-from datetime import datetime
-from enum import Enum
 import json
 import ssl
 import time
+from datetime import datetime
+from enum import Enum
 from typing import Any, Dict, Optional, Tuple
 from urllib.error import HTTPError, URLError
 
 import cryptography as crypto
-from cryptography.x509 import Certificate
-import pandas as pd
 import httpx
+import pandas as pd
 import tldextract
+from cryptography.x509 import Certificate
+from dns.exception import DNSException
 
 # pylint: disable=no-name-in-module
 from dns.resolver import Resolver
-from dns.exception import DNSException
 
 # pylint: enable=no-name-in-module
 from IPython import display

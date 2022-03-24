@@ -5,15 +5,15 @@
 # --------------------------------------------------------------------------
 """Helper module for computations when each session is a list of strings."""
 
-from collections import defaultdict
-from typing import Tuple, List, Union, DefaultDict
 import copy
+from collections import defaultdict
+from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 
+from ....common.exceptions import MsticpyException
 from ..utils.data_structures import StateMatrix
 from ..utils.laplace_smooth import laplace_smooth_cmd_counts
-from ....common.exceptions import MsticpyException
 
 
 def compute_counts(  # nosec

@@ -16,19 +16,19 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
-from importlib.util import find_spec
 import os
+from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Callable, Dict, Optional
 
 import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
+from .._version import VERSION
 from . import exceptions
 from .exceptions import MsticpyUserConfigError
 from .utility import is_valid_uuid
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

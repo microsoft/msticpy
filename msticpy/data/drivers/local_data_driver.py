@@ -5,14 +5,14 @@
 # --------------------------------------------------------------------------
 """Local Data Driver class - for testing and demos."""
 from pathlib import Path
-from typing import Union, Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from .driver_base import DriverBase, QuerySource
+from ..._version import VERSION
 from ...common.pkg_config import settings
 from ...common.utility import export
-from ..._version import VERSION
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

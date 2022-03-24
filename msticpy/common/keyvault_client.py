@@ -8,9 +8,8 @@ import base64
 import json
 from typing import Any, List
 
-from azure.core.exceptions import ResourceNotFoundError, ClientAuthenticationError
+from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 from azure.keyvault.secrets import KeyVaultSecret, SecretClient
-
 from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
     AccessPolicyEntry,
@@ -23,8 +22,7 @@ from azure.mgmt.keyvault.models import (
     VaultCreateOrUpdateParameters,
     VaultProperties,
 )
-
-from IPython.display import display, HTML
+from IPython.display import HTML, display
 from msrestazure.azure_exceptions import CloudError
 
 from .._version import VERSION

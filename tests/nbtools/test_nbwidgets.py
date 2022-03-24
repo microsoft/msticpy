@@ -9,13 +9,15 @@ from pathlib import Path
 
 import ipywidgets as widgets
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pytest
 import pytest_check as check
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common.timespan import TimeSpan
 from msticpy.nbtools import nbwidgets as nbw
-from msticpy.nbtools.nbwidgets.core import parse_time_unit, default_max_buffer, TimeUnit
+from msticpy.nbtools.nbwidgets.core import TimeUnit, default_max_buffer, parse_time_unit
+
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 __author__ = "Ian Hellen"
 
@@ -259,6 +261,7 @@ def test_widget_attribs(widget, w_props, w_funcs, args):
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "NotebookWidgets.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 # @pytest.mark.skipif(
@@ -273,7 +276,8 @@ def test_widgets_notebook():
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        ep.preprocess(nb, {"metadata": {"path": abs_path}})
+        with custom_mp_config(_MP_CONFIG_PATH):
+            ep.preprocess(nb, {"metadata": {"path": abs_path}})
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
         msg = f"Error executing the notebook '{nb_path}'.\n"

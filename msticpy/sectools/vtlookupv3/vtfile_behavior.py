@@ -9,6 +9,7 @@ Deprecated - module vtfile_behavior.py has moved.
 See :py:mod:`msticpy.data.context.tiproviders.vtlookupv3.vtfile_behavior`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

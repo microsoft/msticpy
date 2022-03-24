@@ -11,19 +11,19 @@ Cmd datatype with the params attribute set to a dictionary of
 accompanying params and values.
 """
 
-from collections import defaultdict
-from typing import Tuple, List, Union, DefaultDict
 import copy
+from collections import defaultdict
+from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 
-from ..utils.data_structures import StateMatrix, Cmd
+from ....common.exceptions import MsticpyException
+from ..utils.data_structures import Cmd, StateMatrix
 from ..utils.laplace_smooth import (
     laplace_smooth_cmd_counts,
     laplace_smooth_param_counts,
     laplace_smooth_value_counts,
 )
-from ....common.exceptions import MsticpyException
 
 
 # pylint: disable=too-many-locals, too-many-branches

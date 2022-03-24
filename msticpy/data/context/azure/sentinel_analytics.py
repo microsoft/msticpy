@@ -8,9 +8,8 @@ from uuid import UUID, uuid4
 
 import httpx
 import pandas as pd
-from IPython.display import display
-
 from azure.common.exceptions import CloudError
+from IPython.display import display
 
 from ...._version import VERSION
 from ....common.exceptions import MsticpyUserError

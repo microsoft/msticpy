@@ -25,7 +25,7 @@ from attr import Factory
 
 from ...._version import VERSION
 from ....common.exceptions import MsticpyConfigException
-from ....common.utility import export, _MSTICPY_USER_AGENT
+from ....common.utility import _MSTICPY_USER_AGENT, export
 from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
 __version__ = VERSION

@@ -8,6 +8,7 @@ import os
 import unittest
 
 import pandas as pd
+
 from msticpy.analysis.eventcluster import (
     add_process_features,
     char_ord_score,

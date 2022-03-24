@@ -10,10 +10,11 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
+
 from msticpy.data import QueryProvider
-from msticpy.data.core.data_providers import DriverBase
 from msticpy.data.context.tilookup import TILookup
-from msticpy.data.context.tiproviders import get_provider_settings, AzSTI
+from msticpy.data.context.tiproviders import AzSTI, get_provider_settings
+from msticpy.data.core.data_providers import DriverBase
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

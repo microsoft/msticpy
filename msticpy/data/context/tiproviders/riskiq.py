@@ -14,21 +14,20 @@ requests per minute for the account type that you have.
 """
 from datetime import datetime
 from functools import partial
-from typing import Any, Tuple, Optional, Union
-
+from typing import Any, Optional, Tuple, Union
 
 from passivetotal import analyzer as ptanalyzer
 
+from ...._version import VERSION
+from ....common.exceptions import MsticpyUserError
+from ....common.utility import export
 from .ti_provider_base import (
-    TIProvider,
     LookupResult,
-    TISeverity,
     TILookupStatus,
     TIPivotProvider,
+    TIProvider,
+    TISeverity,
 )
-from ....common.utility import export
-from ....common.exceptions import MsticpyUserError
-from ...._version import VERSION
 
 __version__ = VERSION
 __author__ = "Mark Kendrick"

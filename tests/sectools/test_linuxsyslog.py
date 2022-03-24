@@ -4,21 +4,21 @@
 # license information.
 # --------------------------------------------------------------------------
 import os
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 import pandas as pd
 import pytest
 from pytest import raises
 
-from msticpy.datamodel.entities import Host
 from msticpy.analysis import syslog_utils as ls
-from msticpy.common.exceptions import MsticpyException
 from msticpy.analysis.data import cmd_line as cl
+from msticpy.common.exceptions import MsticpyException
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.data.context.geoip import GeoIPDatabaseException
+from msticpy.datamodel.entities import Host
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 

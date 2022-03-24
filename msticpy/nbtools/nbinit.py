@@ -148,7 +148,7 @@ if sns is not None:
 _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
-    dict(pkg="msticpy.nbtools.foliummap", tgt="FoliumMap"),
+    dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
@@ -598,21 +598,6 @@ def _load_pivots(namespace):
     if not Pivot.current:
         pivot = Pivot()
         namespace["pivot"] = pivot
-
-    vt_pivot = None
-    try:
-        get_config("TIProviders.VirusTotal")
-        try:
-            vt_pivot = importlib.import_module("msticpy.sectools.vtlookupv3.vt_pivot")
-            namespace["vt_pivot"] = vt_pivot
-        except ImportError:
-            # Importing Vt3 libraries failed.
-            pass
-    except KeyError:
-        # No VT settings detected
-        pass
-    if vt_pivot:
-        vt_pivot.add_pivot_functions()
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):

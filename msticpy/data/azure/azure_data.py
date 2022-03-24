@@ -9,6 +9,7 @@ Deprecated - module azure_data.py has moved.
 See :py:mod:`msticpy.data.context.azure.azure_data`
 """
 import warnings
+
 from ..._version import VERSION
 
 __version__ = VERSION

@@ -20,12 +20,11 @@ It is split into the following sub-packages:
 - uploaders - loaders for some data services.
 
 """
+from .._version import VERSION
 from ..common.exceptions import MsticpyImportExtraError
 
 # flake8: noqa: F403
 from .core.data_providers import QueryProvider
 from .core.query_defns import DataEnvironment, DataFamily
-
-from .._version import VERSION
 
 __version__ = VERSION

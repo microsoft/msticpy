@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """QueryProvider Query Browser."""
 import textwrap
-from typing import Generator, Any
+from typing import Any, Generator
 
 from IPython.display import HTML
 

@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from collections import Counter
 import os
 import unittest
+from collections import Counter
 from pathlib import Path
 
 import nbformat
@@ -14,14 +14,17 @@ import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.analysis.timeseries import (
-    timeseries_anomalies_stl,
-    extract_anomaly_periods,
     create_time_period_kqlfilter,
+    extract_anomaly_periods,
     set_new_anomaly_threshold,
+    timeseries_anomalies_stl,
 )
+
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "TimeSeriesAnomaliesVisualization.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 _test_data_folders = [
     d for d, _, _ in os.walk(os.getcwd()) if d.endswith("/docs/notebooks/data")
@@ -71,7 +74,8 @@ class TestTimeSeries(unittest.TestCase):
         ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
         try:
-            ep.preprocess(nb, {"metadata": {"path": abs_path}})
+            with custom_mp_config(_MP_CONFIG_PATH):
+                ep.preprocess(nb, {"metadata": {"path": abs_path}})
         except CellExecutionError:
             nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
             msg = f"Error executing the notebook '{nb_path}'.\n"

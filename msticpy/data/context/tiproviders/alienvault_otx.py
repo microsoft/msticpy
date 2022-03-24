@@ -16,10 +16,10 @@ from typing import Any, Tuple
 
 import attr
 
-from .ti_provider_base import LookupResult, TISeverity
-from .http_base import HttpProvider, IoCLookupParams
-from ....common.utility import export
 from ...._version import VERSION
+from ....common.utility import export
+from .http_base import HttpProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

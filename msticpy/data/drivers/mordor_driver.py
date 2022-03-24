@@ -14,13 +14,13 @@ from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, U
 from zipfile import BadZipFile, ZipFile
 
 import attr
-import pandas as pd
 import httpx
+import pandas as pd
 import yaml
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from ...common.exceptions import MsticpyNotConnectedError, MsticpyUserError
+from ...common.exceptions import MsticpyUserError
 from ...common.pkg_config import settings
 from ..core.query_source import QuerySource
 from .driver_base import DriverBase
@@ -142,7 +142,7 @@ class MordorDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         use_cached = kwargs.pop("used_cached", self.use_cached)
         save_folder = kwargs.pop("save_folder", self.save_folder)
         save_folder = _resolve_cache_folder(save_folder)
@@ -189,7 +189,7 @@ class MordorDriver(DriverBase):
 
         """
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         if not self._driver_queries:
             self._driver_queries = list(self._get_driver_queries())
         return self._driver_queries
@@ -251,7 +251,7 @@ class MordorDriver(DriverBase):
 
         """
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("OTRF Datasets")
         matches = []
         for mdr_id in search_mdr_data(self.mordor_data, terms=search):
             for file_path in self.mordor_data[mdr_id].get_file_paths():
@@ -259,14 +259,6 @@ class MordorDriver(DriverBase):
                     f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
                 )
         return matches
-
-    @staticmethod
-    def _create_not_connected_err():
-        return MsticpyNotConnectedError(
-            "Please run the connect() method before running this method.",
-            title="not connected to Mordor.",
-            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-        )
 
 
 def _resolve_cache_folder(cache_path: str):

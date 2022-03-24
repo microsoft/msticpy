@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """Sentinel Alert class."""
 import json
-
 from typing import Any, Dict, List
+
 import pandas as pd
 
 from ...datamodel.entities import Alert

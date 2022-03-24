@@ -8,19 +8,16 @@ import os
 from pathlib import Path
 
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import pandas as pd
 import pytest
+from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from msticpy.vis.process_tree import build_and_show_process_tree
-from msticpy.analysis.data import process_tree_utils as pt_util
 from msticpy.analysis.data import proc_tree_builder as pt_build
-from msticpy.analysis.data.proc_tree_schema import (
-    LX_EVENT_SCH,
-    WIN_EVENT_SCH,
-)
+from msticpy.analysis.data import process_tree_utils as pt_util
+from msticpy.analysis.data.proc_tree_schema import LX_EVENT_SCH, WIN_EVENT_SCH
+from msticpy.vis.process_tree import build_and_show_process_tree
 
-from ..unit_test_lib import TEST_DATA_PATH
+from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
 
 testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
@@ -344,6 +341,7 @@ def test_build_mde_win_tree_dict_schema():
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "ProcessTree.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 @pytest.mark.skipif(
@@ -358,7 +356,8 @@ def test_process_tree_notebook():
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        ep.preprocess(nb, {"metadata": {"path": abs_path}})
+        with custom_mp_config(_MP_CONFIG_PATH):
+            ep.preprocess(nb, {"metadata": {"path": abs_path}})
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
         msg = f"Error executing the notebook '{nb_path}'.\n"

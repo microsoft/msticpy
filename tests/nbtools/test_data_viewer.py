@@ -7,16 +7,16 @@
 from datetime import datetime
 from pathlib import Path
 
-from bokeh.models import DateFormatter
 import pandas as pd
 import pytest
 import pytest_check as check
+from bokeh.models import DateFormatter
 from traitlets import TraitError
 
 from msticpy.data.browsers.data_viewer import (
-    DataViewer,
     DataTableColumnChooser,
     DataTableFilter,
+    DataViewer,
     _get_cols_from_df,
 )
 

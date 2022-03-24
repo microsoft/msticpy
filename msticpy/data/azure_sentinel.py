@@ -12,7 +12,7 @@ import warnings
 
 # flake8: noqa: F403, F401
 # pylint: disable=unused-import
-from .azure import MicrosoftSentinel as AzureSentinel
+from .context.azure.sentinel_core import MicrosoftSentinel as AzureSentinel
 
 WARN_MSSG = (
     "This module has moved to msticpy.data.azure.sentinel_core\n"

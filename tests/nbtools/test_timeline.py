@@ -8,17 +8,16 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import nbformat
 import pandas as pd
 import pytest
-import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-
-
-from ..unit_test_lib import TEST_DATA_PATH
 
 from msticpy.common.exceptions import MsticpyParameterError
 from msticpy.vis.timeline import display_timeline, display_timeline_values
 from msticpy.vis.timeline_duration import display_timeline_duration
+
+from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
 
 __author__ = "Ian Hellen"
 
@@ -139,11 +138,11 @@ def test_timeline(data, data_net, param, expected):
             print(params)
             if isinstance(expect_result, bool):
                 display_timeline(data, **params)
-                data.mp_timeline.plot(**params)
+                data.mp_plot.timeline(**params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline(data, **params)
-                    data.mp_timeline.plot(**params)
+                    data.mp_plot.timeline(**params)
 
 
 TIME_LINE_REF_ARGS = [
@@ -217,11 +216,11 @@ def test_timeline_values(data, param, expected):
             print("params:", params)
             if isinstance(expect_result, bool):
                 display_timeline_values(data, value_col="EventID", **params)
-                data.mp_timeline.plot_values(value_col="EventID", **params)
+                data.mp_plot.timeline_values(value_col="EventID", **params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline_values(data, value_col="EventID", **params)
-                    data.mp_timeline.plot_values(value_col="EventID", **params)
+                    data.mp_plot.timeline_values(value_col="EventID", **params)
 
 
 TIMELINE_DURATION_ARGS: List[Tuple[Dict[str, List[Any]], List[Any]]] = [
@@ -251,15 +250,16 @@ def test_timeline_duration(data, param, expected):
             print("params:", params)
             if isinstance(expect_result, bool):
                 display_timeline_duration(data, group_by="Account", **params)
-                data.mp_timeline.plot_duration(group_by="Account", **params)
+                data.mp_plot.timeline_duration(group_by="Account", **params)
             else:
                 with pytest.raises(expect_result):
                     display_timeline_duration(data, value_col="Account", **params)
-                    data.mp_timeline.plot_duration(group_by="Account", **params)
+                    data.mp_plot.timeline_duration(group_by="Account", **params)
 
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventTimeline.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 @pytest.mark.skipif(
@@ -273,7 +273,8 @@ def test_timeline_controls():
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        ep.preprocess(nb, {"metadata": {"path": abs_path}})
+        with custom_mp_config(_MP_CONFIG_PATH):
+            ep.preprocess(nb, {"metadata": {"path": abs_path}})
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
         msg = f"Error executing the notebook '{nb_path}'.\n"

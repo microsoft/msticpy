@@ -9,6 +9,7 @@ Deprecated - module ip_utils.py has moved.
 See :py:mod:`msticpy.data.context.ip_utils`
 """
 import warnings
+
 from .._version import VERSION
 
 __version__ = VERSION

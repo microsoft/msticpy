@@ -9,13 +9,13 @@ import re
 import urllib
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
-import pandas as pd
 import httpx
+import pandas as pd
 
 from ..._version import VERSION
 from ...common import pkg_config as config
-from ...common.provider_settings import get_provider_settings
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
+from ...common.provider_settings import get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
@@ -230,7 +230,7 @@ class OData(DriverBase):
     @staticmethod
     def _check_response_errors(response):
         """Check the response for possible errors."""
-        if response.status_code == httpx.codes["ok"]:
+        if response.status_code == httpx.codes.OK:
             return
         print(response.json()["error"]["message"])
         if response.status_code == 401:
