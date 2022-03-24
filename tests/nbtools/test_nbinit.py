@@ -76,7 +76,7 @@ def test_import_all():
         check.is_in(imp, ns_dict)
 
 
-class TestSubdir(Enum):
+class SubDirCase(Enum):
     """Test enumeration for config folder."""
 
     NONE = 0
@@ -86,85 +86,85 @@ class TestSubdir(Enum):
 
 
 _CONFIG_TESTS = [
-    (("missing_file", None, TestSubdir.NONE), False),
+    (("missing_file", None, SubDirCase.NONE), False),
     (
-        ("msticpyconfig.yaml", None, TestSubdir.MAIN_ENV_PTR),
+        ("msticpyconfig.yaml", None, SubDirCase.MAIN_ENV_PTR),
         True,
     ),
     (
         (
             "msticpyconfig-noAzSentSettings.yaml",
             None,
-            TestSubdir.MAIN_ENV_PTR,
+            SubDirCase.MAIN_ENV_PTR,
         ),
         False,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", None, TestSubdir.MAIN_ENV_PTR),
+        ("msticpyconfig-no-settings.yaml", None, SubDirCase.MAIN_ENV_PTR),
         False,
     ),
     (
-        ("msticpyconfig.yaml", None, TestSubdir.SAME_DIR),
+        ("msticpyconfig.yaml", None, SubDirCase.SAME_DIR),
         True,
     ),
     (
-        ("msticpyconfig-noAzSentSettings.yaml", None, TestSubdir.SAME_DIR),
+        ("msticpyconfig-noAzSentSettings.yaml", None, SubDirCase.SAME_DIR),
         False,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", None, TestSubdir.SAME_DIR),
+        ("msticpyconfig-no-settings.yaml", None, SubDirCase.SAME_DIR),
         False,
     ),
     (
-        (None, "config.json", TestSubdir.SAME_DIR),
+        (None, "config.json", SubDirCase.SAME_DIR),
         True,
     ),
     (
-        (None, "config.json", TestSubdir.SEARCH),
+        (None, "config.json", SubDirCase.SEARCH),
         True,
     ),
     (
-        ("msticpyconfig.yaml", None, TestSubdir.SEARCH),
+        ("msticpyconfig.yaml", None, SubDirCase.SEARCH),
         True,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", None, TestSubdir.SEARCH),
+        ("msticpyconfig-no-settings.yaml", None, SubDirCase.SEARCH),
         False,
     ),
     (
         (
             "msticpyconfig-noAzSentSettings.yaml",
             "config.json",
-            TestSubdir.MAIN_ENV_PTR,
+            SubDirCase.MAIN_ENV_PTR,
         ),
         True,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.MAIN_ENV_PTR),
+        ("msticpyconfig-no-settings.yaml", "config.json", SubDirCase.MAIN_ENV_PTR),
         True,
     ),
     (
         (
             "msticpyconfig-noAzSentSettings.yaml",
             "config.json",
-            TestSubdir.SAME_DIR,
+            SubDirCase.SAME_DIR,
         ),
         True,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.SAME_DIR),
+        ("msticpyconfig-no-settings.yaml", "config.json", SubDirCase.SAME_DIR),
         True,
     ),
     (
         (
             "msticpyconfig-noAzSentSettings.yaml",
             "config.json",
-            TestSubdir.SEARCH,
+            SubDirCase.SEARCH,
         ),
         True,
     ),
     (
-        ("msticpyconfig-no-settings.yaml", "config.json", TestSubdir.SEARCH),
+        ("msticpyconfig-no-settings.yaml", "config.json", SubDirCase.SEARCH),
         True,
     ),
 ]
@@ -187,7 +187,7 @@ def test_check_config(conf_file, expected, tmp_path):
         file.unlink()
     try:
         # If we want to test against config files in isolated directory
-        if mp_location != TestSubdir.NONE:
+        if mp_location != SubDirCase.NONE:
             # Read contents of source file
             for file in (mpconf_file, conf_json):
                 if file is None:
@@ -204,11 +204,11 @@ def test_check_config(conf_file, expected, tmp_path):
                 tmp_path.joinpath(dest_file).write_text(file_txt)
             cwd_path = str(tmp_path)
             # If sub-dir, change to the directory, so WorkspaceConfig has to search.
-            if mp_location in (TestSubdir.MAIN_ENV_PTR, TestSubdir.SEARCH):
+            if mp_location in (SubDirCase.MAIN_ENV_PTR, SubDirCase.SEARCH):
                 cwd_path = tmp_path.joinpath("sub_folder")
                 cwd_path.mkdir(parents=True, exist_ok=True)
             os.chdir(str(cwd_path))
-            if mp_location == TestSubdir.SEARCH or mpconf_file is None:
+            if mp_location == SubDirCase.SEARCH or mpconf_file is None:
                 # Pass non-existing file to custom_mp_config to bypass default settings
                 settings_file = "missing_file"
             else:

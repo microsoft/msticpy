@@ -11,10 +11,13 @@ import nbformat
 import pytest
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
+from ...unit_test_lib import custom_mp_config, get_test_data_path
+
 __author__ = "Ian Hellen"
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "MordorData.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 @pytest.mark.skipif(
@@ -33,7 +36,8 @@ def test_mordor_browser():
     nb_exec = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     try:
-        nb_exec.preprocess(nbk, {"metadata": {"path": abs_path}})
+        with custom_mp_config(_MP_CONFIG_PATH):
+            nb_exec.preprocess(nbk, {"metadata": {"path": abs_path}})
     except CellExecutionError:
         nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
         msg = f"Error executing the notebook '{nb_path}'.\n"

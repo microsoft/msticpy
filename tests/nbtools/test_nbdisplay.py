@@ -15,10 +15,11 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.nbtools.nbdisplay import display_logon_data
 
-from ..unit_test_lib import get_test_data_path
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "EventClustering.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 class Testnbdisplay(unittest.TestCase):
@@ -35,7 +36,8 @@ class Testnbdisplay(unittest.TestCase):
         ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
         try:
-            ep.preprocess(nb, {"metadata": {"path": abs_path}})
+            with custom_mp_config(_MP_CONFIG_PATH):
+                ep.preprocess(nb, {"metadata": {"path": abs_path}})
         except CellExecutionError:
             nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
             msg = f"Error executing the notebook '{nb_path}'.\n"

@@ -23,10 +23,11 @@ from msticpy.vis.foliummap import (
     get_map_center,
 )
 
-from ..unit_test_lib import TEST_DATA_PATH
+from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "FoliumMap.ipynb"
+_MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
 class TestFoliumMap(unittest.TestCase):
@@ -167,7 +168,8 @@ class TestFoliumMap(unittest.TestCase):
         ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
         try:
-            ep.preprocess(nb, {"metadata": {"path": abs_path}})
+            with custom_mp_config(_MP_CONFIG_PATH):
+                ep.preprocess(nb, {"metadata": {"path": abs_path}})
         except CellExecutionError:
             nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
             msg = f"Error executing the notebook '{nb_path}'.\n"

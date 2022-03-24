@@ -31,6 +31,7 @@ MSTICPy sectools.
 The sectools sub-package will be removed in version 2.0.0
 
 """
+import contextlib
 
 # from . import process_tree_utils as ptree
 from .._version import VERSION
@@ -41,13 +42,9 @@ from ..analysis.data import base64unpack as base64
 from ..analysis.data.iocextract import IoCExtract
 from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
 from ..data.context.tilookup import TILookup
-from ..data.context.tiproviders.vtlookupv3.vtlookup import VTLookup
 
-try:
+with contextlib.suppress(ImportError):
     from IPython import get_ipython
 
     from ..nbtools import nbmagics as sectool_magics
-except ImportError as err:
-    pass
-
 __version__ = VERSION
