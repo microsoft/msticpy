@@ -86,7 +86,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
 
     # Request screenshot from Browshot and get request ID
     id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
-    id_data = httpx.get(id_string)
+    id_data = httpx.get(id_string, timeout=httpx.Timeout(10.0, connect=30.0))
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
@@ -99,7 +99,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     ready = False
     while not ready:
         progress.value += 1
-        status_data = httpx.get(status_string)
+        status_data = httpx.get(
+            status_string, timeout=httpx.Timeout(10.0, connect=30.0)
+        )
         status = json.loads(status_data.content)["status"]
         if status == "finished":
             ready = True
@@ -108,7 +110,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     progress.value = 40
 
     # Once ready get the screenshot
-    image_data = httpx.get(image_string)
+    image_data = httpx.get(image_string, timeout=httpx.Timeout(10.0, connect=30.0))
 
     if image_data.status_code != 200:
         print(

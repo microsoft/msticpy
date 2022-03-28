@@ -595,6 +595,9 @@ class TestTIProviders(unittest.TestCase):
     def test_tor_exit_nodes(self):
         ti_lookup = self.ti_lookup
 
+        # Trigger a lookup to load Tor List
+        init_lookup = "104.117.0.237"
+        ti_lookup.lookup_ioc(observable=init_lookup, ioc_type="ipv4", providers=["Tor"])
         # we can't use a fixed list since this changes all the time
         # so take a sample from the current list
         tor_prov = ti_lookup.loaded_providers["Tor"]

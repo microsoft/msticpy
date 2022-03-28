@@ -43,6 +43,7 @@ class SentinelUtilsMixin:
             url,
             headers=get_api_headers(self.token),  # type: ignore
             params={"api-version": params},
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
 
     def _list_items(

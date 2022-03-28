@@ -105,6 +105,7 @@ class SentinelIncidentsMixin:
             entities_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=ent_parameters,
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         return (
             [(ent["kind"], ent["properties"]) for ent in ents.json()["entities"]]
@@ -252,6 +253,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -322,6 +324,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -339,6 +342,7 @@ class SentinelIncidentsMixin:
                     headers=get_api_headers(self.token),  # type: ignore
                     params=params,
                     content=str(data),
+                    timeout=httpx.Timeout(10.0, connect=30.0),
                 )
         print("Incident created.")
 
@@ -416,6 +420,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -453,6 +458,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 201:
             raise CloudError(response=response)

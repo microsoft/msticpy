@@ -792,9 +792,19 @@ class VTLookup:
                 headers[hdr] = val
 
         if vt_param.http_verb == "post":
-            response = httpx.post(submit_url, data=params, headers=headers)
+            response = httpx.post(
+                submit_url,
+                data=params,
+                headers=headers,
+                timeout=httpx.Timeout(10.0, connect=30.0),
+            )
         else:
-            response = httpx.get(submit_url, params=params, headers=headers)
+            response = httpx.get(
+                submit_url,
+                params=params,
+                headers=headers,
+                timeout=httpx.Timeout(10.0, connect=30.0),
+            )
         if response.status_code == 200:
             return response.json(), response.status_code
 

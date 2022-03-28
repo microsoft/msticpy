@@ -104,6 +104,7 @@ class SentinelWatchlistsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(request_data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -254,6 +255,7 @@ class SentinelWatchlistsMixin:
             watchlist_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 200:
             raise CloudError(response=response)

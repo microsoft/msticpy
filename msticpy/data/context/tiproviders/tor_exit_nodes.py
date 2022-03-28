@@ -37,11 +37,6 @@ class Tor(TIProvider):
     _last_cached = datetime.min
     _cache_lock = Lock()
 
-    def __init__(self, **kwargs):
-        """Instantiate Tor class."""
-        super().__init__(**kwargs)
-        self._check_and_get_nodelist()
-
     @classmethod
     def _check_and_get_nodelist(cls):
         """Pull down Tor exit node list and save to internal attribute."""
@@ -50,7 +45,9 @@ class Tor(TIProvider):
         now = datetime.utcnow()
         if not cls._nodelist or (now - cls._last_cached).days > 1:
             try:
-                resp = httpx.get(cls._BASE_URL)
+                resp = httpx.get(
+                    cls._BASE_URL, timeout=httpx.Timeout(10.0, connect=30.0)
+                )
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
@@ -96,6 +93,8 @@ class Tor(TIProvider):
             The returned results.
 
         """
+        if not self._nodelist:
+            self._check_and_get_nodelist()
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )

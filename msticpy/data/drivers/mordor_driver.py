@@ -548,7 +548,7 @@ def _get_mdr_github_tree():
     def _get_mdr_tree(uri):
         nonlocal mordor_tree
         if mordor_tree is None:
-            resp = httpx.get(uri)
+            resp = httpx.get(uri, timeout=httpx.Timeout(10.0, connect=30.0))
             mordor_tree = resp.json()
         return mordor_tree
 
@@ -564,7 +564,7 @@ def _get_mdr_file(gh_file):
     file_blob_uri = (
         f"https://raw.githubusercontent.com/OTRF/Security-Datasets/master/{gh_file}"
     )
-    file_resp = httpx.get(file_blob_uri)
+    file_resp = httpx.get(file_blob_uri, timeout=httpx.Timeout(10.0, connect=30.0))
     return file_resp.content
 
 
@@ -727,7 +727,9 @@ def download_mdr_file(
     if not use_cached or not save_file.is_file():
         # streamed download
         with open(str(save_file), "wb") as fdesc:
-            with httpx.stream("GET", file_uri) as resp:
+            with httpx.stream(
+                "GET", file_uri, timeout=httpx.Timeout(10.0, connect=30.0)
+            ) as resp:
                 for chunk in resp.iter_bytes(chunk_size=1024):
                     fdesc.write(chunk)
 
@@ -903,7 +905,7 @@ def _get_mitre_categories(
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass
-    resp = httpx.get(_MITRE_JSON_URL)
+    resp = httpx.get(_MITRE_JSON_URL, timeout=httpx.Timeout(10.0, connect=30.0))
     mitre = pd.json_normalize(resp.json()["objects"])
 
     # remove deprecated items
