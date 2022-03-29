@@ -65,18 +65,20 @@ class SplunkUploader(UploaderBase):
         index_name : str
             Name of the Splunk Index to add data to.
         table_name : str
-            The souretype in Splunk data will be uploaded to.
+            The sourcetype in Splunk data will be uploaded to.
         host : str, optional
             The hostname associated with the uploaded data, by default "Upload".
 
         """
         if not self.connected:
             raise MsticpyConnectionError(
-                "Splunk host not connected, please call .connect before proceding.",
+                "Splunk host not connected, please call .connect before proceeding.",
                 title="Splunk host not connected",
             )
         if not host:
             host = "Upload"
+        if not index_name:
+            raise ValueError("parameter `index_name` must be specified")
         create_idx = kwargs.get("create_index", False)
         index = self._load_index(index_name, create_idx)
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
@@ -135,10 +137,10 @@ class SplunkUploader(UploaderBase):
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        index_name: str,
         table_name: str = None,
         delim: str = ",",
-        create_index=False,
+        index_name: str = "",
+        create_index: bool = False,
         **kwargs,
     ):
         """
@@ -183,9 +185,9 @@ class SplunkUploader(UploaderBase):
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        index_name: str,
         table_name: str = None,
         delim: str = ",",
+        index_name: str = "",
         create_index=False,
         **kwargs,
     ):
