@@ -3,7 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module docstring."""
+"""MpConfigEdit tests."""
+import os
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -126,6 +127,7 @@ def test_mp_edit_load_params():
     for key in orig_settings.keys():
         check.equal(orig_settings[key], mp_conf.mp_controls.mp_config[key])
 
+    # Use default - existing file
     with custom_mp_config(str(config_path)):
         mp_conf = MpConfigEdit()
         check.equal(mp_conf.mp_controls.get_value(test_path), orig_resgroup, "Default")
@@ -134,3 +136,9 @@ def test_mp_edit_load_params():
         )
         for key in orig_settings.keys():
             check.equal(orig_settings[key], mp_conf.mp_controls.mp_config[key])
+
+    # Test no existing MPConfig
+    with custom_mp_config(str(config_path)):
+        os.environ["MSTICPYCONFIG"] = "./invalid_file.yaml"
+        mp_conf = MpConfigEdit()
+        check.equal(mp_conf.mp_conf_file.settings, {})
