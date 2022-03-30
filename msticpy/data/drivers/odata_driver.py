@@ -15,7 +15,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
-from ...common.msal_auth import MSALAuth
+from ...common.msal_auth import MSALDelegatedAuth
 from ...common.provider_settings import get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
@@ -173,7 +173,7 @@ class OData(DriverBase):
             #     cs_dict["location"] if "location" in cs_dict else "token_cache.bin"
             # )
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])
-            self.msal_auth = MSALAuth(
+            self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
                 authority=authority,
                 username=cs_dict["username"],

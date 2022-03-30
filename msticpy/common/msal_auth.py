@@ -24,7 +24,7 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-class MSALAuth:
+class MSALDelegatedAuth:
     """Class for handling MSAL based delegated auth."""
 
     def __init__(
