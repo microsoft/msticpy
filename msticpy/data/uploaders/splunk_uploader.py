@@ -78,8 +78,6 @@ class SplunkUploader(UploaderBase):
             )
         if not host:
             host = "Upload"
-        if not index_name:
-            raise ValueError("parameter `index_name` must be specified")
         create_idx = kwargs.get("create_index", False)
         index = self._load_index(index_name, create_idx)
         progress = tqdm(total=len(data.index), desc="Rows", position=0)
@@ -99,8 +97,8 @@ class SplunkUploader(UploaderBase):
     def upload_df(  # type: ignore
         self,
         data: pd.DataFrame,
-        index_name: str,
         table_name: Optional[str],
+        index_name: str,
         create_index: bool = False,
         **kwargs,
     ):
@@ -122,6 +120,8 @@ class SplunkUploader(UploaderBase):
 
         """
         host = kwargs.get("host", None)
+        if not index_name:
+            raise ValueError("parameter `index_name` must be specified")
         if not isinstance(data, pd.DataFrame):
             raise MsticpyUserError(
                 "Data must be in Pandas DataFrame format.",
@@ -135,13 +135,12 @@ class SplunkUploader(UploaderBase):
             host=host,
         )
 
-    # pylint: disable=arguments-differ
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        index_name: str,
         table_name: Optional[str] = None,
         delim: str = ",",
+        index_name: Optional[str] = None,
         create_index: bool = False,
         **kwargs,
     ):
@@ -166,6 +165,8 @@ class SplunkUploader(UploaderBase):
 
         """
         host = kwargs.get("host", None)
+        if not index_name:
+            raise ValueError("parameter `index_name` must be specified")
         path = Path(file_path)
         try:
             data = pd.read_csv(path, delimiter=delim)
@@ -185,13 +186,12 @@ class SplunkUploader(UploaderBase):
             create_index=create_index,
         )
 
-    # pylint: disable=arguments-differ
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        index_name: str,
         table_name: Optional[str] = None,
         delim: str = ",",
+        index_name: Optional[str] = None,
         create_index=False,
         **kwargs,
     ):
@@ -217,7 +217,8 @@ class SplunkUploader(UploaderBase):
         """
         host = kwargs.get("host", None)
         glob_pat = kwargs.get("glob", "*")
-        t_name = bool(table_name)
+        if not index_name:
+            raise ValueError("parameter `index_name` must be specified")
         input_files = Path(folder_path).glob(glob_pat)
         f_progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:
@@ -228,7 +229,7 @@ class SplunkUploader(UploaderBase):
                     "The file specified is not a seperated value file.",
                     title="Incorrect file type.",
                 ) from parse_err
-            if not t_name:
+            if not table_name:
                 table_name = path.stem
             self._post_data(
                 data=data,
