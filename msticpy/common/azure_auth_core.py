@@ -14,11 +14,9 @@ from typing import List, Optional, Tuple
 from azure.common.credentials import get_cli_profile
 from azure.common.exceptions import CloudError
 from azure.identity import (
-    AzureCliCredential,
     ChainedTokenCredential,
-    EnvironmentCredential,
+    DefaultAzureCredential,
     InteractiveBrowserCredential,
-    ManagedIdentityCredential,
 )
 from dateutil import parser
 from msrestazure import azure_cloud
@@ -32,13 +30,22 @@ from .cloud_mappings import (
     get_all_suffixes,
 )
 from .cred_wrapper import CredentialWrapper
-from .exceptions import MsticpyAzureConnectionError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
+
+_EXCLUDED_AUTH = {
+    "cli": True,
+    "env": True,
+    "msi": True,
+    "vscode": True,
+    "powershell": True,
+    "interactive": True,
+    "cache": True,
+}
 
 
 def get_azure_config_value(key, default):
@@ -76,16 +83,8 @@ class AzureCloudConfig:
             for the identity.
 
         """
-        if cloud:
-            self.cloud = cloud
-        else:
-            self.cloud = get_azure_config_value("cloud", "global")
-
-        if tenant_id:
-            self.tenant_id = tenant_id
-        else:
-            self.tenant_id = get_azure_config_value("tenant_id", None)
-
+        self.cloud = cloud or get_azure_config_value("cloud", "global")
+        self.tenant_id = tenant_id or get_azure_config_value("tenant_id", None)
         self.auth_methods = default_auth_methods()
 
     @property
@@ -164,7 +163,10 @@ def _az_connect_core(
         - "env" - to get authentication details from environment variables
         - "cli" - to use Azure CLI authentication details
         - "msi" - to user Managed Service Identity details
+        - "vscode" - to use VSCode credentials
+        - "powershell" - to use PowerShell credentials
         - "interactive" - to prompt for interactive login
+        - "cache" - to use shared token cache credentials
         If not set, it will use the value defined in msticpyconfig.yaml.
         If this is not set, the default is ["env", "cli", "msi", "interactive"]
     cloud : str, optional
@@ -186,8 +188,6 @@ def _az_connect_core(
 
     Raises
     ------
-    MsticpyAzureConnectionError
-        If invalid auth options are presented.
     CloudError
         If chained token credential creation fails.
 
@@ -205,16 +205,30 @@ def _az_connect_core(
     """
     # Create the auth methods with the specified cloud region
     cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
+    az_config = AzureCloudConfig(cloud)
+    aad_uri = az_config.endpoints.active_directory
     tenant_id = tenant_id or AzureCloudConfig().tenant_id
-    auth_options = _create_auth_options(cloud, tenant_id)
-    if not auth_methods:
-        auth_methods = default_auth_methods()
-    try:
-        auths = [auth_options[meth] for meth in auth_methods]
-    except KeyError as err:
-        raise MsticpyAzureConnectionError(
-            "Unknown authentication option, valid options are; env, cli, msi, interactive"
-        ) from err
+    if auth_methods:
+        for method in auth_methods:
+            if method in _EXCLUDED_AUTH:
+                _EXCLUDED_AUTH[method] = False
+        creds = DefaultAzureCredential(
+            authority=aad_uri,
+            exclude_cli_credential=_EXCLUDED_AUTH["cli"],
+            exclude_environment_credential=_EXCLUDED_AUTH["env"],
+            exclude_managed_identity_credential=_EXCLUDED_AUTH["msi"],
+            exclude_powershell_credential=_EXCLUDED_AUTH["powershell"],
+            exclude_visual_studio_code_credential=_EXCLUDED_AUTH["vscode"],
+            exclude_shared_token_cache_credential=_EXCLUDED_AUTH["cache"],
+            exclude_interactive_browser_credential=_EXCLUDED_AUTH["interactive"],
+            interactive_browser_tenant_id=tenant_id,
+        )
+    else:
+        creds = DefaultAzureCredential(
+            authority=aad_uri,
+            exclude_interactive_browser_credential=False,
+            interactive_browser_tenant_id=tenant_id,
+        )
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)
@@ -224,8 +238,7 @@ def _az_connect_core(
         handler.addFilter(_filter_credential_warning)
     logging.basicConfig(level=logging.WARNING, handlers=[handler])
 
-    # Create credentials and connect to the subscription client to validate
-    creds = ChainedTokenCredential(*auths)  # type: ignore
+    # Connect to the subscription client to validate
     legacy_creds = CredentialWrapper(
         creds, resource_id=AzureCloudConfig(cloud).token_uri
     )
@@ -318,22 +331,6 @@ def _filter_all_warnings(record) -> bool:
         if ".get_token" in message:
             return not message
     return True
-
-
-def _create_auth_options(cloud: str = None, tenant_id: str = None) -> dict:
-    """Create auth options dict with correct cloud set."""
-    az_config = AzureCloudConfig(cloud)
-
-    aad_uri = az_config.endpoints.active_directory  # type: ignore
-
-    return {
-        "env": EnvironmentCredential(),
-        "cli": AzureCliCredential(),
-        "msi": ManagedIdentityCredential(),
-        "interactive": InteractiveBrowserCredential(
-            authority=aad_uri, tenant_id=tenant_id
-        ),
-    }
 
 
 class AzureCliStatus(Enum):

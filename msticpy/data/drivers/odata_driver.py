@@ -15,6 +15,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
+from ...common.msal_auth import MSALDelegatedAuth
 from ...common.provider_settings import get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
@@ -59,6 +60,9 @@ class OData(DriverBase):
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
+        self.token_type = "AAD"  # nosec
+        self.scopes = None
+        self.msal_auth = None
 
     @abc.abstractmethod
     def query(
@@ -122,10 +126,9 @@ class OData(DriverBase):
             cs_dict.update(kwargs)
 
         missing_settings = [
-            setting
-            for setting in ("tenant_id", "client_id", "client_secret")
-            if setting not in cs_dict
+            setting for setting in ("tenant_id", "client_id") if setting not in cs_dict
         ]
+        auth_present = "username" in cs_dict or "client_secret" in cs_dict
         if missing_settings:
             raise MsticpyUserConfigError(
                 "You must supply the following required connection parameter(s)",
@@ -134,25 +137,57 @@ class OData(DriverBase):
                 title="Missing connection parameters.",
                 help_uri=("Connecting to OData sources.", _HELP_URI),
             )
-
-        # self.oauth_url and self.req_body are correctly set in concrete
-        # instances __init__
-        req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
-        req_body = dict(self.req_body)  # type: ignore
-        req_body["client_id"] = cs_dict["client_id"]
-        req_body["client_secret"] = cs_dict["client_secret"]
-
-        # Authenticate and obtain AAD Token for future calls
-        data = urllib.parse.urlencode(req_body).encode("utf-8")
-        response = httpx.post(
-            url=req_url, content=data, timeout=httpx.Timeout(10.0, connect=30.0)
-        )
-        json_response = response.json()
-        self.aad_token = json_response.get("access_token", None)
-        if not self.aad_token:
-            raise MsticpyConnectionError(
-                f"Could not obtain access token - {json_response['error_description']}"
+        if not auth_present:
+            raise MsticpyUserConfigError(
+                "You must supply either a client_secret, or username with which to",
+                "to the connect function or add them to your msticpyconfig.yaml.",
+                title="Missing connection parameters.",
+                help_uri=("Connecting to OData sources.", _HELP_URI),
             )
+
+        # If a client secret is provided connect as the application
+        if "client_secret" in cs_dict:
+            # self.oauth_url and self.req_body are correctly set in concrete
+            # instances __init__
+            req_url = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+            req_body = dict(self.req_body)  # type: ignore
+            req_body["client_id"] = cs_dict["client_id"]
+            req_body["client_secret"] = cs_dict["client_secret"]
+
+            # Authenticate and obtain AAD Token for future calls
+            data = urllib.parse.urlencode(req_body).encode("utf-8")
+            response = httpx.post(url=req_url, content=data)
+            json_response = response.json()
+            self.aad_token = json_response.get("access_token", None)
+            if not self.aad_token:
+                raise MsticpyConnectionError(
+                    f"Could not obtain access token - {json_response['error_description']}"
+                )
+        # If a username is provided connect using delegated authentication
+        elif "username" in cs_dict:
+            # auth_type = (
+            #     cs_dict["auth_type"] if "auth_type" in cs_dict else "interactive"
+            # )
+            # location = (
+            #     cs_dict["location"] if "location" in cs_dict else "token_cache.bin"
+            # )
+            authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
+            self.msal_auth = MSALDelegatedAuth(
+                client_id=cs_dict["client_id"],
+                authority=authority,
+                username=cs_dict["username"],
+                scopes=self.scopes,
+                auth_type=cs_dict["auth_type"]
+                if "auth_type" in cs_dict
+                else "interactive",
+                location=cs_dict["location"]
+                if "location" in cs_dict
+                else "token_cache.bin",
+                connect=True,
+            )
+            self.aad_token = self.msal_auth.token
+            json_response = {}
+            self.token_type = "MSAL"  # nosec
 
         self.req_headers["Authorization"] = "Bearer " + self.aad_token
         self.api_root = cs_dict.get("apiRoot", self.api_root)
@@ -198,6 +233,7 @@ class OData(DriverBase):
 
         # Build request based on whether endpoint requires data to be passed in
         # request body in or URL
+        body = None
         if kwargs["body"] is True:
             req_url = self.request_uri + kwargs["api_end"]
             req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")

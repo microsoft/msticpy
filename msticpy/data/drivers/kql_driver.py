@@ -122,9 +122,10 @@ class KqlDriver(DriverBase):
             Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
             Values can be:
             True or "default": use the settings in msticpyconfig.yaml 'Azure' section
-            str: single auth method name ('msi', 'cli', 'env' or 'interactive')
-            List[str]: list of acceptable auth methods from ('msi', 'cli',
-            'env' or 'interactive')
+            str: single auth method name
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
+            List[str]: list of acceptable auth methods from
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
@@ -502,7 +503,7 @@ class KqlDriver(DriverBase):
         endpoint_uri = self._get_endpoint_uri()
         endpoint_token_uri = f"{endpoint_uri}.default"
         # obtain token for the endpoint
-        token = creds.modern.get_token(endpoint_token_uri)
+        token = creds.modern.get_token(endpoint_token_uri, tenant_id=mp_az_tenant_id)
         # set the token values in the namespace
 
         endpoint_token = {

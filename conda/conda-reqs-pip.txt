@@ -13,6 +13,8 @@ html5lib
 ipwhois>=1.1.0
 KqlmagicCustom[jupyter-basic,auth_code_clipboard]>=0.1.114
 moz_sql_parser>=4.5.0,<=4.11.21016
+msal>=1.12.0
+msal_extensions>=0.3.0
 passivetotal>=2.5.3
 splunk-sdk>=1.6.0
 tldextract>=2.2.2
