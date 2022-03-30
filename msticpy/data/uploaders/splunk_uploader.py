@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Splunk Uploader class."""
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 from pandas.errors import ParserError
@@ -99,8 +99,8 @@ class SplunkUploader(UploaderBase):
     def upload_df(  # type: ignore
         self,
         data: pd.DataFrame,
-        table_name: str,
         index_name: str,
+        table_name: Optional[str],
         create_index: bool = False,
         **kwargs,
     ):
@@ -112,7 +112,7 @@ class SplunkUploader(UploaderBase):
         data : pd.DataFrame
             Data to upload.
         table_name : str
-            The souretype in Splunk data will be uploaded to.
+            The sourcetype in Splunk data will be uploaded to.
         index_name : str
             Name of the Splunk Index to add data to.
         host : str, optional
@@ -135,12 +135,13 @@ class SplunkUploader(UploaderBase):
             host=host,
         )
 
+    # pylint: disable=arguments-differ
     def upload_file(  # type: ignore
         self,
         file_path: str,
-        table_name: str = None,
+        index_name: str,
+        table_name: Optional[str] = None,
         delim: str = ",",
-        index_name: str = "",
         create_index: bool = False,
         **kwargs,
     ):
@@ -154,7 +155,8 @@ class SplunkUploader(UploaderBase):
         index_name : str
             Name of the Splunk Index to add data to.
         table_name : str, optional
-            The souretype in Splunk data will be uploaded to, if not set the file name will be used.
+            The sourcetype in Splunk data will be uploaded to.
+            If not set the file name will be used.
         delim : str, optional
             Seperator value in file, by default ","
         host : str, optional
@@ -183,12 +185,13 @@ class SplunkUploader(UploaderBase):
             create_index=create_index,
         )
 
+    # pylint: disable=arguments-differ
     def upload_folder(  # type: ignore
         self,
         folder_path: str,
-        table_name: str = None,
+        index_name: str,
+        table_name: Optional[str] = None,
         delim: str = ",",
-        index_name: str = "",
         create_index=False,
         **kwargs,
     ):
@@ -202,7 +205,8 @@ class SplunkUploader(UploaderBase):
         index_name : str
             Name of the Splunk Index to add data to, if it doesn't exist it will be created.
         table_name : str, optional
-            The souretype in Splunk data will be uploaded to, if not set the file name will be used.
+            The sourcetype in Splunk data will be uploaded to.
+            If not set the file name will be used.
         delim : str, optional
             Seperator value in files, by default ","
         host : str, optional
