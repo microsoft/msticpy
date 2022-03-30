@@ -61,7 +61,7 @@ class OData(DriverBase):
         self._loaded = True
         self.aad_token = None
         self._debug = kwargs.get("debug", False)
-        self.token_type = "AAD"
+        self.token_type = "AAD"  # nosec
         self.scopes = None
         self.msal_auth = None
 
@@ -172,7 +172,7 @@ class OData(DriverBase):
             # location = (
             #     cs_dict["location"] if "location" in cs_dict else "token_cache.bin"
             # )
-            authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])
+            authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
                 authority=authority,
@@ -188,7 +188,7 @@ class OData(DriverBase):
             )
             self.aad_token = self.msal_auth.token
             json_response = {}
-            self.token_type = "MSAL"
+            self.token_type = "MSAL"  # nosec
 
         self.req_headers["Authorization"] = f"Bearer {self.aad_token}"
         self.api_root = cs_dict.get("apiRoot", self.api_root)

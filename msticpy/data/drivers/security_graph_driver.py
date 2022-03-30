@@ -34,6 +34,8 @@ class SecurityGraphDriver(OData):
         ----------
         connection_str : str, optional
             Connection string
+        delegated_auth : bool, optional
+            Set True if using App delegated authentication
 
         """
         super().__init__(**kwargs)

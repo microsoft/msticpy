@@ -291,7 +291,7 @@ class AzureData:
 
         resources = []  # type: List
         if rgroup is None:
-            resources.extend(iter(self.resource_client.resources.list()))
+            resources.extend(iter(self.resource_client.resources.list()))  # type: ignore
         else:
             resources.extend(
                 iter(
@@ -866,6 +866,8 @@ def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
     ----------
     credential : AzCredentials
         Azure OAuth credentials.
+    tenant_id : str, optional
+        The tenant to connect to if not the users home tenant.
 
     Returns
     -------

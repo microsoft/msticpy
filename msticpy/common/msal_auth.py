@@ -51,6 +51,7 @@ class MSALDelegatedAuth:
             A list of scopes to authenicate with
         debug : bool, optional
             Set True to get additional logging ouput, by default False
+
         """
         self.location = (
             kwargs["location"] if "location" in kwargs else "token_cache.bin"
