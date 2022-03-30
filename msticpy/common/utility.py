@@ -507,7 +507,7 @@ def valid_pyname(identifier: str) -> str:
 
 # Define generic type so enum_parse returns the same type as
 # passed in 'enum_class
-EnumType = TypeVar("EnumType")
+EnumType = TypeVar("EnumType")  # pylint: disable=invalid-name
 
 
 def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
