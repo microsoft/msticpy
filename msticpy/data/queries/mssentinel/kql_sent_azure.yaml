@@ -3,10 +3,10 @@ metadata:
   description: Kql Sentinel Azure
   data_environments: [LogAnalytics]
   data_families: [Azure]
-  tags: ['signin', 'logon', 'azure', 'aad', "activedirectory"]
+  tags: ["signin", "logon", "azure", "aad", "activedirectory"]
 defaults:
   metadata:
-    data_source: 'Azure'
+    data_source: "Azure"
   parameters:
     start:
       description: Query start time
@@ -17,7 +17,7 @@ defaults:
     add_query_items:
       description: Additional query clauses
       type: str
-      default: ''
+      default: ""
 sources:
   list_aad_signins_for_account:
     description: Lists Azure AD Signins for Account
@@ -30,14 +30,18 @@ sources:
       query: '
         let accountName = "{account_name}";
         let account = case(
-            accountName has "@", tostring(split(accountName, "@")[0]),
-            accountName has "\\", tostring(split(accountName, "\\")[1]),
-            accountName
+        accountName has "@", tostring(split(accountName, "@")[0]),
+        accountName has "\\", tostring(split(accountName, "\\")[1]),
+        accountName
         );
         {table}
-        | where UserPrincipalName has account
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
+        | where (
+        (account == "!!DEFAULT!!" or UserPrincipalName has account)
+        and
+        ("{account_id}" == "!!DEFAULT!!" or UserId =~ "{account_id}")
+        )
         {add_query_items}'
     parameters:
       table:
@@ -47,6 +51,11 @@ sources:
       account_name:
         description: The account name to find
         type: str
+        default: "!!DEFAULT!!"
+      account_id:
+        description: Azure user ID to find
+        type: str
+        default: "!!DEFAULT!!"
   list_aad_signins_for_ip:
     description: Lists Azure AD Signins for an IP Address
     metadata:
@@ -55,12 +64,12 @@ sources:
         direct_func_entities:
           - IpAddress
     args:
-      query: '
+      query: "
         {table}
         | where IPAddress in ({ip_address_list})
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        {add_query_items}'
+        {add_query_items}"
     parameters:
       table:
         description: Table name
@@ -80,9 +89,9 @@ sources:
       query: '
         let accountName = "{account_name}";
         let account = case(
-            accountName has "@", tostring(split(accountName, "@")[0]),
-            accountName has "\\", tostring(split(accountName, "\\")[1]),
-            accountName
+        accountName has "@", tostring(split(accountName, "@")[0]),
+        accountName has "\\", tostring(split(accountName, "\\")[1]),
+        accountName
         );
         {table}
         | where Caller has account
@@ -105,12 +114,12 @@ sources:
         direct_func_entities:
           - IpAddress
     args:
-      query: '
+      query: "
         {table}
         | where CallerIpAddress in ({ip_address_list})
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        {add_query_items}'
+        {add_query_items}"
     parameters:
       table:
         description: Table name

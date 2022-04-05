@@ -149,6 +149,57 @@ def test_query_time_events():
     check.equal(qt.origin_time, new_origin)
 
 
+_QT_SET_TIME_TESTS = [
+    ((1,), (3,), (4, 0, TimeUnit.DAY)),
+    ((4,), (6,), (10, 0, TimeUnit.DAY)),
+    ((0.5,), (0,), (12, 0, TimeUnit.HOUR)),
+    ((0.1,), (0.1,), (4, 0, TimeUnit.HOUR)),
+    ((0, 120), (0, 120), (4, 0, TimeUnit.MINUTE)),
+]
+
+
+def _qt_set_time_ids(tests):
+    """Return IDs for set time tests."""
+    return [f"bef:{exp[0]}-aft:{exp[1]}-unit:{exp[2].name}" for _, _, exp in tests]
+
+
+@pytest.mark.parametrize(
+    "start, end, expected", _QT_SET_TIME_TESTS, ids=_qt_set_time_ids(_QT_SET_TIME_TESTS)
+)
+def test_query_time_set_time(start, end, expected):
+    """Test setting time range from set_time method."""
+    # Default starting time
+    init_start = (1,)  # use tuples of (Day, Sec,..) to create time values
+    init_end = (3,)
+    qt = nbw.QueryTime(
+        units="day",
+        start=_END_TIME - timedelta(*init_start),
+        end=_END_TIME + timedelta(*init_end),
+    )
+
+    # Set a new time
+    new_time = TimeSpan((_END_TIME - timedelta(*start), _END_TIME + timedelta(*end)))
+    qt.timespan = new_time
+
+    # check before and after are expected values
+    check.equal(qt.before, expected[0])
+    check.equal(qt.after, expected[1])
+
+    # current start/end should be original minus/plus
+    # the difference between their offsets
+    check.equal(_END_TIME - timedelta(*start), qt.start)
+    check.equal(_END_TIME + timedelta(*end), qt.end)
+
+    qt.value = new_time
+    # check UI values updated correctly
+    check.equal(qt._w_tm_range.value, (-expected[0], expected[1]))
+    check.equal(qt._w_start_time_txt.value, new_time.start.isoformat(sep=" "))
+    check.equal(qt._w_end_time_txt.value, new_time.end.isoformat(sep=" "))
+    check.equal(qt._w_origin_dt.value, new_time.end.date())
+    check.equal(qt._w_origin_tm.value, new_time.end.time().isoformat())
+    check.equal(qt._w_time_unit.value, expected[2].name.capitalize())
+
+
 class _TestSelectAction:
     """Mock action class."""
 
