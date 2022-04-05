@@ -35,7 +35,7 @@ class SecurityGraphDriver(OData):
         connection_str : str, optional
             Connection string
         delegated_auth : bool, optional
-            Set True if using App delegated authentication
+            Set True if using App delegated
 
         """
         super().__init__(**kwargs)
@@ -49,7 +49,8 @@ class SecurityGraphDriver(OData):
         }
 
         if delegated_auth:
-            self.oauth_url = f"{azure_cloud.endpoints.active_directory}/" "{tenantId}"
+            self.oauth_url = f"{azure_cloud.endpoints.active_directory}/{{tenantId}}"
+            print(self.oauth_url)
         else:
             self.oauth_url = (
                 f"{azure_cloud.endpoints.active_directory}/"

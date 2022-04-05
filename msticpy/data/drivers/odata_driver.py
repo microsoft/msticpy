@@ -247,18 +247,6 @@ class OData(DriverBase):
             req_url = self.request_uri + query  # type: ignore
             response = httpx.get(url=req_url, headers=self.req_headers)
 
-        # If it fails when using MSAL creds try getting a new one token
-        # if response.status_code == httpx.codes.OK and self.token_type == "MSAL":
-        #     self.msal_auth.refresh_token()
-        #     self.add_token = self.msal_auth.token
-        #     self.req_headers["Authorization"] = f"Bearer {self.add_token}"
-        #     if body:
-        #         response = httpx.post(
-        #             url=req_url, headers=self.req_headers, content=str(body)
-        #         )
-        #     else:
-        #         response = httpx.get(url=req_url, headers=self.req_headers)
-
         self._check_response_errors(response)
 
         json_response = response.json()

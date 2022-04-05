@@ -37,7 +37,7 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
-_AUTH_MAPPINGS = {
+_EXCLUDED_AUTH = {
     "cli": True,
     "env": True,
     "msi": True,
@@ -210,17 +210,17 @@ def _az_connect_core(
     tenant_id = tenant_id or AzureCloudConfig().tenant_id
     if auth_methods:
         for method in auth_methods:
-            if method in _AUTH_MAPPINGS:
-                _AUTH_MAPPINGS[method] = False
+            if method in _EXCLUDED_AUTH:
+                _EXCLUDED_AUTH[method] = False
         creds = DefaultAzureCredential(
             authority=aad_uri,
-            exclude_cli_credential=_AUTH_MAPPINGS["cli"],
-            exclude_environment_credential=_AUTH_MAPPINGS["env"],
-            exclude_managed_identity_credential=_AUTH_MAPPINGS["msi"],
-            exclude_powershell_credential=_AUTH_MAPPINGS["powershell"],
-            exclude_visual_studio_code_credential=_AUTH_MAPPINGS["vscode"],
-            exclude_shared_token_cache_credential=_AUTH_MAPPINGS["cache"],
-            exclude_interactive_browser_credential=_AUTH_MAPPINGS["interactive"],
+            exclude_cli_credential=_EXCLUDED_AUTH["cli"],
+            exclude_environment_credential=_EXCLUDED_AUTH["env"],
+            exclude_managed_identity_credential=_EXCLUDED_AUTH["msi"],
+            exclude_powershell_credential=_EXCLUDED_AUTH["powershell"],
+            exclude_visual_studio_code_credential=_EXCLUDED_AUTH["vscode"],
+            exclude_shared_token_cache_credential=_EXCLUDED_AUTH["cache"],
+            exclude_interactive_browser_credential=_EXCLUDED_AUTH["interactive"],
             interactive_browser_tenant_id=tenant_id,
         )
     else:
