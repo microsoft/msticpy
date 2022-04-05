@@ -16,6 +16,7 @@ from msal_extensions import (
     LibsecretPersistence,
     PersistedTokenCache,
 )
+from msal_extensions.persistence import PersistenceNotFound
 
 from .._version import VERSION
 from .exceptions import MsticpyAzureConnectionError
@@ -127,7 +128,7 @@ class MSALDelegatedAuth:
                         "msal_token2": "msal_token_values",
                     },
                 )
-            except (msal.PersistenceNotFound, ImportError) as msal_exp:
+            except (PersistenceNotFound, ImportError, ModuleNotFoundError) as msal_exp:
                 if not fallback_to_plaintext:
                     raise MsticpyAzureConnectionError(
                         "Unable to create persitence to store credentials."
