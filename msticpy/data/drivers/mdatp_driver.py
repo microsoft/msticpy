@@ -10,8 +10,9 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.azure_auth import AzureCloudConfig
+from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
-from ..core.query_defns import DataEnvironment, ensure_df_datetimes
+from ..core.query_defns import DataEnvironment
 from .odata_driver import OData, QuerySource
 
 __version__ = VERSION

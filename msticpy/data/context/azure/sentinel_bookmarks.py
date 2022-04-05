@@ -87,6 +87,7 @@ class SentinelBookmarksMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code == 200:
             print("Bookmark created.")
@@ -119,6 +120,7 @@ class SentinelBookmarksMixin:
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code == 200:
             print("Bookmark deleted.")

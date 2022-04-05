@@ -19,7 +19,7 @@ def check_version():
 
     # fetch package metadata from PyPI
     pypi_url = "https://pypi.org/pypi/msticpy/json"
-    pkg_data = httpx.get(pypi_url).json()
+    pkg_data = httpx.get(pypi_url, timeout=httpx.Timeout(10.0, connect=30.0)).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
         latest_version = parse_version(latest_version)

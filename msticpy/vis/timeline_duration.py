@@ -18,8 +18,8 @@ from bokeh.plotting import figure, reset_output
 from bokeh.transform import dodge
 
 from .._version import VERSION
+from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
-from ..data.core.query_defns import ensure_df_datetimes
 from .timeline import (
     _calc_auto_plot_height,
     _create_range_tool,

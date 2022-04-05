@@ -62,7 +62,7 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
-        self._httpx_client = httpx.Client()
+        self._httpx_client = httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0))
         self._request_params = {}
         if "ApiID" in kwargs:
             self._request_params["API_ID"] = kwargs.pop("ApiID")

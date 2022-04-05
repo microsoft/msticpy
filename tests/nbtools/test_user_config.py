@@ -97,10 +97,10 @@ def test_user_config(mp_settings):
 
     check.is_in("qry_asi", prov_dict)
     check.is_instance(prov_dict["qry_asi"], QueryProvider)
-    check.equal(prov_dict["qry_asi"].environment, "AzureSentinel")
+    check.equal(prov_dict["qry_asi"].environment, "MSSentinel")
     check.is_in("qry_soc", prov_dict)
     check.is_instance(prov_dict["qry_soc"], QueryProvider)
-    check.equal(prov_dict["qry_asi"].environment, "AzureSentinel")
+    check.equal(prov_dict["qry_asi"].environment, "MSSentinel")
     check.is_in("qry_splunk", prov_dict)
     check.is_instance(prov_dict["qry_splunk"], QueryProvider)
     check.equal(prov_dict["qry_splunk"].environment, "Splunk")

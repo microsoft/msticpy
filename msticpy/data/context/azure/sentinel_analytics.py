@@ -210,6 +210,7 @@ class SentinelAnalyticsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -280,6 +281,7 @@ class SentinelAnalyticsMixin:
             analytic_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
+            timeout=httpx.Timeout(10.0, connect=30.0),
         )
         if response.status_code != 200:
             raise CloudError(response=response)

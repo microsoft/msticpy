@@ -51,6 +51,7 @@ from . import analysis, data, nbtools, sectools
 from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
+from .common.pkg_config import refresh_config
 from .common.utility import search_name as search
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
 from .nbtools.nbinit import current_providers, init_notebook
