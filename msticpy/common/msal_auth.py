@@ -128,11 +128,12 @@ class MSALDelegatedAuth:
                         "msal_token2": "msal_token_values",
                     },
                 )
-            except (PersistenceNotFound, ImportError, ModuleNotFoundError) as msal_exp:
+            except (PersistenceNotFound, ImportError) as msal_exp:
                 if not fallback_to_plaintext:
                     raise MsticpyAzureConnectionError(
                         "Unable to create persitence to store credentials."
                     ) from msal_exp
+
         return FilePersistence(self.location)
 
     @property
