@@ -60,7 +60,9 @@ class MSALDelegatedAuth:
         self.username = username
         self.scopes = scopes
         self.result = None
-        persistence = self._create_cache()
+        persistence = self._create_cache(
+            fallback_to_plaintext=bool(kwargs["plaintext"])
+        )
         self.token_cache = PersistedTokenCache(persistence)
         self.app = msal.PublicClientApplication(
             client_id=client_id, authority=authority, token_cache=self.token_cache
@@ -125,7 +127,7 @@ class MSALDelegatedAuth:
                         "msal_token2": "msal_token_values",
                     },
                 )
-            except msal.PersistenceNotFound as msal_exp:
+            except (msal.PersistenceNotFound, ImportError) as msal_exp:
                 if not fallback_to_plaintext:
                     raise MsticpyAzureConnectionError(
                         "Unable to create persitence to store credentials."
