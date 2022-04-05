@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+from typing import Optional
+
 import ipywidgets as widgets
 from ipywidgets import Layout
 
@@ -16,16 +18,16 @@ __author__ = "Ian Hellen"
 
 class GetText(RegisteredWidget, IPyDisplayMixin):
     """
-    GetEnvironmentKey.
+    GetText.
 
-    Tries to retrieve an environment variable value. The value
-    can be changed/set and optionally saved back to the system
-    environment.
+    Widget to set text value.
     """
+
+    _NB_PARAMS = {"value": "_value"}
 
     def __init__(
         self,
-        default: str = None,
+        default: Optional[str] = None,
         description: str = "Enter the value: ",
         auto_display: bool = False,
         **kwargs,
@@ -52,22 +54,18 @@ class GetText(RegisteredWidget, IPyDisplayMixin):
         self._value = default
         description = kwargs.pop("prompt", description)
 
-        # Call superclass to register
-        super().__init__(id_vals=[default, description], val_attrs=["_value"], **kwargs)
-
         self._w_text = widgets.Text(
-            value=self._value,
             description=description,
-            layout=Layout(width="50%"),
-            style={"description_width": "initial"},
+            layout=Layout(width=kwargs.get("width", "50%")),
+            style={"description_width": kwargs.get("description_width", "initial")},
+            value=default or kwargs.get("value", ""),
         )
 
-        self._w_text.observe(self._update_value, names="value")
+        # Call superclass to register
+        super().__init__(id_vals=[default, description], val_attrs=["value"], **kwargs)
+
         if auto_display:
             self.display()
-
-    def _update_value(self, change):
-        self._value = change.get("new", "")
 
     @property
     def layout(self):
@@ -76,11 +74,12 @@ class GetText(RegisteredWidget, IPyDisplayMixin):
 
     @property
     def value(self):
-        """Get the current value of the key."""
-        return self._value.strip() if self._value else None
+        """Get the current value of the widget."""
+        return self._w_text.value.strip()
 
-    def display(self):
-        """Display the interactive widgets."""
-        if self._value:
-            self._w_text.value = self._value
-        super().display()
+    @value.setter
+    def value(self, value: str):  # sourcery skip: remove-unnecessary-cast
+        """Set the value of the widget."""
+        if not isinstance(value, str):
+            value = str(value)
+        self._w_text.value = value
