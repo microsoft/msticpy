@@ -62,12 +62,7 @@ def string_empty(string: str) -> bool:
 def is_not_empty(test_object: Any) -> bool:
     """Return True if the test_object is not None or empty."""
     if test_object:
-        if isinstance(test_object, str):
-            if test_object.strip():
-                # test_object is not None AND myString is not empty or blank
-                return True
-            return False
-        return True
+        return bool(test_object.strip()) if isinstance(test_object, str) else True
     return False
 
 
@@ -75,17 +70,13 @@ def is_not_empty(test_object: Any) -> bool:
 @export
 def escape_windows_path(str_path: str) -> str:
     """Escape backslash characters in a string."""
-    if is_not_empty(str_path):
-        return str_path.replace("\\", "\\\\")
-    return str_path
+    return str_path.replace("\\", "\\\\") if is_not_empty(str_path) else str_path
 
 
 @export
 def unescape_windows_path(str_path: str) -> str:
     """Remove escaping from backslash characters in a string."""
-    if is_not_empty(str_path):
-        return str_path.replace("\\\\", "\\")
-    return str_path
+    return str_path.replace("\\\\", "\\") if is_not_empty(str_path) else str_path
 
 
 @export
@@ -124,7 +115,7 @@ def resolve_pkg_path(part_path: str):
 
     resolved_path = str(Path(__file__).resolve().parent.parent.joinpath(part_path))
     if Path(resolved_path).exists():
-        return str(resolved_path)
+        return resolved_path
 
     searched_paths = list(
         Path(__file__).resolve().parent.parent.glob(str(Path("**").joinpath(part_path)))
@@ -355,9 +346,11 @@ def is_ipython(notebook: bool = False) -> bool:
         otherwise False
 
     """
-    if not notebook:
-        return bool(get_ipython())
-    return get_ipython() and type(get_ipython()).__name__.startswith("ZMQ")
+    return (
+        get_ipython() and type(get_ipython()).__name__.startswith("ZMQ")
+        if notebook
+        else bool(get_ipython())
+    )
 
 
 def check_kwarg(arg_name: str, legal_args: List[str]):
@@ -507,7 +500,7 @@ def valid_pyname(identifier: str) -> str:
 
 # Define generic type so enum_parse returns the same type as
 # passed in 'enum_class
-EnumType = TypeVar("EnumType")
+EnumType = TypeVar("EnumType")  # pylint: disable=invalid-name
 
 
 def enum_parse(enum_cls: Type[EnumType], value: str) -> Optional[EnumType]:
