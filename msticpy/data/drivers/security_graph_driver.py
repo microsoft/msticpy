@@ -50,7 +50,6 @@ class SecurityGraphDriver(OData):
 
         if delegated_auth:
             self.oauth_url = f"{azure_cloud.endpoints.active_directory}/{{tenantId}}"
-            print(self.oauth_url)
         else:
             self.oauth_url = (
                 f"{azure_cloud.endpoints.active_directory}/"

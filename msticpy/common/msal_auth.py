@@ -61,8 +61,11 @@ class MSALDelegatedAuth:
         self.username = username
         self.scopes = scopes
         self.result = None
+
         persistence = self._create_cache(
-            fallback_to_plaintext=bool(kwargs["plaintext"])
+            fallback_to_plaintext=bool(
+                kwargs["plaintext"] if "plaintext" in kwargs else False
+            )
         )
         self.token_cache = PersistedTokenCache(persistence)
         self.app = msal.PublicClientApplication(
