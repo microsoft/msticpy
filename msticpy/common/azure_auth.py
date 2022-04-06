@@ -67,19 +67,21 @@ def az_connect(
 
     """
     az_cloud_config = AzureCloudConfig()
-    # If using env options try to load from msticpy
+    # Use auth_methods param or configuration defaults
     data_provs = get_provider_settings(config_section="DataProviders")
-    az_cli_config = data_provs.get("AzureCLI")
     auth_methods = auth_methods or az_cloud_config.auth_methods
-    if az_cli_config and az_cli_config.args:
-        if "auth_methods" in az_cli_config.args:
-            auth_methods = az_cli_config.args.get("auth_methods")
-        if isinstance(auth_methods, list) and "env" in auth_methods:
-            os.environ["AZURE_CLIENT_ID"] = az_cli_config.args.get("clientId") or ""
-            os.environ["AZURE_TENANT_ID"] = az_cli_config.args.get("tenantId") or ""
-            os.environ["AZURE_CLIENT_SECRET"] = (
-                az_cli_config.args.get("clientSecret") or ""
-            )
+
+    # Ignore AzCLI settings except for authentication creds for EnvCred
+    az_cli_config = data_provs.get("AzureCLI")
+    if (
+        az_cli_config
+        and az_cli_config.args
+        and isinstance(auth_methods, list)
+        and "env" in auth_methods
+    ):
+        os.environ["AZURE_CLIENT_ID"] = az_cli_config.args.get("clientId") or ""
+        os.environ["AZURE_TENANT_ID"] = az_cli_config.args.get("tenantId") or ""
+        os.environ["AZURE_CLIENT_SECRET"] = az_cli_config.args.get("clientSecret") or ""
     credentials = az_connect_core(
         auth_methods=auth_methods, tenant_id=tenant_id, silent=silent
     )

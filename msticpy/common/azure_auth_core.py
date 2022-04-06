@@ -320,20 +320,25 @@ def _filter_all_warnings(record) -> bool:
     return True
 
 
+# changes here will be superceded by new authn code.
 def _create_auth_options(cloud: str = None, tenant_id: str = None) -> dict:
     """Create auth options dict with correct cloud set."""
     az_config = AzureCloudConfig(cloud)
 
     aad_uri = az_config.endpoints.active_directory  # type: ignore
 
-    return {
-        "env": EnvironmentCredential(),
+    auth_options = {
         "cli": AzureCliCredential(),
         "msi": ManagedIdentityCredential(),
         "interactive": InteractiveBrowserCredential(
             authority=aad_uri, tenant_id=tenant_id
         ),
     }
+    try:
+        auth_options["env"] = EnvironmentCredential()
+    except ValueError:
+        pass
+    return auth_options
 
 
 class AzureCliStatus(Enum):

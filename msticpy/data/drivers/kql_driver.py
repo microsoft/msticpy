@@ -100,8 +100,11 @@ class KqlDriver(DriverBase):
         self.environment = kwargs.get("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
 
+        self.current_connection = ""
+        self.current_connection_args: Dict[str, Any] = {}
         if connection_str:
             self.current_connection = connection_str
+            self.current_connection_args.update(kwargs)
             self.connect(connection_str)
 
     # pylint: disable=too-many-branches
@@ -147,13 +150,14 @@ class KqlDriver(DriverBase):
                 title="no connection string",
             )
         if "kqlmagic_args" in kwargs:
-            connection_str = connection_str + " " + kwargs["kqlmagic_args"]
-        # Default to using Azure Auth if possible.
+            connection_str = f"{connection_str} {kwargs['kqlmagic_args']}"
 
+        # Default to using Azure Auth if possible.
         if mp_az_auth and "try_token" not in kwargs:
             self._set_az_auth_option(mp_az_auth, mp_az_tenant_id)
 
         self.current_connection = connection_str
+        self.current_connection_args.update(kwargs)
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
         try:
@@ -288,7 +292,7 @@ class KqlDriver(DriverBase):
     def _make_current_connection(self):
         """Switch to the current connection (self.current_connection)."""
         try:
-            self.connect(self.current_connection)
+            self.connect(self.current_connection, **(self.current_connection_args))
         except MsticpyKqlConnectionError:
             self._connected = False
         if not self.connected:
