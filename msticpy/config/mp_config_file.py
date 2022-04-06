@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Config class."""
+
 import io
 import os
 import pprint
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, suppress
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import ipywidgets as widgets
 import yaml
@@ -124,8 +125,8 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         return self._current_file
 
     @current_file.setter
-    def current_file(self, file_name: str):
-        self._current_file = str(file_name) if file_name else None
+    def current_file(self, file_name: Union[str, Path]):
+        self._current_file = str(file_name) or None
         self.txt_current_file.value = self._current_file or ""
 
     def _update_curr_file(self, change):
@@ -135,8 +136,9 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
     def load_default(self):
         """Load default settings specified by MSTICPYCONFIG env var."""
         if self.mp_config_def_path:
-            self.load_from_file(self.mp_config_def_path)
             self.current_file = self.mp_config_def_path
+            with suppress(FileNotFoundError):
+                self.load_from_file(self.mp_config_def_path)
 
     def browse_for_file(self, show: bool = True):
         """Open the browser to browser/search fr a file."""

@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for pre-defined widget layouts."""
+
+import contextlib
 import json
 import random
 from json import JSONDecodeError
@@ -68,12 +70,12 @@ class SelectAlert(IPyDisplayMixin):
             If the function returns one or a tuple of displayable objects
             these will be displayed.
         columns : List[str], optional
-            Override the default column names to use from `alerts`
-            (the default is ['StartTimeUtc', 'AlertName',
-            'CompromisedEntity', 'SystemAlertId'])
+            Override the default column names to use from `alerts` to
+            generate the select list item summary
+            (the default is ['AlertName', 'ProductName'])
         time_col : str, optional
             The column in your alerts that determines when it was created
-            Default is 'StartTimeUtc'.
+            Default is 'StartTimeUtc' with a fallback to 'TimeGenerated'.
         id_col : str, optional
             The column in your data that determines the alert id
             Default is 'SystemAlertId'.
@@ -84,26 +86,17 @@ class SelectAlert(IPyDisplayMixin):
         self.alerts = alerts
         self.alert_action = action
         self.id_col = id_col
-        self.time_col = time_col
+        self.time_col = time_col if time_col in alerts.columns else "TimeGenerated"
 
-        self.columns = columns or [
-            "AlertName",
-            "CompromisedEntity",
-        ]
-
-        alert_cols = self.columns
-        if self.time_col not in alert_cols:
-            alert_cols.append(self.time_col)
-        if self.id_col not in alert_cols:
-            alert_cols.append(self.id_col)
-        items = alerts[alert_cols].sort_values(time_col, ascending=True)
-        self._select_items = items.apply(
-            self._alert_summary,
-            axis=1,
-            time_col=self.time_col,
-            id_col=self.id_col,
-            columns=self.columns,
-        ).values.tolist()
+        columns = columns or ["AlertName", "ProductName"]
+        self.disp_columns = [col for col in columns if col in alerts.columns]
+        if not self.disp_columns:
+            raise ValueError(
+                f"Display columns {','.join(columns)} not found in alerts."
+            )
+        self._select_items = self._get_select_options(
+            alerts, self.time_col, self.id_col, self.disp_columns
+        )
 
         self.selected_alert = None
         self.alert_id = None
@@ -150,26 +143,37 @@ class SelectAlert(IPyDisplayMixin):
     def display(self):
         """Display the interactive widgets."""
         super().display()
-        display(HTML("<hr>"))
         self._select_top_alert()
 
     @staticmethod
     def _alert_summary(alert_row, time_col, id_col, columns):
         """Return summarized string of alert properties."""
-        item = f"{alert_row[time_col]}"
-        for col in columns:
-            item += f" - {alert_row[col]}"
-        item += f" - {alert_row[id_col]}"
-        return item
+        items = [f"{alert_row[time_col]}"]
+        items.extend(alert_row[col] for col in columns)
+        items.append(alert_row[id_col])
+        return " || ".join(items)
+
+    @staticmethod
+    def _get_select_options(data, time_col, id_col, columns):
+        """Return dictionary of displayable options."""
+        return {
+            val: key
+            for key, val in data[[time_col, *columns, id_col]]
+            .sort_values(time_col, ascending=True)
+            .set_index(time_col)
+            .apply(lambda x: " - ".join(str(c) for c in x), axis=1)
+            .to_dict()
+            .items()
+        }
 
     def _update_options(self, change):
         """Filter the alert list by substring."""
         if change is not None and "new" in change:
-            self._w_select_alert.options = [
-                alert_dtl
-                for alert_dtl in self._select_items
-                if change["new"].lower() in alert_dtl[0].lower()
-            ]
+            self._w_select_alert.options = {
+                alert_desc: alert_id
+                for alert_desc, alert_id in self._select_items.items()
+                if change["new"].casefold() in alert_desc.casefold()
+            }
 
     def _select_alert(self, selection=None):
         """Select action triggered by picking item from list."""
@@ -180,7 +184,7 @@ class SelectAlert(IPyDisplayMixin):
         ):
             self.selected_alert = None
         else:
-            self.alert_id = selection["new"].split("- ")[-1]
+            self.alert_id = self._w_select_alert.value
 
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
@@ -195,17 +199,13 @@ class SelectAlert(IPyDisplayMixin):
             if "ExtendedProperties" in alert.index and isinstance(
                 alert["ExtendedProperties"], str
             ):
-                try:
+                with contextlib.suppress(JSONDecodeError):
                     alert["ExtendedProperties"] = json.loads(
                         (alert["ExtendedProperties"])
                     )
-                except JSONDecodeError:
-                    pass
             if "Entities" in alert.index and isinstance(alert["Entities"], str):
-                try:
+                with contextlib.suppress(JSONDecodeError):
                     alert["Entities"] = json.loads((alert["Entities"]))
-                except JSONDecodeError:
-                    pass
             return alert
         return None
 
@@ -213,7 +213,7 @@ class SelectAlert(IPyDisplayMixin):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
         if not top_alert.empty:
-            self._w_select_alert.value = self._w_select_alert.options[0]
+            self._w_select_alert.index = 0
             self.alert_id = top_alert[self.id_col]
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
