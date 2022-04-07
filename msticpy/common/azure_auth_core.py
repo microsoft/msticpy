@@ -315,12 +315,11 @@ def _filter_credential_warning(record) -> bool:
     message = record.getMessage()
     if ".get_token" in message:
         if message.startswith("EnvironmentCredential"):
-            print("Attempting to sign-in with environment variable credentials...")
+            print("Unable to sign-in with environment variable credentials.")
         if message.startswith("AzureCliCredential"):
-            print("Attempting to sign-in with Azure CLI credentials...")
+            print("Unable to sign-in with Azure CLI credentials.")
         if message.startswith("ManagedIdentityCredential"):
-            print("Attempting to sign-in with Managed Instance credentials...")
-            print("Falling back to interactive logon.")
+            print("Unable to sign-in with Managed Instance credentials.")
     return not message
 
 
