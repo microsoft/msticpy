@@ -76,7 +76,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.mp_config_def_path = os.environ.get(
             "MSTICPYCONFIG", "./msticpyconfig.yaml"
         )
-        self._current_file = None
+        self._current_file = file or self.mp_config_def_path
 
         # Set up controls
         self.file_browser = FileBrowser(select_cb=self.load_from_file)
@@ -91,7 +91,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.txt_current_file.value = self.current_file or ""
         self.txt_current_file.observe(self._update_curr_file, "value")
         self.txt_curr_mpconfig = widgets.Text(
-            description="Value of MSTICPCONFIG", **_TXT_STYLE
+            description="Value of MSTICPYCONFIG", **_TXT_STYLE
         )
         self.txt_curr_mpconfig.value = self.mp_config_def_path
         self.txt_curr_mpconfig.disabled = True
@@ -115,9 +115,10 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             layout=self.border_layout("99%"),
         )
 
-        self.current_file = file
-        if file and Path(file).is_file():
-            self.load_from_file(file)
+        if self.current_file and Path(self.current_file).is_file():
+            self.load_from_file(self.current_file)
+        else:
+            self.set_status("No msticpyconfig.yaml found.")
 
     @property
     def current_file(self):
@@ -126,7 +127,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     @current_file.setter
     def current_file(self, file_name: Union[str, Path]):
-        self._current_file = str(file_name) or None
+        self._current_file = str(file_name)
         self.txt_current_file.value = self._current_file or ""
 
     def _update_curr_file(self, change):
