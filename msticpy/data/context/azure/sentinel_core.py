@@ -153,9 +153,7 @@ class MicrosoftSentinel(
 
     def _get_default_workspace(self):
         """Return the default workspace ResourceID."""
-        if self.default_workspace:
-            return self.default_workspace[0]
-        return None
+        return self.default_workspace[0] if self.default_workspace else None
 
     def list_data_connectors(self) -> pd.DataFrame:
         """

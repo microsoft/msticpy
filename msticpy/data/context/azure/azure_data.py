@@ -169,7 +169,7 @@ class AzureData:
             raise CloudError("Could not create a Subscription client.")
         self.connected = True
 
-    def list_subscriptions(self) -> pd.DataFrame:
+    def get_subscriptions(self) -> pd.DataFrame:
         """
         Get details of all subscriptions within the tenant.
 
@@ -255,7 +255,50 @@ class AzureData:
             "Spending Limit": sub.subscription_policies.spending_limit,
         }
 
-    def list_resources(  # noqa: MC0001
+    def list_sentinel_workspaces(self, sub_id: str) -> Dict[str, str]:
+        """
+        Return a list of Microsoft Sentinel workspaces in a Subscription.
+
+        Parameters
+        ----------
+        sub_id : str
+            The subscription ID to get a list of workspaces from.
+            If not provided it will attempt to get sub_id from config files.
+
+        Returns
+        -------
+        Dict
+            A dictionary of workspace names and ids
+
+        """
+        print("Finding Microsoft Sentinel Workspaces...")
+        res = self.get_resources(sub_id=sub_id)  # type: ignore
+        # handle no results
+        if isinstance(res, pd.DataFrame) and not res.empty:
+            sentinel = res[
+                (res["resource_type"] == "Microsoft.OperationsManagement/solutions")
+                & (res["name"].str.startswith("SecurityInsights"))
+            ]
+            workspaces = []
+            for wrkspace in sentinel["resource_id"]:
+                res_details = self.get_resource_details(
+                    sub_id=sub_id, resource_id=wrkspace  # type: ignore
+                )
+                workspaces.append(res_details["properties"]["workspaceResourceId"])
+
+            workspaces_dict = {}
+            for wrkspace in workspaces:
+                name = wrkspace.split("/")[-1]
+                workspaces_dict[name] = wrkspace
+            return workspaces_dict
+
+        print(f"No Microsoft Sentinel workspaces in {sub_id}")
+        return {}
+
+    # Get > List Aliases
+    get_sentinel_workspaces = list_sentinel_workspaces
+
+    def get_resources(  # noqa: MC0001
         self, sub_id: str, rgroup: str = None, get_props: bool = False
     ) -> pd.DataFrame:
         """
@@ -289,13 +332,15 @@ class AzureData:
 
         resources = []  # type: List
         if rgroup is None:
-            for resource in self.resource_client.resources.list():  # type: ignore
-                resources.append(resource)
+            resources.extend(iter(self.resource_client.resources.list()))  # type: ignore
         else:
-            for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
-                rgroup
-            ):
-                resources.append(resource)
+            resources.extend(
+                iter(
+                    self.resource_client.resources.list_by_resource_group(  # type: ignore
+                        rgroup
+                    )
+                )
+            )
 
         # Warn users about getting full properties for each resource
         if get_props:
@@ -832,50 +877,6 @@ class AzureData:
                 ),
             )
 
-    def list_sentinel_workspaces(self, sub_id: str = None) -> Dict[str, str]:
-        """
-        Return a list of Microsoft Sentinel workspaces in a Subscription.
-
-        Parameters
-        ----------
-        sub_id : str
-            The subscription ID to get a list of workspaces from.
-
-        Returns
-        -------
-        Dict
-            A dictionary of workspace names and ids
-
-        """
-        print("Finding Microsoft Sentinel Workspaces...")
-        res = self.get_resources(sub_id=sub_id)  # type: ignore
-        # handle no results
-        if isinstance(res, pd.DataFrame) and not res.empty:
-            sentinel = res[
-                (res["resource_type"] == "Microsoft.OperationsManagement/solutions")
-                & (res["name"].str.startswith("SecurityInsights"))
-            ]
-            workspaces = []
-            for wrkspace in sentinel["resource_id"]:
-                res_details = self.get_resource_details(
-                    sub_id=sub_id, resource_id=wrkspace  # type: ignore
-                )
-                workspaces.append(res_details["properties"]["workspaceResourceId"])
-
-            workspaces_dict = {}
-            for wrkspace in workspaces:
-                name = wrkspace.split("/")[-1]
-                workspaces_dict[name] = wrkspace
-            return workspaces_dict
-
-        print(f"No Microsoft Sentinel workspaces in {sub_id}")
-        return {}
-
-    # Get > List Aliases
-    get_subscriptions = list_subscriptions
-    get_resources = list_resources
-    get_sentinel_workspaces = list_sentinel_workspaces
-
 
 def get_api_headers(token: str) -> Dict:
     """
@@ -898,7 +899,7 @@ def get_api_headers(token: str) -> Dict:
     }
 
 
-def get_token(credential: AzCredentials) -> str:
+def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
     """
     Extract token from a azure.identity object.
 
@@ -906,6 +907,8 @@ def get_token(credential: AzCredentials) -> str:
     ----------
     credential : AzCredentials
         Azure OAuth credentials.
+    tenant_id : str, optional
+        The tenant to connect to if not the users home tenant.
 
     Returns
     -------
@@ -913,5 +916,11 @@ def get_token(credential: AzCredentials) -> str:
         A token to be used in API calls.
 
     """
-    token = credential.modern.get_token(AzureCloudConfig().token_uri)
+    if tenant_id:
+        token = credential.modern.get_token(AzureCloudConfig().token_uri)
+    else:
+        token = credential.modern.get_token(
+            AzureCloudConfig().token_uri, tenant_id=tenant_id
+        )
+
     return token.token

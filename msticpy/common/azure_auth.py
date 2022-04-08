@@ -45,7 +45,11 @@ def az_connect(
         - "cli" - to use Azure CLI authentication details
         - "msi" - to user Managed Service Identity details
         - "interactive" - to prompt for interactive login
-        Default is ["env", "cli", "msi", "interactive"]
+        - "vscode" - to use VSCode credentials
+        - "powershell" - to use PowerShell credentials
+        - "interactive" - to prompt for interactive login
+        - "cache" - to use shared token cache credentials
+        Default is ["env", "msi", "vscode", "cli", "powershell", "interactive"]
     tenant_id : str, optional
         The tenant to authenticate against. If not supplied, the default
         tenant for the identity will be used.

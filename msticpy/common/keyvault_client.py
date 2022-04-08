@@ -80,6 +80,10 @@ class BHKeyVaultClient:
             - "cli" - to use Azure CLI authentication details
             - "msi" - to user Managed Service Identity details
             - "interactive" - to prompt for interactive login
+            - "vscode" - to use VSCode credentials
+            - "powershell" - to use PowerShell credentials
+            - "interactive" - to prompt for interactive login
+            - "cache" - to use shared token cache credentials
         authn_type : str, optional
             [deprecated - use auth_methods]
             Authentication mode, by default 'interactive'
