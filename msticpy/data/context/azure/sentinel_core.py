@@ -143,8 +143,15 @@ class MicrosoftSentinel(
             If not specified and there is only one workspace in the
             subscription, this will be set as the default.
 
+        Raises
+        ------
+        ValueError
+            If no current or default subscription has been set.
+
         """
         sub_id = sub_id or self.default_subscription
+        if not sub_id:
+            raise ValueError("No current or default subscription ID set.")
         workspaces = self.get_sentinel_workspaces(sub_id=sub_id)
         if len(workspaces) == 1:
             self.default_workspace = next(iter(workspaces.items()))
