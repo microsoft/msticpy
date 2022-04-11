@@ -166,12 +166,6 @@ class OData(DriverBase):
                 )
         # If a username is provided connect using delegated authentication
         elif "username" in cs_dict:
-            # auth_type = (
-            #     cs_dict["auth_type"] if "auth_type" in cs_dict else "interactive"
-            # )
-            # location = (
-            #     cs_dict["location"] if "location" in cs_dict else "token_cache.bin"
-            # )
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
