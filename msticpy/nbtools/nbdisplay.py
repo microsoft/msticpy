@@ -77,17 +77,9 @@ def format_alert(
 
     # Display subset of raw properties
     if isinstance(alert, pd.Series):
-        entity = alert["CompromisedEntity"] if "CompromisedEntity" in alert else ""
-        title = f"""
-            <h3>Selected Alert: '{alert["AlertDisplayName"]}'</h3>
-            <b>Alert_time:</b> {alert["StartTimeUtc"]},&nbsp;
-            <b>Compr_entity:</b> {entity},&nbsp;
-            <b>Alert_id:</b> {alert["SystemAlertId"]}
-            <br/>
-            """
-        return HTML(title), pd.DataFrame(alert)
+        return pd.DataFrame(alert)
 
-    raise ValueError("Unrecognized alert object type " + str(type(alert)))
+    raise ValueError(f"Unrecognized alert object type {type(alert)}")
 
 
 @export

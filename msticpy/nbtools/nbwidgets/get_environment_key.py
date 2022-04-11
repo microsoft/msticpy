@@ -26,6 +26,8 @@ class GetEnvironmentKey(RegisteredWidget, IPyDisplayMixin):
     environment.
     """
 
+    _NB_PARAMS = {"value": "_value"}
+
     def __init__(
         self,
         env_var: str,

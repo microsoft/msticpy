@@ -34,6 +34,9 @@ class RegisteredWidget(ABC):
     the same cell after entering values.
     """
 
+    ALLOWED_KWARGS = ["id_vals", "val_attrs", "nb_params", "name_space", "register"]
+    _NB_PARAMS: Dict[str, str] = {}
+
     def __init__(
         self,
         id_vals: Optional[List[Any]] = None,
@@ -89,8 +92,11 @@ class RegisteredWidget(ABC):
                 # if this doesn't have a value set explicitly or
                 # one that was recovered from the widget registry
                 # set it from the nb_param value
-                if nb_param in name_space and not getattr(self, attr, None):
-                    setattr(self, attr, name_space[nb_param])
+                wgt_internal_name = self._NB_PARAMS.get(attr, attr)
+                if nb_param in name_space and not getattr(
+                    self, wgt_internal_name, None
+                ):
+                    setattr(self, wgt_internal_name, name_space[nb_param])
 
 
 # pylint: enable=too-few-public-methods
