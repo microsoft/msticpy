@@ -12,6 +12,7 @@ from contextlib import redirect_stdout, suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
+import warnings
 
 import ipywidgets as widgets
 import yaml
@@ -52,12 +53,16 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
     MSTICPy Configuration management class.
 
     Use the functions from the commandline or display
-    in a Jupter notebook to use interactive version.
+    in a Jupyter notebook to use interactive version.
 
     """
 
+    _DEF_FILENAME = "./msticpyconfig.yaml"
+
     def __init__(
-        self, file: Optional[str] = None, settings: Optional[Dict[str, Any]] = None
+        self,
+        file: Union[str, Path, None] = None,
+        settings: Optional[Dict[str, Any]] = None,
     ):
         """
         Create an instance of the MSTICPy Configuration helper class.
@@ -73,10 +78,6 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.settings = settings or {}
 
         self.kv_client: Any = None
-        self.mp_config_def_path = os.environ.get(
-            "MSTICPYCONFIG", "./msticpyconfig.yaml"
-        )
-        self._current_file = file or self.mp_config_def_path
 
         # Set up controls
         self.file_browser = FileBrowser(select_cb=self.load_from_file)
@@ -88,13 +89,10 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
         self.html_title = widgets.HTML("<h3>MSTICPy settings</h3>")
         self.txt_current_file = widgets.Text(description="Current file", **_TXT_STYLE)
-        self.txt_current_file.value = self.current_file or ""
         self.txt_current_file.observe(self._update_curr_file, "value")
         self.txt_curr_mpconfig = widgets.Text(
             description="Value of MSTICPYCONFIG", **_TXT_STYLE
         )
-        self.txt_curr_mpconfig.value = self.mp_config_def_path
-        self.txt_curr_mpconfig.disabled = True
 
         self.buttons: Dict[str, widgets.Button] = {}
         self.btn_pane = self._setup_buttons()
@@ -115,10 +113,31 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             layout=self.border_layout("99%"),
         )
 
+        self.mp_config_def_path = os.environ.get("MSTICPYCONFIG", None)
+        if (
+            self.mp_config_def_path is not None
+            and not Path(self.mp_config_def_path).is_file()
+        ):
+            warnings.warn(
+                "MSTICPYCONFIG env variable is pointing to invalid path."
+                + self.mp_config_def_path
+            )
+            self.mp_config_def_path = self._DEF_FILENAME
+        if settings is not None:
+            self.current_file = file or self._DEF_FILENAME
+        else:
+            self.current_file = file or self.mp_config_def_path
+
+        self.txt_current_file.value = self.current_file or ""
+
+        if settings is not None:
+            # If caller has supplied settings, we don't want to load
+            # anything from a file
+            return
         if self.current_file and Path(self.current_file).is_file():
             self.load_from_file(self.current_file)
         else:
-            self.set_status("No msticpyconfig.yaml found.")
+            raise ValueError(f"File not found: '{self.current_file}'.")
 
     @property
     def current_file(self):
@@ -147,7 +166,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         if show:
             display(self.viewer)
 
-    def load_from_file(self, file: str):
+    def load_from_file(self, file: Union[str, Path]):
         """Load settings from `file`."""
         self.settings = self._read_mp_config(file)
         self.current_file = file
@@ -328,10 +347,10 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["reload"].on_click(self._btn_func("refresh_mp_config"))
         self.buttons["showkv"].on_click(self._btn_func_no_disp("show_kv_secrets"))
 
-        btns1 = widgets.VBox(list(self.buttons.values())[: int(len(self.buttons) / 2)])
+        btns1 = widgets.VBox(list(self.buttons.values())[: len(self.buttons) // 2])
         # flake8: noqa: E203
         # conflicts with Black formatting
-        btns2 = widgets.VBox(list(self.buttons.values())[int(len(self.buttons) / 2) :])
+        btns2 = widgets.VBox(list(self.buttons.values())[len(self.buttons) // 2 :])
         btns_all = widgets.HBox([btns1, btns2])
         return widgets.VBox(
             [widgets.Label(value="Operations"), btns_all],
