@@ -25,10 +25,11 @@ CompEditStatusMixin.testing = True
 def test_mp_config_file_init():
     """Test MpConfigFile init."""
     mpc_file = MpConfigFile()
-    check.is_false(mpc_file.settings)
+    check.is_true(mpc_file.settings)
 
     # Test loading with empty settings
     mpc_file = MpConfigFile(settings={})
+    check.is_false(mpc_file.settings)
 
     mpc_file = MpConfigFile()
     # load file
@@ -37,6 +38,7 @@ def test_mp_config_file_init():
 
     config_path = Path(TEST_DATA_PATH).joinpath("msticpyconfig.yaml")
     mpc_file = MpConfigFile(file=config_path)
+    check.is_true(mpc_file.settings)
 
 
 def test_mp_config_file_load_default():
@@ -63,7 +65,7 @@ def test_mp_config_file_view_settings():
     mpc_file = MpConfigFile()
     mpc_file.txt_viewer.value = ""
     mpc_file.view_settings()
-    check.is_true(len(mpc_file.txt_viewer.value) > 0)
+    check.greater(len(mpc_file.txt_viewer.value), 0)
     mpc_file.buttons["view"].click()
     mpc_file.btn_close.click()
 

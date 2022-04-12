@@ -140,5 +140,6 @@ def test_mp_edit_load_params():
     # Test no existing MPConfig
     with custom_mp_config(str(config_path)):
         os.environ["MSTICPYCONFIG"] = "./invalid_file.yaml"
-        mp_conf = MpConfigEdit()
-        check.equal(mp_conf.mp_conf_file.settings, {})
+        with pytest.raises(ValueError):
+            with pytest.warns(UserWarning):
+                mp_conf = MpConfigEdit()

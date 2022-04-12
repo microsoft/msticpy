@@ -107,7 +107,7 @@ class TestPkgConfig(unittest.TestCase):
             self.assertIsInstance(geoip_lite._api_key, str)
             self.assertEqual(geoip_lite._api_key, os.environ["MAXMIND_AUTH"])
 
-            self.assertEqual(geoip_lite._dbfolder, conf_dbpath)
+            self.assertEqual(geoip_lite._db_folder, conf_dbpath)
 
             ipstack = IPStackLookup()
             self.assertEqual(ipstack._api_key, "987654321-222")
