@@ -1,7 +1,7 @@
-msticpy.analysis.data package
+msticpy.transform package
 =============================
 
-.. automodule:: msticpy.analysis.data
+.. automodule:: msticpy.transform
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,13 +12,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   msticpy.analysis.data.auditdextract
-   msticpy.analysis.data.base64unpack
-   msticpy.analysis.data.cmd_line
-   msticpy.analysis.data.iocextract
-   msticpy.analysis.data.proc_tree_build_mde
-   msticpy.analysis.data.proc_tree_build_winlx
-   msticpy.analysis.data.proc_tree_builder
-   msticpy.analysis.data.proc_tree_schema
-   msticpy.analysis.data.process_tree_utils
-   msticpy.analysis.data.syslog_utils
+   msticpy.transform.auditdextract
+   msticpy.transform.base64unpack
+   msticpy.transform.cmd_line
+   msticpy.transform.iocextract
+   msticpy.transform.proc_tree_build_mde
+   msticpy.transform.proc_tree_build_winlx
+   msticpy.transform.proc_tree_builder
+   msticpy.transform.proc_tree_schema
+   msticpy.transform.process_tree_utils
+   msticpy.transform.syslog_utils

@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
-from ..._version import VERSION
+from .._version import VERSION
 from . import proc_tree_build_mde as mde
 from . import proc_tree_build_winlx as winlx
 

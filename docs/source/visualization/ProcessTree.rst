@@ -93,11 +93,11 @@ use on the built process trees.
 
 build_process_tree syntax
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-See :py:func:`build_process_tree<msticpy.analysis.data.proc_tree_builder.build_process_tree>`
+See :py:func:`build_process_tree<msticpy.transform.proc_tree_builder.build_process_tree>`
 
 .. code:: python
 
-   from msticpy.analysis.data import process_tree as ptree
+   from msticpy.transform import process_tree as ptree
    ptree.build_process_tree(procs)
 
 Parameters
@@ -127,7 +127,7 @@ between processes.
 
       from IPython.display import display
       import pandas as pd
-      from msticpy.analysis.data import process_tree as ptree
+      from msticpy.transform import process_tree as ptree
 
       win_procs = pd.read_pickle("../demos/data/win_proc_test.pkl")
       p_tree_win = ptree.build_process_tree(win_procs, show_summary=True)
@@ -272,10 +272,10 @@ visualizing Windows processes.
 
 .. note:: This assumes that the Linux audit log has been read from a
    file using
-   :py:func:`read_from_file<msticpy.analysis.data.auditdextract.read_from_file>`
+   :py:func:`read_from_file<msticpy.transform.auditdextract.read_from_file>`
    or read from Azure Sentinel/Log Analytics using the
    LinuxAudit.auditd_all query and processed using
-   :py:func:`extract_events_to_df<msticpy.analysis.data.auditdextract.extract_events_to_df>`
+   :py:func:`extract_events_to_df<msticpy.transform.auditdextract.extract_events_to_df>`
    function. Using either of these, the audit messages events related to a single
    process start are merged into a single row.
 
@@ -417,7 +417,7 @@ Process Tree utility Functions
 ------------------------------
 
 
-The :py:mod:`process_tree_utils<msticpy.analysis.data.process_tree_utils>`
+The :py:mod:`process_tree_utils<msticpy.transform.process_tree_utils>`
 module has a number of functions that may
 be useful in extracting or manipulating process trees or tree
 relationships.
@@ -433,24 +433,24 @@ This controls whether the function will include the source process in the result
 
 Functions:
 
--  :py:func:`build_process_key<msticpy.analysis.data.process_tree_utils.build_process_key>`
--  :py:func:`build_process_tree<msticpy.analysis.data.process_tree_utils.build_process_tree>`
--  :py:func:`get_ancestors<msticpy.analysis.data.process_tree_utils.get_ancestors>`
--  :py:func:`get_children<msticpy.analysis.data.process_tree_utils.get_children>`
--  :py:func:`get_descendents<msticpy.analysis.data.process_tree_utils.get_descendents>`
--  :py:func:`get_parent<msticpy.analysis.data.process_tree_utils.get_parent>`
--  :py:func:`get_process<msticpy.analysis.data.process_tree_utils.get_process>`
--  :py:func:`get_process_key<msticpy.analysis.data.process_tree_utils.get_process_key>`
--  :py:func:`get_root<msticpy.analysis.data.process_tree_utils.get_root>`
--  :py:func:`get_root_tree<msticpy.analysis.data.process_tree_utils.get_root_tree>`
--  :py:func:`get_roots<msticpy.analysis.data.process_tree_utils.get_roots>`
--  :py:func:`get_siblings<msticpy.analysis.data.process_tree_utils.get_siblings>`
--  :py:func:`get_summary_info<msticpy.analysis.data.process_tree_utils.get_summary_info>`
--  :py:func:`get_tree_depth<msticpy.analysis.data.process_tree_utils.get_tree_depth>`
--  :py:func:`infer_schema<msticpy.analysis.data.process_tree_utils.infer_schema>`
+-  :py:func:`build_process_key<msticpy.transform.process_tree_utils.build_process_key>`
+-  :py:func:`build_process_tree<msticpy.transform.process_tree_utils.build_process_tree>`
+-  :py:func:`get_ancestors<msticpy.transform.process_tree_utils.get_ancestors>`
+-  :py:func:`get_children<msticpy.transform.process_tree_utils.get_children>`
+-  :py:func:`get_descendents<msticpy.transform.process_tree_utils.get_descendents>`
+-  :py:func:`get_parent<msticpy.transform.process_tree_utils.get_parent>`
+-  :py:func:`get_process<msticpy.transform.process_tree_utils.get_process>`
+-  :py:func:`get_process_key<msticpy.transform.process_tree_utils.get_process_key>`
+-  :py:func:`get_root<msticpy.transform.process_tree_utils.get_root>`
+-  :py:func:`get_root_tree<msticpy.transform.process_tree_utils.get_root_tree>`
+-  :py:func:`get_roots<msticpy.transform.process_tree_utils.get_roots>`
+-  :py:func:`get_siblings<msticpy.transform.process_tree_utils.get_siblings>`
+-  :py:func:`get_summary_info<msticpy.transform.process_tree_utils.get_summary_info>`
+-  :py:func:`get_tree_depth<msticpy.transform.process_tree_utils.get_tree_depth>`
+-  :py:func:`infer_schema<msticpy.transform.process_tree_utils.infer_schema>`
 
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_summary_info`
+:py:func:`~msticpy.transform.process_tree_utils.get_summary_info`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get summary information.
@@ -472,7 +472,7 @@ Get summary information.
           'IsolatedProcesses': 0,
           'LargestTreeDepth': 7}
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_roots`
+:py:func:`~msticpy.transform.process_tree_utils.get_roots`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get roots of all trees in the data set.
@@ -484,7 +484,7 @@ Get roots of all trees in the data set.
       # Get roots of all trees in the set
       ptree.get_roots(p_tree_win).head()
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_descendents`
+:py:func:`~msticpy.transform.process_tree_utils.get_descendents`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the full tree beneath a process.
@@ -501,7 +501,7 @@ True returns the source process with the result set.
       full_tree = ptree.get_descendents(p_tree_win, t_root)
       full_tree.head()
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_children`
+:py:func:`~msticpy.transform.process_tree_utils.get_children`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the immediate children of a process
@@ -518,7 +518,7 @@ True returns the source process with the result set.
       children.head()
 
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_tree_depth`
+:py:func:`~msticpy.transform.process_tree_utils.get_tree_depth`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the depth of a tree.
@@ -537,10 +537,10 @@ Get the depth of a tree.
 
          depth of tree is 4
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_parent`
+:py:func:`~msticpy.transform.process_tree_utils.get_parent`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_ancestors`
+:py:func:`~msticpy.transform.process_tree_utils.get_ancestors`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -608,7 +608,7 @@ True returns the source process with the result set.
 
          [4 rows x 35 columns]
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_process`
+:py:func:`~msticpy.transform.process_tree_utils.get_process`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 get_process retrieves a process record by its key. The process returned
@@ -639,7 +639,7 @@ is a single row - a pandas Series.
 
          'c:\\windows\\system32\\conhost.exe0x15842019-02-10 15:24:56.050000'
 
-:py:func:`~msticpy.analysis.data.process_tree_utils.get_siblings`
+:py:func:`~msticpy.transform.process_tree_utils.get_siblings`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Get the siblings of a process.
@@ -760,7 +760,7 @@ names in the source schema.
 
 .. code:: ipython
 
-   from msticpy.analysis.data.proc_tree_builder import LX_EVENT_SCH
+   from msticpy.transform.proc_tree_builder import LX_EVENT_SCH
    # also WIN_EVENT_SCH and MDE_EVENT_SCH are available
    from copy import copy
    cust_lx_schema = copy(LX_EVENT_SCH)

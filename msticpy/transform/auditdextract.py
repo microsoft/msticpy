@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 import pandas as pd
 
-from ...common.utility import export
+from ..common.utility import export
 from .proc_tree_builder import build_process_tree
 
 try:
@@ -33,7 +33,7 @@ except ImportError:
         raise NotImplementedError("Cannot import auditd cluster module.")
 
 
-from ..._version import VERSION
+from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

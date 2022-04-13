@@ -6,7 +6,7 @@
 """
 Deprecated - module iocextract.py has moved.
 
-See :py:mod:`msticpy.analysis.data.iocextract`
+See :py:mod:`msticpy.transform.iocextract`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data.iocextract import *
+from ..transform.iocextract import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.data.iocextract\n"
+    "This module has moved to msticpy.transform.iocextract\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

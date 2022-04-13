@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Union
 
 import pandas as pd
 
-from ..._version import VERSION
+from .._version import VERSION
 from .base64unpack import unpack_df
 from .iocextract import IoCExtract
 from .proc_tree_builder import ProcSchema, build_process_tree

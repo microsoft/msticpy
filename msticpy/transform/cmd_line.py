@@ -6,24 +6,25 @@
 """
 cmd_line - Syslog Command processing module.
 
-Contains a series of functions required to correct collect, parse and visualise
+Contains a series of functions required to correct collect, parse and visualize
 linux syslog data.
 
 Designed to support standard linux syslog for investigations where auditd
-is not avalaible.
+is not available.
 
 """
 import datetime as dt
 import json
 import re
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 
-from ..._version import VERSION
-from ...common.exceptions import MsticpyException
-from ...common.utility import export
+from .._version import VERSION
+from ..common.exceptions import MsticpyException
+from ..common.utility import export
 from .base64unpack import unpack
 
 __version__ = VERSION
@@ -36,11 +37,7 @@ _DETECTIONS_DEF_DIR = "resources"
 def risky_cmd_line(
     events: pd.DataFrame,
     log_type: str,
-    detection_rules: str = str(
-        Path(__file__)
-        .parent.parent.parent.joinpath(_DETECTIONS_DEF_DIR)
-        .joinpath("cmd_line_rules.json")
-    ),
+    detection_rules: Optional[str] = None,
     cmd_field: str = "Command",
 ) -> dict:
     """
@@ -78,6 +75,12 @@ def risky_cmd_line(
     if cmd_field not in events.columns:
         raise MsticpyException(
             f"The provided dataset does not contain the {cmd_field} field"
+        )
+    if detection_rules is None:
+        detection_rules = str(
+            Path(__file__)
+            .parent.parent.joinpath(_DETECTIONS_DEF_DIR)
+            .joinpath("cmd_line_rules.json")
         )
 
     events[cmd_field].replace("", np.nan, inplace=True)

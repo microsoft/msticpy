@@ -31,8 +31,8 @@ from urllib.parse import unquote
 
 import pandas as pd
 
-from ..._version import VERSION
-from ...common.utility import check_kwargs, export
+from .._version import VERSION
+from ..common.utility import check_kwargs, export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -181,7 +181,7 @@ class IoCExtract:
 
         # inline import due to circular dependency
         # pylint: disable=import-outside-toplevel
-        from ...data.context.domain_utils import DomainValidator
+        from ..data.context.domain_utils import DomainValidator
 
         # pylint: enable=import-outside-toplevel
         self._dom_validator = DomainValidator()
@@ -218,9 +218,9 @@ class IoCExtract:
 
         """
         if ioc_type is None or ioc_type.strip() is None:
-            raise Exception("No value supplied for ioc_type parameter")
+            raise ValueError("No value supplied for ioc_type parameter")
         if ioc_regex is None or ioc_regex.strip() is None:
-            raise Exception("No value supplied for ioc_regex parameter")
+            raise ValueError("No value supplied for ioc_regex parameter")
 
         self._content_regex[ioc_type] = IoCPattern(
             ioc_type=ioc_type,
@@ -316,17 +316,17 @@ class IoCExtract:
             return self._scan_for_iocs(src=src, ioc_types=ioc_types)
 
         if data is None:
-            raise Exception("No source data was supplied to extract")
+            raise ValueError("No source data was supplied to extract")
 
         if columns is None:
-            raise Exception("No values were supplied for the columns parameter")
+            raise ValueError("No values were supplied for the columns parameter")
 
         ioc_types_to_use = self._get_ioc_types_to_use(ioc_types, include_paths)
 
         col_set = set(columns)
         if col_set > set(data.columns):
             missing_cols = [elem for elem in col_set if elem not in data.columns]
-            raise Exception(
+            raise ValueError(
                 f"Source column(s) {', '.join(missing_cols)} not found",
                 " in supplied DataFrame",
             )

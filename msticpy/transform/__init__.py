@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """MSTICPy Data Processing Tools."""
 
-from ..._version import VERSION
+from .._version import VERSION
 
 # flake8: noqa: F401
 from . import base64unpack as base64

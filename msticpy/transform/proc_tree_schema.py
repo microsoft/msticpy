@@ -9,8 +9,8 @@ from typing import Any, Dict, Optional
 import attr
 import pandas as pd
 
-from ..._version import VERSION
-from ...common.exceptions import MsticpyUserError
+from .._version import VERSION
+from ..common.exceptions import MsticpyUserError
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

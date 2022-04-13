@@ -1,7 +1,7 @@
-msticpy.analysis.data.iocextract module
+msticpy.transform.iocextract module
 =======================================
 
-.. automodule:: msticpy.analysis.data.iocextract
+.. automodule:: msticpy.transform.iocextract
    :members:
    :undoc-members:
    :show-inheritance:

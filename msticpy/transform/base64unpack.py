@@ -39,8 +39,8 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Un
 
 import pandas as pd
 
-from ..._version import VERSION
-from ...common.utility import export
+from .._version import VERSION
+from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

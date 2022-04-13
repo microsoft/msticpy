@@ -1,7 +1,7 @@
-msticpy.analysis.data.syslog\_utils module
+msticpy.transform.syslog\_utils module
 ==========================================
 
-.. automodule:: msticpy.analysis.data.syslog_utils
+.. automodule:: msticpy.transform.syslog_utils
    :members:
    :undoc-members:
    :show-inheritance:

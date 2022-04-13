@@ -159,7 +159,7 @@ sets this can take some time to process.
 
 ::
 
-    from msticpy.analysis.data.auditdextract import extract_events_to_df, get_event_subset
+    from msticpy.transform.auditdextract import extract_events_to_df, get_event_subset
     linux_events_all = extract_events_to_df(linux_events_df, verbose=True)
 
 The call to ``extract_events_to_df()`` does the following:

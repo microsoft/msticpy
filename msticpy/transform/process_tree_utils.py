@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
-from ..._version import VERSION
+from .._version import VERSION
 from .proc_tree_schema import ColNames as Col
 
 __version__ = VERSION

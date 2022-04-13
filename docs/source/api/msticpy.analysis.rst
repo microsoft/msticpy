@@ -13,7 +13,7 @@ Subpackages
    :maxdepth: 4
 
    msticpy.analysis.anomalous_sequence
-   msticpy.analysis.data
+   msticpy.transform
 
 Submodules
 ----------

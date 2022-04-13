@@ -156,7 +156,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.nbtools", tgt="nbmagics"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
-    dict(pkg="msticpy.analysis.data", tgt="mp_pandas_accessors"),
+    dict(pkg="msticpy.transform", tgt="mp_pandas_accessors"),
 ]
 _MP_IMPORT_ALL = [
     dict(module_name="msticpy.nbtools"),

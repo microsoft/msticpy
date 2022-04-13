@@ -243,7 +243,7 @@ Utility Functions
 base64unpack
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.base64unpack`
+:py:mod:`msticpy.transform.base64unpack`
 
 Base64 and archive (gz, zip, tar) extractor. Input can either be a
 single string or a specified column of a pandas dataframe. It will try
@@ -261,7 +261,7 @@ Sample notebook - `Base64Unpack Usage Notebook <https://github.com/microsoft/mst
 iocextract
 ~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.iocextract`
+:py:mod:`msticpy.transform.iocextract`
 
 Uses a set of builtin regular expressions to look for Indicator of
 Compromise (IoC) patterns. Input can be a single string or a pandas
@@ -289,7 +289,7 @@ Sample notebook - `IoCExtract Usage Notebook <https://github.com/microsoft/mstic
 auditdextract
 ~~~~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.auditdextract`
+:py:mod:`msticpy.transform.auditdextract`
 
 Module to load and decode Linux audit logs. It collapses messages
 sharing the same message ID into single events, decodes hex-encoded data
@@ -301,7 +301,7 @@ line arguments into a single string).
 syslog_utils
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.syslog_utils`
+:py:mod:`msticpy.transform.syslog_utils`
 
 Module to support the investigation of Linux hosts through Syslog.
 Includes functions to create host records, cluster logon events, and
@@ -310,7 +310,7 @@ identify user sessions containing suspicious activity.
 cmd_line
 ~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.cmd_line`
+:py:mod:`msticpy.transform.cmd_line`
 
 Module to investigation of command line activity. Allows for the detection
 of known malicious commands as well as suspicious patterns of behaviour.
@@ -318,7 +318,7 @@ of known malicious commands as well as suspicious patterns of behaviour.
 domain_utils
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.data.domain_utils`
+:py:mod:`msticpy.transform.domain_utils`
 
 Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.

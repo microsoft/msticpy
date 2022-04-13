@@ -6,7 +6,7 @@
 """
 Deprecated - module base64unpack.py has moved.
 
-See :py:mod:`msticpy.analysis.data.base64unpack`
+See :py:mod:`msticpy.transform.base64unpack`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data.base64unpack import *
+from ..transform.base64unpack import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.data.base64unpack\n"
+    "This module has moved to msticpy.transform.base64unpack\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

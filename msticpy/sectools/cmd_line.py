@@ -6,7 +6,7 @@
 """
 Deprecated - module cmd_line.py has moved.
 
-See :py:mod:`msticpy.analysis.data.cmd_line`
+See :py:mod:`msticpy.transform.cmd_line`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data.cmd_line import *
+from ..transform.cmd_line import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.data.cmd_line\n"
+    "This module has moved to msticpy.transform.cmd_line\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

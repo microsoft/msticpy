@@ -85,7 +85,7 @@ pivot_providers:
     func_input_value_arg: ip_str
     create_shortcut: True
   b64_unpack:
-    src_module: msticpy.analysis.data.base64unpack
+    src_module: msticpy.transform.base64unpack
     src_func_name: unpack_df
     func_new_name: b64decode
     input_type: dataframe
@@ -96,7 +96,7 @@ pivot_providers:
     func_df_col_param_name: column
     func_out_column_name: original_string
   ioc_extract:
-    src_module: msticpy.analysis.data.iocextract
+    src_module: msticpy.transform.iocextract
     src_class: IoCExtract
     src_func_name: extract_df
     func_new_name: extract_iocs

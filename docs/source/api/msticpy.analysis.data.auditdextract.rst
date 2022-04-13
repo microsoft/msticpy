@@ -1,7 +1,7 @@
-msticpy.analysis.data.auditdextract module
+msticpy.transform.auditdextract module
 ==========================================
 
-.. automodule:: msticpy.analysis.data.auditdextract
+.. automodule:: msticpy.transform.auditdextract
    :members:
    :undoc-members:
    :show-inheritance:

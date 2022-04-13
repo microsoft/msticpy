@@ -12,19 +12,19 @@ MSTICPy sectools.
 
 - TI providers -> msticpy.data.context.tiproviders
   (including vtlookup and vtlookupv3)
-- auditdextract -> msticpy.analysis.data
-- base64unpack  -> msticpy.analysis.data
+- auditdextract -> msticpy.transform
+- base64unpack  -> msticpy.transform
 - cmd_line -> msticpy.data.context
 - domain_utils -> msticpy.data.context
 - eventcluster -> msticpy.analysis
 - geoip -> msticpy.data.context
-- iocextract -> msticpy.analysis.data
+- iocextract -> msticpy.transform
 - ip_utils -> msticpy.data.context
-- proc_tree_builder -> msticpy.analysis.data
-- proc_tree_build_mde -> msticpy.analysis.data
-- proc_tree_build_winlx -> msticpy.analysis.data
-- proc_tree_schema -> msticpy.analysis.data
-- proc_tree_utils -> msticpy.analysis.data
+- proc_tree_builder -> msticpy.transform
+- proc_tree_build_mde -> msticpy.transform
+- proc_tree_build_winlx -> msticpy.transform
+- proc_tree_schema -> msticpy.transform
+- proc_tree_utils -> msticpy.transform
 - sectools_magics -> msticpy.nbtools.nbmagics
 - syslog_utils -> msticpy.analysis
 
@@ -35,13 +35,13 @@ import contextlib
 
 # from . import process_tree_utils as ptree
 from .._version import VERSION
-from ..analysis.data import base64unpack as base64
+from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
+from ..data.context.tilookup import TILookup
+from ..transform import base64unpack as base64
 
 # flake8: noqa: F403
 # pylint: disable=W0401
-from ..analysis.data.iocextract import IoCExtract
-from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
-from ..data.context.tilookup import TILookup
+from ..transform.iocextract import IoCExtract
 
 with contextlib.suppress(ImportError):
     from IPython import get_ipython

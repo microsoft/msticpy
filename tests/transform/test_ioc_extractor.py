@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 
 # Test code
-from msticpy.analysis.data.iocextract import IoCExtract
+from msticpy.transform.iocextract import IoCExtract
 
 TEST_CASES = {
     "ipv4_test": r"c:\one\path\or\another\myprocess -ip4:206.123.1.123",

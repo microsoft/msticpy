@@ -17,8 +17,8 @@ import numpy as np
 import pandas as pd
 
 from ....._version import VERSION
-from .....analysis.data.proc_tree_builder import ProcSchema, build_proc_tree
 from .....common.exceptions import MsticpyImportExtraError, MsticpyUserError
+from .....transform.proc_tree_builder import ProcSchema, build_proc_tree
 
 try:
     import vt

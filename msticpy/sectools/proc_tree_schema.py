@@ -6,7 +6,7 @@
 """
 Deprecated - module proc_tree_schema.py has moved.
 
-See :py:mod:`msticpy.analysis.data.proc_tree_schema`
+See :py:mod:`msticpy.transform.proc_tree_schema`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data.proc_tree_schema import *
+from ..transform.proc_tree_schema import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.analysis.data.proc_tree_schema\n"
+    "This module has moved to msticpy.transform.proc_tree_schema\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )
