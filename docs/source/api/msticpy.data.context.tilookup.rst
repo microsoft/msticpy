@@ -1,7 +1,7 @@
-msticpy.data.context.tilookup module
+msticpy.context.tilookup module
 ====================================
 
-.. automodule:: msticpy.data.context.tilookup
+.. automodule:: msticpy.context.tilookup
    :members:
    :undoc-members:
    :show-inheritance:

@@ -14,7 +14,7 @@ Subpackages
 
    msticpy.data.azure
    msticpy.data.browsers
-   msticpy.data.context
+   msticpy.context
    msticpy.data.core
    msticpy.data.drivers
    msticpy.data.uploaders

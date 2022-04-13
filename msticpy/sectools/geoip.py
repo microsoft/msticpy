@@ -6,7 +6,7 @@
 """
 Deprecated - module geoip.py has moved.
 
-See :py:mod:`msticpy.data.context.geoip`
+See :py:mod:`msticpy.context.geoip`
 """
 import warnings
 
@@ -18,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..data.context.geoip import *
+from ..context.geoip import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.geoip\n"

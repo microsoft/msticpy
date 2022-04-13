@@ -12,7 +12,7 @@ import pytest
 import respx
 from azure.core.exceptions import ClientAuthenticationError
 
-from msticpy.data.context.azure import AzureData, MicrosoftSentinel
+from msticpy.context.azure import AzureData, MicrosoftSentinel
 
 # pylint: disable=redefined-outer-name
 

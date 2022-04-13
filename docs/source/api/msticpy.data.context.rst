@@ -1,7 +1,7 @@
-msticpy.data.context package
+msticpy.context package
 ============================
 
-.. automodule:: msticpy.data.context
+.. automodule:: msticpy.context
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,8 +12,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   msticpy.data.context.azure
-   msticpy.data.context.tiproviders
+   msticpy.context.azure
+   msticpy.context.tiproviders
 
 Submodules
 ----------
@@ -21,7 +21,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   msticpy.data.context.domain_utils
-   msticpy.data.context.geoip
-   msticpy.data.context.ip_utils
-   msticpy.data.context.tilookup
+   msticpy.context.domain_utils
+   msticpy.context.geoip
+   msticpy.context.ip_utils
+   msticpy.context.tilookup

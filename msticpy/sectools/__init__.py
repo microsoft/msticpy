@@ -10,16 +10,16 @@ MSTICPy sectools.
    All functionality has been removed from this sub-package and moved
    to other sub-packages:
 
-- TI providers -> msticpy.data.context.tiproviders
+- TI providers -> msticpy.context.tiproviders
   (including vtlookup and vtlookupv3)
 - auditdextract -> msticpy.transform
 - base64unpack  -> msticpy.transform
-- cmd_line -> msticpy.data.context
-- domain_utils -> msticpy.data.context
+- cmd_line -> msticpy.context
+- domain_utils -> msticpy.context
 - eventcluster -> msticpy.analysis
-- geoip -> msticpy.data.context
+- geoip -> msticpy.context
 - iocextract -> msticpy.transform
-- ip_utils -> msticpy.data.context
+- ip_utils -> msticpy.context
 - proc_tree_builder -> msticpy.transform
 - proc_tree_build_mde -> msticpy.transform
 - proc_tree_build_winlx -> msticpy.transform
@@ -35,8 +35,8 @@ import contextlib
 
 # from . import process_tree_utils as ptree
 from .._version import VERSION
-from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
-from ..data.context.tilookup import TILookup
+from ..context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
+from ..context.tilookup import TILookup
 from ..transform import base64unpack as base64
 
 # flake8: noqa: F403

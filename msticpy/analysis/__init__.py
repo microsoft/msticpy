@@ -18,8 +18,4 @@ This sub-package has a few classes of analysis tools:
 
 from .._version import VERSION
 
-# flake8: noqa: F403
-# pylint: disable=W0401
-from ..data.context.geoip import GeoLiteLookup, IPStackLookup, geo_distance
-
 __version__ = VERSION

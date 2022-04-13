@@ -6,7 +6,7 @@
 """
 Deprecated - module ip_utils.py has moved.
 
-See :py:mod:`msticpy.data.context.ip_utils`
+See :py:mod:`msticpy.context.ip_utils`
 """
 import warnings
 
@@ -18,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..data.context.ip_utils import *
+from ..context.ip_utils import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.ip_utils\n"

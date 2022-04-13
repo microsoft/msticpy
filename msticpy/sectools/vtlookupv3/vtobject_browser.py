@@ -22,7 +22,7 @@ from ...data.browsers.vtobject_browser import *
 
 WARN_MSSG = (
     "This module has moved to "
-    "msticpy.data.context.tiproviders.vtlookupv3.vtobject_browser\n"
+    "msticpy.context.vtlookupv3.vtobject_browser\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

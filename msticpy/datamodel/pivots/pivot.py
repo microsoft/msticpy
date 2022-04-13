@@ -11,8 +11,8 @@ import pkg_resources
 
 from ..._version import VERSION
 from ...common.timespan import TimeSpan
+from ...context.tilookup import TILookup
 from ...data import QueryProvider
-from ...data.context.tilookup import TILookup
 from ...nbtools.nbwidgets import QueryTime
 from .. import entities
 

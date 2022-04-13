@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from msticpy.data.context.azure import AzureBlobStorage
+from msticpy.context.azure import AzureBlobStorage
 
 _CONTAINERS = [
     {

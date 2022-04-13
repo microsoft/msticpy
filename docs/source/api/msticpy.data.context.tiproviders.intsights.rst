@@ -1,7 +1,7 @@
-msticpy.data.context.tiproviders.intsights module
+msticpy.context.tiproviders.intsights module
 =================================================
 
-.. automodule:: msticpy.data.context.tiproviders.intsights
+.. automodule:: msticpy.context.tiproviders.intsights
    :members:
    :undoc-members:
    :show-inheritance:

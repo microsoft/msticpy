@@ -1,7 +1,7 @@
-msticpy.data.context.tiproviders.greynoise module
+msticpy.context.tiproviders.greynoise module
 =================================================
 
-.. automodule:: msticpy.data.context.tiproviders.greynoise
+.. automodule:: msticpy.context.tiproviders.greynoise
    :members:
    :undoc-members:
    :show-inheritance:

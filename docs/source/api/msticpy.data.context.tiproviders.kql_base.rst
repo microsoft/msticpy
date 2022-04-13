@@ -1,7 +1,7 @@
-msticpy.data.context.tiproviders.kql\_base module
+msticpy.context.tiproviders.kql\_base module
 =================================================
 
-.. automodule:: msticpy.data.context.tiproviders.kql_base
+.. automodule:: msticpy.context.tiproviders.kql_base
    :members:
    :undoc-members:
    :show-inheritance:

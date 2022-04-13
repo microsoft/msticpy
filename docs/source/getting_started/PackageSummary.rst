@@ -37,7 +37,7 @@ Data Processing and Enrichment
 Threat Intelligence Providers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.data.context.tilookup`
+:py:mod:`msticpy.context.tilookup`
 
 The TILookup class can lookup IoCs across multiple TI providers. builtin
 providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
@@ -54,7 +54,7 @@ Sample notebook - `TILookup Usage Notebook <https://github.com/microsoft/msticpy
 vtlookup and vtlookupv3
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.data.context.tiproviders.vtlookupv3`
+:py:mod:`msticpy.context.vtlookupv3`
 
 Wrapper class around `Virus Total
 API <https://www.virustotal.com/en/documentation/public-api/>`__.
@@ -71,7 +71,7 @@ Sample notebook - `VTLookup Usage Notebook <https://github.com/microsoft/msticpy
 IP geo-location lookups
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.data.context.geoip`
+:py:mod:`msticpy.context.geoip`
 
 Geographic location lookup for IP addresses. This module has two classes
 for different services:

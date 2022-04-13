@@ -1,7 +1,7 @@
-msticpy.data.context.azure.sentinel\_core module
+msticpy.context.azure.sentinel\_core module
 ================================================
 
-.. automodule:: msticpy.data.context.azure.sentinel_core
+.. automodule:: msticpy.context.azure.sentinel_core
    :members:
    :undoc-members:
    :show-inheritance:

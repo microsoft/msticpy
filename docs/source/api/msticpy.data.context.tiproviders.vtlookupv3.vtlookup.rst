@@ -1,7 +1,7 @@
-msticpy.data.context.tiproviders.vtlookupv3.vtlookup module
+msticpy.context.vtlookupv3.vtlookup module
 ===========================================================
 
-.. automodule:: msticpy.data.context.tiproviders.vtlookupv3.vtlookup
+.. automodule:: msticpy.context.vtlookupv3.vtlookup
    :members:
    :undoc-members:
    :show-inheritance:

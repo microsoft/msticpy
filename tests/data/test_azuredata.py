@@ -16,7 +16,7 @@ from msticpy.common.azure_auth_core import (
     CredentialWrapper,
 )
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.data.context.azure.azure_data import AzureData
+from msticpy.context.azure.azure_data import AzureData
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

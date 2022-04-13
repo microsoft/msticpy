@@ -6,7 +6,7 @@
 """
 Deprecated - module sentinel_watchlists.py has moved.
 
-See :py:mod:`msticpy.data.context.azure.sentinel_watchlists`
+See :py:mod:`msticpy.context.azure.sentinel_watchlists`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..context.azure.sentinel_watchlists import *
+from ...context.azure.sentinel_watchlists import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.context.azure.sentinel_watchlists\n"
+    "This module has moved to msticpy.context.azure.sentinel_watchlists\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

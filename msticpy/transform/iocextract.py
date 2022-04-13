@@ -181,7 +181,7 @@ class IoCExtract:
 
         # inline import due to circular dependency
         # pylint: disable=import-outside-toplevel
-        from ..data.context.domain_utils import DomainValidator
+        from ..context.domain_utils import DomainValidator
 
         # pylint: enable=import-outside-toplevel
         self._dom_validator = DomainValidator()

@@ -6,7 +6,7 @@
 """
 Deprecated - module vtfile_behavior.py has moved.
 
-See :py:mod:`msticpy.data.context.tiproviders.vtlookupv3.vtfile_behavior`
+See :py:mod:`msticpy.context.vtlookupv3.vtfile_behavior`
 """
 import warnings
 
@@ -18,11 +18,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...data.context.tiproviders.vtlookupv3.vtfile_behavior import *
+from ...context.vtlookupv3.vtfile_behavior import *
 
 WARN_MSSG = (
     "This module has moved to "
-    "msticpy.data.context.tiproviders.vtlookupv3.vtfile_behavior\n"
+    "msticpy.context.vtlookupv3.vtfile_behavior\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.0.0"
 )

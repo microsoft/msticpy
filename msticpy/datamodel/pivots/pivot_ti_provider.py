@@ -10,8 +10,8 @@ from typing import Callable, Dict, Optional, Set, Tuple, Type
 import pandas as pd
 
 from ..._version import VERSION
-from ...data.context.tilookup import TILookup
-from ...data.context.tiproviders.ti_provider_base import TIPivotProvider
+from ...context.tilookup import TILookup
+from ...context.tiproviders.ti_provider_base import TIPivotProvider
 from ...data.core.query_container import QueryContainer
 from .. import entities
 from .pivot_register import PivotRegistration, create_pivot_func

@@ -11,11 +11,8 @@ import ipywidgets as widgets
 import pandas as pd
 
 from ..._version import VERSION
+from ...context.vtlookupv3.vtlookupv3 import VTLookupV3, timestamps_to_utcdate
 from ...nbtools.nbwidgets import IPyDisplayMixin
-from ..context.tiproviders.vtlookupv3.vtlookupv3 import (
-    VTLookupV3,
-    timestamps_to_utcdate,
-)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -1,7 +1,7 @@
-msticpy.data.context.geoip module
+msticpy.context.geoip module
 =================================
 
-.. automodule:: msticpy.data.context.geoip
+.. automodule:: msticpy.context.geoip
    :members:
    :undoc-members:
    :show-inheritance:

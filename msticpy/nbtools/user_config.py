@@ -170,7 +170,7 @@ def _load_provider(prov_name: str, qry_prov_entry: Dict[str, Any]) -> Tuple[str,
 # pylint: disable=import-outside-toplevel
 def _load_ti_lookup(comp_settings=None, **kwargs):
     del comp_settings, kwargs
-    from ..data.context.tilookup import TILookup
+    from ..context.tilookup import TILookup
 
     return "ti_lookup", TILookup()
 
@@ -181,11 +181,11 @@ def _load_geoip_lookup(comp_settings=None, **kwargs):
         comp_settings.get("provider") if isinstance(comp_settings, dict) else None
     )
     if provider == "GeoLiteLookup":
-        from ..data.context.geoip import GeoLiteLookup
+        from ..context.geoip import GeoLiteLookup
 
         return "geoip", GeoLiteLookup()
     if provider == "IpStackLookup":
-        from ..data.context.geoip import IPStackLookup
+        from ..context.geoip import IPStackLookup
 
         return "geoip", IPStackLookup()
     return None, None
@@ -234,7 +234,7 @@ def _load_pivot(comp_settings=None, **kwargs):
 
 def _load_azure_data(comp_settings=None, **kwargs):
     del kwargs
-    from ..data.context.azure.azure_data import AzureData
+    from ..context.azure.azure_data import AzureData
 
     az_data = AzureData()
     connect = comp_settings.pop("connect", True)
@@ -247,7 +247,7 @@ def _load_azure_data(comp_settings=None, **kwargs):
 
 def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
-    from ..data.context.azure import MicrosoftSentinel
+    from ..context.azure import MicrosoftSentinel
 
     res_id = comp_settings.pop("res_id", None)
     if res_id:

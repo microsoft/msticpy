@@ -11,9 +11,9 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
+from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
+from msticpy.context.tilookup import TILookup
 from msticpy.data import QueryProvider
-from msticpy.data.context.geoip import GeoLiteLookup, IPStackLookup
-from msticpy.data.context.tilookup import TILookup
 from msticpy.data.core.query_container import QueryContainer
 from msticpy.datamodel import entities
 from msticpy.datamodel.pivots.pivot import Pivot

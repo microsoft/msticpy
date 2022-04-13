@@ -14,7 +14,7 @@ from pytest import raises
 from msticpy.analysis import syslog_utils as ls
 from msticpy.common.exceptions import MsticpyException
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.data.context.geoip import GeoIPDatabaseException
+from msticpy.context.geoip import GeoIPDatabaseException
 from msticpy.datamodel.entities import Host
 from msticpy.transform import cmd_line as cl
 
