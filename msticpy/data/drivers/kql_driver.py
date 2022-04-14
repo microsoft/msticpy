@@ -226,7 +226,6 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
-
         if query_source:
             try:
                 table = query_source["args.table"]
@@ -358,7 +357,7 @@ class KqlDriver(DriverBase):
 
     @staticmethod
     def _get_kql_current_connection():
-        """Get the current connection Workspace ID from KQLMagic"""
+        """Get the current connection Workspace ID from KQLMagic."""
         connections = kql_exec("--conn")
         current_connection = [conn for conn in connections if conn.startswith(" * ")]
         return current_connection[0].strip(" * ").split("@")[0]
