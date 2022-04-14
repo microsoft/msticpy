@@ -158,7 +158,12 @@ class KqlDriver(DriverBase):
             self._set_az_auth_option(mp_az_auth, mp_az_tenant_id)
 
         self.current_connection = connection_str
-        self.workspace_id = self.current_connection.split("workspace('")[1].strip("')")
+        ws_in_connection = re.search(
+            "workspace\(['\"]([^'\"]+).*",  # pylint: disable=anomalous-backslash-in-string # noqa: W605
+            self.current_connection,
+            re.IGNORECASE,
+        )
+        self.workspace_id = ws_in_connection.group(1) if ws_in_connection else None
         self.current_connection_args.update(kwargs)
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
@@ -221,6 +226,7 @@ class KqlDriver(DriverBase):
             the underlying provider result if an error.
 
         """
+
         if query_source:
             try:
                 table = query_source["args.table"]
@@ -261,7 +267,10 @@ class KqlDriver(DriverBase):
         if debug:
             print(query)
 
-        if self.workspace_id != self._get_kql_current_connection():
+        if (
+            not self.connected
+            or self.workspace_id != self._get_kql_current_connection()
+        ):
             self._make_current_connection()
 
         # save current auto_dataframe setting so that we can set to false

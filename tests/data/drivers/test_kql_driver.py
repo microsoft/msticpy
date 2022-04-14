@@ -91,6 +91,9 @@ def kql_exec(content):
         _, conf_item = content.split()
         return {conf_item: True}
 
+    if "--conn" in content:
+        return [" * 1234"]
+
     if "KqlErrorUnk" in content:
         resp = '{"error": {"code": "UnknownError"}}'
         raise KqlError(http_response=resp, message=resp)
