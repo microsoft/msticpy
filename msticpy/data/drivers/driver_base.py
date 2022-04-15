@@ -12,9 +12,9 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
 import pandas as pd
 
 from ..._version import VERSION
-from ..core.query_source import QuerySource
 from ...common.exceptions import MsticpyNotConnectedError
-from ...common.provider_settings import get_provider_settings, ProviderSettings
+from ...common.provider_settings import ProviderSettings, get_provider_settings
+from ..core.query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

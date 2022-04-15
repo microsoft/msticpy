@@ -25,6 +25,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+# pylint: disable=too-many-instance-attributes
 class MpConfigEdit(CompEditDisplayMixin):
     """Msticpy Configuration helper class."""
 
@@ -110,10 +111,13 @@ class MpConfigEdit(CompEditDisplayMixin):
         )
         self.btn_validate.on_click(self._validate_config)
         self.cb_backup = widgets.Checkbox(description="Create backup", value=False)
+        self.cb_refresh = widgets.Checkbox(description="Refresh on save", value=True)
         vbox = widgets.VBox(
             [
                 self.txt_current_file,
-                widgets.HBox([self.btn_save, self.cb_backup, self.btn_validate]),
+                widgets.HBox(
+                    [self.btn_save, self.cb_refresh, self.cb_backup, self.btn_validate]
+                ),
                 self.mp_conf_file.viewer,
             ]
         )
@@ -143,6 +147,8 @@ class MpConfigEdit(CompEditDisplayMixin):
             self.mp_conf_file.save_to_file(
                 self.txt_current_file.value, backup=self.cb_backup.value
             )
+        if self.cb_refresh.value:
+            self.mp_conf_file.refresh_mp_config()
 
     def _validate_config(self, btn):
         del btn
