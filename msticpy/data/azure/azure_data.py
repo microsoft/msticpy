@@ -291,13 +291,15 @@ class AzureData:
 
         resources = []  # type: List
         if rgroup is None:
-            for resource in self.resource_client.resources.list():  # type: ignore
-                resources.append(resource)
+            resources.extend(iter(self.resource_client.resources.list()))  # type: ignore
         else:
-            for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
-                rgroup
-            ):
-                resources.append(resource)
+            resources.extend(
+                iter(
+                    self.resource_client.resources.list_by_resource_group(  # type: ignore
+                        rgroup
+                    )
+                )
+            )
 
         # Warn users about getting full properties for each resource
         if get_props:
@@ -856,7 +858,7 @@ def get_api_headers(token: str) -> Dict:
     }
 
 
-def get_token(credential: AzCredentials) -> str:
+def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
     """
     Extract token from a azure.identity object.
 
@@ -864,6 +866,8 @@ def get_token(credential: AzCredentials) -> str:
     ----------
     credential : AzCredentials
         Azure OAuth credentials.
+    tenant_id : str, optional
+        The tenant to connect to if not the users home tenant.
 
     Returns
     -------
@@ -871,5 +875,11 @@ def get_token(credential: AzCredentials) -> str:
         A token to be used in API calls.
 
     """
-    token = credential.modern.get_token(AzureCloudConfig().token_uri)
+    if tenant_id:
+        token = credential.modern.get_token(AzureCloudConfig().token_uri)
+    else:
+        token = credential.modern.get_token(
+            AzureCloudConfig().token_uri, tenant_id=tenant_id
+        )
+
     return token.token
