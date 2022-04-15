@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: ethomson/send-tweet-action@v1
         with:
-          status: "A new PR has been merged for #MSTICPy - https://github.com/microsoft/msticpy/pull/${{ github.event.pull_request.number}}"
+          status: "A new PR has been merged for #MSTICPy - https://github.com/microsoft/msticpy/pull/${{ github.event.pull_request.number }}"
           consumer-key: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
           consumer-secret: ${{ secrets.TWITTER_CONSUMER_API_SECRET }}
           access-token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
