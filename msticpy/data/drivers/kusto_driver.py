@@ -72,9 +72,10 @@ class KustoDriver(KqlDriver):
             Optional parameter directing KqlMagic to use MSTICPy Azure authentication.
             Values can be:
             True or "default": use the settings in msticpyconfig.yaml 'Azure' section
-            str: single auth method name ('msi', 'cli', 'env' or 'interactive')
-            List[str]: list of acceptable auth methods from ('msi', 'cli',
-            'env' or 'interactive')
+            str: single auth method name
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
+            List[str]: list of acceptable auth methods from
+            ('msi', 'cli', 'env', 'vscode', 'powershell', 'cache' or 'interactive')
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
@@ -240,10 +241,14 @@ class KustoDriver(KqlDriver):
         """Return cluster URI from config if cluster name is passed."""
         if cluster.strip().casefold().startswith("https://"):
             return cluster
-        for cluster_key, kusto_config in self._kusto_settings.items():
-            if cluster_key.startswith(f"https://{cluster.casefold()}."):
-                return kusto_config["cluster"]
-        return None
+        return next(
+            (
+                kusto_config["cluster"]
+                for cluster_key, kusto_config in self._kusto_settings.items()
+                if cluster_key.startswith(f"https://{cluster.casefold()}.")
+            ),
+            None,
+        )
 
     def _get_endpoint_uri(self):
         if not self._cluster_uri.endswith("/"):
