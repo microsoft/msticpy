@@ -210,11 +210,11 @@ def _get_custom_config():
     config_path = os.environ.get(_CONFIG_ENV_VAR, None)
     if config_path and Path(config_path).is_file():
         _CURRENT_CONF_FILE(str(Path(config_path).resolve()))
-        return _read_config_file(config_path)
+        return _read_config_file(current_config_path())
 
     if Path(_CONFIG_FILE).is_file():
         _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
-        return _read_config_file(_CONFIG_FILE)
+        return _read_config_file(current_config_path())
     return {}
 
 
