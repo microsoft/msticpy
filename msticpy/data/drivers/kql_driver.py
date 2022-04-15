@@ -137,8 +137,8 @@ class KqlDriver(DriverBase):
         if not self._previous_connection:
             print("Connecting...", end=" ")
 
-        mp_az_auth = kwargs.pop("mp_az_auth", "default")
-        mp_az_tenant_id = kwargs.pop("mp_az_tenant_id", None)
+        mp_az_auth = kwargs.get("mp_az_auth", "default")
+        mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
 
         if isinstance(connection_str, WorkspaceConfig):
             if not mp_az_tenant_id and "tenant_id" in connection_str:
@@ -158,6 +158,12 @@ class KqlDriver(DriverBase):
             self._set_az_auth_option(mp_az_auth, mp_az_tenant_id)
 
         self.current_connection = connection_str
+        ws_in_connection = re.search(
+            "workspace\(['\"]([^'\"]+).*",  # pylint: disable=anomalous-backslash-in-string # noqa: W605
+            self.current_connection,
+            re.IGNORECASE,
+        )
+        self.workspace_id = ws_in_connection.group(1) if ws_in_connection else None
         self.current_connection_args.update(kwargs)
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
@@ -260,7 +266,11 @@ class KqlDriver(DriverBase):
         if debug:
             print(query)
 
-        self._make_current_connection()
+        if (
+            not self.connected
+            or self.workspace_id != self._get_kql_current_connection()
+        ):
+            self._make_current_connection()
 
         # save current auto_dataframe setting so that we can set to false
         # and restore current setting
@@ -344,6 +354,13 @@ class KqlDriver(DriverBase):
         """Set a Kqlmagic notebook option."""
         opt_val = f"'{value}'" if isinstance(value, str) else value
         return kql_exec(f"--config {option}={opt_val}")
+
+    @staticmethod
+    def _get_kql_current_connection():
+        """Get the current connection Workspace ID from KQLMagic."""
+        connections = kql_exec("--conn")
+        current_connection = [conn for conn in connections if conn.startswith(" * ")]
+        return current_connection[0].strip(" * ").split("@")[0]
 
     def _set_kql_cloud(self):
         """If cloud is set in Azure Settings override default."""
