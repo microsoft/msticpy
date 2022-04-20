@@ -325,6 +325,7 @@ _F_STYLES = {
     "blue": "color: blue",
     "large": "font-size: 130%",
     "heading": "font-size: 200%",
+    "outline": "border: solid; padding: 5pt",
 }
 
 

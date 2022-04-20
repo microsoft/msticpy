@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test module for nbwidgets."""
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -315,9 +316,9 @@ _NB_NAME = "NotebookWidgets.ipynb"
 _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
 
-# @pytest.mark.skipif(
-#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-# )
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_widgets_notebook():
     """Run widgets notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
