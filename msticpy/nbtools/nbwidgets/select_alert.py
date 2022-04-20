@@ -89,7 +89,7 @@ class SelectAlert(IPyDisplayMixin):
         self.time_col = time_col if time_col in alerts.columns else "TimeGenerated"
 
         columns = columns or ["AlertName", "ProductName"]
-        self.disp_columns = [col for col in columns if col in alerts.columns]
+        self.disp_columns = list({col for col in columns if col in alerts.columns})
         if not self.disp_columns:
             raise ValueError(
                 f"Display columns {','.join(columns)} not found in alerts."
@@ -156,9 +156,10 @@ class SelectAlert(IPyDisplayMixin):
     @staticmethod
     def _get_select_options(data, time_col, id_col, columns):
         """Return dictionary of displayable options."""
+        data_cols = list({time_col, id_col, *columns})
         return {
             val: key
-            for key, val in data[[time_col, *columns, id_col]]
+            for key, val in data[data_cols]
             .sort_values(time_col, ascending=True)
             .set_index(time_col)
             .apply(lambda x: " - ".join(str(c) for c in x), axis=1)
