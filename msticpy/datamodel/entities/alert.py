@@ -92,17 +92,17 @@ class Alert(Entity):
         self.ProviderName: Optional[str] = None
         self.Entities: Optional[List] = None
         super().__init__(src_entity=src_entity, **kwargs)
-        if src_entity:
+        if src_entity is not None:
             self._create_from_ent(src_entity)
 
         if isinstance(src_event, pd.Series) and not src_event.empty:
             self._create_from_event(src_event)
 
     def _create_from_ent(self, src_entity):  # noqa: MC0001
-        if "StartTime" in src_entity or "TimeGenerated" in src_entity:
-            self.TimeGeneratedUtc = (
-                src_entity["StartTime"] or src_entity["TimeGenerated"]
-            )
+        if "StartTime" in src_entity:
+            self.TimeGeneratedUtc = src_entity["StartTime"]
+        if "TimeGenerated" in src_entity:
+            self.TimeGeneratedUtc = src_entity["TimeGenerated"]
         if "EndTime" in src_entity:
             self.EndTimeUtc = src_entity["EndTime"]
         if "StartTime" in src_entity:
@@ -137,7 +137,11 @@ class Alert(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return f"Alert: {self.DisplayName}" or self.__class__.__name__
+        return (
+            f"Alert: {self.AlertDisplayName}"
+            or f"Alert: {self.DisplayName}"
+            or self.__class__.__name__
+        )
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""
