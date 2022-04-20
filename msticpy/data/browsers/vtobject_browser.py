@@ -12,7 +12,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...context.vtlookupv3.vtlookupv3 import VTLookupV3, timestamps_to_utcdate
-from ...nbtools.nbwidgets import IPyDisplayMixin
+from ...nbwidgets import IPyDisplayMixin
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

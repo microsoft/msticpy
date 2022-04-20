@@ -13,7 +13,7 @@ from ..._version import VERSION
 from ...common.timespan import TimeSpan
 from ...context.tilookup import TILookup
 from ...data import QueryProvider
-from ...nbtools.nbwidgets import QueryTime
+from ...nbwidgets import QueryTime
 from .. import entities
 
 # pylint: disable=unused-import

@@ -9,7 +9,7 @@ from typing import Optional
 import ipywidgets as widgets
 from ipywidgets import Layout
 
-from ..._version import VERSION
+from .._version import VERSION
 from .core import IPyDisplayMixin, RegisteredWidget
 
 __version__ = VERSION

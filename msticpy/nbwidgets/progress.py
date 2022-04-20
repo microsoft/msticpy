@@ -6,7 +6,7 @@
 """Module for pre-defined widget layouts."""
 import ipywidgets as widgets
 
-from ..._version import VERSION
+from .._version import VERSION
 from .core import IPyDisplayMixin
 
 __version__ = VERSION

@@ -10,7 +10,7 @@ from typing import Any, Iterable, Optional
 import ipywidgets as widgets
 from IPython.display import display
 
-from ..._version import VERSION
+from .._version import VERSION
 from .core import IPyDisplayMixin
 
 __version__ = VERSION

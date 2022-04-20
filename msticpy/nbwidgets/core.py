@@ -11,7 +11,7 @@ from weakref import WeakValueDictionary
 
 from IPython.display import display
 
-from ..._version import VERSION
+from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

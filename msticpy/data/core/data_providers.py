@@ -18,7 +18,7 @@ from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
 from ...datamodel.pivots.pivot_data_queries import add_data_queries_to_entities
-from ...nbtools.nbwidgets import QueryTime
+from ...nbwidgets import QueryTime
 from ..browsers.query_browser import browse_queries
 from ..drivers import DriverBase, import_driver
 from .param_extractor import extract_query_params

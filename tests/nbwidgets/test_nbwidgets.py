@@ -16,7 +16,7 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common.timespan import TimeSpan
 from msticpy.nbtools import nbwidgets as nbw
-from msticpy.nbtools.nbwidgets.core import TimeUnit, default_max_buffer, parse_time_unit
+from msticpy.nbwidgets.core import TimeUnit, default_max_buffer, parse_time_unit
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

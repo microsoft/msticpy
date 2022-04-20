@@ -11,7 +11,7 @@ import pandas as pd
 from IPython.display import HTML
 
 from ..._version import VERSION
-from ...nbtools.nbwidgets import SelectItem
+from ...nbwidgets import SelectItem
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

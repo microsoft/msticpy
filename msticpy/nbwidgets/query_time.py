@@ -10,9 +10,9 @@ from typing import Optional, Union
 import ipywidgets as widgets
 from ipywidgets import Layout
 
-from ..._version import VERSION
-from ...common.timespan import TimeSpan
-from ...common.utility import check_kwargs
+from .._version import VERSION
+from ..common.timespan import TimeSpan
+from ..common.utility import check_kwargs
 from .core import (
     IPyDisplayMixin,
     RegisteredWidget,

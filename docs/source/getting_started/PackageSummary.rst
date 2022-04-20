@@ -226,7 +226,7 @@ Sample notebook - `Event Timeline Visualization <https://github.com/microsoft/ms
 Notebook widgets
 ~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.nbwidgets`
+:py:mod:`msticpy.nbwidgets`
 
 Common functionality such as list pickers, time
 boundary settings, saving and retrieving environment variables into a

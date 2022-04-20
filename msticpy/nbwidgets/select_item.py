@@ -12,7 +12,7 @@ from deprecated.sphinx import deprecated
 from IPython.display import HTML, display
 from ipywidgets import Layout
 
-from ..._version import VERSION
+from .._version import VERSION
 from .core import IPyDisplayMixin
 
 __version__ = VERSION
