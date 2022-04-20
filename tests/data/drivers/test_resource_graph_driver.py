@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 from azure.identity import InteractiveBrowserCredential
 
-from msticpy.common.azure_auth_core import (
+from msticpy.auth.azure_auth_core import (
     AzCredentials,
     ChainedTokenCredential,
     CredentialWrapper,

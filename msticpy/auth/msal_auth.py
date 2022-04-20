@@ -19,7 +19,7 @@ from msal_extensions import (
 from msal_extensions.persistence import PersistenceNotFound
 
 from .._version import VERSION
-from .exceptions import MsticpyAzureConnectionError
+from ..common.exceptions import MsticpyAzureConnectionError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

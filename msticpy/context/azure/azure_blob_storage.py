@@ -17,8 +17,8 @@ from azure.core.exceptions import (
 from azure.storage.blob import BlobServiceClient, generate_blob_sas
 
 from ..._version import VERSION
-from ...common.azure_auth import az_connect
-from ...common.azure_auth_core import AzCredentials, AzureCloudConfig
+from ...auth.azure_auth import az_connect
+from ...auth.azure_auth_core import AzCredentials, AzureCloudConfig
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

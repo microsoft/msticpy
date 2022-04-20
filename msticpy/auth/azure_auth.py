@@ -12,6 +12,9 @@ from azure.mgmt.subscription import SubscriptionClient
 
 from .._version import VERSION
 
+# pylint: enable=unused-import
+from ..common.provider_settings import get_provider_settings
+
 # importing only_interactive_cred for client use.
 # pylint: disable=unused-import
 from .azure_auth_core import (  # noqa: F401
@@ -20,9 +23,6 @@ from .azure_auth_core import (  # noqa: F401
     az_connect_core,
     only_interactive_cred,
 )
-
-# pylint: enable=unused-import
-from .provider_settings import get_provider_settings
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

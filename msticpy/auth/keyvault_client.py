@@ -26,14 +26,14 @@ from IPython.display import HTML, display
 from msrestazure.azure_exceptions import CloudError
 
 from .._version import VERSION
-from .azure_auth_core import az_connect_core
-from .exceptions import (
+from ..common.exceptions import (
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
     MsticpyUserConfigError,
 )
+from ..common.utility import export, is_ipython
+from .azure_auth_core import az_connect_core
 from .keyvault_settings import KeyVaultSettings
-from .utility import export, is_ipython
 
 __version__ = VERSION
 __author__ = "Matt Richard, Ian Hellen"

@@ -14,13 +14,13 @@ from azure.common.exceptions import CloudError
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 
 from ..._version import VERSION
-from ...common.azure_auth import (
+from ...auth.azure_auth import (
     AzCredentials,
     AzureCloudConfig,
     az_connect,
     only_interactive_cred,
 )
-from ...common.cloud_mappings import get_all_endpoints
+from ...auth.cloud_mappings import get_all_endpoints
 from ...common.exceptions import (
     MsticpyAzureConfigError,
     MsticpyImportExtraError,

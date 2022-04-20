@@ -7,7 +7,7 @@
 from msrestazure import azure_cloud
 
 from .._version import VERSION
-from .exceptions import MsticpyAzureConfigError
+from ..common.exceptions import MsticpyAzureConfigError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

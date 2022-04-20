@@ -17,7 +17,7 @@ from . import pkg_config as config
 from .exceptions import MsticpyImportExtraError
 
 try:
-    from .secret_settings import SecretsClient
+    from ..auth.secret_settings import SecretsClient
 
     _SECRETS_ENABLED = True
 except ImportError:

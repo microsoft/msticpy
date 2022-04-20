@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import pandas as pd
 from IPython import get_ipython
 
-from ...common.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,

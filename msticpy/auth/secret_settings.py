@@ -13,11 +13,11 @@ import keyring
 from keyring.errors import KeyringError, KeyringLocked, NoKeyringError
 
 from .._version import VERSION
-from . import pkg_config as config
-from .exceptions import MsticpyKeyVaultConfigError
+from ..common import pkg_config as config
+from ..common.exceptions import MsticpyKeyVaultConfigError
+from ..common.utility import export
 from .keyvault_client import BHKeyVaultClient
 from .keyvault_settings import KeyVaultSettings
-from .utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -12,7 +12,7 @@ import pandas as pd
 from azure.common.exceptions import CloudError
 
 from ..._version import VERSION
-from ...common.azure_auth_core import AzureCloudConfig
+from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
 from ...common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers

@@ -286,7 +286,7 @@ You can also use powershell or Python to manage these programmatically.
 *MSTICPy* has some convenience wrappers around the Azure SDK functions.
 
 The documentation for these is available here:
-:py:mod:`keyvault_client<msticpy.common.keyvault_client>`
+:py:mod:`keyvault_client<msticpy.auth.keyvault_client>`
 :py:mod:`secrets_settings<msticpy.common.secrets_settings>`
 
 

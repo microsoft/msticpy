@@ -11,7 +11,7 @@ import pytest
 import pytest_check as check
 from msrestazure import azure_cloud
 
-from msticpy.common.azure_auth_core import (
+from msticpy.auth.azure_auth_core import (
     AzureCliStatus,
     AzureCloudConfig,
     check_cli_credentials,

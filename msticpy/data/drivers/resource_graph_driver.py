@@ -14,7 +14,7 @@ from azure.mgmt.subscription import SubscriptionClient
 from pandas.core.frame import DataFrame
 
 from ..._version import VERSION
-from ...common.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import MsticpyImportExtraError, MsticpyNotConnectedError
 from ...common.utility import export
 from .driver_base import DriverBase, QuerySource

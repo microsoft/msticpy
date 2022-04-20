@@ -6,7 +6,7 @@
 """Msticpy MSAL authentication test class."""
 from unittest.mock import patch
 
-from msticpy.common.msal_auth import MSALDelegatedAuth
+from msticpy.auth.msal_auth import MSALDelegatedAuth
 
 
 class MSALAppMock:

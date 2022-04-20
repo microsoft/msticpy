@@ -15,14 +15,15 @@ from unittest.mock import MagicMock, patch
 import keyring
 from azure.core.exceptions import ResourceNotFoundError
 
-from msticpy.common import pkg_config, secret_settings
-from msticpy.common.keyvault_client import (  # AuthClient,; KeyringAuthClient,
+from msticpy.auth import secret_settings
+from msticpy.auth.keyvault_client import (  # AuthClient,; KeyringAuthClient,
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
 )
+from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.common.utility import set_unit_testing
 

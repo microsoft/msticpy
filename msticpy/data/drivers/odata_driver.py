@@ -13,9 +13,9 @@ import httpx
 import pandas as pd
 
 from ..._version import VERSION
+from ...auth.msal_auth import MSALDelegatedAuth
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
-from ...common.msal_auth import MSALDelegatedAuth
 from ...common.provider_settings import get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
