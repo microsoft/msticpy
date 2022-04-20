@@ -137,11 +137,8 @@ class Alert(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        return (
-            f"Alert: {self.AlertDisplayName}"
-            or f"Alert: {self.DisplayName}"
-            or self.__class__.__name__
-        )
+        alert_name = self.AlertDisplayName or self.DisplayName or None
+        return f"Alert: {alert_name}" or self.__class__.__name__
 
     def _add_additional_data(self, src_entity: Mapping[str, Any]):
         """Populate additional alert properties."""
