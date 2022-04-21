@@ -25,7 +25,7 @@ MSTICPy sectools.
 - proc_tree_build_winlx -> msticpy.transform
 - proc_tree_schema -> msticpy.transform
 - proc_tree_utils -> msticpy.transform
-- sectools_magics -> msticpy.nbtools.nbmagics
+- sectools_magics -> msticpy.init.nbmagics
 - syslog_utils -> msticpy.analysis
 
 The sectools sub-package will be removed in version 2.0.0
@@ -46,5 +46,5 @@ from ..transform.iocextract import IoCExtract
 with contextlib.suppress(ImportError):
     from IPython import get_ipython
 
-    from ..nbtools import nbmagics as sectool_magics
+    from ..init import nbmagics as sectool_magics
 __version__ = VERSION

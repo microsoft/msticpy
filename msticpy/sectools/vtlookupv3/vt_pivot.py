@@ -18,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...context.vtlookupv3.vt_pivot import *
+from ...init.pivot_init.vt_pivot import *
 
 WARN_MSSG = (
     "This module has moved to "

@@ -5,7 +5,7 @@ pivot_providers:
   #
   # new_pivot_func:
   #   ## The src_module to import
-  #   src_module: msticpy.sectools.ip_utils
+  #   src_module: msticpy.context.ip_utils
   #
   #   ## class to import and instantiate that contains the function/method
   #   ## (not needed if the target function is a Python function)

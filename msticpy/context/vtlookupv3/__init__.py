@@ -9,10 +9,16 @@ from ..._version import VERSION
 
 # pylint: disable=unused-import
 # flake8: noqa: F401
-from ...data.browsers.vtobject_browser import VTObjectBrowser
-from .vt_pivot import add_pivot_functions
+from ...vis.vtobject_browser import VTObjectBrowser
+from . import vtlookupv3
 from .vtfile_behavior import VTFileBehavior
-from .vtlookupv3 import VT_API_NOT_FOUND, MsticpyVTNoDataError, VTLookupV3
+from .vtlookupv3 import (
+    VT_API_NOT_FOUND,
+    MsticpyVTNoDataError,
+    VTEntityType,
+    VTLookupV3,
+    VTObjectProperties,
+)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

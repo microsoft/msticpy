@@ -6,7 +6,7 @@
 """
 Deprecated - module vtobject_browser.py has moved.
 
-See :py:mod:`msticpy.data.browsers.vtobject_browser`
+See :py:mod:`msticpy.vis.vtobject_browser`
 """
 import warnings
 
@@ -18,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...data.browsers.vtobject_browser import *
+from ...vis.vtobject_browser import *
 
 WARN_MSSG = (
     "This module has moved to "

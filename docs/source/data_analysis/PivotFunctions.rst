@@ -141,7 +141,7 @@ the Pivot library.
 
 .. code:: ipython3
 
-    from msticpy.nbtools.nbinit import init_notebook
+    from msticpy.init.nbinit import init_notebook
     init_notebook(namespace=globals());
 
 

@@ -55,7 +55,7 @@ User Defaults
 ~~~~~~~~~~~~~
 This section controls loading of default providers when using the
 package in a notebook. The settings here are loaded by the
-:py:func:`init_notebook <msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
 function.
 
 Specifying secrets as Environment Variables
@@ -295,7 +295,7 @@ User Defaults Section
 
 This section specifies the query and other providers that you want
 to load by default. It is triggered from the
-:py:func:`init_notebook<msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook<msticpy.init.nbinit.init_notebook>`
 although you can call the
 :py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
 function to do this manually.

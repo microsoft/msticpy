@@ -15,7 +15,7 @@ vtlookupv3: Any
 try:
     import vt
 
-    from . import vtlookupv3
+    from .vtlookupv3 import vtlookupv3
 except ImportError:
     # vtlookup3 will not load if vt package not installed
     vtlookupv3 = ImportPlaceholder(  # type: ignore

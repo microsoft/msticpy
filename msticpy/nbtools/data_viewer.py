@@ -6,7 +6,7 @@
 """
 Deprecated - module data_viewer.py has moved.
 
-See :py:mod:`msticpy.data.browsers.data_viewer`
+See :py:mod:`msticpy.vis.data_viewer`
 """
 import warnings
 
@@ -18,10 +18,10 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..data.browsers.data_viewer import *
+from ..vis.data_viewer import *
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.browsers.data_viewer\n"
+    "This module has moved to msticpy.vis.data_viewer\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.2.0"
 )

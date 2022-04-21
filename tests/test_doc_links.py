@@ -34,6 +34,7 @@ def test_readme_md():
     results = check_md_document(str(readme_file))
     page_not_found = [p for p in results.values() if p.status == 404]
     if page_not_found:
+        print(f"File: {readme_file}")
         print("Please fix the following 404 Errors:")
         for page in page_not_found:
             print(page)
@@ -51,6 +52,7 @@ def test_doc_pages_doc_links():
             if result.status == 404:
                 page_errors.append(f"{result.status} - {result.url}")
     if page_errors:
+        pr
         print("Please fix the following 404 Errors:")
         for page in page_errors:
             print(page)

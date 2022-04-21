@@ -18,7 +18,11 @@ from bokeh.layouts import LayoutDOM
 from vt.object import Object as VtObject
 
 from msticpy.context import vtlookupv3
-from msticpy.vis import mp_pandas_plot
+
+# import this to make pandas plot accessors work
+# pylint: disable=unused import
+from msticpy.vis import mp_pandas_plot  # noqa: F401
+from msticpy.vis.vtobject_browser import VTObjectBrowser
 
 from ..unit_test_lib import get_test_data_path
 
@@ -29,15 +33,15 @@ VTLookupV3 = vtlookupv3.VTLookupV3
 VT_API_NOT_FOUND = vtlookupv3.VT_API_NOT_FOUND
 MsticpyVTNoDataError = vtlookupv3.MsticpyVTNoDataError
 VTFileBehavior = vtlookupv3.VTFileBehavior
-VTBrowser = vtlookupv3.VTObjectBrowser
+VTBrowser = None  # vtlookupv3.VTObjectBrowser
 
-
+print(VTLookupV3.__module__)
 __author__ = "Ian Hellen"
 
 _VT_MODULE_PATH = "msticpy.context.vtlookupv3"
 
 
-@patch(f"{_VT_MODULE_PATH}.vtlookupv3.vt")
+@patch(f"{_VT_MODULE_PATH}.vt")
 def create_vt_client(vt_lib) -> VTLookupV3:
     """Test simple lookup of IoC."""
     vt_lib.Client = VTClient
@@ -161,12 +165,8 @@ def test_init_vt_lookup_class():
         os.environ["VIRUSTOTAL_AUTH"] = curr_vt_key
 
 
-@patch(VTLookupV3.__module__ + ".vt")
-def test_lookup_ioc(vt_lib):
+def test_lookup_ioc(vt_client):
     """Test simple lookup of IoC."""
-    vt_lib.Client = VTClient
-    vt_lib.APIError = VTAPIError
-    vt_client = VTLookupV3()
     url = _TEST_URLS[0]
 
     # Simple lookup
@@ -199,13 +199,8 @@ def test_lookup_ioc(vt_lib):
         result_df = vt_client.lookup_ioc("fail", vt_type="url")
 
 
-@patch(VTLookupV3.__module__ + ".vt")
-def test_lookup_iocs(vt_lib):
+def test_lookup_iocs(vt_client):
     """Test lookup of multiple IoCs."""
-    vt_lib.Client = VTClient
-    vt_lib.APIError = VTAPIError
-    vt_client = VTLookupV3()
-
     # Simple lookup
     obs_df = pd.DataFrame(
         {
@@ -375,7 +370,7 @@ def test_file_behavior(vt_client: VTLookupV3, name, sandbox, keys):
 def test_get_object_browser(vt_client: VTLookupV3):
     """Test object browser."""
     del vt_client
-    vt_browser = VTBrowser()
+    vt_browser = VTObjectBrowser()
     # emulate looking up a file using UI
     vt_browser.txt_file_id.value = "file"
     vt_browser.btn_lookup.click()
@@ -389,7 +384,7 @@ def test_get_object_browser(vt_client: VTLookupV3):
     check.equal(set(vt_browser._current_data.columns), set(vt_browser.data_sel.options))
 
     # Check that it auto-loads from init
-    vt_browser = VTBrowser("file")
+    vt_browser = VTObjectBrowser("file")
     check.equal(vt_browser._current_data.shape, (1, 584))
     check.equal(
         vt_browser._current_data.iloc[0].id,

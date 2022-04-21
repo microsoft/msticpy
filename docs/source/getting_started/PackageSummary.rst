@@ -90,9 +90,9 @@ Sample notebook - `GeoIP Lookup Usage Notebook <https://github.com/microsoft/mst
 Azure Resource Data, Storage and Azure Sentinel API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.data.azure_data`
-:py:mod:`msticpy.data.azure_sentinel`
-:py:mod:`msticpy.data.azure_blob_storage`
+:py:mod:`msticpy.context.azure.azure_data`
+:py:mod:`msticpy.context.azure.sentinel_core`
+:py:mod:`msticpy.data.storage.azure_blob_storage`
 
 The AzureData module contains functionality for enriching data regarding Azure host
 details with additional host details exposed via the Azure API. The AzureSentinel

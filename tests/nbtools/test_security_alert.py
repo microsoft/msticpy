@@ -13,9 +13,9 @@ import pytest_check as check
 
 from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.datamodel import entities
-from msticpy.nbtools.nbdisplay import format_alert
 from msticpy.nbtools.security_alert import SecurityAlert
 from msticpy.nbtools.security_alert_graph import create_alert_graph
+from msticpy.vis.nbdisplay import format_alert
 
 # pylint: disable=redefined-outer-name
 

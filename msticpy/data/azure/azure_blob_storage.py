@@ -6,7 +6,7 @@
 """
 Deprecated - module azure_blob_storage.py has moved.
 
-See :py:mod:`msticpy.context.azure.azure_blob_storage`
+See :py:mod:`msticpy.data.azure.azure_blob_storage`
 """
 import warnings
 
@@ -18,7 +18,7 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...context.azure.azure_blob_storage import *
+from ..storage.azure_blob_storage import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.context.azure.azure_blob_storage\n"

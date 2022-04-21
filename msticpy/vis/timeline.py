@@ -80,8 +80,8 @@ _TL_KWARGS = [
 ]
 
 _TIMELINE_HELP = (
-    "https://msticpy.readthedocs.io/en/latest/msticpy.nbtools.html"
-    "#msticpy.nbtools.timeline.{plot_type}"
+    "https://msticpy.readthedocs.io/en/latest/msticpy.vis.html"
+    "#msticpy.vis.timeline.{plot_type}"
 )
 
 

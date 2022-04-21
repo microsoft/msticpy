@@ -25,7 +25,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
 from ..common.utility import export
-from ..data.browsers.ti_browser import browse_results
+from ..vis.ti_browser import browse_results
 from . import tiproviders
 
 # used in dynamic instantiation of providers
