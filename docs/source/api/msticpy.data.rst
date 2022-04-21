@@ -13,10 +13,9 @@ Subpackages
    :maxdepth: 4
 
    msticpy.data.azure
-   msticpy.data.browsers
-   msticpy.context
    msticpy.data.core
    msticpy.data.drivers
+   msticpy.data.storage
    msticpy.data.uploaders
 
 Submodules

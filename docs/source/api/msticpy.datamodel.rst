@@ -13,7 +13,7 @@ Subpackages
    :maxdepth: 4
 
    msticpy.datamodel.entities
-   msticpy.datamodel.pivots
+   msticpy.datamodel.pivot
    msticpy.datamodel.soc
 
 Submodules
@@ -23,4 +23,3 @@ Submodules
    :maxdepth: 4
 
    msticpy.datamodel.pivot
-   msticpy.datamodel.txt_df_magic

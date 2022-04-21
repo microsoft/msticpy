@@ -14,6 +14,7 @@ Submodules
 
    msticpy.data.drivers.cybereason_driver
    msticpy.data.drivers.driver_base
+   msticpy.data.drivers.elastic_driver
    msticpy.data.drivers.kql_driver
    msticpy.data.drivers.kusto_driver
    msticpy.data.drivers.local_data_driver
