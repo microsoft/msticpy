@@ -54,14 +54,14 @@ class SentinelSearchlistsMixin:
         if "limit" in kwargs:
             limit = kwargs.pop("limit")
         if "timespan" in kwargs:
-            start = kwargs.get("timespan").start
-            end = kwargs.get("timespan").end
+            start = kwargs.get("timespan").start  # type: ignore
+            end = kwargs.get("timespan").end  # type: ignore
         search_end = end or datetime.now()
         search_start = start or (search_end - timedelta(days=90))
-        search_name = search_name or uuid4()
-        search_name = search_name.replace("_", "")
+        search_name = search_name or uuid4()  # type: ignore
+        search_name = search_name.replace("_", "")  # type: ignore
         search_url = (
-            self.sent_urls["search"]
+            self.sent_urls["search"]  # type: ignore
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_items = {
@@ -75,7 +75,7 @@ class SentinelSearchlistsMixin:
         search_body = _build_sent_data(search_items)
         search_create_response = httpx.put(
             search_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             json=search_body,
             timeout=60,
         )
@@ -101,14 +101,15 @@ class SentinelSearchlistsMixin:
         ------
         CloudError
             If error in checking the search job status.
+
         """
         search_name = search_name.strip("_SRCH")
         search_url = (
-            self.sent_urls["search"]
+            self.sent_urls["search"]  # type: ignore
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_check_response = httpx.get(
-            search_url, headers=get_api_headers(self.token)
+            search_url, headers=get_api_headers(self.token)  # type: ignore
         )
         if search_check_response.status_code != 200:
             raise CloudError(response=search_check_response)
@@ -136,11 +137,11 @@ class SentinelSearchlistsMixin:
         """
         search_name = search_name.strip("_SRCH")
         search_url = (
-            self.sent_urls["search"]
+            self.sent_urls["search"]  # type: ignore
             + f"/{search_name}_SRCH?api-version=2021-12-01-preview"
         )
         search_delete_response = httpx.delete(
-            search_url, headers=get_api_headers(self.token)
+            search_url, headers=get_api_headers(self.token)  # type: ignore
         )
         if search_delete_response.status_code != 202:
             raise CloudError(response=search_delete_response)
