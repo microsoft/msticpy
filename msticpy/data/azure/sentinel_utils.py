@@ -30,6 +30,7 @@ _PATH_MAPPING = {
     "data_connectors": "/providers/Microsoft.SecurityInsights/dataConnectors",
     "watchlists": "/providers/Microsoft.SecurityInsights/watchlists",
     "alert_template": "/providers/Microsoft.SecurityInsights/alertRuleTemplates",
+    "search": "/tables",
 }
 
 
@@ -175,7 +176,7 @@ class SentinelUtilsMixin:
 
         return "".join(
             [
-                f"{base_url}/subscriptions/{res_info['subscription_id']}",
+                f"{base_url}subscriptions/{res_info['subscription_id']}",
                 f"/resourceGroups/{res_info['resource_group']}",
                 "/providers/Microsoft.OperationalInsights/workspaces"
                 f"/{res_info['workspace_name']}",
@@ -230,7 +231,7 @@ def _build_sent_data(items: dict, props: bool = False, **kwargs) -> dict:
     """
     data_body = {"properties": {}}  # type: Dict[str, Dict[str, str]]
     for key, _ in items.items():
-        if key in ["severity", "status", "title", "message"] or props:
+        if key in ["severity", "status", "title", "message", "searchResults"] or props:
             data_body["properties"].update({key: items[key]})  # type:ignore
         else:
             data_body[key] = items[key]
