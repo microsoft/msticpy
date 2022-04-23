@@ -51,11 +51,12 @@ Configuration:
 
 import os
 
+from . import nbwidgets
+
 # flake8: noqa: F403
 from ._version import VERSION
-from .common import pkg_config as settings
 from .common.check_version import check_version
-from .common.pkg_config import refresh_config
+from .common.pkg_config import refresh_config, settings
 from .common.utility import search_name as search
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
 from .data.core.data_providers import QueryProvider

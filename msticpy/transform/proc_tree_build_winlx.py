@@ -181,7 +181,9 @@ def _merge_parent_by_time(
     # for a match on the right of the join (parent) that is a time earlier
     # than the corresponding row on the left.
     return pd.merge_asof(
-        left=procs.sort_values(schema.time_stamp, ascending=True),
+        left=procs.sort_values(schema.time_stamp, ascending=True).drop(
+            columns=Col.source_index_par, errors="ignore"
+        ),
         right=parent_procs,
         on=schema.time_stamp,
         left_by=child_join_cols,

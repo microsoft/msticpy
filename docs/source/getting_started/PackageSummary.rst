@@ -194,7 +194,7 @@ See :doc:`../Visualization`
 Process tree
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.process_tree` - process tree visualization.
+:py:mod:`msticpy.vis.process_tree` - process tree visualization.
 
 The process tree functionality has two main components:
 
@@ -211,7 +211,7 @@ Sample notebook - `Process Tree Visualization <https://github.com/microsoft/msti
 Event timeline
 ~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.timeline` - event timeline visualization.
+:py:mod:`msticpy.vis.timeline` - event timeline visualization.
 
 Display any log events on an interactive timeline. Using the
 `Bokeh Visualization Library <https://bokeh.org/>`__ the timeline control enables

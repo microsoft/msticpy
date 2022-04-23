@@ -33,8 +33,8 @@ except ImportError:
 
 from .._version import VERSION
 from ..common.utility import is_ipython
-from ..sectools import base64unpack as base64
-from ..sectools.iocextract import IoCExtract
+from ..transform import base64unpack as base64
+from ..transform.iocextract import IoCExtract
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

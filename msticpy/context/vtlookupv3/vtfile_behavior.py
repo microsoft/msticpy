@@ -449,7 +449,7 @@ def _format_widget_data(data_item):
         return ""
     if isinstance(data_item, list):
         if isinstance(data_item[0], dict):
-            return pd.DataFrame(data_item).style.hide_index().render()
+            return pd.DataFrame(data_item).style.hide(axis="index").to_html()
         if isinstance(data_item[0], str):
-            return pd.DataFrame(pd.Series(data_item)).style.hide_index().render()
+            return pd.DataFrame(pd.Series(data_item)).style.hide(axis="index").to_html()
     return f"<pre>{pformat(data_item)}</pre>"

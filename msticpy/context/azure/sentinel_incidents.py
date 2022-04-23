@@ -231,7 +231,8 @@ class SentinelIncidentsMixin:
             Incident ID GUID.
         update_items : dict
             Dictionary of properties to update and their values.
-            Ref: https://docs.microsoft.com/en-us/rest/api/securityinsights/incidents/createorupdate
+            https://docs.microsoft.com/rest/api/securityinsights/
+            stable/incidents/create-or-update
 
         Raises
         ------

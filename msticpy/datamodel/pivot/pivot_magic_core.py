@@ -82,7 +82,6 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
         parsed_df = pd.read_csv(
             cell_text,
             header=0 if args.headers else None,
-            prefix=None if args.headers else "column_",
             sep=args.sep,
             skipinitialspace=True,
             skip_blank_lines=True,

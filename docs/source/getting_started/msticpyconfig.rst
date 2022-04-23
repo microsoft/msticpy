@@ -287,7 +287,7 @@ You can also use powershell or Python to manage these programmatically.
 
 The documentation for these is available here:
 :py:mod:`keyvault_client<msticpy.auth.keyvault_client>`
-:py:mod:`secrets_settings<msticpy.common.secrets_settings>`
+:py:mod:`secrets_settings<msticpy.auth.secrets_settings>`
 
 
 User Defaults Section
@@ -297,7 +297,7 @@ This section specifies the query and other providers that you want
 to load by default. It is triggered from the
 :py:func:`init_notebook<msticpy.init.nbinit.init_notebook>`
 although you can call the
-:py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
+:py:func:`load_user_defaults<msticpy.init.user_config.load_user_defaults>`
 function to do this manually.
 
 If you do not have this section in your configuration ``init_notebook`` will

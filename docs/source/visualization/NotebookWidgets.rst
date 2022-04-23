@@ -10,17 +10,9 @@ picking items from a list or tracking progress of a long-running event.
 .. code:: ipython3
 
     # Imports
-    import sys
-    MIN_REQ_PYTHON = (3,6)
-    if sys.version_info < MIN_REQ_PYTHON:
-        print('Check the Kernel->Change Kernel menu and ensure that Python 3.6')
-        print('or later is selected as the active kernel.')
-        sys.exit("Python %s.%s or later is required.\n" % MIN_REQ_PYTHON)
 
-    from IPython.display import display, Markdown
-    import pandas as pd
-    # Import nbtools package
-    from msticpy.nbtools import *
+    import msticpy
+    msticpy.init_notebook(globals(), verbosity=0)
 
 
 QueryTime

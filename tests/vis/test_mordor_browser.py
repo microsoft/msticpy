@@ -7,11 +7,9 @@
 import os
 from pathlib import Path
 
-import nbformat
 import pytest
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path
+from ..unit_test_lib import exec_notebook, get_test_data_path
 
 __author__ = "Ian Hellen"
 
@@ -31,21 +29,8 @@ def test_mordor_browser():
     ex_json = list(abs_path.glob("**/*.json"))
     ex_zip = list(abs_path.glob("**/*.zip"))
 
-    with open(nb_path) as f_hdl:
-        nbk = nbformat.read(f_hdl, as_version=4)
-    nb_exec = ExecutePreprocessor(timeout=600, kernel_name="python3")
-
     try:
-        with custom_mp_config(_MP_CONFIG_PATH):
-            nb_exec.preprocess(nbk, {"metadata": {"path": abs_path}})
-    except CellExecutionError:
-        nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
-        msg = f"Error executing the notebook '{nb_path}'.\n"
-        msg += f"See notebook '{nb_err}' for the traceback."
-        print(msg)
-        with open(nb_err, mode="w", encoding="utf-8") as f:
-            nbformat.write(nbk, f)
-        raise
+        exec_notebook(nb_path=nb_path, mp_config=_MP_CONFIG_PATH)
     finally:
         # Data file cleanup
         for j_file in abs_path.glob("**/*.json"):

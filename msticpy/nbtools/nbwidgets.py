@@ -10,11 +10,11 @@ See :py:mod:`msticpy.nbwidgets`
 """
 import warnings
 
-from ..._version import VERSION
+from .._version import VERSION
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...nbwidgets import *  # noqa: F401
+from ..nbwidgets import *  # noqa: F401
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

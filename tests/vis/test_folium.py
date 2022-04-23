@@ -10,10 +10,8 @@ import unittest
 from pathlib import Path
 
 import folium
-import nbformat
 import pandas as pd
 import pytest
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.datamodel.entities import GeoLocation, Host, IpAddress
 from msticpy.vis.foliummap import (
@@ -23,7 +21,7 @@ from msticpy.vis.foliummap import (
     get_map_center,
 )
 
-from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
+from ..unit_test_lib import TEST_DATA_PATH, exec_notebook, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "FoliumMap.ipynb"
@@ -162,22 +160,7 @@ class TestFoliumMap(unittest.TestCase):
     def test_folium_map_notebook(self):
         """Run folium notebook."""
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-        abs_path = Path(_NB_FOLDER).absolute()
-        with open(nb_path, encoding="utf-8") as f:
-            nb = nbformat.read(f, as_version=4)
-        ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
-
-        try:
-            with custom_mp_config(_MP_CONFIG_PATH):
-                ep.preprocess(nb, {"metadata": {"path": abs_path}})
-        except CellExecutionError:
-            nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
-            msg = f"Error executing the notebook '{nb_path}'.\n"
-            msg += f"See notebook '{nb_err}' for the traceback."
-            print(msg)
-            with open(nb_err, mode="w", encoding="utf-8") as f:
-                nbformat.write(nb, f)
-            raise
+        exec_notebook(nb_path=nb_path, mp_config=_MP_CONFIG_PATH)
 
 
 def create_ip_entity(row):

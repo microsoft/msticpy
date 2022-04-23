@@ -2,7 +2,7 @@ SQL TO KQL Conversion (Experimental)
 ====================================
 
 The ``sql_to_kql`` module is a simple converter to KQL based on
-`moz_sql_parser <https://github.com/DrDonk/moz-sql-parser>`__. It is an
+`moz_sql_parser <https://github.com/klahnakoski/mo-sql-parsing>`__. It is an
 experimental feature built to help us convert a few queries but we
 thought that it was useful enough to include in MSTICPy.
 

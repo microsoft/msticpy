@@ -145,6 +145,7 @@ class VTLookupV3:
         cls, vt_object: vt.object.Object, all_props: bool = False
     ) -> pd.DataFrame:
         obj_dict = vt_object.to_dict()
+        add_columns_df = pd.DataFrame()
         if VTObjectProperties.ATTRIBUTES.value in obj_dict:
             attributes = obj_dict[VTObjectProperties.ATTRIBUTES.value]
             vt_type = VTEntityType(vt_object.type)
@@ -163,10 +164,14 @@ class VTLookupV3:
                 VTObjectProperties.LAST_ANALYSIS_STATS.value
             )
             if last_analysis_stats:
-                vt_df[ColumnNames.DETECTIONS.value] = last_analysis_stats[
-                    VTObjectProperties.MALICIOUS.value
-                ]
-                vt_df[ColumnNames.SCANS.value] = sum(last_analysis_stats.values())
+                add_columns_df = pd.DataFrame(
+                    {
+                        ColumnNames.DETECTIONS.value: [
+                            last_analysis_stats[VTObjectProperties.MALICIOUS.value]
+                        ],
+                        ColumnNames.SCANS.value: [sum(last_analysis_stats.values())],
+                    }
+                )
             # Format dates for pandas
             vt_df = timestamps_to_utcdate(vt_df)
         elif obj_dict:
@@ -178,10 +183,12 @@ class VTLookupV3:
 
         # Inject ID and Type columns
         if ColumnNames.ID.value not in vt_df.columns:
-            vt_df[ColumnNames.ID.value] = [vt_object.id]
+            add_columns_df[ColumnNames.ID.value] = [vt_object.id]
         if ColumnNames.TYPE.value not in vt_df.columns:
-            vt_df[ColumnNames.TYPE.value] = [vt_object.type]
-        return vt_df  # .set_index([ColumnNames.ID.value])
+            add_columns_df[ColumnNames.TYPE.value] = [vt_object.type]
+        return pd.concat(
+            [vt_df, add_columns_df], axis="columns"
+        )  # .set_index([ColumnNames.ID.value])
 
     def __init__(self, vt_key: Optional[str] = None):
         """
@@ -375,6 +382,7 @@ class VTLookupV3:
         finally:
             self._vt_client.close()
 
+    # pylint: disable=too-many-locals
     async def _lookup_ioc_relationships_async(
         self,
         observable: str,
@@ -460,17 +468,26 @@ class VTLookupV3:
             )
 
             if vt_objects:
-                # Inject source and target columns
-                result_df[ColumnNames.SOURCE.value] = observable
-                result_df[ColumnNames.SOURCE_TYPE.value] = VTEntityType(vt_type).value
-                result_df[ColumnNames.RELATIONSHIP_TYPE.value] = relationship
-                result_df.reset_index(inplace=True)
-                result_df.rename(
-                    columns={
-                        ColumnNames.ID.value: ColumnNames.TARGET.value,
-                        ColumnNames.TYPE.value: ColumnNames.TARGET_TYPE.value,
-                    },
-                    inplace=True,
+                # Add additional columns (with same size as DF)
+                rows = len(result_df)
+                add_columns = pd.DataFrame(
+                    {
+                        ColumnNames.SOURCE.value: [observable] * rows,
+                        ColumnNames.SOURCE_TYPE.value: [VTEntityType(vt_type).value]
+                        * rows,
+                        ColumnNames.RELATIONSHIP_TYPE.value: [relationship] * rows,
+                    }
+                )
+
+                result_df = (
+                    pd.concat([result_df, add_columns], axis="columns")
+                    .rename(
+                        columns={
+                            ColumnNames.ID.value: ColumnNames.TARGET.value,
+                            ColumnNames.TYPE.value: ColumnNames.TARGET_TYPE.value,
+                        },
+                    )
+                    .reset_index()
                 )
                 # result_df.set_index(
                 #     [ColumnNames.SOURCE.value, ColumnNames.TARGET.value], inplace=True
@@ -1000,6 +1017,11 @@ def _get_vt_api_key() -> Optional[str]:
 
 def timestamps_to_utcdate(data: pd.DataFrame):
     """Replace Unix timestamps in VT data with Py/pandas Timestamp."""
-    for date_col in (col for col in data.columns if col.endswith("_date")):
-        data[date_col] = pd.to_datetime(data[date_col], unit="s", utc=True)
-    return data
+    columns = data.columns
+    for date_col in (col for col in columns if col.endswith("_date")):
+        data = (
+            data.assign(pd_data=pd.to_datetime(data[date_col], unit="s", utc=True))
+            .drop(columns=date_col)
+            .rename(columns={"pd_data": date_col})
+        )
+    return data[columns]

@@ -175,6 +175,7 @@ _test_ids = [
 ]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
 def test_check_config(conf_file, expected, tmp_path):
     """Test config check."""

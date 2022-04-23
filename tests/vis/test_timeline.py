@@ -8,16 +8,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-import nbformat
 import pandas as pd
 import pytest
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.common.exceptions import MsticpyParameterError
 from msticpy.vis.timeline import display_timeline, display_timeline_values
 from msticpy.vis.timeline_duration import display_timeline_duration
 
-from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
+from ..unit_test_lib import TEST_DATA_PATH, exec_notebook, get_test_data_path
 
 __author__ = "Ian Hellen"
 
@@ -266,20 +264,6 @@ _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
 )
 def test_timeline_controls():
+    """Test timeline notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-    abs_path = Path(_NB_FOLDER).absolute()
-    with open(nb_path) as f:
-        nb = nbformat.read(f, as_version=4)
-    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
-
-    try:
-        with custom_mp_config(_MP_CONFIG_PATH):
-            ep.preprocess(nb, {"metadata": {"path": abs_path}})
-    except CellExecutionError:
-        nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
-        msg = f"Error executing the notebook '{nb_path}'.\n"
-        msg += f"See notebook '{nb_err}' for the traceback."
-        print(msg)
-        with open(nb_err, mode="w", encoding="utf-8") as f:
-            nbformat.write(nb, f)
-        raise
+    exec_notebook(nb_path=nb_path, mp_config=_MP_CONFIG_PATH)

@@ -17,7 +17,7 @@ from ..context.tilookup import TILookup
 from ..data import QueryProvider
 from ..datamodel import entities
 
-# pylint: disable=unused-import
+# pylint: disable=unused-import, no-name-in-module
 from ..datamodel.pivot import pivot_pd_accessor  # noqa: F401
 from ..datamodel.pivot.pivot_browser import PivotBrowser
 from ..datamodel.pivot.pivot_data_queries import add_data_queries_to_entities

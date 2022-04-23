@@ -9,6 +9,7 @@ from typing import Any
 # flake8: noqa: F403
 # pylint: disable=W0401
 from ..common.utility import ImportPlaceholder
+from .geoip import GeoLiteLookup, IPStackLookup
 from .tilookup import TILookup
 
 vtlookupv3: Any

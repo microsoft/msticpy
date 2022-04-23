@@ -40,7 +40,7 @@ controls that are displayed incorrectly even when viewing a notebook
 locally. The GitHub notebook viewer is reasonable for simple notebooks
 but not very sophisticated. Here is a link to one of the notebooks
 displayed in
-`nbviewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__.
+`nbviewer <https://nbviewer.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb>`__.
 
 Note: you do not need to have Python or any of the dependencies
 installed to view notebooks in nbviewer or GitHub.
@@ -182,30 +182,16 @@ References
 Notebooks
 ---------
 
--  `Automating Security Operations Using Windows Defender ATP APIs with
-   Python and Jupyter
-   Notebooks <https://techcommunity.microsoft.com/t5/Windows-Defender-ATP/Automating-Security-Operations-Using-Windows-Defender-ATP-APIs/ba-p/294434>`__
-   by John Lambert
 
 -  Azure Sentinel Jupyter notebooks can be found
    `here <https://github.com/Azure/Azure-Sentinel-Notebooks>`__ on GitHub.
+   - `Getting started <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb>`__
+   - `MSTICPy CyberSec Features tour <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb>`
    - `Account Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb>`__
    - `Domain and URL Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb>`__
    - `IP Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb>`__
    - `Linux Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb>`__
    - `Windows Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb>`__
 
-Other sample notebooks with saved data are in the `Sample-Notebooks <https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/Sample-Notebooks>`__
-folder:
-
--  Windows Alert Investigation
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
-
--  Office 365 Exploration
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
-
--  Cross-Network Hunting
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__
+Other sample notebooks with saved data are in the `Sample-Notebooks <https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/tutorials-and-examples>`__
+folder.

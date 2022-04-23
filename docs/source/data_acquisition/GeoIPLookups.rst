@@ -153,7 +153,7 @@ Lookup IP location from GeoLite2 database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can pass a single IP Address, a list of IPAddresses or an IpAddress
-entity (see :py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>`)
+entity (see :py:class:`IpAddress<msticpy.datamodel.entities.IpAddress>`)
 
 
 .. code:: ipython3

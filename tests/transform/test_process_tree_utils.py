@@ -7,17 +7,20 @@
 import os
 from pathlib import Path
 
-import nbformat
 import pandas as pd
 import pytest
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.transform import proc_tree_builder as pt_build
 from msticpy.transform import process_tree_utils as pt_util
 from msticpy.transform.proc_tree_schema import LX_EVENT_SCH, WIN_EVENT_SCH
 from msticpy.vis.process_tree import build_and_show_process_tree
 
-from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config, get_test_data_path
+from ..unit_test_lib import (
+    TEST_DATA_PATH,
+    custom_mp_config,
+    exec_notebook,
+    get_test_data_path,
+)
 
 testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
@@ -350,19 +353,5 @@ _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml"
 def test_process_tree_notebook():
     """Run process tree notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-    abs_path = Path(_NB_FOLDER).absolute()
-    with open(nb_path, encoding="utf-8") as f:
-        nb = nbformat.read(f, as_version=4)
-    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
-    try:
-        with custom_mp_config(_MP_CONFIG_PATH):
-            ep.preprocess(nb, {"metadata": {"path": abs_path}})
-    except CellExecutionError:
-        nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
-        msg = f"Error executing the notebook '{nb_path}'.\n"
-        msg += f"See notebook '{nb_err}' for the traceback."
-        print(msg)
-        with open(nb_err, mode="w", encoding="utf-8") as f:
-            nbformat.write(nb, f)
-        raise
+    exec_notebook(nb_path=nb_path, mp_config=_MP_CONFIG_PATH)

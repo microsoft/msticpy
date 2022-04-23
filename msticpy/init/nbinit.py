@@ -149,6 +149,10 @@ _MP_IMPORTS = [
     dict(pkg="msticpy"),
     dict(pkg="msticpy.data", tgt="QueryProvider"),
     dict(pkg="msticpy.vis.foliummap", tgt="FoliumMap"),
+    dict(pkg="msticpy.context", tgt="TILookup"),
+    dict(pkg="msticpy.context", tgt="GeoLiteLookup"),
+    dict(pkg="msticpy.context", tgt="IPStackLookup"),
+    dict(pkg="msticpy.transform", tgt="IoCExtract"),
     dict(pkg="msticpy.common.utility", tgt="md"),
     dict(pkg="msticpy.common.utility", tgt="md_warn"),
     dict(pkg="msticpy.common.wsconfig", tgt="WorkspaceConfig"),
@@ -157,6 +161,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.init", tgt="nbmagics"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
+    dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
 _MP_IMPORT_ALL: List[Dict[str, str]] = []

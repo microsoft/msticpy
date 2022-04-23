@@ -38,6 +38,7 @@ _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 _DP_KEY = "DataProviders"
 _AZ_SENTINEL = "AzureSentinel"
 _AZ_CLI = "AzureCLI"
+_HOME_PATH = f"~/.msticpy/{_CONFIG_FILE}"
 
 # pylint: disable=invalid-name
 default_settings: Dict[str, Any] = {}
@@ -200,7 +201,7 @@ def _get_default_config():
                 "msticpy package may be corrupted.",
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
-        conf_file = next(iter(pkg_root.glob("**/" + _CONFIG_FILE)))
+        conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
     if conf_file:
         return _read_config_file(conf_file)
     return {}
@@ -214,6 +215,11 @@ def _get_custom_config():
 
     if Path(_CONFIG_FILE).is_file():
         _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
+        return _read_config_file(current_config_path())
+
+    home_config = Path(_HOME_PATH).expanduser().resolve()
+    if home_config.is_file():
+        _CURRENT_CONF_FILE(str(home_config))
         return _read_config_file(current_config_path())
     return {}
 

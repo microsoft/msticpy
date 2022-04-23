@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest_check as check
 
-from msticpy.nbtools import utils
+from msticpy.common import utility as utils
 
 
 class TestUtils(unittest.TestCase):

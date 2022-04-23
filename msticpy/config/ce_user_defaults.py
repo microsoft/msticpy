@@ -7,7 +7,6 @@
 import ipywidgets as widgets
 
 from .._version import VERSION
-from ..data import DataEnvironment
 from .ce_common import ITEM_LIST_LAYOUT, get_or_create_mpc_section
 from .comp_edit import CEItemsBase
 from .compound_ctrls import UserDefLoadComponent, UserDefQryProvCtrl
@@ -26,7 +25,7 @@ class CEAutoLoadQProvs(CEItemsBase):
     _HELP_TEXT = """
     Choose the query providers to load when you run nbinit.init_notebook().<br>
 
-    There are two classes of providers - AzureSentinel workspaces and other
+    There are two classes of providers - MSSentinel workspaces and other
     providers.
     In the former case you must specify a workspace to load (by default it is
     the "Default" workspace).
@@ -68,6 +67,9 @@ class CEAutoLoadQProvs(CEItemsBase):
 
         """
         super().__init__(mp_controls)
+        from ..data import DataEnvironment  # pylint: disable=import-outside-toplevel
+
+        self._data_env_enum = DataEnvironment
 
         get_or_create_mpc_section(self.mp_controls, self._COMP_PATH)
         self.select_item.options = self._get_select_opts()
@@ -150,7 +152,7 @@ class CEAutoLoadQProvs(CEItemsBase):
         opt_list.extend(
             {
                 prov.name
-                for prov in DataEnvironment
+                for prov in self._data_env_enum
                 if prov.name not in ("Unknown", "MSSentinel")
             }
         )
@@ -162,7 +164,7 @@ class CEAutoLoadQProvs(CEItemsBase):
     def _get_query_providers(self):
         for name, settings in self.mp_controls.get_value(self._COMP_PATH).items():
             if name == "AzureSentinel":
-                yield from (f"{name}.{wkspace}" for wkspace in settings)
+                yield from (f"AzureSentinel.{wkspace}" for wkspace in settings)
             else:
                 yield name
 
@@ -240,7 +242,7 @@ class CEAutoLoadComps(CEAutoLoadQProvs):
         <li>Pivot (pivot) - Load Pivot functions into entities.</li>
         <li>AzureData (az_data) - Load the AzureData component. Optionally specify
         the authentication options you want to use.</li>
-        <li>AzureSentinelAPI (azs_api) - Load the AzureSentinel API component. Optionally
+        <li>MSSentinelAPI (azs_api) - Load the MSSentinel API component. Optionally
         specify the authentication options you want to use.</li>
     </ul>
 

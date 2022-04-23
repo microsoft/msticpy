@@ -45,7 +45,7 @@ TechCommunity blog posts
     # msticpy imports
     from msticpy.data import QueryProvider
     from msticpy.common.wsconfig import WorkspaceConfig
-    from msticpy.nbtools.timeseries import display_timeseries_anomolies
+    from msticpy.vis.timeseries import display_timeseries_anomalies
 
     WIDGET_DEFAULTS = {
         "layout": widgets.Layout(width="95%"),
@@ -152,20 +152,21 @@ Query, data source, parameters and parameterized raw KQL query
 
 .. code:: ipython3
 
-    #Specify start and end timestamps
+    # Specify start and end timestamps
     start='2020-02-09 00:00:00.000000'
     end='2020-03-10 00:00:00.000000'
-    #Execute the query by passing required and optional parameters
+
+    # Execute the query by passing required and optional parameters
     time_series_data = qry_prov.MultiDataSource.get_timeseries_data(
-    start=start,
-    end=end,
-    table="CommonSecurityLog",
-    timestampcolumn="TimeGenerated",
-    aggregatecolumn="SentBytes",
-    groupbycolumn="DeviceVendor",
-    aggregatefunction="sum(SentBytes)",
-    where_clause='|where DeviceVendor=="Palo Alto Networks"',
-    add_query_items='|mv-expand TimeGenerated to typeof(datetime), SentBytes to typeof(long)',
+        start=start,
+        end=end,
+        table="CommonSecurityLog",
+        timestampcolumn="TimeGenerated",
+        aggregatecolumn="SentBytes",
+        groupbycolumn="DeviceVendor",
+        aggregatefunction="sum(SentBytes)",
+        where_clause='|where DeviceVendor=="Palo Alto Networks"',
+        add_query_items='|mv-expand TimeGenerated to typeof(datetime), SentBytes to typeof(long)',
     )
     #display the output
     time_series_data
@@ -213,7 +214,7 @@ Time Series Analysis and discovering Anomalies
 ----------------------------------------------
 
 By analyzing time series data over an extended period, we can identify
-time-based patterns (e.g. seasonality, trend etc.) in the data and
+time-based patterns (e.g. seasonality, trend etc.) in the data and
 extract meaningful statistics which can help in flagging outliers. A
 particular example in a security context is user logon patterns over a
 period of time exhibiting different behavior after hours and on
@@ -393,7 +394,7 @@ Documentation of timeseries_anomalies_stl function
       Parameters
       ----------
       data: pd.DataFrame
-          DataFrame as a time series data set retrived from data connector or external data source.
+          DataFrame as a time series data set retrieved from data connector or external data source.
           Dataframe must have 2 columns with time column set as index and other numeric value.
 
       Other Parameters
@@ -677,7 +678,7 @@ API is a set of top level reader functions accessed like
 pandas.read_csv() that generally return a pandas object.
 
 Read More at Pandas Documentation: - `I/O Tools (Text
-,CSV,HDF5..) <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__
+,CSV,HDF5..) <https://pandas.pydata.org/docs/user_guide/io.html>`__
 
 Example of using Pandas ``read_csv`` to read local csv file containing
 TimeSeries demo dataset. Additional columns in the csv such as
@@ -831,7 +832,17 @@ details
 
 .. code:: ipython3
 
-    time_series_alerts= qry_prov.MultiDataSource.get_timeseries_alerts(start=start, end =end, table='CommonSecurityLog',timestampcolumn = 'TimeGenerated', aggregatecolumn='SentBytes',groupbycolumn='DeviceVendor',aggregatefunction='sum(SentBytes)', scorethreshold='1.5', where_clause='|where DeviceVendor=="Palo Alto Networks"')
+    time_series_alerts = qry_prov.MultiDataSource.get_timeseries_alerts(
+        start=start,
+        end=end,
+        table='CommonSecurityLog',
+        timestampcolumn='TimeGenerated',
+        aggregatecolumn='SentBytes',
+        groupbycolumn='DeviceVendor',
+        aggregatefunction='sum(SentBytes)',
+        scorethreshold='1.5',
+        where_clause='|where DeviceVendor=="Palo Alto Networks"'
+    )
     time_series_alerts
 
 
@@ -972,7 +983,7 @@ Documentation for display_timeseries_anomalies
 
 ::
 
-   display_timeseries_anomolies(
+   display_timeseries_anomalies(
        data: pandas.core.frame.DataFrame,
        y: str = 'Total',
        time_column: str = 'TimeGenerated',
@@ -1040,7 +1051,7 @@ Documentation for display_timeseries_anomalies
 
 .. code:: ipython3
 
-    display_timeseries_anomolies(data=timeseriesdemo, y= 'TotalBytesSent')
+    display_timeseries_anomalies(data=timeseriesdemo, y= 'TotalBytesSent')
 
 
 
@@ -1084,7 +1095,7 @@ function.
     from IPython.display import Image
 
     # Create a plot
-    timeseries_anomaly_plot = display_timeseries_anomolies(data=timeseriesdemo, y= 'TotalBytesSent')
+    timeseries_anomaly_plot = display_timeseries_anomalies(data=timeseriesdemo, y= 'TotalBytesSent')
 
     # Export
     file_name = "plot.png"

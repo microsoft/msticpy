@@ -221,9 +221,11 @@ def get_children(
 
     """
     proc = get_process(procs, source)
+    current_index_name = procs.index.name
     children = procs[procs[Col.parent_key] == proc.name]
     if include_source:
-        return children.append(proc)
+        children = pd.concat([pd.DataFrame(proc).T, children])
+        children.index.name = current_index_name
     return children
 
 
@@ -257,6 +259,7 @@ def get_descendents(
     descendents = []
     parent_keys = [proc.name]
     level = 0
+    current_index_name = procs.index.name
     rem_procs: Optional[pd.DataFrame] = None
     while max_levels == -1 or level < max_levels:
         if rem_procs is not None:
@@ -279,7 +282,8 @@ def get_descendents(
         desc_procs = pd.DataFrame(columns=proc.index, index=None)
         desc_procs.index.name = Col.proc_key
     if include_source:
-        return desc_procs.append(proc).sort_values("path")
+        desc_procs = pd.concat([pd.DataFrame(proc).T, desc_procs])
+        desc_procs.index.name = current_index_name
     return desc_procs.sort_values("path")
 
 
