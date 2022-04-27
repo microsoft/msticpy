@@ -6,9 +6,11 @@
 """Data uploader base class."""
 import abc
 from abc import ABC
+
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -72,3 +74,8 @@ class UploaderBase(ABC):
             The name of the table to upload the DataFrame to
 
         """
+
+    @staticmethod
+    def get_http_timeout(**kwargs):
+        """Get http timeout from settings or kwargs."""
+        return get_http_timeout(**kwargs)
