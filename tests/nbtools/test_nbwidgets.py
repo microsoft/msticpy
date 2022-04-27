@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test module for nbwidgets."""
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
