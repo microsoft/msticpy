@@ -18,7 +18,7 @@ and Pivot Functions
 MSTICPy Lab
 -----------
 Try out MSTICPy and Notebooks in MyBinder.org. No installation necessary.
-`MSTICPy Lab <https://github.com/Azure-Samples/azure-python-labs/blob/main/9-MSTICPy/README.md>`__
+`MSTICPy Lab <https://github.com/Azure-Samples/azure-python-labs/blob/main/01-msticpy/README.md>`__
 
 .. figure:: _static/msticpy-lab.png
    :alt: MSTICPy lab on Azure Sample GitHub

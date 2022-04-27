@@ -6,7 +6,7 @@
 """
 Deprecated - module pivot.py has moved.
 
-See :py:mod:`msticpy.datamodel.pivots.pivot`
+See :py:mod:`msticpy.init.pivot`
 """
 import warnings
 
@@ -15,14 +15,9 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-
-# flake8: noqa: F403, F401
-# pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from .pivots.pivot import *
-
 WARN_MSSG = (
-    "This module has moved to msticpy.datamodel.pivots.pivot\n"
+    "This module has moved to msticpy.init.pivot\n"
     "Please change your import to reflect this new location."
-    "This will be removed in MSTICPy v2.0.0"
+    "This will be removed in MSTICPy v2.2.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

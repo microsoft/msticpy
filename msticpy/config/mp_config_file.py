@@ -21,7 +21,7 @@ from IPython.display import display
 from .._version import VERSION
 
 try:
-    from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
+    from ..auth.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
 
     _KEYVAULT = True
 except ImportError:

@@ -13,7 +13,6 @@ Subpackages
    :maxdepth: 4
 
    msticpy.analysis.anomalous_sequence
-   msticpy.analysis.data
 
 Submodules
 ----------
@@ -22,9 +21,9 @@ Submodules
    :maxdepth: 4
 
    msticpy.analysis.cluster_auditd
+   msticpy.analysis.code_cleanup
    msticpy.analysis.eventcluster
    msticpy.analysis.observationlist
    msticpy.analysis.outliers
-   msticpy.analysis.sectools_magics
    msticpy.analysis.syslog_utils
    msticpy.analysis.timeseries

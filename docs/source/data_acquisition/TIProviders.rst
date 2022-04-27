@@ -24,7 +24,7 @@ multiple observables. Processing may require a an API key and processing
 performance may be limited to a specific number of requests per minute
 for the account type that you have.
 
-:py:mod:`TILookup API documentation<msticpy.data.context.tilookup>`
+:py:mod:`TILookup API documentation<msticpy.context.tilookup>`
 
 
 
@@ -32,7 +32,7 @@ Constructor
 ~~~~~~~~~~~
 
 
-See :py:class:`TILookup<msticpy.data.context.tilookup.TILookup>`
+See :py:class:`TILookup<msticpy.context.tilookup.TILookup>`
 
 .. parsed-literal::
 
@@ -75,7 +75,7 @@ Available Providers
 The **msticpy** TI Provider library can lookup IoCs in multiple
 providers.
 
-The :py:meth:`list_available_providers <msticpy.data.context.tilookup.TILookup.list_available_providers>`
+The :py:meth:`list_available_providers <msticpy.context.tilookup.TILookup.list_available_providers>`
 class method shows the current set of providers.
 
 .. code:: ipython3
@@ -163,7 +163,7 @@ environment variable ``MSTICPYCONFIG``.
 If you need to create a config file, use the content shown below.
 The ``Provider`` key must correspond to an available Python class.
 The names of the built-in provider classes can be obtained using the
-:py:meth:`list_available_providers <msticpy.data.context.tilookup.TILookup.list_available_providers>`
+:py:meth:`list_available_providers <msticpy.context.tilookup.TILookup.list_available_providers>`
 function.
 
 Delete any provider entries from the example below that you do not want
@@ -278,7 +278,7 @@ Looking up IoCs
 lookup_ioc
 ~~~~~~~~~~
 
-See :py:meth:`lookup_ioc<msticpy.data.context.tilookup.TILookup.lookup_ioc>`
+See :py:meth:`lookup_ioc<msticpy.context.tilookup.TILookup.lookup_ioc>`
 
 To lookup a single IoC.
 
@@ -291,7 +291,7 @@ To lookup a single IoC.
        providers: List[str] = None,
        prov_scope: str = 'primary',
        **kwargs,
-   ) -> Tuple[bool, List[Tuple[str, msticpy.data.context.tiproviders.ti_provider_base.LookupResult]]]
+   ) -> Tuple[bool, List[Tuple[str, msticpy.context.tiproviders.ti_provider_base.LookupResult]]]
 
    Lookup single IoC in active providers.
 
@@ -440,7 +440,7 @@ And show the output
 Or convert result to a DataFrame and let pandas do the display work
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :py:meth:`result_to_df<msticpy.data.context.tilookup.TILookup.result_to_df>`
+See :py:meth:`result_to_df<msticpy.context.tilookup.TILookup.result_to_df>`
 
 .. code:: ipython3
 
@@ -534,7 +534,7 @@ This shows the supported IoC Types.
 In some cases an IoC type will also support special types of sub-query
 such as geo-ip and passive-dns
 
-See :py:meth:`provider_usage<msticpy.data.context.tilookup.TILookup.provider_usage>`
+See :py:meth:`provider_usage<msticpy.context.tilookup.TILookup.provider_usage>`
 
 .. code:: ipython3
 
@@ -661,7 +661,7 @@ dictionary of the form ``{ioc_observable: ioc_type}``
 Looking up Multiple IoCs
 ------------------------
 
-See :py:meth:`lookup_iocs<msticpy.data.context.tilookup.TILookup.lookup_iocs>`
+See :py:meth:`lookup_iocs<msticpy.context.tilookup.TILookup.lookup_iocs>`
 
 lookup_iocs
 ~~~~~~~~~~~

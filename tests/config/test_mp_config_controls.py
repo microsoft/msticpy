@@ -14,7 +14,7 @@ from msticpy.config.ce_common import get_defn_or_default, get_or_create_mpc_sect
 from msticpy.config.comp_edit import SettingsControl
 from msticpy.config.mp_config_control import MpConfigControls, get_mpconfig_definitions
 
-from ..nbtools.test_user_config import CONFIG_TEXT
+from ..init.test_user_config import CONFIG_TEXT
 from ..unit_test_lib import TEST_DATA_PATH
 
 __author__ = "Ian Hellen"

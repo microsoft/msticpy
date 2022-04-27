@@ -3,9 +3,28 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Data provider sub-package."""
+"""
+Deprecated - module data.azure has moved.
+
+See :py:mod:`msticpy.context.azure`
+"""
+import warnings
+
+from ..._version import VERSION
+
+__version__ = VERSION
+__author__ = "Pete Bryan"
+
+from ...context.azure.azure_data import AzureData
+from ...context.azure.sentinel_core import MicrosoftSentinel
+
+# pylint: disable=unused-import
 # flake8: noqa: F401
-# pylint: disable=W0401
-from ..context.azure.azure_blob_storage import AzureBlobStorage
-from ..context.azure.azure_data import AzureData
-from ..context.azure.sentinel_core import MicrosoftSentinel
+from ..storage.azure_blob_storage import AzureBlobStorage
+
+WARN_MSSG = (
+    "This module has moved to msticpy.context.azure\n"
+    "Please change your import to reflect this new location."
+    "This will be removed in MSTICPy v2.2.0"
+)
+warnings.warn(WARN_MSSG, category=DeprecationWarning)

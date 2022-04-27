@@ -14,8 +14,8 @@ import pytest_check as check
 
 from msticpy.datamodel import entities
 from msticpy.datamodel.entities import Alert, Host, IpAddress, OSFamily, Url
-from msticpy.datamodel.pivots.pivot import Pivot
 from msticpy.datamodel.soc.sentinel_alert import SentinelAlert
+from msticpy.init.pivot import Pivot
 
 from ...unit_test_lib import get_test_data_path
 

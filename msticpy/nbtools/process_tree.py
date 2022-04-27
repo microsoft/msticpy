@@ -17,8 +17,8 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..analysis.data.process_tree_utils import get_ancestors  # noqa F401
-from ..analysis.data.process_tree_utils import (
+from ..transform.process_tree_utils import get_ancestors  # noqa F401
+from ..transform.process_tree_utils import (
     get_children,
     get_descendents,
     get_parent,
@@ -37,6 +37,6 @@ from ..vis.process_tree import build_process_tree, infer_schema
 WARN_MSSG = (
     "This module has moved to msticpy.vis.process_tree\n"
     "Please change your import to reflect this new location."
-    "This will be removed in MSTICPy v2.0.0"
+    "This will be removed in MSTICPy v2.2.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

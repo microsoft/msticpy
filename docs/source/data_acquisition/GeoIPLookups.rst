@@ -4,7 +4,7 @@ GeoIP Lookup
 Introduction
 ------------
 
-This :py:mod:`module<msticpy.data.context.geoip>` contains two classes
+This :py:mod:`module<msticpy.context.geoip>` contains two classes
 that allow you to look up the Geolocation of IP Addresses.
 
 MaxMind GeoIPLite
@@ -51,7 +51,7 @@ Importing the GeoIP classes
     import pandas as pd
 
     from msticpy.datamodel.entities import IpAddress, GeoLocation
-    from msticpy.data.context.geoip import GeoLiteLookup, IPStackLookup
+    from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
 
 
@@ -59,7 +59,7 @@ Importing the GeoIP classes
 Maxmind Geo-IP Lite Lookup Class
 --------------------------------
 
-See :py:class:`GeoLiteLookup<msticpy.data.context.geoip.GeoLiteLookup>`
+See :py:class:`GeoLiteLookup<msticpy.context.geoip.GeoLiteLookup>`
 
 .. note:: Maxmind now require an API Key to download database
    updates. You can create a free account or opt for a paid tier,
@@ -153,7 +153,7 @@ Lookup IP location from GeoLite2 database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can pass a single IP Address, a list of IPAddresses or an IpAddress
-entity (see :py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>`)
+entity (see :py:class:`IpAddress<msticpy.datamodel.entities.IpAddress>`)
 
 
 .. code:: ipython3
@@ -290,7 +290,7 @@ Looking up a list of IP Addresses with GeoLiteLookup
 IPStack Geo-lookup Class
 ------------------------
 
-See :py:class:`IPStackLookup<msticpy.data.context.geoip.IPStackLookup>`
+See :py:class:`IPStackLookup<msticpy.context.geoip.IPStackLookup>`
 
 
 .. note:: IPStack requires an IPStack API Key.
@@ -418,7 +418,7 @@ Looking up a list of IP Addresses with IPStackLookup
 Taking input from a pandas DataFrame
 ------------------------------------
 
-See :py:meth:`df_lookup_ip<msticpy.data.context.geoip.GeoIpLookup.df_lookup_ip>`
+See :py:meth:`df_lookup_ip<msticpy.context.geoip.GeoIpLookup.df_lookup_ip>`
 
 The base class for both implementations has a method that sources the ip
 addresses from a dataframe column and returns a new dataframe with the
@@ -436,7 +436,7 @@ Creating a Custom GeopIP Lookup Class
 You can derive a class that implements the same operations to use with a
 different GeoIP service by subclassing the GeoIpLookup class.
 
-See :py:class:`GeoIpLookup<msticpy.data.context.geoip.GeoIpLookup>`
+See :py:class:`GeoIpLookup<msticpy.context.geoip.GeoIpLookup>`
 
 You should override the lookup_ip method implementing your own method of
 geoip lookup.
@@ -445,8 +445,8 @@ geoip lookup.
 Calculating Geographical Distances
 ----------------------------------
 
-Use the :py:func:`geo_distance<msticpy.data.context.geoip.geo_distance>` function from
-msticpy.data.context.geoip to calculate distances between two locations.
+Use the :py:func:`geo_distance<msticpy.context.geoip.geo_distance>` function from
+msticpy.context.geoip to calculate distances between two locations.
 
 I am indebted to Martin Thoma who
 posted this solution (which I’ve modified slightly) on Stackoverflow.
@@ -454,7 +454,7 @@ posted this solution (which I’ve modified slightly) on Stackoverflow.
 
 .. code:: ipython3
 
-    from msticpy.data.context.geoip import geo_distance
+    from msticpy.context.geoip import geo_distance
     _, ip_entity1 = iplocation.lookup_ip(ip_address='90.156.201.97')
     _, ip_entity2 = iplocation.lookup_ip(ip_address='151.101.64.223')
 

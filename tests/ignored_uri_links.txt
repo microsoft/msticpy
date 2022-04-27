@@ -1,0 +1,11 @@
+# Add any URLs that should be skipped in the test_doc_links test
+https://nest.cybereason.com
+https://www.virustotal.com/vtapi/v2/file/report
+https://www.virustotal.com/vtapi/v2/file/report
+https://openpagerank.com/api/v1.0/getPageRank?domains[0]=fkksjobnn43.org
+https://www.virustotal.com/vtapi/v2/domain/report
+https://api.xforce.ibmcloud.com/url/fkksjobnn43.org
+https://api.greynoise.io/v3/community/38.75.137.9
+https://management.azure.com/.default
+https://www.maxmind.com/en/accounts/current/license-key
+https://api.us2.sumologic.com/api

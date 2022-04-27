@@ -31,13 +31,14 @@ from bokeh.transform import dodge, factor_cmap, linear_cmap
 from deprecated.sphinx import deprecated
 
 from .._version import VERSION
-from ..analysis.data.proc_tree_builder import build_process_tree, infer_schema
-from ..analysis.data.proc_tree_schema import ColNames as Col
-from ..analysis.data.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
+from ..common.utility import check_kwargs, export
+from ..transform.proc_tree_builder import build_process_tree, infer_schema
+from ..transform.proc_tree_schema import ColNames as Col
+from ..transform.proc_tree_schema import ProcessTreeSchemaException, ProcSchema
 
 # pylint: disable=unused-import
 # flake8: noqa F401
-from ..analysis.data.process_tree_utils import (
+from ..transform.process_tree_utils import (
     get_ancestors,
     get_children,
     get_descendents,
@@ -51,7 +52,6 @@ from ..analysis.data.process_tree_utils import (
     get_summary_info,
     get_tree_depth,
 )
-from ..common.utility import check_kwargs, export
 
 # pylint: enable=unused-import
 

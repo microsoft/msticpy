@@ -9,14 +9,14 @@ from unittest.mock import patch
 import pytest
 from azure.identity import InteractiveBrowserCredential
 
-from msticpy.common import pkg_config
-from msticpy.common.azure_auth_core import (
+from msticpy.auth.azure_auth_core import (
     AzCredentials,
     ChainedTokenCredential,
     CredentialWrapper,
 )
+from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
-from msticpy.data.context.azure.azure_data import AzureData
+from msticpy.context.azure.azure_data import AzureData
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

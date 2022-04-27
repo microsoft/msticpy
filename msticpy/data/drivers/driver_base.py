@@ -13,6 +13,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyNotConnectedError
+from ...common.pkg_config import get_http_timeout
 from ...common.provider_settings import ProviderSettings, get_provider_settings
 from ..core.query_source import QuerySource
 
@@ -204,3 +205,8 @@ class DriverBase(ABC):
             title=f"not connected to {prov_name}.",
             help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
         )
+
+    @staticmethod
+    def get_http_timeout(**kwargs):
+        """Get http timeout from settings or kwargs."""
+        return get_http_timeout(**kwargs)

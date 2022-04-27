@@ -356,7 +356,7 @@ then run a simple lookup.
     mpconfig.refresh_mp_config()
 
     # import the TI module
-    from msticpy.data.context import TILookup
+    from msticpy.context import TILookup
     result = TILookup().lookup_ioc('ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa')
     TILookup.result_to_df(result)
 
@@ -435,7 +435,7 @@ Test that the GeoIP settings work
 
     mpconfig.refresh_mp_config()
 
-    from msticpy.data.context.geoip import IPStackLookup
+    from msticpy.context.geoip import IPStackLookup
     geoip = IPStackLookup()
     geoip.lookup_ip("52.96.165.18")[1][0]
 
@@ -466,7 +466,7 @@ This is the equivalent for Maxmind *GeoLite*.
 
     mpconfig.refresh_mp_config()
 
-    from msticpy.data.context.geoip import GeoLiteLookup
+    from msticpy.context.geoip import GeoLiteLookup
     geoip = GeoLiteLookup()
     geoip.lookup_ip("52.96.165.18")[1][0]
 

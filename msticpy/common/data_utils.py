@@ -62,3 +62,8 @@ def ensure_df_datetimes(
                 "UTC", ambiguous="infer", nonexistent="shift_forward"
             )
     return converted_data
+
+
+def df_has_data(data) -> bool:
+    """Return true if data is a pd.DataFrame and is not empty."""
+    return isinstance(data, pd.DataFrame) and not data.empty

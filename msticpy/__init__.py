@@ -18,6 +18,10 @@ To quickly import common modules into a notebook run:
 For more options:
 >>> help(msticpy.init_notebook)
 
+Search msticpy modules for a keyword:
+>>> import msticpy
+>>> msticpy.search(keyword)
+
 -----------------------------------------------
 
 Full documentation is available at:
@@ -29,12 +33,17 @@ https://github.com/microsoft/msticpy
 
 Package structure:
 
-- analysis - analysis and data processing functions
-- common - utility functions, authentication, secrets
+- auth - authentication and secrets management
+- analysis - analysis functions
+- common - utility functions, common types, exceptions
 - config - configuration tool
 - data - queries, data access, context functions
 - datamodel - entities and pivot functions
-- nbtools - notebook initialization and tools
+- init - package initialization
+- nbtools - deprecated location
+- nbwidgets - notebook widgets
+- resources - data resource files
+- transform - data transforms and decoding
 - vis - visualizations
 
 Configuration:
@@ -46,18 +55,23 @@ Configuration:
 
 import os
 
+from . import nbwidgets
+
 # flake8: noqa: F403
-from . import analysis, data, nbtools, sectools
 from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
-from .common.pkg_config import refresh_config
 from .common.utility import search_name as search
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
-from .nbtools.nbinit import current_providers, init_notebook
+from .data import QueryProvider
+from .datamodel import entities
+from .init.nbinit import current_providers, init_notebook
+from .init.pivot import Pivot
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
+
+refresh_config = settings.refresh_config
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"

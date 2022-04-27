@@ -6,7 +6,7 @@
 """
 Deprecated - module domain_utils.py has moved.
 
-See :py:mod:`msticpy.data.context.domain_utils`
+See :py:mod:`msticpy.context.domain_utils`
 """
 import warnings
 
@@ -18,11 +18,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ..data.context.domain_utils import *
+from ..context.domain_utils import *
 
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.domain_utils\n"
     "Please change your import to reflect this new location."
-    "This will be removed in MSTICPy v2.0.0"
+    "This will be removed in MSTICPy v2.2.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)

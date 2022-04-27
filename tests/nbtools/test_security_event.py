@@ -8,6 +8,7 @@ import os
 import unittest
 
 import pandas as pd
+import pytest
 
 from msticpy.nbtools.security_event import SecurityEvent
 
@@ -24,11 +25,13 @@ class TestSecurity(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
+        """Setup test."""
         input_file = os.path.join(_TEST_DATA, "processes_on_host.csv")
         self.input_df = pd.read_csv(input_file)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_4688_events(self):
-
+        """Tests process creation events."""
         for idx, row in self.input_df[0:5].iterrows():
             test_event = SecurityEvent(src_row=row)
             self.assertGreaterEqual(len(test_event.entities), 4)

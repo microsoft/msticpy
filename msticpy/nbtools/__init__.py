@@ -18,15 +18,16 @@ to the vis sub-package.
 """
 # flake8: noqa: F403
 # pylint: disable=W0401
+from .. import nbwidgets
 from .._version import VERSION
 from ..common import utility as utils
 from ..common.wsconfig import WorkspaceConfig
-from . import nbdisplay, nbwidgets
+from ..vis import nbdisplay
 
 try:
     from IPython import get_ipython
 
-    from . import nbmagics
+    from ..init import nbmagics
 except ImportError as err:
     pass
 

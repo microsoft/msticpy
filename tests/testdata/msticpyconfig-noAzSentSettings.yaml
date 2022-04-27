@@ -38,7 +38,7 @@ TIProviders:
       WorkspaceID: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
       TenantID: "69d28fd7-42a5-48bc-a619-af56397b9f28"
     Primary: True
-    Provider: "NoLoad-AzSTI"
+    Provider: "LocalData"
   OpenPageRank:
     Args:
       AuthKey: "69d28fd7-42a5-48bc-a619-af56397b9f28"

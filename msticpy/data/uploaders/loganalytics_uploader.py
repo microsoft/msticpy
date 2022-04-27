@@ -126,10 +126,7 @@ class LAUploader(UploaderBase):
         }
         try:
             response = httpx.post(
-                uri,
-                content=body,
-                headers=headers,
-                timeout=httpx.Timeout(10.0, connect=30.0),
+                uri, content=body, headers=headers, timeout=self.get_http_timeout()
             )
         except httpx.ConnectError as req_err:
             raise MsticpyConnectionError(

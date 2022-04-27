@@ -9,7 +9,7 @@ from typing import Any, Union
 import pandas as pd
 
 from ..._version import VERSION
-from ...common.azure_auth import AzureCloudConfig
+from ...auth.azure_auth import AzureCloudConfig
 from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment

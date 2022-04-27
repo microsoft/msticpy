@@ -39,12 +39,12 @@ from pprint import pprint
 import yaml
 from msrestazure.azure_exceptions import CloudError
 
-from msticpy.common import pkg_config as config
-from msticpy.common.keyvault_client import (
+from msticpy.auth.keyvault_client import (
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
 )
+from msticpy.common import pkg_config as config
 
 try:
     from .toollib import VERSION  # type: ignore

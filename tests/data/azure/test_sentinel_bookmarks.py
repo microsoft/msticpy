@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 import respx
 
-from msticpy.data.context.azure import MicrosoftSentinel
+from msticpy.context.azure import MicrosoftSentinel
 
 _BOOKMARK = {
     "value": [

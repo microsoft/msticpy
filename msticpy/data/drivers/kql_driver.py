@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import pandas as pd
 from IPython import get_ipython
 
-from ...common.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
@@ -159,7 +159,7 @@ class KqlDriver(DriverBase):
 
         self.current_connection = connection_str
         ws_in_connection = re.search(
-            "workspace\(['\"]([^'\"]+).*",  # pylint: disable=anomalous-backslash-in-string # noqa: W605
+            r"workspace\(['\"]([^'\"]+).*",
             self.current_connection,
             re.IGNORECASE,
         )

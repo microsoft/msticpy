@@ -8,10 +8,8 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-import nbformat
 import pandas as pd
 import pytest
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 from msticpy.analysis.timeseries import (
     create_time_period_kqlfilter,
@@ -20,7 +18,7 @@ from msticpy.analysis.timeseries import (
     timeseries_anomalies_stl,
 )
 
-from ..unit_test_lib import custom_mp_config, get_test_data_path
+from ..unit_test_lib import exec_notebook, get_test_data_path
 
 _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "TimeSeriesAnomaliesVisualization.ipynb"
@@ -39,6 +37,7 @@ class TestTimeSeries(unittest.TestCase):
     """Unit test class."""
 
     def setUp(self):
+        """Initialize test."""
         input_file = os.path.join(_TEST_DATA, "TimeSeriesDemo.csv")
         self.input_df = pd.read_csv(
             input_file,
@@ -50,6 +49,7 @@ class TestTimeSeries(unittest.TestCase):
         self.output_df = timeseries_anomalies_stl(data=self.input_df)
 
     def test_timeseries_anomalies_stl(self):
+        """Test anomalies function."""
         out_df = self.output_df
 
         self.assertIn("residual", out_df.columns)
@@ -67,23 +67,9 @@ class TestTimeSeries(unittest.TestCase):
         not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
     )
     def test_timeseries_controls(self):
+        """Test notebook."""
         nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
-        abs_path = Path(_NB_FOLDER).absolute()
-        with open(nb_path) as f:
-            nb = nbformat.read(f, as_version=4)
-        ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
-
-        try:
-            with custom_mp_config(_MP_CONFIG_PATH):
-                ep.preprocess(nb, {"metadata": {"path": abs_path}})
-        except CellExecutionError:
-            nb_err = str(nb_path).replace(".ipynb", "-err.ipynb")
-            msg = f"Error executing the notebook '{nb_path}'.\n"
-            msg += f"See notebook '{nb_err}' for the traceback."
-            print(msg)
-            with open(nb_err, mode="w", encoding="utf-8") as f:
-                nbformat.write(nb, f)
-            raise
+        exec_notebook(nb_path=nb_path, mp_config=_MP_CONFIG_PATH)
 
     def test_extract_anomaly_periods(self):
         """Test extracting anomaly periods."""

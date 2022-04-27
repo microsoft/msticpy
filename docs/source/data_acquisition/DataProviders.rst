@@ -430,7 +430,7 @@ The values acceptable for the *split_queries_by* parameter have the format:
 where N is the number of units and TimeUnit is a mnemonic of the unit, e.g.
 H = hour, D = day, etc. For the full list of these see the documentation
 for Timedelta in the
-`pandas documentation <https://pandas.pydata.org/pandas-docs>`__
+`pandas documentation <https://pandas.pydata.org/docs>`__
 
 .. warning:: There are some important caveats to this feature.
 

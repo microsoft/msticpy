@@ -42,8 +42,8 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _TIMELINE_HELP = (
-    "https://msticpy.readthedocs.io/en/latest/msticpy.nbtools.html"
-    "#msticpy.nbtools.timeline_duration.{plot_type}"
+    "https://msticpy.readthedocs.io/en/latest/msticpy.init.html"
+    "#msticpy.init.timeline_duration.{plot_type}"
 )
 
 

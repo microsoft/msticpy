@@ -23,6 +23,6 @@ from ..analysis.syslog_utils import *
 WARN_MSSG = (
     "This module has moved to msticpy.analysis.syslog_utils\n"
     "Please change your import to reflect this new location."
-    "This will be removed in MSTICPy v2.0.0"
+    "This will be removed in MSTICPy v2.2.0"
 )
 warnings.warn(WARN_MSSG, category=DeprecationWarning)
