@@ -18,10 +18,12 @@ Consolidated settings are accessible as an attribute `settings`.
 """
 from importlib.util import find_spec
 import os
+from numbers import Number
 from pathlib import Path
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Callable, Dict, Optional
 
 import pkg_resources
+import httpx
 import yaml
 from yaml.error import YAMLError
 
@@ -243,6 +245,24 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     if az_cli_config and _AZ_CLI not in data_providers:
         data_providers[_AZ_CLI] = mp_config[_AZ_CLI]
     return mp_config
+
+
+def get_http_timeout(
+    **kwargs,
+) -> httpx.Timeout:
+    """Return timeout from settings or overridden in `kwargs`."""
+    timeout_params = kwargs.get(
+        "timeout", kwargs.get("def_timeout", settings.get("http_timeout", None))  # type: ignore
+    )  # type: ignore
+    if isinstance(timeout_params, dict):
+        return httpx.Timeout(**timeout_params)
+    if isinstance(timeout_params, httpx.Timeout):
+        return timeout_params
+    if isinstance(timeout_params, Number):
+        return httpx.Timeout(float(timeout_params))
+    if isinstance(timeout_params, tuple) and len(timeout_params) == 2:
+        return httpx.Timeout(timeout_params[0], connect=timeout_params[1])
+    return httpx.Timeout(None)
 
 
 # read initial config when first imported.
