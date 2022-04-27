@@ -16,11 +16,11 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
+import numbers
 import os
 from importlib.util import find_spec
-from numbers import Number
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 import httpx
 import pkg_resources
@@ -298,14 +298,28 @@ def get_http_timeout(
         "timeout", kwargs.get("def_timeout", settings.get("http_timeout", None))  # type: ignore
     )  # type: ignore
     if isinstance(timeout_params, dict):
+        timeout_params = {
+            name: _valid_timeout(val) for name, val in timeout_params.items()
+        }
         return httpx.Timeout(**timeout_params)
     if isinstance(timeout_params, httpx.Timeout):
         return timeout_params
-    if isinstance(timeout_params, Number):
-        return httpx.Timeout(float(timeout_params))
-    if isinstance(timeout_params, tuple) and len(timeout_params) == 2:
-        return httpx.Timeout(timeout_params[0], connect=timeout_params[1])
+    if isinstance(timeout_params, numbers.Real):
+        return httpx.Timeout(_valid_timeout(timeout_params))
+    if isinstance(timeout_params, (list, tuple)):
+        timeout_params = [_valid_timeout(val) for val in timeout_params]
+        if len(timeout_params) >= 2:
+            return httpx.Timeout(timeout=timeout_params[0], connect=timeout_params[1])
+        if timeout_params:
+            return httpx.Timeout(timeout_params[0])
     return httpx.Timeout(None)
+
+
+def _valid_timeout(timeout_val) -> Union[float, None]:
+    """Return float in valid range or None."""
+    if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
+        return float(timeout_val)
+    return None
 
 
 # read initial config when first imported.
@@ -448,23 +462,42 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
     if p_name == "XForce":
         errs.append(_check_required_key(sec_args, "ApiID", sec_path))
     if p_name == _AZ_SENTINEL:
-        errs.append(_check_is_uuid(sec_args, "WorkspaceID", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantID", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceID", sec_path),
+                _check_is_uuid(sec_args, "TenantID", sec_path),
+            )
+        )
+
     if p_name.startswith("AzureSentinel_"):
-        errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceId", sec_path),
+                _check_is_uuid(sec_args, "TenantId", sec_path),
+            )
+        )
+
     if (
         p_name == _AZ_CLI
         and "clientId" in sec_args
         and sec_args["clientId"] is not None
     ):
         # only warn if partially filled - since these are optional
-        errs.append(_check_required_key(sec_args, "clientId", sec_path))
-        errs.append(_check_required_key(sec_args, "tenantId", sec_path))
-        errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "clientId", sec_path),
+                _check_required_key(sec_args, "tenantId", sec_path),
+                _check_required_key(sec_args, "clientSecret", sec_path),
+            )
+        )
     if p_name == "RiskIQ":
-        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
-        errs.append(_check_required_package("passivetotal", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "ApiID", sec_path),
+                _check_required_package("passivetotal", sec_path),
+            )
+        )
+
     return [err for err in errs if err]
 
 
