@@ -16,8 +16,9 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
-from importlib.util import find_spec
+import collections
 import os
+from importlib.util import find_spec
 from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
@@ -259,9 +260,12 @@ def get_http_timeout(
     if isinstance(timeout_params, httpx.Timeout):
         return timeout_params
     if isinstance(timeout_params, Number):
-        return httpx.Timeout(float(timeout_params))
-    if isinstance(timeout_params, tuple) and len(timeout_params) == 2:
-        return httpx.Timeout(timeout_params[0], connect=timeout_params[1])
+        return httpx.Timeout(float(timeout_params))  # type: ignore
+    if isinstance(timeout_params, collections.abc.Iterable):
+        if len(timeout_params) >= 2:
+            return httpx.Timeout(timeout_params[0], connect=timeout_params[1])
+        if len(timeout_params) >= 1:
+            return httpx.Timeout(timeout_params[0])
     return httpx.Timeout(None)
 
 
