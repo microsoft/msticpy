@@ -24,8 +24,9 @@ Configuration sections
 
 AzureSentinel
 ~~~~~~~~~~~~~
-Here you can specify your default workspace and tenant IDs and add additional
-workspaces if needed.
+Here you can specify your default workspace IDs and tenant IDs and add additional
+workspaces if needed. If you wish to use the Microsoft Sentinel API features you
+can also specify Subscription Ids, Subscription names and Workspace names here.
 
 QueryDefinitions
 ~~~~~~~~~~~~~~~~
@@ -559,6 +560,9 @@ Commented configuration file sample
         Default:
           WorkspaceId: "d973e3d2-28e6-458e-b2cf-d38876fb1ba4"
           TenantId: "4cdf87a8-f0fc-40bb-9d85-68bcf4ac8e61"
+          SubscriptionId: "2e0acf9c-b2c4-4c9b-8f34-9899b9588492"
+          WorkspaceName: "MyWorkspace"
+          ResourceGroup: "MyResourceGroup"
         # To use these launch with an explicit name - WorkspaceConfig(workspace_name="Workspace2")
         Workspace2:
           WorkspaceId: "c88dd3c2-d657-4eb3-b913-58d58d811a41"

@@ -22,6 +22,7 @@
 definitions:
   # Azure Sentinel workspace definition
   workspace_defn: &workspace
+    WorkspaceName: str(required=False)
     WorkspaceId: str(format=uuid)
     TenantId: str(format=uuid)
     SubscriptionId: str(required=False, format=uuid)
