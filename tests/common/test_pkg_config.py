@@ -40,7 +40,7 @@ def test_load_default():
         )
 
 
-def test_custom_config(self):
+def test_custom_config():
     """Test load queries from custom path."""
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
@@ -68,7 +68,7 @@ def test_custom_config(self):
             check.is_in("Primary", prov)
             check.is_in("Provider", prov)
             if "Args" in prov:
-                self.assertIsInstance(prov["Args"], dict)
+                check.is_instance(prov["Args"], dict)
                 for arg_name, arg_val in prov["Args"].items():
                     check.is_in(
                         arg_name, ["ApiID", "AuthKey", "WorkspaceID", "TenantID"]
@@ -80,7 +80,7 @@ def test_custom_config(self):
                     )
 
 
-def test_geo_ip_settings(self):
+def test_geo_ip_settings():
     """Test get geo_ip_settings."""
     if "MAXMIND_AUTH" not in os.environ:
         os.environ["MAXMIND_AUTH"] = "Testkey"
@@ -101,7 +101,7 @@ def test_geo_ip_settings(self):
             # We want to ignore warnings from failure to download DB file
             warnings.simplefilter("ignore", category=UserWarning)
             geoip_lite = GeoLiteLookup()
-        self.assertIsInstance(geoip_lite._api_key, str)
+        check.is_instance(geoip_lite._api_key, str)
         check.equal(geoip_lite._api_key, os.environ["MAXMIND_AUTH"])
 
         check.equal(geoip_lite._db_folder, conf_dbpath)
@@ -114,12 +114,12 @@ def test_geo_ip_settings(self):
     os.environ.get("MSTICPY_BUILD_SOURCE", "").casefold() == "fork",
     reason="External fork.",
 )
-def test_validate_config(self):
+def test_validate_config():
     """Test config validation function."""
     test_config1 = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
     with custom_mp_config(test_config1):
         results = pkg_config.validate_config()
-        self.assertGreater(len(results[0]), 1)
+        check.greater(len(results[0]), 1)
         # save env vars
         vt_auth_save = os.environ.get("VTAUTHKEY", "")
         xf_id__save = os.environ.get("XFORCE_ID", "")
