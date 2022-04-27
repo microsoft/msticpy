@@ -133,7 +133,6 @@ and
 
 ### Azure Resource Data, Storage and Azure Sentinel API
 
-
 The AzureData module contains functionality for enriching data regarding Azure host
 details with additional host details exposed via the Azure API. The AzureSentinel
 module allows you to query incidents, retrieve detector and hunting
@@ -142,6 +141,7 @@ queries. AzureBlogStorage lets you read and write data from blob storage.
 [Azure Resource APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureData.html),
 [Azure Sentinel APIs](https://msticpy.readthedocs.io/en/latest/data_acquisition/Sentinel.html),
 [Azure Storage](https://msticpy.readthedocs.io/en/latest/data_acquisition/AzureBlobStorage.html)
+
 ## Security Analysis
 
 This subpackage contains several modules helpful for working on security investigations and hunting:
@@ -217,6 +217,7 @@ the IpAddress entity and browse its methods.
 [Pivot Functions](https://msticpy.readthedocs.io/en/latest/data_analysis/PivotFunctions.html)
 and
 [Pivot Functions Notebook](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/PivotFunctions.ipynb)
+
 ### base64unpack
 
 Base64 and archive (gz, zip, tar) extractor. It will try to identify any base64 encoded
@@ -309,18 +310,7 @@ View directly on GitHub or copy and paste the link into [nbviewer.org](https://n
 
 ## Notebook examples with saved data
 
-See the following notebooks for more examples of the use of this package in practice:
-
-- Windows Alert Investigation in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-  or
-  [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb)
-- Office 365 Exploration in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-  or [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb)
-- Cross-Network Hunting in
-  [GitHub](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)or
-  [NbViewer](https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb)
+See the more examples of the use of this package in practice in the [Microsoft Sentinel Examples](https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/tutorials-and-examples/example-notebooks)
 
 ## Supported Platforms and Packages
 
