@@ -6,6 +6,7 @@
 """Test module for nbwidgets."""
 import os
 from datetime import datetime, timedelta
+import os
 from pathlib import Path
 
 import ipywidgets as widgets
