@@ -387,8 +387,8 @@ def _decode_b64_string_recursive(
                     item_prefix,
                     fragment_index,
                 )
-                df_results = df_results.append(
-                    new_records, ignore_index=True, sort=False
+                df_results = pd.concat(
+                    [df_results, pd.DataFrame(new_records)], ignore_index=True
                 )
             # replace the decoded fragment in our current results string
             # (decode_string)
@@ -428,7 +428,7 @@ def _decode_b64_string_recursive(
         )
         return (
             next_level_string,
-            df_results.append(child_records, ignore_index=True, sort=False),
+            pd.concat([df_results, child_records], ignore_index=True),
         )
 
     _debug_print_trace("Nothing left to decode")
