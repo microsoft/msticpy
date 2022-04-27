@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """Test module for nbwidgets."""
 from datetime import datetime, timedelta
+import os
 from pathlib import Path
 
 import ipywidgets as widgets
@@ -312,9 +313,9 @@ _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "NotebookWidgets.ipynb"
 
 
-# @pytest.mark.skipif(
-#     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
-# )
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_widgets_notebook():
     """Run widgets notebook."""
     nb_path = Path(_NB_FOLDER).joinpath(_NB_NAME)
