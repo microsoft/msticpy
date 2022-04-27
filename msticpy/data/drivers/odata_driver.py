@@ -157,7 +157,11 @@ class OData(DriverBase):
 
             # Authenticate and obtain AAD Token for future calls
             data = urllib.parse.urlencode(req_body).encode("utf-8")
-            response = httpx.post(url=req_url, content=data)
+            response = httpx.post(
+                url=req_url,
+                content=data,
+                timeout=self.get_http_timeout(**kwargs),
+            )
             json_response = response.json()
             self.aad_token = json_response.get("access_token", None)
             if not self.aad_token:
@@ -234,12 +238,19 @@ class OData(DriverBase):
             req_url = urllib.parse.quote(req_url, safe="%/:=&?~#+!$,;'@()*[]")
             body = {"Query": query}
             response = httpx.post(
-                url=req_url, headers=self.req_headers, content=str(body)
+                url=req_url,
+                headers=self.req_headers,
+                content=str(body),
+                timeout=self.get_http_timeout(**kwargs),
             )
         else:
             # self.request_uri set if self.connected
             req_url = self.request_uri + query  # type: ignore
-            response = httpx.get(url=req_url, headers=self.req_headers)
+            response = httpx.get(
+                url=req_url,
+                headers=self.req_headers,
+                timeout=self.get_http_timeout(**kwargs),
+            )
 
         self._check_response_errors(response)
 

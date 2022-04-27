@@ -16,19 +16,21 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
-from importlib.util import find_spec
 import os
+from importlib.util import find_spec
+from numbers import Number
 from pathlib import Path
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Callable, Dict, Optional
 
+import httpx
 import pkg_resources
 import yaml
 from yaml.error import YAMLError
 
+from .._version import VERSION
 from . import exceptions
 from .exceptions import MsticpyUserConfigError
 from .utility import is_valid_uuid
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -200,7 +202,7 @@ def _get_default_config():
                 "msticpy package may be corrupted.",
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
-        conf_file = next(iter(pkg_root.glob("**/" + _CONFIG_FILE)))
+        conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
     if conf_file:
         return _read_config_file(conf_file)
     return {}
@@ -243,6 +245,32 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     if az_cli_config and _AZ_CLI not in data_providers:
         data_providers[_AZ_CLI] = mp_config[_AZ_CLI]
     return mp_config
+
+
+def get_http_timeout(
+    **kwargs,
+) -> httpx.Timeout:
+    """Return timeout from settings or overridden in `kwargs`."""
+    timeout_params = kwargs.get(
+        "timeout", kwargs.get("def_timeout", settings.get("http_timeout", None))  # type: ignore
+    )  # type: ignore
+    if isinstance(timeout_params, dict):
+        timeout_params = {
+            name: val if isinstance(val, Number) else None
+            for name, val in timeout_params.items()
+        }
+        return httpx.Timeout(**timeout_params)
+    if isinstance(timeout_params, httpx.Timeout):
+        return timeout_params
+    if isinstance(timeout_params, Number):
+        return httpx.Timeout(float(timeout_params))  # type: ignore
+    if isinstance(timeout_params, (list, tuple)):
+        timeout_params = list(timeout_params)
+        if len(timeout_params) >= 2:
+            return httpx.Timeout(timeout=timeout_params[0], connect=timeout_params[1])
+        if timeout_params:
+            return httpx.Timeout(timeout_params[0])
+    return httpx.Timeout(None)
 
 
 # read initial config when first imported.
@@ -385,23 +413,42 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
     if p_name == "XForce":
         errs.append(_check_required_key(sec_args, "ApiID", sec_path))
     if p_name == _AZ_SENTINEL:
-        errs.append(_check_is_uuid(sec_args, "WorkspaceID", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantID", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceID", sec_path),
+                _check_is_uuid(sec_args, "TenantID", sec_path),
+            )
+        )
+
     if p_name.startswith("AzureSentinel_"):
-        errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceId", sec_path),
+                _check_is_uuid(sec_args, "TenantId", sec_path),
+            )
+        )
+
     if (
         p_name == _AZ_CLI
         and "clientId" in sec_args
         and sec_args["clientId"] is not None
     ):
         # only warn if partially filled - since these are optional
-        errs.append(_check_required_key(sec_args, "clientId", sec_path))
-        errs.append(_check_required_key(sec_args, "tenantId", sec_path))
-        errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "clientId", sec_path),
+                _check_required_key(sec_args, "tenantId", sec_path),
+                _check_required_key(sec_args, "clientSecret", sec_path),
+            )
+        )
     if p_name == "RiskIQ":
-        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
-        errs.append(_check_required_package("passivetotal", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "ApiID", sec_path),
+                _check_required_package("passivetotal", sec_path),
+            )
+        )
+
     return [err for err in errs if err]
 
 
