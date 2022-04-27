@@ -13,7 +13,7 @@ import attr
 import pandas as pd
 
 from ..._version import VERSION
-from .. import entities
+from ...datamodel import entities
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

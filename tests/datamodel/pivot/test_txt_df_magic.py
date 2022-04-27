@@ -7,7 +7,7 @@
 import pandas as pd
 import pytest_check as check
 
-from msticpy.datamodel.pivot.pivot_magic_core import run_txt2df
+from msticpy.init.pivot_core.pivot_magic_core import run_txt2df
 
 __author__ = "Ian Hellen"
 

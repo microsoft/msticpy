@@ -1,5 +1,5 @@
-msticpy.nbtools.nbwidgets package
-=================================
+msticpy.nbtools.nbwidgets module
+================================
 
 .. automodule:: msticpy.nbtools.nbwidgets
    :members:

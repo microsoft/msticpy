@@ -14,7 +14,7 @@ from attr import Factory
 from tqdm.auto import tqdm
 
 from ..._version import VERSION
-from .. import entities
+from ...datamodel import entities
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -29,7 +29,7 @@ _STEP_TYPES = {
 }
 
 PipelineExecStep = namedtuple(
-    "PipelineExecStep", "accessor, pos_params, params, text, comment"
+    "PipelineExecStep", "accessor, pos_params, params, text, comment, step_type"
 )
 
 
@@ -58,6 +58,7 @@ class PipelineStep:
             text - the text representation of the accessor + params
             comment - optional comment that can be used by the pipeline
             builder to add Python comments to output.
+            step_type - the type of pipeline step
 
         """
         if self.step_type not in _STEP_TYPES:
@@ -87,6 +88,7 @@ class PipelineStep:
             params=params,
             text=func_text,
             comment=self.comment,
+            step_type=self.step_type,
         )
 
     # pylint: disable=no-member, not-an-iterable
@@ -163,8 +165,7 @@ class Pipeline:
         self.description = description
         self.steps: List[PipelineStep] = []
         if steps:
-            for step in steps:
-                self.steps.append(step)
+            self.steps.extend(iter(steps))
 
     def __repr__(self) -> str:
         """
@@ -296,7 +297,10 @@ class Pipeline:
                     "This is not a valid input type for the next stage.",
                 )
                 break
-            exec_kws = {"verbose": verbose, "debug": debug}
+            if step.step_type == _STEP_TYPES["pivot"]:
+                exec_kws = {"verbose": verbose, "debug": debug}
+            else:
+                exec_kws = {}
             func = _get_pd_accessor_func(pipeline_result, exec_action.accessor)
             pipeline_result = func(
                 *exec_action.pos_params, **exec_action.params, **exec_kws

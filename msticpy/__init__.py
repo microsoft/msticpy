@@ -18,6 +18,10 @@ To quickly import common modules into a notebook run:
 For more options:
 >>> help(msticpy.init_notebook)
 
+Search msticpy modules for a keyword:
+>>> import msticpy
+>>> msticpy.search(keyword)
+
 -----------------------------------------------
 
 Full documentation is available at:
@@ -55,15 +59,19 @@ from . import nbwidgets
 
 # flake8: noqa: F403
 from ._version import VERSION
+from .common import pkg_config as settings
 from .common.check_version import check_version
-from .common.pkg_config import refresh_config, settings
 from .common.utility import search_name as search
 from .config.mp_config_edit import MpConfigEdit, MpConfigFile
-from .data.core.data_providers import QueryProvider
+from .data import QueryProvider
+from .datamodel import entities
 from .init.nbinit import current_providers, init_notebook
+from .init.pivot import Pivot
 
 __version__ = VERSION
 __author__ = "Ian Hellen, Pete Bryan, Ashwin Patil"
+
+refresh_config = settings.refresh_config
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"

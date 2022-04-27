@@ -7,7 +7,6 @@
 import datetime
 import os
 import subprocess  # nosec
-from collections import namedtuple
 from datetime import timedelta
 from enum import Enum
 from pathlib import Path
@@ -194,7 +193,9 @@ def test_check_config(conf_file, expected, tmp_path):
                 if file is None:
                     continue
                 tgt_file = Path(TEST_DATA_PATH).joinpath(file).name
-                file_txt = Path(TEST_DATA_PATH).joinpath(file).read_text()
+                file_txt = (
+                    Path(TEST_DATA_PATH).joinpath(file).read_text(encoding="utf-8")
+                )
 
                 dest_file = (
                     "config.json"

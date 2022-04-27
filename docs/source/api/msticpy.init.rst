@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   msticpy.init.pivot_core
    msticpy.init.pivot_init
 
 Submodules

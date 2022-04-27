@@ -22,7 +22,7 @@ from IPython.core.magic import (
     register_cell_magic,
 )
 
-from ..datamodel.pivot.pivot_magic_core import run_txt2df
+from ..init.pivot_core.pivot_magic_core import run_txt2df
 
 try:
     from bs4 import BeautifulSoup

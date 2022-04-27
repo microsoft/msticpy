@@ -13,8 +13,8 @@ from ..._version import VERSION
 from ...context.tilookup import TILookup
 from ...context.tiproviders.ti_provider_base import TIPivotProvider
 from ...datamodel import entities
-from ...datamodel.pivot.pivot_container import PivotContainer
-from ...datamodel.pivot.pivot_register import PivotRegistration, create_pivot_func
+from ..pivot_core.pivot_container import PivotContainer
+from ..pivot_core.pivot_register import PivotRegistration, create_pivot_func
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

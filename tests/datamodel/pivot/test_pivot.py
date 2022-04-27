@@ -17,8 +17,8 @@ from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
 from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
-from msticpy.datamodel.pivot.pivot_container import PivotContainer
 from msticpy.init.pivot import Pivot
+from msticpy.init.pivot_core.pivot_container import PivotContainer
 
 __author__ = "Ian Hellen"
 

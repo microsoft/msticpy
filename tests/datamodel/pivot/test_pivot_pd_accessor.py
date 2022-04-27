@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.datamodel.pivot import pivot_pd_accessor
+from msticpy.init.pivot_core import pivot_pd_accessor
 
 from ...unit_test_lib import TEST_DATA_PATH
 

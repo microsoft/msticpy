@@ -13,7 +13,6 @@ Subpackages
    :maxdepth: 4
 
    msticpy.datamodel.entities
-   msticpy.datamodel.pivot
    msticpy.datamodel.soc
 
 Submodules

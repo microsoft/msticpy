@@ -17,7 +17,6 @@ from ..._version import VERSION
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
-from ...datamodel.pivot.pivot_data_queries import add_data_queries_to_entities
 from ...nbwidgets import QueryTime
 from ...vis.query_browser import browse_queries
 from ..drivers import DriverBase, import_driver
@@ -71,6 +70,13 @@ class QueryProvider:
         DataProviderBase : base class for data query providers.
 
         """
+        # import at runtime to prevent circular import
+        # pylint: disable=import-outside-toplevel
+        from ...init.pivot_init.pivot_data_queries import add_data_queries_to_entities
+
+        # pylint: enable=import-outside-toplevel
+        setattr(self.__class__, "_add_pivots", add_data_queries_to_entities)
+
         if isinstance(data_environment, str):
             data_env = DataEnvironment.parse(data_environment)
             if data_env != DataEnvironment.Unknown:
@@ -105,7 +111,7 @@ class QueryProvider:
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
-        add_data_queries_to_entities(self, lambda: self._query_time.timespan)
+        self._add_pivots(lambda: self._query_time.timespan)
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -137,7 +143,7 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
-            add_data_queries_to_entities(self, lambda: self._query_time.timespan)
+            self._add_pivots(lambda: self._query_time.timespan)
 
     def add_connection(
         self,

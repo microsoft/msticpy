@@ -571,6 +571,10 @@ def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC000
     ref_times: List[Tuple[datetime, str]] = kwargs.pop("ref_times", None)
 
     tool_tip_columns, min_time, max_time = _unpack_data_series_dict(data, **kwargs)
+    if min_time is None or max_time is None:
+        print("No data to plot.")
+        return figure()
+
     series_count = len(data)
 
     tooltips, formatters = _create_tool_tips(data, tool_tip_columns)

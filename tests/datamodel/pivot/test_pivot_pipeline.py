@@ -10,8 +10,8 @@ import pytest
 import pytest_check as check
 import yaml
 
-from msticpy.datamodel.pivot.pivot_pipeline import Pipeline
 from msticpy.init.pivot import Pivot
+from msticpy.init.pivot_core.pivot_pipeline import Pipeline
 
 __author__ = "Ian Hellen"
 

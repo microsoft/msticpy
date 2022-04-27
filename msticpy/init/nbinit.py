@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import ipywidgets as widgets
 import pandas as pd
 import yaml
+from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
 from matplotlib import MatplotlibDeprecationWarning
@@ -41,9 +42,9 @@ from ..common.utility import (
     unit_testing,
 )
 from ..config import MpConfigFile
-from ..init.pivot import Pivot
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml
+from .pivot import Pivot
 from .user_config import load_user_defaults
 
 __version__ = VERSION
@@ -208,7 +209,7 @@ def _err_output(*args):
 
 
 def init_notebook(
-    namespace: Dict[str, Any],
+    namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
@@ -219,9 +220,10 @@ def init_notebook(
 
     Parameters
     ----------
-    namespace : Dict[str, Any]
+    namespace : Dict[str, Any], optional
         Namespace (usually globals()) into which imports
         are to be populated.
+        By default, it will use the ipython `user_global_ns`.
     def_imports : str, optional
         Import default packages. By default "all".
         Possible values are:
@@ -282,6 +284,10 @@ def init_notebook(
     """
     global current_providers  # pylint: disable=global-statement, invalid-name
 
+    if namespace is None and get_ipython():
+        namespace = get_ipython().user_global_ns
+    else:
+        namespace = namespace if (namespace is not None) else {}
     check_kwargs(
         kwargs,
         [
@@ -481,9 +487,9 @@ def _build_import_list(
 ) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     imports = []
     imports_all = []
-    if def_imports.casefold() in ["all", "nb"]:
+    if def_imports.casefold() in {"all", "nb"}:
         imports.extend(_NB_IMPORTS)
-    if def_imports.casefold() in ["all", "msticpy"]:
+    if def_imports.casefold() in {"all", "msticpy"}:
         imports.extend(_MP_IMPORTS)
         imports_all.extend(_MP_IMPORT_ALL)
     return imports, imports_all

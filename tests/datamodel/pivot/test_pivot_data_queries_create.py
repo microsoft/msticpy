@@ -15,8 +15,8 @@ import pytest_check as check
 from msticpy.common.timespan import TimeSpan
 from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
-from msticpy.datamodel.pivot.pivot_container import PivotContainer
-from msticpy.datamodel.pivot.pivot_data_queries import (
+from msticpy.init.pivot_core.pivot_container import PivotContainer
+from msticpy.init.pivot_init.pivot_data_queries import (
     PivotQueryFunctions,
     _create_pivot_func,
     add_queries_to_entities,

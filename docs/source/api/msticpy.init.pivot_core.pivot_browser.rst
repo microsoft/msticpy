@@ -1,7 +1,7 @@
-msticpy.datamodel.pivot.pivot\_register module
+msticpy.init.pivot\_core.pivot\_browser module
 ==============================================
 
-.. automodule:: msticpy.datamodel.pivot.pivot_register
+.. automodule:: msticpy.init.pivot_core.pivot_browser
    :members:
    :undoc-members:
    :show-inheritance:

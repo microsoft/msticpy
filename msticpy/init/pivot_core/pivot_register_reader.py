@@ -16,7 +16,7 @@ from ...common.exceptions import (
     MsticpyUserConfigError,
     MsticpyUserError,
 )
-from .. import entities
+from ...datamodel import entities
 from .pivot_container import PivotContainer
 from .pivot_register import PivotRegistration, create_pivot_func
 

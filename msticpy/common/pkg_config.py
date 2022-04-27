@@ -101,8 +101,13 @@ def get_config(setting_path: str) -> Any:
         The item at the path location.
 
     """
+    return _get_config(setting_path, settings)
+
+
+def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
+    """Return value from setting_path."""
     path_elems = setting_path.split(".")
-    cur_node = settings
+    cur_node = settings_dict
     for elem in path_elems:
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
@@ -123,8 +128,13 @@ def set_config(setting_path: str, value: Any):
         The value to set.
 
     """
+    return _set_config(setting_path, settings, value)
+
+
+def _set_config(setting_path: str, settings_dict, value: Any) -> Any:
+    """Set `setting_path` in `settings_dict` to `value`."""
     path_elems = setting_path.split(".")
-    cur_node = settings
+    cur_node = settings_dict
     for elem in path_elems:
         if elem in cur_node:
             cur_node[elem] = value
@@ -133,6 +143,22 @@ def set_config(setting_path: str, value: Any):
         if cur_node is None:
             raise KeyError(f"{elem} value of {setting_path} is not a valid path")
     return cur_node
+
+
+def _del_config(setting_path: str, settings_dict) -> Any:
+    """Delete `setting_path` from `settings_dict`."""
+    path_elems = setting_path.split(".")
+    cur_node = settings_dict
+    current_value = None
+    for elem in path_elems:
+        if elem in cur_node:
+            current_value = cur_node[elem]
+            del cur_node[elem]
+            break
+        cur_node = cur_node.get(elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+    return current_value
 
 
 def _read_config_file(config_file: str) -> Dict[str, Any]:
@@ -248,6 +274,17 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     az_cli_config = mp_config.get(_AZ_CLI)
     if az_cli_config and _AZ_CLI not in data_providers:
         data_providers[_AZ_CLI] = mp_config[_AZ_CLI]
+    return mp_config
+
+
+def _translate_legacy_settings(
+    mp_config: Dict[str, Any], translate: Dict[str, str]
+) -> Dict[str, Any]:
+    """Map legacy settings to new location."""
+    for src, target in translate.items():
+        src_value = _get_config(src, mp_config)
+        _set_config(target, mp_config, src_value)
+        _del_config(src, mp_config)
     return mp_config
 
 

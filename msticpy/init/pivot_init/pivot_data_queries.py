@@ -14,9 +14,9 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.timespan import TimeSpan
-from .. import entities
-from .pivot_container import PivotContainer
-from .pivot_register import get_join_params, join_result
+from ...datamodel import entities
+from ..pivot_core.pivot_container import PivotContainer
+from ..pivot_core.pivot_register import get_join_params, join_result
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

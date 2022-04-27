@@ -135,6 +135,69 @@ def check_doc(
     return page_results
 
 
+# pylint: disable=too-many-locals
+def check_html(
+    html: str,
+    doc_name: str = "unknown",
+    doc_type: str = "html",
+    max_threads: int = 10,
+    delay: float = 0,
+    ignore_uris: Optional[List[str]] = None,
+    path_rewrite: Dict[str, str] = None,
+) -> Dict[str, Dict[str, UrlResult]]:
+    """
+    Check single HTML string.
+
+    Parameters
+    ----------
+    html : str
+        html content
+    doc_name : str
+        name of document being checked
+    doc_type : str
+        type of document (html or md)
+    max_threads: int, optional
+        The maximum number of async threads to run
+    delay: float, optional
+        Seconds delay between requests
+    ignore_uris : List[str], optional
+        List of URIs to skip
+    path_rewrite : Dict[str, str]
+        Dictionary of replacements for the file name so
+        that we can create the path to the source file.
+
+    Returns
+    -------
+    Dict[str, Dict[str, UrlResult]]
+        Dictionary of pages checked. Results for each page
+        is a dictionary of checked links for the page.
+
+    """
+    page_results: Dict[str, Dict[str, UrlResult]] = defaultdict(dict)
+    link_results: Dict[str, UrlResult] = {}
+
+    pg_links = _get_doc_links(doc=html, doc_type=doc_type)
+    links_to_check: Dict[str, Set[str]] = defaultdict(set)
+
+    page = doc_name
+    if path_rewrite:
+        for src, target in path_rewrite.items():
+            page = page.replace(src, target)
+    for link in pg_links:
+        links_to_check[link].add(page)
+    links_to_check = remove_ignored_uris(links_to_check, ignore_uris)
+    print(f"Checking links {len(links_to_check)}...")
+    checked_links = check_uris(links_to_check, max_threads, delay)
+    print("\ndone")
+    for result in checked_links:
+        link_results[result.url] = result
+        src_pages = links_to_check[result.url]
+        for src_page in src_pages:
+            page_results[src_page][result.url] = result
+
+    return page_results
+
+
 def _get_links_from_files(
     doc_path: str, recurse: bool = True, path_rewrite: Dict[str, str] = None
 ) -> Dict[str, Set[str]]:
@@ -173,7 +236,9 @@ def remove_ignored_uris(links_to_check, ignore_uris):
     }
 
 
-def _get_doc_links(doc_path: Path) -> Set[str]:
+def _get_doc_links(
+    doc_path: Path = None, doc: str = None, doc_type: str = "html"
+) -> Set[str]:
     """
     Check links in an HTML or Markdown document.
 
@@ -181,6 +246,10 @@ def _get_doc_links(doc_path: Path) -> Set[str]:
     ----------
     doc_path : str
         Path to the document
+    doc : str
+        Document text
+    doc_type : str
+        Type of document
 
     Returns
     -------
@@ -189,17 +258,24 @@ def _get_doc_links(doc_path: Path) -> Set[str]:
 
     """
     html_content = None
-    try:
-        html_content = doc_path.read_text(encoding="utf-8")
-    except UnicodeDecodeError:
-        html_content = doc_path.read_text(encoding="mbcs")
-    if doc_path.suffix.casefold() == ".md":
+    if doc:
+        html_content = doc
+    else:
+        if not doc_path:
+            raise ValueError("'doc' or 'doc_path' must be supplied.")
+        try:
+            html_content = doc_path.read_text(encoding="utf-8") if doc_path else doc
+        except UnicodeDecodeError:
+            html_content = doc_path.read_text(encoding="mbcs")
+        if doc_path.suffix.casefold() == ".md":
+            doc_type = "md"
+    if doc_type == "md":
         html_content = markdown.markdown(html_content)
     soup = BeautifulSoup(html_content, "html.parser")
     links = soup.find_all("a")
 
     links = {link.get("href") for link in links}
-    links = {link for link in links if link.casefold().startswith("http")}
+    links = {link for link in links if link and link.casefold().startswith("http")}
     return links
 
 

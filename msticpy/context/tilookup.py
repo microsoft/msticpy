@@ -29,9 +29,14 @@ from ..vis.ti_browser import browse_results
 from . import tiproviders
 
 # used in dynamic instantiation of providers
-# pylint: disable=unused-wildcard-import, wildcard-import
+# pylint: disable=unused-wildcard-import, wildcard-import, unused-import
 from .tiproviders import *  # noqa:F401, F403
-from .tiproviders.ti_provider_base import LookupResult, TILookupStatus, TIProvider
+from .tiproviders.ti_provider_base import (  # noqa:F401
+    LookupResult,
+    TILookupStatus,
+    TIProvider,
+    TISeverity,
+)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -161,8 +166,8 @@ class TILookup:
                 continue
             # if it is a class - we only want to show concrete classes
             # that are sub-classes of TIProvider
-            if issubclass(provider_class, tiproviders.TIProvider) and not bool(
-                getattr(provider_class, "__abstractmethods__", False)
+            if issubclass(provider_class, tiproviders.TIProvider) and not getattr(
+                provider_class, "__abstractmethods__", False
             ):
                 providers.append(provider_class.__name__)
         return providers

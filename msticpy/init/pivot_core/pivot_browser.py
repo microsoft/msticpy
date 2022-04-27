@@ -11,7 +11,7 @@ from IPython import get_ipython
 from IPython.display import display
 
 from ..._version import VERSION
-from .. import entities
+from ...datamodel import entities
 
 try:
     import pyperclip

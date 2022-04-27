@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-Deprecated - module vt_pivot.py has moved.
+Deprecated - module ti_provider_base.py has moved.
 
-See :py:mod:`msticpy.context.vtlookupv3.vt_pivot`
+See :py:mod:`msticpy.context.tiproviders.ti_provider_base`
 """
 import warnings
 
@@ -18,11 +18,11 @@ __author__ = "Pete Bryan"
 
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...init.pivot_init.vt_pivot import *
+from ...context.tiproviders.ti_provider_base import *
 
 WARN_MSSG = (
     "This module has moved to "
-    "msticpy.context.vtlookupv3.vt_pivot\n"
+    "msticpy.context.tiproviders.ti_provider_base\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.2.0"
 )

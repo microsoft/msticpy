@@ -5,29 +5,37 @@
 # --------------------------------------------------------------------------
 """Pivot functions main module."""
 
+import warnings
 from datetime import datetime, timezone
 from types import ModuleType
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
 import pkg_resources
 
+# pylint: disable=unused-import
+from .. import datamodel  # noqa:F401
 from .._version import VERSION
 from ..common.timespan import TimeSpan
 from ..context.tilookup import TILookup
 from ..data import QueryProvider
 from ..datamodel import entities
 
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=DeprecationWarning)
+    from ..datamodel import pivot as legacy_pivot
+
+from ..nbwidgets import QueryTime
+from . import pivot_init
+
 # pylint: disable=unused-import, no-name-in-module
-from ..datamodel.pivot import pivot_pd_accessor  # noqa: F401
-from ..datamodel.pivot.pivot_browser import PivotBrowser
-from ..datamodel.pivot.pivot_data_queries import add_data_queries_to_entities
-from ..datamodel.pivot.pivot_register import PivotRegistration
-from ..datamodel.pivot.pivot_register_reader import (
+from .pivot_core import pivot_pd_accessor  # noqa: F401
+from .pivot_core.pivot_browser import PivotBrowser
+from .pivot_core.pivot_register import PivotRegistration
+from .pivot_core.pivot_register_reader import (
     add_unbound_pivot_function,
     register_pivots,
 )
-from ..nbwidgets import QueryTime
-from . import pivot_init
+from .pivot_init.pivot_data_queries import add_data_queries_to_entities
 from .pivot_init.pivot_ti_provider import (
     add_ioc_queries_to_entities,
     register_ti_pivot_providers,
@@ -450,3 +458,8 @@ class Pivot:
     def browse():
         """Return PivotBrowser."""
         return PivotBrowser()
+
+
+# add link in datamodel for legacy location
+setattr(legacy_pivot, "Pivot", Pivot)
+setattr(legacy_pivot, "PivotRegistration", PivotRegistration)

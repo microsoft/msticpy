@@ -6,14 +6,6 @@ msticpy.nbtools package
    :undoc-members:
    :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   msticpy.nbtools.nbwidgets
-
 Submodules
 ----------
 
@@ -25,6 +17,7 @@ Submodules
    msticpy.nbtools.foliummap
    msticpy.nbtools.morph_charts
    msticpy.nbtools.nbdisplay
+   msticpy.nbtools.nbwidgets
    msticpy.nbtools.observationlist
    msticpy.nbtools.process_tree
    msticpy.nbtools.security_alert

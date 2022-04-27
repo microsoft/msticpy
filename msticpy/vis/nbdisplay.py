@@ -19,6 +19,11 @@ from .._version import VERSION
 from ..common.utility import export
 from ..nbtools.security_alert import SecurityAlert
 
+# pylint: disable=unused-import
+from .timeline import display_timeline  # noqa: F401
+
+# pylint: disable=unused-import
+
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
