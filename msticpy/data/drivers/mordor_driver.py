@@ -47,13 +47,15 @@ _MITRE_TECH_CACHE = "mitre_tech_cache.pkl"
 _MITRE_TACTICS_CACHE = "mitre_tact_cache.pkl"
 _MORDOR_CACHE = "mordor_cache.json"
 
+_HTTP_TIMEOUT = DriverBase.get_http_timeout()
+
 
 # pylint: disable=too-many-instance-attributes
 class MordorDriver(DriverBase):
     """Mordor data driver."""
 
     def __init__(self, **kwargs):
-        """Initialize the Morder driver."""
+        """Initialize the Mordor driver."""
         super().__init__(**kwargs)
         self.use_query_paths = False
         self.has_driver_queries = True
@@ -548,7 +550,7 @@ def _get_mdr_github_tree():
     def _get_mdr_tree(uri):
         nonlocal mordor_tree
         if mordor_tree is None:
-            resp = httpx.get(uri, timeout=httpx.Timeout(10.0, connect=30.0))
+            resp = httpx.get(uri, timeout=_HTTP_TIMEOUT)
             mordor_tree = resp.json()
         return mordor_tree
 
@@ -564,7 +566,7 @@ def _get_mdr_file(gh_file):
     file_blob_uri = (
         f"https://raw.githubusercontent.com/OTRF/Security-Datasets/master/{gh_file}"
     )
-    file_resp = httpx.get(file_blob_uri, timeout=httpx.Timeout(10.0, connect=30.0))
+    file_resp = httpx.get(file_blob_uri, timeout=_HTTP_TIMEOUT)
     return file_resp.content
 
 
@@ -727,9 +729,7 @@ def download_mdr_file(
     if not use_cached or not save_file.is_file():
         # streamed download
         with open(str(save_file), "wb") as fdesc:
-            with httpx.stream(
-                "GET", file_uri, timeout=httpx.Timeout(10.0, connect=30.0)
-            ) as resp:
+            with httpx.stream("GET", file_uri, timeout=_HTTP_TIMEOUT) as resp:
                 for chunk in resp.iter_bytes(chunk_size=1024):
                     fdesc.write(chunk)
 
@@ -905,7 +905,7 @@ def _get_mitre_categories(
                 return tech_df, tactics_df
             except pickle.PickleError:
                 pass
-    resp = httpx.get(_MITRE_JSON_URL, timeout=httpx.Timeout(10.0, connect=30.0))
+    resp = httpx.get(_MITRE_JSON_URL, timeout=_HTTP_TIMEOUT)
     mitre = pd.json_normalize(resp.json()["objects"])
 
     # remove deprecated items

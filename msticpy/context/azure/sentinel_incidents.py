@@ -16,7 +16,7 @@ from IPython.display import display
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserError
 from .azure_data import get_api_headers
-from .sentinel_utils import _azs_api_result_to_df, _build_sent_data
+from .sentinel_utils import _azs_api_result_to_df, _build_sent_data, get_http_timeout
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -105,7 +105,7 @@ class SentinelIncidentsMixin:
             entities_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=ent_parameters,
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
         return (
             [(ent["kind"], ent["properties"]) for ent in ents.json()["entities"]]
@@ -136,6 +136,7 @@ class SentinelIncidentsMixin:
             alerts_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=alerts_parameters,
+            timeout=get_http_timeout(),
         )
         return (
             [
@@ -254,7 +255,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
         if response.status_code != 200:
             raise CloudError(response=response)
@@ -325,7 +326,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -343,7 +344,7 @@ class SentinelIncidentsMixin:
                     headers=get_api_headers(self.token),  # type: ignore
                     params=params,
                     content=str(data),
-                    timeout=httpx.Timeout(10.0, connect=30.0),
+                    timeout=get_http_timeout(),
                 )
         print("Incident created.")
 
@@ -421,7 +422,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
         if response.status_code != 201:
             raise CloudError(response=response)
@@ -459,7 +460,7 @@ class SentinelIncidentsMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
         if response.status_code != 201:
             raise CloudError(response=response)

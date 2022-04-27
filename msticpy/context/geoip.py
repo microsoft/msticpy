@@ -41,7 +41,7 @@ from IPython.display import HTML, display
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
-from ..common.pkg_config import current_config_path
+from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
 from ..common.utility import export
 from ..datamodel.entities import GeoLocation, IpAddress
@@ -331,7 +331,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         submit_url = self._IPSTACK_API.format(
             iplist=",".join(ip_list), access_key=self._api_key
         )
-        response = httpx.get(submit_url, timeout=httpx.Timeout(10.0, connect=30.0))
+        response = httpx.get(submit_url, timeout=get_http_timeout())
 
         if response.status_code == 200:
             results = response.json()
@@ -355,7 +355,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
     def _lookup_ip_list(self, ip_list: List[str]):
         """Lookup IP Addresses one-by-one."""
         ip_loc_results = []
-        with httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0)) as client:
+        with httpx.Client(timeout=get_http_timeout()) as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
@@ -647,9 +647,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 # Some other process is downloading, wait a little then return
                 sleep(3)
                 return True
-            with httpx.stream(
-                "GET", url, timeout=httpx.Timeout(10.0, connect=30.0)
-            ) as response:
+            with httpx.stream("GET", url, timeout=get_http_timeout()) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):

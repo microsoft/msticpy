@@ -14,6 +14,7 @@ from azure.common.exceptions import CloudError
 from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.exceptions import MsticpyAzureConfigError, MsticpyAzureConnectionError
+from ...common.pkg_config import get_http_timeout
 from ...common.wsconfig import WorkspaceConfig
 from .azure_data import get_api_headers
 
@@ -43,7 +44,7 @@ class SentinelUtilsMixin:
             url,
             headers=get_api_headers(self.token),  # type: ignore
             params={"api-version": params},
-            timeout=httpx.Timeout(10.0, connect=30.0),
+            timeout=get_http_timeout(),
         )
 
     def _list_items(

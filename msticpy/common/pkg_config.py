@@ -18,9 +18,11 @@ Consolidated settings are accessible as an attribute `settings`.
 """
 import os
 from importlib.util import find_spec
+from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
+import httpx
 import pkg_resources
 import yaml
 from yaml.error import YAMLError
@@ -286,6 +288,24 @@ def _translate_legacy_settings(
         _set_config(target, mp_config, src_value)
         _del_config(src, mp_config)
     return mp_config
+
+
+def get_http_timeout(
+    **kwargs,
+) -> httpx.Timeout:
+    """Return timeout from settings or overridden in `kwargs`."""
+    timeout_params = kwargs.get(
+        "timeout", kwargs.get("def_timeout", settings.get("http_timeout", None))  # type: ignore
+    )  # type: ignore
+    if isinstance(timeout_params, dict):
+        return httpx.Timeout(**timeout_params)
+    if isinstance(timeout_params, httpx.Timeout):
+        return timeout_params
+    if isinstance(timeout_params, Number):
+        return httpx.Timeout(float(timeout_params))
+    if isinstance(timeout_params, tuple) and len(timeout_params) == 2:
+        return httpx.Timeout(timeout_params[0], connect=timeout_params[1])
+    return httpx.Timeout(None)
 
 
 # read initial config when first imported.

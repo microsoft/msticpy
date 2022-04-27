@@ -19,6 +19,7 @@ from typing import Any, Dict, Iterable, Tuple
 import httpx
 
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
 from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
@@ -45,9 +46,7 @@ class Tor(TIProvider):
         now = datetime.utcnow()
         if not cls._nodelist or (now - cls._last_cached).days > 1:
             try:
-                resp = httpx.get(
-                    cls._BASE_URL, timeout=httpx.Timeout(10.0, connect=30.0)
-                )
+                resp = httpx.get(cls._BASE_URL, timeout=get_http_timeout())
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))

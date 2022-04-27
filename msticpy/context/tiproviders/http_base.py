@@ -25,6 +25,7 @@ from attr import Factory
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigException
+from ...common.pkg_config import get_http_timeout
 from ...common.utility import _MSTICPY_USER_AGENT, export
 from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
 
@@ -62,7 +63,7 @@ class HttpProvider(TIProvider):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
 
-        self._httpx_client = httpx.Client(timeout=httpx.Timeout(10.0, connect=30.0))
+        self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
         self._request_params = {}
         if "ApiID" in kwargs:
             self._request_params["API_ID"] = kwargs.pop("ApiID")
@@ -136,7 +137,9 @@ class HttpProvider(TIProvider):
                 result.safe_ioc, result.ioc_type, query_type
             )
             if verb == "GET":
-                response = self._httpx_client.get(**req_params)
+                response = self._httpx_client.get(
+                    **req_params, timeout=get_http_timeout(**kwargs)
+                )
             else:
                 raise NotImplementedError(f"Unsupported verb {verb}")
             result.status = response.status_code

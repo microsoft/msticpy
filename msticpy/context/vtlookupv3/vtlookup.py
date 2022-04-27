@@ -29,6 +29,7 @@ import httpx
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
 from ..tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
 
@@ -796,14 +797,14 @@ class VTLookup:
                 submit_url,
                 data=params,
                 headers=headers,
-                timeout=httpx.Timeout(10.0, connect=30.0),
+                timeout=get_http_timeout(),
             )
         else:
             response = httpx.get(
                 submit_url,
                 params=params,
                 headers=headers,
-                timeout=httpx.Timeout(10.0, connect=30.0),
+                timeout=get_http_timeout(),
             )
         if response.status_code == 200:
             return response.json(), response.status_code
