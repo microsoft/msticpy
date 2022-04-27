@@ -30,6 +30,7 @@ import httpx
 
 from .iocextract import IoCExtract
 from .tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
+from ..common.pkg_config import get_http_timeout
 from ..common.utility import export
 from .._version import VERSION
 
@@ -795,9 +796,13 @@ class VTLookup:
                 headers[hdr] = val
 
         if vt_param.http_verb == "post":
-            response = httpx.post(submit_url, data=params, headers=headers)
+            response = httpx.post(
+                submit_url, data=params, headers=headers, timeout=get_http_timeout()
+            )
         else:
-            response = httpx.get(submit_url, params=params, headers=headers)
+            response = httpx.get(
+                submit_url, params=params, headers=headers, timeout=get_http_timeout()
+            )
         if response.status_code == 200:
             return response.json(), response.status_code
 

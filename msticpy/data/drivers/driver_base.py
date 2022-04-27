@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
 from ..query_source import QuerySource
 
 __version__ = VERSION
@@ -186,3 +187,8 @@ class DriverBase(ABC):
                 ", ".join(f"'{name}'" for name in allowed_names),
             )
         self._query_filter[name].add(query_filter)
+
+    @staticmethod
+    def get_http_timeout(**kwargs):
+        """Get http timeout from settings or kwargs."""
+        return get_http_timeout(**kwargs)
