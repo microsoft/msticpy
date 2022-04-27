@@ -15,7 +15,7 @@ from azure.common.exceptions import CloudError
 
 from ..._version import VERSION
 from .azure_data import get_api_headers
-from .sentinel_utils import _build_sent_data
+from .sentinel_utils import _build_sent_data, get_http_timeout
 from ...common.exceptions import MsticpyUserError
 
 __version__ = VERSION
@@ -87,6 +87,7 @@ class SentinelBookmarksMixin:
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
+            timeout=get_http_timeout(),
         )
         if response.status_code == 200:
             print("Bookmark created.")
@@ -118,6 +119,7 @@ class SentinelBookmarksMixin:
             bookmark_url,
             headers=get_api_headers(self.token),  # type: ignore
             params=params,
+            timeout=get_http_timeout(),
         )
         if response.status_code == 200:
             print("Bookmark deleted.")
