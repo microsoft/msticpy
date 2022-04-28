@@ -128,7 +128,7 @@ def _create_lookup_func(
     suffix = f"_{ioc_name}"
     short_func_name = f"lookup{suffix}"
     func_name = f"{short_func_name}_{ioc_name}"
-    params_dict = {"providers": providers, "ioc_type": ioc}
+    params_dict = {"default_providers": providers, "ioc_type": ioc}
 
     entity_cls, entity_attr = TI_ENTITY_ATTRIBS[ioc]
 

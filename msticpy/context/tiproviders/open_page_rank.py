@@ -107,8 +107,10 @@ class OPR(HttpProvider):
         results: List[pd.Series] = []
         if not domain_list:
             return pd.DataFrame(columns=LookupResult.column_map())
-        for item_result in self._lookup_bulk_request(domain_list):  # type: ignore
-            results.append(pd.Series(attr.asdict(item_result)))
+        results.extend(
+            pd.Series(attr.asdict(item_result))
+            for item_result in self._lookup_bulk_request(domain_list)
+        )
 
         all_results = results + bad_requests
         return pd.DataFrame(data=all_results).rename(columns=LookupResult.column_map())
@@ -143,25 +145,28 @@ class OPR(HttpProvider):
     def _parse_multi_results(self, response: LookupResult) -> Iterable[LookupResult]:
         """Parse details of batch response."""
         if not isinstance(response.raw_result, dict):
-            new_result = LookupResult(**attr.asdict(response))
-            new_result.result = False
-            new_result.set_severity(TISeverity.information)
-            new_result.details = "Not found."
-            yield new_result
+            yield LookupResult(
+                **attr.asdict(response),
+                result=False,
+                severity=TISeverity.information.value,
+                details="Not found",
+            )
+
         elif "response" in response.raw_result:
             dom_records = response.raw_result["response"]
             for dom_record in dom_records:
                 result, sev, details = self._parse_one_record(dom_record)
                 domain_name = dom_record["domain"]
-                new_result = LookupResult(ioc=domain_name, ioc_type="dns")
-                new_result.ioc = domain_name
-                new_result.provider = self._provider_name
-                new_result.result = result
-                new_result.set_severity(sev)
-                new_result.details = details
-                new_result.raw_result = dom_record
-                new_result.reference = f"{response.reference}?domains[0]={domain_name}"
-                yield new_result
+                yield LookupResult(
+                    ioc=domain_name,
+                    ioc_type="dns",
+                    provider=self._provider_name,
+                    result=result,
+                    severity=int(sev),
+                    details=details,
+                    raw_result=dom_record,
+                    reference=f"{response.reference}?domains[0]={domain_name}",
+                )
 
     @staticmethod
     def _parse_one_record(dom_record: dict):
@@ -195,15 +200,15 @@ class OPR(HttpProvider):
         l_len = len(ioc_list)
         for step in range(0, l_len, batch_size):
             batch_list = ioc_list[step : (step + batch_size)]  # noqa: E203
-            for result in self._lookup_batch(batch_list):
-                yield result
+            yield from self._lookup_batch(batch_list)
 
     # pylint: disable=duplicate-code
     def _lookup_batch(self, ioc_list: list) -> Iterable[LookupResult]:
         # build the query string manually - of the form domains[N]=domN&domains[N+1]...
-        qry_elements = []
-        for idx, dom in zip(range(0, len(ioc_list)), ioc_list):
-            qry_elements.append(f"domains[{idx}]={dom}")
+        qry_elements = [
+            f"domains[{idx}]={dom}" for idx, dom in zip(range(len(ioc_list)), ioc_list)
+        ]
+
         qry_str = "&".join(qry_elements)
         path = self._IOC_QUERIES["dns"].path
         req_url = f"{self._BASE_URL}{path}?{qry_str}"
@@ -213,29 +218,37 @@ class OPR(HttpProvider):
             response = self._httpx_client.get(
                 url=req_url, headers=req_params["headers"]
             )
-            result = LookupResult(ioc=",".join(ioc_list), ioc_type="dns")
             if response.status_code == 200:
-                result.status = TILookupStatus.ok.value
-                result.reference = self._BASE_URL + path
-                result.raw_result = response.json()
-                for single_result in self._parse_multi_results(result):
-                    yield single_result
+                result = LookupResult(
+                    ioc=",".join(ioc_list),
+                    ioc_type="dns",
+                    status=TILookupStatus.ok.value,
+                    reference=f"{self._BASE_URL}{path}",
+                    raw_result=response.json(),
+                )
+
+                yield from self._parse_multi_results(result)
             else:
-                result.raw_result = str(response)
-                result.result = False
-                result.reference = req_url
-                result.status = response.status_code
-                result.details = "No response from provider."
-                yield result
+                yield LookupResult(
+                    ioc=",".join(ioc_list),
+                    ioc_type="dns",
+                    status=response.status_code,
+                    reference=req_url,
+                    raw_result=str(response),
+                    result=False,
+                    details="No response from provider.",
+                )
         except (
             LookupError,
             JSONDecodeError,
             NotImplementedError,
             ConnectionError,
         ) as err:
-            self._err_to_results(result, err)
-            if not isinstance(err, LookupError):
-                result.reference = req_url
-            yield result
-
-    # pylint: enable=duplicate-code
+            result_dict = {
+                "ioc": ",".join(ioc_list),
+                "ioc_type": "dns",
+                "details": "\n".join(err.args),
+            }
+            if isinstance(err, LookupError):
+                result_dict["reference"] = req_url
+            yield LookupResult(**result_dict)  # type: ignore

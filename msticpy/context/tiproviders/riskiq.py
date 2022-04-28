@@ -205,6 +205,31 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         return result
 
+    def lookup_ioc_async(
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
+    ) -> LookupResult:
+        """
+        Lookup a single IoC observable.
+
+        Parameters
+        ----------
+        ioc : str
+            IoC Observable value
+        ioc_type : str, optional
+            IoC Type, by default None (type will be inferred)
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
+
+        Returns
+        -------
+        LookupResult
+            The returned results.
+
+        """
+        return self.lookup_ioc(ioc, ioc_type, query_type, **kwargs)
+
     def _parse_result_all_props(self, pt_result, ti_result):
         """Parse results for ALL properties."""
         ti_result.details = {
@@ -212,10 +237,10 @@ class RiskIQ(TIProvider, TIPivotProvider):
             "reputation": pt_result.reputation.as_dict,
         }
         ti_result.raw_result = ti_result.details
-        if pt_result.summary.total == 0 and pt_result.reputation.score == 0:
-            ti_result.result = False
-        else:
-            ti_result.result = True
+        ti_result.result = (
+            pt_result.summary.total != 0 or pt_result.reputation.score != 0
+        )
+
         rep_severity = self._severity_rep(pt_result.reputation.classification)
         ti_result.set_severity(rep_severity)
         if (

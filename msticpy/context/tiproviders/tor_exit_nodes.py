@@ -12,7 +12,10 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from datetime import datetime
+
+
+import contextlib
+from datetime import datetime, timezone
 from threading import Lock
 from typing import Any, Dict, Iterable, Tuple
 
@@ -43,16 +46,14 @@ class Tor(TIProvider):
         """Pull down Tor exit node list and save to internal attribute."""
         if cls._cache_lock.locked():
             return
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if not cls._nodelist or (now - cls._last_cached).days > 1:
-            try:
+            with contextlib.suppress(ConnectionError):
                 resp = httpx.get(cls._BASE_URL, timeout=get_http_timeout())
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
-                    cls._last_cached = datetime.utcnow()
-            except ConnectionError:
-                pass
+                    cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod
     def _tor_splitter(node_list) -> Iterable[Tuple[str, Dict[str, str]]]:

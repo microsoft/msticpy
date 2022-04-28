@@ -19,8 +19,10 @@ Submodules
    msticpy.context.tiproviders.ibm_xforce
    msticpy.context.tiproviders.intsights
    msticpy.context.tiproviders.kql_base
+   msticpy.context.tiproviders.lookup_result
    msticpy.context.tiproviders.open_page_rank
    msticpy.context.tiproviders.riskiq
    msticpy.context.tiproviders.ti_provider_base
+   msticpy.context.tiproviders.ti_severity
    msticpy.context.tiproviders.tor_exit_nodes
    msticpy.context.tiproviders.virustotal

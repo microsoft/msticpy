@@ -12,19 +12,21 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+import asyncio
 import sys  # noqa
 import warnings
 from collections import ChainMap
 from inspect import isclass
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import attr
+import nest_asyncio
 import pandas as pd
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
-from ..common.utility import export
+from ..common.utility import export, is_ipython
 from ..vis.ti_browser import browse_results
 from . import tiproviders
 
@@ -93,6 +95,8 @@ class TILookup:
             self._load_providers()
 
         self._all_providers = ChainMap(self._secondary_providers, self._providers)
+        if is_ipython():
+            nest_asyncio.apply()
 
     @property
     def loaded_providers(self) -> Dict[str, TIProvider]:
@@ -156,21 +160,6 @@ class TILookup:
 
         """
         return self._get_available_providers()
-
-    @classmethod
-    def _get_available_providers(cls):
-        providers = []
-        for provider_name in dir(tiproviders):
-            provider_class = getattr(tiproviders, provider_name, None)
-            if not (provider_class and isclass(provider_class)):
-                continue
-            # if it is a class - we only want to show concrete classes
-            # that are sub-classes of TIProvider
-            if issubclass(provider_class, tiproviders.TIProvider) and not getattr(
-                provider_class, "__abstractmethods__", False
-            ):
-                providers.append(provider_class.__name__)
-        return providers
 
     def enable_provider(self, providers: Union[str, Iterable[str]]):
         """
@@ -323,6 +312,298 @@ class TILookup:
         self.reload_provider_settings()
         self._load_providers()
 
+    def add_provider(
+        self, provider: TIProvider, name: str = None, primary: bool = True
+    ):
+        """
+        Add a TI provider to the current collection.
+
+        Parameters
+        ----------
+        provider : TIProvider
+            Provider instance
+        name : str, optional
+            The name to use for the provider (overrides the class name
+            of `provider`)
+        primary : bool, optional
+            "primary" or "secondary" if False, by default "primary"
+
+        """
+        if not name:
+            name = provider.__class__.__name__
+        if primary:
+            self._providers[name] = provider
+        else:
+            self._secondary_providers[name] = provider
+
+    # pylint: disable=too-many-arguments
+    def lookup_ioc(
+        self,
+        observable: str = None,
+        ioc_type: str = None,
+        ioc_query_type: str = None,
+        providers: List[str] = None,
+        default_providers: Optional[List[str]] = None,
+        prov_scope: str = "primary",
+        **kwargs,
+    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
+        """
+        Lookup single IoC in active providers.
+
+        Parameters
+        ----------
+        observable : str
+            IoC observable
+            (`ioc` is also an alias for observable)
+        ioc_type : str, optional
+            One of IoCExtract.IoCType, by default None
+            If none, the IoC type will be inferred
+        ioc_query_type: str, optional
+            The ioc query type (e.g. rep, info, malware)
+        providers: List[str]
+            Explicit list of providers to use
+        default_providers: Optional[List[str]], optional
+            Used by pivot functions as a fallback to `providers`. If
+            `providers` is specified, it will override this parameter.
+        prov_scope : str, optional
+            Use "primary", "secondary" or "all" providers, by default "primary"
+        kwargs :
+            Additional arguments passed to the underlying provider(s)
+
+        Returns
+        -------
+        Tuple[bool, List[Tuple[str, LookupResult]]]
+            The result returned as a tuple(bool, list):
+            bool indicates whether a TI record was found in any provider
+            list has an entry for each provider result
+
+        """
+        if not observable and "ioc" in kwargs:
+            observable = kwargs["ioc"]
+        if not observable:
+            raise ValueError("observable or ioc parameter must be supplied.")
+
+        result_list: List[Tuple[str, LookupResult]] = []
+        selected_providers = self._select_providers(
+            providers or default_providers, prov_scope
+        )
+        if not selected_providers:
+            raise MsticpyUserConfigError(
+                _NO_PROVIDERS_MSSG,
+                title="No Threat Intel Provider configuration found.",
+                help_uri=_TI_HELP_URI,
+            )
+
+        ioc_type = ioc_type or TIProvider.resolve_ioc_type(observable)
+        for prov_name, provider in selected_providers.items():
+            provider_result: LookupResult = provider.lookup_ioc(
+                ioc=observable, ioc_type=ioc_type, query_type=ioc_query_type, **kwargs
+            )
+            result_list.append((prov_name, provider_result))
+        overall_result = any(res.result for _, res in result_list)
+        return overall_result, result_list
+
+    def lookup_iocs(
+        self,
+        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        ioc_query_type: str = None,
+        providers: List[str] = None,
+        default_providers: Optional[List[str]] = None,
+        prov_scope: str = "primary",
+        **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Lookup a collection of IoCs.
+
+        Parameters
+        ----------
+        data : Union[pd.DataFrame, Mapping[str, str], Iterable[str]]
+            Data input in one of three formats:
+            1. Pandas dataframe (you must supply the column name in
+            `obs_col` parameter)
+            2. Mapping (e.g. a dict) of [observable, IoCType]
+            3. Iterable of observables - IoCTypes will be inferred
+        obs_col : str, optional
+            DataFrame column to use for observables, by default None
+            ("col" and "column" are also aliases for this parameter)
+        ioc_type_col : str, optional
+            DataFrame column to use for IoCTypes, by default None
+        ioc_query_type: str, optional
+            The ioc query type (e.g. rep, info, malware)
+        providers: List[str]
+            Explicit list of providers to use
+        default_providers: Optional[List[str]], optional
+            Used by pivot functions as a fallback to `providers`. If
+            `providers` is specified, it will override this parameter.
+        prov_scope : str, optional
+            Use "primary", "secondary" or "all" providers, by default "primary"
+        kwargs :
+            Additional arguments passed to the underlying provider(s)
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of results
+
+        """
+        return _make_sync(
+            self._lookup_iocs_async(
+                data=data,
+                obs_col=obs_col,
+                ioc_type_col=ioc_type_col,
+                ioc_query_type=ioc_query_type,
+                providers=providers,
+                default_providers=default_providers,
+                prov_scope=prov_scope,
+                **kwargs,
+            )
+        )
+
+    async def _lookup_iocs_async(
+        self,
+        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        ioc_query_type: str = None,
+        providers: List[str] = None,
+        default_providers: Optional[List[str]] = None,
+        prov_scope: str = "primary",
+        **kwargs,
+    ) -> pd.DataFrame:
+        """Lookup IoCs async."""
+        obs_col = obs_col or kwargs.pop("col", kwargs.pop("column", None))
+
+        selected_providers = self._select_providers(
+            providers or default_providers, prov_scope
+        )
+        if not selected_providers:
+            raise MsticpyUserConfigError(
+                _NO_PROVIDERS_MSSG,
+                title="No Threat Intel Provider configuration found.",
+                help_uri=_TI_HELP_URI,
+            )
+
+        result_futures: List[Any] = []
+        provider_names: List[str] = []
+        for prov_name, provider in selected_providers.items():
+            provider_names.append(prov_name)
+            result_futures.append(
+                provider.lookup_iocs_async(
+                    data=data,
+                    obs_col=obs_col,
+                    ioc_type_col=ioc_type_col,
+                    query_type=ioc_query_type,
+                    **kwargs,
+                )
+            )
+
+        results = await asyncio.gather(*result_futures)
+        return self._combine_results(results, provider_names, kwargs)
+
+    def lookup_iocs_sync(
+        self,
+        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        ioc_query_type: str = None,
+        providers: List[str] = None,
+        default_providers: Optional[List[str]] = None,
+        prov_scope: str = "primary",
+        **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Lookup a collection of IoCs.
+
+        Parameters
+        ----------
+        data : Union[pd.DataFrame, Mapping[str, str], Iterable[str]]
+            Data input in one of three formats:
+            1. Pandas dataframe (you must supply the column name in
+            `obs_col` parameter)
+            2. Mapping (e.g. a dict) of [observable, IoCType]
+            3. Iterable of observables - IoCTypes will be inferred
+        obs_col : str, optional
+            DataFrame column to use for observables, by default None
+            ("col" and "column" are also aliases for this parameter)
+        ioc_type_col : str, optional
+            DataFrame column to use for IoCTypes, by default None
+        ioc_query_type: str, optional
+            The ioc query type (e.g. rep, info, malware)
+        providers: List[str]
+            Explicit list of providers to use
+        default_providers: Optional[List[str]], optional
+            Used by pivot functions as a fallback to `providers`. If
+            `providers` is specified, it will override this parameter.
+        prov_scope : str, optional
+            Use "primary", "secondary" or "all" providers, by default "primary"
+        kwargs :
+            Additional arguments passed to the underlying provider(s)
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of results
+
+        """
+        obs_col = obs_col or kwargs.pop("col", kwargs.pop("column", None))
+
+        selected_providers = self._select_providers(
+            providers or default_providers, prov_scope
+        )
+        if not selected_providers:
+            raise MsticpyUserConfigError(
+                _NO_PROVIDERS_MSSG,
+                title="No Threat Intel Provider configuration found.",
+                help_uri=_TI_HELP_URI,
+            )
+
+        results: List[Any] = []
+        provider_names: List[str] = []
+        for prov_name, provider in selected_providers.items():
+            provider_names.append(prov_name)
+            results.append(
+                provider.lookup_iocs(
+                    data=data,
+                    obs_col=obs_col,
+                    ioc_type_col=ioc_type_col,
+                    query_type=ioc_query_type,
+                    **kwargs,
+                )
+            )
+        return self._combine_results(results, provider_names, kwargs)
+
+    @staticmethod
+    def result_to_df(
+        ioc_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
+    ) -> pd.DataFrame:
+        """
+        Return DataFrame representation of IoC Lookup response.
+
+        Parameters
+        ----------
+        ioc_lookup : Tuple[bool, List[Tuple[str, LookupResult]]]
+            Output from `lookup_ioc`
+
+        Returns
+        -------
+        pd.DataFrame
+            The response as a DataFrame with a row for each
+            provider response.
+
+        """
+        return (
+            pd.DataFrame(
+                {
+                    r_item[0]: pd.Series(attr.asdict(r_item[1]))
+                    for r_item in ioc_lookup[1]
+                }
+            )
+            .T.rename(columns=LookupResult.column_map())
+            .drop("SafeIoc", axis=1)
+        )
+
     def _load_providers(self):
         """Load provider classes based on config."""
         prov_settings = get_provider_settings()
@@ -368,198 +649,6 @@ class TILookup:
             self.add_provider(
                 provider=provider_instance, name=provider_name, primary=settings.primary
             )
-
-    def add_provider(
-        self, provider: TIProvider, name: str = None, primary: bool = True
-    ):
-        """
-        Add a TI provider to the current collection.
-
-        Parameters
-        ----------
-        provider : TIProvider
-            Provider instance
-        name : str, optional
-            The name to use for the provider (overrides the class name
-            of `provider`)
-        primary : bool, optional
-            "primary" or "secondary" if False, by default "primary"
-
-        """
-        if not name:
-            name = provider.__class__.__name__
-        if primary:
-            self._providers[name] = provider
-        else:
-            self._secondary_providers[name] = provider
-
-    # pylint: disable=too-many-arguments
-    def lookup_ioc(
-        self,
-        observable: str = None,
-        ioc_type: str = None,
-        ioc_query_type: str = None,
-        providers: List[str] = None,
-        prov_scope: str = "primary",
-        **kwargs,
-    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
-        """
-        Lookup single IoC in active providers.
-
-        Parameters
-        ----------
-        observable : str
-            IoC observable
-            (`ioc` is also an alias for observable)
-        ioc_type : str, optional
-            One of IoCExtract.IoCType, by default None
-            If none, the IoC type will be inferred
-        ioc_query_type: str, optional
-            The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
-            Explicit list of providers to use
-        prov_scope : str, optional
-            Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
-
-        Returns
-        -------
-        Tuple[bool, List[Tuple[str, LookupResult]]]
-            The result returned as a tuple(bool, list):
-            bool indicates whether a TI record was found in any provider
-            list has an entry for each provider result
-
-        """
-        if not observable and "ioc" in kwargs:
-            observable = kwargs["ioc"]
-        if not observable:
-            raise ValueError("observable or ioc parameter must be supplied.")
-
-        result_list: List[Tuple[str, LookupResult]] = []
-        selected_providers = self._select_providers(providers, prov_scope)
-        if not selected_providers:
-            raise MsticpyUserConfigError(
-                _NO_PROVIDERS_MSSG,
-                title="No Threat Intel Provider configuration found.",
-                help_uri=_TI_HELP_URI,
-            )
-
-        ioc_type = ioc_type or TIProvider.resolve_ioc_type(observable)
-        for prov_name, provider in selected_providers.items():
-            provider_result: LookupResult = provider.lookup_ioc(
-                ioc=observable, ioc_type=ioc_type, query_type=ioc_query_type, **kwargs
-            )
-            result_list.append((prov_name, provider_result))
-        overall_result = any(res.result for _, res in result_list)
-        return overall_result, result_list
-
-    def lookup_iocs(
-        self,
-        data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        obs_col: str = None,
-        ioc_type_col: str = None,
-        ioc_query_type: str = None,
-        providers: List[str] = None,
-        prov_scope: str = "primary",
-        **kwargs,
-    ) -> pd.DataFrame:
-        """
-        Lookup a collection of IoCs.
-
-        Parameters
-        ----------
-        data : Union[pd.DataFrame, Mapping[str, str], Iterable[str]]
-            Data input in one of three formats:
-            1. Pandas dataframe (you must supply the column name in
-            `obs_col` parameter)
-            2. Mapping (e.g. a dict) of [observable, IoCType]
-            3. Iterable of observables - IoCTypes will be inferred
-        obs_col : str, optional
-            DataFrame column to use for observables, by default None
-            ("col" and "column" are also aliases for this parameter)
-        ioc_type_col : str, optional
-            DataFrame column to use for IoCTypes, by default None
-        ioc_query_type: str, optional
-            The ioc query type (e.g. rep, info, malware)
-        providers: List[str]
-            Explicit list of providers to use
-        prov_scope : str, optional
-            Use "primary", "secondary" or "all" providers, by default "primary"
-        kwargs :
-            Additional arguments passed to the underlying provider(s)
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame of results
-
-        """
-        obs_col = obs_col or kwargs.pop("col", kwargs.pop("column", None))
-
-        result_list: List[pd.DataFrame] = []
-        selected_providers = self._select_providers(providers, prov_scope)
-        if not selected_providers:
-            raise MsticpyUserConfigError(
-                _NO_PROVIDERS_MSSG,
-                title="No Threat Intel Provider configuration found.",
-                help_uri=_TI_HELP_URI,
-            )
-
-        for prov_name, provider in selected_providers.items():
-            provider_result = provider.lookup_iocs(
-                data=data,
-                obs_col=obs_col,
-                ioc_type_col=ioc_type_col,
-                query_type=ioc_query_type,
-                **kwargs,
-            )
-            if provider_result is None or provider_result.empty:
-                continue
-            if not kwargs.get("show_not_supported", False):
-                provider_result = provider_result[
-                    provider_result["Status"] != TILookupStatus.not_supported.value
-                ]
-            if not kwargs.get("show_bad_ioc", False):
-                provider_result = provider_result[
-                    provider_result["Status"] != TILookupStatus.bad_format.value
-                ]
-            provider_result["Provider"] = prov_name
-            result_list.append(provider_result)
-
-        if not result_list:
-            print("No IoC matches")
-        return pd.concat(result_list, sort=False)
-
-    @staticmethod
-    def result_to_df(
-        ioc_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
-    ) -> pd.DataFrame:
-        """
-        Return DataFrame representation of IoC Lookup response.
-
-        Parameters
-        ----------
-        ioc_lookup : Tuple[bool, List[Tuple[str, LookupResult]]]
-            Output from `lookup_ioc`
-
-        Returns
-        -------
-        pd.DataFrame
-            The response as a DataFrame with a row for each
-            provider response.
-
-        """
-        return (
-            pd.DataFrame(
-                {
-                    r_item[0]: pd.Series(attr.asdict(r_item[1]))
-                    for r_item in ioc_lookup[1]
-                }
-            )
-            .T.rename(columns=LookupResult.column_map())
-            .drop("SafeIoc", axis=1)
-        )
 
     def _select_providers(
         self, providers: List[str] = None, prov_scope: str = "primary"
@@ -632,3 +721,53 @@ class TILookup:
         return browse_results(data=data, severities=severities, **kwargs)
 
     browse = browse_results
+
+    @classmethod
+    def _get_available_providers(cls):
+        providers = []
+        for provider_name in dir(tiproviders):
+            provider_class = getattr(tiproviders, provider_name, None)
+            if not (provider_class and isclass(provider_class)):
+                continue
+            # if it is a class - we only want to show concrete classes
+            # that are sub-classes of TIProvider
+            if issubclass(provider_class, tiproviders.TIProvider) and not getattr(
+                provider_class, "__abstractmethods__", False
+            ):
+                providers.append(provider_class.__name__)
+        return providers
+
+    @staticmethod
+    def _combine_results(
+        results: Iterable[pd.DataFrame], provider_names: List[str], kwargs
+    ):
+        """Combine dataframe results into single DF."""
+        result_list: List[pd.DataFrame] = []
+        for prov_name, provider_result in zip(provider_names, results):
+            if provider_result is None or provider_result.empty:
+                continue
+            if not kwargs.get("show_not_supported", False):
+                provider_result = provider_result[
+                    provider_result["Status"] != TILookupStatus.not_supported.value
+                ]
+            if not kwargs.get("show_bad_ioc", False):
+                provider_result = provider_result[
+                    provider_result["Status"] != TILookupStatus.bad_format.value
+                ]
+            provider_result["Provider"] = prov_name
+            result_list.append(provider_result)
+
+        if not result_list:
+            print("No IoC matches")
+        return pd.concat(result_list, sort=False)
+
+
+def _make_sync(future):
+    """Wait for an async call, making it sync."""
+    try:
+        event_loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # Generate an event loop if there isn't any.
+        event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(event_loop)
+    return event_loop.run_until_complete(future)

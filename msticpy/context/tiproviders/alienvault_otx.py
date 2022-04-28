@@ -105,10 +105,7 @@ class OTX(HttpProvider):
                         "sections_available": response.raw_result["sections"],
                     },
                 )
-            if pulse_count == 1:
-                severity = TISeverity.warning
-            else:
-                severity = TISeverity.high
+            severity = TISeverity.warning if pulse_count == 1 else TISeverity.high
             return (
                 True,
                 severity,

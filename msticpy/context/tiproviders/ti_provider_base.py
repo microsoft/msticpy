@@ -12,201 +12,39 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 import abc
 import collections
+import contextlib
 import math  # noqa
-import pprint
 import re
 from abc import ABC, abstractmethod
 from collections import Counter, namedtuple
 from enum import Enum
-from functools import lru_cache, singledispatch, total_ordering
+from functools import lru_cache, singledispatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.parse import quote_plus
 
 import attr
 import pandas as pd
+from tqdm.asyncio import tqdm
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from ..._version import VERSION
 from ...common.utility import export
 from ...transform.iocextract import IoCExtract, IoCType
+from .lookup_result import LookupResult
+from .ti_severity import TISeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 
-# pylint: disable=too-few-public-methods
-@total_ordering
-class TISeverity(Enum):
-    """Threat intelligence report severity."""
-
-    # pylint: disable=invalid-name
-    unknown = -1
-    information = 0
-    warning = 1
-    high = 2
-
-    # pylint: enable=invalid-name
-
-    # pylint: disable=unsupported-membership-test, no-member
-    @classmethod
-    def parse(cls, value) -> "TISeverity":
-        """
-        Parse string or numeric value to TISeverity.
-
-        Parameters
-        ----------
-        value : Any
-            TISeverity, str or int
-
-        Returns
-        -------
-        TISeverity
-            TISeverity instance.
-
-        """
-        if isinstance(value, TISeverity):
-            return value
-        if isinstance(value, str) and value.lower() in cls.__members__:
-            return cls[value.lower()]
-        if isinstance(value, int) and value in [
-            v.value for v in cls.__members__.values()
-        ]:
-            return cls(value)
-        return TISeverity.unknown
-
-    # pylint: enable=unsupported-membership-test, no-member
-
-    # pylint: disable=comparison-with-callable
-    def __eq__(self, other) -> bool:
-        """
-        Return True if severities are equal.
-
-        Parameters
-        ----------
-        other : Any
-            TISeverity to compare to.
-            Can be a numeric value or name of TISeverity value.
-
-        Returns
-        -------
-        bool
-            If severities are equal
-
-        """
-        other_sev = TISeverity.parse(other)
-        return self.value == other_sev.value
-
-    def __gt__(self, other) -> bool:
-        """
-        Return True self is greater than other.
-
-        Parameters
-        ----------
-        other : Any
-            TISeverity to compare to.
-            Can be a numeric value or name of TISeverity value.
-
-        Returns
-        -------
-        bool
-            If severities are equal
-
-        """
-        other_sev = TISeverity.parse(other)
-        return self.value > other_sev.value
-
-
-# pylint: enable=comparison-with-callable
-# pylint: disable=too-many-instance-attributes
-@attr.s(auto_attribs=True)
-class LookupResult:
-    """Lookup result for IoCs."""
-
-    ioc: str
-    ioc_type: str
-    safe_ioc: str = ""
-    query_subtype: Optional[str] = None
-    provider: Optional[str] = None
-    result: bool = False
-    severity: int = attr.ib(default=0)
-    details: Any = None
-    raw_result: Optional[Union[str, dict]] = None
-    reference: Optional[str] = None
-    status: int = 0
-
-    @severity.validator
-    def _check_severity(self, attribute, value):
-        del attribute
-        if isinstance(value, TISeverity):
-            self.severity = value.name
-            return
-        self.severity = TISeverity.parse(value).name
-
-    @property
-    def summary(self):
-        """Print a summary of the Lookup Result."""
-        p_pr = pprint.PrettyPrinter(indent=4)
-        print("ioc:", self.ioc, "(", self.ioc_type, ")")
-        print("result:", self.result)
-        # print("severity:", self.severity)
-        p_pr.pprint(self.details)
-        print("reference: ", self.reference)
-
-    @property
-    def raw_result_fmtd(self):
-        """Print raw results of the Lookup Result."""
-        p_pr = pprint.PrettyPrinter(indent=4)
-        p_pr.pprint(self.raw_result)
-
-    @property
-    def severity_name(self) -> str:
-        """
-        Return text description of severity score.
-
-        Returns
-        -------
-        str
-            Severity description.
-
-        """
-        try:
-            return TISeverity(self.severity).name
-        except ValueError:
-            return TISeverity.unknown.name
-
-    def set_severity(self, value: Any):
-        """
-        Set the severity from enum, int or string.
-
-        Parameters
-        ----------
-        value : Any
-            The severity value to set
-
-        """
-        self._check_severity(None, value)
-
-    @classmethod
-    def column_map(cls):
-        """Return a dictionary that maps fields to DF Names."""
-        col_mapping = {}
-        for name in attr.fields_dict(cls):
-            out_name = "".join(part.capitalize() for part in name.split("_"))
-            col_mapping[name] = out_name
-        return col_mapping
-
-
-# pylint: enable=too-many-instance-attributes
-
-
-# pylint: disable=too-few-public-methods, invalid-name
+# pylint: disable=invalid-name
 class TILookupStatus(Enum):
     """Threat intelligence lookup status."""
 
@@ -217,8 +55,7 @@ class TILookupStatus(Enum):
     other = 10
 
 
-# pylint: enable=too-few-public-methods, invalid-name
-
+# pylint: enable=invalid-name
 
 _IOC_EXTRACT = IoCExtract()
 
@@ -242,6 +79,11 @@ class TIProvider(ABC):
             self._supported_types.remove(IoCType.unknown)
 
         self.require_url_encoding = False
+
+    @property
+    def name(self) -> str:
+        """Return the name of the provider."""
+        return self.__class__.__name__
 
     # pylint: disable=duplicate-code
     @abc.abstractmethod
@@ -304,6 +146,53 @@ class TIProvider(ABC):
 
         """
         results = []
+        for observable, ioc_type in tqdm(
+            generate_items(data, obs_col, ioc_type_col), total=len(data), desc=self.name
+        ):
+            if not observable:
+                continue
+            item_result = self.lookup_ioc(
+                ioc=observable, ioc_type=ioc_type, query_type=query_type
+            )
+            results.append(pd.Series(attr.asdict(item_result)))
+
+        return pd.DataFrame(data=results).rename(columns=LookupResult.column_map())
+
+    async def lookup_iocs_async(
+        self,
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        query_type: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Lookup collection of IoC observables.
+
+        Parameters
+        ----------
+        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+            Data input in one of three formats:
+            1. Pandas dataframe (you must supply the column name in
+            `obs_col` parameter)
+            2. Dict of observable, IoCType
+            3. Iterable of observables - IoCTypes will be inferred
+        obs_col : str, optional
+            DataFrame column to use for observables, by default None
+        ioc_type_col : str, optional
+            DataFrame column to use for IoCTypes, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of results.
+
+        """
+        results = []
         for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
             if not observable:
                 continue
@@ -313,6 +202,7 @@ class TIProvider(ABC):
             results.append(pd.Series(attr.asdict(item_result)))
 
         return pd.DataFrame(data=results).rename(columns=LookupResult.column_map())
+        # return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, status_queue, **kwargs)
 
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
@@ -573,7 +463,7 @@ def _preprocess_url(
     if scheme is None or host is None:
         return SanitizedObservable(None, f"Could not obtain scheme or host from {url}")
     # get rid of some obvious false positives (localhost, local hostnames)
-    try:
+    with contextlib.suppress(ValueError):
         addr = ip_address(host)
         if addr.is_private:
             return SanitizedObservable(None, "Host part of URL is a private IP address")
@@ -581,9 +471,6 @@ def _preprocess_url(
             return SanitizedObservable(
                 None, "Host part of URL is a loopback IP address"
             )
-    except ValueError:
-        pass
-
     if "." not in host:
         return SanitizedObservable(None, "Host is unqualified domain name")
 
@@ -622,11 +509,9 @@ def get_schema_and_host(
         # Try to clean URL and re-check
         cleaned_url = _clean_url(url)
         if cleaned_url is not None:
-            try:
+            with contextlib.suppress(LocationParseError):
                 scheme, _, host, _, _, _, _ = parse_url(cleaned_url)
                 clean_url = cleaned_url
-            except LocationParseError:
-                pass
     if require_url_encoding and clean_url:
         clean_url = quote_plus(clean_url)
     return clean_url, scheme, host
@@ -692,13 +577,10 @@ def _preprocess_dns(domain: str) -> SanitizedObservable:
     """Ensure DNS is a valid-looking domain."""
     if "." not in domain:
         return SanitizedObservable(None, "Domain is unqualified domain name")
-    try:
+    with contextlib.suppress(ValueError):
         addr = ip_address(domain)
         del addr
         return SanitizedObservable(None, "Domain is an IP address")
-    except ValueError:
-        pass
-
     return SanitizedObservable(domain, "ok")
 
 

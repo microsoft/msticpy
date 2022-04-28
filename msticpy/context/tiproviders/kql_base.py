@@ -125,7 +125,7 @@ class KqlTIProvider(TIProvider):
         data_result = query_obj(**query_params)
         if not isinstance(data_result, pd.DataFrame):
             result.status = TILookupStatus.query_failed.value
-        if data_result.empty:
+        elif data_result.empty:
             result.details = "Not found."
             result.status = TILookupStatus.ok.value
             return result
@@ -253,6 +253,42 @@ class KqlTIProvider(TIProvider):
             all_results.append(combined_results_df)
 
         return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
+
+    async def lookup_iocs_async(
+        self,
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        query_type: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Lookup collection of IoC observables.
+
+        Parameters
+        ----------
+        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+            Data input in one of three formats:
+            1. Pandas dataframe (you must supply the column name in
+            `obs_col` parameter)
+            2. Dict of observable, IoCType
+            3. Iterable of observables - IoCTypes will be inferred
+        obs_col : str, optional
+            DataFrame column to use for observables, by default None
+        ioc_type_col : str, optional
+            DataFrame column to use for IoCTypes, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of results.
+
+        """
+        return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, **kwargs)
 
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
