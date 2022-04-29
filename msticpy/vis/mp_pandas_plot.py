@@ -398,7 +398,7 @@ class MsticpyPlotAccessor:
             Raised if the dataframe does not contain incidents or alerts.
 
         """
-        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+        if any(elem not in self._df.columns for elem in req_alert_cols) and any(
             elem not in self._df.columns for elem in req_inc_cols
         ):
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
