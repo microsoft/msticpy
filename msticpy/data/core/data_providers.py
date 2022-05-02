@@ -18,7 +18,6 @@ from ...common import pkg_config as config
 from ...common.exceptions import MsticpyDataQueryError
 from ...common.utility import export, valid_pyname
 from ...nbwidgets import QueryTime
-from ...vis.query_browser import browse_queries
 from ..drivers import DriverBase, import_driver
 from .param_extractor import extract_query_params
 from .query_container import QueryContainer
@@ -384,6 +383,9 @@ class QueryProvider:
             SelectItem browser for TI Data.
 
         """
+        # pylint: disable=import-outside-toplevel
+        from ...vis.query_browser import browse_queries
+
         return browse_queries(self, **kwargs)
 
     # alias for browse_queries

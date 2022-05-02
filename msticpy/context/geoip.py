@@ -19,18 +19,18 @@ rate. Maxmind geolite uses a downloadable database, while IPStack is
 an online lookup (API key required).
 
 """
-
+import contextlib
 import math
 import random
 import tarfile
 import warnings
 from abc import ABCMeta, abstractmethod
-from collections.abc import Iterable
+from collections import abc
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from time import sleep
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 import geoip2.database  # type: ignore
 import httpx
@@ -43,8 +43,9 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
-from ..common.utility import export
+from ..common.utility import SingletonClass, export
 from ..datamodel.entities import GeoLocation, IpAddress
+from .ip_utils import get_ip_type
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -152,6 +153,19 @@ class GeoIpLookup(metaclass=ABCMeta):
             if ent.Location is not None
         ]
         return pd.DataFrame(data=ip_dicts)
+
+    @staticmethod
+    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity):
+        """Try to convert different parameter formats to list."""
+        if ip_address and isinstance(ip_address, str):
+            ip_list = [ip_address.strip()]
+        elif ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
+            ip_list = [ip.strip() for ip in ip_addr_list]
+        elif ip_entity:
+            ip_list = [ip_entity.Address]
+        else:
+            raise ValueError("No valid ip addresses were passed as arguments.")
+        return ip_list
 
     # pylint: disable=protected-access
     def _print_license(self):
@@ -274,14 +288,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
         """
         self._check_valid_config()
-        if ip_address and isinstance(ip_address, str):
-            ip_list = [ip_address.strip()]
-        elif ip_addr_list:
-            ip_list = [ip.strip() for ip in ip_addr_list]
-        elif ip_entity:
-            ip_list = [ip_entity.Address]
-        else:
-            raise ValueError("No valid ip addresses were passed as arguments.")
+        ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
         results = self._submit_request(ip_list)
         output_raw = []
@@ -346,10 +353,8 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             return [(item, response.status_code) for item in results]
 
         if response:
-            try:
+            with contextlib.suppress(JSONDecodeError):
                 return [(response.json(), response.status_code)]
-            except JSONDecodeError:
-                pass
         return [({}, response.status_code)]
 
     def _lookup_ip_list(self, ip_list: List[str]):
@@ -376,6 +381,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
 
 @export
+@SingletonClass
 class GeoLiteLookup(GeoIpLookup):
     """
     GeoIP Lookup using MaxMindDB database.
@@ -478,7 +484,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             except Exception as err:  # pylint: disable=broad-except
                 print(f"Exception when trying to close GeoIP DB {err}")
 
-    def lookup_ip(
+    def lookup_ip(  # noqa: MC0001
         self,
         ip_address: str = None,
         ip_addr_list: Iterable = None,
@@ -505,24 +511,23 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 
         """
         self._check_db_open()
-        if ip_address and isinstance(ip_address, str):
-            ip_list = [ip_address.strip()]
-        elif ip_addr_list:
-            ip_list = [ip.strip() for ip in ip_addr_list]
-        elif ip_entity:
-            ip_list = [ip_entity.Address]
-        else:
-            raise ValueError("No valid ip addresses were passed as arguments.")
+        ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
         output_raw = []
         output_entities = []
-        ip_cache: Dict[str, Any] = {}
         for ip_input in ip_list:
             geo_match = None
             try:
-                geo_match = ip_cache.get(ip_input, self._reader.city(ip_input).raw)
-            except (AddressNotFoundError, AttributeError, ValueError):
-                continue
+                ip_type = get_ip_type(ip_input)
+            except ValueError:
+                ip_type = "Invalid IP Address"
+            if ip_type != "Public":
+                geo_match = self._get_geomatch_non_public(ip_type)
+            else:
+                try:
+                    geo_match = self._reader.city(ip_input).raw
+                except (AddressNotFoundError, AttributeError, ValueError):
+                    continue
             if geo_match:
                 output_raw.append(geo_match)
                 output_entities.append(
@@ -530,6 +535,17 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 )
 
         return output_raw, output_entities
+
+    @staticmethod
+    def _get_geomatch_non_public(ip_type):
+        """Return placeholder record for non-public IP Types."""
+        return {
+            "country": {
+                "iso_code": None,
+                "names": {"en": f"{ip_type} address"},
+            },
+            "city": {"names": {"en": "location unknown"}},
+        }
 
     @staticmethod
     def _create_ip_entity(
