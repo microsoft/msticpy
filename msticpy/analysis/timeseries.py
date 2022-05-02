@@ -199,7 +199,7 @@ def extract_anomaly_periods(
     time_column: str = "TimeGenerated",
     period: str = "1H",
     pos_only: bool = True,
-    anomalies_col: str = "anomalies",
+    anomalies_column: str = "anomalies",
 ) -> Dict[datetime, datetime]:
     """
     Return dictionary of anomaly periods, merging adjacent ones.
@@ -220,7 +220,6 @@ def extract_anomaly_periods(
     anomalies_column : str, optional
         The column containing the anomalies flag.
 
-
     Returns
     -------
     Dict[datetime, datetime] :
@@ -231,7 +230,7 @@ def extract_anomaly_periods(
     # we want to merge 2 adjacent samples on.
     anom_filter = [1] if pos_only else [1, -1]
     resampled = (
-        data[(data[anomalies_col].isin(anom_filter))]
+        data[(data[anomalies_column].isin(anom_filter))]
         .sort_values(time_column)
         .set_index(time_column)
         .resample(period)
@@ -270,7 +269,7 @@ def find_anomaly_periods(
     time_column: str = "TimeGenerated",
     period: str = "1H",
     pos_only: bool = True,
-    anomalies_col: str = "anomalies",
+    anomalies_column: str = "anomalies",
 ) -> List[TimeSpan]:
     """
     Return list of anomaly period as TimeSpans.
@@ -304,7 +303,7 @@ def find_anomaly_periods(
             time_column=time_column,
             period=period,
             pos_only=pos_only,
-            anomalies_col=anomalies_col,
+            anomalies_column=anomalies_column,
         ).items()
     ]
 
@@ -337,7 +336,7 @@ def set_new_anomaly_threshold(
     data: pd.DataFrame,
     threshold: float,
     threshold_low: Optional[float] = None,
-    anomalies_col: str = "anomalies",
+    anomalies_column: str = "anomalies",
 ) -> pd.DataFrame:
     """
     Return DataFrame with anomalies calculated based on new threshold.
@@ -367,8 +366,8 @@ def set_new_anomaly_threshold(
     new_df = data.assign(__new_anomalies__=0)
     new_df.loc[new_df["score"] >= threshold, new_anoms_col] = 1
     new_df.loc[new_df["score"] <= -threshold_low, new_anoms_col] = -1
-    return new_df.drop(columns=[anomalies_col]).rename(
-        columns={new_anoms_col: anomalies_col}
+    return new_df.drop(columns=[anomalies_column]).rename(
+        columns={new_anoms_col: anomalies_column}
     )
 
 
