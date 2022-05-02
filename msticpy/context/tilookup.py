@@ -13,7 +13,6 @@ requests per minute for the account type that you have.
 
 """
 import asyncio
-import sys  # noqa
 import warnings
 from collections import ChainMap
 from inspect import isclass
@@ -32,7 +31,7 @@ from . import tiproviders
 
 # used in dynamic instantiation of providers
 # pylint: disable=unused-wildcard-import, wildcard-import, unused-import
-from .tiproviders import *  # noqa:F401, F403
+from .tiproviders import TI_PROVIDERS, import_provider
 from .tiproviders.ti_provider_base import (  # noqa:F401
     LookupResult,
     TILookupStatus,
@@ -58,12 +57,7 @@ _TI_HELP_URI = (
 class TILookup:
     """Threat Intel observable lookup from providers."""
 
-    def __init__(
-        self,
-        primary_providers: Optional[List[TIProvider]] = None,
-        secondary_providers: Optional[List[TIProvider]] = None,
-        providers: Optional[List[str]] = None,
-    ):
+    def __init__(self, providers: Optional[List[str]] = None, **kwargs):
         """
         Initialize TILookup instance.
 
@@ -85,10 +79,16 @@ class TILookup:
         self._secondary_providers: Dict[str, TIProvider] = {}
         self._providers_to_load = providers
 
+        primary_providers = kwargs.pop("primary_providers", None)
         if primary_providers:
+
             for prov in primary_providers:
                 self.add_provider(prov, primary=True)
+        secondary_providers = kwargs.pop("secondary_providers", None)
         if secondary_providers:
+            warnings.warn(
+                "'secondary_providers' is a deprecated parameter", DeprecationWarning
+            )
             for prov in secondary_providers:
                 self.add_provider(prov, primary=False)
         if not (primary_providers or secondary_providers):
@@ -159,7 +159,7 @@ class TILookup:
             List of TI Provider classes.
 
         """
-        return self._get_available_providers()
+        return list(TI_PROVIDERS)
 
     def enable_provider(self, providers: Union[str, Iterable[str]]):
         """
@@ -259,8 +259,8 @@ class TILookup:
 
         """
         providers = []
-        for provider_name in cls._get_available_providers():
-            provider_class = getattr(tiproviders, provider_name, None)
+        for provider_name in TI_PROVIDERS:
+            provider_class = import_provider(provider_name)
             if not as_list:
                 print(provider_name)
             providers.append(provider_name)
@@ -606,17 +606,19 @@ class TILookup:
 
     def _load_providers(self):
         """Load provider classes based on config."""
-        prov_settings = get_provider_settings()
+        prov_settings = get_provider_settings("TIProviders")
 
         for provider_entry, settings in prov_settings.items():
             # Allow overriding provider name to use another class
             provider_name = settings.provider or provider_entry
-            if self._providers_to_load and provider_name not in self._providers_to_load:
+            if (
+                self._providers_to_load is not None
+                and provider_name not in self._providers_to_load
+            ):
                 continue
-            provider_class: TIProvider = getattr(
-                sys.modules[__name__], provider_name, None
-            )
-            if not provider_class:
+            try:
+                provider_class: TIProvider = import_provider(provider_name)
+            except LookupError:
                 warnings.warn(
                     f"Could not find provider class for {provider_name} "
                     f"in config section {provider_entry}"
@@ -725,7 +727,7 @@ class TILookup:
     @classmethod
     def _get_available_providers(cls):
         providers = []
-        for provider_name in dir(tiproviders):
+        for provider_name in TI_PROVIDERS:
             provider_class = getattr(tiproviders, provider_name, None)
             if not (provider_class and isclass(provider_class)):
                 continue

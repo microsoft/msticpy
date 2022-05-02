@@ -16,10 +16,8 @@ from datetime import datetime
 from functools import partial
 from typing import Any, Optional, Tuple, Union
 
-from passivetotal import analyzer as ptanalyzer
-
 from ..._version import VERSION
-from ...common.exceptions import MsticpyUserError
+from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
 from .ti_provider_base import (
     LookupResult,
@@ -28,6 +26,16 @@ from .ti_provider_base import (
     TIProvider,
     TISeverity,
 )
+
+try:
+    from passivetotal import analyzer as ptanalyzer  # isort: skip
+except ImportError as imp_err:
+    raise MsticpyImportExtraError(
+        "Cannot use this feature without passivetotal",
+        "package installed.",
+        title="Error importing RiskIQ modules.",
+        extra="riskiq",
+    ) from imp_err
 
 __version__ = VERSION
 __author__ = "Mark Kendrick"

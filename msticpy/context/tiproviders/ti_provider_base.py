@@ -28,7 +28,6 @@ from urllib.parse import quote_plus
 
 import attr
 import pandas as pd
-from tqdm.asyncio import tqdm
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
@@ -146,9 +145,7 @@ class TIProvider(ABC):
 
         """
         results = []
-        for observable, ioc_type in tqdm(
-            generate_items(data, obs_col, ioc_type_col), total=len(data), desc=self.name
-        ):
+        for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
             if not observable:
                 continue
             item_result = self.lookup_ioc(

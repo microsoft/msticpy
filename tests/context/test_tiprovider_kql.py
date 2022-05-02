@@ -11,8 +11,9 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 
+from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
-from msticpy.context.tiproviders import AzSTI, get_provider_settings
+from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 

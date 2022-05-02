@@ -16,12 +16,13 @@ from pathlib import Path
 import pandas as pd
 
 from msticpy.common import pkg_config
+from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
-from msticpy.context.tiproviders import get_provider_settings, preprocess_observable
 from msticpy.context.tiproviders.ti_provider_base import (
     TISeverity,
     _clean_url,
     generate_items,
+    preprocess_observable,
 )
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
