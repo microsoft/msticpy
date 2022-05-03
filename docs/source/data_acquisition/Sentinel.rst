@@ -8,6 +8,7 @@ Microsoft Sentinel APIs
    SentinelBookmarks
    SentinelIncidents
    SentinelWatchlists
+   SentinelSearch
 
 Description
 -----------
@@ -115,3 +116,8 @@ Watchlists
 
 You can interact with Watchlists, including creating new watchlists and adding items to a watchlist via this feature.
 More details can be found in :doc:`Sentinel Watchlists <SentinelWatchlists>`
+
+Search
+------
+
+You can create and delete Microsoft Sentinel Search jobs via MSTICPy :doc:`Sentinel Search <SentinelSearch>`

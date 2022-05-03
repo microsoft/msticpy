@@ -159,7 +159,7 @@ class KqlDriver(DriverBase):
 
         self.current_connection = connection_str
         ws_in_connection = re.search(
-            "workspace\(['\"]([^'\"]+).*",  # pylint: disable=anomalous-backslash-in-string # noqa: W605
+            r"workspace\(['\"]([^'\"]+).*",
             self.current_connection,
             re.IGNORECASE,
         )

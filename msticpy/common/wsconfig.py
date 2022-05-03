@@ -304,6 +304,8 @@ class WorkspaceConfig:
             selected_workspace = ws_settings[workspace_name]
         elif "Default" in ws_settings:
             selected_workspace = ws_settings["Default"]
+        elif len(ws_settings) == 1:
+            selected_workspace = next(iter(ws_settings.values()))
         else:
             return {}
         if (
