@@ -18,8 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TISeverity
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -30,11 +30,12 @@ __author__ = "Ian Hellen"
 class _OTXParams(IoCLookupParams):
     # override IoCLookupParams to set common defaults
     def __attrs_post_init__(self):
+        # pylint: disable=
         self.headers = {"X-OTX-API-KEY": "{API_KEY}"}
 
 
 @export
-class OTX(HttpProvider):
+class OTX(HttpTIProvider):
     """AlientVault OTX Lookup."""
 
     _BASE_URL = "https://otx.alienvault.com"
@@ -73,7 +74,7 @@ class OTX(HttpProvider):
         super().__init__(**kwargs)
         self.require_url_encoding = True
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -84,19 +85,19 @@ class OTX(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, TISeverity.information, "Not found."
+            return False, ResultSeverity.information, "Not found."
         if "pulse_info" in response.raw_result:
             pulses = response.raw_result["pulse_info"].get("pulses", {})
             pulse_count = len(pulses)
             if pulse_count == 0:
-                severity = TISeverity.information
+                severity = ResultSeverity.information
                 return (
                     True,
                     severity,
@@ -105,7 +106,9 @@ class OTX(HttpProvider):
                         "sections_available": response.raw_result["sections"],
                     },
                 )
-            severity = TISeverity.warning if pulse_count == 1 else TISeverity.high
+            severity = (
+                ResultSeverity.warning if pulse_count == 1 else ResultSeverity.high
+            )
             return (
                 True,
                 severity,
@@ -116,6 +119,6 @@ class OTX(HttpProvider):
                     "references": [p.get("references") for p in pulses],
                 },
             )
-        return True, TISeverity.information, {}
+        return True, ResultSeverity.information, {}
 
     # pylint: enable=duplicate-code

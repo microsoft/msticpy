@@ -42,7 +42,7 @@ TIProviders:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   OpenPageRank:
     Args:
       AuthKey:

@@ -20,15 +20,15 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TILookupStatus, TISeverity, generate_items
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, LookupStatus, ResultSeverity, generate_items
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
 @export
-class OPR(HttpProvider):
+class OPR(HttpTIProvider):
     """Open PageRank Lookup."""
 
     _BASE_URL = "https://openpagerank.com"
@@ -52,6 +52,17 @@ class OPR(HttpProvider):
             "Using Open PageRank.",
             "See https://www.domcop.com/openpagerank/what-is-openpagerank",
         )
+
+    async def lookup_iocs_async(
+        self,
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        query_type: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """Passthrough async wrapper to original method."""
+        return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, **kwargs)
 
     # pylint: disable=duplicate-code
     def lookup_iocs(
@@ -99,7 +110,7 @@ class OPR(HttpProvider):
                 ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
             )
 
-            if result.status == TILookupStatus.ok.value:
+            if result.status == LookupStatus.ok.value:
                 domain_list.add(result.ioc)
             else:
                 bad_requests.append(pd.Series(attr.asdict(result)))
@@ -115,7 +126,7 @@ class OPR(HttpProvider):
         all_results = results + bad_requests
         return pd.DataFrame(data=all_results).rename(columns=LookupResult.column_map())
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -126,16 +137,16 @@ class OPR(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, TISeverity.information, "Not found."
+            return False, ResultSeverity.information, "Not found."
 
-        severity = TISeverity.information
+        severity = ResultSeverity.information
         if "response" in response.raw_result:
             dom_records = response.raw_result["response"]
             dom_record = dom_records[0]
@@ -148,7 +159,7 @@ class OPR(HttpProvider):
             yield LookupResult(
                 **attr.asdict(response),
                 result=False,
-                severity=TISeverity.information.value,
+                severity=ResultSeverity.information.value,
                 details="Not found",
             )
 
@@ -162,7 +173,7 @@ class OPR(HttpProvider):
                     ioc_type="dns",
                     provider=self._provider_name,
                     result=result,
-                    severity=int(sev),
+                    severity=sev.value,
                     details=details,
                     raw_result=dom_record,
                     reference=f"{response.reference}?domains[0]={domain_name}",
@@ -171,7 +182,7 @@ class OPR(HttpProvider):
     @staticmethod
     def _parse_one_record(dom_record: dict):
         record_status = dom_record.get("status_code", 404)
-        severity = TISeverity.information
+        severity = ResultSeverity.information
         if record_status == 200:
             return (
                 True,
@@ -185,13 +196,13 @@ class OPR(HttpProvider):
         if record_status == 404:
             return (
                 True,
-                TISeverity.warning,
+                ResultSeverity.warning,
                 {
                     "rank": dom_record.get("rank", "0"),
                     "error": dom_record.get("error", ""),
                 },
             )
-        return False, TISeverity.information, {}
+        return False, ResultSeverity.information, {}
 
     def _lookup_bulk_request(self, ioc_list: Iterable[str]) -> Iterable[LookupResult]:
         ioc_list = list(ioc_list)
@@ -222,7 +233,7 @@ class OPR(HttpProvider):
                 result = LookupResult(
                     ioc=",".join(ioc_list),
                     ioc_type="dns",
-                    status=TILookupStatus.ok.value,
+                    status=LookupStatus.ok.value,
                     reference=f"{self._BASE_URL}{path}",
                     raw_result=response.json(),
                 )

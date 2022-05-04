@@ -18,8 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TISeverity
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -38,7 +38,7 @@ class _IntSightsParams(IoCLookupParams):
 
 
 @export
-class IntSights(HttpProvider):
+class IntSights(HttpTIProvider):
     """IntSights Lookup."""
 
     _BASE_URL = "https://api.intsights.com"
@@ -88,7 +88,7 @@ class IntSights(HttpProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -99,17 +99,17 @@ class IntSights(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, TISeverity.information, "Not found."
+            return False, ResultSeverity.information, "Not found."
 
         if response.raw_result["Whitelist"] == "True":
-            return False, TISeverity.information, "Whitelisted."
+            return False, ResultSeverity.information, "Whitelisted."
 
         sev = response.raw_result["Severity"]
         result_dict = {
@@ -133,13 +133,13 @@ class IntSights(HttpProvider):
         }
 
         severity = (
-            TISeverity.information
+            ResultSeverity.information
             if sev == "Low"
-            else TISeverity.warning
+            else ResultSeverity.warning
             if sev == "Medium"
-            else TISeverity.high
+            else ResultSeverity.high
             if sev == "High"
-            else TISeverity.unknown
+            else ResultSeverity.unknown
         )
 
         return True, severity, result_dict

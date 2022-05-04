@@ -15,47 +15,23 @@ requests per minute for the account type that you have.
 
 import abc
 import collections
-import contextlib
-import math  # noqa
-import re
 from abc import ABC, abstractmethod
-from collections import Counter, namedtuple
-from enum import Enum
 from functools import lru_cache, singledispatch
-from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
-from urllib.parse import quote_plus
 
 import attr
 import pandas as pd
-from tqdm.asyncio import tqdm
-from urllib3.exceptions import LocationParseError
-from urllib3.util import parse_url
 
 from ..._version import VERSION
 from ...common.utility import export
 from ...transform.iocextract import IoCExtract, IoCType
-from .lookup_result import LookupResult
-from .ti_severity import TISeverity
+from .lookup_result import LookupResult, LookupStatus
+from .preprocess_observable import PreProcessor
+from .result_severity import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
-
-
-# pylint: disable=invalid-name
-class TILookupStatus(Enum):
-    """Threat intelligence lookup status."""
-
-    ok = 0
-    not_supported = 1
-    bad_format = 2
-    query_failed = 3
-    other = 10
-
-
-# pylint: enable=invalid-name
 
 _IOC_EXTRACT = IoCExtract()
 
@@ -79,6 +55,8 @@ class TIProvider(ABC):
             self._supported_types.remove(IoCType.unknown)
 
         self.require_url_encoding = False
+
+        self._preprocessors = PreProcessor()
 
     @property
     def name(self) -> str:
@@ -146,11 +124,7 @@ class TIProvider(ABC):
 
         """
         results = []
-        for observable, ioc_type in tqdm(
-            generate_items(data, obs_col, ioc_type_col),
-            total=len(data),  # type: ignore
-            desc=self.name,
-        ):
+        for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
             if not observable:
                 continue
             item_result = self.lookup_ioc(
@@ -199,7 +173,7 @@ class TIProvider(ABC):
             if not observable:
                 continue
             item_result = self.lookup_ioc(
-                ioc=observable, ioc_type=ioc_type, query_type=query_type
+                ioc=observable, ioc_type=ioc_type, query_type=query_type, **kwargs
             )
             results.append(pd.Series(attr.asdict(item_result)))
 
@@ -207,7 +181,7 @@ class TIProvider(ABC):
         # return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, status_queue, **kwargs)
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -218,9 +192,9 @@ class TIProvider(ABC):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
@@ -246,7 +220,7 @@ class TIProvider(ABC):
         Returns
         -------
         Dict[str, Any]
-            IoC query/requist definitions keyed by IoCType
+            IoC query/request definitions keyed by IoCType
 
         """
         return self._IOC_QUERIES
@@ -345,7 +319,7 @@ class TIProvider(ABC):
         """
         result = LookupResult(
             ioc=ioc,
-            safe_ioc=ioc,
+            sanitized_value=ioc,
             ioc_type=ioc_type or self.resolve_ioc_type(ioc),
             query_subtype=query_subtype,
             result=False,
@@ -356,18 +330,18 @@ class TIProvider(ABC):
 
         if not self.is_supported_type(result.ioc_type):
             result.details = f"IoC type {result.ioc_type} not supported."
-            result.status = TILookupStatus.not_supported.value
+            result.status = LookupStatus.not_supported.value
             return result
 
-        clean_ioc = preprocess_observable(
-            ioc, result.ioc_type, self.require_url_encoding
+        clean_ioc = self._preprocessors.check(
+            ioc, result.ioc_type, require_url_encoding=self.require_url_encoding
         )
 
-        result.safe_ioc = clean_ioc.observable
+        result.sanitized_value = clean_ioc.observable
 
         if clean_ioc.status != "ok":
             result.details = clean_ioc.status
-            result.status = TILookupStatus.bad_format.value
+            result.status = LookupStatus.bad_format.value
 
         return result
 
@@ -392,217 +366,6 @@ class TIPivotProvider(ABC):
             Pivot library instance
 
         """
-
-
-# slightly stricter than normal URL regex to exclude '() from host string
-_HTTP_STRICT_REGEX = r"""
-    (?P<protocol>(https?|ftp|telnet|ldap|file)://)
-    (?P<userinfo>([a-z0-9-._~!$&*+,;=:]|%[0-9A-F]{2})*@)?
-    (?P<host>([a-z0-9-._~!$&\*+,;=]|%[0-9A-F]{2})*)
-    (:(?P<port>\d*))?
-    (/(?P<path>([^?\#| ]|%[0-9A-F]{2})*))?
-    (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
-    (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?\b"""
-
-_HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
-
-
-# pylint: disable=too-many-return-statements, too-many-branches
-def preprocess_observable(
-    observable, ioc_type, require_url_encoding: bool = False
-) -> SanitizedObservable:
-    """
-    Preprocesses and checks validity of observable against declared IoC type.
-
-        :param observable: the value of the IoC
-        :param ioc_type: the IoC type
-    """
-    observable = observable.strip()
-    try:
-        validated = _IOC_EXTRACT.validate(observable, ioc_type)
-    except KeyError:
-        validated = False
-    if not validated:
-        return SanitizedObservable(
-            None, "Observable does not match expected pattern for " + ioc_type
-        )
-    if ioc_type == "url":
-        return _preprocess_url(observable, require_url_encoding)
-    if ioc_type == "ipv4":
-        return _preprocess_ip(observable, version=4)
-    if ioc_type == "ipv6":
-        return _preprocess_ip(observable, version=6)
-    if ioc_type in ["dns", "hostname"]:
-        return _preprocess_dns(observable)
-    if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash", "file_hash"]:
-        return _preprocess_hash(observable)
-    return SanitizedObservable(observable, "ok")
-
-
-# Would complicate code with too many branches
-# pylint: disable=too-many-return-statements
-def _preprocess_url(
-    url: str, require_url_encoding: bool = False
-) -> SanitizedObservable:
-    """
-    Check that URL can be parsed.
-
-    Parameters
-    ----------
-    url : str
-        The URL to check
-    require_url_encoding : bool
-        Set to True if url's require encoding before passing to provider
-
-    Returns
-    -------
-    SanitizedObservable
-        Pre-processed result
-
-    """
-    clean_url, scheme, host = get_schema_and_host(url, require_url_encoding)
-
-    if scheme is None or host is None:
-        return SanitizedObservable(None, f"Could not obtain scheme or host from {url}")
-    # get rid of some obvious false positives (localhost, local hostnames)
-    with contextlib.suppress(ValueError):
-        addr = ip_address(host)
-        if addr.is_private:
-            return SanitizedObservable(None, "Host part of URL is a private IP address")
-        if addr.is_loopback:
-            return SanitizedObservable(
-                None, "Host part of URL is a loopback IP address"
-            )
-    if "." not in host:
-        return SanitizedObservable(None, "Host is unqualified domain name")
-
-    if scheme.lower() in ["file"]:
-        return SanitizedObservable(None, f"{scheme} URL scheme is not supported")
-
-    return SanitizedObservable(clean_url, "ok")
-
-
-def get_schema_and_host(
-    url: str, require_url_encoding: bool = False
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    """
-    Return URL scheme and host and cleaned URL.
-
-    Parameters
-    ----------
-    url : str
-        Input URL
-    require_url_encoding : bool
-        Set to True if url needs encoding. Defualt is False.
-
-    Returns
-    -------
-    Tuple[Optional[str], Optional[str], Optional[str]
-        Tuple of URL, scheme, host
-
-    """
-    clean_url = None
-    scheme = None
-    host = None
-    try:
-        scheme, _, host, _, _, _, _ = parse_url(url)
-        clean_url = url
-    except LocationParseError:
-        # Try to clean URL and re-check
-        cleaned_url = _clean_url(url)
-        if cleaned_url is not None:
-            with contextlib.suppress(LocationParseError):
-                scheme, _, host, _, _, _, _ = parse_url(cleaned_url)
-                clean_url = cleaned_url
-    if require_url_encoding and clean_url:
-        clean_url = quote_plus(clean_url)
-    return clean_url, scheme, host
-
-
-def _clean_url(url: str) -> Optional[str]:
-    """
-    Clean URL to remove query params and fragments and any trailing stuff.
-
-    Parameters
-    ----------
-    url : str
-        the URL to check
-
-    Returns
-    -------
-    Optional[str]
-        Cleaned URL or None if the input was not a valid URL
-
-    """
-    # Try to clean URL and re-check
-    match_url = _HTTP_STRICT_RGXC.search(url)
-    if (
-        not match_url
-        or match_url.groupdict()["protocol"] is None
-        or match_url.groupdict()["host"] is None
-    ):
-        return None
-
-    # build the URL dropping the query string and fragments
-    clean_url = match_url.groupdict()["protocol"]
-    if match_url.groupdict()["userinfo"]:
-        clean_url += match_url.groupdict()["userinfo"]
-    clean_url += match_url.groupdict()["host"]
-    if match_url.groupdict()["port"]:
-        clean_url += ":" + match_url.groupdict()["port"]
-    if match_url.groupdict()["path"]:
-        clean_url += "/" + match_url.groupdict()["path"]
-
-    return clean_url
-
-
-# Would complicate code with too many branches
-# pylint: disable=too-many-return-statements
-def _preprocess_ip(ipaddress: str, version=4):
-    """Ensure Ip address is a valid public IPv4 address."""
-    try:
-        addr = ip_address(ipaddress)
-    except ValueError:
-        return SanitizedObservable(None, "IP address is invalid format")
-
-    if version == 4 and not isinstance(addr, IPv4Address):
-        return SanitizedObservable(None, "Not an IPv4 address")
-    if version == 6 and not isinstance(addr, IPv6Address):
-        return SanitizedObservable(None, "Not an IPv6 address")
-    if addr.is_global:
-        return SanitizedObservable(ipaddress, "ok")
-
-    return SanitizedObservable(None, "IP address is not global")
-
-
-def _preprocess_dns(domain: str) -> SanitizedObservable:
-    """Ensure DNS is a valid-looking domain."""
-    if "." not in domain:
-        return SanitizedObservable(None, "Domain is unqualified domain name")
-    with contextlib.suppress(ValueError):
-        addr = ip_address(domain)
-        del addr
-        return SanitizedObservable(None, "Domain is an IP address")
-    return SanitizedObservable(domain, "ok")
-
-
-def _preprocess_hash(hash_str: str) -> SanitizedObservable:
-    """Ensure Hash has minimum entropy (rather than a string of 'x')."""
-    str_entropy = entropy(hash_str)
-    if str_entropy < 3.0:
-        return SanitizedObservable(None, "String has too low an entropy to be a hash")
-    return SanitizedObservable(hash_str, "ok")
-
-
-def entropy(input_str: str) -> float:
-    """Compute entropy of input string."""
-    str_len = float(len(input_str))
-    return -sum(
-        map(
-            lambda a: (a / str_len) * math.log2(a / str_len),
-            Counter(input_str).values(),
-        )
-    )
 
 
 @singledispatch

@@ -17,8 +17,8 @@ from typing import Any, Dict, Tuple
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TISeverity
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -29,7 +29,7 @@ _GZIP_HEADERS = {"Accept-Encoding": "gzip, deflate"}
 
 
 @export
-class VirusTotal(HttpProvider):
+class VirusTotal(HttpTIProvider):
     """VirusTotal Lookup."""
 
     _BASE_URL = "https://www.virustotal.com/"
@@ -72,7 +72,7 @@ class VirusTotal(HttpProvider):
         "detected_communicating_samples": ("sha256", "date"),
     }
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -83,14 +83,14 @@ class VirusTotal(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, TISeverity.information, "Not found."
+            return False, ResultSeverity.information, "Not found."
 
         result_dict = {
             "verbose_msg": response.raw_result.get("verbose_msg", None),
@@ -122,13 +122,13 @@ class VirusTotal(HttpProvider):
 
         if "positives" in result_dict:
             if result_dict["positives"] > 1:
-                severity = TISeverity.high
+                severity = ResultSeverity.high
             elif result_dict["positives"] > 0:
-                severity = TISeverity.warning
+                severity = ResultSeverity.warning
             else:
-                severity = TISeverity.information
+                severity = ResultSeverity.information
         else:
-            severity = TISeverity.unknown
+            severity = ResultSeverity.unknown
 
         return True, severity, result_dict
 

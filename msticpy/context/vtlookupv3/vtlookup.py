@@ -31,7 +31,10 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
-from ..tiproviders.ti_provider_base import SanitizedObservable, preprocess_observable
+from ..tiproviders.preprocess_observable import (
+    SanitizedObservable,
+    preprocess_observable,
+)
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -454,7 +457,7 @@ class VTLookup:
         source_idx: Any = 0,
         source_row_index: Any = None,
         vt_param: VTParams = None,
-    ):
+    ):  # noqa: C901 MC0001
         """
         Parse VirusTotal results based on IoCType.
 

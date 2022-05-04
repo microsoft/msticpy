@@ -3,15 +3,16 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""TI Result class."""
+"""Lookup Result and Status classes."""
 import pprint
 from collections import namedtuple
+from enum import Enum
 from typing import Any, Optional, Union
 
 import attr
 
 from ..._version import VERSION
-from .ti_severity import TISeverity
+from .result_severity import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -19,6 +20,19 @@ __author__ = "Ian Hellen"
 
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
+
+# pylint: disable=invalid-name
+class LookupStatus(Enum):
+    """Threat intelligence lookup status."""
+
+    ok = 0
+    not_supported = 1
+    bad_format = 2
+    query_failed = 3
+    other = 10
+
+
+# pylint: enable=invalid-name
 
 # pylint: enable=comparison-with-callable
 # pylint: disable=too-many-instance-attributes
@@ -28,7 +42,7 @@ class LookupResult:
 
     ioc: str
     ioc_type: str
-    safe_ioc: str = ""
+    sanitized_value: str = ""
     query_subtype: Optional[str] = None
     provider: Optional[str] = None
     result: bool = False
@@ -41,16 +55,16 @@ class LookupResult:
     @severity.validator
     def _check_severity(self, attribute, value):
         del attribute
-        if isinstance(value, TISeverity):
+        if isinstance(value, ResultSeverity):
             self.severity = value.name
             return
-        self.severity = TISeverity.parse(value).name
+        self.severity = ResultSeverity.parse(value).name
 
     @property
     def summary(self):
         """Print a summary of the Lookup Result."""
         p_pr = pprint.PrettyPrinter(indent=4)
-        print("ioc:", self.ioc, "(", self.ioc_type, ")")
+        print("value:", self.ioc, "(", self.ioc_type, ")")
         print("result:", self.result)
         # print("severity:", self.severity)
         p_pr.pprint(self.details)
@@ -61,6 +75,31 @@ class LookupResult:
         """Print raw results of the Lookup Result."""
         p_pr = pprint.PrettyPrinter(indent=4)
         p_pr.pprint(self.raw_result)
+
+    @property
+    def value(self) -> str:
+        """Return lookup value."""
+        return self.ioc
+
+    @value.setter
+    def value(self, value: str):
+        """Set lookup value."""
+        self.ioc = value
+
+    @property
+    def value_type(self) -> str:
+        """Return lookup value type."""
+        return self.ioc_type
+
+    @value_type.setter
+    def value_type(self, value: str):
+        """Set lookup value type."""
+        self.ioc_type = value
+
+    @property
+    def safe_ioc(self) -> str:
+        """Return sanitized value."""
+        return self.sanitized_value
 
     @property
     def severity_name(self) -> str:
@@ -74,9 +113,9 @@ class LookupResult:
 
         """
         try:
-            return TISeverity(self.severity).name
+            return ResultSeverity(self.severity).name
         except ValueError:
-            return TISeverity.unknown.name
+            return ResultSeverity.unknown.name
 
     def set_severity(self, value: Any):
         """

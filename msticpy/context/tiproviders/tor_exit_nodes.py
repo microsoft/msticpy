@@ -24,7 +24,7 @@ import httpx
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
-from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
+from .ti_provider_base import LookupResult, LookupStatus, ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -104,7 +104,7 @@ class Tor(TIProvider):
         result.reference = self._BASE_URL
 
         if result.status and not bool(self._nodelist):
-            result.status = TILookupStatus.query_failed.value
+            result.status = LookupStatus.query_failed.value
 
         if result.status:
             return result
@@ -112,7 +112,7 @@ class Tor(TIProvider):
         tor_node = self._nodelist.get(ioc)
 
         if tor_node:
-            result.set_severity(TISeverity.warning)
+            result.set_severity(ResultSeverity.warning)
             result.details = {
                 "NodeID": tor_node["ExitNode"],
                 "LastStatus": tor_node["LastStatus"],
@@ -122,7 +122,7 @@ class Tor(TIProvider):
             result.details = "Not found."
         return result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -133,10 +133,10 @@ class Tor(TIProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
-        return (True, TISeverity.information, None)
+        return (True, ResultSeverity.information, None)

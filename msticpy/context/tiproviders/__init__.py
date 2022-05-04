@@ -7,28 +7,10 @@
 import importlib
 
 from ..._version import VERSION
-
-# from .alienvault_otx import OTX  # noqa:F401
-# from .azure_sent_byoti import AzSTI  # noqa:F401
-# from .greynoise import GreyNoise  # noqa:F401
-from .http_base import HttpProvider  # noqa:F401
-
-# from .ibm_xforce import XForce  # noqa:F401
-# from .intsights import IntSights  # noqa:F401
-# from .open_page_rank import OPR  # noqa:F401
-from .ti_provider_base import (  # noqa:F401
-    LookupResult,
-    TIProvider,
-    preprocess_observable,
-)
-
-# from .tor_exit_nodes import Tor  # noqa:F401
-# from .virustotal import VirusTotal  # noqa:F401
-
-try:
-    from .riskiq import RiskIQ  # noqa:F401
-except ImportError:
-    pass
+from .http_provider import HttpTIProvider  # noqa:F401
+from .lookup_result import LookupResult  # noqa:F401
+from .preprocess_observable import preprocess_observable  # noqa:F401
+from .ti_provider_base import TIProvider  # noqa:F401
 
 __version__ = VERSION
 
@@ -36,7 +18,6 @@ TI_PROVIDERS = {
     "OTX": ("alienvault_otx", "OTX"),
     "AzSTI": ("azure_sent_byoti", "AzSTI"),
     "GreyNoise": ("greynoise", "GreyNoise"),
-    "HttpProvider": ("http_base", "HttpProvider"),
     "XForce": ("ibm_xforce", "XForce"),
     "IntSights": ("intsights", "IntSights"),
     "OPR": ("open_page_rank", "OPR"),
