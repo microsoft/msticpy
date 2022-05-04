@@ -36,20 +36,6 @@ from ..context.geoip import GeoLiteLookup  # isort: skip
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-
-# def _get_geolite_lookup() -> Callable[..., GeoLiteLookup]:  # type: ignore # noqa: F821
-#     """Closure for instantiating GeoLiteLookup."""
-#     geo_ip = None
-
-#     def _get_geo_ip(**kwargs) -> GeoLiteLookup:
-#         nonlocal geo_ip
-#         if geo_ip is None:
-#             geo_ip = GeoLiteLookup(**kwargs)
-#         return geo_ip
-
-#     return _get_geo_ip
-
-
 _GEO_LITE = GeoLiteLookup()
 
 
@@ -896,9 +882,9 @@ def _get_location_for_ip_entities(
             or ip_entity.Location.Longitude is None
             or ip_entity.Location.Latitude is None
         ):
-            # pylint: disable=no-member
-            _, ip_entity.Location = _GEO_LITE.lookup_ip(ip_entity)
-            # pylint: enable=no-member
+            _, ip_res_list = _GEO_LITE.lookup_ip(ip_entity=ip_entity)
+            if ip_res_list:
+                ip_entity.Location = ip_res_list[0].Location  # type: ignore
         yield ip_entity
 
 

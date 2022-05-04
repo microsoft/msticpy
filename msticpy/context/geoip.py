@@ -155,17 +155,21 @@ class GeoIpLookup(metaclass=ABCMeta):
         return pd.DataFrame(data=ip_dicts)
 
     @staticmethod
-    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity):
+    def _ip_params_to_list(ip_address, ip_addr_list, ip_entity) -> List[str]:
         """Try to convert different parameter formats to list."""
-        if ip_address and isinstance(ip_address, str):
-            ip_list = [ip_address.strip()]
-        elif ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
-            ip_list = [ip.strip() for ip in ip_addr_list]
-        elif ip_entity:
-            ip_list = [ip_entity.Address]
-        else:
-            raise ValueError("No valid ip addresses were passed as arguments.")
-        return ip_list
+        if ip_address is not None:
+            # check if ip_address just used as positional arg.
+            if isinstance(ip_address, str):
+                return [ip_address.strip()]
+            if isinstance(ip_address, abc.Iterable):
+                return [ip.strip() for ip in ip_addr_list]
+            if isinstance(ip_address, IpAddress):
+                return [ip_entity.Address]
+        if ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
+            return [ip.strip() for ip in ip_addr_list]
+        if ip_entity:
+            return [ip_entity.Address]
+        raise ValueError("No valid ip addresses were passed as arguments.")
 
     # pylint: disable=protected-access
     def _print_license(self):

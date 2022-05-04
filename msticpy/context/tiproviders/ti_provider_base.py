@@ -147,7 +147,9 @@ class TIProvider(ABC):
         """
         results = []
         for observable, ioc_type in tqdm(
-            generate_items(data, obs_col, ioc_type_col), total=len(data), desc=self.name
+            generate_items(data, obs_col, ioc_type_col),
+            total=len(data),  # type: ignore
+            desc=self.name,
         ):
             if not observable:
                 continue
