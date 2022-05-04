@@ -25,6 +25,7 @@ from msticpy.context.tiproviders.preprocess_observable import (
     preprocess_observable,
 )
 from msticpy.context.tiproviders.ti_provider_base import ResultSeverity, generate_items
+from msticpy.context.tiproviders.tor_exit_nodes import Tor
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 
@@ -32,7 +33,7 @@ _TEST_DATA = get_test_data_path()
 
 
 # pylint: disable=protected-access, redefined-outer-name
-@pytest.fixture(scope="module")
+@pytest.fixture
 def ti_lookup():
     """Return TILookup instance."""
     config_path = Path(_TEST_DATA).joinpath(pkg_config._CONFIG_FILE)
@@ -231,6 +232,7 @@ def verify_result(result, ti_lookup):
     check.is_false(result_df.empty)
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_ti_config_and_load(ti_lookup):
     """Test loading TI providers."""
     config_path = Path(_TEST_DATA).parent.joinpath("msticpyconfig-test.yaml")
@@ -331,7 +333,7 @@ def test_opr_multi_result(ti_lookup):
     ti_provider = ti_lookup.loaded_providers["OPR"]
     ti_provider._httpx_client = RequestSession()
 
-    n_requests = 250
+    n_requests = 9
     gen_doms = {_generate_rand_domain(): "dns" for i in range(n_requests)}
     results_df = ti_lookup.lookup_iocs(data=gen_doms, providers=["OPR"])
     check.equal(n_requests, len(results_df))
@@ -356,13 +358,21 @@ def _generate_rand_domain():
     return f"{dom}.{suffix}"
 
 
-def test_tor_exit_nodes(ti_lookup):
+def test_tor_exit_nodes(ti_lookup, monkeypatch):
     """Test TOR exit nodes."""
-    # Trigger a lookup to load Tor List
-    init_lookup = "104.117.0.237"
-    ti_lookup.lookup_ioc(observable=init_lookup, ioc_type="ipv4", providers=["Tor"])
-    # we can't use a fixed list since this changes all the time
-    # so take a sample from the current list
+    # # ONLINE_TEST - Uncomment these lines and comment out "OFFLINE_TEST" section
+    # # Trigger a lookup to load Tor List
+    # init_lookup = "104.117.0.237"
+    # ti_lookup.lookup_ioc(observable=init_lookup, ioc_type="ipv4", providers=["Tor"])
+    # # we can't use a fixed list since this changes all the time
+    # # so take a sample from the current list
+    # # ONLINE_TEST - End
+
+    # OFFLINE_TEST
+    node_dict = {"ExitNode": True, "LastStatus": dt.datetime.now(dt.timezone.utc)}
+    nodelist = {node: node_dict for node in _TOR_NODES}
+    monkeypatch.setattr(Tor, "_nodelist", nodelist)
+    # OFFLINE_TEST - End
     tor_prov = ti_lookup.loaded_providers["Tor"]
     tor_nodes = random.sample(list(tor_prov._nodelist.keys()), 4)  # nosec
 
@@ -377,9 +387,7 @@ def test_tor_exit_nodes(ti_lookup):
     pos_results = []
     neg_results = []
     for ioc in tor_nodes + other_ips:
-        result = ti_lookup.lookup_ioc(
-            observable=ioc, ioc_type="ipv4", providers=["Tor"]
-        )
+        result = ti_lookup.lookup_ioc(observable=ioc, providers=["Tor"])
         lu_result = result[1][0][1]
         check.is_true(lu_result.result)
         check.is_true(bool(lu_result.reference))
@@ -854,3 +862,28 @@ _PROVIDER_RESPONSES = {
         },
     },
 }
+
+_TOR_NODES = [
+    "163.172.213.212",
+    "163.172.41.228",
+    "164.132.9.199",
+    "164.92.218.139",
+    "164.92.79.65",
+    "166.70.207.2",
+    "167.235.245.76",
+    "167.86.70.160",
+    "167.86.94.107",
+    "167.99.214.205",
+    "169.239.128.179",
+    "171.22.147.64",
+    "171.25.193.20",
+    "171.25.193.235",
+    "171.25.193.25",
+    "2001:0678:0e3c:0000:0000:0000:0000:000a",
+    "2001:0678:0e3c:0000:0000:0000:0000:000b",
+    "2001:0678:0e3c:0000:0000:0000:0000:000c",
+    "2001:0678:0e3c:0000:0000:0000:0000:000d",
+    "2001:067c:06ec:0203:0192:0042:0116:0016",
+    "2001:067c:06ec:0203:0218:33ff:fe44:5513",
+    "2001:067c:06ec:0203:0218:33ff:fe44:5514",
+]

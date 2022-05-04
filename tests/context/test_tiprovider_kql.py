@@ -123,7 +123,7 @@ def query_provider(data_provider):
     return QueryProvider(data_environment="MSSentinel", driver=data_provider)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def ti_lookup(query_provider):
     """Return TI Lookup."""
     test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
