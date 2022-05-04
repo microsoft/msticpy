@@ -15,14 +15,14 @@ requests per minute for the account type that you have.
 from typing import Any, Tuple
 
 from ..._version import VERSION
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TISeverity
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-class GreyNoise(HttpProvider):
+class GreyNoise(HttpTIProvider):
     """GreyNoise Lookup."""
 
     _BASE_URL = "https://api.greynoise.io"
@@ -45,7 +45,7 @@ class GreyNoise(HttpProvider):
         ),
     }
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -56,14 +56,14 @@ class GreyNoise(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
-            return False, TISeverity.information, "Not found."
+            return False, ResultSeverity.information, "Not found."
         result = True
         result_dict = {}
         # If community API response extract key elements
@@ -95,7 +95,7 @@ class GreyNoise(HttpProvider):
         if "code" in response.raw_result:
             result_dict = response.raw_result
 
-        severity = TISeverity.information
+        severity = ResultSeverity.information
         if response.raw_result["classification"] == "malicious":
-            severity = TISeverity.high
+            severity = ResultSeverity.high
         return result, severity, result_dict

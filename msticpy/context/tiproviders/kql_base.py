@@ -27,9 +27,9 @@ from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
 from .ti_provider_base import (
     LookupResult,
-    TILookupStatus,
+    LookupStatus,
+    ResultSeverity,
     TIProvider,
-    TISeverity,
     generate_items,
 )
 
@@ -124,10 +124,10 @@ class KqlTIProvider(TIProvider):
             )
         data_result = query_obj(**query_params)
         if not isinstance(data_result, pd.DataFrame):
-            result.status = TILookupStatus.query_failed.value
+            result.status = LookupStatus.query_failed.value
         elif data_result.empty:
             result.details = "Not found."
-            result.status = TILookupStatus.ok.value
+            result.status = LookupStatus.ok.value
             return result
 
         result.raw_result = data_result
@@ -181,7 +181,7 @@ class KqlTIProvider(TIProvider):
                 ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
             )
 
-            if result.status != TILookupStatus.not_supported.value:
+            if result.status != LookupStatus.not_supported.value:
                 ioc_groups[result.ioc_type].add(result.ioc)
 
         all_results = []
@@ -228,21 +228,21 @@ class KqlTIProvider(TIProvider):
             if not isinstance(data_result, pd.DataFrame):
                 src_ioc_frame["Result"] = False
                 src_ioc_frame["Details"] = "Query failure"
-                src_ioc_frame["Status"] = TILookupStatus.query_failed.value
-                src_ioc_frame["Severity"] = TISeverity.information.value
+                src_ioc_frame["Status"] = LookupStatus.query_failed.value
+                src_ioc_frame["Severity"] = ResultSeverity.information.value
                 all_results.append(src_ioc_frame)
                 continue
             if data_result.empty:
                 src_ioc_frame["Result"] = False
                 src_ioc_frame["Details"] = "Not found."
-                src_ioc_frame["Status"] = TILookupStatus.ok.value
-                src_ioc_frame["Severity"] = TISeverity.information.value
+                src_ioc_frame["Status"] = LookupStatus.ok.value
+                src_ioc_frame["Severity"] = ResultSeverity.information.value
                 all_results.append(src_ioc_frame)
                 continue
 
             # Create our results columns
             data_result["Result"] = True
-            data_result["Status"] = TILookupStatus.ok.value
+            data_result["Status"] = LookupStatus.ok.value
             data_result["Severity"] = self._get_severity(data_result)
             data_result["Details"] = self._get_detail_summary(data_result)
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
@@ -291,7 +291,7 @@ class KqlTIProvider(TIProvider):
         return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, **kwargs)
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -302,9 +302,9 @@ class KqlTIProvider(TIProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
@@ -434,8 +434,8 @@ class KqlTIProvider(TIProvider):
         # Fill in any NaN values from the merge
         combined_df["Result"] = combined_df["Result"].fillna(False)
         combined_df["Details"] = combined_df["Details"].fillna("Not found.")
-        combined_df["Status"] = combined_df["Status"].fillna(TILookupStatus.ok.value)
+        combined_df["Status"] = combined_df["Status"].fillna(LookupStatus.ok.value)
         combined_df["Severity"] = combined_df["Severity"].fillna(
-            TISeverity.information.value
+            ResultSeverity.information.value
         )
         return combined_df

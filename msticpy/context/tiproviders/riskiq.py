@@ -21,10 +21,10 @@ from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
 from .ti_provider_base import (
     LookupResult,
-    TILookupStatus,
+    LookupStatus,
+    ResultSeverity,
     TIPivotProvider,
     TIProvider,
-    TISeverity,
 )
 
 try:
@@ -146,11 +146,11 @@ class RiskIQ(TIProvider, TIPivotProvider):
     def _severity_rep(classification):
         """Get the severity level for a reputation score classification."""
         return {
-            "MALICIOUS": TISeverity.high,
-            "SUSPICIOUS": TISeverity.warning,
-            "UNKNOWN": TISeverity.information,
-            "GOOD": TISeverity.information,
-        }.get(classification, TISeverity.information)
+            "MALICIOUS": ResultSeverity.high,
+            "SUSPICIOUS": ResultSeverity.warning,
+            "UNKNOWN": ResultSeverity.information,
+            "GOOD": ResultSeverity.information,
+        }.get(classification, ResultSeverity.information)
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
@@ -191,7 +191,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
         ]:
             result.result = False
-            result.status = TILookupStatus.query_failed.value
+            result.status = LookupStatus.query_failed.value
             result.details = f"ERROR: unsupported query type {query_type}"
             return result
         else:
@@ -206,10 +206,10 @@ class RiskIQ(TIProvider, TIPivotProvider):
                 result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
             result.result = False
-            result.status = TILookupStatus.query_failed.value
+            result.status = LookupStatus.query_failed.value
             result.details = f"ERROR: {err}"
             result.raw_result = err
-            result.set_severity(TISeverity.unknown)
+            result.set_severity(ResultSeverity.unknown)
 
         return result
 
@@ -255,9 +255,9 @@ class RiskIQ(TIProvider, TIPivotProvider):
             "malware_hashes" in pt_result.summary.available
             or "articles" in pt_result.summary.available
         ):
-            ti_result.set_severity(max(rep_severity, TISeverity.high))
+            ti_result.set_severity(max(rep_severity, ResultSeverity.high))
         elif "projects" in pt_result.summary.available:
-            ti_result.set_severity(max(rep_severity, TISeverity.warning))
+            ti_result.set_severity(max(rep_severity, ResultSeverity.warning))
         return ti_result
 
     def _parse_result_prop(self, pt_result, pt_prop, ti_result):
@@ -266,14 +266,14 @@ class RiskIQ(TIProvider, TIPivotProvider):
         if pt_prop == "reputation":
             ti_result.set_severity(self._severity_rep(attr.classification))
         elif pt_prop == "malware_hashes" and len(attr) > 0:
-            ti_result.set_severity(TISeverity.high)
+            ti_result.set_severity(ResultSeverity.high)
         else:
-            ti_result.set_severity(TISeverity.information)
+            ti_result.set_severity(ResultSeverity.information)
         ti_result.details = ti_result.raw_result = attr.as_dict
         ti_result.result = True
         return ti_result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -284,13 +284,13 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
-        return (True, TISeverity.information, None)
+        return (True, ResultSeverity.information, None)
 
     def _set_pivot_timespan(self, **kwargs):
         """

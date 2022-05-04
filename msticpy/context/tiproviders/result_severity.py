@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""TI Severity enumeration."""
+"""Result Severity enumeration."""
 from collections import namedtuple
 from enum import Enum
 from functools import total_ordering
@@ -19,8 +19,8 @@ SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"]
 
 # pylint: disable=too-few-public-methods
 @total_ordering
-class TISeverity(Enum):
-    """Threat intelligence report severity."""
+class ResultSeverity(Enum):
+    """Item report severity."""
 
     # pylint: disable=invalid-name
     unknown = -1
@@ -32,22 +32,22 @@ class TISeverity(Enum):
 
     # pylint: disable=unsupported-membership-test, no-member
     @classmethod
-    def parse(cls, value) -> "TISeverity":
+    def parse(cls, value) -> "ResultSeverity":
         """
-        Parse string or numeric value to TISeverity.
+        Parse string or numeric value to ResultSeverity.
 
         Parameters
         ----------
         value : Any
-            TISeverity, str or int
+            ResultSeverity, str or int
 
         Returns
         -------
-        TISeverity
-            TISeverity instance.
+        ResultSeverity
+            ResultSeverity instance.
 
         """
-        if isinstance(value, TISeverity):
+        if isinstance(value, ResultSeverity):
             return value
         if isinstance(value, str) and value.lower() in cls.__members__:
             return cls[value.lower()]
@@ -55,7 +55,7 @@ class TISeverity(Enum):
             v.value for v in cls.__members__.values()
         ]:
             return cls(value)
-        return TISeverity.unknown
+        return ResultSeverity.unknown
 
     # pylint: enable=unsupported-membership-test, no-member
 
@@ -67,8 +67,8 @@ class TISeverity(Enum):
         Parameters
         ----------
         other : Any
-            TISeverity to compare to.
-            Can be a numeric value or name of TISeverity value.
+            ResultSeverity to compare to.
+            Can be a numeric value or name of ResultSeverity value.
 
         Returns
         -------
@@ -76,7 +76,7 @@ class TISeverity(Enum):
             If severities are equal
 
         """
-        other_sev = TISeverity.parse(other)
+        other_sev = ResultSeverity.parse(other)
         return self.value == other_sev.value
 
     def __gt__(self, other) -> bool:
@@ -86,8 +86,8 @@ class TISeverity(Enum):
         Parameters
         ----------
         other : Any
-            TISeverity to compare to.
-            Can be a numeric value or name of TISeverity value.
+            ResultSeverity to compare to.
+            Can be a numeric value or name of ResultSeverity value.
 
         Returns
         -------
@@ -95,5 +95,5 @@ class TISeverity(Enum):
             If severities are equal
 
         """
-        other_sev = TISeverity.parse(other)
+        other_sev = ResultSeverity.parse(other)
         return self.value > other_sev.value
