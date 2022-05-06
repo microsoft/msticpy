@@ -61,10 +61,11 @@ class OPR(HttpTIProvider):
         query_type: str = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Passthrough async wrapper to original method."""
-        return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, **kwargs)
+        """Call base async wrapper."""
+        return await self._lookup_iocs_async_wrapper(
+            data, obs_col, ioc_type_col, query_type, **kwargs
+        )
 
-    # pylint: disable=duplicate-code
     def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
@@ -110,7 +111,7 @@ class OPR(HttpTIProvider):
                 ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
             )
 
-            if result.status == LookupStatus.ok.value:
+            if result.status == LookupStatus.OK.value:
                 domain_list.add(result.ioc)
             else:
                 bad_requests.append(pd.Series(attr.asdict(result)))
@@ -213,7 +214,6 @@ class OPR(HttpTIProvider):
             batch_list = ioc_list[step : (step + batch_size)]  # noqa: E203
             yield from self._lookup_batch(batch_list)
 
-    # pylint: disable=duplicate-code
     def _lookup_batch(self, ioc_list: list) -> Iterable[LookupResult]:
         # build the query string manually - of the form domains[N]=domN&domains[N+1]...
         qry_elements = [
@@ -233,7 +233,7 @@ class OPR(HttpTIProvider):
                 result = LookupResult(
                     ioc=",".join(ioc_list),
                     ioc_type="dns",
-                    status=LookupStatus.ok.value,
+                    status=LookupStatus.OK.value,
                     reference=f"{self._BASE_URL}{path}",
                     raw_result=response.json(),
                 )

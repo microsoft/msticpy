@@ -191,7 +191,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
         ]:
             result.result = False
-            result.status = LookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
             result.details = f"ERROR: unsupported query type {query_type}"
             return result
         else:
@@ -206,37 +206,12 @@ class RiskIQ(TIProvider, TIPivotProvider):
                 result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
             result.result = False
-            result.status = LookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
             result.details = f"ERROR: {err}"
             result.raw_result = err
             result.set_severity(ResultSeverity.unknown)
 
         return result
-
-    def lookup_ioc_async(
-        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
-        """
-        Lookup a single IoC observable.
-
-        Parameters
-        ----------
-        ioc : str
-            IoC Observable value
-        ioc_type : str, optional
-            IoC Type, by default None (type will be inferred)
-        query_type : str, optional
-            Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
-            will be returned.
-
-        Returns
-        -------
-        LookupResult
-            The returned results.
-
-        """
-        return self.lookup_ioc(ioc, ioc_type, query_type, **kwargs)
 
     def _parse_result_all_props(self, pt_result, ti_result):
         """Parse results for ALL properties."""

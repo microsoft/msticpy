@@ -118,7 +118,7 @@ class Tor(TIProvider):
         result.reference = self._BASE_URL
 
         if result.status and not bool(self._nodelist):
-            result.status = LookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
 
         if result.status:
             return result

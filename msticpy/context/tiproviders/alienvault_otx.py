@@ -61,7 +61,6 @@ class OTX(HttpTIProvider):
         "url": _OTXParams(path="/api/v1/indicators/url/{observable}/general"),
     }
 
-    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]

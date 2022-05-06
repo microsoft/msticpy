@@ -17,7 +17,6 @@ __author__ = "Ian Hellen"
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 
-# pylint: disable=too-few-public-methods
 @total_ordering
 class ResultSeverity(Enum):
     """Item report severity."""
@@ -30,7 +29,6 @@ class ResultSeverity(Enum):
 
     # pylint: enable=invalid-name
 
-    # pylint: disable=unsupported-membership-test, no-member
     @classmethod
     def parse(cls, value) -> "ResultSeverity":
         """
@@ -57,9 +55,6 @@ class ResultSeverity(Enum):
             return cls(value)
         return ResultSeverity.unknown
 
-    # pylint: enable=unsupported-membership-test, no-member
-
-    # pylint: disable=comparison-with-callable
     def __eq__(self, other) -> bool:
         """
         Return True if severities are equal.

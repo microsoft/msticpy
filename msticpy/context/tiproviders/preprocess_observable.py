@@ -52,8 +52,6 @@ _HTTP_STRICT_RGXC = re.compile(_HTTP_STRICT_REGEX, re.I | re.X | re.M)
 CheckerType = Callable[..., SanitizedObservable]
 
 
-# Would complicate code with too many branches
-# pylint: disable=too-many-return-statements
 def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
     """
     Check that URL can be parsed.
@@ -168,8 +166,6 @@ def _clean_url(url: str) -> Optional[str]:
     return clean_url
 
 
-# Would complicate code with too many branches
-# pylint: disable=too-many-return-statements
 def _preprocess_ip(ipaddress: str, **kwargs):
     """Ensure Ip address is a valid public IPv4 address."""
     version = kwargs.pop("version", 4)
@@ -289,7 +285,6 @@ class PreProcessor:
             self._processors[value_type].append(checker)
 
 
-# pylint: disable=too-many-return-statements, too-many-branches
 def preprocess_observable(
     observable, ioc_type, require_url_encoding: bool = False
 ) -> SanitizedObservable:

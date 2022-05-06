@@ -12,7 +12,9 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 import abc
+import contextlib
 import warnings
 from collections import defaultdict
 from functools import lru_cache
@@ -61,7 +63,6 @@ class KqlTIProvider(TIProvider):
         if not self._query_provider or not self._query_provider.connected:
             raise MsticpyConfigException("Query provider for KQL could not be created.")
 
-    # pylint: disable=duplicate-code
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
@@ -124,10 +125,10 @@ class KqlTIProvider(TIProvider):
             )
         data_result = query_obj(**query_params)
         if not isinstance(data_result, pd.DataFrame):
-            result.status = LookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
         elif data_result.empty:
             result.details = "Not found."
-            result.status = LookupStatus.ok.value
+            result.status = LookupStatus.OK.value
             return result
 
         result.raw_result = data_result
@@ -137,8 +138,8 @@ class KqlTIProvider(TIProvider):
         result.reference = query_obj("print_query", **query_params)
         return result
 
-    # pylint: disable=too-many-locals, too-many-branches
-    def lookup_iocs(  # noqa: C901, MC0001
+    # pylint: disable=too-many-locals
+    def lookup_iocs(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
         obs_col: str = None,
@@ -181,68 +182,43 @@ class KqlTIProvider(TIProvider):
                 ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
             )
 
-            if result.status != LookupStatus.not_supported.value:
+            if result.status != LookupStatus.NOT_SUPPORTED.value:
                 ioc_groups[result.ioc_type].add(result.ioc)
 
         all_results = []
         for ioc_type, obs_set in ioc_groups.items():
-            try:
+            with contextlib.suppress(LookupError):
                 query_obj, query_params = self._get_query_and_params(
                     ioc=list(obs_set),
                     ioc_type=ioc_type,
                     query_type=query_type,
                     **kwargs,
                 )
-            except LookupError:
-                pass
             if not query_obj:
                 warnings.warn(f"Could not find query for {ioc_type}, {query_type}")
                 continue
 
             # run the query
             data_result = query_obj(**query_params)
-            if isinstance(data_result, pd.DataFrame):
-                data_result = data_result.copy()
-            else:
-                if (
-                    hasattr(data_result, "completion_query_info")
-                    and data_result.completion_query_info["StatusCode"] == 0
-                    and data_result.records_count == 0
-                ):
-                    print("No results return from data provider.")
-                elif data_result and hasattr(data_result, "completion_query_info"):
-                    print(
-                        "No results returned from data provider. "
-                        + str(data_result.completion_query_info)
-                    )
-                else:
-                    print("Unknown response from provider: " + str(data_result))
 
             src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
             src_ioc_frame["QuerySubtype"] = query_type
             src_ioc_frame["Reference"] = query_obj("print_query", **query_params)
 
+            lookup_status = self._check_result_status(data_result)
             # If no results, add the empty dataframe to the combined results
             # and continue
-            if not isinstance(data_result, pd.DataFrame):
-                src_ioc_frame["Result"] = False
-                src_ioc_frame["Details"] = "Query failure"
-                src_ioc_frame["Status"] = LookupStatus.query_failed.value
-                src_ioc_frame["Severity"] = ResultSeverity.information.value
-                all_results.append(src_ioc_frame)
-                continue
-            if data_result.empty:
-                src_ioc_frame["Result"] = False
-                src_ioc_frame["Details"] = "Not found."
-                src_ioc_frame["Status"] = LookupStatus.ok.value
-                src_ioc_frame["Severity"] = ResultSeverity.information.value
+            if lookup_status in {LookupStatus.QUERY_FAILED, LookupStatus.NO_DATA}:
+                self._add_failure_status(src_ioc_frame, lookup_status)
                 all_results.append(src_ioc_frame)
                 continue
 
+            # copy the DF to avoid pandas warnings about changing DF view
+            data_result = data_result.copy()
             # Create our results columns
             data_result["Result"] = True
-            data_result["Status"] = LookupStatus.ok.value
+            data_result["Status"] = LookupStatus.OK.value
             data_result["Severity"] = self._get_severity(data_result)
             data_result["Details"] = self._get_detail_summary(data_result)
             data_result["RawResult"] = data_result.apply(lambda x: x.to_dict(), axis=1)
@@ -254,6 +230,39 @@ class KqlTIProvider(TIProvider):
 
         return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
 
+    @staticmethod
+    def _add_failure_status(src_ioc_frame: pd.DataFrame, lookup_status: LookupStatus):
+        """Add status info, if query produced no results."""
+        src_ioc_frame["Result"] = False
+        src_ioc_frame["Details"] = (
+            "Query failure"
+            if lookup_status == LookupStatus.QUERY_FAILED
+            else "Not found"
+        )
+        src_ioc_frame["Status"] = lookup_status.value
+        src_ioc_frame["Severity"] = ResultSeverity.information.value
+
+    @staticmethod
+    def _check_result_status(data_result):
+        """Check the return value from the query."""
+        if isinstance(data_result, pd.DataFrame):
+            return LookupStatus.NO_DATA if data_result.empty else LookupStatus.OK
+        if (
+            hasattr(data_result, "completion_query_info")
+            and data_result.completion_query_info["StatusCode"] == 0
+            and data_result.records_count == 0
+        ):
+            print("No results return from data provider.")
+            return LookupStatus.NO_DATA
+        if data_result and hasattr(data_result, "completion_query_info"):
+            print(
+                "No results returned from data provider. "
+                + str(data_result.completion_query_info)
+            )
+        else:
+            print(f"Unknown response from provider: {str(data_result)}")
+        return LookupStatus.QUERY_FAILED
+
     async def lookup_iocs_async(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
@@ -262,33 +271,10 @@ class KqlTIProvider(TIProvider):
         query_type: str = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Lookup collection of IoC observables.
-
-        Parameters
-        ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
-            Data input in one of three formats:
-            1. Pandas dataframe (you must supply the column name in
-            `obs_col` parameter)
-            2. Dict of observable, IoCType
-            3. Iterable of observables - IoCTypes will be inferred
-        obs_col : str, optional
-            DataFrame column to use for observables, by default None
-        ioc_type_col : str, optional
-            DataFrame column to use for IoCTypes, by default None
-        query_type : str, optional
-            Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
-            will be returned.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame of results.
-
-        """
-        return self.lookup_iocs(data, obs_col, ioc_type_col, query_type, **kwargs)
+        """Call base async wrapper."""
+        return await self._lookup_iocs_async_wrapper(
+            data, obs_col, ioc_type_col, query_type, **kwargs
+        )
 
     @abc.abstractmethod
     def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
@@ -352,12 +338,10 @@ class KqlTIProvider(TIProvider):
             "tenantid": ["tenant_id", "tenantid"],
         }
         variants = variant_dict.get(name, [name.casefold()])
-        for key, val in kwargs.items():
-            if key.casefold() in variants:
-                return val
-        return None
+        return next(
+            (val for key, val in kwargs.items() if key.casefold() in variants), None
+        )
 
-    # pylint: disable=too-many-branches
     def _get_query_and_params(
         self,
         ioc: Union[str, List[str]],
@@ -366,25 +350,20 @@ class KqlTIProvider(TIProvider):
         **kwargs,
     ) -> Tuple[Callable, Dict[str, Any]]:
 
-        if query_type:
-            ioc_key = ioc_type + "-" + query_type
-        else:
-            ioc_key = ioc_type
-
+        ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         query_def = self._IOC_QUERIES.get(ioc_key, None)
         if not query_def:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         query_name = query_def[0]
         query_def_params = query_def[1]
-        query_params = {}
         if "ioc" not in query_def_params:
             raise ValueError(
                 f"No parameter name defined for observable for {ioc_type}. "
                 + f"Referenced query: {query_name}"
             )
 
-        query_params[query_def_params["ioc"]] = ioc
+        query_params = {query_def_params["ioc"]: ioc}
         if "start" in kwargs:
             query_params["start"] = kwargs["start"]
         if "end" in kwargs:
@@ -434,7 +413,7 @@ class KqlTIProvider(TIProvider):
         # Fill in any NaN values from the merge
         combined_df["Result"] = combined_df["Result"].fillna(False)
         combined_df["Details"] = combined_df["Details"].fillna("Not found.")
-        combined_df["Status"] = combined_df["Status"].fillna(LookupStatus.ok.value)
+        combined_df["Status"] = combined_df["Status"].fillna(LookupStatus.OK.value)
         combined_df["Severity"] = combined_df["Severity"].fillna(
             ResultSeverity.information.value
         )

@@ -16,7 +16,8 @@ requests per minute for the account type that you have.
 import abc
 import collections
 from abc import ABC, abstractmethod
-from functools import lru_cache, singledispatch
+from asyncio import get_event_loop
+from functools import lru_cache, partial, singledispatch
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import attr
@@ -63,7 +64,6 @@ class TIProvider(ABC):
         """Return the name of the provider."""
         return self.__class__.__name__
 
-    # pylint: disable=duplicate-code
     @abc.abstractmethod
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
@@ -168,13 +168,22 @@ class TIProvider(ABC):
             DataFrame of results.
 
         """
+        event_loop = get_event_loop()
         results = []
+        prog_counter = kwargs.pop("prog_counter", None)
         for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
             if not observable:
                 continue
-            item_result = self.lookup_ioc(
-                ioc=observable, ioc_type=ioc_type, query_type=query_type, **kwargs
+            get_ioc = partial(
+                self.lookup_ioc,
+                ioc=observable,
+                ioc_type=ioc_type,
+                query_type=query_type,
+                **kwargs,
             )
+            item_result: LookupResult = await event_loop.run_in_executor(None, get_ioc)
+            if prog_counter:
+                await prog_counter.decrement()
             results.append(pd.Series(attr.asdict(item_result)))
 
         return pd.DataFrame(data=results).rename(columns=LookupResult.column_map())
@@ -330,7 +339,7 @@ class TIProvider(ABC):
 
         if not self.is_supported_type(result.ioc_type):
             result.details = f"IoC type {result.ioc_type} not supported."
-            result.status = LookupStatus.not_supported.value
+            result.status = LookupStatus.NOT_SUPPORTED.value
             return result
 
         clean_ioc = self._preprocessors.check(
@@ -341,8 +350,57 @@ class TIProvider(ABC):
 
         if clean_ioc.status != "ok":
             result.details = clean_ioc.status
-            result.status = LookupStatus.bad_format.value
+            result.status = LookupStatus.BAD_FORMAT.value
 
+        return result
+
+    async def _lookup_iocs_async_wrapper(
+        self,
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        obs_col: str = None,
+        ioc_type_col: str = None,
+        query_type: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Async wrapper for providers that do not implement lookup_iocs_async.
+
+        Parameters
+        ----------
+        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
+            Data input in one of three formats:
+            1. Pandas dataframe (you must supply the column name in
+            `obs_col` parameter)
+            2. Dict of observable, IoCType
+            3. Iterable of observables - IoCTypes will be inferred
+        obs_col : str, optional
+            DataFrame column to use for observables, by default None
+        ioc_type_col : str, optional
+            DataFrame column to use for IoCTypes, by default None
+        query_type : str, optional
+            Specify the data subtype to be queried, by default None.
+            If not specified the default record type for the IoC type
+            will be returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame of results.
+
+        """
+        event_loop = get_event_loop()
+        prog_counter = kwargs.pop("prog_counter", None)
+        get_iocs = partial(
+            self.lookup_iocs,
+            data=data,
+            obs_col=obs_col,
+            ioc_type_col=ioc_type_col,
+            query_type=query_type,
+            **kwargs,
+        )
+        result = await event_loop.run_in_executor(None, get_iocs)
+        if prog_counter:
+            await prog_counter.decrement(len(data))  # type: ignore
         return result
 
 

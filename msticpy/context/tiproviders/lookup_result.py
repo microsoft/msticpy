@@ -21,21 +21,18 @@ __author__ = "Ian Hellen"
 SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 
-# pylint: disable=invalid-name
 class LookupStatus(Enum):
     """Threat intelligence lookup status."""
 
-    ok = 0
-    not_supported = 1
-    bad_format = 2
-    query_failed = 3
-    other = 10
+    OK = 0
+    NOT_SUPPORTED = 1
+    BAD_FORMAT = 2
+    QUERY_FAILED = 3
+    NO_DATA = 4
+    OTHER = 10
 
-
-# pylint: enable=invalid-name
 
 # pylint: enable=comparison-with-callable
-# pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True)
 class LookupResult:
     """Lookup result for IoCs."""
@@ -50,7 +47,7 @@ class LookupResult:
     details: Any = None
     raw_result: Optional[Union[str, dict]] = None
     reference: Optional[str] = None
-    status: int = 0
+    status: int = LookupStatus.OK.value
 
     @severity.validator
     def _check_severity(self, attribute, value):

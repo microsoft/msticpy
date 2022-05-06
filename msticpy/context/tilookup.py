@@ -12,6 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+
 import asyncio
 import warnings
 from collections import ChainMap
@@ -20,6 +21,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 import attr
 import nest_asyncio
 import pandas as pd
+from tqdm.auto import tqdm
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
@@ -28,7 +30,6 @@ from ..common.utility import export, is_ipython
 from ..vis.ti_browser import browse_results
 
 # used in dynamic instantiation of providers
-# pylint: disable=unused-wildcard-import, wildcard-import, unused-import
 from .tiproviders import TI_PROVIDERS, import_provider
 from .tiproviders.ti_provider_base import (  # noqa:F401
     LookupResult,
@@ -48,6 +49,28 @@ _TI_HELP_URI = (
     "https://msticpy.readthedocs.io/en/latest/data_acquisition/"
     "TIProviders.html#configuration-file"
 )
+
+
+class ProgressCounter:
+    """Progress counter for async tasks."""
+
+    def __init__(self, total: int):
+        """Initialize the class."""
+        self.total = total
+        self._lock: asyncio.Condition = asyncio.Condition()
+        self._remaining: int = total
+
+    async def decrement(self, increment: int = 1):
+        """Decrement the counter."""
+        if self._remaining == 0:
+            return
+        async with self._lock:
+            self._remaining -= increment
+
+    async def get_remaining(self) -> int:
+        """Get the current remaining count."""
+        async with self._lock:
+            return self._remaining
 
 
 @export
@@ -264,6 +287,46 @@ class TILookup:
             return providers
         return None
 
+    @classmethod
+    def browse_results(
+        cls, data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
+    ):
+        """
+        Return TI Results list browser.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            TI Results data from TIProviders
+        severities : Optional[List[str]], optional
+            A list of the severity classes to show.
+            By default these are ['warning', 'high'].
+            Pass ['information', 'warning', 'high'] to see all
+            results.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            passed to SelectItem constructor.
+
+        Returns
+        -------
+        SelectItem
+            SelectItem browser for TI Data.
+
+        """
+        if not isinstance(data, pd.DataFrame):
+            try:
+                data = cls.result_to_df(data)
+            # pylint: disable=broad-except
+            except Exception:
+                print("Input data is in an unexpected format.")
+                return None
+            # pylint: enable=broad-except
+        return browse_results(data=data, severities=severities, **kwargs)
+
+    browse = browse_results
+
     def provider_usage(self):
         """Print usage of loaded providers."""
         print("Primary providers")
@@ -454,6 +517,7 @@ class TILookup:
             )
         )
 
+    # pylint: disable=too-many-locals
     async def _lookup_iocs_async(
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
@@ -478,8 +542,13 @@ class TILookup:
                 help_uri=_TI_HELP_URI,
             )
 
+        event_loop = asyncio.get_event_loop()
         result_futures: List[Any] = []
         provider_names: List[str] = []
+        prog_counter = ProgressCounter(
+            total=len(data) * len(selected_providers)  # type: ignore
+        )
+        # create a list of futures/tasks to await
         for prov_name, provider in selected_providers.items():
             provider_names.append(prov_name)
             result_futures.append(
@@ -488,11 +557,16 @@ class TILookup:
                     obs_col=obs_col,
                     ioc_type_col=ioc_type_col,
                     query_type=ioc_query_type,
+                    prog_counter=prog_counter,
                     **kwargs,
                 )
             )
-
+        # Create a task for tqdm
+        prog_task = event_loop.create_task(self._track_completion(prog_counter))
+        # collect the return values of the tasks
         results = await asyncio.gather(*result_futures)
+        # cancel the progress task if results have completed.
+        prog_task.cancel()
         return self._combine_results(results, provider_names, kwargs)
 
     def lookup_iocs_sync(
@@ -597,6 +671,26 @@ class TILookup:
             .drop("SanitizedValue", errors="ignore", axis=1)
         )
 
+    @staticmethod
+    async def _track_completion(prog_counter):
+        total = await prog_counter.get_remaining()
+        with tqdm(total=total, unit="obs", desc="Observables processed") as prog_bar:
+            try:
+                last_remaining = total
+                while last_remaining:
+                    new_remaining = await prog_counter.get_remaining()
+                    incr = last_remaining - new_remaining
+                    if incr:
+                        prog_bar.update(incr)
+                    last_remaining = new_remaining
+                    # print(f"progress: incr {incr}, last: {last_remaining}")
+                    await asyncio.sleep(0)
+            except asyncio.CancelledError:
+                # make progress bar get to 100% on cancel
+                final_remaining = await prog_counter.get_remaining()
+                if final_remaining:
+                    prog_bar.update(total - final_remaining)
+
     def _load_providers(self):
         """Load provider classes based on config."""
         prov_settings = get_provider_settings("TIProviders")
@@ -677,46 +771,6 @@ class TILookup:
             return self._providers
         return self._secondary_providers
 
-    @classmethod
-    def browse_results(
-        cls, data: pd.DataFrame, severities: Optional[List[str]] = None, **kwargs
-    ):
-        """
-        Return TI Results list browser.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            TI Results data from TIProviders
-        severities : Optional[List[str]], optional
-            A list of the severity classes to show.
-            By default these are ['warning', 'high'].
-            Pass ['information', 'warning', 'high'] to see all
-            results.
-
-        Other Parameters
-        ----------------
-        kwargs :
-            passed to SelectItem constructor.
-
-        Returns
-        -------
-        SelectItem
-            SelectItem browser for TI Data.
-
-        """
-        if not isinstance(data, pd.DataFrame):
-            try:
-                data = cls.result_to_df(data)
-            # pylint: disable=broad-except
-            except Exception:
-                print("Input data is in an unexpected format.")
-                return None
-            # pylint: enable=broad-except
-        return browse_results(data=data, severities=severities, **kwargs)
-
-    browse = browse_results
-
     @staticmethod
     def _combine_results(
         results: Iterable[pd.DataFrame], provider_names: List[str], kwargs
@@ -728,11 +782,11 @@ class TILookup:
                 continue
             if not kwargs.get("show_not_supported", False):
                 provider_result = provider_result[
-                    provider_result["Status"] != LookupStatus.not_supported.value
+                    provider_result["Status"] != LookupStatus.NOT_SUPPORTED.value
                 ]
             if not kwargs.get("show_bad_ioc", False):
                 provider_result = provider_result[
-                    provider_result["Status"] != LookupStatus.bad_format.value
+                    provider_result["Status"] != LookupStatus.BAD_FORMAT.value
                 ]
             provider_result["Provider"] = prov_name
             result_list.append(provider_result)
