@@ -19,6 +19,7 @@ from IPython.display import HTML, display
 from tqdm.auto import tqdm
 from tqdm.notebook import tqdm as tqdm_notebook
 
+from ... import _version
 from ..._version import VERSION
 from .ipython import is_ipython
 from .types import export
@@ -41,13 +42,20 @@ def resolve_pkg_path(part_path: str):
     if Path(part_path).is_absolute():
         return part_path
 
-    resolved_path = str(Path(__file__).resolve().parent.parent.joinpath(part_path))
+    resolved_path = str(Path(_version.__file__).resolve().parent.joinpath(part_path))
     if Path(resolved_path).exists():
         return resolved_path
 
     searched_paths = list(
-        Path(__file__).resolve().parent.parent.glob(str(Path("**").joinpath(part_path)))
+        {
+            str(path)
+            for path in Path(_version.__file__)
+            .resolve()
+            .parent.glob(str(Path("**").joinpath(part_path)))
+            if ".mypy_cache" not in str(path)
+        }
     )
+
     if not searched_paths or len(searched_paths) > 1:
         warnings.warn(f"No path or ambiguous match for {part_path} not found")
         return None
