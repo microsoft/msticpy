@@ -348,14 +348,12 @@ def _generate_rand_domain():
     """Return random domain name helper function."""
     dom_suffixes = ["com", "org", "net", "biz"]
     letters = string.ascii_letters
-    str_length = random.randint(4, 20)  # nosec
-    dom = ""
-    for _ in range(2):
-        dom_part = "".join(random.choice(letters) for _ in range(str_length))  # nosec
-        dom = f"{dom}.{dom_part}" if dom else dom_part
+    str_length = 25  # nosec
+    dom = "".join(random.choice(letters) for _ in range(str_length))  # nosec
+    dom_part = "".join(random.choice(letters) for _ in range(str_length))  # nosec
     suffix = random.choice(dom_suffixes)  # nosec
 
-    return f"{dom}.{suffix}"
+    return f"{dom}.{dom_part}.{suffix}"
 
 
 def test_tor_exit_nodes(ti_lookup, monkeypatch):
