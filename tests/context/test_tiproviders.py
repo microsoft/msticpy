@@ -292,7 +292,7 @@ def test_opr_single_result(ti_lookup):
     iocs = {
         "google.com": ("dns", None),
         "microsoft.com": ("dns", None),
-        "badplace.net": ("dns", None),
+        "fsdghklfgh.ndfspccpos.net": ("dns", None),
     }
 
     # Lookup multiple IoCs
@@ -334,12 +334,20 @@ def test_opr_multi_result(ti_lookup):
     ti_provider._httpx_client = RequestSession()
 
     n_requests = 9
-    gen_doms = {_generate_rand_domain(): "dns" for i in range(n_requests)}
-    results_df = ti_lookup.lookup_iocs(data=gen_doms, providers=["OPR"])
+    gen_doms = pd.DataFrame(
+        [
+            {"domain": _generate_rand_domain(), "ioc_type": "dns"}
+            for _ in range(n_requests)
+        ]
+    )
+
+    results_df = ti_lookup.lookup_iocs(
+        data=gen_doms, obs_col="domain", ioc_type_col="ioc_type", providers=["OPR"]
+    )
     check.equal(n_requests, len(results_df))
-    check.greater(
+    check.greater_equal(
         len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]),
-        n_requests / 3,
+        n_requests // 4,
     )
     check.equal(n_requests, len(results_df[results_df["Result"]]))
 
@@ -348,12 +356,12 @@ def _generate_rand_domain():
     """Return random domain name helper function."""
     dom_suffixes = ["com", "org", "net", "biz"]
     letters = string.ascii_letters
-    str_length = 25  # nosec
+    str_length = 10  # nosec
     dom = "".join(random.choice(letters) for _ in range(str_length))  # nosec
     dom_part = "".join(random.choice(letters) for _ in range(str_length))  # nosec
     suffix = random.choice(dom_suffixes)  # nosec
 
-    return f"{dom}.{dom_part}.{suffix}"
+    return f"{dom}.{dom_part}.{suffix}".casefold()
 
 
 def test_tor_exit_nodes(ti_lookup, monkeypatch):
