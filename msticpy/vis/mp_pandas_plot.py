@@ -12,6 +12,8 @@ from bokeh.plotting import figure
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
+from ..transform.network import GraphType, df_to_networkx
+from ..vis.network_plot import plot_nx_graph
 from ..vis.process_tree import build_and_show_process_tree
 from ..vis.timeline import display_timeline, display_timeline_values
 from ..vis.timeline_duration import display_timeline_duration
@@ -398,9 +400,100 @@ class MsticpyPlotAccessor:
             Raised if the dataframe does not contain incidents or alerts.
 
         """
-        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+        if any(elem not in self._df.columns for elem in req_alert_cols) and any(
             elem not in self._df.columns for elem in req_inc_cols
         ):
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
         graph = EntityGraph(self._df)
         return graph.plot(hide=hide, timeline=timeline, **kwargs)
+
+    # pylint: disable=too-many-arguments
+    def network(
+        self,
+        source_col: str,
+        target_col: str,
+        title: str = "Data Graph",
+        source_attrs: Optional[Iterable[str]] = None,
+        target_attrs: Optional[Iterable[str]] = None,
+        edge_attrs: Optional[Iterable[str]] = None,
+        graph_type: GraphType = "graph",
+        **kwargs,
+    ):
+        """
+        Plot entity graph with Bokeh.
+
+        Parameters
+        ----------
+        source_col : str
+            Column for source nodes.
+        target_col : str
+            Column for target nodes.
+        title : str
+            Title for the plot, by default 'Data Graph'
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+        hide : bool, optional
+            Don't show the plot, by default False. If True, just
+            return the figure.
+        source_attrs : Optional[List[str]], optional
+            Optional list of source attributes to use as hover properties, by default None
+        target_attrs : Optional[List[str]], optional
+            Optional list of target attributes to use as hover properties, by default None
+        edge_attrs : Optional[List[str]], optional
+            Optional list of edge attributes to use as hover properties, by default None
+
+        Other Parameters
+        ----------------
+        source_color : str, optional
+            The color of the source nodes, by default 'light-blue'
+        target_color : str, optional
+            The color of the source nodes, by default 'light-green'
+        edge_color : str, optional
+            The color of the edges, by default 'black'
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+        hide : bool, optional
+            Don't show the plot, by default False. If True, just
+            return the figure.
+
+        Returns
+        -------
+        bokeh.plotting.figure
+            The network plot.
+
+        """
+        nx_graph = df_to_networkx(
+            data=self._df,
+            source_col=source_col,
+            target_col=target_col,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            graph_type=graph_type,
+        )
+        return plot_nx_graph(
+            nx_graph=nx_graph,
+            title=title,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            **kwargs,
+        )
