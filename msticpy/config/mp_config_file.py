@@ -12,7 +12,6 @@ from contextlib import redirect_stdout, suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
-import warnings
 
 import ipywidgets as widgets
 import yaml
@@ -118,7 +117,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
             self.mp_config_def_path is not None
             and not Path(self.mp_config_def_path).is_file()
         ):
-            warnings.warn(
+            self.set_status(
                 "MSTICPYCONFIG env variable is pointing to invalid path."
                 + self.mp_config_def_path
             )
@@ -137,7 +136,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         if self.current_file and Path(self.current_file).is_file():
             self.load_from_file(self.current_file)
         else:
-            raise ValueError(f"File not found: '{self.current_file}'.")
+            self.set_status(f"Filename does not exist: '{self.current_file}'.")
 
     @property
     def current_file(self):
