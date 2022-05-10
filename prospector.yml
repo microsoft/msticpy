@@ -14,13 +14,13 @@ ignore-paths:
 pyroma:
   run: true
 
-pycodestyle:
+pep8:
   full: true
   disable: [
       E501, # Line length handled by Black
     ]
 
-pydocstyle:
+pep257:
   disable: [
       # Disable because not part of PEP257 official convention:
       # see http://pep257.readthedocs.io/en/latest/error_codes.html
