@@ -79,7 +79,6 @@ class MpConfigEdit(CompEditDisplayMixin):
                 self.mp_conf_file.current_file = conf_filepath
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile(file=settings)
-            self.mp_conf_file.load_from_file(file=settings)
         else:
             self.mp_conf_file = MpConfigFile()
             self.mp_conf_file.load_default()

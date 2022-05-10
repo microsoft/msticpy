@@ -140,9 +140,10 @@ def test_mp_edit_load_params():
         for key in orig_settings.keys():
             check.equal(orig_settings[key], mp_conf.mp_controls.mp_config[key])
 
-    # Test no existing MPConfig
+    # Test invalid file in MPConfig env and with file parameter.
+    # should load without exception
     with custom_mp_config(str(config_path)):
         os.environ["MSTICPYCONFIG"] = "./invalid_file.yaml"
-        with pytest.raises(ValueError):
-            with pytest.warns(UserWarning):
-                mp_conf = MpConfigEdit()
+        mp_conf = MpConfigEdit()
+
+        mp_conf = MpConfigEdit(settings="./invalid_file.yaml")
