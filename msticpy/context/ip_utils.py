@@ -12,8 +12,6 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
-
-import contextlib
 import ipaddress
 from functools import lru_cache
 from typing import List, Optional, Set, Tuple
