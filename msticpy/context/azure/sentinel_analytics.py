@@ -56,7 +56,9 @@ class SentinelAnalyticsMixin:
             A table of the workspace's alert rules.
 
         """
-        return self._list_items(item_type="alert_rules")  # type: ignore
+        return self._list_items(  # type: ignore
+            item_type="alert_rules", api_version="2021-10-01"
+        )
 
     def _get_template_id(
         self,

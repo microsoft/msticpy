@@ -65,7 +65,8 @@ class MicrosoftSentinel(
             Sentinel Workspace, by default None
 
         """
-        super().__init__(connect=connect, cloud=cloud)
+        self.user_cloud = cloud
+        super().__init__(connect=connect, cloud=self.user_cloud)
         self.config = None  # type: ignore
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
@@ -110,7 +111,9 @@ class MicrosoftSentinel(
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:
-            self.token = get_token(self.credentials)  # type: ignore
+            self.token = get_token(
+                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud
+            )  # type: ignore
 
         self.res_group_url = None
         self.prov_path = None

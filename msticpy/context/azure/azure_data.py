@@ -11,6 +11,7 @@ import attr
 import numpy as np
 import pandas as pd
 from azure.common.exceptions import CloudError
+from azure.core.exceptions import ClientAuthenticationError
 from azure.mgmt.resource.subscriptions import SubscriptionClient
 
 from ..._version import VERSION
@@ -18,6 +19,7 @@ from ...auth.azure_auth import (
     AzCredentials,
     AzureCloudConfig,
     az_connect,
+    fallback_devicecode_creds,
     only_interactive_cred,
 )
 from ...auth.cloud_mappings import get_all_endpoints
@@ -898,7 +900,9 @@ def get_api_headers(token: str) -> Dict:
     }
 
 
-def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
+def get_token(
+    credential: AzCredentials, tenant_id: str = None, cloud: str = None
+) -> str:
     """
     Extract token from a azure.identity object.
 
@@ -908,6 +912,8 @@ def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
         Azure OAuth credentials.
     tenant_id : str, optional
         The tenant to connect to if not the users home tenant.
+    cloud: str, optional
+        The Azure cloud to connect to.
 
     Returns
     -------
@@ -916,10 +922,20 @@ def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
 
     """
     if tenant_id:
-        token = credential.modern.get_token(AzureCloudConfig().token_uri)
+        try:
+            token = credential.modern.get_token(AzureCloudConfig().token_uri)
+        except ClientAuthenticationError:
+            credential = fallback_devicecode_creds(cloud=cloud)
+            token = credential.modern.get_token(AzureCloudConfig().token_uri)
     else:
-        token = credential.modern.get_token(
-            AzureCloudConfig().token_uri, tenant_id=tenant_id
-        )
+        try:
+            token = credential.modern.get_token(
+                AzureCloudConfig().token_uri, tenant_id=tenant_id
+            )
+        except ClientAuthenticationError:
+            credential = fallback_devicecode_creds(cloud=cloud, tenant_id=tenant_id)
+            token = credential.modern.get_token(
+                AzureCloudConfig().token_uri, tenant_id=tenant_id
+            )
 
     return token.token
