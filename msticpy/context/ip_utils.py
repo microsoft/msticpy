@@ -12,6 +12,8 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
+
+import contextlib
 import ipaddress
 from functools import lru_cache
 from typing import Callable, List, Optional, Set, Tuple
@@ -119,10 +121,8 @@ def convert_to_ip_entities(  # noqa: MC0001
         all_ips |= ip_list
         if geo_lookup:
             for ip_ent in ip_entities:
-                try:
+                with contextlib.suppress(DataError):
                     ip_lookup.lookup_ip(ip_entity=ip_ent)
-                except DataError:
-                    pass
     return ip_entities
 
 
@@ -290,7 +290,6 @@ def get_whois_df(
     return data
 
 
-# pylint: disable=too-few-public-methods
 @pd.api.extensions.register_dataframe_accessor("mp_whois")
 @export
 class IpWhoisAccessor:

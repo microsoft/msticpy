@@ -12,7 +12,10 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from datetime import datetime
+
+
+import contextlib
+from datetime import datetime, timezone
 from threading import Lock
 from typing import Any, Dict, Iterable, Tuple
 
@@ -21,7 +24,7 @@ import httpx
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
-from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
+from .ti_provider_base import LookupResult, LookupStatus, ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -32,8 +35,12 @@ class Tor(TIProvider):
     """Tor Exit Nodes Lookup."""
 
     _BASE_URL = "https://check.torproject.org/exit-addresses"
+    _ALT_URL = (
+        "https://raw.githubusercontent.com/SecOps-Institute/Tor-IP-Addresses"
+        "/master/tor-exit-nodes.lst"
+    )
 
-    _IOC_QUERIES: dict = {"ipv4": None}
+    _IOC_QUERIES: dict = {"ipv4": None, "ipv6": None}
     _nodelist: Dict[str, Dict[str, str]] = {}
     _last_cached = datetime.min
     _cache_lock = Lock()
@@ -43,16 +50,24 @@ class Tor(TIProvider):
         """Pull down Tor exit node list and save to internal attribute."""
         if cls._cache_lock.locked():
             return
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if not cls._nodelist or (now - cls._last_cached).days > 1:
-            try:
+            with contextlib.suppress(ConnectionError):
                 resp = httpx.get(cls._BASE_URL, timeout=get_http_timeout())
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
-                    cls._last_cached = datetime.utcnow()
-            except ConnectionError:
-                pass
+                    cls._last_cached = datetime.now(timezone.utc)
+        if not cls._nodelist:
+            with contextlib.suppress(ConnectionError):
+                resp = httpx.get(cls._ALT_URL, timeout=get_http_timeout())
+                tor_raw_list = resp.content.decode()
+                with cls._cache_lock:
+                    node_dict = {"ExitNode": True, "LastStatus": now}
+                    cls._nodelist = {
+                        node: node_dict for node in tor_raw_list.split("\n")
+                    }
+                    cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod
     def _tor_splitter(node_list) -> Iterable[Tuple[str, Dict[str, str]]]:
@@ -103,7 +118,7 @@ class Tor(TIProvider):
         result.reference = self._BASE_URL
 
         if result.status and not bool(self._nodelist):
-            result.status = TILookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
 
         if result.status:
             return result
@@ -111,7 +126,7 @@ class Tor(TIProvider):
         tor_node = self._nodelist.get(ioc)
 
         if tor_node:
-            result.set_severity(TISeverity.warning)
+            result.set_severity(ResultSeverity.warning)
             result.details = {
                 "NodeID": tor_node["ExitNode"],
                 "LastStatus": tor_node["LastStatus"],
@@ -121,7 +136,7 @@ class Tor(TIProvider):
             result.details = "Not found."
         return result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -132,10 +147,10 @@ class Tor(TIProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
-        return (True, TISeverity.information, None)
+        return (True, ResultSeverity.information, None)

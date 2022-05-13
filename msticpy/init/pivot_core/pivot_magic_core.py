@@ -74,7 +74,7 @@ def run_txt2df(line, cell, local_ns) -> pd.DataFrame:
         return pd.DataFrame()
     cell_text = io.StringIO(cell)
     warn_args: Dict[str, Union[str, bool]]
-    if _PD_VER < parse_version("1.3.0"):
+    if _PD_VER < parse_version("1.3.0"):  # type: ignore
         warn_args = {"warn_bad_lines": True}
     else:
         warn_args = {"on_bad_lines": "warn"}

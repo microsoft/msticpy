@@ -15,7 +15,7 @@ import warnings
 from ..context.azure.sentinel_core import MicrosoftSentinel as AzureSentinel
 
 WARN_MSSG = (
-    "This module has moved to msticpy.data.azure.sentinel_core\n"
+    "This module has moved to msticpy.context.azure.sentinel_core\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.2.0"
 )

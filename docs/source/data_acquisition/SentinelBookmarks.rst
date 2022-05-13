@@ -8,7 +8,7 @@ List Bookmarks
 created it, when and with what details. It also includes query text that can be executed with a
 `QueryProvider` in order to get the details of the bookmark's logs.
 
-See :py:meth:`list_bookmarks <msticpy.data.azure.sentinel_core.MicrosoftSentinel.list_bookmarks>`
+See :py:meth:`list_bookmarks <msticpy.context.azure.sentinel_core.MicrosoftSentinel.list_bookmarks>`
 
 .. code:: ipython3
 
@@ -25,7 +25,7 @@ are needed:
 -notes: Any notes you want associated with the bookmark, by default None
 -labels: Any labels you want associated with the bookmark, by default None
 
-See :py:meth:`create_bookmark <msticpy.data.azure.sentinel_core.MicrosoftSentinel.create_bookmark>`
+See :py:meth:`create_bookmark <msticpy.context.azure.sentinel_core.MicrosoftSentinel.create_bookmark>`
 
 .. code:: ipython3
 
@@ -37,7 +37,7 @@ Delete Bookmarks
 Bookmarks can be deleted by calling `delete_bookmark` and passing in a bookmark name, or a GUID of a bookmark.
 If the bookmark cannot be found then an error will be raised.
 
-See :py:meth:`delete_bookmark <msticpy.data.azure.sentinel_core.MicrosoftSentinel.delete_bookmark>`
+See :py:meth:`delete_bookmark <msticpy.context.azure.sentinel_core.MicrosoftSentinel.delete_bookmark>`
 
 .. code:: ipython3
 

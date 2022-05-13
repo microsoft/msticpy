@@ -247,7 +247,6 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
     # get the control for this provider
     ctrl_path = f"TIProviders.{provider}.Args.AuthKey"
     arg_ctrl = mp_conf_ctrl.get_control(ctrl_path)
-
     arg_ctrl.rb_store_type.value = STORE_ENV_VAR
     arg_ctrl.txt_val.value = "test_var"
     os.environ["test_var"] = "test_value"

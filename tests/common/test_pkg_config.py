@@ -14,7 +14,7 @@ import pytest_check as check
 import yaml
 
 from msticpy.common import pkg_config
-from msticpy.sectools.geoip import GeoLiteLookup, IPStackLookup
+from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
 from ..unit_test_lib import custom_mp_config, get_test_data_path
 

@@ -193,7 +193,6 @@ class AzureData:
         subscription_ids = []
         display_names = []
         states = []
-        # pylint: disable=unnecessary-comprehension
         try:
             sub_list = list(self.sub_client.subscriptions.list())  # type: ignore
         except AttributeError:
@@ -668,7 +667,7 @@ class AzureData:
 
         return ip_df, nsg_df
 
-    def get_metrics(  # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
+    def get_metrics(  # pylint: disable=too-many-locals
         self,
         metrics: str,
         resource_id: str,

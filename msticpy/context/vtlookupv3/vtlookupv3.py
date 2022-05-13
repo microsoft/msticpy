@@ -232,13 +232,11 @@ class VTLookupV3:
 
         """
         if VTEntityType(vt_type) not in self._SUPPORTED_VT_TYPES:
-            # pylint: disable=no-member
             raise KeyError(
                 f"Property type {vt_type} not supported",
                 "Valid types are",
                 ", ".join(x.value for x in VTEntityType.__members__.values()),
             )
-            # pylint: enable=no-member
 
         endpoint_name = self._get_endpoint_name(vt_type)
         try:
@@ -758,17 +756,17 @@ class VTLookupV3:
             graph.save_graph()
         except vt_graph_errs.SaveGraphError as graph_err:
             graph_mssg = (
-                [""]
-                if not private
-                else [
+                [
                     "Please check you have Private Graph premium feature enabled in",
                     "your subscription. It is possible to create public Graphs",
                     "with 'private=False' input argument",
                 ]
+                if private
+                else [""]
             )
+
             raise MsticpyVTGraphSaveGraphError(
-                "Could not save Graph.",
-                *graph_mssg,
+                "Could not save Graph.", *graph_mssg
             ) from graph_err
 
         return graph.graph_id
