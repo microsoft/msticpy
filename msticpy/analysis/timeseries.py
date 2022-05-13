@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for timeseries analysis functions."""
+import inspect
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -13,6 +14,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyException, MsticpyImportExtraError
 from ..common.timespan import TimeSpan
 from ..common.utility import check_kwargs, export
+from ..vis.timeseries import display_timeseries_anomalies
 
 try:
     from scipy import stats
@@ -28,8 +30,77 @@ __version__ = VERSION
 __author__ = "Ashwin Patil"
 
 
+@pd.api.extensions.register_dataframe_accessor("mp_timeseries")
+class MsticpyTimeSeriesAccessor:
+    """Msticpy pandas accessor for time series functions."""
+
+    def __init__(self, pandas_obj):
+        """Initialize the extension."""
+        self._df = pandas_obj
+
+        # extract documentation from original functions
+        _doc_funcs = {
+            "analyze": ts_anomalies_stl,
+            "anomaly_periods": find_anomaly_periods,
+            "apply_threshold": set_new_anomaly_threshold,
+        }
+        for tgt_name, src_func in _doc_funcs.items():
+            remove_other_params = tgt_name == "analyze"
+            tgt_func = getattr(self.__class__, tgt_name)
+            tgt_func.__doc__ = _doc_remove_data(
+                src_func, remove_other_params=remove_other_params
+            )
+
+    def analyze(self, **kwargs) -> pd.DataFrame:
+        """Return time series STL analysis."""
+        return ts_anomalies_stl(self._df, **kwargs)
+
+    def anomaly_periods(self, **kwargs):
+        """Return list of anomaly periods."""
+        return find_anomaly_periods(data=self._df, **kwargs)
+
+    def apply_threshold(self, **kwargs):
+        """Return dataframe with new anomaly calculation."""
+        return set_new_anomaly_threshold(data=self._df, **kwargs)
+
+    def kql_periods(self, **kwargs):
+        """
+        Return KQL filter expression for anomaly time periods.
+
+        Parameters
+        ----------
+        time_column : str, optional
+            The name of the time column
+        period : str, optional
+            pandas-compatible time period designator,
+            by default "1H"
+        pos_only : bool, optional
+            If True only extract positive anomaly periods,
+            else extract both positive and negative.
+            By default, True
+
+        Returns
+        -------
+        List[TimeSpan] :
+            TimeSpan(start, end)
+
+        """
+        anom_periods = extract_anomaly_periods(data=self._df, **kwargs)
+        return create_time_period_kqlfilter(anom_periods)
+
+    def plot(self, **kwargs):
+        """Plot time series anomalies."""
+        return display_timeseries_anomalies(data=self._df, **kwargs)
+
+
 # Constants
-_DEFAULT_KWARGS = ["seasonal", "period", "score_threshold"]
+_DEFAULT_KWARGS = [
+    "seasonal",
+    "period",
+    "score_threshold",
+    "time_column",
+    "data_column",
+]
 
 
 @export
@@ -128,9 +199,10 @@ def extract_anomaly_periods(
     time_column: str = "TimeGenerated",
     period: str = "1H",
     pos_only: bool = True,
+    anomalies_column: str = "anomalies",
 ) -> Dict[datetime, datetime]:
     """
-    Merge adjacent anomaly periods.
+    Return dictionary of anomaly periods, merging adjacent ones.
 
     Parameters
     ----------
@@ -145,6 +217,8 @@ def extract_anomaly_periods(
         If True only extract positive anomaly periods,
         else extract both positive and negative.
         By default, True
+    anomalies_column : str, optional
+        The column containing the anomalies flag.
 
     Returns
     -------
@@ -156,7 +230,7 @@ def extract_anomaly_periods(
     # we want to merge 2 adjacent samples on.
     anom_filter = [1] if pos_only else [1, -1]
     resampled = (
-        data[(data["anomalies"].isin(anom_filter))]
+        data[(data[anomalies_column].isin(anom_filter))]
         .sort_values(time_column)
         .set_index(time_column)
         .resample(period)
@@ -195,9 +269,10 @@ def find_anomaly_periods(
     time_column: str = "TimeGenerated",
     period: str = "1H",
     pos_only: bool = True,
+    anomalies_column: str = "anomalies",
 ) -> List[TimeSpan]:
     """
-    Merge adjacent anomaly periods.
+    Return list of anomaly period as TimeSpans.
 
     Parameters
     ----------
@@ -212,6 +287,8 @@ def find_anomaly_periods(
         If True only extract positive anomaly periods,
         else extract both positive and negative.
         By default, True
+    anomalies_column : str, optional
+        The column containing the anomalies flag.
 
     Returns
     -------
@@ -222,14 +299,18 @@ def find_anomaly_periods(
     return [
         TimeSpan(start=key, end=val)
         for key, val in extract_anomaly_periods(
-            data=data, time_column=time_column, period=period, pos_only=pos_only
+            data=data,
+            time_column=time_column,
+            period=period,
+            pos_only=pos_only,
+            anomalies_column=anomalies_column,
         ).items()
     ]
 
 
 def create_time_period_kqlfilter(periods: Dict[datetime, datetime]) -> str:
     """
-    Create KQL time filter expression from time periods dict.
+    Return KQL time filter expression from anomaly periods.
 
     Parameters
     ----------
@@ -252,7 +333,10 @@ def create_time_period_kqlfilter(periods: Dict[datetime, datetime]) -> str:
 
 
 def set_new_anomaly_threshold(
-    data: pd.DataFrame, threshold: int, threshold_low: Optional[int] = None
+    data: pd.DataFrame,
+    threshold: float,
+    threshold_low: Optional[float] = None,
+    anomalies_column: str = "anomalies",
 ) -> pd.DataFrame:
     """
     Return DataFrame with anomalies calculated based on new threshold.
@@ -261,13 +345,15 @@ def set_new_anomaly_threshold(
     ----------
     data : pd.DataFrame
         Input DataFrame
-    threshold : int
+    threshold : float
         Threshold above (beyond) which values will be marked as
         anomalies. Used as positive and negative threshold
         unless `threshold_low` is specified.
-    threshold_low : Optional[int], optional
+    threshold_low : Optional[float], optional
         The threshhold below which values will be reported
         as anomalies, by default None.
+    anomalies_column : str, optional
+        The column containing the anomalies flag.
 
     Returns
     -------
@@ -275,10 +361,35 @@ def set_new_anomaly_threshold(
         Output DataFrame with recalculated anomalies.
 
     """
+    new_anoms_col = "__new_anomalies__"
     threshold_low = threshold_low or threshold
-    new_df = data.assign(newanomalies=0)
-    new_df.loc[new_df["score"] >= threshold, "newanomalies"] = 1
-    new_df.loc[new_df["score"] <= -threshold_low, "newanomalies"] = -1
-    return new_df.drop(columns=["anomalies"]).rename(
-        columns={"newanomalies": "anomalies"}
+    new_df = data.assign(__new_anomalies__=0)
+    new_df.loc[new_df["score"] >= threshold, new_anoms_col] = 1
+    new_df.loc[new_df["score"] <= -threshold_low, new_anoms_col] = -1
+    return new_df.drop(columns=[anomalies_column]).rename(
+        columns={new_anoms_col: anomalies_column}
     )
+
+
+def _doc_remove_data(func, remove_other_params: bool = False):
+    new_doc = inspect.getdoc(func)
+    if not new_doc:
+        return ""
+    doc_lines = iter(new_doc.split("\n"))
+    out_lines = []
+    while True:
+        try:
+            line = next(doc_lines)
+            if line.startswith("data"):
+                line = next(doc_lines)
+                while line.startswith("    "):
+                    line = next(doc_lines)
+                out_lines.append(line)
+                continue
+            if remove_other_params and line.startswith("Other Parameters"):
+                line = next(doc_lines)
+                continue
+            out_lines.append(line)
+        except StopIteration:
+            break
+    return "\n".join(out_lines)
