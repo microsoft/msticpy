@@ -112,8 +112,8 @@ class MicrosoftSentinel(
             self.token = kwargs["token"]
         else:
             self.token = get_token(
-                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud
-            )  # type: ignore
+                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
+            )
 
         self.res_group_url = None
         self.prov_path = None
