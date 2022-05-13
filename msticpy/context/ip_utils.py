@@ -12,6 +12,8 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
+
+import contextlib
 import ipaddress
 from functools import lru_cache
 from typing import List, Optional, Set, Tuple
@@ -266,7 +268,6 @@ def get_whois_df(
     return data
 
 
-# pylint: disable=too-few-public-methods
 @pd.api.extensions.register_dataframe_accessor("mp_whois")
 @export
 class IpWhoisAccessor:

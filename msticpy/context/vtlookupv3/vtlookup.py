@@ -19,7 +19,6 @@ for the account type that you have. Support IoC Types:
 -  IPv4 Address
 
 """
-# pylint: disable=too-many-lines
 import json
 from collections import namedtuple
 from json import JSONDecodeError
@@ -448,7 +447,7 @@ class VTLookup:
                 batch_index = 0
                 obs_batch = []
 
-    # pylint: disable=too-many-arguments, too-many-branches
+    # pylint: disable=too-many-branches
     def _parse_vt_results(  # noqa: C901 MC0001
         self,
         vt_results: Any,
@@ -502,7 +501,7 @@ class VTLookup:
         else:
             observables = [observable]
 
-        # pylint: disable=locally-disabled, consider-using-enumerate
+        # pylint: disable=consider-using-enumerate
         for result_idx in range(len(results_to_parse)):
             df_dict_vtresults = self._parse_single_result(
                 results_to_parse[result_idx], ioc_type
@@ -660,7 +659,6 @@ class VTLookup:
             self._add_invalid_input_result(
                 observable, ioc_type, pp_observable.status, idx
             )
-            # pylint: disable=locally-disabled, line-too-long
             self._print_status(
                 (
                     f'Invalid observable format: "{observable}", '
@@ -670,13 +668,11 @@ class VTLookup:
                 ),
                 2,
             )
-            # pylint: enable=locally-disabled, line-too-long
             return pp_observable
 
         # Check that we don't already have a result for this
         dup_result = self._check_duplicate_submission(observable, ioc_type, idx)
         if dup_result.is_dup:
-            # pylint: disable=locally-disabled, line-too-long
             self._print_status(
                 (
                     "Duplicate observable value detected: "

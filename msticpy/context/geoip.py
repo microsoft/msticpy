@@ -635,7 +635,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 )
 
     # noqa: MC0001
-    # pylint: disable=too-many-branches
     def _download_and_extract_archive(self) -> bool:  # noqa: MC0001
         """
         Download file from the given URL and extract if it is archive.
@@ -709,8 +708,6 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 self._pr_debug(f"Removing temp file {db_archive_path}")
                 db_archive_path.unlink()
         return False
-
-    # pylint: enable=too-many-branches
 
     def _extract_to_folder(self, db_archive_path):
         self._pr_debug(f"Extracting tarfile {db_archive_path}")

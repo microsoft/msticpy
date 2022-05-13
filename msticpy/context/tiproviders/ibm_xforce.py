@@ -52,7 +52,6 @@ class XForce(HttpTIProvider):
         "url-malware": _XForceParams(path="/url/malware/{observable}"),
     }
 
-    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
     _IOC_QUERIES["ipv6-rep"] = _IOC_QUERIES["ipv4-rep"]
@@ -70,7 +69,6 @@ class XForce(HttpTIProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    # pylint: disable=too-many-branches
     def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.

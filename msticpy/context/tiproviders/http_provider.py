@@ -84,7 +84,6 @@ class HttpTIProvider(TIProvider, abc.ABC):
                 f"Missing parameters are: {param_list}",
             )
 
-    # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
@@ -130,7 +129,7 @@ class HttpTIProvider(TIProvider, abc.ABC):
         )
 
         result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        if result.status:
+        if result.status != LookupStatus.OK.value:
             return result
 
         req_params: Dict[str, Any] = {}
@@ -157,13 +156,13 @@ class HttpTIProvider(TIProvider, abc.ABC):
                     severity = ResultSeverity.information
                     result.details = {}
                 result.set_severity(severity)
-                result.status = LookupStatus.ok.value
+                result.status = LookupStatus.OK.value
             else:
                 result.raw_result = str(response)
                 result.result = False
                 result.details = self._response_message(result.status)
             return result
-        except (  # pylint: disable=duplicate-code
+        except (
             LookupError,
             JSONDecodeError,
             NotImplementedError,
@@ -176,7 +175,6 @@ class HttpTIProvider(TIProvider, abc.ABC):
             return result
 
     # pylint: enable=duplicate-code
-    # pylint: disable=too-many-branches
     def _substitute_parms(
         self, value: str, value_type: str, query_type: str = None
     ) -> Tuple[str, Dict[str, Any]]:

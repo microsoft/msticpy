@@ -11,8 +11,12 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import parse_version  # type: ignore
-from pkg_resources import DistInfoDistribution, Requirement, WorkingSet  # type: ignore
+from pkg_resources import (  # type: ignore
+    DistInfoDistribution,
+    Requirement,
+    WorkingSet,
+    parse_version,
+)
 
 from .._version import VERSION
 from ..common.pkg_config import refresh_config

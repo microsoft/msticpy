@@ -35,8 +35,12 @@ class Tor(TIProvider):
     """Tor Exit Nodes Lookup."""
 
     _BASE_URL = "https://check.torproject.org/exit-addresses"
+    _ALT_URL = (
+        "https://raw.githubusercontent.com/SecOps-Institute/Tor-IP-Addresses"
+        "/master/tor-exit-nodes.lst"
+    )
 
-    _IOC_QUERIES: dict = {"ipv4": None}
+    _IOC_QUERIES: dict = {"ipv4": None, "ipv6": None}
     _nodelist: Dict[str, Dict[str, str]] = {}
     _last_cached = datetime.min
     _cache_lock = Lock()
@@ -53,6 +57,16 @@ class Tor(TIProvider):
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
+                    cls._last_cached = datetime.now(timezone.utc)
+        if not cls._nodelist:
+            with contextlib.suppress(ConnectionError):
+                resp = httpx.get(cls._ALT_URL, timeout=get_http_timeout())
+                tor_raw_list = resp.content.decode()
+                with cls._cache_lock:
+                    node_dict = {"ExitNode": True, "LastStatus": now}
+                    cls._nodelist = {
+                        node: node_dict for node in tor_raw_list.split("\n")
+                    }
                     cls._last_cached = datetime.now(timezone.utc)
 
     @staticmethod
@@ -104,7 +118,7 @@ class Tor(TIProvider):
         result.reference = self._BASE_URL
 
         if result.status and not bool(self._nodelist):
-            result.status = LookupStatus.query_failed.value
+            result.status = LookupStatus.QUERY_FAILED.value
 
         if result.status:
             return result

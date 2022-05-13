@@ -58,7 +58,6 @@ class VirusTotal(HttpTIProvider):
         ),
     }
 
-    # pylint: disable=duplicate-code, too-many-branches
     # aliases
     _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
     _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]

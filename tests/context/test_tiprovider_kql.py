@@ -15,6 +15,7 @@ import pytest_check as check
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
+from msticpy.context.tiproviders.lookup_result import LookupStatus
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 
@@ -77,7 +78,7 @@ class KqlTestDriver(DriverBase):
         if "failed_query" in query:
             query_result = Kql_Result()
             # pylint: disable=attribute-defined-outside-init
-            query_result.completion_query_info = {"StatusCode": 0}  # type: ignore
+            query_result.completion_query_info = {"StatusCode": 1}  # type: ignore
             query_result.records_count = 0  # type: ignore
             return query_result
 
@@ -123,7 +124,7 @@ def query_provider(data_provider):
     return QueryProvider(data_environment="MSSentinel", driver=data_provider)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def ti_lookup(query_provider):
     """Return TI Lookup."""
     test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
@@ -151,55 +152,57 @@ def test_ti_config_and_load(query_provider):
         check.greater_equal(1, len(ti_lookup.provider_status))
 
 
-def test_ASByoti_provider(ti_lookup):
+_IOC_URL = "http://ajaraheritage.ge/g7cberv"
+_IOC_URLS = [
+    "http://cheapshirts.us/zVnMrG.php",
+    "http://chinasymbolic.com/i9jnrc",
+    "http://cetidawabi.com/468fd",
+    "http://append.pl/srh9xsz",
+    "http://aiccard.co.th/dvja1te",
+    "http://ajaraheritage.ge/g7cberv",
+    "http://cic-integration.com/hjy93JNBasdas",
+    "https://google.com",  # benign
+    "https://microsoft.com",  # benign
+    "https://python.org",  # benign
+]
+_IOC_IP = "91.219.31.18"
+_IOC_IPS = [
+    "185.92.220.35",
+    "213.159.214.86",
+    "77.222.54.202",
+    "91.219.29.81",
+    "193.9.28.254",
+    "89.108.83.196",
+    "91.219.28.44",
+    "188.127.231.124",
+    "192.42.116.41",
+    "91.219.31.18",
+    "46.4.239.76",
+    "188.166.168.250",
+    "195.154.241.208",
+    "51.255.172.55",
+    "93.170.169.52",
+    "104.215.148.63",
+    "13.77.161.179",
+    "40.76.4.15",  # benign
+    "40.112.72.205",
+    "40.113.200.201",  # benign
+]
+
+
+def test_sentinel_ti_provider(ti_lookup):
     """Test TI provider queries."""
     end = datetime(2019, 8, 5, 22, 59, 59, 809000)
     start = datetime(2019, 8, 5, 22, 16, 16, 574000)
-    ioc_url = "http://ajaraheritage.ge/g7cberv"
-    ioc_urls = [
-        "http://cheapshirts.us/zVnMrG.php",
-        "http://chinasymbolic.com/i9jnrc",
-        "http://cetidawabi.com/468fd",
-        "http://append.pl/srh9xsz",
-        "http://aiccard.co.th/dvja1te",
-        "http://ajaraheritage.ge/g7cberv",
-        "http://cic-integration.com/hjy93JNBasdas",
-        "https://google.com",  # benign
-        "https://microsoft.com",  # benign
-        "https://python.org",  # benign
-    ]
-    ioc_ip = "91.219.31.18"
-    ioc_ips = [
-        "185.92.220.35",
-        "213.159.214.86",
-        "77.222.54.202",
-        "91.219.29.81",
-        "193.9.28.254",
-        "89.108.83.196",
-        "91.219.28.44",
-        "188.127.231.124",
-        "192.42.116.41",
-        "91.219.31.18",
-        "46.4.239.76",
-        "188.166.168.250",
-        "195.154.241.208",
-        "51.255.172.55",
-        "93.170.169.52",
-        "104.215.148.63",
-        "13.77.161.179",
-        "40.76.4.15",  # benign
-        "40.112.72.205",
-        "40.113.200.201",  # benign
-    ]
 
-    result = ti_lookup.lookup_ioc(observable=ioc_url, start=start, end=end)
+    result = ti_lookup.lookup_ioc(observable=_IOC_URL, start=start, end=end)
     check.is_not_none(result)
     ioc_lookups = result[1]
 
     check.greater_equal(1, len(ioc_lookups))
     check.equal(ioc_lookups[0][0], "AzSTI")
     azs_result = ioc_lookups[0][1]
-    check.equal(azs_result.ioc.lower(), ioc_url.lower())
+    check.equal(azs_result.ioc.lower(), _IOC_URL.lower())
     check.equal(azs_result.ioc_type, "url")
     check.is_in("alert", azs_result.details["Action"])
     check.is_in(True, azs_result.details["Active"])
@@ -211,42 +214,61 @@ def test_ASByoti_provider(ti_lookup):
     check.is_instance(azs_result.reference, str)
     check.is_true("ThreatIntelligenceIndicator  | where" in azs_result.reference)
 
-    # Bulk URL Lookups
-    results = ti_lookup.lookup_iocs(data=ioc_urls, start=start, end=end)
-    check.is_not_none(results)
-    check.equal(10, len(ioc_urls))
-    check.equal(7, len(results[results["Result"]]))
-
     # IP Lookups
-    result = ti_lookup.lookup_ioc(observable=ioc_ip, start=start, end=end)
+    result = ti_lookup.lookup_ioc(observable=_IOC_IP, start=start, end=end)
     check.is_not_none(result)
     ioc_lookups = result[1]
 
     check.greater_equal(1, len(ioc_lookups))
     check.equal(ioc_lookups[0][0], "AzSTI")
     azs_result = ioc_lookups[0][1]
-    check.equal(azs_result.ioc, ioc_ip)
+    check.equal(azs_result.ioc, _IOC_IP)
     check.equal(azs_result.ioc_type, "ipv4")
     check.is_in("alert", azs_result.details["Action"])
     check.is_in(True, azs_result.details["Active"])
     check.is_in(70, azs_result.details["ConfidenceScore"])
     check.is_in("Malware", azs_result.details["ThreatType"])
 
+
+_TEST_MULTI = [
+    (_IOC_URLS, 10, 7, LookupStatus.OK.value, None),
+    (_IOC_IPS, 20, 15, LookupStatus.OK.value, None),
+    (
+        {"c:\\empty_result.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.NO_DATA.value,
+        "Not found",
+    ),
+    (
+        {"c:\\failed_query.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.QUERY_FAILED.value,
+        "Query failure",
+    ),
+    (
+        {"c:\\no_dataframe.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.QUERY_FAILED.value,
+        "Query failure",
+    ),
+]
+
+
+@pytest.mark.parametrize("src, num_results, positives, status, details", _TEST_MULTI)
+def test_sentinel_ti_multi_lookups(
+    ti_lookup, src, num_results, positives, status, details
+):
+    """Test multiple IOCs and failures."""
+    end = datetime(2019, 8, 5, 22, 59, 59, 809000)
+    start = datetime(2019, 8, 5, 22, 16, 16, 574000)
     # Bulk IP Lookups
-    results = ti_lookup.lookup_iocs(data=ioc_ips, start=start, end=end)
+    results = ti_lookup.lookup_iocs(data=src, start=start, end=end)
     check.is_not_none(results)
-    check.equal(20, len(ioc_ips))
-    check.equal(15, len(results[results["Result"]]))
-
-    # Fail Lookups
-    results = ti_lookup.lookup_iocs(data={"c:\\empty_result.txt": "windows_path"})
-    check.equal(results.iloc[0]["Details"], "Not found.")
-    check.equal(len(results), 1)
-
-    results = ti_lookup.lookup_iocs(data={"c:\\failed_query.txt": "windows_path"})
-    check.equal(results.iloc[0]["Details"], "Query failure")
-    check.equal(len(results), 1)
-
-    results = ti_lookup.lookup_iocs(data={"c:\\no_dataframe.txt": "windows_path"})
-    check.equal(results.iloc[0]["Details"], "Query failure")
-    check.equal(len(results), 1)
+    check.equal(num_results, len(src))
+    check.equal(len(results[results["Result"]]), positives)
+    if details:
+        check.equal(results.iloc[0]["Details"], details)
+    check.equal(results.iloc[0]["Status"], status)

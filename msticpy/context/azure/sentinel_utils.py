@@ -34,7 +34,6 @@ _PATH_MAPPING = {
 }
 
 
-# pylint: disable=too-few-public-methods
 class SentinelUtilsMixin:
     """Mixin class for Sentinel core feature integrations."""
 

@@ -39,7 +39,7 @@ DataProviders:
 """
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def kusto_qry_prov():
     """Return query provider with query paths."""
     qry_path = str(get_test_data_path().joinpath("kusto"))

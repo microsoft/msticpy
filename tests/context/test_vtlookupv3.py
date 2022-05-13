@@ -165,6 +165,7 @@ def test_init_vt_lookup_class():
         os.environ["VIRUSTOTAL_AUTH"] = curr_vt_key
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_lookup_ioc(vt_client):
     """Test simple lookup of IoC."""
     url = _TEST_URLS[0]
@@ -199,6 +200,7 @@ def test_lookup_ioc(vt_client):
         result_df = vt_client.lookup_ioc("fail", vt_type="url")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_lookup_iocs(vt_client):
     """Test lookup of multiple IoCs."""
     # Simple lookup
@@ -251,6 +253,7 @@ def test_lookup_iocs(vt_client):
     check.equal(result_df.iloc[3].last_submission_date, "Not found")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_lookup_ioc_relationship(vt_client: VTLookupV3):
     """Test lookup relationship links."""
     file = "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8"
@@ -275,6 +278,7 @@ def test_lookup_ioc_relationship(vt_client: VTLookupV3):
     check.equal(result_df.iat[0, 2], "Not found")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_lookup_ioc_related(vt_client: VTLookupV3):
     """Test lookup related objects."""
     file = "380269259e1f607fb07769fee779f0dc3144924f865e76a3c05c8898295d02f8"
@@ -292,6 +296,7 @@ def test_lookup_ioc_related(vt_client: VTLookupV3):
     check.equal(result_df.iloc[0].relationship_type, "contacted_urls")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_lookup_iocs_relationships(vt_client: VTLookupV3):
     """Test lookup of IoC relationships for multiple IoCs."""
     # Lookup related items for multi IoCs
@@ -321,6 +326,7 @@ def test_lookup_iocs_relationships(vt_client: VTLookupV3):
         check.equal(result_df.iloc[idx].relationship_type, "contacted_urls")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_get_object(vt_client: VTLookupV3):
     """Test simple get_object api."""
     result_df = vt_client.get_object(_TEST_URLS[0], vt_type="url")
@@ -348,6 +354,7 @@ _FB_TESTS = [
 _FB_TEST_IDS = [test[0] for test in _FB_TESTS]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.parametrize("name, sandbox, keys", _FB_TESTS, ids=_FB_TEST_IDS)
 def test_file_behavior(vt_client: VTLookupV3, name, sandbox, keys):
     """Test get_file_behavior api."""
