@@ -12,11 +12,12 @@ from bokeh.plotting import figure
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
-from ..vis.process_tree import build_and_show_process_tree
-from ..vis.timeline import display_timeline, display_timeline_values
-from ..vis.timeline_duration import display_timeline_duration
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
+from .foliummap import plot_map
 from .matrix_plot import plot_matrix
+from .process_tree import build_and_show_process_tree
+from .timeline import display_timeline, display_timeline_values
+from .timeline_duration import display_timeline_duration
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -404,3 +405,7 @@ class MsticpyPlotAccessor:
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
         graph = EntityGraph(self._df)
         return graph.plot(hide=hide, timeline=timeline, **kwargs)
+
+    def folium_map(self, **kwargs):
+        """Plot folium map."""
+        return plot_map(data=self._df, **kwargs)

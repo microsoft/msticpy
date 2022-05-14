@@ -83,12 +83,10 @@ def test_geoiplite_download(tmp_path):
 
 def test_geoiplite_lookup():
     """Test GeoLite lookups."""
-    socket_info = socket.getaddrinfo("pypi.org", 0, 0, 0, 0)
-
-    ips = [res[4][0] for res in socket_info]
+    ips = ["151.101.128.223", "151.101.0.223", "151.101.64.223", "151.101.192.223"]
     with custom_mp_config(_MP_CONFIG_PATH):
         ip_location = GeoLiteLookup()
-
+        print(ip_location.lookup_ip(ip_address="104.97.41.163"))
         loc_result, ip_entities = ip_location.lookup_ip(ip_addr_list=ips)
         check.equal(len(ip_entities), len(ips))
         check.equal(len(loc_result), len(ips))

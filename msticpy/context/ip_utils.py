@@ -12,11 +12,9 @@ to assist investigations.
 Designed to support any data source containing IP address entity.
 
 """
-
-import contextlib
 import ipaddress
 from functools import lru_cache
-from typing import Callable, List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import pandas as pd
 from deprecated.sphinx import deprecated
@@ -33,34 +31,9 @@ from ipwhois import (
 from .._version import VERSION
 from ..common.utility import arg_to_list, export
 from ..datamodel.entities import GeoLocation, IpAddress
-from .geoip import GeoLiteLookup
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
-
-
-class Error(Exception):
-    """Base class for other exceptions."""
-
-
-class DataError(Error):
-    """Raised when thereis a data input error."""
-
-
-def _get_geolite_lookup() -> Callable:
-    """Closure for instantiating GeoLiteLookup."""
-    geo_ip = None
-
-    def _get_geo_ip(**kwargs) -> GeoLiteLookup:
-        nonlocal geo_ip
-        if geo_ip is None:
-            geo_ip = GeoLiteLookup(**kwargs)
-        return geo_ip
-
-    return _get_geo_ip
-
-
-_GET_IP_LOOKUP = _get_geolite_lookup()
 
 
 @export  # noqa: MC0001
@@ -97,11 +70,15 @@ def convert_to_ip_entities(  # noqa: MC0001
         If neither ip_string or data/column provided as input
 
     """
+    # locally imported to prevent cyclic import
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    from .geoip import GeoLiteLookup
+
+    geo_lite_lookup = GeoLiteLookup()
+
     ip_entities: List[IpAddress] = []
     all_ips: Set[str] = set()
 
-    if geo_lookup:
-        ip_lookup = _GET_IP_LOOKUP()
     if ip_str:
         addrs = arg_to_list(ip_str)
     elif data is not None and ip_col:
@@ -121,8 +98,7 @@ def convert_to_ip_entities(  # noqa: MC0001
         all_ips |= ip_list
         if geo_lookup:
             for ip_ent in ip_entities:
-                with contextlib.suppress(DataError):
-                    ip_lookup.lookup_ip(ip_entity=ip_ent)
+                geo_lite_lookup.lookup_ip(ip_entity=ip_ent)
     return ip_entities
 
 
