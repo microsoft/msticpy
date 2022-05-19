@@ -126,7 +126,7 @@ class MSALDelegatedAuth:
                         "msal_token2": "msal_token_values",
                     },
                 )
-            except (PersistenceNotFound, ImportError):
+            except (PersistenceNotFound, ImportError, ValueError):
                 print("Unable to create encrypted token cache - using in memory cache.")
                 return None
 
