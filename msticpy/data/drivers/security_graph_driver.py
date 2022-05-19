@@ -44,7 +44,7 @@ class SecurityGraphDriver(OData):
             "scope": f"{azure_cloud.endpoints.microsoft_graph_resource_id}/.default",
         }
         self.oauth_url = (
-            f"{azure_cloud.endpoints.active_directory}/" "{tenantId}/oauth2/v2.0/token"
+            f"{azure_cloud.endpoints.active_directory}/{{tenantId}}/oauth2/v2.0/token"
         )
         self.api_root = azure_cloud.endpoints.microsoft_graph_resource_id
         self.api_ver = kwargs.get("api_ver", "v1.0")
