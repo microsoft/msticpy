@@ -68,7 +68,8 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
             Sentinel Workspace, by default None
 
         """
-        super().__init__(connect=connect, cloud=cloud)
+        self.user_cloud = cloud
+        super().__init__(connect=connect, cloud=self.user_cloud)
         self.config = None  # type: ignore
         if "workspace" in kwargs:
             self.config = kwargs["workspace"]
@@ -116,7 +117,9 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:
-            self.token = get_token(self.credentials)  # type: ignore
+            self.token = get_token(
+                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
+            )
 
         self.res_group_url = None
         self.prov_path = None
