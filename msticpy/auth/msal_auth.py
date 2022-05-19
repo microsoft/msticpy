@@ -134,7 +134,8 @@ class MSALDelegatedAuth:
             except (PersistenceNotFound, ImportError) as msal_exp:
                 if not fallback_to_plaintext:
                     raise MsticpyAzureConnectionError(
-                        "Unable to create persitence to store credentials."
+                        """Unable to create encrypted persistence to store credentials.
+                        Set plaintext=True to store credentials in plaintext."""
                     ) from msal_exp
 
         return FilePersistence(self.location)
