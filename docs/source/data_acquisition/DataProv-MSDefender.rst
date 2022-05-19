@@ -41,6 +41,7 @@ The settings in the file should look like the following:
             ClientId: "CLIENT ID"
             ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
+            UserName: "User Name"
 
 
 We strongly recommend storing the client secret value
@@ -73,8 +74,7 @@ an instance string to the "MicrosoftDefender" section name.
       MicrosoftDefender-Tenant2:
           Args:
             ClientId: "CLIENT ID"
-            ClientSecret:
-                KeyVault:
+            UserName: "USER NAME"
             TenantId: "TENANT ID"
 
 
@@ -106,6 +106,15 @@ an instance name when you call connect.
 
         mdatp_prov.connect(instance="Tenant2")
 
+If you want to use delegated authentication for your application
+you can specify this when you call connect. By default, this will
+attempt to use browser-based authentication, however you can also
+use device code authentication (needed if using Azure ML) by setting
+auth_type to "device".
+
+.. code:: ipython3
+
+        mdatp_prov.connect(delegated_auth=True, auth_type="device")
 
 You can also pass connection parameters as
 keyword arguments or a connection string.
@@ -116,6 +125,7 @@ the required parameters are:
 * tenant_id -- The tenant ID of the Defender workspace to connect to.
 * client_id -- The ID of the application registered for MS Defender.
 * client_secret -- The secret used for by the application.
+* username -- If using delegated auth for your application.
 
 
 .. code:: ipython3

@@ -24,9 +24,7 @@ class SecurityGraphDriver(OData):
     CONFIG_NAME = "MicrosoftGraph"
     _ALT_CONFIG_NAMES = ["SecurityGraphApp"]
 
-    def __init__(
-        self, connection_str: str = None, delegated_auth: bool = False, **kwargs
-    ):
+    def __init__(self, connection_str: str = None, **kwargs):
         """
         Instantiate MSGraph driver and optionally connect.
 
@@ -34,8 +32,6 @@ class SecurityGraphDriver(OData):
         ----------
         connection_str : str, optional
             Connection string
-        delegated_auth : bool, optional
-            Set True if using App delegated
 
         """
         super().__init__(**kwargs)
@@ -47,14 +43,9 @@ class SecurityGraphDriver(OData):
             "grant_type": "client_credentials",
             "scope": f"{azure_cloud.endpoints.microsoft_graph_resource_id}/.default",
         }
-
-        if delegated_auth:
-            self.oauth_url = f"{azure_cloud.endpoints.active_directory}/{{tenantId}}"
-        else:
-            self.oauth_url = (
-                f"{azure_cloud.endpoints.active_directory}/"
-                "{tenantId}/oauth2/v2.0/token"
-            )
+        self.oauth_url = (
+            f"{azure_cloud.endpoints.active_directory}/{{tenantId}}/oauth2/v2.0/token"
+        )
         self.api_root = azure_cloud.endpoints.microsoft_graph_resource_id
         self.api_ver = kwargs.get("api_ver", "v1.0")
 
