@@ -19,7 +19,6 @@ from msal_extensions import (
 from msal_extensions.persistence import PersistenceNotFound
 
 from .._version import VERSION
-from .exceptions import MsticpyAzureConnectionError
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -54,6 +53,7 @@ class MSALDelegatedAuth:
             Set True to get additional logging ouput, by default False
 
         """
+        self.token_cache = None
         self.location = (
             kwargs["location"] if "location" in kwargs else "token_cache.bin"
         )
@@ -62,12 +62,9 @@ class MSALDelegatedAuth:
         self.scopes = scopes
         self.result = None
 
-        persistence = self._create_cache(
-            fallback_to_plaintext=bool(
-                kwargs["plaintext"] if "plaintext" in kwargs else False
-            )
-        )
-        self.token_cache = PersistedTokenCache(persistence)
+        if persistence := self._create_cache():
+            self.token_cache = PersistedTokenCache(persistence)
+
         self.app = msal.PublicClientApplication(
             client_id=client_id, authority=authority, token_cache=self.token_cache
         )
@@ -80,8 +77,7 @@ class MSALDelegatedAuth:
 
     def get_token(self):
         """Get an authneticaiton token."""
-        chosen_account = self.app.get_accounts(username=self.username)
-        if chosen_account:
+        if chosen_account := self.app.get_accounts(username=self.username):
             self.result = self.app.acquire_token_silent_with_error(
                 scopes=self.scopes, account=chosen_account[0]
             )
@@ -94,8 +90,7 @@ class MSALDelegatedAuth:
     def refresh_token(self):
         """Refresh the authentication token."""
         self.result = None
-        chosen_account = self.app.get_accounts(username=self.username)
-        if chosen_account:
+        if chosen_account := self.app.get_accounts(username=self.username):
             self.result = self.app.acquire_token_silent_with_error(
                 scopes=self.scopes, account=chosen_account[0], force_refresh=True
             )
@@ -115,7 +110,7 @@ class MSALDelegatedAuth:
             print(flow["message"])
             return self.app.acquire_token_by_device_flow(flow)
 
-    def _create_cache(self, fallback_to_plaintext: bool = False):
+    def _create_cache(self):
         """Build a suitable token persistence instance based your current OS."""
         if platform.startswith("win"):
             return FilePersistenceWithDataProtection(self.location)
@@ -131,12 +126,9 @@ class MSALDelegatedAuth:
                         "msal_token2": "msal_token_values",
                     },
                 )
-            except (PersistenceNotFound, ImportError) as msal_exp:
-                if not fallback_to_plaintext:
-                    raise MsticpyAzureConnectionError(
-                        """Unable to create encrypted persistence to store credentials.
-                        Set plaintext=True to store credentials in plaintext."""
-                    ) from msal_exp
+            except (PersistenceNotFound, ImportError):
+                print("Unable to create encrypted token cache - using in memory cache.")
+                return None
 
         return FilePersistence(self.location)
 
