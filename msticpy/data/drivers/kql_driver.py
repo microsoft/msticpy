@@ -321,7 +321,7 @@ class KqlDriver(DriverBase):
         print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
-                # Supress logging exception about PyGObject from msal_extensions
+                # Suppress logging exception about PyGObject from msal_extensions
                 msal_ext_logger = logging.getLogger("msal_extensions.libsecret")
                 current_level = msal_ext_logger.getEffectiveLevel()
                 msal_ext_logger.setLevel(logging.CRITICAL)
