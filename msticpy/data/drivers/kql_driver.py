@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """KQL Driver class."""
 import json
+import logging
 import os
 import re
 import warnings
@@ -319,8 +320,13 @@ class KqlDriver(DriverBase):
         print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
+                # Supress logging exception about PyGObject from msal_extensions
+                msal_ext_logger = logging.getLogger("msal_extensions.libsecret")
+                current_level = msal_ext_logger.getEffectiveLevel()
+                msal_ext_logger.setLevel(logging.CRITICAL)
                 warnings.simplefilter(action="ignore")
                 self._ip.run_line_magic("reload_ext", "Kqlmagic")
+                msal_ext_logger.setLevel(current_level)
         self._loaded = True
         print("done")
 
