@@ -155,12 +155,14 @@ DataProviders:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   MicrosoftGraph:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   Sumologic:
