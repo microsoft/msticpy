@@ -170,12 +170,12 @@ class OData(DriverBase):
                 raise MsticpyConnectionError(
                     f"Could not obtain access token - {json_response['error_description']}"
                 )
-        elif delegated_auth:
+        else:
             _check_config(cs_dict, "username", "delegated authentication")
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
             if authority.startswith("https://login.microsoftonline.com/"):
                 authority = re.split(
-                    r"(https:\/\/login.microsoftonline.com\/[^\/]*)", authority
+                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
                 )[1]
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
@@ -267,13 +267,13 @@ class OData(DriverBase):
                 "Warning - query did not complete successfully.",
                 "Check returned response.",
             )
-            return None, json_response
+            return None, json_response  # type: ignore
 
         result = json_response.get("Results", json_response)
 
         if not result:
             print("Warning - query did not return any results.")
-            return None, json_response
+            return None, json_response  # type: ignore
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
@@ -379,7 +379,7 @@ def _get_driver_settings(
     return _map_config_dict_name(app_config)
 
 
-def _check_config(cs_config: dict, item_name: str, scope: str) -> bool:
+def _check_config(cs_config: dict, item_name: str, scope: str):
     """Check if an iteam is present in a config."""
     if item_name not in cs_config:
         raise MsticpyUserConfigError(
