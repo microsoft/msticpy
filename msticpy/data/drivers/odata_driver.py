@@ -189,7 +189,6 @@ class OData(DriverBase):
                 if "location" in cs_dict
                 else "token_cache.bin",
                 connect=True,
-                plaintext=kwargs["plaintext"] if "plaintext" in kwargs else "False",
             )
             self.aad_token = self.msal_auth.token
             json_response = {}
