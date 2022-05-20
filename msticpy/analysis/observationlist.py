@@ -5,13 +5,16 @@
 # --------------------------------------------------------------------------
 """Observation summary collector."""
 from collections import OrderedDict
-from typing import Any, Dict, List, Mapping, Optional
+from datetime import datetime
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Set, Tuple
 
 import attr
+import pandas as pd
 from attr import Factory
 from IPython.display import Markdown, display
 
 from .._version import VERSION
+from ..common.timespan import TimeSpan
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -60,6 +63,11 @@ class Observation:
     score: int = 0
     tags: List[str] = Factory(list)
     additional_properties: Dict[str, Any] = Factory(dict)
+    timestamp: Optional[datetime] = None
+    time_span: Optional[TimeSpan] = None
+    time_column: Optional[str] = None
+    filter: Optional[str] = None
+    schema: Optional[str] = None
 
     @classmethod
     def required_fields(cls) -> List[str]:
@@ -75,35 +83,51 @@ class Observation:
         return ["caption", "data"]
 
     @classmethod
-    def all_fields(cls) -> List[str]:
+    def all_fields(cls) -> Set[str]:
         """
         Return all fields of Observation class.
 
         Returns
         -------
-        List[str]
-            List of all field names.
+        Set[str]
+            Set of all field names.
 
         """
-        return [field.name for field in attr.fields(cls)]
+        return {field.name for field in attr.fields(cls)}
 
     def display(self):
         """Display the observation."""
         display(Markdown(f"### {self.caption}"))
         if self.description:
             display(Markdown(self.description))
-        display(Markdown(f"Score: {self.score}"))
+        if self.score:
+            display(Markdown(f"Score: {self.score}"))
         if self.link:
             display(Markdown(f"[Go to details](#{self.link})"))
         if self.tags:
             display(Markdown(f'tags: {", ".join(self.tags)}'))
-        display(self.data)
+        display(self.filtered_data)
         if self.additional_properties:
             display(Markdown("### Additional Properties"))
             # pylint: disable=no-member
             for key, val in self.additional_properties.items():
                 display(Markdown(f"**{key}**: {val}"))
             # pylint: enable=no-member
+
+    @property
+    def filtered_data(self) -> Any:
+        """Apply filtering to data if it is a DataFrame."""
+        if not isinstance(self.data, pd.DataFrame):
+            return self.data
+        filtered_data = self.data
+        if self.filter:
+            filtered_data = filtered_data.query(self.filter)
+        if self.time_span and self.time_column:
+            filtered_data = filtered_data[
+                (filtered_data[self.time_column] >= self.time_span.start)
+                & (filtered_data[self.time_column] <= self.time_span.end)
+            ]
+        return filtered_data
 
 
 class Observations:
@@ -123,6 +147,13 @@ class Observations:
         self.observation_list: Dict[str, Observation] = OrderedDict()
         if observationlist is not None:
             self.observation_list.update(observationlist.observations)
+
+    def __getitem__(self, key: str) -> Observation:
+        """Return the observation with a caption."""
+        return self.observation_list[key]
+
+    def __iter__(self) -> Iterator[Tuple[str, Observation]]:
+        yield from self.observation_list.items()
 
     @property
     def observations(self) -> Mapping[str, Observation]:
@@ -176,11 +207,15 @@ class Observations:
                 )
 
             core_fields = {
-                k: v for k, v in kwargs.items() if k in Observation.all_fields()
+                key: value
+                for key, value in kwargs.items()
+                if key in Observation.all_fields()
             }
             new_observation = Observation(**core_fields)
             addl_fields = {
-                k: v for k, v in kwargs.items() if k not in Observation.all_fields()
+                key: value
+                for key, value in kwargs.items()
+                if key not in Observation.all_fields()
             }
             # pylint: disable=no-member
             new_observation.additional_properties.update(addl_fields)
