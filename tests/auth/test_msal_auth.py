@@ -53,7 +53,6 @@ def test_msal_auth_device(msal_mock):
         username="test@test.com",
         scopes=["User.Read"],
         auth_type="device",
-        plaintext=True,
     )
     auth.get_token()
     assert auth.token == "aHR0cHM6Ly9yZWFkdGhlZG9jcy5vcmcvcHJvamVjdHMvbXN0aWNweS8="
@@ -68,7 +67,6 @@ def test_msal_auth(msal_mock):
         authority="https://login.microsoftonline.com",
         username="test@test.com",
         scopes=["User.Read"],
-        plaintext=True,
     )
     auth.get_token()
     assert auth.token == "aHR0cHM6Ly9yZWFkdGhlZG9jcy5vcmcvcHJvamVjdHMvbXN0aWNweS8="
@@ -83,7 +81,6 @@ def test_msal_auth_unkown_user(msal_mock):
         authority="https://login.microsoftonline.com",
         username="test@test2.com",
         scopes=["User.Read"],
-        plaintext=True,
     )
     auth.get_token()
     assert auth.token == "aHR0cHM6Ly9yZWFkdGhlZG9jcy5vcmcvcHJvamVjdHMvbXN0aWNweS8="
