@@ -131,7 +131,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html("Checking Python kernel version...")
     if sys_ver < min_py_ver:
         # Bandit SQL inject error found here
-        _disp_html(
+        _disp_html(  # nosec
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>

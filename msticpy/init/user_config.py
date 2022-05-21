@@ -137,6 +137,8 @@ def _load_az_workspaces(
 ) -> Dict[str, Any]:
     az_provs = {}
     for ws_name, ws_settings in azsent_prov_entry.items():
+        if not ws_settings:
+            continue
         print(f"Loading {prov_name}, workspace: {ws_name}")
         alias = ws_settings.get("alias", ws_name)
         connect = ws_settings.get("connect", True)
