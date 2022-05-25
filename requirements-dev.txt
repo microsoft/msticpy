@@ -24,7 +24,7 @@ pyroma>=3.1
 pytest-check>=1.0.1
 pytest-cov>=2.11.1
 pytest>=5.0.1
-readthedocs-sphinx-ext==2.1.6
+readthedocs-sphinx-ext==2.1.7
 responses>=0.13.2
 respx==0.19.2
 sphinx-rtd-theme>=1.0.0
