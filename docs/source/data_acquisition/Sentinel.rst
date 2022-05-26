@@ -9,6 +9,7 @@ Microsoft Sentinel APIs
    SentinelIncidents
    SentinelWatchlists
    SentinelSearch
+   SentinelWorkspaces
 
 Description
 -----------

@@ -347,7 +347,7 @@ def test_opr_multi_result(ti_lookup):
     check.equal(n_requests, len(results_df))
     check.greater_equal(
         len(results_df[results_df["Severity"].isin(["warning", "high"]) > 0]),
-        n_requests // 4,
+        1,
     )
     check.equal(n_requests, len(results_df[results_df["Result"]]))
 
@@ -576,23 +576,24 @@ def _open_page_rank_response(dom_responses, **kwargs):
         rand_responses = []
         for param in url_params:
             dom = param.split("=")[1]
-            rank = random.randint(1, 1000)
-            if bool(rank % 2):
-                dom_resp = {
-                    "status_code": 200,
-                    "error": "",
-                    "page_rank_integer": rank,
-                    "page_rank_decimal": float(rank),
-                    "rank": str(rank),
-                    "domain": dom,
-                }
-            else:
+            rank = random.randint(1, 10000)
+            if bool(rank % 5):
                 dom_resp = {
                     "status_code": 404,
                     "error": "Domain not found",
                     "page_rank_integer": 0,
                     "page_rank_decimal": 0,
                     "rank": None,
+                    "domain": dom,
+                }
+
+            else:
+                dom_resp = {
+                    "status_code": 200,
+                    "error": "",
+                    "page_rank_integer": rank,
+                    "page_rank_decimal": float(rank),
+                    "rank": str(rank),
                     "domain": dom,
                 }
             rand_responses.append(dom_resp)

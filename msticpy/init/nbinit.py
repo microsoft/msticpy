@@ -17,7 +17,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import ipywidgets as widgets
 import pandas as pd
-import yaml
 from IPython import get_ipython
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import HTML, display
@@ -32,7 +31,7 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import get_config, validate_config
+from ..common.pkg_config import get_config, refresh_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -41,9 +40,8 @@ from ..common.utility import (
     search_for_file,
     unit_testing,
 )
-from ..config import MpConfigFile
 from .azure_ml_tools import check_versions as check_versions_aml
-from .azure_ml_tools import is_in_aml
+from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
 from .pivot import Pivot
 from .user_config import load_user_defaults
 
@@ -208,6 +206,7 @@ def _err_output(*args):
         print(*args)
 
 
+# pylint: disable=too-many-statements
 def init_notebook(
     namespace: Optional[Dict[str, Any]] = None,
     def_imports: str = "all",
@@ -264,6 +263,10 @@ def init_notebook(
         0 = No output
         1 or False = Brief output (default)
         2 or True = Detailed output
+    config : Optional[str]
+        Use this path to load a msticpyconfig.yaml.
+        Defaults are MSTICPYCONFIG env variable, home folder (~/.msticpy),
+        current working directory.
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
     verbosity : int, optional
@@ -301,6 +304,8 @@ def init_notebook(
     user_install: bool = kwargs.pop("user_install", False)
     friendly_exceptions: Optional[bool] = kwargs.pop("friendly_exceptions", None)
     no_config_check: bool = kwargs.pop("no_config_check", False)
+    if "config" in kwargs:
+        _use_custom_config(kwargs.pop("config", None))
 
     _set_verbosity(**kwargs)
 
@@ -358,7 +363,7 @@ def init_notebook(
     if prov_dict:
         namespace.update(prov_dict)
         current_providers = prov_dict
-        _pr_output("Autoloaded components:", ", ".join(prov_dict.keys()))
+        _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
 
     # show any warnings
     init_status = _show_init_warnings(imp_ok, conf_ok)
@@ -433,7 +438,7 @@ MP_EXTRAS = "REQ_MP_EXTRAS"
 
 def _get_aml_globals(namespace: Dict[str, Any]):
     """Return global values if found."""
-    py_ver = namespace.get(PY_VER_VAR, "3.6")
+    py_ver = namespace.get(PY_VER_VAR, "3.8")
     mp_ver = namespace.get(MP_VER_VAR, __version__)
     extras = namespace.get(MP_EXTRAS)
     return py_ver, mp_ver, extras
@@ -506,6 +511,16 @@ def _verify_no_azs_errors(errs):
     return all(az_err not in errs for az_err in _AZ_SENT_ERRS)
 
 
+def _use_custom_config(config_file: str):
+    """Use the config file supplied as a command line parameter."""
+    if not config_file:
+        return
+    if not Path(config_file).is_file():
+        raise ValueError(f"Configuration file {config_file} not found")
+    os.environ["MSTICPYCONFIG"] = config_file
+    refresh_config()
+
+
 def _get_or_create_config() -> bool:
     # Cases
     # 1. Env var set and mpconfig exists -> goto 4
@@ -513,13 +528,13 @@ def _get_or_create_config() -> bool:
     # 3. search_for_file finds mpconfig -> goto 4
     # 4. if file and check_file_contents -> return ok
     # 5. search_for_file(config.json)
-    # 6. If config.json -> import into mpconfig and save
+    # 6. If aml user try to import config.json into mpconfig and save
     # 7. Error - no Microsoft Sentinel config
     mp_path = os.environ.get("MSTICPYCONFIG")
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
     if not mp_path or not Path(mp_path).is_file():
-        mp_path = search_for_file("msticpyconfig.yaml", paths=[".", ".."])
+        mp_path = search_for_file("msticpyconfig.yaml", paths=["."])
 
     if mp_path:
         errs: List[str] = []
@@ -540,42 +555,13 @@ def _get_or_create_config() -> bool:
             _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
 
-    # Look for a config.json
-    config_json = search_for_file("config.json", paths=[".", ".."])
-    if config_json:
-        # if we found one, use it to populate msticpyconfig.yaml
-        _populate_config_to_mp_config(mp_path, config_json)
-        return True
-
+    if is_in_aml():
+        status = populate_config_to_mp_config(mp_path)
+        if status:
+            _pr_output(status)
+            return True
     _pr_output("No valid configuration for Microsoft Sentinel found.")
     return False
-
-
-def _populate_config_to_mp_config(mp_path, config_json):
-    """Populate new or existing msticpyconfig with settings from config.json."""
-    mp_path = mp_path or "./msticpyconfig.yaml"
-    mp_config_convert = MpConfigFile(file=config_json)
-    azs_settings = mp_config_convert.map_json_to_mp_ws()
-    def_azs_settings = next(
-        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values())
-    )
-    if def_azs_settings:
-        mp_config_convert.settings["AzureSentinel"]["Workspaces"][
-            "Default"
-        ] = def_azs_settings.copy()
-    mssg = f"Created '{mp_path}'' with Microsoft Sentinel settings."
-    if Path(mp_path).exists():
-        # If there is an existing file read it in
-        mp_config_text = Path(mp_path).read_text(encoding="utf-8")
-        mp_config_settings = yaml.safe_load(mp_config_text)
-        # update exist settings with the AzSent settings from config.json
-        mp_config_settings.update(mp_config_convert.settings)
-        # update MpConfigFile with the merged settings
-        mp_config_convert.settings = mp_config_settings
-        mssg = f"Updated '{mp_path}'' with Microsoft Sentinel settings."
-    # Save the file
-    mp_config_convert.save_to_file(mp_path, backup=True)
-    _pr_output(mssg)
 
 
 def _set_nb_options(namespace):

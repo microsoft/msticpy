@@ -16,6 +16,7 @@ from .sentinel_incidents import SentinelIncidentsMixin
 from .sentinel_search import SentinelSearchlistsMixin
 from .sentinel_utils import _PATH_MAPPING, SentinelUtilsMixin, validate_res_id
 from .sentinel_watchlists import SentinelWatchlistsMixin
+from .sentinel_workspaces import SentinelWorkspacesMixin
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -29,6 +30,7 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
     SentinelUtilsMixin,
     SentinelWatchlistsMixin,
     SentinelSearchlistsMixin,
+    SentinelWorkspacesMixin,
     AzureData,
 ):
     """Class for returning key Microsoft Sentinel elements."""
@@ -76,6 +78,7 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
+
         res_id = res_id or self._get_default_workspace()
         if not res_id:
             res_id = self._build_sent_res_id(sub_id, res_grp, ws_name)

@@ -108,7 +108,7 @@ class SentinelUtilsMixin:
             if item in self.config:  # type: ignore
                 config_items[item] = self.config[item]  # type: ignore
             else:
-                raise MsticpyAzureConfigError(f"No {item} avaliable in config.")
+                raise MsticpyAzureConfigError(f"No {item} available in config.")
 
         return config_items
 
