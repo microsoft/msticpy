@@ -696,6 +696,7 @@ def plot_map(
     function and the return value used to populate the Icon arguments.
 
     For example:
+
     .. code::python
 
         def icon_mapper(icon_key):
