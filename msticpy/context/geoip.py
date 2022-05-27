@@ -236,17 +236,19 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         """
         super().__init__()
 
-        self.settings = _get_geoip_provider_settings("IPStack")
-        self._api_key = (
-            api_key or self.settings.args.get("AuthKey") if self.settings else None
-        )
+        self.settings: Optional[ProviderSettings] = None
+        self._api_key: Optional[str] = api_key
         self.bulk_lookup = bulk_lookup
 
-    def _check_valid_config(self):
+    def _check_initialized(self):
         """Return True if valid API key available."""
         if self._api_key:
             return True
 
+        self.settings = _get_geoip_provider_settings("IPStack")
+        self._api_key = self.settings.args.get("AuthKey") if self.settings else None
+        if self._api_key:
+            return True
         raise MsticpyUserConfigError(
             self._NO_API_KEY_MSSG,
             help_uri=(
@@ -291,7 +293,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
             on free tier API key)
 
         """
-        self._check_valid_config()
+        self._check_initialized()
         ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
         results = self._submit_request(ip_list)
@@ -426,6 +428,7 @@ https://msticpy.readthedocs.io/en/latest/data_acquisition/GeoIPLookups.html#maxm
 Alternatively, you can pass this to the GeoLiteLookup class when creating it:
 >>> iplookup = GeoLiteLookup(api_key="your_api_key")
 """
+    _UNSET_PATH = "~~UNSET~~"
 
     def __init__(
         self,
@@ -468,13 +471,10 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         self._debug = debug
         if self._debug:
             self._debug_init_state(api_key, db_folder, force_update, auto_update)
-        self.settings = _get_geoip_provider_settings("GeoIPLite")
-        self._api_key = api_key or self.settings.args.get("AuthKey")
+        self.settings: Optional[ProviderSettings] = None
+        self._api_key: Optional[str] = api_key or None
 
-        self._db_folder: str = db_folder or self.settings.args.get(  # type: ignore
-            "DBFolder", self._DB_HOME
-        )
-        self._db_folder = str(Path(self._db_folder).expanduser())  # type: ignore
+        self._db_folder: str = db_folder or self._UNSET_PATH
         self._force_update = force_update
         self._auto_update = auto_update
         self._db_path: Optional[str] = None
@@ -514,7 +514,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
             populated Location property.
 
         """
-        self._check_db_open()
+        self._check_initialized()
         ip_list = self._ip_params_to_list(ip_address, ip_addr_list, ip_entity)
 
         output_raw = []
@@ -572,10 +572,20 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         ip_entity.Location = geo_entity
         return ip_entity
 
-    def _check_db_open(self):
+    def _check_initialized(self):
         """Check if DB reader open with a valid database."""
-        if self._reader:
+        if self._reader and self.settings:
             return
+
+        self.settings = _get_geoip_provider_settings("GeoIPLite")
+        self._api_key = self._api_key or self.settings.args.get("AuthKey")
+
+        self._db_folder: str = (
+            self._db_folder
+            if self._db_folder != self._UNSET_PATH
+            else self.settings.args.get("DBFolder", self._DB_HOME)  # type: ignore
+        )
+        self._db_folder = str(Path(self._db_folder).expanduser())  # type: ignore
         self._check_and_update_db()
         self._db_path = self._get_geoip_db_path()
         if self._debug:

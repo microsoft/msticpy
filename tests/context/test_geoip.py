@@ -19,6 +19,8 @@ _NB_FOLDER = "docs/notebooks"
 _NB_NAME = "GeoIPLookups.ipynb"
 _MP_CONFIG_PATH = get_test_data_path().parent.joinpath("msticpyconfig-test.yaml")
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.skipif(
     not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
@@ -57,7 +59,7 @@ def test_geoiplite_download(tmp_path):
                 ip_location = GeoLiteLookup(
                     db_folder=str(tgt_folder), force_update=True, debug=True
                 )
-                ip_location._check_db_open()
+                ip_location._check_initialized()
                 check.is_true(tgt_folder.joinpath("GeoLite2-City.mmdb").is_file())
                 ip_location.close()
         if warning_record:
