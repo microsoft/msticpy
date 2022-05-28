@@ -51,13 +51,18 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
 
     Define Base URL of the service
 
-    ``_BASE_URL = "https://my.api.org/"``
+    .. code:: python
+
+        _BASE_URL = "https://my.api.org/"
 
     Define query parameters for different item types (keys)
 
-    ``_API_QUERIES: Dict[str, APILookupParams] = {}``
+    ..code:: python
 
-    E.g.
+        _API_QUERIES: Dict[str, APILookupParams] = {}
+
+    For example:
+
     .. code:: python
 
         _IOC_QUERIES = {
@@ -72,7 +77,12 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
 
 
     Define list of required __init__ params
-    _REQUIRED_PARAMS: List[str] = []
+
+    .. code:: python
+
+        _REQUIRED_PARAMS: List[str] = []
+
+    For example:
 
     .. code:: python
 
@@ -80,12 +90,18 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
 
     In __init__
 
-    Be sure to call ``super().__init__(**kwargs)``
+    Be sure to call
 
-    Supply any additional checkers/preprocessors
+    .. code::
+
+        super().__init__(**kwargs)``
+
+    Supply any additional checkers/pre-processors
     with
-    ```
-    self._preprocessors.add_check(type, check_func)
+
+    .. code: python
+
+        self._preprocessors.add_check(type, check_func)
 
     See Also
     --------
