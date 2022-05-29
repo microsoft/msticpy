@@ -162,11 +162,11 @@ class GeoIpLookup(metaclass=ABCMeta):
             if isinstance(ip_address, str):
                 return [ip_address.strip()]
             if isinstance(ip_address, abc.Iterable):
-                return [ip.strip() for ip in ip_addr_list]
+                return [str(ip).strip() for ip in ip_addr_list]
             if isinstance(ip_address, IpAddress):
                 return [ip_entity.Address]
         if ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
-            return [ip.strip() for ip in ip_addr_list]
+            return [str(ip).strip() for ip in ip_addr_list]
         if ip_entity:
             return [ip_entity.Address]
         raise ValueError("No valid ip addresses were passed as arguments.")
