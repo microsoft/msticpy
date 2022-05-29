@@ -27,7 +27,7 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("..//.."))
 
 # -- Project information -----------------------------------------------------
 
@@ -215,6 +215,7 @@ autoapi_dirs = ["../../msticpy"]
 
 autodoc_mock_imports = [
     "adal",
+    "azure",
     "azure.common.exceptions",
     "azure.core.exceptions",
     "azure.core.pipeline.policies",
@@ -234,10 +235,14 @@ autodoc_mock_imports = [
     "azure.mgmt.subscription",
     "azure.storage.blob",
     "azure.storage",
+    "bokeh",
     "dnspython",
+    "dns",
     "folium",
+    "geoip2",
     "ipwhois",
     "IPython",
+    "ipywidgets",
     "keyring",
     "Kqlmagic",
     "matplotlib.pyplot",
@@ -246,8 +251,8 @@ autodoc_mock_imports = [
     "msal",
     "msal_extensions",
     "msrest",
-    "msrest.authentication",
     "msrestazure",
+    "msrest.authentication",
     "nest_asyncio",
     "networkx",
     "openpyxl",
