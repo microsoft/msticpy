@@ -1,6 +1,5 @@
 docutils<0.18.0
 httpx>=0.21
-msticpy
 readthedocs-sphinx-ext==2.1.4
 sphinx-rtd-theme==1.0.0
 sphinx==4.5.0
