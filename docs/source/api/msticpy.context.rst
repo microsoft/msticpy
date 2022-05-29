@@ -25,5 +25,4 @@ Submodules
    msticpy.context.domain_utils
    msticpy.context.geoip
    msticpy.context.ip_utils
-   msticpy.context.profile_tilookup
    msticpy.context.tilookup

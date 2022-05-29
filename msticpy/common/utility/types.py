@@ -227,6 +227,7 @@ class SingletonClass:
     -----
     Using this decorator on a class enforces the following
     behavior:
+
     - First instantiation of class will work as normal
     - Subsequent attempts with the same set/values of kwargs
       will just return the original class
