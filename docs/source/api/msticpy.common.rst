@@ -6,6 +6,14 @@ msticpy.common package
    :undoc-members:
    :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   msticpy.common.utility
+
 Submodules
 ----------
 
@@ -19,5 +27,4 @@ Submodules
    msticpy.common.pkg_config
    msticpy.common.provider_settings
    msticpy.common.timespan
-   msticpy.common.utility
    msticpy.common.wsconfig

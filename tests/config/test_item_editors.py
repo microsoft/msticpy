@@ -247,7 +247,6 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
     # get the control for this provider
     ctrl_path = f"TIProviders.{provider}.Args.AuthKey"
     arg_ctrl = mp_conf_ctrl.get_control(ctrl_path)
-
     arg_ctrl.rb_store_type.value = STORE_ENV_VAR
     arg_ctrl.txt_val.value = "test_var"
     os.environ["test_var"] = "test_value"
@@ -297,8 +296,10 @@ def test_azure_sentinel_editor(mp_conf_ctrl):
     result, _ = _validate_ws(new_ws, mp_conf_ctrl, edit_comp._COMP_PATH)
     check.is_false(result)
 
-    edit_comp.edit_ctrls.children[1].value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
-    edit_comp.edit_ctrls.children[2].value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
+    ctrl = _get_named_control(edit_comp, "WorkspaceId")
+    ctrl.value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
+    ctrl = _get_named_control(edit_comp, "TenantId")
+    ctrl.value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
     edit_comp.edit_buttons.btn_save.click()
     result, _ = _validate_ws(new_ws, mp_conf_ctrl, edit_comp._COMP_PATH)
     check.is_true(result)
@@ -316,6 +317,12 @@ def test_azure_sentinel_editor(mp_conf_ctrl):
     edit_comp.btn_set_default.click()
     def_ws = mp_conf_ctrl.get_value(f"{edit_comp._COMP_PATH}.Default")
     check.equal(def_ws, ren_workspace_settings)
+
+
+def _get_named_control(edit_comp, name):
+    return next(
+        ctrl for ctrl in edit_comp.edit_ctrls.children if ctrl.description == name
+    )
 
 
 def test_key_vault_editor(mp_conf_ctrl):

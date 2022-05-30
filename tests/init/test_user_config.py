@@ -88,6 +88,7 @@ def mp_settings():
     return settings_dict
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_user_config(mp_settings):
     """Test user config."""
     mpcfg_path = os.environ.get("MSTICPYCONFIG")

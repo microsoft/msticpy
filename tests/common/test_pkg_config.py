@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 """Pkg_config test class."""
 import os
-import unittest
 import warnings
 from pathlib import Path
 
@@ -102,12 +101,14 @@ def test_geo_ip_settings():
             # We want to ignore warnings from failure to download DB file
             warnings.simplefilter("ignore", category=UserWarning)
             geoip_lite = GeoLiteLookup()
+            geoip_lite._check_initialized()
         check.is_instance(geoip_lite._api_key, str)
         check.equal(geoip_lite._api_key, os.environ["MAXMIND_AUTH"])
 
         check.equal(geoip_lite._db_folder, conf_dbpath)
 
         ipstack = IPStackLookup()
+        ipstack._check_initialized()
         check.equal(ipstack._api_key, "987654321-222")
 
 

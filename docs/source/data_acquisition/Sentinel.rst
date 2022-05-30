@@ -8,6 +8,7 @@ Microsoft Sentinel APIs
    SentinelBookmarks
    SentinelIncidents
    SentinelWatchlists
+   SentinelSearch
 
 Description
 -----------
@@ -16,13 +17,13 @@ This package contains functionality making calls to Microsoft Sentinel directly.
 These can be used to get data from Microsoft Sentinel, as well as perform
 configuration and other actions on the Microsoft Sentinel Workspace
 
-:py:mod:`Microsoft Sentinel API documentation<msticpy.data.azure.sentinel_core.MicrosoftSentinel>`
+:py:mod:`Microsoft Sentinel API documentation<msticpy.context.azure.sentinel_core.MicrosoftSentinel>`
 
 
 Instantiating and Connecting the Microsoft Sentinel API Connector
 -----------------------------------------------------------------
 
-See :py:class:`Microsoft Sentinel <msticpy.data.azure.sentinel_core.MicrosoftSentinel>`
+See :py:class:`Microsoft Sentinel <msticpy.context.azure.sentinel_core.MicrosoftSentinel>`
 
 When instantiating the class you need to pass it details of the Sentinel workspace
 you want to interact with. This can be provided as a complete resource ID,
@@ -64,7 +65,7 @@ list to `.connect` via the auth_methods parameter.
 Get Microsoft Sentinel Workspaces
 ---------------------------------
 
-See :py:meth:`list_sentinel_workspaces <msticpy.data.azure.sentinel_core.MicrosoftSentinel.get_sentinel_workspaces>`
+See :py:meth:`list_sentinel_workspaces <msticpy.context.azure.sentinel_core.MicrosoftSentinel.get_sentinel_workspaces>`
 
 If you want to see Sentinel workspace in a subscription you can call `list_sentinel_workspaces`.
 
@@ -91,7 +92,7 @@ You can return a dataframe detailing all hunting queries configured in the works
 analysis and configuration of hunting queries, as well as the ability to take a
 hunting query and run it with a QueryProvider.
 
-See :py:meth:`list_hunting_queries <msticpy.data.azure.sentinel_core.MicrosoftSentinel.list_hunting_queries>`
+See :py:meth:`list_hunting_queries <msticpy.context.azure.sentinel_core.MicrosoftSentinel.list_hunting_queries>`
 
 .. code:: ipython3
 
@@ -115,3 +116,8 @@ Watchlists
 
 You can interact with Watchlists, including creating new watchlists and adding items to a watchlist via this feature.
 More details can be found in :doc:`Sentinel Watchlists <SentinelWatchlists>`
+
+Search
+------
+
+You can create and delete Microsoft Sentinel Search jobs via MSTICPy :doc:`Sentinel Search <SentinelSearch>`

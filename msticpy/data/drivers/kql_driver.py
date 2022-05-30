@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 """KQL Driver class."""
 import json
+import logging
 import os
 import re
 import warnings
@@ -12,6 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
+from azure.core.exceptions import ClientAuthenticationError
 from IPython import get_ipython
 
 from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
@@ -319,8 +321,13 @@ class KqlDriver(DriverBase):
         print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
+                # Suppress logging exception about PyGObject from msal_extensions
+                msal_ext_logger = logging.getLogger("msal_extensions.libsecret")
+                current_level = msal_ext_logger.getEffectiveLevel()
+                msal_ext_logger.setLevel(logging.CRITICAL)
                 warnings.simplefilter(action="ignore")
                 self._ip.run_line_magic("reload_ext", "Kqlmagic")
+                msal_ext_logger.setLevel(current_level)
         self._loaded = True
         print("done")
 
@@ -524,15 +531,20 @@ class KqlDriver(DriverBase):
         endpoint_uri = self._get_endpoint_uri()
         endpoint_token_uri = f"{endpoint_uri}.default"
         # obtain token for the endpoint
-        token = creds.modern.get_token(endpoint_token_uri, tenant_id=mp_az_tenant_id)
-        # set the token values in the namespace
-
-        endpoint_token = {
-            "access_token": token.token,
-            "token_type": "Bearer",
-            "resource": endpoint_uri,
-        }
-        self._set_kql_option("try_token", endpoint_token)
+        try:
+            token = creds.modern.get_token(
+                endpoint_token_uri, tenant_id=mp_az_tenant_id
+            )
+            # set the token values in the namespace
+            endpoint_token = {
+                "access_token": token.token,
+                "token_type": "Bearer",
+                "resource": endpoint_uri,
+            }
+            self._set_kql_option("try_token", endpoint_token)
+        # if the above auth fails fall back to KQLMagics auth method
+        except ClientAuthenticationError:
+            pass
 
     def _get_endpoint_uri(self):
         return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]

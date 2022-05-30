@@ -22,6 +22,7 @@
 definitions:
   # Azure Sentinel workspace definition
   workspace_defn: &workspace
+    WorkspaceName: str(required=False)
     WorkspaceId: str(format=uuid)
     TenantId: str(format=uuid)
     SubscriptionId: str(required=False, format=uuid)
@@ -155,12 +156,14 @@ DataProviders:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   MicrosoftGraph:
     Args:
       ClientId: str(format=uuid)
       TenantId: str(format=uuid)
+      UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
   Sumologic:
@@ -169,6 +172,12 @@ DataProviders:
       accessid: str()
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       accesskey: *cred_key
+  Cybereason:
+    Args:
+      TenantId: str(format=uuid)
+      ClientId: str()
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

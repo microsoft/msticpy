@@ -261,7 +261,7 @@ class SentinelIncidentsMixin:
             raise CloudError(response=response)
         print("Incident updated.")
 
-    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+    def create_incident(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         title: str,
         severity: str,

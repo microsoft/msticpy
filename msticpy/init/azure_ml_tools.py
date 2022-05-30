@@ -11,7 +11,12 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from IPython import get_ipython
 from IPython.display import HTML, display
-from pkg_resources import DistInfoDistribution, Requirement, WorkingSet, parse_version
+from pkg_resources import (  # type: ignore
+    DistInfoDistribution,
+    Requirement,
+    WorkingSet,
+    parse_version,
+)
 
 from .._version import VERSION
 from ..common.pkg_config import refresh_config
@@ -126,7 +131,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html("Checking Python kernel version...")
     if sys_ver < min_py_ver:
         # Bandit SQL inject error found here
-        _disp_html(
+        _disp_html(  # nosec
             f"""
             <h4><font color='red'>This notebook requires a later
             (Python) kernel version.</h4></font>
@@ -245,7 +250,7 @@ def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
 def _get_installed_mp_version() -> Optional[DistInfoDistribution]:
     """Return the installed version of MSTICPY."""
     working_set = WorkingSet()
-    mp_installed = working_set.find(Requirement("msticpy"))
+    mp_installed = working_set.find(Requirement("msticpy"))  # type: ignore
     if mp_installed:
         return mp_installed.parsed_version
     return None

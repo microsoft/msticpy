@@ -27,7 +27,9 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigException
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import _MSTICPY_USER_AGENT, export
-from .ti_provider_base import LookupResult, TILookupStatus, TIProvider, TISeverity
+from .lookup_result import LookupResult, LookupStatus
+from .result_severity import ResultSeverity
+from .ti_provider_base import TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -50,8 +52,8 @@ class IoCLookupParams:
 
 
 @export
-class HttpProvider(TIProvider):
-    """HTTP TI provider base class."""
+class HttpTIProvider(TIProvider, abc.ABC):
+    """HTTP API Lookup provider base class."""
 
     _BASE_URL = ""
 
@@ -78,27 +80,26 @@ class HttpProvider(TIProvider):
         if missing_params:
             param_list = ", ".join(f"'{param}'" for param in missing_params)
             raise MsticpyConfigException(
-                f"Parameter values missing for TI Provider '{self.__class__.__name__}'",
+                f"Parameter values missing for Provider '{self.__class__.__name__}'",
                 f"Missing parameters are: {param_list}",
             )
 
-    # pylint: disable=too-many-branches, duplicate-code
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> LookupResult:
         """
-        Lookup a single IoC observable.
+        Lookup a single item.
 
         Parameters
         ----------
         ioc : str
-            IoC observable
+            Item value to lookup
         ioc_type : str, optional
-            IocType, by default None (type will be inferred)
+            The Type of the value to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
+            If not specified the default record type for the item_value
             will be returned.
 
         Returns
@@ -108,7 +109,7 @@ class HttpProvider(TIProvider):
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
             raw_result - Raw Response
-            reference - URL of IoC
+            reference - URL of the item
 
         Raises
         ------
@@ -128,7 +129,7 @@ class HttpProvider(TIProvider):
         )
 
         result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        if result.status:
+        if result.status != LookupStatus.OK.value:
             return result
 
         req_params: Dict[str, Any] = {}
@@ -152,16 +153,16 @@ class HttpProvider(TIProvider):
                     result.raw_result = f"""There was a problem parsing results from this lookup:
                                         {response.text}"""
                     result.result = False
-                    severity = TISeverity.information
+                    severity = ResultSeverity.information
                     result.details = {}
                 result.set_severity(severity)
-                result.status = TILookupStatus.ok.value
+                result.status = LookupStatus.OK.value
             else:
                 result.raw_result = str(response)
                 result.result = False
                 result.details = self._response_message(result.status)
             return result
-        except (  # pylint: disable=duplicate-code
+        except (
             LookupError,
             JSONDecodeError,
             NotImplementedError,
@@ -174,22 +175,21 @@ class HttpProvider(TIProvider):
             return result
 
     # pylint: enable=duplicate-code
-    # pylint: disable=too-many-branches
     def _substitute_parms(
-        self, ioc: str, ioc_type: str, query_type: str = None
+        self, value: str, value_type: str, query_type: str = None
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Create requests parameters collection.
 
         Parameters
         ----------
-        ioc : str
-            IoC observable
-        ioc_type : str, optional
-            IocType, by default None
+        value : str
+            The value of the item being queried
+        value_type : str, optional
+            The value type, by default None
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
+            If not specified the default record type for the type
             will be returned.
 
         Returns
@@ -198,20 +198,20 @@ class HttpProvider(TIProvider):
             HTTP method, dictionary of parameter keys/values
 
         """
-        req_params = {"observable": ioc}
+        req_params = {"observable": value}
         req_params.update(self._request_params)
-        ioc_key = ioc_type + "-" + query_type if query_type else ioc_type
-        src = self._IOC_QUERIES.get(ioc_key, None)
+        value_key = f"{value_type}-{query_type}" if query_type else value_type
+        src = self.ioc_query_defs.get(value_key, None)
         if not src:
-            raise LookupError(f"Provider does not support IoC type {ioc_key}.")
+            raise LookupError(f"Provider does not support this type {value_key}.")
 
         # create a parameter dictionary to pass to requests
         # substitute any parameter value from our req_params dict
         req_dict: Dict[str, Any] = {
             "headers": {},
-            "url": self._BASE_URL + src.path.format(**req_params)
-            if not src.full_url
-            else src.path.format(observable=ioc),
+            "url": src.path.format(observable=value)
+            if src.full_url
+            else self._BASE_URL + src.path.format(**req_params),
         }
 
         if src.headers:
@@ -240,7 +240,7 @@ class HttpProvider(TIProvider):
         return src.verb, req_dict
 
     @abc.abstractmethod
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -251,9 +251,9 @@ class HttpProvider(TIProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """

@@ -4,33 +4,49 @@
 # license information.
 # --------------------------------------------------------------------------
 """Folium map class."""
+
+
+import contextlib
+import itertools
 import math
 import statistics as stats
-import warnings
-from typing import Iterable, List, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import folium
+import pandas as pd
 import pygeohash
 from folium.plugins import FeatureGroupSubGroup, MarkerCluster
 
 from .._version import VERSION
-
-# pylint: enable=locally-disabled, unused-import
 from ..common.utility import export
 from ..datamodel.entities import Entity, GeoLocation, IpAddress
+
+from ..context.geoip import GeoLiteLookup  # isort: skip
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
+_GEO_LITE = GeoLiteLookup()
 
-# pylint: disable=too-many-arguments, too-few-public-methods
+
+# pylint: disable=too-many-lines
 @export
 class FoliumMap:
     """Wrapper class for Folium/Leaflet mapping."""
 
     def __init__(
         self,
-        title: str = "layer1",
+        title: str = "OpenStreetMap",
         zoom_start: float = 2.5,
         tiles=None,
         width: str = "100%",
@@ -43,7 +59,7 @@ class FoliumMap:
         Parameters
         ----------
         title : str, optional
-            Name of the layer (the default is 'layer1')
+            Name of the main tile layer (the default is 'OpenStreetMap')
         zoom_start : int, optional
             The zoom level of the map (the default is 7)
         tiles : [type], optional
@@ -70,6 +86,7 @@ class FoliumMap:
             width=width,
             height=height,
             location=location,
+            control_scale=True,
         )
         folium.TileLayer(name=title).add_to(self.folium_map)
         self.locations: List[Tuple[float, float]] = []
@@ -84,7 +101,9 @@ class FoliumMap:
         """Calculate and set map center based on current coordinates."""
         self.folium_map.location = _get_center_coords(self.locations)
 
-    def add_ip_cluster(self, ip_entities: Iterable[IpAddress], **kwargs):
+    def add_ip_cluster(
+        self, ip_entities: Iterable[IpAddress], layer: Optional[str] = None, **kwargs
+    ):
         """
         Add a collection of IP Entities to the map.
 
@@ -92,24 +111,22 @@ class FoliumMap:
         ----------
         ip_entities : Iterable[IpAddress]
             a iterable of IpAddress Entities
+        layer : str, optional
+            If not none, it will add the entities to a new layer.
 
         Other Parameters
         ----------------
-            kwargs: icon properties to use for displaying this cluster
+        kwargs: icon properties to use for displaying this cluster
 
         """
-        geo_entity = GeoLocation()
-        geo_entity.CountryCode = "Unknown"
-        geo_entity.CountryName = "Unknown"
-        geo_entity.State = "Unknown"
-        geo_entity.City = "Unknown"
-        geo_entity.Longitude = 0.0  # type: ignore
-        geo_entity.Latitude = 0.0  # type: ignore
+        ip_entities = _get_location_for_ip_entities(ip_entities)
 
-        for ip_entity in ip_entities:
-            if ip_entity.Location is None:
-                ip_entity.Location = geo_entity
-
+        if layer:
+            marker_target = folium.FeatureGroup(name=layer)
+            marker_target.add_to(self.folium_map)
+            folium.LayerControl().add_to(self.folium_map)
+        else:
+            marker_target = self.folium_map
         for ip_entity in ip_entities:
             if ip_entity.Location is None:
                 continue
@@ -121,49 +138,39 @@ class FoliumMap:
                 or math.isnan(ip_entity.Location.Latitude)
                 or math.isnan(ip_entity.Location.Longitude)
             ):
-                warnings.warn(
-                    "Invalid location information for IP: " + ip_entity.Address,
-                    RuntimeWarning,
-                )
                 continue
-            loc_props = ", ".join(
-                f"{key}={val}"
-                for key, val in ip_entity.Location.properties.items()
-                if val
-            )
+            popup_text = _get_popup_text(ip_entity)
+            tooltip_text = _get_tooltip_text(ip_entity)
 
-            popup_text = f"{loc_props}<br>IP: {ip_entity.Address}"
-            if (
-                "City" in ip_entity.Location.properties
-                or "CountryName" in ip_entity.Location.properties
-            ):
-                tooltip_text = (
-                    f"{ip_entity.Location.City}, {ip_entity.Location.CountryName}"
-                )
-            else:
-                tooltip_text = (
-                    f"{ip_entity.Location.Latitude}, {ip_entity.Location.Longitude}"
-                )
-
-            if ip_entity.AdditionalData:
-                addl_props = ", ".join(
-                    f"{key}={val}"
-                    for key, val in ip_entity.AdditionalData.items()
-                    if val
-                )
-
-                popup_text = f"{popup_text}<br>{addl_props}"
-                tooltip_text = f"{tooltip_text}, {addl_props}"
             marker = folium.Marker(
                 location=[ip_entity.Location.Latitude, ip_entity.Location.Longitude],
                 popup=popup_text,
                 tooltip=tooltip_text,
                 icon=folium.Icon(**kwargs),
             )
-            marker.add_to(self.folium_map)
+            marker.add_to(marker_target)
             self.locations.append(
                 (ip_entity.Location.Latitude, ip_entity.Location.Longitude)
             )
+
+    def add_ips(self, ip_addresses: Iterable[str], **kwargs):
+        """
+        Add a collection of GeoLocation objects to the map.
+
+        Parameters
+        ----------
+        ip_addresses : Iterable[str]
+            Iterable of ip strings.
+        layer : str, optional
+            If not none, it will add the entities to a new layer.
+
+        Other Parameters
+        ----------------
+        kwargs: icon properties to use for displaying this cluster
+
+        """
+        _, ip_entities = _GEO_LITE.lookup_ip(ip_addr_list=ip_addresses)
+        self.add_ip_cluster(ip_entities=ip_entities, **kwargs)
 
     def add_geoloc_cluster(self, geo_locations: Iterable[GeoLocation], **kwargs):
         """
@@ -173,6 +180,12 @@ class FoliumMap:
         ----------
         geo_locations : Iterable[GeoLocation]
             Iterable of GeoLocation entities.
+        layer : str, optional
+            If not none, it will add the entities to a new layer.
+
+        Other Parameters
+        ----------------
+        kwargs: icon properties to use for displaying this cluster
 
         """
         ip_entities = [IpAddress(Address="na", Location=geo) for geo in geo_locations]
@@ -186,6 +199,12 @@ class FoliumMap:
         ----------
         locations : Iterable[Tuple[float, float]]
             Iterable of location tuples.
+        layer : str, optional
+            If not none, it will add the entities to a new layer.
+
+        Other Parameters
+        ----------------
+        kwargs: icon properties to use for displaying this cluster
 
         """
         geo_entities = [
@@ -201,6 +220,12 @@ class FoliumMap:
         ----------
         geohashes : Iterable[str]
             Iterable of geolocation hashes
+        layer : str, optional
+            If not none, it will add the entities to a new layer.
+
+        Other Parameters
+        ----------------
+        kwargs: icon properties to use for displaying this cluster
 
         """
         geo_entities = []
@@ -528,6 +553,342 @@ def decode_geohash_collection(geohashes: Iterable[str]):
     return locations
 
 
+def _get_tooltip_text(ip_entity):
+    """Return tooltip text for marker."""
+    return "<br>".join(
+        str(line)
+        for line in [
+            ip_entity.Address,
+            ip_entity.Location.City or "Unknown city",
+            ip_entity.Location.CountryCode or "Unknown country",
+            *(list(ip_entity.AdditionalData.items())),
+        ]
+    )
+
+
+def _get_popup_text(ip_entity):
+    """Return popup text for marker."""
+    return "<br>".join(
+        str(line)
+        for line in [
+            ip_entity.Address,
+            *(list(ip_entity.Location.properties.values())),
+            *(list(ip_entity.AdditionalData.items())),
+        ]
+    )
+
+
+IconMapper = Union[Callable[[str], Dict[str, Any]], Dict[str, Any], None]
+
+
+# pylint: disable=too-many-locals, too-many-arguments
+def plot_map(
+    data: pd.DataFrame,
+    ip_column: Optional[str] = None,
+    lat_column: Optional[str] = None,
+    long_column: Optional[str] = None,
+    layer_column: Optional[str] = None,
+    icon_column: Optional[str] = None,
+    icon_map: IconMapper = None,
+    popup_columns: Optional[List[str]] = None,
+    tooltip_columns: Optional[List[str]] = None,
+    **kwargs,
+) -> folium.Map:
+    """
+    Plot folium map from DataFrame.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame, must have either an IP address
+        column or latitude and longitude columns.
+    ip_column : Optional[str], optional
+        The name of the IP Address column, by default None
+    lat_column : Optional[str], optional
+        The name of the location 'latitude' column, by default None
+    long_column : Optional[str], optional
+        The name of the location 'longitude' column, by default None
+    layer_column : Optional[str], optional
+        The column to group markers into for displaying on different
+        map layers, by default None
+    icon_column : Optional[str], optional
+        Optional column containing the name of the icon to use
+        for the marker in this row, by default None
+    icon_map : IconMapper, optional
+        Mapping dictionary or function, by default None
+        See Notes for more details.
+    popup_columns : Optional[List[str]], optional
+        List of columns to use for the popup text, by default None
+    tooltip_columns : Optional[List[str]], optional
+        List of columns to use for the tooltip text, by default None
+
+
+    Other Parameters
+    ----------------
+    marker_cluster : bool, optional
+        Use marker clustering, default is True.
+    default_color : str, optional
+        Default color for marker icons, by default "blue"
+    title : str, optional
+        Name of the layer (the default is 'layer1')
+        (passed to FoliumMap constructor)
+    zoom_start : int, optional
+        The zoom level of the map (the default is 7)
+        (passed to FoliumMap constructor)
+    tiles : [type], optional
+        Custom set of tiles or tile URL (the default is None)
+        (passed to FoliumMap constructor)
+    width : str, optional
+        Map display width (the default is '100%')
+        (passed to FoliumMap constructor)
+    height : str, optional
+        Map display height (the default is '100%')
+        (passed to FoliumMap constructor)
+    location : list, optional
+        Location to center map on
+
+    Returns
+    -------
+    folium.Map
+        Folium Map object.
+
+    Raises
+    ------
+    ValueError
+        If neither `ip_col` nor `lat_col` and `long_col` are passed.
+    LookupError
+        If one of the passed columns does not exist in `data`
+
+    Notes
+    -----
+    There are two ways of providing custom icon settings based on the
+    the row of the input DataFrame.
+
+    If `icon_map` is a dict it should contain keys that map to the
+    value of `icon_col` and values that a dicts of valid
+    folium Icon properties ("color", "icon_color", "icon", "angle", "prefix").
+    The dict should include a "default" entry that will be used if the
+    value in the DataFrame[icon_col] doesn't match any key.
+    For example:
+
+    .. code:: python
+
+        icon_map = {
+            "high": {
+                "color": "red",
+                "icon": "warning",
+            },
+            "medium": {
+                "color": "orange",
+                "icon": "triangle-exclamation",
+                "prefix": "fa",
+            },
+            "default": {
+                "color": "blue",
+                "icon": "info-sign",
+            },
+        }
+
+    If icon_map is a function it should take a single str parameter
+    (the item key) and return a dict of icon properties. It should
+    return a default set of values if the key does not match a known
+    key. The `icon_col` value for each row will be passed to this
+    function and the return value used to populate the Icon arguments.
+
+    For example:
+
+    .. code::python
+
+        def icon_mapper(icon_key):
+            if icon_key.startswith("bad"):
+                return {
+                    "color": "red",
+                    "icon": "triangle-alert",
+                }
+            ...
+            else:
+                return {
+                    "color": "blue",
+                    "icon": "info-sign",
+                }
+
+    FontAwesome icon (prefix "fa") names are available at https://fontawesome.com/
+    GlyphIcons icons (prefix "glyphicon") are available at https://www.glyphicons.com/
+
+    """
+    folium_map = FoliumMap(**kwargs)
+    if ip_column and not (lat_column and long_column):
+        # resolve IP location and merge with input data.
+        data = data.merge(
+            # pylint: disable=no-member
+            _GEO_LITE.lookup_ips(data, column=ip_column),
+            # pylint: enable=no-member
+            left_on=ip_column,
+            right_on="IpAddress",
+            suffixes=("_src", None),
+        ).dropna(axis="index", subset=["Latitude", "Longitude"])
+        lat_column, long_column = ["Latitude", "Longitude"]
+        if not tooltip_columns:
+            tooltip_columns = [ip_column, "CountryCode", "City"]
+        if not popup_columns:
+            popup_columns = [ip_column, "CountryName", "City", lat_column, long_column]
+    else:
+        if not tooltip_columns:
+            tooltip_columns = []
+            tooltip_columns.extend(col for col in (lat_column, long_column) if col)
+        if not popup_columns:
+            popup_columns = []
+            popup_columns.extend(col for col in (lat_column, long_column) if col)
+
+    _validate_columns(
+        data,
+        ip_column,
+        lat_column,
+        long_column,
+        [layer_column, icon_column, popup_columns, tooltip_columns],
+    )
+
+    folium_map.locations.extend(
+        data.apply(lambda row: (row[lat_column], row[long_column]), axis=1)
+    )
+    # common dictionary of kwargs to _create_feature_group
+    static_kwargs = dict(
+        lat_column=lat_column,
+        long_column=long_column,
+        icon_column=icon_column,
+        icon_map=icon_map,
+        popup_cols=popup_columns,
+        tooltip_cols=tooltip_columns,
+        use_marker_cluster=kwargs.pop("marker_cluster", True),
+    )
+    if layer_column is None:
+        feature_group = _create_feature_group(
+            data=data,
+            layer_name="All locations",
+            def_layer_color=kwargs.pop("default_color", "blue"),
+            **static_kwargs,  # type: ignore
+        )
+        feature_group.add_to(folium_map.folium_map)
+    else:
+        for index, (layer, layer_df) in enumerate(data.groupby(layer_column)):
+            def_layer_color = _get_icon_layer_color(index)
+            feature_group = _create_feature_group(
+                data=layer_df,
+                layer_name=layer,
+                def_layer_color=def_layer_color,
+                **static_kwargs,  # type: ignore
+            )
+            feature_group.add_to(folium_map.folium_map)
+        folium.LayerControl().add_to(folium_map.folium_map)
+    return folium_map
+
+
+# pylint: enable=too-many-locals, too-many-arguments
+
+
+def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
+    """Validate required columns and that optional cols are in the data."""
+    if not ip_column and not (lat_column and long_column):
+        raise ValueError(
+            "Data must have either an IpAddress ('ip_col')",
+            "or latitude ('lat_col') and longitude ('long_col')",
+        )
+    param_cols: List[str] = []
+    for param in other_columns:
+        if not param:
+            continue
+        if isinstance(param, list):
+            param_cols.extend(param)
+        else:
+            param_cols.append(param)
+    missing_columns = {col for col in param_cols if col not in data.columns}
+    if missing_columns:
+        raise LookupError(
+            "The following columns are not in the supplied DataFrame",
+            ",".join(f"'{col}'" for col in missing_columns),
+        )
+
+
+# pylint: disable=too-many-arguments
+def _create_feature_group(
+    data: pd.DataFrame,
+    layer_name: str,
+    lat_column: str,
+    long_column: str,
+    icon_column: Optional[str],
+    icon_map: IconMapper,
+    popup_cols: List[str],
+    tooltip_cols: List[str],
+    def_layer_color: str,
+    use_marker_cluster: bool = True,
+) -> folium.FeatureGroup:
+    """Create folium feature group."""
+    feature_group = folium.FeatureGroup(name=layer_name)
+    if use_marker_cluster:
+        container = MarkerCluster(name=layer_name)
+        container.add_to(feature_group)
+    else:
+        container = feature_group
+    data.apply(
+        lambda row: folium.Marker(
+            location=(row[lat_column], row[long_column]),
+            tooltip=_create_marker_text(row, tooltip_cols),
+            popup=_create_marker_text(row, popup_cols),
+            icon=_create_mapped_icon(row, icon_column, icon_map, def_layer_color),
+        ).add_to(feature_group),
+        axis=1,
+    )
+    return feature_group
+
+
+# pylint: enable=too-many-arguments
+
+
+def _create_marker_text(row: pd.Series, columns: List[str]) -> str:
+    """Return HTML formatted text for tooltips and popups."""
+    return "<br>".join(f"{col}: {row[col]}" for col in columns)
+
+
+def _get_icon_layer_color(layer_index: int) -> str:
+    """Get a color from folium.color options."""
+    col_options = folium.Icon.color_options - {"white"}
+    return list(col_options)[layer_index % len(col_options)]
+
+
+def _create_mapped_icon(
+    row: pd.Series,
+    icon_column: Optional[str] = None,
+    icon_map: Optional[IconMapper] = None,
+    def_layer_color: str = "blue",
+) -> folium.Icon:
+    """Return folium Icon from mapping or defaults."""
+    icon_kwargs: Dict[str, str] = {}
+    if isinstance(icon_map, dict):
+        icon_kwargs = icon_map.get(row[icon_column], icon_map.get("default", {}))
+    elif callable(icon_map):
+        icon_kwargs = icon_map(row[icon_column])
+    elif icon_column:
+        icon_kwargs = {"icon": row[icon_column]}
+    if "color" not in icon_kwargs:
+        icon_kwargs["color"] = def_layer_color
+    return folium.Icon(**icon_kwargs)
+
+
+def _get_location_for_ip_entities(
+    ip_entities: Iterable[IpAddress],
+) -> Generator[IpAddress, None, None]:
+    for ip_entity in ip_entities:
+        if (
+            ip_entity.Location is None
+            or ip_entity.Location.Longitude is None
+            or ip_entity.Location.Latitude is None
+        ):
+            _, ip_res_list = _GEO_LITE.lookup_ip(ip_entity=ip_entity)
+            if ip_res_list:
+                ip_entity.Location = ip_res_list[0].Location  # type: ignore
+        yield ip_entity
+
+
 @export
 def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
     """
@@ -569,15 +930,14 @@ def get_map_center(entities: Iterable[Entity], mode: str = "modal"):
         for p_name, p_val in entities[0].properties.items()
         if isinstance(p_val, (IpAddress, GeoLocation))
     ]
-    for entity in entities:
-        for prop in loc_props:
-            if prop not in entity:
-                continue
-            loc_entity = entity[prop]
-            if isinstance(loc_entity, IpAddress):
-                ip_entities.append(loc_entity)
-            elif isinstance(loc_entity, GeoLocation):
-                loc_entities.append(loc_entity)
+    for entity, prop in itertools.product(entities, loc_props):
+        if prop not in entity:
+            continue
+        loc_entity = entity[prop]
+        if isinstance(loc_entity, IpAddress):
+            ip_entities.append(loc_entity)
+        elif isinstance(loc_entity, GeoLocation):
+            loc_entities.append(loc_entity)
     locs_ips = _extract_locs_ip_entities(ip_entities)
     return get_center_geo_locs(locs_ips + loc_entities, mode=mode)
 
@@ -660,13 +1020,11 @@ def _get_center_coords(
         return 0, 0
     locs = list(locations)
     if mode == "median":
-        try:
+        with contextlib.suppress(stats.StatisticsError):
             return (
                 stats.median([loc[0] for loc in locs if not math.isnan(loc[0])]),
                 stats.median([loc[1] for loc in locs if not math.isnan(loc[1])]),
             )
-        except stats.StatisticsError:
-            pass
     return (
         stats.mean([loc[0] for loc in locs if not math.isnan(loc[0])]),
         stats.mean([loc[1] for loc in locs if not math.isnan(loc[1])]),

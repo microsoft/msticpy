@@ -24,8 +24,9 @@ Configuration sections
 
 AzureSentinel
 ~~~~~~~~~~~~~
-Here you can specify your default workspace and tenant IDs and add additional
-workspaces if needed.
+Here you can specify your default workspace IDs and tenant IDs and add additional
+workspaces if needed. If you wish to use the Microsoft Sentinel API features you
+can also specify Subscription Ids, Subscription names and Workspace names here.
 
 QueryDefinitions
 ~~~~~~~~~~~~~~~~
@@ -461,7 +462,7 @@ AzureData example above this is equivalent to the following code.
 
 .. code:: ipython3
 
-    from msticpy.data.azure_data import AzureData
+    from msticpy.context.azure_data import AzureData
     az_data = AzureData()
     az_data.connect(auth_methods=['cli','interactive'])
 
@@ -497,8 +498,8 @@ provider instances created are also stored in an attribute of the
     'ti_lookup': <msticpy.context.tilookup.TILookup at 0x216611c7908>,
     'geoip': <msticpy.context.geoip.GeoLiteLookup at 0x21660659c88>,
     'pivot': <msticpy.datamodel.pivot.Pivot at 0x216602d8e88>,
-    'az_data': <msticpy.data.azure_data.AzureData at 0x21668aaf708>,
-    'azs_api': <msticpy.data.azure_sentinel.AzureSentinel at 0x21603f42388>,
+    'az_data': <msticpy.context.azure_data.AzureData at 0x21668aaf708>,
+    'azs_api': <msticpy.context.azure_sentinel.AzureSentinel at 0x21603f42388>,
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
 
 
@@ -559,6 +560,9 @@ Commented configuration file sample
         Default:
           WorkspaceId: "d973e3d2-28e6-458e-b2cf-d38876fb1ba4"
           TenantId: "4cdf87a8-f0fc-40bb-9d85-68bcf4ac8e61"
+          SubscriptionId: "2e0acf9c-b2c4-4c9b-8f34-9899b9588492"
+          WorkspaceName: "MyWorkspace"
+          ResourceGroup: "MyResourceGroup"
         # To use these launch with an explicit name - WorkspaceConfig(workspace_name="Workspace2")
         Workspace2:
           WorkspaceId: "c88dd3c2-d657-4eb3-b913-58d58d811a41"

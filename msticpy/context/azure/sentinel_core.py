@@ -13,6 +13,7 @@ from .azure_data import AzureData, get_token
 from .sentinel_analytics import SentinelAnalyticsMixin, SentinelHuntingMixin
 from .sentinel_bookmarks import SentinelBookmarksMixin
 from .sentinel_incidents import SentinelIncidentsMixin
+from .sentinel_search import SentinelSearchlistsMixin
 from .sentinel_utils import _PATH_MAPPING, SentinelUtilsMixin, validate_res_id
 from .sentinel_watchlists import SentinelWatchlistsMixin
 
@@ -20,13 +21,14 @@ __version__ = VERSION
 __author__ = "Pete Bryan"
 
 
-class MicrosoftSentinel(
+class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
     SentinelAnalyticsMixin,
     SentinelHuntingMixin,
     SentinelBookmarksMixin,
     SentinelIncidentsMixin,
     SentinelUtilsMixin,
     SentinelWatchlistsMixin,
+    SentinelSearchlistsMixin,
     AzureData,
 ):
     """Class for returning key Microsoft Sentinel elements."""
@@ -39,6 +41,7 @@ class MicrosoftSentinel(
         sub_id: str = None,
         res_grp: str = None,
         ws_name: str = None,
+        **kwargs,
     ):
         """
         Initialize connector for Azure APIs.
@@ -65,8 +68,11 @@ class MicrosoftSentinel(
             Sentinel Workspace, by default None
 
         """
-        super().__init__(connect=connect, cloud=cloud)
+        self.user_cloud = cloud
+        super().__init__(connect=connect, cloud=self.user_cloud)
         self.config = None  # type: ignore
+        if "workspace" in kwargs:
+            self.config = kwargs["workspace"]
         self.base_url = self.endpoints.resource_manager
         self.default_subscription: Optional[str] = None
         self.default_workspace: Optional[Tuple[str, str]] = None
@@ -80,6 +86,7 @@ class MicrosoftSentinel(
             "incidents": self.url + _PATH_MAPPING["incidents"],
             "alert_rules": self.url + _PATH_MAPPING["alert_rules"],
             "watchlists": self.url + _PATH_MAPPING["watchlists"],
+            "search": self.url + _PATH_MAPPING["search"],
         }
 
     def connect(
@@ -110,7 +117,9 @@ class MicrosoftSentinel(
         if "token" in kwargs:
             self.token = kwargs["token"]
         else:
-            self.token = get_token(self.credentials)  # type: ignore
+            self.token = get_token(
+                self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
+            )
 
         self.res_group_url = None
         self.prov_path = None

@@ -1,7 +1,7 @@
-msticpy.context.tiproviders.http\_base module
+msticpy.context.azure.sentinel\_search module
 =============================================
 
-.. automodule:: msticpy.context.tiproviders.http_base
+.. automodule:: msticpy.context.azure.sentinel_search
    :members:
    :undoc-members:
    :show-inheritance:

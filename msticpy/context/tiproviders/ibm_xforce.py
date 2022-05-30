@@ -18,8 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_base import HttpProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, TISeverity
+from .http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import LookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -35,7 +35,7 @@ class _XForceParams(IoCLookupParams):
 
 
 @export
-class XForce(HttpProvider):
+class XForce(HttpTIProvider):
     """IBM XForce Lookup."""
 
     _BASE_URL = "https://api.xforce.ibmcloud.com"
@@ -52,7 +52,6 @@ class XForce(HttpProvider):
         "url-malware": _XForceParams(path="/url/malware/{observable}"),
     }
 
-    # pylint: disable=duplicate-code
     # aliases
     _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
     _IOC_QUERIES["ipv6-rep"] = _IOC_QUERIES["ipv4-rep"]
@@ -70,8 +69,7 @@ class XForce(HttpProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    # pylint: disable=too-many-branches
-    def parse_results(self, response: LookupResult) -> Tuple[bool, TISeverity, Any]:
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -82,13 +80,13 @@ class XForce(HttpProvider):
 
         Returns
         -------
-        Tuple[bool, TISeverity, Any]
+        Tuple[bool, ResultSeverity, Any]
             bool = positive or negative hit
-            TISeverity = enumeration of severity
+            ResultSeverity = enumeration of severity
             Object with match details
 
         """
-        severity = TISeverity.information
+        severity = ResultSeverity.information
         if self._failed_response(response) or not isinstance(response.raw_result, dict):
             return False, severity, "Not found."
         result = True
@@ -113,11 +111,11 @@ class XForce(HttpProvider):
                 }
             )
             severity = (
-                TISeverity.information
+                ResultSeverity.information
                 if score < 2
-                else TISeverity.warning
+                else ResultSeverity.warning
                 if 2 <= score < 5
-                else TISeverity.high
+                else ResultSeverity.high
             )
         if (
             response.ioc_type in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
@@ -134,7 +132,7 @@ class XForce(HttpProvider):
                         ),
                     }
                 )
-                severity = TISeverity.high
+                severity = ResultSeverity.high
         if response.ioc_type in [
             "dns",
             "ipv4",
@@ -144,7 +142,7 @@ class XForce(HttpProvider):
             records = response.raw_result.get("total_rows", 0)
             contact = response.raw_result.get("contact", 0)
             if records:
-                result_dict.update({"records": records})
+                result_dict["records"] = records
             elif contact:
-                result_dict.update({"contact": contact})
+                result_dict["contact"] = contact
         return result, severity, result_dict

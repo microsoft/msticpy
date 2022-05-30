@@ -4,15 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 """TIProviders test class."""
-import unittest
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
+import pytest
+import pytest_check as check
 
+from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
-from msticpy.context.tiproviders import AzSTI, get_provider_settings
+from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
+from msticpy.context.tiproviders.lookup_result import LookupStatus
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 
@@ -29,6 +32,7 @@ class KqlTestDriver(DriverBase):
     """KqlTestDriver class to execute kql queries."""
 
     def __init__(self, connection_str: str = None, **kwargs):
+        """Initialize class."""
         del connection_str
         super().__init__(**kwargs)
 
@@ -44,16 +48,19 @@ class KqlTestDriver(DriverBase):
         self.url_df["IoC"] = self.url_df["Url"].str.lower()
 
     def connect(self, connection_str: Optional[str] = None, **kwargs):
+        """Mock connect function."""
         self._connected = True
         return None
 
     @property
     def schema(self) -> Dict[str, Dict]:
+        """Mock schema property."""
         return self._schema
 
     def query(
         self, query: str, query_source: Any = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
+        """Mock query function."""
         del query_source, kwargs
 
         query_toks = [tok.lower() for tok in query.split("'") if tok != ","]
@@ -71,7 +78,7 @@ class KqlTestDriver(DriverBase):
         if "failed_query" in query:
             query_result = Kql_Result()
             # pylint: disable=attribute-defined-outside-init
-            query_result.completion_query_info = {"StatusCode": 0}  # type: ignore
+            query_result.completion_query_info = {"StatusCode": 1}  # type: ignore
             query_result.records_count = 0  # type: ignore
             return query_result
 
@@ -80,156 +87,188 @@ class KqlTestDriver(DriverBase):
         return None
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
-        pass
+        """Mock query_with_results."""
+        del query, kwargs
+        return (pd.DataFrame, None)
 
 
-class mock_ip:
+class IPython:
+    """Mock IPython."""
+
     def run_cell_magic(self, *args, **kwargs):
+        """Mock run_cell_magic."""
         del args, kwargs
 
     def run_line_magic(self, *args, **kwargs):
+        """Mock run_line_magic."""
         del args
         if kwargs.get("line") == "--schema":
             return {}
 
     def find_magic(self, *args, **kwargs):
+        """Mock find_magic."""
         del args, kwargs
         return True
 
 
-def get_mock_ip():
-    return mock_ip()
+# pylint: disable=redefined-outer-name
+@pytest.fixture(scope="module")
+def data_provider():
+    """Return mock Kql driver."""
+    return KqlTestDriver()
 
 
-class TestASKqlTIProvider(unittest.TestCase):
-    """Unit test class."""
+@pytest.fixture(scope="module")
+def query_provider(data_provider):
+    """Query provider."""
+    return QueryProvider(data_environment="MSSentinel", driver=data_provider)
 
-    def setUp(self):
-        test_data_provider = KqlTestDriver()
-        self.qry_prov = QueryProvider(
-            data_environment="LogAnalytics", driver=test_data_provider
-        )
 
-    def test_ti_config_and_load(self):
-        test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml")
-        with custom_mp_config(test_config1):
-            ti_settings = get_provider_settings()
+@pytest.fixture
+def ti_lookup(query_provider):
+    """Return TI Lookup."""
+    test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
+    with custom_mp_config(test_config1):
+        as_byoti_prov = AzSTI(query_provider=query_provider)
+        return TILookup(primary_providers=[as_byoti_prov])
 
-            self.assertIsInstance(ti_settings, dict)
-            self.assertGreaterEqual(1, len(ti_settings))
 
-            # Try to load TIProviders - should throw a warning on
-            # missing provider class
-            as_byoti_prov = AzSTI(query_provider=self.qry_prov)
-            ti_lookup = TILookup(primary_providers=[as_byoti_prov])
+def test_ti_config_and_load(query_provider):
+    """Test loading settings and TI Lookup."""
+    test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml")
+    with custom_mp_config(test_config1):
+        ti_settings = get_provider_settings()
 
-            # should have 2 succesfully loaded providers
-            self.assertGreaterEqual(1, len(ti_lookup.loaded_providers))
-            self.assertGreaterEqual(1, len(ti_lookup.provider_status))
+        check.is_instance(ti_settings, dict)
+        check.greater_equal(1, len(ti_settings))
 
-    def load_ti_lookup(self):
-        test_config1 = Path(_TEST_DATA).joinpath("msticpyconfig-askql.yaml").resolve()
-        with custom_mp_config(test_config1):
-            as_byoti_prov = AzSTI(query_provider=self.qry_prov)
-            return TILookup(primary_providers=[as_byoti_prov])
+        # Try to load TIProviders - should throw a warning on
+        # missing provider class
+        as_byoti_prov = AzSTI(query_provider=query_provider)
+        ti_lookup = TILookup(primary_providers=[as_byoti_prov])
 
-    def test_ASByoti_provider(self):
-        ti_lookup = self.load_ti_lookup()
+        # should have 2 successfully loaded providers
+        check.greater_equal(1, len(ti_lookup.loaded_providers))
+        check.greater_equal(1, len(ti_lookup.provider_status))
 
-        end = datetime(2019, 8, 5, 22, 59, 59, 809000)
-        start = datetime(2019, 8, 5, 22, 16, 16, 574000)
-        ioc_url = "http://ajaraheritage.ge/g7cberv"
-        ioc_urls = [
-            "http://cheapshirts.us/zVnMrG.php",
-            "http://chinasymbolic.com/i9jnrc",
-            "http://cetidawabi.com/468fd",
-            "http://append.pl/srh9xsz",
-            "http://aiccard.co.th/dvja1te",
-            "http://ajaraheritage.ge/g7cberv",
-            "http://cic-integration.com/hjy93JNBasdas",
-            "https://google.com",  # benign
-            "https://microsoft.com",  # benign
-            "https://python.org",  # benign
-        ]
-        ioc_ip = "91.219.31.18"
-        ioc_ips = [
-            "185.92.220.35",
-            "213.159.214.86",
-            "77.222.54.202",
-            "91.219.29.81",
-            "193.9.28.254",
-            "89.108.83.196",
-            "91.219.28.44",
-            "188.127.231.124",
-            "192.42.116.41",
-            "91.219.31.18",
-            "46.4.239.76",
-            "188.166.168.250",
-            "195.154.241.208",
-            "51.255.172.55",
-            "93.170.169.52",
-            "104.215.148.63",
-            "13.77.161.179",
-            "40.76.4.15",  # benign
-            "40.112.72.205",
-            "40.113.200.201",  # benign
-        ]
 
-        result = ti_lookup.lookup_ioc(observable=ioc_url, start=start, end=end)
-        self.assertIsNotNone(result)
-        ioc_lookups = result[1]
+_IOC_URL = "http://ajaraheritage.ge/g7cberv"
+_IOC_URLS = [
+    "http://cheapshirts.us/zVnMrG.php",
+    "http://chinasymbolic.com/i9jnrc",
+    "http://cetidawabi.com/468fd",
+    "http://append.pl/srh9xsz",
+    "http://aiccard.co.th/dvja1te",
+    "http://ajaraheritage.ge/g7cberv",
+    "http://cic-integration.com/hjy93JNBasdas",
+    "https://google.com",  # benign
+    "https://microsoft.com",  # benign
+    "https://python.org",  # benign
+]
+_IOC_IP = "91.219.31.18"
+_IOC_IPS = [
+    "185.92.220.35",
+    "213.159.214.86",
+    "77.222.54.202",
+    "91.219.29.81",
+    "193.9.28.254",
+    "89.108.83.196",
+    "91.219.28.44",
+    "188.127.231.124",
+    "192.42.116.41",
+    "91.219.31.18",
+    "46.4.239.76",
+    "188.166.168.250",
+    "195.154.241.208",
+    "51.255.172.55",
+    "93.170.169.52",
+    "104.215.148.63",
+    "13.77.161.179",
+    "40.76.4.15",  # benign
+    "40.112.72.205",
+    "40.113.200.201",  # benign
+]
 
-        self.assertGreaterEqual(1, len(ioc_lookups))
-        self.assertEqual(ioc_lookups[0][0], "AzSTI")
-        azs_result = ioc_lookups[0][1]
-        self.assertEqual(azs_result.ioc.lower(), ioc_url.lower())
-        self.assertEqual(azs_result.ioc_type, "url")
-        self.assertIn("alert", azs_result.details["Action"])
-        self.assertIn(True, azs_result.details["Active"])
-        self.assertIn(100, azs_result.details["ConfidenceScore"])
-        self.assertIn("Malware", azs_result.details["ThreatType"])
 
-        res_df = azs_result.raw_result
-        self.assertIsInstance(res_df, pd.DataFrame)
-        self.assertIsInstance(azs_result.reference, str)
-        self.assertTrue("ThreatIntelligenceIndicator  | where" in azs_result.reference)
+def test_sentinel_ti_provider(ti_lookup):
+    """Test TI provider queries."""
+    end = datetime(2019, 8, 5, 22, 59, 59, 809000)
+    start = datetime(2019, 8, 5, 22, 16, 16, 574000)
 
-        # Bulk URL Lookups
-        results = ti_lookup.lookup_iocs(data=ioc_urls, start=start, end=end)
-        self.assertIsNotNone(results)
-        self.assertEqual(10, len(ioc_urls))
-        self.assertEqual(7, len(results[results["Result"]]))
+    result = ti_lookup.lookup_ioc(observable=_IOC_URL, start=start, end=end)
+    check.is_not_none(result)
+    ioc_lookups = result[1]
 
-        # IP Lookups
-        result = ti_lookup.lookup_ioc(observable=ioc_ip, start=start, end=end)
-        self.assertIsNotNone(result)
-        ioc_lookups = result[1]
+    check.greater_equal(1, len(ioc_lookups))
+    check.equal(ioc_lookups[0][0], "AzSTI")
+    azs_result = ioc_lookups[0][1]
+    check.equal(azs_result.ioc.lower(), _IOC_URL.lower())
+    check.equal(azs_result.ioc_type, "url")
+    check.is_in("alert", azs_result.details["Action"])
+    check.is_in(True, azs_result.details["Active"])
+    check.is_in(100, azs_result.details["ConfidenceScore"])
+    check.is_in("Malware", azs_result.details["ThreatType"])
 
-        self.assertGreaterEqual(1, len(ioc_lookups))
-        self.assertEqual(ioc_lookups[0][0], "AzSTI")
-        azs_result = ioc_lookups[0][1]
-        self.assertEqual(azs_result.ioc, ioc_ip)
-        self.assertEqual(azs_result.ioc_type, "ipv4")
-        self.assertIn("alert", azs_result.details["Action"])
-        self.assertIn(True, azs_result.details["Active"])
-        self.assertIn(70, azs_result.details["ConfidenceScore"])
-        self.assertIn("Malware", azs_result.details["ThreatType"])
+    res_df = azs_result.raw_result
+    check.is_instance(res_df, pd.DataFrame)
+    check.is_instance(azs_result.reference, str)
+    check.is_true("ThreatIntelligenceIndicator  | where" in azs_result.reference)
 
-        # Bulk IP Lookups
-        results = ti_lookup.lookup_iocs(data=ioc_ips, start=start, end=end)
-        self.assertIsNotNone(results)
-        self.assertEqual(20, len(ioc_ips))
-        self.assertEqual(15, len(results[results["Result"]]))
+    # IP Lookups
+    result = ti_lookup.lookup_ioc(observable=_IOC_IP, start=start, end=end)
+    check.is_not_none(result)
+    ioc_lookups = result[1]
 
-        # Fail Lookups
-        results = ti_lookup.lookup_iocs(data={"c:\\empty_result.txt": "windows_path"})
-        self.assertEqual(results.iloc[0]["Details"], "Not found.")
-        self.assertEqual(len(results), 1)
+    check.greater_equal(1, len(ioc_lookups))
+    check.equal(ioc_lookups[0][0], "AzSTI")
+    azs_result = ioc_lookups[0][1]
+    check.equal(azs_result.ioc, _IOC_IP)
+    check.equal(azs_result.ioc_type, "ipv4")
+    check.is_in("alert", azs_result.details["Action"])
+    check.is_in(True, azs_result.details["Active"])
+    check.is_in(70, azs_result.details["ConfidenceScore"])
+    check.is_in("Malware", azs_result.details["ThreatType"])
 
-        results = ti_lookup.lookup_iocs(data={"c:\\failed_query.txt": "windows_path"})
-        self.assertEqual(results.iloc[0]["Details"], "Query failure")
-        self.assertEqual(len(results), 1)
 
-        results = ti_lookup.lookup_iocs(data={"c:\\no_dataframe.txt": "windows_path"})
-        self.assertEqual(results.iloc[0]["Details"], "Query failure")
-        self.assertEqual(len(results), 1)
+_TEST_MULTI = [
+    (_IOC_URLS, 10, 7, LookupStatus.OK.value, None),
+    (_IOC_IPS, 20, 15, LookupStatus.OK.value, None),
+    (
+        {"c:\\empty_result.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.NO_DATA.value,
+        "Not found",
+    ),
+    (
+        {"c:\\failed_query.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.QUERY_FAILED.value,
+        "Query failure",
+    ),
+    (
+        {"c:\\no_dataframe.txt": "windows_path"},
+        1,
+        0,
+        LookupStatus.QUERY_FAILED.value,
+        "Query failure",
+    ),
+]
+
+
+@pytest.mark.parametrize("src, num_results, positives, status, details", _TEST_MULTI)
+def test_sentinel_ti_multi_lookups(
+    ti_lookup, src, num_results, positives, status, details
+):
+    """Test multiple IOCs and failures."""
+    end = datetime(2019, 8, 5, 22, 59, 59, 809000)
+    start = datetime(2019, 8, 5, 22, 16, 16, 574000)
+    # Bulk IP Lookups
+    results = ti_lookup.lookup_iocs(data=src, start=start, end=end)
+    check.is_not_none(results)
+    check.equal(num_results, len(src))
+    check.equal(len(results[results["Result"]]), positives)
+    if details:
+        check.equal(results.iloc[0]["Details"], details)
+    check.equal(results.iloc[0]["Status"], status)

@@ -24,11 +24,7 @@ import pandas as pd
 import tldextract
 from cryptography.x509 import Certificate
 from dns.exception import DNSException
-
-# pylint: disable=no-name-in-module
 from dns.resolver import Resolver
-
-# pylint: enable=no-name-in-module
 from IPython import display
 from ipywidgets import IntProgress
 from urllib3.exceptions import LocationParseError
@@ -174,7 +170,7 @@ class DomainValidator:
         return bool(tld)
 
     @staticmethod
-    def is_resolvable(url_domain: str) -> bool:  # pylint: disable=no-self-use
+    def is_resolvable(url_domain: str) -> bool:
         """
         Validate if a domain or URL be be resolved to an IP address.
 
@@ -214,11 +210,9 @@ class DomainValidator:
         x509: Optional[Certificate]
         try:
             cert = ssl.get_server_certificate((url_domain, 443))
-            # pylint: disable=no-value-for-parameter
             x509 = crypto.x509.load_pem_x509_certificate(  # type: ignore
                 cert.encode("ascii")
             )
-            # pylint: enable=no-value-for-parameter
             cert_sha1 = x509.fingerprint(
                 crypto.hazmat.primitives.hashes.SHA1()  # type: ignore # nosec
             )

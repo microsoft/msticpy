@@ -119,27 +119,31 @@ def ti_details_display(ti_data):
     def get_ti_details(ioc_prov):
         """Display TI records from individual TI entry."""
         ioc, provs = ioc_prov
-        results = []
         h2_style = "border: 1px solid;background-color: DarkGray; padding: 6px"
         h3_style = "background-color: SteelBlue; padding: 6px"
-        results.append(f"<h2 style='{h2_style}'>{ioc}</h2>")
+        results = [f"<h2 style='{h2_style}'>{ioc}</h2>"]
         for prov in provs:
             ioc_match = ti_data[
                 (ti_data["Ioc"] == ioc) & (ti_data["Provider"] == prov)
             ].iloc[0]
-            results.append(
-                f"<h3 style='{h3_style}'>Type: '{ioc_match.IocType}', Provider: {prov}, "
-                + f"severity: {ioc_match.Severity}</h3>"
-            )
-            results.append("<h4>Details</h4>")
-            results.append(_ti_detail_table(ioc_match.Details))
-            results.append(
-                f"<h4>Reference: </h4><a href='{ioc_match.Reference}'>"
-                + f"{ioc_match.Reference}</a><br>"
+            results.extend(
+                (
+                    f"<h3 style='{h3_style}'>Type: '{ioc_match.IocType}', Provider: {prov}, "
+                    + f"severity: {ioc_match.Severity}</h3>",
+                    "<h4>Details</h4>",
+                )
             )
 
-            results.append("<hr>")
-            results.append("<h4>Raw Results</h4>")
+            results.append(_ti_detail_table(ioc_match.Details))
+            results.extend(
+                (
+                    f"<h4>Reference: </h4><a href='{ioc_match.Reference}'>"
+                    + f"{ioc_match.Reference}</a><br>",
+                    "<hr>",
+                    "<h4>Raw Results</h4>",
+                )
+            )
+
             results.append(raw_results(ioc_match.RawResult))
         return HTML("".join(results))
 

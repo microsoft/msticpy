@@ -8,6 +8,7 @@ import os
 from typing import List
 
 from azure.common.exceptions import CloudError
+from azure.identity import DeviceCodeCredential
 from azure.mgmt.subscription import SubscriptionClient
 
 from .._version import VERSION
@@ -23,6 +24,7 @@ from .azure_auth_core import (  # noqa: F401
     az_connect_core,
     only_interactive_cred,
 )
+from .cred_wrapper import CredentialWrapper
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -120,3 +122,44 @@ def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredential
     return az_connect_core(
         auth_methods=["cli", "interactive"], tenant_id=tenant_id, silent=silent
     )
+
+
+def fallback_devicecode_creds(cloud: str = None, tenant_id: str = None, **kwargs):
+    """
+    Authenticate using device code as a fallback method.
+
+    Parameters
+    ----------
+    cloud : str, optional
+        What Azure cloud to connect to.
+        By default it will attempt to use the cloud setting from config file.
+        If this is not set it will default to Azure Public Cloud
+    tenant_id : str, optional
+        The tenant to authenticate against. If not supplied,
+        the tenant ID is read from configuration, or the default tenant for the identity.
+
+    Returns
+    -------
+    AzCredentials
+                Named tuple of:
+        - legacy (ADAL) credentials
+        - modern (MSAL) credentials
+
+    Raises
+    ------
+    CloudError
+        If chained token credential creation fails.
+
+    """
+    cloud = cloud or kwargs.pop("region", AzureCloudConfig().cloud)
+    az_config = AzureCloudConfig(cloud)
+    aad_uri = az_config.endpoints.active_directory
+    tenant_id = tenant_id or AzureCloudConfig().tenant_id
+    creds = DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id)
+    legacy_creds = CredentialWrapper(
+        creds, resource_id=AzureCloudConfig(cloud).token_uri
+    )
+    if not creds:
+        raise CloudError("Could not obtain credentials.")
+
+    return AzCredentials(legacy_creds, creds)

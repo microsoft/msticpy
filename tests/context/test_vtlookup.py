@@ -7,7 +7,7 @@
 import unittest
 from os import path
 
-from msticpy.context.tiproviders.ti_provider_base import preprocess_observable
+from msticpy.context.tiproviders import preprocess_observable
 from msticpy.context.vtlookupv3.vtlookup import VTLookup
 
 from ..unit_test_lib import TEST_DATA_PATH

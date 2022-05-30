@@ -24,11 +24,6 @@ __author__ = "Ian Hellen"
 # pylint: disable=redefined-outer-name, broad-except
 
 
-@pytest.fixture(scope="module")
-def fixture_name():
-    """Fixture_docstring."""
-
-
 def test_entity_merge():
     """Entity comparison and merging."""
     host1 = Host(
@@ -79,6 +74,7 @@ def test_url():
     check.equal(url.fragment, "frag2?query=xxx")
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_pivot_shortcuts():
     """Test pivot function shortcut creation and deletion."""
     Pivot()
@@ -183,6 +179,7 @@ def test_alert_entity_creation():
     assert alert_entity.SystemAlertIds == "f1ce87ca-8863-4a66-a0bd-a4d3776a7c64"
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_sentinel_entity_creation():
     """Test creation of Sentinel Alert entity."""
     data_path = Path(get_test_data_path()) / "localdata"

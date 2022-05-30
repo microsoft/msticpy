@@ -116,7 +116,7 @@ def dbcluster_events(
         else:
             x_input = data[cluster_columns].values
     elif isinstance(data, np.ndarray):
-        x_input = data if cluster_columns is None else data[:, cluster_columns].values
+        x_input = data if cluster_columns is None else data[:, cluster_columns]
     if x_input is None:
         type_list = ", ".join(str(t) for t in allowed_types)
         raise ValueError(
