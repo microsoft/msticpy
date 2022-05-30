@@ -150,7 +150,7 @@ def _create_node_hover(
     renderers: List[Renderer],
 ) -> HoverTool:
     """Create a hover tool for nodes."""
-    node_attr_cols = (source_attrs or []) + (target_attrs or [])
+    node_attr_cols = set((source_attrs or []) + (target_attrs or []))
     node_tooltips = [
         ("node_type", "@node_type"),
         *[(col, f"@{{{col}}}") for col in node_attr_cols],

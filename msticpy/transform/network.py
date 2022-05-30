@@ -104,11 +104,11 @@ def _set_node_attributes(
 
 
 def _pd_unique_list(series: pd.Series):
-    """Return either a value or a list if item not unique."""
+    """Return either a value or a string if item not unique."""
     unique_vals = series.unique()
     if len(unique_vals) == 1:
         return unique_vals[0]
-    return list(unique_vals)
+    return ", ".join(list(unique_vals))
 
 
 def _verify_columns(
