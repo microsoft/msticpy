@@ -21,7 +21,7 @@ pyflakes>=2.2.0
 pylint>=2.5.3
 pytest-cov>=2.11.1
 pytest>=5.0.1
-respx==0.19.2
+respx>=0.19.0
 sphinx_rtd_theme>=0.5.1
 sphinx>=2.1.2
 virtualenv
