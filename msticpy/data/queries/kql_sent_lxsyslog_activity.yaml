@@ -110,7 +110,21 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}"
+        | where Computer has {host_name}
         {add_query_items}'
     parameters:
-
+  summarize_events:
+    description: Returns all syslog activity for a host
+    args:
+      query: '
+         {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer =~ {host_name}
+        | summarize count() by Facility, SeverityLevel, ProcessName
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Computer to get summary for
+        type: str

@@ -121,3 +121,18 @@ sources:
       event_list:
         description: List of event IDs to match
         type: list
+  summarize_events:
+    description: Summarizes a the events on a host
+    args:
+      query: '
+        {table}
+        {query_project}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer =~ {host_name}
+        | summarize count() by EventID, Channel, Activity, Account
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
