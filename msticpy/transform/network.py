@@ -108,7 +108,7 @@ def _pd_unique_list(series: pd.Series):
     unique_vals = series.unique()
     if len(unique_vals) == 1:
         return unique_vals[0]
-    return ", ".join(list(unique_vals))
+    return ", ".join([str(attrib) for attrib in unique_vals])
 
 
 def _verify_columns(
