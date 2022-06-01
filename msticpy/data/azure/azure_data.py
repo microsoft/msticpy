@@ -876,10 +876,10 @@ def get_token(credential: AzCredentials, tenant_id: str = None) -> str:
 
     """
     if tenant_id:
-        token = credential.modern.get_token(AzureCloudConfig().token_uri)
-    else:
         token = credential.modern.get_token(
             AzureCloudConfig().token_uri, tenant_id=tenant_id
         )
+    else:
+        token = credential.modern.get_token(AzureCloudConfig().token_uri)
 
     return token.token
