@@ -13,9 +13,12 @@ Requires Python 3.6 or later.
 To quickly import common modules into a notebook run:
 
 >>> import msticpy
+>>> msticpy.init_notebook()
+
+If not running in a notebook/IPython use
 >>> msticpy.init_notebook(globals())
 
-For more options:
+To see help on `init_notebook`:
 >>> help(msticpy.init_notebook)
 
 Search msticpy modules for a keyword:
@@ -33,8 +36,8 @@ https://github.com/microsoft/msticpy
 
 Package structure:
 
-- auth - authentication and secrets management
 - analysis - analysis functions
+- auth - authentication and secrets management
 - common - utility functions, common types, exceptions
 - config - configuration tool
 - data - queries, data access, context functions
@@ -52,8 +55,9 @@ Configuration:
   of your `msticpyconfig.yaml` file.
 
 """
-
+import importlib
 import os
+from typing import Any
 
 from . import nbwidgets
 
@@ -62,10 +66,7 @@ from ._version import VERSION
 from .common import pkg_config as settings
 from .common.check_version import check_version
 from .common.utility import search_name as search
-from .config.mp_config_edit import MpConfigEdit, MpConfigFile
-from .data import QueryProvider
 from .datamodel import entities
-from .init.nbinit import current_providers, init_notebook
 from .init.pivot import Pivot
 
 __version__ = VERSION
@@ -75,3 +76,52 @@ refresh_config = settings.refresh_config
 
 if not os.environ.get("KQLMAGIC_EXTRAS_REQUIRES"):
     os.environ["KQLMAGIC_EXTRAS_REQUIRES"] = "jupyter-basic"
+
+_STATIC_ATTRIBS = list(locals().keys())
+
+_DEFAULT_IMPORTS = {
+    "az_connect": "msticpy.auth.azure_auth",
+    "current_providers": "msticpy.init.nbinit",
+    "GeoLiteLookup": "msticpy.context.geoip",
+    "init_notebook": "msticpy.init.nbinit",
+    "IPStackLookup": "msticpy.context.ipstack",
+    "MicrosoftSentinel": "msticpy.context.azure",
+    "MpConfigEdit": "msticpy.config.mp_config_edit",
+    "MpConfigFile": "msticpy.config.mp_config_file",
+    "QueryProvider": "msticpy.data",
+    "TILookup": "msticpy.context.tilookup",
+    "TimeSpan": "msticpy.common.timespan",
+    "WorkspaceConfig": "msticpy.common.wsconfig",
+}
+
+
+def __getattr__(attrib: str) -> Any:
+    """
+    Import and return an attribute of MSTICPy.
+
+    Parameters
+    ----------
+    attrib : str
+        The attribute name
+
+    Returns
+    -------
+    Any
+        The attribute value.
+
+    Raises
+    ------
+    AttributeError
+        No attribute found.
+
+    """
+    print(f"called with {attrib}")
+    if attrib in _DEFAULT_IMPORTS:
+        module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
+        return getattr(module, attrib)
+    raise AttributeError(f"msticpy has no attribute {attrib}")
+
+
+def __dir__():
+    """Return attribute list."""
+    return sorted(set(_STATIC_ATTRIBS + list(_DEFAULT_IMPORTS)))

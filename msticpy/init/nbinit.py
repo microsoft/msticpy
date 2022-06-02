@@ -163,7 +163,7 @@ _MP_IMPORTS = [
     dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = []
+_MP_IMPORT_ALL: List[Dict[str, str]] = [dict(module_name="msticpy.datamodel.entities")]
 
 _CONF_URI = (
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
@@ -390,10 +390,10 @@ def _show_init_warnings(imp_ok, conf_ok):
 
 def _set_verbosity(**kwargs):
     """Set verbosity of output from boolean or int `verbose` param."""
-    verbosity = 1
-    verb_param = kwargs.pop("verbose", kwargs.pop("verbosity", 1))
+    verbosity = 0
+    verb_param = kwargs.pop("verbose", kwargs.pop("verbosity", 0))
     if isinstance(verb_param, bool):
-        verbosity = 2 if verb_param else 1
+        verbosity = 2 if verb_param else 0
     elif isinstance(verb_param, int):
         verbosity = min(2, max(0, verb_param))
     _VERBOSITY(verbosity)
