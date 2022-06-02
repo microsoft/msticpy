@@ -116,16 +116,20 @@ def plot_nx_graph(
     """
     output_notebook()
     font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
+    source_color = kwargs.pop("source_color", "lightblue")
+    target_color = kwargs.pop("target_color", "lightgreen")
+    edge_color = kwargs.pop("edge_color", "black")
     node_attrs = {
         node: attrs.get(
             "color",
-            kwargs.pop("source_color", "lightblue")
+            source_color
             if attrs.get("node_role", "source") == "source"
-            else kwargs.pop("target_color", "lightgreen"),
+            else target_color,
         )
         for node, attrs in nx_graph.nodes(data=True)
     }
     nx.set_node_attributes(nx_graph, node_attrs, "node_color")
+    hide = kwargs.pop("hide", False)
 
     plot = figure(
         title=title,
@@ -137,7 +141,7 @@ def plot_nx_graph(
 
     graph_layout = _get_graph_layout(nx_graph, layout, **kwargs)
     graph_renderer = from_networkx(nx_graph, graph_layout, scale=scale, center=(0, 0))
-    _create_edge_renderer(graph_renderer, edge_color=kwargs.pop("edge_color", "black"))
+    _create_edge_renderer(graph_renderer, edge_color=edge_color)
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
     graph_renderer.selection_policy = NodesAndLinkedEdges()

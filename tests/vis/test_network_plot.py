@@ -6,6 +6,7 @@
 """Test network_plot functions."""
 from collections import namedtuple
 
+import networkx as nx
 import pandas as pd
 import pytest
 import pytest_check as check
@@ -80,7 +81,7 @@ PlotParams = namedtuple(
         "width",
         "height",
         "scale",
-        "hidden",
+        "hide",
         "source_color",
         "target_color",
         "edge_color",
@@ -114,3 +115,28 @@ def test_plot_nx_graph_params(create_graph, plot_params):
     plot = network_plot.plot_nx_graph(create_graph, **plot_args)
 
     check.is_not_none(plot)
+
+
+_TEST_LAYOUTS = [
+    "spring",
+    "spectral",
+    nx.spring_layout,
+]
+
+
+@pytest.mark.parametrize("layout", _TEST_LAYOUTS)
+def test_plot_nx_graph_layout(create_graph, layout):
+    """Test different parameters."""
+    plot_args = {
+        param: val
+        for param, val in _PLOT_PARAMS[0]._asdict().items()
+        if val is not None
+    }
+
+    plot = network_plot.plot_nx_graph(create_graph, layout=layout, **plot_args)
+    check.is_not_none(plot)
+
+    if callable(layout):
+        g_layout = layout(create_graph)
+        plot = network_plot.plot_nx_graph(create_graph, layout=g_layout, **plot_args)
+        check.is_not_none(plot)
