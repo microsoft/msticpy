@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import List, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import networkx as nx
 from bokeh.io import output_notebook
@@ -28,6 +28,24 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
+GraphLayout = Union[
+    Callable[[Any], Dict[str, Tuple[float, float]]],
+    Literal[
+        "spring",
+        "bipartite",
+        "circular",
+        "kamada_kawai",
+        "planar",
+        "random",
+        "shell",
+        "spectral",
+        "spiral",
+        "multi_partite",
+    ],
+    Dict[str, Tuple[float, float]],
+]
+
+
 # pylint: disable=too-many-arguments, too-many-locals
 def plot_nx_graph(
     nx_graph: nx.Graph,
@@ -41,6 +59,7 @@ def plot_nx_graph(
     source_attrs: Optional[List[str]] = None,
     target_attrs: Optional[List[str]] = None,
     edge_attrs: Optional[List[str]] = None,
+    layout: GraphLayout = "spring",
     **kwargs,
 ) -> figure:
     """
@@ -72,6 +91,11 @@ def plot_nx_graph(
         Optional list of target attributes to use as hover properties, by default None
     edge_attrs : Optional[List[str]], optional
         Optional list of edge attributes to use as hover properties, by default None
+    layout : GraphLayout, optional
+        The layout name to use, a callable that will return layout
+        positions, a dictionary of {nFode_id: (float, float)} node positions.
+        The default is "spring".
+        See https://networkx.org/documentation/stable/reference/drawing.html
 
     Other Parameters
     ----------------
@@ -81,6 +105,8 @@ def plot_nx_graph(
         The color of the source nodes, by default 'light-green'
     edge_color : str, optional
         The color of the edges, by default 'black'
+    kwargs :
+        Additional keyword arguments are passed to the layout
 
     Returns
     -------
@@ -109,9 +135,8 @@ def plot_nx_graph(
         height=height,
     )
 
-    graph_renderer = from_networkx(
-        nx_graph, nx.spring_layout, scale=scale, center=(0, 0)
-    )
+    graph_layout = _get_graph_layout(nx_graph, layout, **kwargs)
+    graph_renderer = from_networkx(nx_graph, graph_layout, scale=scale, center=(0, 0))
     _create_edge_renderer(graph_renderer, edge_color=kwargs.pop("edge_color", "black"))
     _create_node_renderer(graph_renderer, node_size, "node_color")
 
@@ -142,6 +167,16 @@ def plot_nx_graph(
     if not hide:
         show(plot)
     return plot
+
+
+def _get_graph_layout(nx_graph: nx.Graph, layout: GraphLayout, **kwargs):
+    """Return a layout for the graph."""
+    if callable(layout):
+        return layout(nx_graph, **kwargs)
+    layout_func = getattr(nx, f"{layout}_layout", None)
+    if layout_func:
+        return layout_func(nx_graph, **kwargs)
+    return nx.spring_layout(nx_graph, **kwargs)
 
 
 def _create_node_hover(

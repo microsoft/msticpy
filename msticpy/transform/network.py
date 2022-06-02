@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Module for coverting DataFrame to Networkx graph."""
+"""Module for converting DataFrame to Networkx graph."""
 from typing import Callable, Dict, Iterable, Literal, Optional, Union
 
 import networkx as nx
