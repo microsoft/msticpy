@@ -84,7 +84,7 @@ _DEFAULT_IMPORTS = {
     "current_providers": "msticpy.init.nbinit",
     "GeoLiteLookup": "msticpy.context.geoip",
     "init_notebook": "msticpy.init.nbinit",
-    "IPStackLookup": "msticpy.context.ipstack",
+    "IPStackLookup": "msticpy.context.geoip",
     "MicrosoftSentinel": "msticpy.context.azure",
     "MpConfigEdit": "msticpy.config.mp_config_edit",
     "MpConfigFile": "msticpy.config.mp_config_file",
@@ -115,7 +115,6 @@ def __getattr__(attrib: str) -> Any:
         No attribute found.
 
     """
-    print(f"called with {attrib}")
     if attrib in _DEFAULT_IMPORTS:
         module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
         return getattr(module, attrib)
