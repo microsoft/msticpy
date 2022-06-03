@@ -1,8 +1,8 @@
 metadata:
   version: 1
   description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
   tags: ["process"]
 defaults:
   metadata:

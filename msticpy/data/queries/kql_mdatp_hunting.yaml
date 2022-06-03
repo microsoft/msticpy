@@ -1,8 +1,8 @@
 metadata:
   version: 1
   description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATPHunting]
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATPHunting, MDE]
   tags: ['user']
 defaults:
   metadata:

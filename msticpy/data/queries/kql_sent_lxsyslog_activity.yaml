@@ -33,6 +33,10 @@ defaults:
         description: Hostname to query for
         type: str
         default: ''
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
       query_project:
         description: Column project statement
         type: str
@@ -58,7 +62,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}"
+        | where Computer {host_op} "{host_name}"
         | where ProcessName == "sudo"
         | extend SudoResult = iif(SyslogMessage contains "authentication failure", "Failure", "Sucess")
         | extend Sudoer = extract("(by |user=)([[:alnum:]]+)",2,SyslogMessage), SudoTo = extract("for user ([A-Z,a-z,0-9]+)",1,SyslogMessage),Command=extract("(COMMAND=|\\(command continued\\))(.*)$",2,SyslogMessage), CommandCallTmp=extract("COMMAND=([[:graph:]]*)",1,SyslogMessage)
@@ -78,7 +82,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}"
+        | where Computer {host_op} "{host_name}"
         | where ProcessName == "CRON" or Facility == "cron"
         | extend CMD=extract("CMD(.*)",1,SyslogMessage), User=extract("for user ([[:alpha:]]*)",1,SyslogMessage), CronUser=extract("^[(]([[:alpha:]]*)",1,SyslogMessage),EditStatus=extract("[A-Z]+ EDIT",0,SyslogMessage)
         {add_query_items}'
@@ -91,7 +95,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}"
+        | where Computer {host_op} "{host_name}"
         | where Facility == "authpriv"
         | extend UserGroupAction = iif((ProcessName == "groupadd" or ProcessName == "useradd") and (SyslogMessage contains "new group" or SyslogMessage contains "new user"), "Add",
                                     iif((ProcessName == "groupdel" or ProcessName == "userdel") and (SyslogMessage contains "delete user" or SyslogMessage matches regex "(removed group|removed$)"), "Delete",
@@ -110,7 +114,7 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has {host_name}
+        | where Computer {host_op} "{host_name}"
         {add_query_items}'
     parameters:
   summarize_events:
@@ -121,10 +125,19 @@ sources:
         | where {subscription_filter}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer =~ {host_name}
+        | where Computer {host_op} "{host_name}"
         | summarize count() by Facility, SeverityLevel, ProcessName
         {add_query_items}'
     parameters:
-      host_name:
-        description: Computer to get summary for
-        type: str
+  notable_events:
+    description: Returns all syslog activity for a host
+    args:
+      query: '
+         {table}
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer {host_op} "{host_name}"
+        | where SeverityLevel in ("alert", "crit")
+        {add_query_items}'
+    parameters:

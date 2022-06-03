@@ -1,8 +1,8 @@
 metadata:
   version: 1
-  description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
+  description: MDE Queries
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
   tags: ["network"]
 defaults:
   metadata:
@@ -24,7 +24,7 @@ defaults:
       default: ""
 sources:
   list_connections:
-    description: Retrieves list of network connections for a host
+    description: Retrieves list of all network connections
     metadata:
     args:
       query: "
@@ -35,7 +35,7 @@ sources:
       uri: None
     parameters:
   host_connections:
-    description: Lists alerts by for a specified hostname
+    description: Lists connections by for a specified hostname
     metadata:
     args:
       query: '
@@ -51,7 +51,7 @@ sources:
         aliases:
           - hostname
   ip_connections:
-    description: Lists alerts associated with a specified remote IP
+    description: Lists network connections associated with a specified remote IP
     metadata:
     args:
       query: '
@@ -65,7 +65,7 @@ sources:
         description: Remote IP Address
         type: str
   url_connections:
-    description: Lists alerts associated with a specified URL
+    description: Lists connections associated with a specified URL
     metadata:
     args:
       query: '
@@ -79,7 +79,7 @@ sources:
         description: Remote URL
         type: str
   protocol_connections:
-    description: Lists alerts associated with a specified protocol
+    description: Lists connections associated with a specified protocol
     metadata:
     args:
       query: "

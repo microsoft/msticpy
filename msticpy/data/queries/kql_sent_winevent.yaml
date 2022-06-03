@@ -129,13 +129,17 @@ sources:
         {query_project}
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer =~ "{host_name}"
+        | where Computer {host_op} "{host_name}"
         | summarize count() by EventID, Channel, Activity, Account
         {add_query_items}'
     parameters:
       host_name:
         description: Name of host
         type: str
+      host_op:
+        description: The hostname match operator
+        type: str
+        default: has
   schdld_tasks_and_services:
     description: Gets events related to scheduled tasks and services
     args:
