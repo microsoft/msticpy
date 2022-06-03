@@ -24,7 +24,7 @@ Plotting a simple timeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The display_timeline function (see
-:py:func:`display_timeline<msticpy.nbtools.timeline.display_timeline>`) takes three main
+:py:func:`display_timeline<msticpy.vis.timeline.display_timeline>`) takes three main
 parameters:
 
 * data - the data to plot. This can be either a pandas DataFrame or a
@@ -40,7 +40,7 @@ time series.
 
 .. code:: ipython3
 
-   from msticpy.nbtools.timeline import display_timeline
+   from msticpy.vis.timeline import display_timeline
 
    # load some data
    processes_on_host = pd.read_csv(
@@ -92,7 +92,7 @@ More Advanced Timelines
 give you more flexibility to show multiple data series and change the
 way the graph appears.
 
-See :py:func:`display_timeline<msticpy.nbtools.timeline.display_timeline>` Documentation
+See :py:func:`display_timeline<msticpy.vis.timeline.display_timeline>` Documentation
 for a description of all of the parameters.
 
 
@@ -153,14 +153,15 @@ to show all values of the groups.
 Plotting directly from a DataFrame
 ----------------------------------
 
-We’ve implemented the timeline plotting functions as pandas accessors so
+We've implemented the timeline plotting functions as pandas accessors so
 you can plot directly from the DataFrame using ``mp_timeline.plot()``.
 
 All of the parameters used in the standalone function are available in
 the pandas accessor functions.
 
-.. note: you still need to import ``msticpy.nbtools.timeline`` to
-   activate this.
+.. note: if you have not run msticpy.init_notebook, you may
+   need to import timeline or one of the other packages in msticpy.vis
+   to load these accessor functions.
 
 .. code:: ipython3
 
@@ -317,7 +318,7 @@ Note that the majority of parameters are the same as
 ``display_timeline`` but include a mandatory ``y`` parameter which
 indicates which value you want to plot on the y (vertical) axis.
 
-See :py:func:`display_timeline_values<msticpy.nbtools.timeline.display_timeline_values>` documentation
+See :py:func:`display_timeline_values<msticpy.vis.timeline.display_timeline_values>` documentation
 for a description of all of the parameters.
 
 
@@ -416,7 +417,7 @@ diamonds).
 
 .. code:: ipython3
 
-   from msticpy.nbtools.timeline_duration import display_timeline_duration
+   from msticpy.vis.timeline_duration import display_timeline_duration
 
    display_timeline_duration(
       host_logons,

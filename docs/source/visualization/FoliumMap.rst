@@ -1,7 +1,7 @@
 Folium Map Plotting
 ===================
 
-The :py:class:`FoliumMap<msticpy.nbtools.foliummap.FoliumMap>`
+The :py:class:`FoliumMap<msticpy.vis.foliummap.FoliumMap>`
 class is a light wrapper around the Folium geo-mapping interactive
 mapping package.
 See `Folium <https://python-visualization.github.io/folium/>`_.
@@ -9,15 +9,15 @@ See `Folium <https://python-visualization.github.io/folium/>`_.
 Folium is itself built on the leaflet.js library.
 
 The msticpy ``FoliumMap`` class expects
-:py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>`
+:py:class:`IpAddress<msticpy.datamodel.entities.IpAddress>`
 entities as input.
 Each entity must have a valid ``Location`` property populated with
-a :py:class:`GeoLocation<msticpy.nbtools.entityschema.GeoLocation>`
+a :py:class:`GeoLocation<msticpy.datamodel.entities.GeoLocation>`
 object containing the Latitude, Longitude and, optionally, other
 attributes.
 
 The GeoIP Lookup module classes return IpAddress entities populated
-with this data so can be used seemlessly with the ``FoliumMap`` class.
+with this data so can be used seamlessly with the ``FoliumMap`` class.
 
 
 Display a GeoIP Map
@@ -29,7 +29,7 @@ data populated, you can plot the addresses as follows:
 
 .. code:: ipython3
 
-    from msticpy.nbtools.foliummap import FoliumMap
+    from msticpy.vis.foliummap import FoliumMap
     folium_map = FoliumMap()
 
     # Set Icon properties to display
@@ -57,11 +57,11 @@ Converting IP Address Strings to IpAddress entities
 ---------------------------------------------------
 
 This example uses an function to create
-:py:class:`IpAddress<msticpy.nbtools.entityschema.IpAddress>` entities
-from IP string or ipaddress objects stored in a pandas DataFrame.
+:py:class:`IpAddress<msticpy.vis.entityschema.IpAddress>` entities
+from IP string or IpAdddress objects stored in a pandas DataFrame.
 
 The ``format_ip_entity`` function converts the IP string value to
-an IpAddress object, looks up the geolocation (this data is populated
+an IpAddress object, looks up the geo-location (this data is populated
 into the IpAddress ``Location`` attribute). It also adds additional
 information from the pandas DataFrame into the AdditionalData attribute.
 Values populated here will be displayed in the tooltip for each plotted

@@ -2,7 +2,7 @@ Data Viewer
 ===========
 
 This describes the use of the
-:py:class:`DataViewer<msticpy.nbtools.data_viewer.DataViewer>`
+:py:class:`DataViewer<msticpy.vis.data_viewer.DataViewer>`
 control.
 
 DataViewer uses the Bokeh DataTable control to provide some basic
@@ -26,7 +26,7 @@ the `data` parameter.
 
 .. code:: ipython3
 
-    from msticpy.nbtools.data_viewer import DataViewer
+    from msticpy.vis.data_viewer import DataViewer
     import pandas as pd
 
     # data is a pandas DataFrame
@@ -214,12 +214,12 @@ The format of the filter dictionary is:
         ...
     }
 
-You can also use the :py:class:`FilterExpr<msticpy.nbtools.data_viewer.FilterExpr>`
+You can also use the :py:class:`FilterExpr<msticpy.vis.data_viewer.FilterExpr>`
 named tuple to specify each filter condition:
 
 .. code:: ipython3
 
-    from msticpy.nbtools.data_viewer import FilterExpr
+    from msticpy.vis.data_viewer import FilterExpr
     sample_filter = {
         "ParentProcessName contains 'cmd'": FilterExpr(
             column="ParentProcessName",

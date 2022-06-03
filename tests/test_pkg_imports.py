@@ -10,9 +10,9 @@ import sys
 from pathlib import Path
 import pkg_resources
 
+import pkg_resources
 import pytest
 import pytest_check as check
-
 from tools.toollib.import_analyzer import analyze_imports, get_setup_reqs
 
 PKG_ROOT = "."
@@ -45,6 +45,7 @@ def extras_from_setup():
     return get_setup_reqs(PKG_ROOT, skip_setup=False)[1]
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_missing_pkgs_req():
     """Check for packages used in code but not in requirements.txt."""
     mod_imports = analyze_imports(

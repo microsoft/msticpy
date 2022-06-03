@@ -8,18 +8,14 @@ import math
 from typing import List, Optional, Union
 
 import attr
-from bokeh.io import output_notebook, show, reset_output
-from bokeh.plotting import figure
-from bokeh.models import (
-    HoverTool,
-    ColumnDataSource,
-    LayoutDOM,
-)
 import numpy as np
 import pandas as pd
+from bokeh.io import output_notebook, reset_output, show
+from bokeh.models import ColumnDataSource, HoverTool, LayoutDOM
+from bokeh.plotting import figure
 
-from ..common.utility import check_kwargs
 from .._version import VERSION
+from ..common.utility import check_kwargs
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

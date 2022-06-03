@@ -7,9 +7,9 @@
 import json
 import pprint
 import typing
-from datetime import datetime
 from abc import ABC
 from copy import deepcopy
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 import networkx as nx
@@ -604,7 +604,7 @@ class Entity(ABC, Node):
             if hasattr(attr, "pivot_properties"):
                 pivots.append(prop)
                 continue
-            if attr.__class__.__name__ != "QueryContainer":
+            if attr.__class__.__name__ != "PivotContainer":
                 continue
             for name, qt_attr in attr:
                 if hasattr(qt_attr, "pivot_properties"):

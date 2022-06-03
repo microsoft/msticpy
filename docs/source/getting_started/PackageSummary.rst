@@ -37,7 +37,7 @@ Data Processing and Enrichment
 Threat Intelligence Providers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.tilookup`
+:py:mod:`msticpy.context.tilookup`
 
 The TILookup class can lookup IoCs across multiple TI providers. builtin
 providers include AlienVault OTX, IBM XForce, VirusTotal and Azure Sentinel.
@@ -54,7 +54,7 @@ Sample notebook - `TILookup Usage Notebook <https://github.com/microsoft/msticpy
 vtlookup and vtlookupv3
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.vtlookup`
+:py:mod:`msticpy.context.vtlookupv3`
 
 Wrapper class around `Virus Total
 API <https://www.virustotal.com/en/documentation/public-api/>`__.
@@ -71,7 +71,7 @@ Sample notebook - `VTLookup Usage Notebook <https://github.com/microsoft/msticpy
 IP geo-location lookups
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.geoip`
+:py:mod:`msticpy.context.geoip`
 
 Geographic location lookup for IP addresses. This module has two classes
 for different services:
@@ -90,9 +90,9 @@ Sample notebook - `GeoIP Lookup Usage Notebook <https://github.com/microsoft/mst
 Azure Resource Data, Storage and Azure Sentinel API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.data.azure_data`
-:py:mod:`msticpy.data.azure_sentinel`
-:py:mod:`msticpy.data.azure_blob_storage`
+:py:mod:`msticpy.context.azure.azure_data`
+:py:mod:`msticpy.context.azure.sentinel_core`
+:py:mod:`msticpy.data.storage.azure_blob_storage`
 
 The AzureData module contains functionality for enriching data regarding Azure host
 details with additional host details exposed via the Azure API. The AzureSentinel
@@ -137,7 +137,7 @@ Sample notebook - `Anomalous Sequence Notebook <https://github.com/microsoft/mst
 Time Series Analysis
 ~~~~~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.analysis.timeseries` and :py:mod:`msticpy.sectools.timeseries`
+:py:mod:`msticpy.analysis.timeseries`
 
 Time series analysis allows you to identify unusual patterns in your log data
 taking into account normal seasonal variations (e.g. the regular ebb and flow of
@@ -152,7 +152,7 @@ Sample notebook - `Time Series <https://github.com/microsoft/msticpy/blob/master
 eventcluster
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.eventcluster`
+:py:mod:`msticpy.analysis.eventcluster`
 
 This module is intended to be used to summarize large numbers of events
 into clusters of different patterns. High volume repeating events can
@@ -175,7 +175,7 @@ Sample notebook - `Event Clustering Notebook <https://github.com/microsoft/mstic
 outliers
 ~~~~~~~~
 
-:py:mod:`msticpy.sectools.outliers`
+:py:mod:`msticpy.analysis.outliers`
 
 Similar to the eventcluster module but a little bit more experimental
 (read 'less tested'). It uses SkLearn Isolation Forest to identify
@@ -194,7 +194,7 @@ See :doc:`../Visualization`
 Process tree
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.process_tree` - process tree visualization.
+:py:mod:`msticpy.vis.process_tree` - process tree visualization.
 
 The process tree functionality has two main components:
 
@@ -211,7 +211,7 @@ Sample notebook - `Process Tree Visualization <https://github.com/microsoft/msti
 Event timeline
 ~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.timeline` - event timeline visualization.
+:py:mod:`msticpy.vis.timeline` - event timeline visualization.
 
 Display any log events on an interactive timeline. Using the
 `Bokeh Visualization Library <https://bokeh.org/>`__ the timeline control enables
@@ -226,7 +226,7 @@ Sample notebook - `Event Timeline Visualization <https://github.com/microsoft/ms
 Notebook widgets
 ~~~~~~~~~~~~~~~~
 
-:py:mod:`msticpy.nbtools.nbwidgets`
+:py:mod:`msticpy.nbwidgets`
 
 Common functionality such as list pickers, time
 boundary settings, saving and retrieving environment variables into a
@@ -243,7 +243,7 @@ Utility Functions
 base64unpack
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.base64unpack`
+:py:mod:`msticpy.transform.base64unpack`
 
 Base64 and archive (gz, zip, tar) extractor. Input can either be a
 single string or a specified column of a pandas dataframe. It will try
@@ -261,7 +261,7 @@ Sample notebook - `Base64Unpack Usage Notebook <https://github.com/microsoft/mst
 iocextract
 ~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.iocextract`
+:py:mod:`msticpy.transform.iocextract`
 
 Uses a set of builtin regular expressions to look for Indicator of
 Compromise (IoC) patterns. Input can be a single string or a pandas
@@ -289,7 +289,7 @@ Sample notebook - `IoCExtract Usage Notebook <https://github.com/microsoft/mstic
 auditdextract
 ~~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.auditdextract`
+:py:mod:`msticpy.transform.auditdextract`
 
 Module to load and decode Linux audit logs. It collapses messages
 sharing the same message ID into single events, decodes hex-encoded data
@@ -301,7 +301,7 @@ line arguments into a single string).
 syslog_utils
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.syslog_utils`
+:py:mod:`msticpy.transform.syslog_utils`
 
 Module to support the investigation of Linux hosts through Syslog.
 Includes functions to create host records, cluster logon events, and
@@ -310,7 +310,7 @@ identify user sessions containing suspicious activity.
 cmd_line
 ~~~~~~~~
 
-:py:mod:`msticpy.sectools.cmd_line`
+:py:mod:`msticpy.transform.cmd_line`
 
 Module to investigation of command line activity. Allows for the detection
 of known malicious commands as well as suspicious patterns of behaviour.
@@ -318,7 +318,7 @@ of known malicious commands as well as suspicious patterns of behaviour.
 domain_utils
 ~~~~~~~~~~~~
 
-:py:mod:`msticpy.sectools.domain_utils`
+:py:mod:`msticpy.transform.domain_utils`
 
 Module to support investigation of domain names and URLs with functions to
 validate a domain name and screenshot a URL.

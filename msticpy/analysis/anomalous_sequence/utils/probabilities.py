@@ -6,7 +6,7 @@
 """Helper module for computing training probabilities when modelling sessions."""
 
 from collections import defaultdict
-from typing import Tuple, Union, DefaultDict
+from typing import DefaultDict, Tuple, Union
 
 from ..utils.data_structures import StateMatrix
 

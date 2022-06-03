@@ -10,16 +10,16 @@ import ipywidgets as widgets
 from IPython.display import display
 
 from .._version import VERSION
+from .ce_azure import CEAzure
 from .ce_azure_sentinel import CEAzureSentinel
 from .ce_data_providers import CEDataProviders
 from .ce_keyvault import CEKeyVault
-from .ce_azure import CEAzure
 from .ce_other_providers import CEOtherProviders
 from .ce_ti_providers import CETIProviders
 from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
-from .comp_edit import CompEditDisplayMixin, CompEditTabs, CETabControlDef
-from .mp_config_file import MpConfigFile
+from .comp_edit import CETabControlDef, CompEditDisplayMixin, CompEditTabs
 from .mp_config_control import MpConfigControls, get_mpconfig_definitions
+from .mp_config_file import MpConfigFile
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

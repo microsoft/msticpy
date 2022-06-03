@@ -11,7 +11,7 @@ import ipywidgets as widgets
 
 from .._version import VERSION
 from .ce_common import TEXT_LAYOUT
-from .ce_provider_base import CEProviders, HELP_URIS
+from .ce_provider_base import HELP_URIS, CEProviders
 from .mp_config_control import MpConfigControls
 
 __version__ = VERSION

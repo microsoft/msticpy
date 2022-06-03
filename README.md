@@ -294,28 +294,36 @@ query time boundary settings and event display into an easy-to-use format.
 
 ---
 
+## Example MSTICPy notebooks
+
+[MSTICPy Notebooks](https://github.com/microsoft/msticpy/blob/master/docs/notebooks/)
+
 ## More Notebooks on Azure Sentinel Notebooks GitHub
 
 [Azure Sentinel Notebooks](https://github.com/Azure/Azure-Sentinel-Notebooks)
 
 Example notebooks:
 
+- [Tour of MSTICPy Features](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb)
 - [Account Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb)
 - [Domain and URL Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb)
 - [IP Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb)
 - [Linux Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb)
 - [Windows Host Explorer](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb)
+- [Getting started in Azure Sentinel notebooks](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb)
 
 View directly on GitHub or copy and paste the link into [nbviewer.org](https://nbviewer.jupyter.org/)
 
 ## Notebook examples with saved data
 
-See the more examples of the use of this package in practice in the [Microsoft Sentinel Examples](https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/tutorials-and-examples/example-notebooks)
+See the following notebooks for more examples of the use of this package in practice:
+
+- [Simple Machine Learning](https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Machine%20Learning%20in%20Notebooks%20Examples.ipynb)
 
 ## Supported Platforms and Packages
 
 - msticpy is OS-independent
-- Requires [Python 3.6 or later](https://www.python.org/dev/peps/pep-0494/)
+- Requires [Python 3.8 or later](https://www.python.org/dev/peps/pep-0494/)
 - See [requirements.txt](requirements.txt) for more details and version requirements.
 
 ---

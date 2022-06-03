@@ -13,9 +13,9 @@ import httpx
 import pandas as pd
 
 from ..._version import VERSION
+from ...auth.msal_auth import MSALDelegatedAuth
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
-from ...common.msal_auth import MSALDelegatedAuth
 from ...common.provider_settings import get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
@@ -175,7 +175,7 @@ class OData(DriverBase):
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
             if authority.startswith("https://login.microsoftonline.com/"):
                 authority = re.split(
-                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
+                    r"(https:\/\/login.microsoftonline.com\/[^\/]*)", authority
                 )[1]
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],

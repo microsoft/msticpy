@@ -12,7 +12,7 @@ QueryGroup          Query                             Description               
 ==================  ================================  ===========================================================================================================  ===============================================================================================================  ===========================
 Azure               get_vmcomputer_for_host           Gets latest VMComputer record for Host                                                                       end (datetime), host_name (str), start (datetime)                                                                VMComputer
 Azure               get_vmcomputer_for_ip             Gets latest VMComputer record for IPAddress                                                                  end (datetime), ip_address (str), start (datetime)                                                               VMComputer
-Azure               list_aad_signins_for_account      Lists Azure AD Signins for Account                                                                           account_name (str), end (datetime), start (datetime)                                                             SigninLogs
+Azure               list_aad_signins_for_account      Lists Azure AD Signins for Account                                                                           end (datetime), start (datetime)                                                                                 SigninLogs
 Azure               list_aad_signins_for_ip           Lists Azure AD Signins for an IP Address                                                                     end (datetime), ip_address_list (list), start (datetime)                                                         SigninLogs
 Azure               list_all_signins_geo              Gets Signin data used by morph charts                                                                        end (datetime), start (datetime)                                                                                 SigninLogs
 Azure               list_azure_activity_for_account   Lists Azure Activity for Account                                                                             account_name (str), end (datetime), start (datetime)                                                             AzureActivity
@@ -92,6 +92,7 @@ WindowsSecurity     list_host_logons                  Retrieves the logon events
 WindowsSecurity     list_host_processes               Retrieves list of processes on a host                                                                        end (datetime), host_name (str), start (datetime)                                                                SecurityEvent
 WindowsSecurity     list_hosts_matching_commandline   Retrieves processes on hosts with matching commandline                                                       commandline (str), end (datetime), process_name (str), start (datetime)                                          SecurityEvent
 WindowsSecurity     list_logon_attempts_by_account    Retrieves the logon events for an account                                                                    account_name (str), end (datetime), start (datetime)                                                             SecurityEvent
+WindowsSecurity     list_logon_attempts_by_ip         Retrieves the logon events for an IP Address                                                                 end (datetime), ip_address (str), start (datetime)                                                               SecurityEvent
 WindowsSecurity     list_logon_failures_by_account    Retrieves the logon failure events  for an account                                                           account_name (str), end (datetime), start (datetime)                                                             SecurityEvent
 WindowsSecurity     list_logons_by_account            Retrieves the logon events for an account                                                                    account_name (str), end (datetime), start (datetime)                                                             SecurityEvent
 WindowsSecurity     list_matching_processes           Retrieves list of processes matching process name                                                            end (datetime), process_name (str), start (datetime)                                                             SecurityEvent
@@ -203,16 +204,19 @@ Queries for Azure Resource Graph
 
 Data Environment identifier: ResourceGraph
 
-=============  ==============================  ====================================================  ===================  =========
-QueryGroup     Query                           Description                                           Req-Params           Table
-=============  ==============================  ====================================================  ===================  =========
-ResourceGraph  list_detailed_virtual_machines  Retrieves list of VMs with network details                                 resources
-ResourceGraph  list_public_ips                 Retrieves list of resources with public IP addresses                       resources
-ResourceGraph  list_resources                  Retrieves list of resources                                                resources
-ResourceGraph  list_resources_by_api_version   Retrieves list of resources for each API version                           resources
-ResourceGraph  list_resources_by_type          Retrieves list of resources by type                   resource_type (str)  resources
-ResourceGraph  list_virtual_machines           Retrieves list of VM resources                                             resources
-=============  ==============================  ====================================================  ===================  =========
+=============  =======================================  ==================================================================================================================  ====================  =========
+QueryGroup     Query                                    Description                                                                                                         Req-Params            Table
+=============  =======================================  ==================================================================================================================  ====================  =========
+ResourceGraph  list_detailed_virtual_machines           Retrieves list of VMs with network details                                                                                                resources
+ResourceGraph  list_public_ips                          Retrieves list of resources with public IP addresses                                                                                      resources
+ResourceGraph  list_resources                           Retrieves list of resources                                                                                                               resources
+ResourceGraph  list_resources_by_api_version            Retrieves list of resources for each API version                                                                                          resources
+ResourceGraph  list_resources_by_type                   Retrieves list of resources by type                                                                                 resource_type (str)   resources
+ResourceGraph  list_virtual_machines                    Retrieves list of VM resources                                                                                                            resources
+Sentinel       get_sentinel_workspace_for_resource_id   Retrieves Sentinel/Azure monitor workspace details by resource ID                                                   resource_id (str)     resources
+Sentinel       get_sentinel_workspace_for_workspace_id  Retrieves Sentinel/Azure monitor workspace details by workspace ID                                                  workspace_id (str)    resources
+Sentinel       list_sentinel_workspaces_for_name        Retrieves Sentinel/Azure monitor workspace(s) details by name and optionally resource group and/or subscription_id  workspace_name (str)  resources
+=============  =======================================  ==================================================================================================================  ====================  =========
 
 
 

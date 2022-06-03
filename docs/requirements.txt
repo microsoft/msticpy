@@ -1,5 +1,13 @@
-msticpy
-sphinx==4.5.0
+attrs>=18.2.0
+deprecated>=1.2.4
 docutils<0.18.0
-sphinx-rtd-theme==1.0.0
-readthedocs-sphinx-ext==2.1.6
+httpx>=0.21
+ipython >= 7.1.1
+numpy>=1.15.4
+pandas>=1.1.5
+python-dateutil>=2.8.1
+pytz>=2019.2
+pyyaml>=3.13
+readthedocs-sphinx-ext>=2.1.4
+sphinx-rtd-theme>=1.0.0
+sphinx

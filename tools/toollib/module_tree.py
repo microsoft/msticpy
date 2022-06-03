@@ -4,10 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+
+from . import VERSION
+from .ast_parser import analyze
 
 # try:
 #     from nxviz.plots import CircosPlot
@@ -15,8 +18,6 @@ import matplotlib.pyplot as plt
 # except ImportError:
 #     circos = False
 
-from .ast_parser import analyze
-from . import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -49,7 +50,7 @@ def _create_call_graph(
     calls: Dict[str, Any], funcs: Dict[str, Any], all_calls=False
 ) -> nx.MultiDiGraph:
     # Calculate the span (line numbers) of each function
-    func_span = dict()
+    func_span = {}
     last_func = None
     for lineno, name in sorted([(span[0], name) for name, span in funcs.items()]):
         if last_func:

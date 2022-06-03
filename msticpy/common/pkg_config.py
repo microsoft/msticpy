@@ -16,11 +16,11 @@ Custom settings are accessible as an attribute `custom_settings`.
 Consolidated settings are accessible as an attribute `settings`.
 
 """
+import numbers
 import os
 from importlib.util import find_spec
-from numbers import Number
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 import httpx
 import pkg_resources
@@ -40,6 +40,7 @@ _CONFIG_ENV_VAR: str = "MSTICPYCONFIG"
 _DP_KEY = "DataProviders"
 _AZ_SENTINEL = "AzureSentinel"
 _AZ_CLI = "AzureCLI"
+_HOME_PATH = f"~/.msticpy/{_CONFIG_FILE}"
 
 # pylint: disable=invalid-name
 default_settings: Dict[str, Any] = {}
@@ -102,8 +103,13 @@ def get_config(setting_path: str) -> Any:
         The item at the path location.
 
     """
+    return _get_config(setting_path, settings)
+
+
+def _get_config(setting_path: str, settings_dict: Dict[str, Any]) -> Any:
+    """Return value from setting_path."""
     path_elems = setting_path.split(".")
-    cur_node = settings
+    cur_node = settings_dict
     for elem in path_elems:
         cur_node = cur_node.get(elem, None)
         if cur_node is None:
@@ -124,8 +130,13 @@ def set_config(setting_path: str, value: Any):
         The value to set.
 
     """
+    return _set_config(setting_path, settings, value)
+
+
+def _set_config(setting_path: str, settings_dict, value: Any) -> Any:
+    """Set `setting_path` in `settings_dict` to `value`."""
     path_elems = setting_path.split(".")
-    cur_node = settings
+    cur_node = settings_dict
     for elem in path_elems:
         if elem in cur_node:
             cur_node[elem] = value
@@ -134,6 +145,22 @@ def set_config(setting_path: str, value: Any):
         if cur_node is None:
             raise KeyError(f"{elem} value of {setting_path} is not a valid path")
     return cur_node
+
+
+def _del_config(setting_path: str, settings_dict) -> Any:
+    """Delete `setting_path` from `settings_dict`."""
+    path_elems = setting_path.split(".")
+    cur_node = settings_dict
+    current_value = None
+    for elem in path_elems:
+        if elem in cur_node:
+            current_value = cur_node[elem]
+            del cur_node[elem]
+            break
+        cur_node = cur_node.get(elem, None)
+        if cur_node is None:
+            raise KeyError(f"{elem} value of {setting_path} is not a valid path")
+    return current_value
 
 
 def _read_config_file(config_file: str) -> Dict[str, Any]:
@@ -217,6 +244,11 @@ def _get_custom_config():
     if Path(_CONFIG_FILE).is_file():
         _CURRENT_CONF_FILE(str(Path(".").joinpath(_CONFIG_FILE).resolve()))
         return _read_config_file(current_config_path())
+
+    home_config = Path(_HOME_PATH).expanduser().resolve()
+    if home_config.is_file():
+        _CURRENT_CONF_FILE(str(home_config))
+        return _read_config_file(current_config_path())
     return {}
 
 
@@ -247,6 +279,17 @@ def _create_data_providers(mp_config: Dict[str, Any]) -> Dict[str, Any]:
     return mp_config
 
 
+def _translate_legacy_settings(
+    mp_config: Dict[str, Any], translate: Dict[str, str]
+) -> Dict[str, Any]:
+    """Map legacy settings to new location."""
+    for src, target in translate.items():
+        src_value = _get_config(src, mp_config)
+        _set_config(target, mp_config, src_value)
+        _del_config(src, mp_config)
+    return mp_config
+
+
 def get_http_timeout(
     **kwargs,
 ) -> httpx.Timeout:
@@ -256,21 +299,27 @@ def get_http_timeout(
     )  # type: ignore
     if isinstance(timeout_params, dict):
         timeout_params = {
-            name: val if isinstance(val, Number) else None
-            for name, val in timeout_params.items()
+            name: _valid_timeout(val) for name, val in timeout_params.items()
         }
         return httpx.Timeout(**timeout_params)
     if isinstance(timeout_params, httpx.Timeout):
         return timeout_params
-    if isinstance(timeout_params, Number):
-        return httpx.Timeout(float(timeout_params))  # type: ignore
+    if isinstance(timeout_params, numbers.Real):
+        return httpx.Timeout(_valid_timeout(timeout_params))
     if isinstance(timeout_params, (list, tuple)):
-        timeout_params = list(timeout_params)
+        timeout_params = [_valid_timeout(val) for val in timeout_params]
         if len(timeout_params) >= 2:
             return httpx.Timeout(timeout=timeout_params[0], connect=timeout_params[1])
         if timeout_params:
             return httpx.Timeout(timeout_params[0])
     return httpx.Timeout(None)
+
+
+def _valid_timeout(timeout_val) -> Union[float, None]:
+    """Return float in valid range or None."""
+    if isinstance(timeout_val, numbers.Real) and float(timeout_val) >= 0.0:
+        return float(timeout_val)
+    return None
 
 
 # read initial config when first imported.

@@ -11,8 +11,8 @@ from typing import List, Tuple, Union
 
 from IPython.display import display
 
-from .utility import is_ipython
 from .._version import VERSION
+from .utility import is_ipython
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -114,11 +114,8 @@ class MsticpyUserError(MsticpyException):
         ]
         if help_args:
             self._output.append("You can find other related help here:")
-            self._output.extend((uri, "uri") for uri in help_args)
-        self._context = self._format_exception_context(
-            stack=traceback.format_stack(limit=5),
-            frame_locals=sys._getframe(1).f_locals,
-        )
+            for uri in help_args:
+                self._output.append((uri, "uri"))
         if _get_config("msticpy.FriendlyExceptions") and disp_exception:
             self._display_exception()
 

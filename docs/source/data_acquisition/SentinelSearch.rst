@@ -6,14 +6,15 @@ Create Search
 
 You can trigger a Search job with 'create_search'.
 When calling this function, you can pass the following parameters:
-    - 'query': the KQL query to run for the search.
-    - 'start': the start time of the search. The default is 90 days ago.
-    - 'end': the end time of the search. The default is now.
-    - 'search_name': the name to give the search. The default is a random GUID.
-    - 'timespan': if not passing start and end times you can provide a TimeSpan object.
-    - 'limit': the max number of results to return, default is 1000.
 
-See :py:meth:`create_search <msticpy.data.azure.MicrosoftSentinel.create_search>`
+- 'query': the KQL query to run for the search.
+- 'start': the start time of the search. The default is 90 days ago.
+- 'end': the end time of the search. The default is now.
+- 'search_name': the name to give the search. The default is a random GUID.
+- 'timespan': if not passing start and end times you can provide a TimeSpan object.
+- 'limit': the max number of results to return, default is 1000.
+
+See :py:meth:`create_search <msticpy.context.azure.MicrosoftSentinel.create_search>`
 
 .. code:: ipython3
 

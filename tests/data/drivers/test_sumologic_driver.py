@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pandas as pd
 import pytest
-import httpx
 import pytest_check as check
 
 from msticpy.common.exceptions import (
@@ -225,7 +225,7 @@ def test_sumologic_query_no_connect():
     with pytest.raises(MsticpyNotConnectedError) as mp_ex:
         sumologic_driver.query("some query")
     check.is_false(sumologic_driver.connected)
-    check.is_in("not connected to Sumologic.", mp_ex.value.args)
+    check.is_in("not connected to SumoLogic.", mp_ex.value.args)
 
 
 @pytest.fixture

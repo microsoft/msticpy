@@ -4,19 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 """Miscellaneous data provider driver tests."""
-from unittest.mock import patch
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import pytest_check as check
 
 from msticpy.data import DataEnvironment, QueryProvider
 from msticpy.data.drivers import import_driver
-
 from msticpy.data.drivers.mdatp_driver import MDATPDriver
 from msticpy.data.drivers.security_graph_driver import SecurityGraphDriver
 
-from ...unit_test_lib import get_test_data_path, custom_mp_config
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 _RGE_IMP_OK = False
 try:

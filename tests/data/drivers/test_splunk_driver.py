@@ -5,20 +5,17 @@
 # --------------------------------------------------------------------------
 """datq query test class."""
 import io
-from os import stat
+from unittest.mock import MagicMock, patch
 
-from unittest.mock import patch, MagicMock
+import pandas as pd
 import pytest
 import pytest_check as check
 
-import pandas as pd
-
 from msticpy.common.exceptions import (
-    MsticpyUserConfigError,
     MsticpyConnectionError,
     MsticpyNotConnectedError,
+    MsticpyUserConfigError,
 )
-
 from msticpy.data.drivers.splunk_driver import SplunkDriver, sp_client
 
 from ...unit_test_lib import get_test_data_path

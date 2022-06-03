@@ -4,10 +4,11 @@ repos:
     hooks:
       - id: check-yaml
       - id: check-json
+        exclude: .*devcontainer.json
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/ambv/black
-    rev: 22.1.0
+    rev: 22.3.0
     hooks:
       - id: black
         language: python
@@ -23,9 +24,17 @@ repos:
     hooks:
       - id: flake8
         args:
-          - --extend-ignore=E0401,E501
+          - --extend-ignore=E0401,E501,W503
           - --max-line-length=90
           - --exclude=tests,test*.py
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+        args:
+          - --profile
+          - black
   - repo: local
     hooks:
       - id: check_reqs_all

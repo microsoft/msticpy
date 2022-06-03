@@ -10,11 +10,12 @@ import networkx as nx
 import pandas as pd
 import pytest
 import pytest_check as check
-from msticpy.data.query_defns import DataEnvironment
+
+from msticpy.data.core.query_defns import DataEnvironment
 from msticpy.datamodel import entities
-from msticpy.nbtools.nbdisplay import format_alert
 from msticpy.nbtools.security_alert import SecurityAlert
 from msticpy.nbtools.security_alert_graph import create_alert_graph
+from msticpy.vis.nbdisplay import format_alert
 
 # pylint: disable=redefined-outer-name
 
@@ -185,7 +186,10 @@ sample_alert = {
 
 
 class TestSecurityAlert(unittest.TestCase):
+    """Security alert test class."""
+
     def setUp(self):
+        """Setup test."""
         self.raw_alert = pd.Series(sample_alert)
         self.raw_alert["StartTimeUtc"] = pd.to_datetime(self.raw_alert["StartTimeUtc"])
         self.raw_alert["EndTimeUtc"] = pd.to_datetime(self.raw_alert["EndTimeUtc"])
@@ -193,7 +197,9 @@ class TestSecurityAlert(unittest.TestCase):
             self.raw_alert["TimeGeneratedUtc"]
         )
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_alert_import(self):
+        """Test importing alert."""
         alert = SecurityAlert(self.raw_alert)
 
         str_alert = str(alert)
@@ -251,7 +257,9 @@ class TestSecurityAlert(unittest.TestCase):
         self.assertEqual(alert.data_family, entities.OSFamily.Windows)
         self.assertEqual(alert.data_environment, DataEnvironment.LogAnalytics)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_alert_display(self):
+        """Test display alert."""
         alert = SecurityAlert(self.raw_alert)
         entity_str = ", ".join(str(e) for e in alert.entities)
         self.assertIsNotNone(entity_str)
@@ -265,13 +273,17 @@ class TestSecurityAlert(unittest.TestCase):
         alert_html = format_alert(self.raw_alert)
         self.assertIsNotNone(alert_html)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_alert_graph(self):
+        """Test alert graph."""
         alert = SecurityAlert(self.raw_alert)
         alert_graph = create_alert_graph(alert)
         self.assertIsNotNone(alert_graph)
         self.assertLessEqual(5, len(alert_graph.nodes))
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_alert_entities(self):
+        """Test alert entities."""
         alert = SecurityAlert(self.raw_alert)
         for ent in alert.entities:
             self.assertIsNotNone(ent.description_str)
@@ -286,6 +298,7 @@ def test_alert():
     return raw_alert
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_alert_native_graph(test_alert):
     alert = SecurityAlert(test_alert)
     graph = None
