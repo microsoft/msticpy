@@ -455,6 +455,8 @@ class MsticpyPlotAccessor:
             Optional list of target attributes to use as hover properties, by default None
         edge_attrs : Optional[List[str]], optional
             Optional list of edge attributes to use as hover properties, by default None
+        graph_type : str
+            "graph" or "digraph" (for nx.DiGraph)
 
         Other Parameters
         ----------------

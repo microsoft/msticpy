@@ -400,13 +400,13 @@ class EntityGraph:
 
 def _dedupe_entities(alerts, ents) -> list:
     """Deduplicate incident and alert entities."""
-    alrt_ents = []
-    for alrt in alerts:
-        if alrt["Entities"]:
+    alert_entities = []
+    for alert in alerts:
+        if alert["Entities"]:
 
-            alrt_ents += [ent.__hash__() for ent in alrt["Entities"]]
+            alert_entities += [hash(ent) for ent in alert["Entities"]]
     for ent in ents:
-        if ent.__hash__() in alrt_ents:
+        if hash(ent) in alert_entities:
             ents.remove(ent)
     return ents
 

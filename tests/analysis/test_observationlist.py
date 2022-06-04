@@ -26,14 +26,19 @@ else:
 
 
 _TEST_FIELDS = {
+    "additional_properties",
     "caption",
-    "description",
-    "data",
     "data_type",
+    "data",
+    "description",
+    "filter",
     "link",
+    "schema",
     "score",
     "tags",
-    "additional_properties",
+    "time_column",
+    "time_span",
+    "timestamp",
 }
 
 
