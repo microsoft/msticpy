@@ -4,26 +4,25 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-msticpy - Jupyter and Python Tools for InfoSec.
+Jupyter and Python Tools for InfoSec.
 
 -----------------------------------------------
 
-Requires Python 3.6 or later.
+Requires Python 3.8 or later.
 
 To quickly import common modules into a notebook run:
 
->>> import msticpy
->>> msticpy.init_notebook()
+>>> import msticpy as mp
+>>> mp.init_notebook()
 
 If not running in a notebook/IPython use
->>> msticpy.init_notebook(globals())
+>>> mp.init_notebook(globals())
 
 To see help on `init_notebook`:
->>> help(msticpy.init_notebook)
+>>> help(mp.init_notebook)
 
 Search msticpy modules for a keyword:
->>> import msticpy
->>> msticpy.search(keyword)
+>>> mp.search(keyword)
 
 -----------------------------------------------
 

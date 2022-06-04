@@ -165,7 +165,7 @@ selected workspace with these details.
    (without clicking on the **Update** button), to refresh the
    existing settings.
 
-.. figure:: _static/mpconfig_edit_new_workspace.png"
+.. figure:: _static/mpconfig_edit_new_workspace.png
    :alt: Imported settings from config.json
 
 You can also resolve full Workspace details from partial details
@@ -697,7 +697,7 @@ Other data providers - Splunk, Azure CLI, LocalData, Mordor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Azure API and Microsoft Sentinel API
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have set your preferences for Azure authentication methods
 in the **Azure** tab you do not need to add the **AzureCLI**

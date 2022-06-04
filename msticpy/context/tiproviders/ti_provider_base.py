@@ -172,6 +172,7 @@ class TIProvider(ABC):
         results = []
         prog_counter = kwargs.pop("prog_counter", None)
         for observable, ioc_type in generate_items(data, obs_col, ioc_type_col):
+            ioc_type = kwargs.pop("ioc_type", ioc_type)
             if not observable:
                 continue
             get_ioc = partial(
