@@ -64,7 +64,6 @@ BinaryRecord = namedtuple(
     ],
 )
 
-# pylint: disable=locally-disabled, line-too-long
 _BASE64_HEADER_TYPES = {
     """TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAA\
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+AAAAA4fug""": "exe",
@@ -81,7 +80,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6AAAAA4fug""": "sys",
     "0M8R4KGxGuE": "msi",
     "TVNXSU0AAADQ": "wim",
 }
-# pylint: enable=locally-disabled, line-too-long
 _BASE64_HEADER_OFFSET_TYPES = {"DAxMDA3NzcAMDAwMDAwM": "tar"}
 
 # Base64 simple regex
@@ -97,9 +95,9 @@ _UNDECODABLE_STRINGS: Set[str] = set()
 
 # When True prints see more verbose execution
 # (set from 'trace' parameter to unpack_items)
-# pylint: disable=locally-disabled, invalid-name
+# pylint: disable=invalid-name
 _debug_trace = False
-# pylint: enable=locally-disabled, invalid-name
+# pylint: enable=invalid-name
 
 _STRIP_TAGS = r"</?decoded[^>]*>"
 

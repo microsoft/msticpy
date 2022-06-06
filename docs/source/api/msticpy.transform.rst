@@ -21,4 +21,3 @@ Submodules
    msticpy.transform.proc_tree_builder
    msticpy.transform.proc_tree_schema
    msticpy.transform.process_tree_utils
-   msticpy.transform.syslog_utils
