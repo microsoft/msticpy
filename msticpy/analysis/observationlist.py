@@ -153,6 +153,7 @@ class Observations:
         return self.observation_list[key]
 
     def __iter__(self) -> Iterator[Tuple[str, Observation]]:
+        """Return iterator over observations."""
         yield from self.observation_list.items()
 
     @property

@@ -9,15 +9,13 @@ from typing import Any, List, Mapping, Tuple, Union
 import IPython
 import networkx as nx
 import pandas as pd
-from bokeh.io import output_notebook
-from bokeh.models import Circle, HoverTool, Label
-from bokeh.plotting import figure, from_networkx, show
 from deprecated.sphinx import deprecated
 from IPython.display import HTML, Javascript, display
 
 from .._version import VERSION
 from ..common.utility import export
 from ..nbtools.security_alert import SecurityAlert
+from .network_plot import plot_entity_graph
 
 # pylint: disable=unused-import
 from .timeline import display_timeline  # noqa: F401
@@ -137,96 +135,6 @@ def draw_alert_entity_graph(
         width=width * 100,
         scale=scale * 2,
     )
-
-
-def plot_entity_graph(
-    entity_graph: nx.Graph,
-    node_size: int = 25,
-    font_size: Union[int, str] = 10,
-    height: int = 800,
-    width: int = 800,
-    scale: int = 2,
-    hide: bool = False,
-) -> figure:
-    """
-    Plot entity graph with Bokeh.
-
-    Parameters
-    ----------
-    entity_graph : nx.Graph
-        The entity graph as a networkX graph
-    node_size : int, optional
-        Size of the nodes in pixels, by default 25
-    font_size : int, optional
-        Font size for node labels, by default 10
-        Can be an integer (point size) or a string (e.g. "10pt")
-    width : int, optional
-        Width in pixels, by default 800
-    height : int, optional
-        Image height (the default is 800)
-    scale : int, optional
-        Position scale (the default is 2)
-    hide : bool, optional
-        Don't show the plot, by default False. If True, just
-        return the figure.
-
-    Returns
-    -------
-    bokeh.plotting.figure
-        The network plot.
-
-    """
-    output_notebook()
-    font_pnt = f"{font_size}pt" if isinstance(font_size, int) else font_size
-    node_attrs = {
-        node: attrs.get("color", "green")
-        for node, attrs in entity_graph.nodes(data=True)
-    }
-    nx.set_node_attributes(entity_graph, node_attrs, "node_color")
-
-    plot = figure(
-        title="Alert Entity graph",
-        x_range=(-3, 3),
-        y_range=(-3, 3),
-        width=width,
-        height=height,
-    )
-
-    plot.add_tools(
-        HoverTool(
-            tooltips=[
-                ("node_type", "@node_type"),
-                ("name", "@name"),
-                ("description", "@description"),
-                ("entitytype", "@entitytype"),
-            ]
-        )
-    )
-
-    graph_renderer = from_networkx(
-        entity_graph, nx.spring_layout, scale=scale, center=(0, 0)
-    )
-    graph_renderer.node_renderer.glyph = Circle(
-        size=node_size, fill_color="node_color", fill_alpha=0.5
-    )
-    # pylint: disable=no-member
-    plot.renderers.append(graph_renderer)
-
-    # Create labels
-    for name, pos in graph_renderer.layout_provider.graph_layout.items():
-        label = Label(
-            x=pos[0],
-            y=pos[1],
-            x_offset=5,
-            y_offset=5,
-            text=name,
-            text_font_size=font_pnt,
-        )
-        plot.add_layout(label)
-    # pylint: enable=no-member
-    if not hide:
-        show(plot)
-    return plot
 
 
 # Constants for Windows logon

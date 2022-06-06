@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import networkx as nx
 from bokeh.io import output_notebook
@@ -56,9 +56,9 @@ def plot_nx_graph(
     width: int = 800,
     scale: int = 2,
     hide: bool = False,
-    source_attrs: Optional[List[str]] = None,
-    target_attrs: Optional[List[str]] = None,
-    edge_attrs: Optional[List[str]] = None,
+    source_attrs: Optional[Iterable[str]] = None,
+    target_attrs: Optional[Iterable[str]] = None,
+    edge_attrs: Optional[Iterable[str]] = None,
     layout: GraphLayout = "spring",
     **kwargs,
 ) -> figure:
@@ -146,7 +146,7 @@ def plot_nx_graph(
 
     graph_renderer.selection_policy = NodesAndLinkedEdges()
     graph_renderer.inspection_policy = EdgesAndLinkedNodes()
-    plot.renderers.append(graph_renderer)
+    plot.renderers.append(graph_renderer)  # pylint: disable=no-member
 
     hover_tools = [
         _create_node_hover(source_attrs, target_attrs, [graph_renderer.node_renderer])
@@ -158,6 +158,7 @@ def plot_nx_graph(
     plot.add_tools(*hover_tools, TapTool(), BoxSelectTool())
 
     # Create labels
+    # pylint: disable=no-member
     for name, pos in graph_renderer.layout_provider.graph_layout.items():
         label = Label(
             x=pos[0],
@@ -184,8 +185,8 @@ def _get_graph_layout(nx_graph: nx.Graph, layout: GraphLayout, **kwargs):
 
 
 def _create_node_hover(
-    source_attrs: Optional[List[str]],
-    target_attrs: Optional[List[str]],
+    source_attrs: Optional[Iterable[str]],
+    target_attrs: Optional[Iterable[str]],
     renderers: List[Renderer],
 ) -> HoverTool:
     """Create a hover tool for nodes."""
@@ -197,7 +198,9 @@ def _create_node_hover(
     return HoverTool(tooltips=node_tooltips, renderers=renderers)
 
 
-def _create_edge_hover(edge_attrs: List[str], renderers: List[Renderer]) -> HoverTool:
+def _create_edge_hover(
+    edge_attrs: Iterable[str], renderers: List[Renderer]
+) -> HoverTool:
     """Create a hover tool for nodes."""
     edge_attr_cols = edge_attrs or []
     edge_tooltips = [
