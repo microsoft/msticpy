@@ -4,9 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 """Settings provider for secrets."""
+import random
 import re
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Set, Tuple
+
+import keyring
+from keyring.errors import KeyringError, KeyringLocked, NoKeyringError
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -170,11 +174,8 @@ class SecretsClient:
             )
         self.kv_secret_vault: Dict[str, str] = {}
         self.kv_vaults: Dict[str, BHKeyVaultClient] = {}
-        self._use_keyring = (
-            _KEYRING_INSTALLED
-            and KeyringClient.is_keyring_available()
-            and (use_keyring or self._kv_settings.get("UseKeyring", False))
-        )
+        self._use_keyring = use_keyring or self._kv_settings.get("UseKeyring", False)
+        self._use_keyring = self._use_keyring and KeyringClient.is_keyring_available()
         if self._use_keyring:
             self._keyring_client = KeyringClient("Providers")
 

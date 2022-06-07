@@ -227,8 +227,9 @@ class KqlTIProvider(TIProvider):
                 input_df=src_ioc_frame, results_df=data_result, reslt_ioc_key="IoC"
             )
             all_results.append(combined_results_df)
-
-        return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
+        if all_results:
+            return pd.concat(all_results, ignore_index=True, sort=False, axis=0)
+        return None
 
     @staticmethod
     def _add_failure_status(src_ioc_frame: pd.DataFrame, lookup_status: LookupStatus):

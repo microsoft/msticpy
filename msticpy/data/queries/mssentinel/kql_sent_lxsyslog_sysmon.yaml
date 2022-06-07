@@ -1,0 +1,120 @@
+metadata:
+  version: 1
+  description: Linux Syslog Sysmon Data Queries
+  data_environments: [LogAnalytics]
+  data_families: [LinuxSyslog]
+  tags: ["linux", "syslog"]
+defaults:
+  metadata:
+    data_source: 'linux_syslog'
+  parameters:
+      start:
+        description: Query start time
+        type: datetime
+      end:
+        description: Query end time
+        type: datetime
+      add_query_items:
+        description: Additional query clauses
+        type: str
+        default: ''
+      subscription_filter:
+        description: Optional subscription/tenant filter expression
+        type: str
+        default: "true"
+sources:
+  sysmon_process_events:
+    description: Get Process Events from a specified host
+    metadata:
+    args:
+      query: |
+        let ParsedProcessEvent=(){{
+        Syslog
+        | where {subscription_filter}
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        | where SyslogMessage has_all ('<Provider Name="Linux-Sysmon"', '<EventID>1</EventID>')
+        | parse SyslogMessage with
+                *
+                '<EventRecordID>' EventRecordId:int '</EventRecordID>'
+                *
+                '<Computer>' SysmonComputer:string '</Computer>'
+                *
+                '<Data Name="RuleName">'RuleName // parsing the XML using the original fields name - for readability
+                '</Data><Data Name="UtcTime">'UtcTime
+                '</Data><Data Name="ProcessGuid">{{'ProcessGuid
+                '}}</Data><Data Name="ProcessId">'ProcessId:string
+                '</Data><Data Name="Image">'Image
+                '</Data><Data Name="FileVersion">'FileVersion
+                '</Data><Data Name="Description">'Description
+                '</Data><Data Name="Product">'Product
+                '</Data><Data Name="Company">'Company'</Data>' *
+        | extend  OriginalFileName = extract (@'"OriginalFileName">([^<]+)<',1,SyslogMessage)
+        | parse SyslogMessage with *
+                '<Data Name="CommandLine">'CommandLine'</Data>'
+                '<Data Name="CurrentDirectory">'CurrentDirectory
+                '</Data><Data Name="User">'User
+                '</Data><Data Name="LogonGuid">{{'LogonGuid
+                '}}</Data><Data Name="LogonId">'LogonId
+                '</Data><Data Name="TerminalSessionId">'TerminalSessionId
+                '</Data><Data Name="IntegrityLevel">'IntegrityLevel
+                '</Data><Data Name="Hashes">'Hashes
+                '</Data><Data Name="ParentProcessGuid">{{'ParentProcessGuid
+                '}}</Data><Data Name="ParentProcessId">'ParentProcessId:string
+                '</Data><Data Name="ParentImage">'ParentImage
+                '</Data><Data Name="ParentCommandLine">'ParentCommandLine '</Data>'*
+        | parse SyslogMessage with *'<Data Name="ParentUser">'ActorUsername '</Data>' *
+        | extend    TargetProcessSHA1=extract(@'SHA1=(\w+)',1, tostring(Hashes)),
+                    TargetProcessSHA256=extract(@'SHA256=(\w+)',1, tostring(Hashes)),
+                    TargetProcessIMPHASH=extract(@'IMPHASH=(\w+)',1,tostring(Hashes)),
+                    TargetProcessMD5=extract(@'MD5=(\w+)',1, tostring(Hashes))
+        // End of XML parse
+        | project-away SyslogMessage, Hashes
+        | extend
+                    EventType = "ProcessCreated",
+                    EventStartTime = TimeGenerated,
+                    EventEndTime = TimeGenerated,
+                    EventCount = int(1),
+                    EventVendor = "Microsoft",
+                    EventSchemaVersion = "0.1.0",
+                    EventSchema = 'ProcessEvent',
+                    EventProduct = "Sysmon for Linux",
+                    EventResult = 'Success',
+                    EventOriginalUid = tostring(EventRecordId),
+                    DvcOs = "Linux",
+                    TargetUserSessionId = tostring(LogonId)  ,
+                    TargetUsernameType = "Simple",
+                    TargetUsername = User,
+                    TargetProcessCommandLine = CommandLine,
+                    TargetProcessCurrentDirectory = CurrentDirectory,
+                    ActorUsernameType = "Simple",
+                    EventOriginalType = '1' // Set with a constant value to avoid parsing
+        | project-rename
+                    DvcHostName = SysmonComputer,
+                    DvcIpAddr = HostIP,
+                    TargetUserSessionGuid = LogonGuid,
+                    TargetProcessId = ProcessId,
+                    TargetProcessGuid = ProcessGuid,
+                    TargetProcessName = Image,
+                    TargetProcessIntegrityLevel = IntegrityLevel,
+                    TargetProcessCompany = Company,
+                    TargetProcessFileDescription = Description,
+                    TargetProcessFileVersion = FileVersion,
+                    TargetProcessFileProduct = Product,
+                    ActingProcessId = ParentProcessId,
+                    ActingProcessGuid = ParentProcessGuid,
+                    ActingProcessCommandLine = ParentCommandLine,
+                    ActingProcessName = ParentImage
+        | extend // aliases
+                    User = ActorUsername,
+                    Process = TargetProcessName,
+                    Dvc = DvcHostName,
+                    Hash = coalesce(TargetProcessSHA256, TargetProcessSHA1, TargetProcessMD5)
+        | project-away
+                    ProcessName, ProcessID
+        }}; ParsedProcessEvent
+    parameters:
+      host_name:
+        description: Hostname to query for
+        type: str
