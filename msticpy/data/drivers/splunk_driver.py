@@ -5,9 +5,11 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 from datetime import datetime
+from time import sleep
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+from tqdm import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import (

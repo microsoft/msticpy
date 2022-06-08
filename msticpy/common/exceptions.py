@@ -175,16 +175,6 @@ class MsticpyUserError(MsticpyException):
                 text_line = line.replace("\n", "<br>")
                 content.append(f"{text_line}<br>")
 
-        if self._context:
-            context = [f"<div class='indent'>{line}</div>" for line in self._context]
-            content.extend(
-                (
-                    "<summary>Additional context<details>",
-                    *context,
-                    "</details></summary>",
-                )
-            )
-
         return "".join((ex_style, div_tmplt.format(content="".join(content))))
 
     def _display_txt_exception(self):
@@ -209,8 +199,7 @@ class MsticpyUserError(MsticpyException):
                         out_lines.append(f" - {l_content}")
             else:
                 out_lines.append(line)
-        if self._context:
-            out_lines.extend(["", "Exception context:", *self._context])
+
         return "\n".join(out_lines)
 
     @staticmethod

@@ -22,6 +22,10 @@ defaults:
       description: Additional query clauses
       type: str
       default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "{time_column}"
 sources:
   list_connections:
     description: Retrieves list of all network connections
@@ -29,8 +33,8 @@ sources:
     args:
       query: "
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         {add_query_items}"
       uri: None
     parameters:
@@ -40,8 +44,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where DeviceName has "{host_name}"
         {add_query_items}'
     parameters:
@@ -56,8 +60,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where RemoteIP has "{ip_address}" or where LocalIP has "{ip_address}"
         {add_query_items}'
     parameters:
@@ -70,8 +74,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where RemoteUrl has "{url}"
         {add_query_items}'
     parameters:
@@ -84,8 +88,8 @@ sources:
     args:
       query: "
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where RemotePort == {protocol}
         {add_query_items}"
     parameters:
