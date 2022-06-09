@@ -95,7 +95,6 @@ class Process(Entity):
         self.LogonSession: Optional[HostLogonSession] = None
         super().__init__(src_entity=src_entity, **kwargs)
 
-        # pylint: disable=locally-disabled, line-too-long
         if src_event is not None:
             self._create_from_event(src_event, role)
 
