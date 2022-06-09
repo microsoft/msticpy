@@ -2,15 +2,15 @@ Installing
 ==========
 
 
-Python 3.6 or Later
+Python 3.8 or Later
 -------------------
 
-*MSTICPy* requires Python 3.6 or later.
+*MSTICPy* requires Python 3.8 or later.
 If you are running in hosted environment such as Azure Notebooks,
-Python is already installed. Please ensure that the Python 3.6 (or later)
+Python is already installed. Please ensure that the Python 3.8 (or later)
 kernel is selected for your notebooks.
 
-If you are running the notebooks locally, you will need to install Python 3.6
+If you are running the notebooks locally, you will need to install Python 3.8
 or later. The Ananconda distribution is a good starting point since it comes
 with many of packages required by *MSTICPy* pre-installed.
 
@@ -78,10 +78,23 @@ that you do not need.
    installed - only the external libraries on which certain
    functions inside *MSTICPy* need to work.
 
-.. warning:: the core install no longer includes the
-   **Azure** libraries and only a limited install of the Kqlmagic package
-   used for most Azure Sentinel data queries. If you are an Azure Sentinel
-   user, you should always install with the "azsentinel" extra.
+.. warning:: zshell/MacOS users - you need to escape the first "[".
+   Otherwise this is interpreted as the start of a file pattern
+   match expression. In other shells such as bash you may find that
+   you need to escape the leading "[" if the extra name matches
+   the pattern of local files in your current directory.
+
+   .. code:: bash
+
+      pip install msticpy\[riskiq]
+
+   If you are installing a specific version number you should
+   also escape one of the "=" characters
+
+   .code:: bash
+
+      pip install msticpy\[vt]\==1.8.2
+
 
 Extras in *MSTICPy*
 ~~~~~~~~~~~~~~~~~~~
@@ -108,9 +121,10 @@ The extras available in *MSTICPy* are described in the following table:
 | kql              | - Azure Sentinel data queries      |   2m:07s     |   3m:20s     |
 |                  | - Kqlmagic Jupyter extended        |              |              |
 +------------------+------------------------------------+--------------+--------------+
-| azsentinel       | - Combination of core install      |   3m:48s     |   5m:00s     |
-|                  |   plus "azure", "keyvault" and     |              |              |
-|                  |   "kql"                            |              |              |
+| sentinel         | - Combination of core install      |   3m:48s     |   5m:00s     |
+|(aliases:         |   plus "azure", "keyvault" and     |              |              |
+| azsentinel       |   "kql"                            |              |              |
+| azuresentinel)   |                                    |              |              |
 +------------------+------------------------------------+--------------+--------------+
 | ml               | - Timeseries analysis              |      29s     |   1m:42s     |
 |                  | - Event clustering                 |              |              |

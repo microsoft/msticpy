@@ -36,14 +36,13 @@ import geoip2.database  # type: ignore
 import httpx
 import pandas as pd
 from geoip2.errors import AddressNotFoundError  # type: ignore
-from IPython import get_ipython
 from IPython.display import HTML, display
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
-from ..common.utility import SingletonClass, export
+from ..common.utility import SingletonClass, export, is_ipython
 from ..datamodel.entities import GeoLocation, IpAddress
 from .ip_utils import get_ip_type
 
@@ -175,7 +174,7 @@ class GeoIpLookup(metaclass=ABCMeta):
     def _print_license(self):
         if self.__class__._license_shown:
             return
-        if self._LICENSE_HTML and get_ipython():
+        if self._LICENSE_HTML and is_ipython(notebook=True):
             display(HTML(self._LICENSE_HTML))
         elif self._LICENSE_TXT:
             print(self._LICENSE_TXT)

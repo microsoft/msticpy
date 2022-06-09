@@ -242,7 +242,7 @@ def search_name(pattern: str) -> None:
 
     """
     mod_uris = search_module(pattern)
-    if not is_ipython():
+    if not is_ipython(notebook=True):
         print("\n".join(f"{mod}:\t{uri}" for mod, uri in mod_uris.items()))
         return
 

@@ -42,7 +42,7 @@ Importing the GeoIP classes
     import sys
     MIN_REQ_PYTHON = (3,6)
     if sys.version_info < MIN_REQ_PYTHON:
-        print('Check the Kernel->Change Kernel menu and ensure that Python 3.6')
+        print('Check the Kernel->Change Kernel menu and ensure that Python 3.8')
         print('or later is selected as the active kernel.')
         sys.exit("Python %s.%s or later is required.\n" % MIN_REQ_PYTHON)
 
