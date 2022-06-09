@@ -12,6 +12,8 @@ from bokeh.plotting import figure
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
+from ..transform.network import GraphType, df_to_networkx
+from ..vis.network_plot import plot_nx_graph
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .foliummap import plot_map
 from .matrix_plot import plot_matrix
@@ -409,3 +411,96 @@ class MsticpyPlotAccessor:
     def folium_map(self, **kwargs):
         """Plot folium map."""
         return plot_map(data=self._df, **kwargs)
+
+    # pylint: disable=too-many-arguments
+    def network(
+        self,
+        source_col: str,
+        target_col: str,
+        title: str = "Data Graph",
+        source_attrs: Optional[Iterable[str]] = None,
+        target_attrs: Optional[Iterable[str]] = None,
+        edge_attrs: Optional[Iterable[str]] = None,
+        graph_type: GraphType = "graph",
+        **kwargs,
+    ):
+        """
+        Plot entity graph with Bokeh.
+
+        Parameters
+        ----------
+        source_col : str
+            Column for source nodes.
+        target_col : str
+            Column for target nodes.
+        title : str
+            Title for the plot, by default 'Data Graph'
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+        hide : bool, optional
+            Don't show the plot, by default False. If True, just
+            return the figure.
+        source_attrs : Optional[List[str]], optional
+            Optional list of source attributes to use as hover properties, by default None
+        target_attrs : Optional[List[str]], optional
+            Optional list of target attributes to use as hover properties, by default None
+        edge_attrs : Optional[List[str]], optional
+            Optional list of edge attributes to use as hover properties, by default None
+        graph_type : str
+            "graph" or "digraph" (for nx.DiGraph)
+
+        Other Parameters
+        ----------------
+        source_color : str, optional
+            The color of the source nodes, by default 'light-blue'
+        target_color : str, optional
+            The color of the source nodes, by default 'light-green'
+        edge_color : str, optional
+            The color of the edges, by default 'black'
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+        hide : bool, optional
+            Don't show the plot, by default False. If True, just
+            return the figure.
+
+        Returns
+        -------
+        bokeh.plotting.figure
+            The network plot.
+
+        """
+        nx_graph = df_to_networkx(
+            data=self._df,
+            source_col=source_col,
+            target_col=target_col,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            graph_type=graph_type,
+        )
+        return plot_nx_graph(
+            nx_graph=nx_graph,
+            title=title,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            **kwargs,
+        )

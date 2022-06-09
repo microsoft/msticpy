@@ -38,29 +38,88 @@ class MsticpyTimeSeriesAccessor:
         """Initialize the extension."""
         self._df = pandas_obj
 
-        # extract documentation from original functions
-        _doc_funcs = {
-            "analyze": ts_anomalies_stl,
-            "anomaly_periods": find_anomaly_periods,
-            "apply_threshold": set_new_anomaly_threshold,
-        }
-        for tgt_name, src_func in _doc_funcs.items():
-            remove_other_params = tgt_name == "analyze"
-            tgt_func = getattr(self.__class__, tgt_name)
-            tgt_func.__doc__ = _doc_remove_data(
-                src_func, remove_other_params=remove_other_params
-            )
-
     def analyze(self, **kwargs) -> pd.DataFrame:
-        """Return time series STL analysis."""
+        """
+        Return anomalies in Timeseries using STL.
+
+        Parameters
+        ----------
+        time_column : str, optional
+            If the input data is not indexed on the time column, use this column
+            as the time index
+        data_column : str, optional
+            Use named column if the input data has more than one column.
+        seasonal : int, optional
+            Seasonality period of the input data required for STL.
+            Must be an odd integer, and should normally be >= 7 (default).
+        period: int, optional
+            Periodicity of the the input data. by default 24 (Hourly).
+        score_threshold : float, optional
+            standard deviation threshold value calculated using Z-score used to
+            flag anomalies, by default 3
+
+        Returns
+        -------
+        pd.DataFrame
+            Returns a dataframe with additional columns by decomposing time series data
+            into residual, trend, seasonal, weights, baseline, score and anomalies.
+            The anomalies column will have 0, 1,-1 values based on score_threshold set.
+
+        Notes
+        -----
+        The decomposition method is STL - Seasonal-Trend Decomposition using LOESS
+
+        """
         return ts_anomalies_stl(self._df, **kwargs)
 
     def anomaly_periods(self, **kwargs):
-        """Return list of anomaly periods."""
+        """
+        Return list of anomaly period as TimeSpans.
+
+        Parameters
+        ----------
+        time_column : str, optional
+            The name of the time column
+        period : str, optional
+            pandas-compatible time period designator,
+            by default "1H"
+        pos_only : bool, optional
+            If True only extract positive anomaly periods,
+            else extract both positive and negative.
+            By default, True
+        anomalies_column : str, optional
+            The column containing the anomalies flag.
+
+        Returns
+        -------
+        List[TimeSpan] :
+            TimeSpan(start, end)
+
+        """
         return find_anomaly_periods(data=self._df, **kwargs)
 
     def apply_threshold(self, **kwargs):
-        """Return dataframe with new anomaly calculation."""
+        """
+        Return DataFrame with anomalies calculated based on new threshold.
+
+        Parameters
+        ----------
+        threshold : float
+            Threshold above (beyond) which values will be marked as
+            anomalies. Used as positive and negative threshold
+            unless `threshold_low` is specified.
+        threshold_low : Optional[float], optional
+            The threshhold below which values will be reported
+            as anomalies, by default None.
+        anomalies_column : str, optional
+            The column containing the anomalies flag.
+
+        Returns
+        -------
+        pd.DataFrame
+            Output DataFrame with recalculated anomalies.
+
+        """
         return set_new_anomaly_threshold(data=self._df, **kwargs)
 
     def kql_periods(self, **kwargs):
@@ -89,7 +148,62 @@ class MsticpyTimeSeriesAccessor:
         return create_time_period_kqlfilter(anom_periods)
 
     def plot(self, **kwargs):
-        """Plot time series anomalies."""
+        """
+        Display time series anomalies visualization.
+
+        Parameters
+        ----------
+        y : str, optional
+            Name of column holding numeric values to plot against time series to
+            determine anomalies
+            (the default is 'Total')
+        time_column : str, optional
+            Name of the timestamp column
+            (the default is 'TimeGenerated')
+        anomalies_column : str, optional
+            Name of the column holding binary status(1/0) for anomaly/benign
+            (the default is 'anomalies')
+        source_columns : list, optional
+            List of default source columns to use in tooltips
+            (the default is None)
+        period : int, optional
+            Period of the dataset for hourly-no of days, for daily-no of weeks.
+            This is used to correctly calculate the plot height.
+            (the default is 30)
+
+        Other Parameters
+        ----------------
+        ref_time : datetime, optional
+            Input reference line to display (the default is None)
+        title : str, optional
+            Title to display (the default is None)
+        legend: str, optional
+            Where to position the legend
+            None, left, right or inline (default is None)
+        yaxis : bool, optional
+            Whether to show the yaxis and labels
+        range_tool : bool, optional
+            Show the the range slider tool (default is True)
+        height : int, optional
+            The height of the plot figure
+            (the default is auto-calculated height)
+        width : int, optional
+            The width of the plot figure (the default is 900)
+        xgrid : bool, optional
+            Whether to show the xaxis grid (default is True)
+        ygrid : bool, optional
+            Whether to show the yaxis grid (default is False)
+        color : list, optional
+            List of colors to use in 3 plots as specified in order
+            3 plots- line(observed), circle(baseline), circle_x/user specified(anomalies).
+            (the default is ["navy", "green", "firebrick"])
+
+        Returns
+        -------
+        figure
+            The bokeh plot figure.
+
+        """
         return display_timeseries_anomalies(data=self._df, **kwargs)
 
 

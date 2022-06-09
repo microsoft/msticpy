@@ -125,7 +125,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         )
 
         self.mp_config_env_path = os.environ.get("MSTICPYCONFIG", None)
-        self.txt_curr_mpconfig.value = self.mp_config_env_path
+        self.txt_curr_mpconfig.value = self.mp_config_env_path or ""
         self.mp_config_def_path = self.mp_config_env_path
         if (
             self.mp_config_env_path is not None

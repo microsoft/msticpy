@@ -16,6 +16,7 @@ Submodules
    msticpy.transform.base64unpack
    msticpy.transform.cmd_line
    msticpy.transform.iocextract
+   msticpy.transform.network
    msticpy.transform.proc_tree_build_mde
    msticpy.transform.proc_tree_build_winlx
    msticpy.transform.proc_tree_builder

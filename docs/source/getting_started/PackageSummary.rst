@@ -338,6 +338,6 @@ Supported Platforms and Packages
 --------------------------------
 
 -  msticpy is OS-independent
--  Requires Python 3.6 or later
+-  Requires Python 3.8 or later
 -  See `requirements.txt <https://github.com/microsoft/msticpy/blob/master/requirements.txt>`__
    for more details and version requirements.
