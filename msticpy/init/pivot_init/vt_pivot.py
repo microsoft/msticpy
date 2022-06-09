@@ -127,7 +127,6 @@ def add_pivot_functions(api_scope: Optional[str] = None):
                 entity_map={entity: _ENTITY_PROPS[entity]},
                 func_input_value_arg="entity_id",
                 can_iterate=True,
-                create_shortcut=True,
             )
             Pivot.add_pivot_function(func, pivot_reg=pivot_reg, container="VT")
 

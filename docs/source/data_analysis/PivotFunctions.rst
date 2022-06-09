@@ -106,6 +106,20 @@ more standardized form. This gives us several benefits:
    this time range at any time, of course, as well as override it
    by supplying time parameters in the function call).
 
+Sample notebooks
+----------------
+
+You can view and try out two notebooks illustrating the use of
+pivot functions:
+
+- [PivotFunctions-Introduction](https://github.com/microsoft/msticpy/blob/main/docs/notebooks/PivotFunctions-Introduction.ipynb)
+  This is a quick introduction that covers concepts and most
+  of the use cases for pivot functions
+- [PivotFunctions](https://github.com/microsoft/msticpy/blob/main/docs/notebooks/PivotFunctions.ipynb)
+  This follows the content of this document more closely with
+  more detailed examples and explanations.
+
+
 Changes in V2.0.0
 -----------------
 
