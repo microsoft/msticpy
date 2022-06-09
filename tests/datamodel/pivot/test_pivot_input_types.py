@@ -11,12 +11,13 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
+from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
-from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
-from msticpy.init.pivot import Pivot
 from msticpy.init.pivot_core.pivot_container import PivotContainer
+
+# pylint: disable=redefined-outer-name, unused-import, unused-argument
+from .pivot_fixtures import create_pivot
 
 __author__ = "Ian Hellen"
 
@@ -33,24 +34,6 @@ def data_providers():
             "geolite": GeoLiteLookup(),
             #  "ip_stack": IPStackLookup(),
         }
-
-
-def _reset_entities():
-    """Clear any query containers in entities."""
-    for entity_name in ("Host", "IpAddress", "Account", "Url"):
-        entity = getattr(entities, entity_name)
-        for attr in dir(entity):
-            if isinstance(getattr(entity, attr), PivotContainer):
-                delattr(entity, attr)
-
-
-@pytest.fixture(scope="session")
-def _create_pivot(data_providers):
-    _reset_entities()
-    providers = data_providers.values()
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        return Pivot(providers=providers)
 
 
 PivotQuery = namedtuple(
@@ -135,7 +118,7 @@ _PIVOT_QUERIES = [
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_pivot_funcs_value(_create_pivot, test_case):
+def test_pivot_funcs_value(create_pivot, test_case):
     """Test calling function with value."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test value input
@@ -153,7 +136,7 @@ def test_pivot_funcs_value(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_pivot_funcs_itbl(_create_pivot, test_case):
+def test_pivot_funcs_itbl(create_pivot, test_case):
     """Test calling function with iterable input."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test value input
@@ -174,7 +157,7 @@ def test_pivot_funcs_itbl(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_pivot_funcs_df(_create_pivot, test_case):
+def test_pivot_funcs_df(create_pivot, test_case):
     """Test calling function with DF input attributes."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test DF input
@@ -194,7 +177,7 @@ def test_pivot_funcs_df(_create_pivot, test_case):
 
 @pytest.mark.parametrize("join_type", ["left", "inner", "right"])
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_pivot_funcs_df_merge(_create_pivot, join_type, test_case):
+def test_pivot_funcs_df_merge(create_pivot, join_type, test_case):
     """Test calling function with DF input attributes."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test DF input

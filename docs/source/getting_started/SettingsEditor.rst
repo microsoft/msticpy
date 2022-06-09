@@ -697,7 +697,7 @@ Other data providers - Splunk, Azure CLI, LocalData, Mordor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Azure API and Microsoft Sentinel API
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have set your preferences for Azure authentication methods
 in the **Azure** tab you do not need to add the **AzureCLI**

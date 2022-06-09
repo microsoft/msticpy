@@ -613,11 +613,9 @@ class VTLookup:
                 # positives are listed per detected_url so we need to
                 # pull those our and sum them.
                 positives = sum(
-                    [
-                        item["positives"]
-                        for item in results_dict["detected_urls"]
-                        if "positives" in item
-                    ]
+                    item["positives"]
+                    for item in results_dict["detected_urls"]
+                    if "positives" in item
                 )
                 df_dict_vtresults["Positives"] = positives
 

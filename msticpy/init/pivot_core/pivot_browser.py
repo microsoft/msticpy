@@ -210,7 +210,7 @@ class PivotBrowser:
     def _get_current_func(self):
         func_name = self._select["pivot_funcs"].value
         entity_name = self._select["entities"].value
-        return f"entities.{entity_name}.{func_name}()"
+        return f"{entity_name}.{func_name}()"
 
     def _add_cur_func_to_cell(self, btn):
         del btn

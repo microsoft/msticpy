@@ -590,9 +590,14 @@ def _set_nb_options(namespace):
 
 def _load_pivots(namespace):
     """Load pivot functions."""
-    if not Pivot.current:
+    # pylint: disable=no-member
+    if not Pivot.current():
         pivot = Pivot()
         namespace["pivot"] = pivot
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        import msticpy
+
+        setattr(msticpy, "pivot", pivot)
 
 
 def _import_extras(nm_spc: Dict[str, Any], extra_imports: List[str]):
@@ -683,6 +688,7 @@ def _check_and_reload_pkg(
     pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
     if pkg_version < req_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
+        # sourcery skip: swap-if-expression
         resp = (
             input("Install the package now? (y/n)") if not unit_testing() else "y"
         )  # nosec

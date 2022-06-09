@@ -22,57 +22,81 @@ sources:
   user_logons:
     description: Lists all user logons by user
     metadata:
+      pivot:
+        short_name: logon_events
     args:
       query: '
-        DeviceLogonEvents
+        {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
       uri: None
     parameters:
+      table:
+        description: Logon events table
+        type: str
+        default: DeviceLogonEvents
       account_name:
         description: Name of user
         type: str
   user_processes:
     description: Lists all processes created by a user
     metadata:
+      pivot:
+        short_name: process_events
     args:
       query: '
-        DeviceProcessEvents
+        {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
     parameters:
+      table:
+        description: Process events table
+        type: str
+        default: DeviceProcessEvents
       account_name:
         description: Name of user
         type: str
   user_files:
     description: Lists all files created by a user
     metadata:
+      pivot:
+        short_name: file_events
     args:
       query: '
-        DeviceFileEvents
+        {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
+      table:
+        description: File events table
+        type: str
+        default: DeviceFileEvents
       account_name:
         description: Name of user
         type: str
   user_network:
     description: Lists all network connections associated with a user
     metadata:
+      pivot:
+        short_name: network_events
     args:
       query: '
-        DeviceNetworkEvents
+        {table}
         | where Timestamp >= datetime({start})
         | where Timestamp <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
+      table:
+        description: Network events table
+        type: str
+        default: DeviceNetworkEvents
       account_name:
         description: Name of user
         type: str

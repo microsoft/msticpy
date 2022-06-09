@@ -19,7 +19,7 @@ from IPython.core.magic import (
     line_cell_magic,
     magics_class,
     needs_local_scope,
-    register_cell_magic,
+    register_line_cell_magic,
 )
 
 from ..init.pivot_core.pivot_magic_core import run_txt2df
@@ -172,8 +172,27 @@ if is_ipython():
         IPYTHON.register_magics(Base64Magic)
         IPYTHON.register_magics(IoCExtractMagic)
 
-    @register_cell_magic
+    @register_line_cell_magic
     @needs_local_scope
-    def txt2df(line, cell, local_ns):
-        """Convert cell text to pandas DataFrame."""
+    def txt2df(line, cell, local_ns):  # noqa: D417
+        """
+        Convert cell text to pandas DataFrame.
+
+        Parameters
+        ----------
+        sep : str
+            Column separator/delimiter to use
+            `--sep ;` or `-s ,`, default ",",
+        name : str
+            If specified, the DataFrame will be assigned to the named variable.
+            `--name df_name`" or `-n df_name`,
+        headers : bool
+            If supplied, the first line is treated as the header row.
+            `--headers` or `-h`
+        keepna : bool
+            Don't drop columns that are all NA, The default is to drop
+            them, which is useful for data with trailing delimiters)
+            `--keepna` or `-k`
+
+        """
         return run_txt2df(line, cell, local_ns)

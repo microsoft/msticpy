@@ -4,8 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot function hierarchy attribute class."""
-from functools import partial
-
 from ..._version import VERSION
 from ...common.data_types import ObjectContainer
 
@@ -19,13 +17,13 @@ class PivotContainer(ObjectContainer):
     def __repr__(self):
         """Return list of attributes."""
         repr_list = []
-        for name, obj in self.__dict__.items():
+        for name, obj in sorted(self.__dict__.items()):
             if isinstance(obj, ObjectContainer):
                 repr_list.append(f"{name} (container)")
-            elif isinstance(obj, partial):
+            elif hasattr(obj, "pivot_properties"):
                 repr_list.append(f"{name} (pivot function)")
             elif not name.startswith("_"):
-                repr_list.append(f"{name} {type(obj).__name__}")
+                repr_list.append(f"{name} ({type(obj).__name__})")
         return "\n".join(repr_list)
 
     def __call__(self, *args, **kwargs):
