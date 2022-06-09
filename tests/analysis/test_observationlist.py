@@ -26,17 +26,22 @@ else:
 
 
 _TEST_FIELDS = {
+    "additional_properties",
     "caption",
-    "description",
-    "data",
     "data_type",
+    "data",
+    "description",
+    "filter",
     "link",
+    "schema",
     "score",
     "tags",
-    "additional_properties",
+    "time_column",
+    "time_span",
+    "timestamp",
 }
 
-
+# pylint: disable=unsupported-assignment-operation
 def test_create_observation_class():
     """Test creating observations instance."""
     check.is_in("caption", Observation.required_fields())

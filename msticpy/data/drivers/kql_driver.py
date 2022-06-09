@@ -116,8 +116,8 @@ class KqlDriver(DriverBase):
 
         Parameters
         ----------
-        connection_str : str
-            Connect to a data source
+        connection_str : Union[str, WorkspaceConfig, None]
+            Connection string or WorkspaceConfig for the Sentinel Workspace.
 
         Other Parameters
         ----------------
@@ -134,6 +134,11 @@ class KqlDriver(DriverBase):
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
+        workspace : str, optional
+            Alternative to supplying a WorkspaceConfig object as the connection_str
+            parameter. Giving a workspace name will fetch the workspace
+            settings from msticpyconfig.yaml.
+
 
         """
         if not self._previous_connection:
@@ -141,6 +146,9 @@ class KqlDriver(DriverBase):
 
         mp_az_auth = kwargs.get("mp_az_auth", "default")
         mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
+        workspace = kwargs.get("workspace", None)
+        if workspace:
+            connection_str = WorkspaceConfig(workspace=workspace)  # type: ignore
 
         if isinstance(connection_str, WorkspaceConfig):
             if not mp_az_tenant_id and "tenant_id" in connection_str:

@@ -15,6 +15,7 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
+from msticpy.init import azure_ml_tools, nbinit
 from msticpy.init.nbinit import _get_or_create_config, _imp_module_all, init_notebook
 
 from ..unit_test_lib import TEST_DATA_PATH, custom_mp_config
@@ -124,7 +125,7 @@ _CONFIG_TESTS = [
     ),
     (
         ("msticpyconfig.yaml", None, SubDirCase.SEARCH),
-        True,
+        False,
     ),
     (
         ("msticpyconfig-no-settings.yaml", None, SubDirCase.SEARCH),
@@ -176,7 +177,7 @@ _test_ids = [
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.parametrize("conf_file, expected", _CONFIG_TESTS, ids=_test_ids)
-def test_check_config(conf_file, expected, tmp_path):
+def test_check_config(conf_file, expected, tmp_path, monkeypatch):
     """Test config check."""
     mpconf_file, conf_json, mp_location = conf_file
     init_cwd = str(Path(".").absolute())
@@ -214,11 +215,13 @@ def test_check_config(conf_file, expected, tmp_path):
                 # Pass non-existing file to custom_mp_config to bypass default settings
                 settings_file = "missing_file"
             else:
-                settings_file = tmp_path.joinpath(mpconf_file)
+                settings_file = tmp_path.joinpath("msticpyconfig.yaml")
         else:
             os.chdir(str(tmp_path))
 
         with custom_mp_config(settings_file, path_check=False):
+            monkeypatch.setattr(nbinit, "is_in_aml", lambda: True)
+            monkeypatch.setattr(azure_ml_tools, "get_aml_user_folder", lambda: tmp_path)
             result = _get_or_create_config()
 
             print("result=", result)
@@ -239,6 +242,9 @@ def test_check_config(conf_file, expected, tmp_path):
         os.chdir(init_cwd)
 
 
+@pytest.mark.skipif(
+    not os.environ.get("MSTICPY_TEST_NOSKIP"), reason="Skipped for local tests."
+)
 def test_install_pkgs():
     """Test installing and importing a package."""
     test_pkg = "pip_install_test"

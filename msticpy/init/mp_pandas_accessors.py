@@ -11,6 +11,7 @@ import pandas as pd
 from .._version import VERSION
 from ..transform.base64unpack import unpack_df
 from ..transform.iocextract import IoCExtract
+from ..transform.network import df_to_networkx
 from ..transform.proc_tree_builder import ProcSchema, build_process_tree
 
 __version__ = VERSION
@@ -159,3 +160,30 @@ class MsticpyCoreAccessor:
         return build_process_tree(
             procs=self._df, schema=schema, show_summary=show_summary, debug=debug
         )
+
+    def to_graph(self, **kwargs):
+        """
+        Create a networkx graph from a DataFrame.
+
+        Parameters
+        ----------
+        source_col : str
+            Column for source nodes.
+        target_col : str
+            Column for target nodes.
+        source_attrs : Optional[List[str]], optional
+            Optional list of columns to use as source node attributes, by default None
+        target_attrs : Optional[List[str]], optional
+            Optional list of columns to use as target node attributes, by default None
+        edge_attrs : Optional[List[str]], optional
+            Optional list of columns to use as edge node attributes, by default None
+        graph_type : str
+            "graph" or "digraph" (for nx.DiGraph)
+
+        Returns
+        -------
+        nx.Graph
+            The networkx graph object
+
+        """
+        return df_to_networkx(self._df, **kwargs)

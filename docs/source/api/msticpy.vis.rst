@@ -21,6 +21,7 @@ Submodules
    msticpy.vis.morph_charts
    msticpy.vis.mp_pandas_plot
    msticpy.vis.nbdisplay
+   msticpy.vis.network_plot
    msticpy.vis.process_tree
    msticpy.vis.query_browser
    msticpy.vis.ti_browser

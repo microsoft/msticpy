@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 
+import yaml
 from IPython import get_ipython
 from IPython.display import HTML, display
 from pkg_resources import (  # type: ignore
@@ -20,6 +21,8 @@ from pkg_resources import (  # type: ignore
 
 from .._version import VERSION
 from ..common.pkg_config import refresh_config
+from ..common.utility import search_for_file
+from ..config import MpConfigFile
 
 __version__ = VERSION
 
@@ -156,20 +159,6 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
     _disp_html(f"Info: Python kernel version {sys_ver} - OK<br>")
 
 
-def _check_mp_install(
-    min_mp_ver: Union[str, Tuple],
-    mp_release: Optional[str],
-    extras: Optional[List[str]],
-):
-    """Check for and try to install required MSTICPy version."""
-    # Use the release ver specified in params, in the environment or
-    # the notebook default.
-    pkg_version = _get_pkg_version(min_mp_ver)
-    mp_install_version = mp_release or os.environ.get("MP_TEST_VER") or str(pkg_version)
-
-    check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
-
-
 def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]):
     """
     Check and optionally update the current version of msticpy.
@@ -225,6 +214,53 @@ def check_mp_ver(min_msticpy_ver: Union[str, Tuple], extras: Optional[List[str]]
             "Please restart the notebook kernel and re-run this cell."
         )
     _disp_html(f"Info: msticpy version {loaded_version} (>= {mp_min_pkg_ver}) - OK<br>")
+
+
+def populate_config_to_mp_config(mp_path):
+    """Populate new or existing msticpyconfig with settings from config.json."""
+    # Look for a config.json
+    config_json = search_for_file("config.json", paths=[get_aml_user_folder()])
+    if not config_json:
+        return None
+
+    # if we found one, use it to populate msticpyconfig.yaml
+    mp_path = mp_path or "./msticpyconfig.yaml"
+    mp_config_convert = MpConfigFile(file=config_json)
+    azs_settings = mp_config_convert.map_json_to_mp_ws()
+    def_azs_settings = next(
+        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values())
+    )
+    if def_azs_settings:
+        mp_config_convert.settings["AzureSentinel"]["Workspaces"][
+            "Default"
+        ] = def_azs_settings.copy()
+    mssg = f"Created '{mp_path}'' with Microsoft Sentinel settings."
+    if Path(mp_path).exists():
+        # If there is an existing file read it in
+        mp_config_text = Path(mp_path).read_text(encoding="utf-8")
+        mp_config_settings = yaml.safe_load(mp_config_text)
+        # update exist settings with the AzSent settings from config.json
+        mp_config_settings.update(mp_config_convert.settings)
+        # update MpConfigFile with the merged settings
+        mp_config_convert.settings = mp_config_settings
+        mssg = f"Updated '{mp_path}'' with Microsoft Sentinel settings."
+    # Save the file
+    mp_config_convert.save_to_file(mp_path, backup=True)
+    return mssg
+
+
+def _check_mp_install(
+    min_mp_ver: Union[str, Tuple],
+    mp_release: Optional[str],
+    extras: Optional[List[str]],
+):
+    """Check for and try to install required MSTICPy version."""
+    # Use the release ver specified in params, in the environment or
+    # the notebook default.
+    pkg_version = _get_pkg_version(min_mp_ver)
+    mp_install_version = mp_release or os.environ.get("MP_TEST_VER") or str(pkg_version)
+
+    check_mp_ver(min_msticpy_ver=mp_install_version, extras=extras)
 
 
 def _set_kql_env_vars(extras: Optional[List[str]]):

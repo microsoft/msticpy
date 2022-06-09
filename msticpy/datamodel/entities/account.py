@@ -98,12 +98,9 @@ class Account(Entity):
         self.DisplayName: Optional[str] = None
         self.ObjectGuid: Optional[str] = None
 
-        # pylint: disable=locally-disabled, line-too-long
         super().__init__(src_entity=src_entity, **kwargs)
         if src_event is not None:
             self._create_from_event(src_event, role)
-
-    # pylint: enable=locally-disabled, line-too-long
 
     @property
     def description_str(self) -> str:

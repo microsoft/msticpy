@@ -204,16 +204,19 @@ Queries for Azure Resource Graph
 
 Data Environment identifier: ResourceGraph
 
-=============  ==============================  ====================================================  ===================  =========
-QueryGroup     Query                           Description                                           Req-Params           Table
-=============  ==============================  ====================================================  ===================  =========
-ResourceGraph  list_detailed_virtual_machines  Retrieves list of VMs with network details                                 resources
-ResourceGraph  list_public_ips                 Retrieves list of resources with public IP addresses                       resources
-ResourceGraph  list_resources                  Retrieves list of resources                                                resources
-ResourceGraph  list_resources_by_api_version   Retrieves list of resources for each API version                           resources
-ResourceGraph  list_resources_by_type          Retrieves list of resources by type                   resource_type (str)  resources
-ResourceGraph  list_virtual_machines           Retrieves list of VM resources                                             resources
-=============  ==============================  ====================================================  ===================  =========
+=============  =======================================  ==================================================================================================================  ====================  =========
+QueryGroup     Query                                    Description                                                                                                         Req-Params            Table
+=============  =======================================  ==================================================================================================================  ====================  =========
+ResourceGraph  list_detailed_virtual_machines           Retrieves list of VMs with network details                                                                                                resources
+ResourceGraph  list_public_ips                          Retrieves list of resources with public IP addresses                                                                                      resources
+ResourceGraph  list_resources                           Retrieves list of resources                                                                                                               resources
+ResourceGraph  list_resources_by_api_version            Retrieves list of resources for each API version                                                                                          resources
+ResourceGraph  list_resources_by_type                   Retrieves list of resources by type                                                                                 resource_type (str)   resources
+ResourceGraph  list_virtual_machines                    Retrieves list of VM resources                                                                                                            resources
+Sentinel       get_sentinel_workspace_for_resource_id   Retrieves Sentinel/Azure monitor workspace details by resource ID                                                   resource_id (str)     resources
+Sentinel       get_sentinel_workspace_for_workspace_id  Retrieves Sentinel/Azure monitor workspace details by workspace ID                                                  workspace_id (str)    resources
+Sentinel       list_sentinel_workspaces_for_name        Retrieves Sentinel/Azure monitor workspace(s) details by name and optionally resource group and/or subscription_id  workspace_name (str)  resources
+=============  =======================================  ==================================================================================================================  ====================  =========
 
 
 
