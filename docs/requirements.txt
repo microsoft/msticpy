@@ -11,3 +11,4 @@ pyyaml>=3.13
 readthedocs-sphinx-ext>=2.1.4
 sphinx-rtd-theme>=1.0.0
 sphinx
+typing-extensions>=4.2.0
