@@ -25,7 +25,7 @@ defaults:
     time_column:
       description: The name of the column detailing the time the event was generated.
       type: str
-      default: "{time_column}"
+      default: "Timestamp"
 sources:
   list_connections:
     description: Retrieves list of all network connections

@@ -70,7 +70,7 @@ class HttpTIProvider(TIProvider, abc.ABC):
         if "ApiID" in kwargs:
             self._request_params["API_ID"] = kwargs.pop("ApiID")
         if "AuthKey" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
+            self._request_params["API_KEY"] = kwargs.pop("AuthKey").strip()
 
         missing_params = [
             param

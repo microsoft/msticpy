@@ -54,9 +54,9 @@ class SelectAlert(IPyDisplayMixin):
         alerts: pd.DataFrame,
         action: Callable[..., Optional[Tuple]] = None,
         columns: List[str] = None,
-        time_col: str = "StartTimeUtc",
-        id_col: str = "SystemAlertId",
         auto_display: bool = False,
+        id_col: str = "SystemAlertId",
+        **kwargs,
     ):
         """
         Create a new instance of AlertSelector.
@@ -81,12 +81,16 @@ class SelectAlert(IPyDisplayMixin):
             Default is 'SystemAlertId'.
         auto_display : bool, optional
             Whether to display on instantiation (the default is False)
+        default_alert: str, optional
+            If you want to select a default value provide the ID.
 
         """
         self.alerts = alerts
         self.alert_action = action
         self.id_col = id_col
+        time_col = kwargs.get("time_col", "TimeGenerated")
         self.time_col = time_col if time_col in alerts.columns else "TimeGenerated"
+        self.default_alert = kwargs.get("default_alert", None)
 
         columns = columns or ["AlertName", "ProductName"]
         self.disp_columns = list({col for col in columns if col in alerts.columns})
@@ -106,10 +110,9 @@ class SelectAlert(IPyDisplayMixin):
             description="Select alert :",
             layout=Layout(width="95%", height="300px"),
             style={"description_width": "initial"},
+            value=self.default_alert,
         )
-
         self._w_filter_alerts = widgets.Text(
-            value="",
             description="Filter alerts by title:",
             style={"description_width": "initial"},
         )
@@ -161,7 +164,7 @@ class SelectAlert(IPyDisplayMixin):
             val: key
             for key, val in data[data_cols]
             .sort_values(time_col, ascending=True)
-            .set_index(time_col)
+            .set_index(id_col)
             .apply(lambda x: " - ".join(str(c) for c in x), axis=1)
             .to_dict()
             .items()
@@ -185,7 +188,7 @@ class SelectAlert(IPyDisplayMixin):
         ):
             self.selected_alert = None
         else:
-            self.alert_id = self._w_select_alert.value
+            self.alert_id = selection.new
 
             self.selected_alert = self._get_alert(self.alert_id)
             if self.alert_action is not None:
@@ -213,6 +216,10 @@ class SelectAlert(IPyDisplayMixin):
     def _select_top_alert(self):
         """Select the first alert by default."""
         top_alert = self.alerts.iloc[0]
+        if self.default_alert:
+            top_alert = self.alerts[
+                self.alerts[self.id_col] == self.default_alert
+            ].iloc[0]
         if not top_alert.empty:
             self._w_select_alert.index = 0
             self.alert_id = top_alert[self.id_col]

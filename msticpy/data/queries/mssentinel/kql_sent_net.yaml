@@ -49,6 +49,12 @@ defaults:
       description: Additional query clauses
       type: str
       default: ''
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
 sources:
   get_ips_for_host:
     description: Gets the latest AzureNetworkAnalytics interface event for a host.
@@ -209,3 +215,26 @@ sources:
       query_condition:
         description: Query-specific where clause
         value: '| where VM_s has "{host_name}"'
+  network_connections_to_url:
+    description: List of network connections to a URL
+    metadata:
+      pivot:
+        short_name: url_connections
+        direct_func_entities:
+          - URL
+    args:
+      query: '
+        CommonSecurityLog
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        | where RequestURL has "{url}"
+        {add_query_items}'
+    parameters:
+      url:
+        description: URL to search for
+        type: str
+      host_name:
+        description: Name of host
+        type: str
+        default: ""

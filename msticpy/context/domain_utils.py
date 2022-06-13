@@ -90,10 +90,10 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"  # pylint: disable=line-too-long
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
-    progress = IntProgress(min=0, max=40)
+    progress = IntProgress(min=0, max=100)
     display.display(progress)
     ready = False
-    while not ready:
+    while not ready and progress.value < 100:
         progress.value += 1
         status_data = httpx.get(status_string, timeout=config.get_http_timeout())
         status = json.loads(status_data.content)["status"]
@@ -101,9 +101,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
             ready = True
         else:
             time.sleep(0.05)
-    progress.value = 40
+    progress.value = 100
 
-    # Once ready get the screenshot
+    # Once ready or timed out get the screenshot
     image_data = httpx.get(image_string, timeout=config.get_http_timeout())
 
     if image_data.status_code != 200:
