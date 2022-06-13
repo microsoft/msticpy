@@ -37,16 +37,6 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
-_EXCLUDED_AUTH = {
-    "cli": True,
-    "env": True,
-    "msi": True,
-    "vscode": True,
-    "powershell": True,
-    "interactive": True,
-    "cache": True,
-}
-
 
 def get_azure_config_value(key, default):
     """Get a config value from Azure section."""
