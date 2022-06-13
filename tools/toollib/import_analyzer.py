@@ -10,7 +10,6 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any, DefaultDict, Dict, Generator, List, Optional, Set, Tuple
 
-import pkg_resources
 import networkx as nx
 import pandas as pd
 import pkg_resources
