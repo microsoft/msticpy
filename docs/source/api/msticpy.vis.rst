@@ -26,7 +26,9 @@ Submodules
    msticpy.vis.query_browser
    msticpy.vis.ti_browser
    msticpy.vis.timeline
+   msticpy.vis.timeline_common
    msticpy.vis.timeline_duration
    msticpy.vis.timeline_pd_accessor
+   msticpy.vis.timeline_values
    msticpy.vis.timeseries
    msticpy.vis.vtobject_browser

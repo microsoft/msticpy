@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
+import warnings
 from collections import namedtuple
 from typing import Optional, Tuple, Union
 
@@ -545,16 +546,7 @@ def _check_proc_tree_schema(data):
     """Return true if expected process tree columns are present."""
     if data.index.name != Col.proc_key:
         return {Col.proc_key}
-    expected_cols = set(
-        [
-            Col.parent_key,
-            "IsRoot",
-            "IsLeaf",
-            "IsBranch",
-            "path",
-            # "parent_index",
-        ]
-    )
+    expected_cols = {Col.parent_key, "IsRoot", "IsLeaf", "IsBranch", "path"}
     return expected_cols - set(data.columns)
 
 
@@ -607,6 +599,12 @@ class ProcessTreeAccessor:
             Layout - Bokeh layout structure.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp_plot.process_tree() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return build_and_show_process_tree(data=self._df, **kwargs)
 
     def build(self, schema: ProcSchema = None, **kwargs) -> pd.DataFrame:
@@ -638,6 +636,12 @@ class ProcessTreeAccessor:
         to return the processed tree data as a DataFrame
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp.build_process_tree() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return build_process_tree(
             procs=self._df,
             schema=schema,

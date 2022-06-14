@@ -31,6 +31,7 @@ import hashlib
 import io
 import re
 import tarfile
+import warnings
 import zipfile
 from collections import namedtuple
 
@@ -835,9 +836,8 @@ def _b64_string_pad(string: str) -> str:
         return string
 
     string = string.rstrip("=")
-    while len(string) % 4 != 0:
-        string = string + "A"
-    return string
+    padding = 4 - (len(string) % 4)
+    return f"{string}{'A' * padding}"
 
 
 # pylint: disable=too-few-public-methods
@@ -900,4 +900,10 @@ class B64ExtractAccessor:
           frame.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp.b64extract() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return unpack_df(data=self._df, column=column, **kwargs)

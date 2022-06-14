@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""Timeline duration control."""
+"""Timeline duration plot."""
 from datetime import datetime
 from typing import Iterable, List, Optional, Tuple, Union
 
@@ -20,15 +20,15 @@ from bokeh.transform import dodge
 from .._version import VERSION
 from ..common.data_utils import ensure_df_datetimes
 from ..common.utility import check_kwargs, export
-from .timeline import (
-    _calc_auto_plot_height,
-    _create_range_tool,
-    _create_tool_tips,
-    _get_tick_formatter,
-    _get_time_bounds,
-    _plot_ref_events,
-    _set_axes_and_grids,
+from .timeline_common import (
+    calc_auto_plot_height,
     check_df_columns,
+    create_range_tool,
+    create_tool_tips,
+    get_tick_formatter,
+    get_time_bounds,
+    plot_ref_events,
+    set_axes_and_grids,
 )
 
 # pylint: disable=unused-import
@@ -47,7 +47,6 @@ _TIMELINE_HELP = (
 )
 
 
-@export
 @attr.s(auto_attribs=True)
 class PlotParams:
     """Plot params for time_duration."""
@@ -166,8 +165,7 @@ def display_timeline_duration(
     if "source_columns" in kwargs:
         tool_tip_cols += kwargs["source_columns"]
 
-    tooltips, formatters = _create_tool_tips(grouped_data, tool_tip_cols)
-    hover = HoverTool(tooltips=tooltips, formatters=formatters)
+    hover = HoverTool(**(create_tool_tips(data, tool_tip_cols)))
 
     title = (
         f"Timeline: {param.title}"
@@ -175,8 +173,8 @@ def display_timeline_duration(
         else f"Event Duration Timeline for {', '.join(group_by)}"
     )
 
-    start_range, end_range, min_time, max_time = _get_time_bounds(min_time, max_time)
-    height = param.height or _calc_auto_plot_height(len(grouped_data))
+    start_range, end_range, min_time, max_time = get_time_bounds(min_time, max_time)
+    height = param.height or calc_auto_plot_height(len(grouped_data))
     # Concatenate ylabel columns to display on y-axis
     if len(group_by) > 1:
         y_range = grouped_data[group_by[0]].str.cat(
@@ -216,10 +214,10 @@ def display_timeline_duration(
     )
 
     # Set grid parameters
-    _set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)
+    set_axes_and_grids(None, plot, param.yaxis, param.ygrid, param.xgrid)
 
     # Create plot bar to act as as range selector
-    rng_select = _create_range_tool(
+    rng_select = create_range_tool(
         data=all_data,
         min_time=min_time,
         max_time=max_time,
@@ -231,8 +229,8 @@ def display_timeline_duration(
     )
 
     # set the tick datetime formatter
-    plot.xaxis[0].formatter = _get_tick_formatter()
-    _plot_ref_events(
+    plot.xaxis[0].formatter = get_tick_formatter()
+    plot_ref_events(
         plot=plot,
         ref_events=param.ref_events,
         time_col=time_column,
