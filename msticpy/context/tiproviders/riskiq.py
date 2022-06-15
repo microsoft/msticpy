@@ -127,7 +127,6 @@ class RiskIQ(TIProvider, TIPivotProvider):
         self._pivot_timespan_end: Optional[datetime] = None
         self._pivot_get_timespan: Any = None
 
-    # pylint: disable=no-self-use
     @property
     def _httpx_client(self):
         """Return the PT Analyzer session."""
@@ -139,8 +138,6 @@ class RiskIQ(TIProvider, TIPivotProvider):
         # pylint: disable=consider-using-dict-items
         for name in ptanalyzer.api_clients:
             ptanalyzer.api_clients[name].session = session
-
-    # pylint: enable=no-self-use
 
     @staticmethod
     def _severity_rep(classification):
