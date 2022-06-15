@@ -13,9 +13,10 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
+from azure.core.exceptions import ClientAuthenticationError
 from IPython import get_ipython
 
-from ...common.azure_auth import AzureCloudConfig, only_interactive_cred, az_connect
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
@@ -23,16 +24,16 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
-from ...common.wsconfig import WorkspaceConfig
 from ...common.utility import export
-from ..query_defns import DataEnvironment
+from ...common.wsconfig import WorkspaceConfig
+from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
 try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
-    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.kql_proxy import KqlResponse
+    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -115,8 +116,8 @@ class KqlDriver(DriverBase):
 
         Parameters
         ----------
-        connection_str : str
-            Connect to a data source
+        connection_str : Union[str, WorkspaceConfig, None]
+            Connection string or WorkspaceConfig for the Sentinel Workspace.
 
         Other Parameters
         ----------------
@@ -133,6 +134,11 @@ class KqlDriver(DriverBase):
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
+        workspace : str, optional
+            Alternative to supplying a WorkspaceConfig object as the connection_str
+            parameter. Giving a workspace name will fetch the workspace
+            settings from msticpyconfig.yaml.
+
 
         """
         if not self._previous_connection:
@@ -140,6 +146,9 @@ class KqlDriver(DriverBase):
 
         mp_az_auth = kwargs.get("mp_az_auth", "default")
         mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
+        workspace = kwargs.get("workspace", None)
+        if workspace:
+            connection_str = WorkspaceConfig(workspace=workspace)  # type: ignore
 
         if isinstance(connection_str, WorkspaceConfig):
             if not mp_az_tenant_id and "tenant_id" in connection_str:
@@ -320,7 +329,7 @@ class KqlDriver(DriverBase):
         print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
-                # Supress logging exception about PyGObject from msal_extensions
+                # Suppress logging exception about PyGObject from msal_extensions
                 msal_ext_logger = logging.getLogger("msal_extensions.libsecret")
                 current_level = msal_ext_logger.getEffectiveLevel()
                 msal_ext_logger.setLevel(logging.CRITICAL)
@@ -530,15 +539,20 @@ class KqlDriver(DriverBase):
         endpoint_uri = self._get_endpoint_uri()
         endpoint_token_uri = f"{endpoint_uri}.default"
         # obtain token for the endpoint
-        token = creds.modern.get_token(endpoint_token_uri, tenant_id=mp_az_tenant_id)
-        # set the token values in the namespace
-
-        endpoint_token = {
-            "access_token": token.token,
-            "token_type": "Bearer",
-            "resource": endpoint_uri,
-        }
-        self._set_kql_option("try_token", endpoint_token)
+        try:
+            token = creds.modern.get_token(
+                endpoint_token_uri, tenant_id=mp_az_tenant_id
+            )
+            # set the token values in the namespace
+            endpoint_token = {
+                "access_token": token.token,
+                "token_type": "Bearer",
+                "resource": endpoint_uri,
+            }
+            self._set_kql_option("try_token", endpoint_token)
+        # if the above auth fails fall back to KQLMagics auth method
+        except ClientAuthenticationError:
+            pass
 
     def _get_endpoint_uri(self):
         return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]

@@ -1,5 +1,5 @@
-from collections import defaultdict
 import unittest
+from collections import defaultdict
 
 import numpy as np
 

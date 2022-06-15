@@ -1,6 +1,11 @@
 msticpy.analysis.anomalous\_sequence package
 ============================================
 
+.. automodule:: msticpy.analysis.anomalous_sequence
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -12,34 +17,9 @@ Subpackages
 Submodules
 ----------
 
-msticpy.analysis.anomalous\_sequence.anomalous module
------------------------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: msticpy.analysis.anomalous_sequence.anomalous
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-msticpy.analysis.anomalous\_sequence.model module
--------------------------------------------------
-
-.. automodule:: msticpy.analysis.anomalous_sequence.model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-msticpy.analysis.anomalous\_sequence.sessionize module
-------------------------------------------------------
-
-.. automodule:: msticpy.analysis.anomalous_sequence.sessionize
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: msticpy.analysis.anomalous_sequence
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   msticpy.analysis.anomalous_sequence.anomalous
+   msticpy.analysis.anomalous_sequence.model
+   msticpy.analysis.anomalous_sequence.sessionize

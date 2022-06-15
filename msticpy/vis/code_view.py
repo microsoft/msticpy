@@ -6,8 +6,8 @@
 """Display code with with highlighting."""
 from typing import List, Optional
 
-from IPython.display import HTML, display, DisplayHandle
-from pygments import highlight, lexers, styles, formatters
+from IPython.display import HTML, DisplayHandle, display
+from pygments import formatters, highlight, lexers, styles
 
 from .._version import VERSION
 

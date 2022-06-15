@@ -5,18 +5,18 @@
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
 
-import os
 import json
-from typing import Dict, Any, Optional
+import os
 from pathlib import Path
+from typing import Any, Dict, Optional
 
-from IPython.display import display
 import ipywidgets as widgets
+from IPython.display import display
 
+from .._version import VERSION
+from . import pkg_config
 from .exceptions import MsticpyUserConfigError
 from .utility import export, is_valid_uuid, md, md_warn
-from . import pkg_config
-from .._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -28,18 +28,18 @@ values, is written to the file specified in the --output argument.
 
 """
 import argparse
-from copy import deepcopy
 import json
 import os
-from pathlib import Path
-from pprint import pprint
 import re
 import sys
-import yaml
+from copy import deepcopy
+from pathlib import Path
+from pprint import pprint
 
+import yaml
 from msrestazure.azure_exceptions import CloudError
 
-from msticpy.common.keyvault_client import (
+from msticpy.auth.keyvault_client import (
     BHKeyVaultClient,
     BHKeyVaultMgmtClient,
     KeyVaultSettings,
@@ -67,7 +67,7 @@ def _read_config_settings(conf_file):
     if not conf_file:
         raise ValueError("Configuration file not found.")
     print(conf_file)
-    with open(conf_file, "r") as conf_hdl:
+    with open(conf_file, "r", encoding="utf-8") as conf_hdl:
         cur_settings = yaml.safe_load(conf_hdl)
 
     # temporarily set env var to point to conf_file
@@ -84,7 +84,7 @@ def _write_config_settings(conf_file, conf_settings, confirm):
         if not _prompt_yn("Overwrite (y/n)? ", confirm):
             return
     yaml.SafeDumper.ignore_aliases = lambda *args: True
-    with open(conf_file, "w") as conf_hdl:
+    with open(conf_file, "w", encoding="utf-8") as conf_hdl:
         yaml.safe_dump(data=conf_settings, stream=conf_hdl)
 
 

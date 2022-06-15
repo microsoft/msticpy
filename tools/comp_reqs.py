@@ -6,8 +6,9 @@
 """Compare two requirements files."""
 import argparse
 import re
-from packaging.version import parse
+
 from packaging.specifiers import SpecifierSet
+from packaging.version import parse
 
 
 def _add_script_args(description):
@@ -29,7 +30,7 @@ def _parse_line(line):
 
 
 def _parse_reqs(file):
-    with open(file, "r") as file_reqs:
+    with open(file, "r", encoding="utf-8") as file_reqs:
         req_lines = file_reqs.readlines()
     p_lines = [_parse_line(line) for line in req_lines]
     return {pkg: (op, ver) for pkg, op, ver in p_lines}

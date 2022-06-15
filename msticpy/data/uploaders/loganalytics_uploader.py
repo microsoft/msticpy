@@ -4,24 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """LogAnayltics Uploader class."""
-from typing import Any
-import json
+import base64
 import datetime
-import sys
 import hashlib
 import hmac
-import base64
+import json
 import re
+import sys
 from pathlib import Path
+from typing import Any
 
 import httpx
-from tqdm.notebook import tqdm
 import pandas as pd
+from tqdm.notebook import tqdm
 
-from ...common.exceptions import MsticpyConnectionError
-
-from .uploader_base import UploaderBase
 from ..._version import VERSION
+from ...common.exceptions import MsticpyConnectionError
+from .uploader_base import UploaderBase
 
 # Credits
 # https://docs.microsoft.com/en-us/azure/azure-monitor/platform/data-collector-api#python-3-sample

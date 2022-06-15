@@ -12,9 +12,9 @@ import ipywidgets as widgets
 from .._version import VERSION
 from .ce_common import (
     ITEM_LIST_LAYOUT,
-    get_wgt_ctrl,
-    get_or_create_mpc_section,
     get_defn_or_default,
+    get_or_create_mpc_section,
+    get_wgt_ctrl,
 )
 from .comp_edit import CEItemsBase, CompEditDisplayMixin
 from .compound_ctrls import get_arg_ctrl

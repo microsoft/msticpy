@@ -11,7 +11,6 @@ from ...common.utility import export
 from .entity import Entity
 from .registry_key import RegistryKey
 
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
 

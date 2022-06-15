@@ -2,7 +2,7 @@ msticpy API
 ===========
 
 .. toctree::
-    :maxdepth: 4
+    :maxdepth: 6
 
     api-how-to-read
     api/msticpy

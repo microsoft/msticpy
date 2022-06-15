@@ -9,7 +9,7 @@ from typing import Any, Union
 import pandas as pd
 
 from ..._version import VERSION
-from ...common.azure_auth_core import AzureCloudConfig
+from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.utility import export
 from .odata_driver import OData, QuerySource
 

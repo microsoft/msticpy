@@ -6,11 +6,11 @@
 """Module for Model class for modelling sessions data."""
 
 from collections import defaultdict
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
-from .utils.data_structures import Cmd
-from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
 from ...common.exceptions import MsticpyException
+from .utils import cmds_only, cmds_params_only, cmds_params_values, probabilities
+from .utils.data_structures import Cmd
 
 
 # pylint: disable=too-many-instance-attributes

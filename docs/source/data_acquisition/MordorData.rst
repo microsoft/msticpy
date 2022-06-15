@@ -296,7 +296,7 @@ You can also download and preview (if it is convertible to a DataFrame)
 the dataset from the browser
 
 See
-:py:class:`MordorBrowser<msticpy.data.browsers.mordor_browser.MordorBrowser>`.
+:py:class:`MordorBrowser<msticpy.vis.mordor_browser.MordorBrowser>`.
 for API details.
 
 For more explanation of the data items shown in the browser, please see
@@ -305,7 +305,7 @@ the `Mordor GitHub repo <https://github.com/OTRF/mordor>`__ and the
 
 .. code:: ipython3
 
-    >>> from msticpy.data.browsers.mordor_browser import MordorBrowser
+    >>> from msticpy.vis.mordor_browser import MordorBrowser
     >>> mdr_browser = MordorBrowser()
 
 
@@ -413,7 +413,7 @@ You can also use the standard QueryProvider query browser to view some
 details of the queries. This works for all query types (not just Mordor)
 but has fewer details.
 See
-:py:mod:`query_browser<msticpy.data.browsers.query_browser>`
+:py:mod:`query_browser<msticpy.vis.query_browser>`
 for more details.
 
 .. code:: ipython3

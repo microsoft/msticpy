@@ -106,4 +106,4 @@ def test_display_code(lang, style, full, expected):
 
     handle = code_view.display_html(_INPUT_TEXT, **kwargs)
     if is_ipython(notebook=True):
-        check.is_true(handle is not None)
+        check.is_not_none(handle)

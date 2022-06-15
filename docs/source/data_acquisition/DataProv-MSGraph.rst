@@ -38,7 +38,7 @@ The settings in the file should look like the following:
             ClientId: "CLIENT ID"
             ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
-            UserName: "User Name"
+            UserName: "USER NAME"
 
 
 We strongly recommend storing the client secret value
@@ -70,7 +70,7 @@ an instance string to the "MicrosoftGraph" section name.
       MicrosoftGraph-Tenant2:
           Args:
             ClientId: "CLIENT ID"
-            UserName: "pete@contoso.com"
+            UserName: "USER NAME"
             TenantId: "TENANT ID"
 
 Loading a QueryProvider for Microsoft Graph
@@ -104,13 +104,11 @@ If you want to use delegated authentication for your application
 you can specify this when you call connect. By default, this will
 attempt to use browser-based authentication, however you can also
 use device code authentication (needed if using Azure ML) by setting
-auth_type to "device". To use delegated auth you must include
-a username either as a keyword argument or in your msticpyconfig.yaml
-file.
+auth_type to "device".
 
 .. code:: ipython3
 
-        msg_prov.connect(delegated_auth=True, auth_type="device")
+        mdatp_prov.connect(delegated_auth=True, auth_type="device")
 
 You can also pass connection parameters as
 keyword arguments or a connection string.

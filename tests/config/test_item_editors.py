@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 import pytest_check as check
 import yaml
-from msticpy.config.comp_edit import CompEditStatusMixin
+
 from msticpy.config.ce_azure import CEAzure
 from msticpy.config.ce_azure_sentinel import CEAzureSentinel, _validate_ws
 from msticpy.config.ce_common import get_def_tenant_id
@@ -20,10 +20,11 @@ from msticpy.config.ce_keyvault import CEKeyVault
 from msticpy.config.ce_other_providers import CEOtherProviders
 from msticpy.config.ce_ti_providers import CETIProviders
 from msticpy.config.ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
+from msticpy.config.comp_edit import CompEditStatusMixin
 from msticpy.config.compound_ctrls import ArgControl
 from msticpy.config.mp_config_control import MpConfigControls, get_mpconfig_definitions
 
-from ..nbtools.test_user_config import CONFIG_TEXT
+from ..init.test_user_config import CONFIG_TEXT
 from ..unit_test_lib import TEST_DATA_PATH
 
 __author__ = "Ian Hellen"
@@ -83,12 +84,12 @@ _EDITORS = [
             CEAutoLoadQProvs,
             [
                 "AzureSentinel.Default",
-                "Mordor",
+                "OTRF",
                 "LocalData",
-                "AzureSecurityCenter",
+                "M365D",
                 "Splunk",
                 "MDE",
-                "SecurityGraph",
+                "MSGraph",
             ],
         ),
         id="CEAutoLoadQProvs",
@@ -246,7 +247,6 @@ def test_tiproviders_editor(kv_sec, mp_conf_ctrl):
     # get the control for this provider
     ctrl_path = f"TIProviders.{provider}.Args.AuthKey"
     arg_ctrl = mp_conf_ctrl.get_control(ctrl_path)
-
     arg_ctrl.rb_store_type.value = STORE_ENV_VAR
     arg_ctrl.txt_val.value = "test_var"
     os.environ["test_var"] = "test_value"
@@ -296,8 +296,10 @@ def test_azure_sentinel_editor(mp_conf_ctrl):
     result, _ = _validate_ws(new_ws, mp_conf_ctrl, edit_comp._COMP_PATH)
     check.is_false(result)
 
-    edit_comp.edit_ctrls.children[1].value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
-    edit_comp.edit_ctrls.children[2].value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
+    ctrl = _get_named_control(edit_comp, "WorkspaceId")
+    ctrl.value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
+    ctrl = _get_named_control(edit_comp, "TenantId")
+    ctrl.value = "40dcc8bf-0478-4f3b-b275-ed0a94f2c013"
     edit_comp.edit_buttons.btn_save.click()
     result, _ = _validate_ws(new_ws, mp_conf_ctrl, edit_comp._COMP_PATH)
     check.is_true(result)
@@ -315,6 +317,12 @@ def test_azure_sentinel_editor(mp_conf_ctrl):
     edit_comp.btn_set_default.click()
     def_ws = mp_conf_ctrl.get_value(f"{edit_comp._COMP_PATH}.Default")
     check.equal(def_ws, ren_workspace_settings)
+
+
+def _get_named_control(edit_comp, name):
+    return next(
+        ctrl for ctrl in edit_comp.edit_ctrls.children if ctrl.description == name
+    )
 
 
 def test_key_vault_editor(mp_conf_ctrl):
