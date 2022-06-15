@@ -8,6 +8,4 @@ pandas>=1.1.5
 python-dateutil>=2.8.1
 pytz>=2019.2
 pyyaml>=3.13
-readthedocs-sphinx-ext>=2.1.4
-sphinx-rtd-theme>=1.0.0
-sphinx
+typing-extensions>=4.2.0

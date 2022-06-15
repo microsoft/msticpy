@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""MSAL delegated app authenticaiton class."""
+"""MSAL delegated app authentication class."""
 import json
 import logging
 from sys import platform

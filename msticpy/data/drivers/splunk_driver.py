@@ -5,9 +5,11 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 from datetime import datetime
+from time import sleep
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
+from tqdm import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import (
@@ -39,7 +41,7 @@ SPLUNK_CONNECT_ARGS = {
     "port": "(integer) The port number (the default is 8089).",
     "http_scheme": "('https' or 'http') The scheme for accessing the service "
     + "(the default is 'https').",
-    "verify": "(Boolean) Enable (True) or disable (False) SSL verification for "
+    "verify": "(Boolean) Enable (True) or disable (False) SSL verrification for "
     + "https connections. (optional, the default is True)",
     "owner": "(string) The owner context of the namespace (optional).",
     "app": "(string) The app context of the namespace (optional).",
@@ -174,12 +176,12 @@ class SplunkDriver(DriverBase):
         self, query: str, query_source: QuerySource = None, **kwargs
     ) -> Union[pd.DataFrame, Any]:
         """
-        Execute splunk query and retrieve results via OneShot search mode.
+        Execute splunk query and retrieve results via OneShot or async search mode.
 
         Parameters
         ----------
         query : str
-            Splunk query to execute via OneShot search mode
+            Splunk query to execute via OneShot or async search mode
         query_source : QuerySource
             The query definition object
 
@@ -188,6 +190,8 @@ class SplunkDriver(DriverBase):
         kwargs :
             Are passed to Splunk oneshot method
             count=0 by default
+            oneshot=False by default for async query,
+                set to True for oneshot (blocking) mode
 
         Returns
         -------
@@ -199,10 +203,37 @@ class SplunkDriver(DriverBase):
         del query_source
         if not self._connected:
             raise self._create_not_connected_err("Splunk")
+
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)
-        query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
-        reader = sp_results.ResultsReader(query_results)
+
+        # Normal, oneshot or blocking searches. Defaults to non-blocking
+        # Oneshot is blocking a blocking HTTP call which may cause time-outs
+        # https://dev.splunk.com/enterprise/docs/python/sdk-python/howtousesplunkpython/howtorunsearchespython
+        is_oneshot = kwargs.get("oneshot", False)
+
+        if is_oneshot is True:
+            query_results = self.service.jobs.oneshot(query, count=count, **kwargs)
+            reader = sp_results.ResultsReader(query_results)
+
+        else:
+            # Set mode and initialize async job
+            kwargs_normalsearch = {"exec_mode": "normal"}
+            query_job = self.service.jobs.create(query, **kwargs_normalsearch)
+
+            # Initiate progress bar and start while loop, waiting for async query to complete
+            progress_bar = tqdm(total=100, desc="Waiting Splunk job to complete")
+            while not query_job.is_done():
+                current_state = query_job.state
+                progress = float(current_state["content"]["doneProgress"]) * 100
+                progress_bar.update(progress)
+                sleep(1)
+
+            # Update progress bar indicating completion and fetch results
+            progress_bar.update(100)
+            progress_bar.close()
+            reader = sp_results.ResultsReader(query_job.results())
+
         resp_rows = [row for row in reader if isinstance(row, dict)]
         if not resp_rows:
             print("Warning - query did not return any results.")

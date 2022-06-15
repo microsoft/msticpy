@@ -12,7 +12,7 @@ from azure.core.exceptions import ClientAuthenticationError
 
 from msticpy.context.azure import AzureData, MicrosoftSentinel
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, protected-access
 
 _RESOURCES = pd.DataFrame(
     {
@@ -70,15 +70,6 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
 
 @patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
 def test_azuresent_connect_fail(az_data_connect: Mock):
-    """Test connect failure."""
-    az_data_connect.side_effect = ClientAuthenticationError("Could not authenticate.")
-    with pytest.raises(ClientAuthenticationError):
-        sentinel_inst = MicrosoftSentinel(res_id=_RES_ID)
-        sentinel_inst.connect(auth_methods=["env"])
-
-
-@patch(MicrosoftSentinel.__module__ + ".AzureData.connect")
-def test_azuresent_connect_fail(az_data_connect):
     """Test connect failure."""
     az_data_connect.side_effect = ClientAuthenticationError("Could not authenticate.")
     with pytest.raises(ClientAuthenticationError):
