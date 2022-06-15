@@ -174,7 +174,7 @@ class OData(DriverBase):
             authority = self.oauth_url.format(tenantId=cs_dict["tenant_id"])  # type: ignore
             if authority.startswith("https://login.microsoftonline.com/"):
                 authority = re.split(
-                    r"(https:\/\/login.microsoftonline.com\/[^\/]*)", authority
+                    r"(https:\/\/login\.microsoftonline\.com\/[^\/]*)", authority
                 )[1]
             self.msal_auth = MSALDelegatedAuth(
                 client_id=cs_dict["client_id"],
