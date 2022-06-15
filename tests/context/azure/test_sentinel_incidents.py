@@ -14,6 +14,8 @@ import respx
 
 from msticpy.context.azure import MicrosoftSentinel
 
+# pylint: disable=redefined-outer-name
+
 _INCIDENT = {
     "value": [
         {
@@ -74,7 +76,7 @@ def sent_loader(mock_creds):
 @respx.mock
 def test_sent_incidents(sent_loader):
     """Test Sentinel incidents feature."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_INCIDENT
     )
     incidents = sent_loader.list_incidents()
@@ -90,8 +92,8 @@ def test_sent_incidents(sent_loader):
 @respx.mock
 def test_sent_updates(sent_loader):
     """Test Sentinel incident update feature."""
-    respx.put(re.compile("https://management.azure.com/.*")).respond(201, json="")
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(201, json="")
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_INCIDENT
     )
     sent_loader.post_comment(
@@ -102,8 +104,8 @@ def test_sent_updates(sent_loader):
 @respx.mock
 def test_sent_comments(sent_loader):
     """Test Sentinel comments feature."""
-    respx.put(re.compile("https://management.azure.com/.*")).respond(200, json="")
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(200, json="")
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_INCIDENT
     )
     sent_loader.update_incident(
@@ -115,7 +117,7 @@ def test_sent_comments(sent_loader):
 @respx.mock
 def test_sent_entities(sent_loader):
     """Test getting Entities from a Sentinel Incident."""
-    respx.post(re.compile("https://management.azure.com/.*")).respond(
+    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json={"entities": [{"kind": "ipv4", "properties": "13.67.128.10"}]}
     )
     ents = sent_loader.get_entities("0c7d4a60-46b3-45d0-a966-3b51373faef0")
@@ -127,7 +129,7 @@ def test_sent_entities(sent_loader):
 @respx.mock
 def test_sent_alerts(sent_loader):
     """Test getting alerts from a Sentinel Incident."""
-    respx.post(re.compile("https://management.azure.com/.*")).respond(
+    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(
         200,
         json={
             "value": [
@@ -147,9 +149,9 @@ def test_sent_alerts(sent_loader):
 
 
 @respx.mock
-def test_sent_comments(sent_loader):
+def test_sent_incident_comments(sent_loader):
     """Test getting alerts from a Sentinel Incident."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200,
         json={
             "value": [
@@ -171,7 +173,7 @@ def test_sent_comments(sent_loader):
 @respx.mock
 def test_sent_bookmarks(sent_loader):
     """Test getting bookmarks from a Sentinel Incident."""
-    respx.get(re.compile("https://management.azure.com/.*/relations")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*/relations")).respond(
         200,
         json={
             "value": [
@@ -184,7 +186,7 @@ def test_sent_bookmarks(sent_loader):
             ]
         },
     )
-    respx.get(re.compile("https://management.azure.com/.*/bookmarks")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*/bookmarks")).respond(
         200,
         json={
             "value": [
@@ -203,5 +205,6 @@ def test_sent_bookmarks(sent_loader):
 
 @respx.mock
 def test_sent_incident_create(sent_loader):
-    respx.put(re.compile("https://management.azure.com/.*")).respond(201)
+    """Test incident creation."""
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(201)
     sent_loader.create_incident(title="Test Incident", severity="Low")

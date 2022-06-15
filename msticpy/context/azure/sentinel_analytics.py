@@ -25,12 +25,12 @@ class SentinelHuntingMixin:
 
     def list_hunting_queries(self) -> pd.DataFrame:
         """
-        Return all hunting queries in a Microsoft Sentinel workspace.
+        Return all custom hunting queries in a Microsoft Sentinel workspace.
 
         Returns
         -------
         pd.DataFrame
-            A table of the hunting queries.
+            A table of the custom hunting queries.
 
         """
         saved_query_df = self._list_items(  # type: ignore
