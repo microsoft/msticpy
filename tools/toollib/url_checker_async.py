@@ -381,7 +381,7 @@ async def _check_uris_async(
     async with ClientSession() as session:
         for uri in links_to_check:
             if delay:
-                asyncio.sleep(delay)
+                await asyncio.sleep(delay)
             # pass Semaphore and session to every GET request
             task = asyncio.ensure_future(_check_uri_with_sem_async(sem, uri, session))
             tasks.append(task)

@@ -13,6 +13,8 @@ import respx
 
 from msticpy.context.azure import MicrosoftSentinel
 
+# pylint: disable=redefined-outer-name
+
 _WATCHLISTS = {
     "value": [
         {
@@ -99,7 +101,7 @@ def sent_loader(mock_creds):
 @respx.mock
 def test_sent_watchlists(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_WATCHLISTS
     )
     watchlists = sent_loader.list_watchlists()
@@ -111,8 +113,8 @@ def test_sent_watchlists(sent_loader):
 @respx.mock
 def test_sent_watchlists_create(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.put(re.compile("https://management.azure.com/.*")).respond(200)
-    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(200)
+    respx.get(re.compile(r"https://management\.azure\.com/.*/watchlists")).respond(
         200, json=_WATCHLISTS
     )
     sent_loader.create_watchlist(
@@ -125,8 +127,8 @@ def test_sent_watchlists_create(sent_loader):
 @respx.mock
 def test_sent_watchlists_delete(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.delete(re.compile("https://management.azure.com/.*")).respond(200)
-    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+    respx.delete(re.compile(r"https://management\.azure\.com/.*")).respond(200)
+    respx.get(re.compile(r"https://management\.azure\.com/.*/watchlists")).respond(
         200, json=_WATCHLISTS
     )
     sent_loader.delete_watchlist(watchlist_name="watchlist1")
@@ -135,7 +137,7 @@ def test_sent_watchlists_delete(sent_loader):
 @respx.mock
 def test_sent_watchlists_items(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.get(re.compile("https://management.azure.com/.*/watchlistItems")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*/watchlistItems")).respond(
         200, json=_WATCHLIST_ITEM
     )
     watchlist_items = sent_loader.list_watchlist_items(watchlist_name="Test Watchlist")
@@ -149,13 +151,13 @@ def test_sent_watchlists_items(sent_loader):
 @respx.mock
 def test_sent_watchlists_items_add(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.get(re.compile("https://management.azure.com/.*/watchlistItems")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*/watchlistItems")).respond(
         200, json=_WATCHLIST_ITEM
     )
-    respx.put(re.compile("https://management.azure.com/.*/watchlistItems/.*")).respond(
-        200
-    )
-    respx.get(re.compile("https://management.azure.com/.*/watchlists")).respond(
+    respx.put(
+        re.compile(r"https://management\.azure\.com/.*/watchlistItems/.*")
+    ).respond(200)
+    respx.get(re.compile(r"https://management\.azure\.com/.*/watchlists")).respond(
         200, json=_WATCHLISTS
     )
     sent_loader.add_watchlist_item(

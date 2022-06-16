@@ -13,6 +13,8 @@ import respx
 
 from msticpy.context.azure import MicrosoftSentinel
 
+# pylint: disable=redefined-outer-name
+
 _HUNTING_QUERIES = {
     "__metadata": {},
     "value": [
@@ -92,7 +94,7 @@ def sent_loader(mock_creds):
 @respx.mock
 def test_sent_hunting_queries(sent_loader):
     """Test Sentinel hunting feature."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_HUNTING_QUERIES
     )
     hqs = sent_loader.list_hunting_queries()
@@ -103,7 +105,7 @@ def test_sent_hunting_queries(sent_loader):
 @respx.mock
 def test_sent_alert_rules(sent_loader):
     """Test Sentinel alert feature."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_ALERT_RULES
     )
     alerts = sent_loader.list_alert_rules()
@@ -114,8 +116,12 @@ def test_sent_alert_rules(sent_loader):
 @respx.mock
 def test_sent_analytic_create(sent_loader):
     """Test Sentinel analytics feature."""
-    respx.put(re.compile("https://management.azure.com/.*/alertRules/.*")).respond(201)
-    respx.get(re.compile("https://management.azure.com/.*/alertRuleTemplates")).respond(
+    respx.put(re.compile(r"https://management\.azure\.com/.*/alertRules/.*")).respond(
+        201
+    )
+    respx.get(
+        re.compile(r"https://management\.azure\.com/.*/alertRuleTemplates")
+    ).respond(
         200,
         json={
             "value": [
@@ -144,7 +150,7 @@ def test_sent_analytic_create(sent_loader):
 @respx.mock
 def test_sent_analytics_delete(sent_loader):
     """Test Sentinel analytics feature."""
-    respx.delete(re.compile("https://management.azure.com/.*/alertRules/.*")).respond(
-        200
-    )
+    respx.delete(
+        re.compile(r"https://management\.azure\.com/.*/alertRules/.*")
+    ).respond(200)
     sent_loader.delete_analytic_rule("508f3c50-f6d3-45b3-8321-fb674afe3478")
