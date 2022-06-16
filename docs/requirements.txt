@@ -1,4 +1,5 @@
 attrs>=18.2.0
+cryptography
 deprecated>=1.2.4
 docutils<0.18.0
 httpx>=0.21
