@@ -62,6 +62,8 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
+    # "sphinx.ext.intersphinx",
+    # "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
