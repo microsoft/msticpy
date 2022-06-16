@@ -6,8 +6,6 @@
 """Azure Sentinel unit tests."""
 import re
 from collections import namedtuple
-from operator import itemgetter
-from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -95,7 +93,7 @@ _WS_RES_GRAPH_DATA = [
 
 
 def _get_ws_results(**kwargs):
-    """Return results DF"""
+    """Return results DF."""
     df = pd.DataFrame(_WS_RES_GRAPH_DATA)
 
     if kwargs.get("workspace_id"):
@@ -201,7 +199,7 @@ def test_ws_details_from_url(url, expected, wk_space, monkeypatch):
 )
 def test_get_workspace_name(url, expected, wk_space, monkeypatch):
     """Testing retrieving workspace details from portal url."""
-    del url
+    del url, wk_space
     _patch_qry_prov(monkeypatch)
 
     ws_name = MicrosoftSentinel.get_workspace_name(workspace_id=expected.ws_id)

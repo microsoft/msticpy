@@ -36,7 +36,10 @@
         {
             "file": "test_pkg_config.py",
             "_justification": "This is a test case and does not contain a secret."
+        },
+        {
+            "file": "ContiLeaksAnalysis.ipynb",
+            "_justification": "There are no passwords in the notebook."
         }
-
     ]
 }

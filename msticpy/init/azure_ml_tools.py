@@ -140,7 +140,7 @@ def check_python_ver(min_py_ver: Union[str, Tuple] = MIN_PYTHON_VER_DEF):
             (Python) kernel version.</h4></font>
             Select a kernel from the notebook toolbar (above), that is Python
             {min_py_ver} or later (Python 3.8 recommended)<br>
-            """  # nosec
+            """
         )
         _disp_html(
             f"""
