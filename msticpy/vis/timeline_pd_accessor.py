@@ -15,7 +15,7 @@ from .._version import VERSION
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-# pylint: disable=unused-import, import-outside-toplevel, cyclic-import
+# pylint: disable=import-outside-toplevel, cyclic-import
 
 
 @deprecated("Will be removed in version 2.0.0", version="1.7.0")
@@ -103,7 +103,6 @@ class TimeLineAccessor:
         """
         return self._display_timeline(data=self._df, **kwargs)
 
-    # pylint: disable=invalid-name
     def plot_values(self, value_col: str = None, **kwargs) -> LayoutDOM:
         """
         Display a timeline of events.
