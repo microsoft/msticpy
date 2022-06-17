@@ -6,6 +6,8 @@
 """Test Pivot registered functions."""
 import warnings
 from collections import namedtuple
+from contextlib import redirect_stdout
+from io import StringIO
 
 import pandas as pd
 import pytest
@@ -14,8 +16,9 @@ import pytest_check as check
 from msticpy.context.geoip import GeoLiteLookup
 from msticpy.context.tilookup import TILookup
 from msticpy.datamodel import entities
-from msticpy.init.pivot import Pivot
-from msticpy.init.pivot_core.pivot_container import PivotContainer
+
+# pylint: disable=redefined-outer-name, unused-import, unused-argument
+from .pivot_fixtures import create_pivot
 
 __author__ = "Ian Hellen"
 
@@ -32,24 +35,6 @@ def data_providers():
             "geolite": GeoLiteLookup(),
             #  "ip_stack": IPStackLookup(),
         }
-
-
-def _reset_entities():
-    """Clear any query containers in entities."""
-    for entity_name in ("Host", "IpAddress", "Account", "Url"):
-        entity = getattr(entities, entity_name)
-        for attr in dir(entity):
-            if isinstance(getattr(entity, attr), PivotContainer):
-                delattr(entity, attr)
-
-
-@pytest.fixture(scope="session")
-def _create_pivot(data_providers):
-    _reset_entities()
-    providers = data_providers.values()
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        return Pivot(providers=providers)
 
 
 EntityQuery = namedtuple(
@@ -248,7 +233,7 @@ _ENTITY_QUERIES = [
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_entity(_create_pivot, test_case):
+def test_entity_attr_funcs_entity(create_pivot, test_case):
     """Test calling function with entity attributes."""
     # Test entity
     ent_cls = getattr(entities, test_case.entity)
@@ -260,7 +245,7 @@ def test_entity_attr_funcs_entity(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_value(_create_pivot, test_case):
+def test_entity_attr_funcs_value(create_pivot, test_case):
     """Test calling function with value."""
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
@@ -273,7 +258,7 @@ def test_entity_attr_funcs_value(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_itbl(_create_pivot, test_case):
+def test_entity_attr_funcs_itbl(create_pivot, test_case):
     """Test calling function with iterable input."""
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
@@ -286,7 +271,7 @@ def test_entity_attr_funcs_itbl(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _ENTITY_QUERIES)
-def test_entity_attr_funcs_df(_create_pivot, test_case):
+def test_entity_attr_funcs_df(create_pivot, test_case):
     """Test calling function with DF input attributes."""
     ent_cls = getattr(entities, test_case.entity)
     entity = ent_cls(**(test_case.args))
@@ -296,3 +281,15 @@ def test_entity_attr_funcs_df(_create_pivot, test_case):
     in_df = pd.DataFrame([val], columns=[test_case.src_col])
     result_df = func(data=in_df, src_column=test_case.src_col)
     check.is_in(test_case.exp_val, result_df.iloc[0][test_case.exp_col])
+
+
+def test_pivot_container(create_pivot):
+    """Test operations of PivotContainer class."""
+    pivot_funcs = entities.Host.pivots()
+    check.greater_equal(len(pivot_funcs), 7)
+
+    with redirect_stdout(StringIO()) as print_capture:
+        entities.Host.util()
+
+    pr_content = print_capture.getvalue()
+    check.is_in("(pivot function)", pr_content)

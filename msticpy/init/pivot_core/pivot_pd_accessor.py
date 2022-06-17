@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas DataFrame accessor for Pivot functions."""
+
+import contextlib
 import json
 import re
 import warnings
@@ -16,6 +18,7 @@ import numpy as np
 import pandas as pd
 from IPython import get_ipython
 from IPython.display import HTML, display
+from pkg_resources import parse_version
 
 from ..._version import VERSION
 
@@ -395,6 +398,8 @@ class PivotAccessor:
 
         """
         orig_cols = self._df.columns
+        if parse_version(pd.__version__) >= parse_version("1.3.0"):
+            return self._df.explode(column=cols)
         data = self._df
         if isinstance(cols, str):
             cols = [cols]
@@ -419,7 +424,7 @@ class PivotAccessor:
         Parameters
         ----------
         cols : Union[str, Iterable[str]]
-            Column or interable of columns to process
+            Column or iterable of columns to process
 
         Returns
         -------
@@ -440,14 +445,12 @@ class PivotAccessor:
 def _name_match(cur_cols: Iterable[str], col_filter, match_case):
     col_filter = re.sub(r"[^.]\*", ".*", col_filter)
     col_filter = re.sub(r"[^.]\?", ".?", col_filter)
-    regex_opts = [re.IGNORECASE] if not match_case else []
+    regex_opts = [] if match_case else [re.IGNORECASE]
     return {col for col in cur_cols if re.match(col_filter, col, *regex_opts)}
 
 
 def _json_safe_conv(val):
     if val:
-        try:
+        with contextlib.suppress(TypeError, JSONDecodeError):
             return json.loads(val)
-        except (TypeError, JSONDecodeError):
-            pass
     return val

@@ -4,9 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline browser UI."""
-import warnings
-
-import pytest
 import pytest_check as check
 
 try:
@@ -16,22 +13,17 @@ try:
 except ImportError:
     _ENABLE_CLIP = False
 
+# pylint: disable=redefined-outer-name, protected-access, unused-import
+# pylint: disable=unused-argument
 from msticpy.init.pivot import Pivot
 from msticpy.init.pivot_core.pivot_browser import PivotBrowser
 
+from .pivot_fixtures import create_data_providers, create_pivot, data_providers
+
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name, protected-access
 
-
-@pytest.fixture(scope="session")
-def _create_pivot():
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        return Pivot()
-
-
-def test_pivot_browser(_create_pivot):
+def test_pivot_browser(create_pivot):
     """Test pivot browser."""
     browser = PivotBrowser()
 
@@ -46,14 +38,14 @@ def test_pivot_browser(_create_pivot):
         "Return&nbsp;components&nbsp;of&nbsp;domain", browser._html["func_help"].value
     )
 
-    browser._text["search_txt"].value = "Vir"
-    check.is_in("ti.lookup_file_hash_VirusTotal", browser._html["search_res"].value)
+    browser._text["search_txt"].value = "dns"
+    check.is_in("tilookup_dns", browser._html["search_res"].value)
 
     browser._btn["copy"].click()
 
     if _ENABLE_CLIP:
         try:
             cb_content = pyperclip.paste()
-            check.equal("entities.Dns.util.dns_components()", cb_content)
+            check.equal("Dns.util.dns_components()", cb_content)
         except pyperclip.PyperclipException:
             print("Pyperclip not operational on this OS.")

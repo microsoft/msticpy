@@ -122,7 +122,7 @@ The extras available in *MSTICPy* are described in the following table:
 |                  | - Kqlmagic Jupyter extended        |              |              |
 +------------------+------------------------------------+--------------+--------------+
 | sentinel         | - Combination of core install      |   3m:48s     |   5m:00s     |
-|(aliases:         |   plus "azure", "keyvault" and     |              |              |
+| (aliases:        |   plus "azure", "keyvault" and     |              |              |
 | azsentinel       |   "kql"                            |              |              |
 | azuresentinel)   |                                    |              |              |
 +------------------+------------------------------------+--------------+--------------+

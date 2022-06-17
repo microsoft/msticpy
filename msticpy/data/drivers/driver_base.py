@@ -38,6 +38,7 @@ class DriverBase(ABC):
         self._previous_connection = False
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
+        self._instance: Optional[str] = None
 
     @property
     def loaded(self) -> bool:
@@ -75,6 +76,20 @@ class DriverBase(ABC):
 
         """
         return self._connected
+
+    @property
+    def instance(self) -> Optional[str]:
+        """
+        Return instance name, if one is set.
+
+        Returns
+        -------
+        Optional[str]
+            The name of driver instance or None if
+            the driver does not support multiple instances
+
+        """
+        return self._instance
 
     @property
     def schema(self) -> Dict[str, Dict]:

@@ -4,16 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-Initialization sub-package.
+Pivot initialization sub-package.
 
 This is a sub-package that handles the pivot initialization.
 
-- nbinit - notebook initialization
-- azure_ml_tools - configuration and helpers for AML workspaces
-- pivot - pivot initializer
-- pivot_init - pivot initialization files
-- user_config - user auto-load of components
-- nbmagics - MSTICPy magics
-- mp_pandas_accessors - MSTICPy core accessors
+- pivot_data_queries
+- pivot_ti_providers
+- vt_pivot
 
 """

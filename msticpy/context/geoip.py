@@ -42,7 +42,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
-from ..common.utility import SingletonClass, export, is_ipython
+from ..common.utility import SingletonArgsClass, export, is_ipython
 from ..datamodel.entities import GeoLocation, IpAddress
 from .ip_utils import get_ip_type
 
@@ -386,7 +386,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
 
 @export
-@SingletonClass
+@SingletonArgsClass
 class GeoLiteLookup(GeoIpLookup):
     """
     GeoIP Lookup using MaxMindDB database.
