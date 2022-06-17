@@ -23,7 +23,6 @@ from bokeh.models import (
 from bokeh.models.annotations import LegendItem
 
 # pylint: disable=too-many-lines
-# pylint: disable=no-name-in-module
 from bokeh.palettes import viridis
 
 # pylint: enable=no-name-in-module
@@ -228,7 +227,7 @@ def display_timeline(
 _TL_VALUE_KWARGS = ["kind", "y", "x"]
 
 
-# pylint: disable=invalid-name, too-many-locals, too-many-statements, too-many-branches
+# pylint: disable=too-many-locals, too-many-statements, too-many-branches
 @export  # noqa: C901, MC0001
 def display_timeline_values(  # noqa: C901, MC0001
     data: pd.DataFrame,
@@ -485,7 +484,7 @@ def display_timeline_values(  # noqa: C901, MC0001
 # pylint: enable=invalid-name,too-many-locals, too-many-statements, too-many-branches
 
 
-# pylint: disable=too-many-locals, too-many-statements, too-many-branches
+# pylint: disable=too-many-locals
 def _display_timeline_dict(data: dict, **kwargs) -> figure:  # noqa: C901, MC0001
     """
     Display a timeline of events.
@@ -1005,7 +1004,7 @@ def _calc_auto_plot_height(group_count):
     return max(ht_per_row * group_count, 300)
 
 
-# pylint: disable=too-many-arguments, invalid-name, too-many-locals
+# pylint: disable=too-many-arguments, invalid-name
 def _create_range_tool(
     data,
     min_time,
