@@ -100,8 +100,10 @@ class KqlDriver(DriverBase):
 
         self._set_kql_option("request_user_agent-tag", MSTICPY_USER_AGENT)
         self._schema: Dict[str, Any] = {}
-        self.environment = kwargs.get("data_environment", DataEnvironment.MSSentinel)
+        self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
+        for option, value in kwargs.items():
+            self._set_kql_option(option, value)
 
         self.current_connection = ""
         self.current_connection_args: Dict[str, Any] = {}
@@ -292,7 +294,7 @@ class KqlDriver(DriverBase):
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = kql_exec(query)
+        result = kql_exec(query, options=kwargs)
         self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
