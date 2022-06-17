@@ -14,18 +14,21 @@ import pytest_check as check
 
 from msticpy.data import QueryProvider
 from msticpy.datamodel import entities
+
+# pylint: disable=unused-import
 from msticpy.init.pivot import Pivot
 from msticpy.init.pivot_core.pivot_container import PivotContainer
 
 from ...unit_test_lib import get_test_data_path
+from .pivot_fixtures import create_pivot, data_providers
 
 __author__ = "Ian Hellen"
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, unused-argument
 
 
 @pytest.fixture(scope="session")
-def data_providers():
+def create_data_providers():
     """Return dict of providers."""
     data_path = Path(get_test_data_path()) / "localdata"
     with warnings.catch_warnings():
@@ -35,24 +38,6 @@ def data_providers():
                 "LocalData", data_paths=[str(data_path)], query_paths=[str(data_path)]
             ),
         }
-
-
-def _reset_entities():
-    """Clear any query containers in entities."""
-    for entity_name in ("Host", "IpAddress", "Account", "Url"):
-        entity = getattr(entities, entity_name)
-        for attr in dir(entity):
-            if isinstance(getattr(entity, attr), PivotContainer):
-                delattr(entity, attr)
-
-
-@pytest.fixture(scope="session")
-def _create_pivot(data_providers):
-    _reset_entities()
-    providers = data_providers.values()
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        return Pivot(providers=providers)
 
 
 PivotQuery = namedtuple(
@@ -115,7 +100,7 @@ _PIVOT_QUERIES = [
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_data_query_entity(_create_pivot, test_case):
+def test_data_query_entity(create_pivot, test_case):
     """Test calling function with entity attributes."""
     # Test entity
     first_val = next(iter(test_case.value))
@@ -129,7 +114,7 @@ def test_data_query_entity(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_data_query_value(_create_pivot, test_case):
+def test_data_query_value(create_pivot, test_case):
     """Test calling function with value."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test value input
@@ -140,7 +125,7 @@ def test_data_query_value(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_data_query_itbl(_create_pivot, test_case):
+def test_data_query_itbl(create_pivot, test_case):
     """Test calling function with iterable input."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
 
@@ -163,7 +148,7 @@ def test_data_query_itbl(_create_pivot, test_case):
 
 
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_data_query_df(_create_pivot, test_case):
+def test_data_query_df(create_pivot, test_case):
     """Test calling function with DF input attributes."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
 
@@ -179,7 +164,7 @@ def test_data_query_df(_create_pivot, test_case):
     check.is_instance(result_df, pd.DataFrame)
     # For local data we are reading and returning the same data set each time
     # for multi input values, we expect to get that number
-    # mulitplied by the number of input values, except in cases
+    # multiplied by the number of input values, except in cases
     # where the query supports "list" parameters. In that case we
     # should just get 1x the data set.
     check.equal(len(single_val_result_df) * test_case.exp_count, len(result_df))
@@ -187,7 +172,7 @@ def test_data_query_df(_create_pivot, test_case):
 
 @pytest.mark.parametrize("join_type", ["left", "inner", "right"])
 @pytest.mark.parametrize("test_case", _PIVOT_QUERIES)
-def test_pivot_funcs_df_merge(_create_pivot, join_type, test_case):
+def test_pivot_funcs_df_merge(create_pivot, join_type, test_case):
     """Test calling function with DF input attributes."""
     func = getattr(getattr(test_case.entity, test_case.provider), test_case.pivot_func)
     # Test DF input

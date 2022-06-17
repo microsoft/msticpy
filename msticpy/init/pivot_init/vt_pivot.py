@@ -127,7 +127,6 @@ def add_pivot_functions(api_scope: Optional[str] = None):
                 entity_map={entity: _ENTITY_PROPS[entity]},
                 func_input_value_arg="entity_id",
                 can_iterate=True,
-                create_shortcut=True,
             )
             Pivot.add_pivot_function(func, pivot_reg=pivot_reg, container="VT")
 
@@ -140,7 +139,11 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = enum_parse(VTAPIScope, api_scope) or VTAPIScope.PUBLIC
     else:
         scope = api_scope
-    vt_client = VTLookupV3()
+    try:
+        vt_client = VTLookupV3()
+    except ValueError:
+        # Can't initialize VTLookup - don't add the pivot funcs
+        return {}
 
     if not isinstance(scope, VTAPIScope):
         # pylint: disable=not-an-iterable

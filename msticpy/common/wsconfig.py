@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 """Module for Log Analytics-related configuration."""
 
+
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -121,6 +123,7 @@ class WorkspaceConfig:
         self._config: Dict[str, str] = {}
         self._interactive = interactive
         self._config_file = config_file
+        self.workspace_key = workspace or "Default"
         # If config file specified, use that
         if config_file:
             self._config.update(self._read_config_values(config_file))
@@ -232,12 +235,10 @@ class WorkspaceConfig:
         """Read configuration file."""
         if not file_path:
             return {}
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             with open(file_path, "r", encoding="utf-8") as json_file:
                 if json_file:
                     return json.load(json_file)
-        except json.JSONDecodeError:
-            pass
         return {}
 
     @classmethod

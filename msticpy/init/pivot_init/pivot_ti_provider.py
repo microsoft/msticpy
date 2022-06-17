@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Pivot TI Provider helper functions."""
 from collections import defaultdict
-from typing import Callable, Dict, Optional, Set, Tuple, Type
+from typing import Callable, Dict, Set, Tuple, Type
 
 import pandas as pd
 
@@ -27,7 +27,7 @@ TI_ENTITY_ATTRIBS: Dict[str, Tuple[Type, str]] = {
     "ip": (entities.IpAddress, "Address"),
     "dns": (entities.Dns, "DomainName"),
     "file_hash": (entities.File, "file_hash"),
-    "file_path": (entities.File, "file_hash"),
+    "file_path": (entities.File, "FullPath"),
     "url": (entities.Url, "Url"),
 }
 
@@ -76,16 +76,6 @@ def create_ti_pivot_funcs(ti_lookup: TILookup):
     # Special case for ipv4 and ipv6 - we want to merge these into "ip" if these are equivalent
     ioc_queries.update(_get_ip_functions(ioc_type_supp, ti_lookup))
 
-    # Add functions for provider-specific lookup function names
-    # These have a "_provider_name" suffix
-    for prov, ioc_set in ioc_type_supp.items():
-        for ioc in ioc_set:
-            ioc_name = _merged_ip_ioc_type(ioc, ti_lookup.loaded_providers.get(prov))
-            if not ioc_name:
-                continue
-            _, func_name, func = _create_lookup_func(ti_lookup, ioc, ioc, [prov])
-            func_name = f"{func_name}_{prov}"
-            ioc_queries[ioc][func_name] = func
     return ioc_queries
 
 
@@ -103,24 +93,6 @@ def _get_supported_ioc_types(ti_lookup: TILookup) -> Dict[str, Set[str]]:
     }
 
 
-def _prov_ipv4v6_equal(ti_provider) -> bool:
-    if not ti_provider:
-        return False
-    ti_queries = ti_provider.ioc_query_defs
-    return ti_queries.get("ipv4") is not None and (
-        ti_queries.get("ipv6") is None
-        or ti_queries.get("ipv4") == ti_queries.get("ipv6")
-    )
-
-
-def _merged_ip_ioc_type(ioc, ti_provider) -> Optional[str]:
-    if ioc == "ipv4" and _prov_ipv4v6_equal(ti_provider):
-        return "ip"
-    if ioc == "ipv6" and _prov_ipv4v6_equal(ti_provider):
-        return None
-    return ioc
-
-
 def _create_lookup_func(
     ti_lookup: TILookup, ioc, ioc_name, providers
 ) -> Tuple[str, str, Callable[..., pd.DataFrame]]:
@@ -130,7 +102,8 @@ def _create_lookup_func(
     func_name = f"{short_func_name}_{ioc_name}"
     params_dict = {"default_providers": providers, "ioc_type": ioc}
 
-    entity_cls, entity_attr = TI_ENTITY_ATTRIBS[ioc]
+    # use IoC name if ioc_type is None
+    entity_cls, entity_attr = TI_ENTITY_ATTRIBS[ioc or ioc_name]
 
     pivot_reg = PivotRegistration(
         src_func_name=ti_lookup.lookup_iocs.__name__,
@@ -163,42 +136,16 @@ def _get_non_ip_functions(ioc_type_supp, ti_lookup):
 def _get_ip_functions(ioc_type_supp, ti_lookup):
     """Get functions for IP IoC Types."""
     # Special case for ipv4 and ipv6
-    # we want to merge these into "ip" if these are equivalent
+    # we want to merge these into single "ip" function
     ioc_queries = defaultdict(dict)
-    # Special case for ipv4 and ipv6 - we want to merge these into "ip" if these are equivalent
     ip_types = {"ipv4", "ipv6"}
     ip_all_provs = [
         prov for prov, supp_types in ioc_type_supp.items() if ip_types & supp_types
     ]
 
-    # Register providers where IP v4 and v6 are equivalent, or only support ipv4, as "ip"
-    ip_gen_provs = [
-        prov
-        for prov in ip_all_provs
-        if _prov_ipv4v6_equal(ti_lookup.loaded_providers.get(prov))
-        or "ipv6" not in ioc_type_supp[prov]
-    ]
-
-    _, func_name, func = _create_lookup_func(ti_lookup, "ipv4", "ip", ip_gen_provs)
+    # Use None as the ioc_type to let TILookup resolve the type individually
+    # - this let's us send either IpV4 and IpV6 addresses
+    _, func_name, func = _create_lookup_func(ti_lookup, None, "ip", ip_all_provs)
     ioc_queries["ip"][func_name] = func
-
-    # Also register IP v4 and v6 specific queries
-    ip_v4_provs = [
-        prov
-        for prov in ip_all_provs
-        if "ipv4" in ioc_type_supp[prov]
-        if prov not in ip_gen_provs
-    ]
-    _, func_name, func = _create_lookup_func(ti_lookup, "ipv4", "ipv4", ip_v4_provs)
-    ioc_queries["ipv4"][func_name] = func
-
-    ip_v6_provs = [
-        prov
-        for prov in ip_all_provs
-        if "ipv6" in ioc_type_supp[prov]
-        if prov not in ip_gen_provs
-    ]
-    _, func_name, func = _create_lookup_func(ti_lookup, "ipv6", "ipv6", ip_v6_provs)
-    ioc_queries["ipv6"][func_name] = func
 
     return ioc_queries

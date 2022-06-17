@@ -70,7 +70,7 @@ class QueryProvider:
 
         """
         # import at runtime to prevent circular import
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel, cyclic-import
         from ...init.pivot_init.pivot_data_queries import add_data_queries_to_entities
 
         # pylint: enable=import-outside-toplevel
@@ -110,7 +110,6 @@ class QueryProvider:
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
-        self._add_pivots(lambda: self._query_time.timespan)
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -142,7 +141,8 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
-            self._add_pivots(lambda: self._query_time.timespan)
+        # Since we're now connected, add Pivot functions
+        self._add_pivots(lambda: self._query_time.timespan)
 
     def add_connection(
         self,
@@ -230,6 +230,20 @@ class QueryProvider:
 
         """
         return list(self._query_provider.schema.keys())
+
+    @property
+    def instance(self) -> Optional[str]:
+        """
+        Return instance name, if any for provider.
+
+        Returns
+        -------
+        Optional[str]
+            The instance name or None for drivers that do not
+            support multiple instances.
+
+        """
+        return self._query_provider.instance
 
     def import_query_file(self, query_file: str):
         """
@@ -458,6 +472,7 @@ class QueryProvider:
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
+        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
         """Return any kwargs not already in params."""
         query_options = kwargs.pop("query_options", {})
         if not query_options:
@@ -629,9 +644,11 @@ class QueryProvider:
     @classmethod
     def _resolve_package_path(cls, config_path: str) -> Path:
         """Resolve path relative to current package."""
-        if not Path(config_path).is_absolute():
-            return Path(__file__).resolve().parent.parent.joinpath(config_path)
-        return Path(config_path)
+        return (
+            Path(config_path)
+            if Path(config_path).is_absolute()
+            else Path(__file__).resolve().parent.parent.joinpath(config_path)
+        )
 
     @classmethod
     def _resolve_path(cls, config_path: str) -> Optional[str]:

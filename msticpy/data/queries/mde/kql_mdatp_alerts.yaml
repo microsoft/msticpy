@@ -37,6 +37,8 @@ sources:
   host_alerts:
     description: Lists alerts by for a specified hostname
     metadata:
+      pivot:
+        short_name: alerts
     args:
       query: '
         {table}
@@ -51,6 +53,8 @@ sources:
   ip_alerts:
     description: Lists alerts associated with a specified remote IP
     metadata:
+      pivot:
+        short_name: alerts
     args:
       query: '
         {table}
@@ -65,6 +69,8 @@ sources:
   url_alerts:
     description: Lists alerts associated with a specified URL
     metadata:
+      pivot:
+        short_name: alerts
     args:
       query: '
         {table}
@@ -79,6 +85,8 @@ sources:
   sha1_alerts:
     description: Lists alerts associated with a specified SHA1 hash
     metadata:
+      pivot:
+        short_name: alerts
     args:
       query: '
         {table}

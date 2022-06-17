@@ -87,6 +87,7 @@ def test_get_whois_df(net_df):
     check.equal(len(results2[~results2["whois"].isna()]), len(net_df))
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_whois_pdext(net_df):
     """Test IP Whois."""
     results = net_df.mp_whois.lookup(ip_column="AllExtIPs")

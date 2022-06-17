@@ -24,6 +24,7 @@ The following types are built-in:
 """
 
 import re
+import warnings
 from collections import defaultdict, namedtuple
 from enum import Enum
 from typing import Any, Dict, List, Set, Tuple, Union
@@ -674,4 +675,10 @@ class IoCExtractAccessor:
         is True or explicitly included in `ioc_paths`.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp.ioc_extract() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return self._ioc.extract_df(data=self._df, columns=columns, **kwargs)

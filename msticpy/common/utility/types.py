@@ -231,8 +231,6 @@ class SingletonClass:
     - First instantiation of class will work as normal
     - Subsequent attempts with the same set/values of kwargs
       will just return the original class
-    - Instantiation of the class with a different set of kwargs
-      will instantiate a new class.
     - The class method `current()` will always return the
       last instance of the class.
 
@@ -245,15 +243,9 @@ class SingletonClass:
         self.__doc__ = wrapped_cls.__doc__
 
     def __call__(self, *args, **kwargs):
-        """Overide the __call__ method for the wrapper class."""
-        if (
-            self.instance is None
-            or getattr(self.instance, "kwargs", None) != kwargs
-            or getattr(self.instance, "args", None) != args
-        ):
+        """Override the __call__ method for the wrapper class."""
+        if self.instance is None:
             self.instance = self.wrapped_cls(*args, **kwargs)
-            self.instance.kwargs = kwargs
-            self.instance.args = args
         return self.instance
 
     def current(self):
@@ -269,6 +261,39 @@ class SingletonClass:
         if name == "current":
             return self.instance
         return getattr(self.instance, name)
+
+
+@export
+class SingletonArgsClass(SingletonClass):
+    """
+    SingletonArgs decorator class.
+
+    Notes
+    -----
+    Using this decorator on a class enforces the following
+    behavior:
+
+    - First instantiation of class will work as normal
+    - Subsequent attempts with the same set/values of kwargs
+      will just return the original class
+    - Instantiation of the class with a different set of kwargs
+      will instantiate a new class.
+    - The class method `current()` will always return the
+      last instance of the class.
+
+    """
+
+    def __call__(self, *args, **kwargs):
+        """Override the __call__ method for the wrapper class."""
+        if (
+            self.instance is None
+            or getattr(self.instance, "kwargs", None) != kwargs
+            or getattr(self.instance, "args", None) != args
+        ):
+            self.instance = self.wrapped_cls(*args, **kwargs)
+            self.instance.kwargs = kwargs
+            self.instance.args = args
+        return self.instance
 
 
 @export
