@@ -15,7 +15,7 @@ requests per minute for the account type that you have.
 import contextlib
 import math  # noqa
 import re
-from collections import Counter, namedtuple
+from collections import Counter
 from functools import partial
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Callable, List, Optional, Set, Tuple, Union
@@ -26,12 +26,10 @@ from urllib3.util import parse_url
 
 from ..._version import VERSION
 from ...transform.iocextract import IoCExtract
+from .lookup_result import SanitizedObservable
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-
-
-SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 _IOC_EXTRACT = IoCExtract()
 
