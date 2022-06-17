@@ -4,11 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 """MSTICPy core pandas accessor methods."""
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Mapping, Union
 
 import pandas as pd
 
 from .._version import VERSION
+from ..data.data_obfus import mask_df
 from ..transform.base64unpack import unpack_df
 from ..transform.iocextract import IoCExtract
 from ..transform.network import df_to_networkx
@@ -187,3 +188,27 @@ class MsticpyCoreAccessor:
 
         """
         return df_to_networkx(self._df, **kwargs)
+
+    def mask(
+        self, column_map: Mapping[str, Any] = None, use_default: bool = True
+    ) -> pd.DataFrame:
+        """
+        Obfuscate the data in columns of a pandas dataframe.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            dataframe containing column to obfuscate
+        column_map : Mapping[str, Any], optional
+            Custom column mapping, by default None
+        use_default: bool
+            If True use the built-in map (adding any custom
+            mappings to this dictionary)
+
+        Returns
+        -------
+        pd.DataFrame
+            Obfuscated dataframe
+
+        """
+        return mask_df(data=self._df, column_map=column_map, use_default=use_default)

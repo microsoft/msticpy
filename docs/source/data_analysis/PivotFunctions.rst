@@ -70,7 +70,7 @@ pipeline that does multiple operations on data:
             # Query IPs that have login attempts in our AAD
             .mp_pivot.run(IpAddress.AzureSentinel.list_aad_signins_for_ip, ip_address_list="Ioc")
             # Send the output of this to a plot
-            .mp_timeline.plot(
+            .mp_plot.timeline.plot(
                 title="High Severity IPs with Logon attempts",
                 source_columns=["UserPrincipalName", "IPAddress", "ResultType", "ClientAppUsed", "UserAgent", "Location"],
                 group_by="UserPrincipalName"
@@ -1930,7 +1930,7 @@ on a timeline chart.
         # Query IPs that have login attempts
         .mp_pivot.run(IpAddress.AzureSentinel.list_aad_signins_for_ip, ip_address_list="Ioc")
         # Send the output of this to a plot
-        .mp_timeline.plot(
+        .mp_plot.timeline(
             title="High Severity IPs with Logon attempts",
             source_columns=["UserPrincipalName", "IPAddress", "ResultType", "ClientAppUsed", "UserAgent", "Location"],
             group_by="UserPrincipalName"
@@ -1985,16 +1985,16 @@ the definitions for the different pipeline types described earlier.
                 clobber: True
           - name: tee_logons_disp
             step_type: pivot_tee_exec
-            comment: Pivot tee_exec with mp_timeline.plot
-            function: mp_timeline.plot
+            comment: Pivot tee_exec with mp_plot.timeline
+            function: mp_plot.timeline
             params:
               source_columns:
                 - Computer
                 - Account
           - name: logons_timeline
             step_type: pd_accessor
-            comment: Standard accessor with mp_timeline.plot
-            function: mp_timeline.plot
+            comment: Standard accessor with mp_plot.timeline
+            function: mp_plot.timeline
             pos_params:
               - one
               - 2
@@ -2039,9 +2039,9 @@ or path of the function as if it was being executed as a method of the
 DataFrame. For built-in DataFrame methods, such as ``sort_values`` or
 ``query``, this is simply the function name. For custom accessor
 functions this must be the full dotted path. For example, *MSTICPy*
-has a custom accessor ``mp_timeline.plot()`` that plots the event
+has a custom accessor ``mp_plot.timeline()`` that plots the event
 timeline of events in a DataFrame. To invoke this use the full
-path of the function - "mp_timeline.plot".
+path of the function - "mp_plot.timeline".
 
 Reading a saved pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2068,10 +2068,10 @@ Assuming that you've saved the pipeline in a file "pipelines.yml"
         .mp_pivot.display(title='The title', query='Computer.str.startswith('MSTICAlerts')', cols=['Computer', 'Account'], head=10)
         # Pivot tee
         .mp_pivot.tee(var_name='var_df', clobber=True)
-        # Pivot tee_exec with mp_timeline.plot
-        .mp_pivot.tee_exec('mp_timeline.plot', source_columns=['Computer', 'Account'])
-        # Standard accessor with mp_timeline.plot
-        .mp_timeline.plot('one', 2, source_columns=['Computer', 'Account'])
+        # Pivot tee_exec with mp_plot.timeline
+        .mp_pivot.tee_exec('mp_plot.timeline', source_columns=['Computer', 'Account'])
+        # Standard accessor with mp_plot.timeline
+        .mp_plot.timeline('one', 2, source_columns=['Computer', 'Account'])
     )
 
 Calling the

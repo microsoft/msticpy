@@ -544,4 +544,10 @@ class ObfuscationAccessor:
             Obfuscated dataframe
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp.mask() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return mask_df(data=self._df, column_map=column_map, use_default=use_default)
