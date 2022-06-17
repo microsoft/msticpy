@@ -50,7 +50,7 @@ version = _ver
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+# needs_sphinx = "5.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -59,9 +59,11 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
-    "sphinx.ext.githubpages",
+    # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
+    # "sphinx.ext.intersphinx",
+    # "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
@@ -83,7 +85,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
