@@ -29,7 +29,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
-from ...common.utility import export
+from ...common.utility import export, mp_ua_header
 from ..tiproviders.preprocess_observable import (
     SanitizedObservable,
     preprocess_observable,
@@ -784,7 +784,7 @@ class VTLookup:
         """
         params = {"apikey": self._vtkey, vt_param.api_var_name: submission_string}
         submit_url = self._get_vt_api_url(vt_param.api_type)
-        headers = {"User-Agent": "VirusTotal", "Content-Type": "application/json"}
+        headers = {**(mp_ua_header()), "Content-Type": "application/json"}
         if vt_param.headers is not None:
             for hdr, val in vt_param.headers.items():
                 headers[hdr] = val

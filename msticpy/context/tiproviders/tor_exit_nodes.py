@@ -23,7 +23,7 @@ import httpx
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
-from ...common.utility import export
+from ...common.utility import export, mp_ua_header
 from .ti_provider_base import LookupResult, LookupStatus, ResultSeverity, TIProvider
 
 __version__ = VERSION
@@ -53,14 +53,18 @@ class Tor(TIProvider):
         now = datetime.now(timezone.utc)
         if not cls._nodelist or (now - cls._last_cached).days > 1:
             with contextlib.suppress(ConnectionError):
-                resp = httpx.get(cls._BASE_URL, timeout=get_http_timeout())
+                resp = httpx.get(
+                    cls._BASE_URL, timeout=get_http_timeout(), headers=mp_ua_header()
+                )
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     cls._nodelist = dict(cls._tor_splitter(tor_raw_list))
                     cls._last_cached = datetime.now(timezone.utc)
         if not cls._nodelist:
             with contextlib.suppress(ConnectionError):
-                resp = httpx.get(cls._ALT_URL, timeout=get_http_timeout())
+                resp = httpx.get(
+                    cls._ALT_URL, timeout=get_http_timeout(), headers=mp_ua_header()
+                )
                 tor_raw_list = resp.content.decode()
                 with cls._cache_lock:
                     node_dict = {"ExitNode": True, "LastStatus": now}

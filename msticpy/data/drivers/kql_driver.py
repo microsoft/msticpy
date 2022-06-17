@@ -24,7 +24,7 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
-from ...common.utility import export
+from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
 from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
@@ -98,6 +98,7 @@ class KqlDriver(DriverBase):
         if not self._loaded:
             self._load_kql_magic()
 
+        self._set_kql_option("request_user_agent-tag", MSTICPY_USER_AGENT)
         self._schema: Dict[str, Any] = {}
         self.environment = kwargs.get("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
@@ -173,7 +174,7 @@ class KqlDriver(DriverBase):
             self.current_connection,
             re.IGNORECASE,
         )
-        self.workspace_id = ws_in_connection.group(1) if ws_in_connection else None
+        self.workspace_id = ws_in_connection[1] if ws_in_connection else None
         self.current_connection_args.update(kwargs)
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False

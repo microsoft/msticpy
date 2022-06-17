@@ -42,7 +42,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
-from ..common.utility import SingletonClass, export, is_ipython
+from ..common.utility import SingletonClass, export, is_ipython, mp_ua_header
 from ..datamodel.entities import GeoLocation, IpAddress
 from .ip_utils import get_ip_type
 
@@ -343,7 +343,9 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
         submit_url = self._IPSTACK_API.format(
             iplist=",".join(ip_list), access_key=self._api_key
         )
-        response = httpx.get(submit_url, timeout=get_http_timeout())
+        response = httpx.get(
+            submit_url, timeout=get_http_timeout(), headers=mp_ua_header()
+        )
 
         if response.status_code == 200:
             results = response.json()
@@ -365,7 +367,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
     def _lookup_ip_list(self, ip_list: List[str]):
         """Lookup IP Addresses one-by-one."""
         ip_loc_results = []
-        with httpx.Client(timeout=get_http_timeout()) as client:
+        with httpx.Client(timeout=get_http_timeout(), headers=mp_ua_header()) as client:
             for ip_addr in ip_list:
                 submit_url = self._IPSTACK_API.format(
                     iplist=ip_addr, access_key=self._api_key
@@ -675,7 +677,9 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
                 # Some other process is downloading, wait a little then return
                 sleep(3)
                 return True
-            with httpx.stream("GET", url, timeout=get_http_timeout()) as response:
+            with httpx.stream(
+                "GET", url, timeout=get_http_timeout(), headers=mp_ua_header()
+            ) as response:
                 print("Downloading and extracting GeoLite DB archive from MaxMind....")
                 with open(db_archive_path, "wb") as file_hdl:
                     for chunk in response.iter_bytes(chunk_size=10000):

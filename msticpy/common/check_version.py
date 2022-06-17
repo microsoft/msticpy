@@ -8,6 +8,7 @@ import httpx
 from pkg_resources import parse_version
 
 from .._version import VERSION
+from .utility import mp_ua_header
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -19,7 +20,9 @@ def check_version():
 
     # fetch package metadata from PyPI
     pypi_url = "https://pypi.org/pypi/msticpy/json"
-    pkg_data = httpx.get(pypi_url, timeout=httpx.Timeout(10.0, connect=30.0)).json()
+    pkg_data = httpx.get(
+        pypi_url, timeout=httpx.Timeout(10.0, connect=30.0), headers=mp_ua_header()
+    ).json()
     latest_version = pkg_data.get("info", {}).get("version", None)
     if latest_version:
         latest_version = parse_version(latest_version)

@@ -26,7 +26,7 @@ from attr import Factory
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConfigException
 from ...common.pkg_config import get_http_timeout
-from ...common.utility import _MSTICPY_USER_AGENT, export
+from ...common.utility import export, mp_ua_header
 from .lookup_result import LookupResult, LookupStatus
 from .result_severity import ResultSeverity
 from .ti_provider_base import TIProvider
@@ -220,7 +220,7 @@ class HttpTIProvider(TIProvider, abc.ABC):
             }
             req_dict["headers"] = headers
         if "User-Agent" not in req_dict["headers"]:
-            req_dict["headers"]["User-Agent"] = _MSTICPY_USER_AGENT
+            req_dict["headers"].update(mp_ua_header())
         if src.params:
             q_params: Dict[str, Any] = {
                 key: val.format(**req_params) for key, val in src.params.items()

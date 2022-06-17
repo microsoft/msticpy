@@ -14,6 +14,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
 from ...common.provider_settings import ProviderArgs, get_provider_settings
+from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
@@ -54,7 +55,9 @@ class CybereasonDriver(DriverBase):
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded = True
         self.client = httpx.Client(
-            follow_redirects=True, timeout=self.get_http_timeout(def_timeout=120)
+            follow_redirects=True,
+            timeout=self.get_http_timeout(def_timeout=120),
+            headers=mp_ua_header(),
         )
         self.formatters = {
             "datetime": self._format_datetime,

@@ -29,6 +29,7 @@ from ...common.exceptions import (
     MsticpyNotConnectedError,
     MsticpyResourceException,
 )
+from ...common.utility import mp_ua_header
 
 try:
     from azure.mgmt.network import NetworkManagementClient
@@ -896,6 +897,7 @@ def get_api_headers(token: str) -> Dict:
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+        **(mp_ua_header()),
     }
 
 
