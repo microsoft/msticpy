@@ -18,8 +18,9 @@ from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .foliummap import plot_map
 from .matrix_plot import plot_matrix
 from .process_tree import build_and_show_process_tree
-from .timeline import display_timeline, display_timeline_values
+from .timeline import display_timeline
 from .timeline_duration import display_timeline_duration
+from .timeline_values import display_timeline_values
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

@@ -4,25 +4,24 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pivot pipeline tests."""
-import warnings
-
-import pytest
 import pytest_check as check
 import yaml
 
-from msticpy.init.pivot import Pivot
 from msticpy.init.pivot_core.pivot_pipeline import Pipeline
+
+# pylint: disable=redefined-outer-name, unused-import, unused-argument
+from .pivot_fixtures import create_data_providers, create_pivot, data_providers
 
 __author__ = "Ian Hellen"
 
 # pylint: disable=redefined-outer-name
 
 
-@pytest.fixture(scope="session")
-def _create_pivot():
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=UserWarning)
-        return Pivot()
+# @pytest.fixture(scope="session")
+# def create_pivot():
+#     with warnings.catch_warnings():
+#         warnings.simplefilter("ignore", category=UserWarning)
+#         return Pivot()
 
 
 _EXPECTED_OUTPUT = """# Pipeline 1 description
@@ -34,14 +33,14 @@ _EXPECTED_OUTPUT = """# Pipeline 1 description
     .mp_pivot.display(title='The title', query='Computer.str.startswith('MSTICAlerts')', cols=['Computer', 'Account'], head=10)
     # Pivot tee
     .mp_pivot.tee(var_name='var_df', clobber=True)
-    # Pivot tee_exec with mp_timeline.plot
-    .mp_pivot.tee_exec('mp_timeline.plot', source_columns=['Computer', 'Account'])
-    # Standard accessor with mp_timeline.plot
-    .mp_timeline.plot('one', 2, source_columns=['Computer', 'Account'])
+    # Pivot tee_exec with mp_plot.timeline
+    .mp_pivot.tee_exec('mp_plot.timeline', source_columns=['Computer', 'Account'])
+    # Standard accessor with mp_plot.timeline
+    .mp_plot.timeline('one', 2, source_columns=['Computer', 'Account'])
 )"""
 
 
-def test_pipeline_objects(_create_pivot):
+def test_pipeline_objects(create_pivot):
     """Test parse pipeline."""
     pipelines = list(Pipeline.from_yaml(_TEST_PIPELINES))
     check.equal(len(pipelines), 2)
@@ -124,16 +123,16 @@ pipelines:
           clobber: True
       - name: tee_logons_disp
         step_type: pivot_tee_exec
-        comment: Pivot tee_exec with mp_timeline.plot
-        function: mp_timeline.plot
+        comment: Pivot tee_exec with mp_plot.timeline
+        function: mp_plot.timeline
         params:
           source_columns:
               - Computer
               - Account
       - name: logons_timeline
         step_type: pd_accessor
-        comment: Standard accessor with mp_timeline.plot
-        function: mp_timeline.plot
+        comment: Standard accessor with mp_plot.timeline
+        function: mp_plot.timeline
         pos_params:
           - one
           - 2

@@ -154,7 +154,7 @@ Plotting directly from a DataFrame
 ----------------------------------
 
 We've implemented the timeline plotting functions as pandas accessors so
-you can plot directly from the DataFrame using ``mp_timeline.plot()``.
+you can plot directly from the DataFrame using ``mp_plot.timeline()``.
 
 All of the parameters used in the standalone function are available in
 the pandas accessor functions.
@@ -174,7 +174,7 @@ the pandas accessor functions.
    )
 
 
-   host_logons.mp_timeline.plot(
+   host_logons.mp_plot.timeline(
       title="Logons by Account name",
       group_by="Account",
       source_columns=["Account", "TargetLogonId", "LogonType"],
@@ -183,7 +183,7 @@ the pandas accessor functions.
    )
 
 
-   host_logons.mp_timeline.plot(
+   host_logons.mp_plot.timeline(
       title="Logons by logon type",
       group_by="LogonType",
       source_columns=["Account", "TargetLogonId", "LogonType"],
@@ -431,7 +431,7 @@ diamonds).
 
 .. code:: ipython3
 
-   az_net_flows_df.mp_timeline.plot_duration(
+   az_net_flows_df.mp_plot.timeline_duration(
        group_by=["SrcIP", "DestIP", "L7Protocol"]
    )
 

@@ -18,21 +18,39 @@ from deprecated.sphinx import deprecated
 
 from .._version import VERSION
 from ..common.utility import check_kwargs, export
-from .timeline import (
-    _DEFAULT_KWARGS,
-    _TL_VALUE_KWARGS,
-    _add_ref_line,
-    _calc_auto_plot_height,
-    _create_range_tool,
-    _create_tool_tips,
-    _get_ref_event_time,
-    _get_tick_formatter,
+from .timeline_common import (
+    calc_auto_plot_height,
+    create_range_tool,
+    create_tool_tips,
+    get_ref_event_time,
+    get_tick_formatter,
+    plot_ref_line,
 )
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
 
-
+_DEFAULT_KWARGS = [
+    "color",
+    "data",
+    "group_by",
+    "height",
+    "legend",
+    "range_tool",
+    "ref_event",
+    "ref_time",
+    "source_columns",
+    "time_column",
+    "title",
+    "width",
+    "yaxis",
+    "ref_events",
+    "ref_time_col",
+    "ref_col",
+    "ref_times",
+    "size",
+]
+_TL_VALUE_KWARGS = ["kind", "y", "x"]
 _TS_KWARGS = ["xgrid", "ygrid"]
 
 
@@ -44,7 +62,6 @@ def display_timeseries_anomalies(
     y: str = "Total",
     time_column: str = "TimeGenerated",
     anomalies_column: str = "anomalies",
-    source_columns: list = None,
     period: int = 30,
     **kwargs,
 ) -> figure:
@@ -57,19 +74,18 @@ def display_timeseries_anomalies(
         DataFrame as a time series data set retrieved from KQL time series
         functions. Dataframe must have columns specified in `y`, `time_column`
         and `anomalies_column` parameters
-    y : str, optional
+    value_column : str, optional
         Name of column holding numeric values to plot against time series to
         determine anomalies
         (the default is 'Total')
+    y : str, optional
+        alias for "value_column"
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
     anomalies_column : str, optional
         Name of the column holding binary status(1/0) for anomaly/benign
         (the default is 'anomalies')
-    source_columns : list, optional
-        List of default source columns to use in tooltips
-        (the default is None)
     period : int, optional
         Period of the dataset for hourly-no of days, for daily-no of weeks.
         This is used to correctly calculate the plot height.
@@ -126,8 +142,9 @@ def display_timeseries_anomalies(
     xgrid: bool = kwargs.pop("xgrid", False)
     ygrid: bool = kwargs.pop("ygrid", False)
     kind: str = kwargs.pop("kind", "circle_x")
+    value_column = y or kwargs.pop("value_column", "Total")
 
-    ref_time, ref_label = _get_ref_event_time(**kwargs)
+    ref_time, ref_label = get_ref_event_time(**kwargs)
 
     source = ColumnDataSource(data)
 
@@ -137,8 +154,7 @@ def display_timeseries_anomalies(
     source_columns = [col for col in data.columns if col not in [anomalies_column]]
     data_anomaly = data[data[anomalies_column] == 1][source_columns].reset_index()
 
-    tooltips, formatters = _create_tool_tips(data, source_columns)
-    hover = HoverTool(tooltips=tooltips, formatters=formatters)
+    hover = HoverTool(**(create_tool_tips(data, source_columns)))
 
     # Create the Plot figure
     title = title or "Time Series Anomalies Visualization"
@@ -146,7 +162,7 @@ def display_timeseries_anomalies(
     max_time = data[time_column].max()
     start_range = min_time - ((max_time - min_time) * 0.05)
     end_range = max_time + ((max_time - min_time) * 0.05)
-    height = height or _calc_auto_plot_height(series_count)
+    height = height or calc_auto_plot_height(series_count)
 
     plot = figure(
         x_range=(start_range, end_range),
@@ -155,7 +171,7 @@ def display_timeseries_anomalies(
         plot_width=width,
         x_axis_label=time_column,
         x_axis_type="datetime",
-        y_axis_label=y,
+        y_axis_label=value_column,
         x_minor_ticks=10,
         tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
         toolbar_location="above",
@@ -178,12 +194,12 @@ def display_timeseries_anomalies(
         plot.ygrid.grid_line_color = None
 
     # set the tick formatter
-    plot.xaxis[0].formatter = _get_tick_formatter()
+    plot.xaxis[0].formatter = get_tick_formatter()
     plot.yaxis.formatter = NumeralTickFormatter(format="00")
 
     plot.circle(
         time_column,
-        y,
+        value_column,
         line_color=color[0],
         size=4,
         source=source,
@@ -200,7 +216,7 @@ def display_timeseries_anomalies(
     # create default plot args
     arg_dict: Dict[str, Any] = dict(
         x=time_column,
-        y=y,
+        y=value_column,
         size=12,
         color=color[2],
         fill_alpha=0.2,
@@ -223,7 +239,7 @@ def display_timeseries_anomalies(
     plot.legend.click_policy = "hide"
 
     # Create plot for the score column to act as as range selector
-    rng_select = _create_range_tool(
+    rng_select = create_range_tool(
         data=data,
         y="score",
         min_time=min_time,
@@ -236,7 +252,7 @@ def display_timeseries_anomalies(
 
     # if we have a reference timestamp, plot the time as a line
     if ref_time is not None:
-        _add_ref_line(plot, ref_time, ref_label, data[y].max())
+        plot_ref_line(plot, ref_time, ref_label, data[value_column].max())
 
     if show_range:
         show(column(plot, rng_select))

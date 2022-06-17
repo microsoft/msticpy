@@ -118,8 +118,10 @@ class CybereasonDriver(DriverBase):
         """
         cs_dict: Dict[str, Any] = {}
 
-        instance = kwargs.pop("instance", None)
-        cs_dict = CybereasonDriver._get_driver_settings(self.CONFIG_NAME, instance)
+        self._instance = kwargs.pop("instance", None)
+        cs_dict = CybereasonDriver._get_driver_settings(
+            self.CONFIG_NAME, self._instance
+        )
         # let user override config settings with function kwargs
         cs_dict.update(kwargs)
 

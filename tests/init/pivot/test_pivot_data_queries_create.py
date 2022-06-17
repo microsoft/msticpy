@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """Test query_functions module."""
+
+import contextlib
 import warnings
 from datetime import datetime, timedelta
 from functools import partial
@@ -23,14 +25,12 @@ from msticpy.init.pivot_init.pivot_data_queries import (
 )
 
 _KQL_IMP_OK = False
-try:
+with contextlib.suppress(ImportError):
     # pylint: disable=unused-import
     from msticpy.data.drivers import kql_driver
 
     del kql_driver
     _KQL_IMP_OK = True
-except ImportError:
-    pass
 
 __author__ = "Ian Hellen"
 
@@ -134,7 +134,7 @@ def _generate_test_data(**kwargs):
 
     # Generate test DataFrame
     list_lens = [len(value) for value in params.values() if isinstance(value, list)]
-    min_len = min(list_lens) if list_lens else 1
+    min_len = min(list_lens, default=1)
     series = []
     for row_num in range(min_len):
         row_dict = {
@@ -221,7 +221,7 @@ def test_create_pivot_func_df(test_input, expected):
     )
     # We're only expecting column names as values for kwargs
     params = {p_name: p_name for p_name in params}
-    params.update({"data": test_df})
+    params["data"] = test_df
     result_df = call_data_query(**params, **add_params)
 
     check.equal(result_df.shape, expected["shape"])

@@ -50,7 +50,7 @@ version = _ver
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = "5.0"
+needs_sphinx = "5.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -62,8 +62,8 @@ extensions = [
     # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    # "sphinx.ext.intersphinx",
-    # "seed_intersphinx_mapping",
+    "sphinx.ext.intersphinx",
+    "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True

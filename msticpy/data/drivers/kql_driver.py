@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
+
+import contextlib
 import json
 import logging
 import os
@@ -156,6 +158,7 @@ class KqlDriver(DriverBase):
         if isinstance(connection_str, WorkspaceConfig):
             if not mp_az_tenant_id and "tenant_id" in connection_str:
                 mp_az_tenant_id = connection_str["tenant_id"]
+            self._instance = connection_str.workspace_key
             connection_str = connection_str.code_connect_str
 
         if not connection_str:
@@ -542,7 +545,7 @@ class KqlDriver(DriverBase):
         endpoint_uri = self._get_endpoint_uri()
         endpoint_token_uri = f"{endpoint_uri}.default"
         # obtain token for the endpoint
-        try:
+        with contextlib.suppress(ClientAuthenticationError):
             token = creds.modern.get_token(
                 endpoint_token_uri, tenant_id=mp_az_tenant_id
             )
@@ -553,9 +556,6 @@ class KqlDriver(DriverBase):
                 "resource": endpoint_uri,
             }
             self._set_kql_option("try_token", endpoint_token)
-        # if the above auth fails fall back to KQLMagics auth method
-        except ClientAuthenticationError:
-            pass
 
     def _get_endpoint_uri(self):
         return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]

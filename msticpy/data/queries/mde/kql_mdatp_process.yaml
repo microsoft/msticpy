@@ -26,6 +26,8 @@ sources:
   list_host_processes:
     description: Lists all process creations for a host
     metadata:
+      pivot:
+        short_name: processes
     args:
       query: '
         {table}
@@ -52,9 +54,27 @@ sources:
       process_identifier:
         description: Identifier for the process, filename, or hash
         type: str
+  process_for_hash:
+    description: Lists all processes created for a file hash
+    metadata:
+      pivot:
+        short_name: processes_by_hash
+    args:
+      query: '
+        {table}
+        | where Timestamp >= datetime({start})
+        | where Timestamp <= datetime({end})
+        | where SHA1 has "{file_hash}" or SHA256 has "{file_hash}" or MD5 has "{file_hash}"
+        {add_query_items}'
+    parameters:
+      file_hash:
+        description: File hash of the process
+        type: str
   process_paths:
     description: Lists all processes created from a path
     metadata:
+      pivot:
+        short_name: processes_by_path
     args:
       query: '
         {table}
@@ -69,6 +89,8 @@ sources:
   process_cmd_line:
     description: Lists all processes with a command line containing a string
     metadata:
+      pivot:
+        short_name: processes_by_cmdline
     args:
       query: '
         {table}

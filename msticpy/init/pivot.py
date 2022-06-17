@@ -5,8 +5,11 @@
 # --------------------------------------------------------------------------
 """Pivot functions main module."""
 
+import contextlib
 import warnings
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from importlib import import_module
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, Iterable, Optional, Type
 
@@ -24,6 +27,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=DeprecationWarning)
     from ..datamodel import pivot as legacy_pivot
 
+from ..common.utility.types import SingletonClass
 from ..nbwidgets import QueryTime
 from . import pivot_init
 
@@ -47,10 +51,11 @@ __author__ = "Ian Hellen"
 _DEF_PIVOT_REG_FILE = "resources/mp_pivot_reg.yaml"
 
 
+@SingletonClass
 class Pivot:
     """Pivot environment loader."""
 
-    current: Optional["Pivot"] = None
+    # current: Optional["Pivot"] = None
 
     def __init__(
         self,
@@ -76,12 +81,10 @@ class Pivot:
             to be 24 hours prior to the load time.
 
         """
-        self.__class__.current = self
-        self._query_time: QueryTime
+        # self.__class__.current = self
+        self._query_time: QueryTime = self._get_default_query_time("day", 1)
         if timespan is not None:
             self.timespan = timespan
-        else:
-            self._query_time = self._get_default_query_time("day", 1)
 
         # acquire current providers
         self._providers: Dict[str, Any] = {}
@@ -91,7 +94,7 @@ class Pivot:
         self,
         namespace: Dict[str, Any] = None,
         providers: Iterable[Any] = None,
-        clear_existing: bool = True,
+        clear_existing: bool = False,
     ):
         """
         Load or reload Pivot functions from environment and/or providers list.
@@ -109,20 +112,13 @@ class Pivot:
             Reloads pivot functions without clearing existing pivot
             assignments. Any pivot functions with conflicting names will
             be overwritten by the reload operation.
-            The default is True.
+            The default is False.
 
         """
         if clear_existing:
             self.remove_pivot_funcs(entity="all")
 
         self._get_all_providers(namespace, providers)
-
-        # load and assign functions for data queries
-        data_provs = (
-            prov for prov in self._providers.values() if isinstance(prov, QueryProvider)
-        )
-        for prov in data_provs:
-            add_data_queries_to_entities(prov, self.get_timespan)
 
         # load TI functions
         add_ioc_queries_to_entities(self.get_provider("TILookup"), container="ti")
@@ -177,9 +173,12 @@ class Pivot:
     @staticmethod
     def _load_from_pivot_init():
         """Load any modules in pivot_init sub-package."""
-        for module in vars(pivot_init).values():
-            if isinstance(module, ModuleType) and hasattr(module, "init"):
-                module.init()
+        pivot_init_folder = Path(pivot_init.__file__)
+        for mod_name in pivot_init_folder.parent.glob("*.py"):
+            with contextlib.suppress(ImportError):
+                module = import_module(f"msticpy.init.pivot_init.{mod_name.stem}")
+                if isinstance(module, ModuleType) and hasattr(module, "init"):
+                    module.init()
 
     def add_query_provider(self, prov: QueryProvider):
         """
@@ -257,10 +256,8 @@ class Pivot:
             by default None
 
         """
-        self._query_time = QueryTime(
-            timespan=timespan or self.timespan,
-            label="Set time range for pivot functions.",
-        )
+        if timespan:
+            self._query_time.set_time(timespan)
         self._query_time.display()
 
     @staticmethod
@@ -294,7 +291,7 @@ class Pivot:
             The current timespan
 
         """
-        return TimeSpan(start=self.start, end=self.end)
+        return self._query_time.timespan
 
     @timespan.setter
     def timespan(self, value: Any):
@@ -304,7 +301,7 @@ class Pivot:
         Parameters
         ----------
         value : Optional[Any], optional
-            Timespan object or something convertible to
+            TimeSpan object or something convertible to
             a TimeSpan, by default None
 
         """
@@ -312,10 +309,7 @@ class Pivot:
             timespan = value
         elif value is not None:
             timespan = TimeSpan(value)
-        self._query_time = QueryTime(
-            timespan=timespan,
-            label="Set time range for pivot functions.",
-        )
+        self._query_time.set_time(timespan)
 
     def set_timespan(self, value: Optional[Any] = None, **kwargs):
         """
@@ -324,13 +318,13 @@ class Pivot:
         Parameters
         ----------
         value : Optional[Any], optional
-            Timespan object or something convertible to
+            TimeSpan object or something convertible to
             a TimeSpan, by default None
 
         Other Parameters
         ----------------
         kwargs
-            Key/value arguments passed to Timespan constructor.
+            Key/value arguments passed to TimeSpan constructor.
 
         """
         if isinstance(value, TimeSpan):
@@ -343,7 +337,15 @@ class Pivot:
 
     def get_timespan(self) -> TimeSpan:
         """Return the timespan as a TimeSpan object."""
-        return TimeSpan(start=self.start, end=self.end)
+        return self.timespan
+
+    def reset_timespan(self):
+        """Reset the time range used to [now - 1day] - [now]."""
+        now = datetime.now(timezone.utc)
+        self._query_time.set_time(
+            start=now - timedelta(1),
+            end=now,
+        )
 
     @staticmethod
     def register_pivot_providers(

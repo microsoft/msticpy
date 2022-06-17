@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.pkg_config import settings
 from ...common.timespan import TimeSpan
 from ...datamodel import entities
 from ..pivot_core.pivot_container import PivotContainer
@@ -32,7 +33,22 @@ PivQuerySettings = namedtuple(
 
 _DEF_IGNORE_PARAM = {"start", "end"}
 
-_TABLE_SHORTNAMES = {
+
+# Settings retrieval
+def _use_v1_query_naming() -> bool:
+    return settings.get("Pivots", {}).get("UseV1QueryNames", False)
+
+
+def _use_query_family_prefix() -> bool:
+    return settings.get("Pivots", {}).get("UseQueryFamily", False)
+
+
+def _use_pivot_time() -> bool:
+    """If user setting specifies use QP time setting."""
+    return not settings.get("Pivots", {}).get("UseQueryProviderTimeSpans", False)
+
+
+_V1_TABLE_SHORT_NAMES = {
     "SecurityEvent": "wevt",
     "Syslog": "lxsys",
     "SecurityAlert": "",
@@ -48,6 +64,30 @@ _TABLE_SHORTNAMES = {
     "DnsEvents": "dns",
 }
 
+_V2_TABLE_SHORT_NAMES = {
+    "SecurityEvent": "wevt",
+    "Syslog": "syslog",
+    "SecurityAlert": "sec",
+    "SigninLogs": "aad",
+    "AzureActivity": "azure",
+    "AzureNetworkAnalytics_CL": "az_nsg",
+    "OfficeActivity": "o365",
+    "ThreatIntelligenceIndicator": "ti",
+    "Heartbeat": "",
+    "AuditLog_CL": "auditd",
+    "HuntingBookmark": "sent",
+    "StorageFileLogs": "az_stor",
+    "DnsEvents": "dns",
+}
+
+
+def _get_query_prefix(table: str, family: str) -> str:
+    if _use_query_family_prefix():
+        return family
+    if _use_v1_query_naming():
+        return _V1_TABLE_SHORT_NAMES.get(table, table)
+    return _V2_TABLE_SHORT_NAMES.get(table, table)
+
 
 class PivotQueryFunctions:
     """Class to retrieve the queries and params from a provider."""
@@ -58,7 +98,7 @@ class PivotQueryFunctions:
         self,
         query_provider: "QueryProvider",  # type: ignore  # noqa: F821
         ignore_reqd: List[str] = None,
-    ):
+    ):  # sourcery skip: remove-unnecessary-cast
         """
         Instantiate PivotQueryFunctions class.
 
@@ -112,6 +152,20 @@ class PivotQueryFunctions:
                     },
                     table=q_source.params.get("table", {}),
                 )
+
+    @property
+    def instance_name(self) -> Optional[str]:
+        """
+        Return instance name, if any for provider.
+
+        Returns
+        -------
+        Optional[str]
+            The instance name or None for drivers that do not
+            support multiple instances.
+
+        """
+        return self._provider.instance
 
     def get_query_settings(
         self, family: str, query: str
@@ -301,10 +355,12 @@ PARAM_ENTITY_MAP["user"] = PARAM_ENTITY_MAP["account_name"]
 PARAM_ENTITY_MAP["file_hash_list"] = PARAM_ENTITY_MAP["file_hash"]
 PARAM_ENTITY_MAP["domain_list"] = PARAM_ENTITY_MAP["domain"]
 PARAM_ENTITY_MAP["url_list"] = PARAM_ENTITY_MAP["url"]
+PARAM_ENTITY_MAP["cmd_line"] = PARAM_ENTITY_MAP["commandline"]
 
 
 def add_data_queries_to_entities(
-    provider: "QueryProvider", get_timespan: Callable[[], TimeSpan]  # type: ignore  # noqa: F821
+    provider: "QueryProvider",  # type: ignore  # noqa: F821
+    get_timespan: Optional[Callable[[], TimeSpan]],
 ):
     """
     Add data queries from `provider` to entities.
@@ -313,17 +369,28 @@ def add_data_queries_to_entities(
     ----------
     provider : QueryProvider
         Query provider
-    get_timespan : Callable[[], TimeSpan]
-        Callback to get time span
+    get_timespan : Optional[Callable[[], TimeSpan]]
+        Callback to get time span. If None
+        it will use the Pivot built-in time range.
 
     """
     q_funcs = PivotQueryFunctions(provider)
 
+    if (
+        provider.instance
+        and provider.instance != "Default"
+        and not _use_v1_query_naming()
+    ):
+        container_name = f"{provider.environment}_{provider.instance.casefold()}"
+    else:
+        container_name = provider.environment
     add_queries_to_entities(
         prov_qry_funcs=q_funcs,
-        container=provider.environment,
+        container=container_name,
         get_timespan=get_timespan,
     )
+
+    _get_pivot_instance().providers[container_name] = provider
 
 
 # pylint: disable=too-many-locals
@@ -332,7 +399,7 @@ def add_data_queries_to_entities(
 def add_queries_to_entities(
     prov_qry_funcs: PivotQueryFunctions,
     container: str,
-    get_timespan: Callable[[], TimeSpan],
+    get_timespan: Optional[Callable[[], TimeSpan]],
 ):
     """
     Add data queries to entities.
@@ -343,10 +410,14 @@ def add_queries_to_entities(
         Collection of wrapped query functions
     container : str
         The name of the container to add query functions to
-    get_timespan : Callable[[], TimeSpan]
-        Function to get the current timespan.
+    get_timespan : Optional[Callable[[], TimeSpan]]
+        Function to get the current timespan. If None
+        it will use the Pivot built-in time range.
 
     """
+    if get_timespan is None or _use_pivot_time():
+        get_timespan = _get_pivot_instance().get_timespan
+
     # For each parameter in the parameter map
     for param_name, entity_list in PARAM_ENTITY_MAP.items():
 
@@ -375,7 +446,7 @@ def add_queries_to_entities(
             }
             # Wrap the function
             cls_func = _create_pivot_func(
-                func, func_params.param_attrs, attr_map, get_timespan
+                func, func_params.param_attrs, attr_map, get_timespan  # type:ignore
             )
             # add a properties dict to the function
             setattr(
@@ -384,7 +455,7 @@ def add_queries_to_entities(
                 _create_piv_properties(name, param_entities, container),
             )
             q_piv_settings = prov_qry_funcs.get_query_pivot_settings(family, name)
-            func_name = _format_func_name(name, func_params, q_piv_settings)
+            func_name = _format_func_name(name, family, func_params, q_piv_settings)
 
             # Add the wrapped function to the entity container
             query_container = getattr(entity_cls, container, None)
@@ -393,9 +464,7 @@ def add_queries_to_entities(
                 setattr(entity_cls, container, query_container)
             setattr(query_container, func_name, cls_func)
 
-            # Also set this as a direct entity method if this entity is listed
-            # in the query pivot "direct_func_entities" list
-            if (
+            if _use_v1_query_naming() and (
                 q_piv_settings.direct_func_entities
                 and entity_cls.__name__ in q_piv_settings.direct_func_entities
             ):
@@ -406,11 +475,19 @@ def add_queries_to_entities(
 # pylint: enable=too-many-locals
 
 
-def _format_func_name(name, func_params, q_piv_settings):
+def _get_pivot_instance():
+    """Get the timespan access function from Pivot global instance."""
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    from ..pivot import Pivot
+
+    return Pivot()
+
+
+def _format_func_name(name, family, func_params, q_piv_settings):
     # To help disambiguation we prefix the function name with
     # the table name (or short version)
     table_name = func_params.table.get("default", "")
-    t_prefix = _TABLE_SHORTNAMES.get(table_name, table_name)
+    t_prefix = _get_query_prefix(table_name, family)
     if t_prefix and not t_prefix.endswith("_"):
         t_prefix = f"{t_prefix}_"
     # if query func has a short name, use that
