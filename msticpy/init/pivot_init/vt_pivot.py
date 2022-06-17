@@ -139,7 +139,11 @@ def _create_pivots(api_scope: Union[str, VTAPIScope, None]):
         scope = enum_parse(VTAPIScope, api_scope) or VTAPIScope.PUBLIC
     else:
         scope = api_scope
-    vt_client = VTLookupV3()
+    try:
+        vt_client = VTLookupV3()
+    except ValueError:
+        # Can't initialize VTLookup - don't add the pivot funcs
+        return {}
 
     if not isinstance(scope, VTAPIScope):
         # pylint: disable=not-an-iterable
