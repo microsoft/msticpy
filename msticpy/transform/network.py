@@ -4,10 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for converting DataFrame to Networkx graph."""
-from typing import Callable, Dict, Iterable, Literal, Optional, Union
+from typing import Callable, Dict, Iterable, Optional, Union
 
 import networkx as nx
 import pandas as pd
+from typing_extensions import Literal
 
 from .._version import VERSION
 
