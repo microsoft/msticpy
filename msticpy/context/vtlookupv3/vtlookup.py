@@ -30,10 +30,8 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export
-from ..tiproviders.preprocess_observable import (
-    SanitizedObservable,
-    preprocess_observable,
-)
+from ..tiproviders.lookup_result import SanitizedObservable
+from ..tiproviders.preprocess_observable import preprocess_observable
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

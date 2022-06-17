@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 """Result Severity enumeration."""
-from collections import namedtuple
 from enum import Enum
 from functools import total_ordering
 
@@ -12,9 +11,6 @@ from ..._version import VERSION
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
-
-
-SanitizedObservable = namedtuple("SanitizedObservable", ["observable", "status"])
 
 
 @total_ordering

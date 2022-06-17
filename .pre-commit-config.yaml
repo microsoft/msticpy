@@ -13,11 +13,11 @@ repos:
       - id: black
         language: python
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.12.2
+    rev: v2.14.1
     hooks:
       - id: pylint
         args:
-          - --disable=bad-continuation,duplicate-code,import-error
+          - --disable=duplicate-code,import-error
           - --ignore-patterns=test_
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2

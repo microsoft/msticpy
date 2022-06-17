@@ -37,6 +37,16 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
+_EXCLUDED_AUTH = {
+    "cli": True,
+    "env": True,
+    "msi": True,
+    "vscode": True,
+    "powershell": True,
+    "interactive": True,
+    "cache": True,
+}
+
 
 def get_azure_config_value(key, default):
     """Get a config value from Azure section."""
@@ -198,28 +208,19 @@ def _az_connect_core(
     az_config = AzureCloudConfig(cloud)
     aad_uri = az_config.endpoints.active_directory
     tenant_id = tenant_id or AzureCloudConfig().tenant_id
-    excluded_auth = {
-        "cli": True,
-        "env": True,
-        "msi": True,
-        "vscode": True,
-        "powershell": True,
-        "interactive": True,
-        "cache": True,
-    }
     if auth_methods:
         for method in auth_methods:
-            if method in excluded_auth:
-                excluded_auth[method] = False
+            if method in _EXCLUDED_AUTH:
+                _EXCLUDED_AUTH[method] = False
         creds = DefaultAzureCredential(
             authority=aad_uri,
-            exclude_cli_credential=excluded_auth["cli"],
-            exclude_environment_credential=excluded_auth["env"],
-            exclude_managed_identity_credential=excluded_auth["msi"],
-            exclude_powershell_credential=excluded_auth["powershell"],
-            exclude_visual_studio_code_credential=excluded_auth["vscode"],
-            exclude_shared_token_cache_credential=excluded_auth["cache"],
-            exclude_interactive_browser_credential=excluded_auth["interactive"],
+            exclude_cli_credential=_EXCLUDED_AUTH["cli"],
+            exclude_environment_credential=_EXCLUDED_AUTH["env"],
+            exclude_managed_identity_credential=_EXCLUDED_AUTH["msi"],
+            exclude_powershell_credential=_EXCLUDED_AUTH["powershell"],
+            exclude_visual_studio_code_credential=_EXCLUDED_AUTH["vscode"],
+            exclude_shared_token_cache_credential=_EXCLUDED_AUTH["cache"],
+            exclude_interactive_browser_credential=_EXCLUDED_AUTH["interactive"],
             interactive_browser_tenant_id=tenant_id,
         )
     else:

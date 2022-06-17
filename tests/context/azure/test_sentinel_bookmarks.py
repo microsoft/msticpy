@@ -13,6 +13,8 @@ import respx
 
 from msticpy.context.azure import MicrosoftSentinel
 
+# pylint: disable=redefined-outer-name
+
 _BOOKMARK = {
     "value": [
         {
@@ -69,7 +71,7 @@ def sent_loader(mock_creds):
 @respx.mock
 def test_sent_bookmarks(sent_loader):
     """Test Sentinel bookmarks feature."""
-    respx.get(re.compile("https://management.azure.com/.*")).respond(
+    respx.get(re.compile(r"https://management\.azure\.com/.*")).respond(
         200, json=_BOOKMARK
     )
     bkmarks = sent_loader.list_bookmarks()
@@ -80,7 +82,7 @@ def test_sent_bookmarks(sent_loader):
 @respx.mock
 def test_sent_bookmark_create(sent_loader):
     """Test Sentinel bookmark creation."""
-    respx.put(re.compile("https://management.azure.com/.*")).respond(200, json={})
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(200, json={})
     sent_loader.create_bookmark(
         name="Test Bookmark",
         query="SecurityAlert | take 10",
@@ -93,5 +95,5 @@ def test_sent_bookmark_create(sent_loader):
 @respx.mock
 def test_sent_bookmark_delete(sent_loader):
     """Test Sentinel bookmark deletion."""
-    respx.delete(re.compile("https://management.azure.com/.*")).respond(200, json={})
+    respx.delete(re.compile(r"https://management\.azure\.com/.*")).respond(200, json={})
     sent_loader.delete_bookmark("a55463ed-dce0-4ba4-83ca-6f6d0e5d5acf")

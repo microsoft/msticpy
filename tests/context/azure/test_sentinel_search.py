@@ -7,15 +7,16 @@
 import re
 from unittest.mock import patch
 
-import pandas as pd
 import pytest
 import respx
 
 from msticpy.context.azure import MicrosoftSentinel
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture(scope="module")
-@patch(MicrosoftSentinel.__module__ + ".MicrosoftSentinel.connect")
+@patch(f"{MicrosoftSentinel.__module__}.MicrosoftSentinel.connect")
 def sent_loader(mock_creds):
     """Generate MicrosoftSentinel for testing."""
     mock_creds.return_value = None
