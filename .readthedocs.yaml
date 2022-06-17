@@ -6,7 +6,7 @@ build:
     python: "3.7"
 
 sphinx:
-   configuration: docs/conf.py
+   configuration: docs/source/conf.py
    builder: html
    fail_on_warning: false
 
