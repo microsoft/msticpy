@@ -62,7 +62,8 @@ class MSALDelegatedAuth:
         self.scopes = scopes
         self.result = None
 
-        if persistence := self._create_cache():
+        persistence = self._create_cache()
+        if persistence:
             self.token_cache = PersistedTokenCache(persistence)
 
         self.app = msal.PublicClientApplication(
@@ -77,7 +78,8 @@ class MSALDelegatedAuth:
 
     def get_token(self):
         """Get an authneticaiton token."""
-        if chosen_account := self.app.get_accounts(username=self.username):
+        chosen_account = self.app.get_accounts(username=self.username)
+        if chosen_account:
             self.result = self.app.acquire_token_silent_with_error(
                 scopes=self.scopes, account=chosen_account[0]
             )
@@ -90,7 +92,8 @@ class MSALDelegatedAuth:
     def refresh_token(self):
         """Refresh the authentication token."""
         self.result = None
-        if chosen_account := self.app.get_accounts(username=self.username):
+        chosen_account = self.app.get_accounts(username=self.username)
+        if chosen_account:
             self.result = self.app.acquire_token_silent_with_error(
                 scopes=self.scopes, account=chosen_account[0], force_refresh=True
             )

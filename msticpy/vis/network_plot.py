@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Module for common display functions."""
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import networkx as nx
 from bokeh.io import output_notebook
@@ -21,6 +21,7 @@ from bokeh.models import (
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
+from typing_extensions import Literal
 
 from .._version import VERSION
 

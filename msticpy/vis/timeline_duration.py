@@ -248,9 +248,6 @@ def display_timeline_duration(
     return plot_layout
 
 
-# pylint: disable=too-many-locals
-
-
 def _group_durations(
     data: pd.DataFrame, group_by: List[str], time_column: str, end_time_column: str
 ):
