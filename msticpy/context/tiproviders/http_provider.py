@@ -68,9 +68,11 @@ class HttpTIProvider(TIProvider, abc.ABC):
         self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
         self._request_params = {}
         if "ApiID" in kwargs:
-            self._request_params["API_ID"] = kwargs.pop("ApiID")
+            api_id = kwargs.pop("ApiID")
+            self._request_params["API_ID"] = api_id.strip() if api_id else None
         if "AuthKey" in kwargs:
-            self._request_params["API_KEY"] = kwargs.pop("AuthKey")
+            auth_key = kwargs.pop("AuthKey")
+            self._request_params["API_KEY"] = auth_key.strip() if auth_key else None
 
         missing_params = [
             param
