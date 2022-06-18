@@ -110,7 +110,7 @@ class TimeLineAccessor:
         warnings.warn(warn_message, category=DeprecationWarning)
         return self._display_timeline(data=self._df, **kwargs)
 
-    def plot_values(self, value_col: str = None, **kwargs) -> LayoutDOM:
+    def plot_values(self, value_column: str = None, **kwargs) -> LayoutDOM:
         """
         Display a timeline of events.
 
@@ -119,7 +119,7 @@ class TimeLineAccessor:
         time_column : str, optional
             Name of the timestamp column
             (the default is 'TimeGenerated')
-        value_col : str
+        value_column : str
             The column name holding the value to plot vertically
         source_columns : list, optional
             List of default source columns to use in tooltips
@@ -130,7 +130,9 @@ class TimeLineAccessor:
         x : str, optional
             alias of `time_column`
         y : str, optional
-            alias of `value_col`
+            alias of `value_column`
+        value_col : str, optional
+            alias of `value_column`
         title : str, optional
             Title to display (the default is None)
         ref_event : Any, optional
@@ -188,7 +190,7 @@ class TimeLineAccessor:
         )
         warnings.warn(warn_message, category=DeprecationWarning)
         return self._display_timeline_values(
-            data=self._df, value_col=value_col, **kwargs
+            data=self._df, value_column=value_column, **kwargs
         )
 
     def plot_duration(
