@@ -155,6 +155,9 @@ def display_timeline_values(  # noqa: C901, MC0001
     """
     # check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + ["y"])
     check_kwargs(kwargs, PlotParams.field_list() + ["y", "value_col"])
+    value_col = value_column or kwargs.pop("y", kwargs.pop("value_col", None))
+    if not value_col:
+        raise ValueError("Must supply 'value_column', 'value_col' or 'y' parameter.")
     param = PlotParams(**kwargs)
 
     if data is None or not isinstance(data, pd.DataFrame) or data.empty:
@@ -168,9 +171,6 @@ def display_timeline_values(  # noqa: C901, MC0001
 
     plot_kinds = param.kind if isinstance(param.kind, list) else [param.kind]
     param.ref_time_col = param.ref_time_col or time_column or "TimeGenerated"
-    value_col = value_column or kwargs.pop("y", kwargs.pop("value_col", None))
-    if not value_col:
-        raise ValueError("Must supply 'value_column', 'value_col' or 'y' parameter.")
 
     ref_time, ref_label = get_ref_event_time(**kwargs)
 
