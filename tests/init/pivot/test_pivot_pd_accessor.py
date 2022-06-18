@@ -212,11 +212,15 @@ def test_list_to_rows():
     exp_df = test_df.mp_pivot.list_to_rows(cols="col1")
     check.equal(len(exp_df), 5)
     check.equal(exp_df.col1.iloc[0], "1item1")
+    check.equal(exp_df.col1.iloc[3], "1item4")
+    check.equal(exp_df.col2.iloc[3], ["2item3", "2item4"])
     # with both col1 and col2, the first two rows will be expanded twice so + 4
     exp_df = test_df.mp_pivot.list_to_rows(cols=["col1", "col2"])
-    check.equal(len(exp_df), 9)
+    check.equal(len(exp_df), 5)
     check.equal(exp_df.col1.iloc[0], "1item1")
     check.equal(exp_df.col2.iloc[0], "2item1")
+    check.equal(exp_df.col1.iloc[3], "1item4")
+    check.equal(exp_df.col2.iloc[3], "2item4")
 
 
 def test_parse_json():

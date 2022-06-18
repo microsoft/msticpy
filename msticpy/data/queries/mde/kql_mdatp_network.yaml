@@ -24,7 +24,7 @@ defaults:
       default: ""
 sources:
   list_connections:
-    description: Retrieves list of network connections for a host
+    description: Retrieves list of network connections
     metadata:
     args:
       query: "
@@ -37,6 +37,8 @@ sources:
   host_connections:
     description: Lists alerts by for a specified hostname
     metadata:
+      pivot:
+        short_name: net_connections
     args:
       query: '
         {table}
@@ -53,6 +55,8 @@ sources:
   ip_connections:
     description: Lists alerts associated with a specified remote IP
     metadata:
+      pivot:
+        short_name: net_connections
     args:
       query: '
         {table}
@@ -67,6 +71,8 @@ sources:
   url_connections:
     description: Lists alerts associated with a specified URL
     metadata:
+      pivot:
+        short_name: net_connections
     args:
       query: '
         {table}

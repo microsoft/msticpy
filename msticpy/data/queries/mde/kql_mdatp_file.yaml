@@ -26,6 +26,8 @@ sources:
   list_files:
     description: Lists all file events by filename
     metadata:
+      pivot:
+        short_name: file_events_filename
     args:
       query: '
         {table}
@@ -41,6 +43,8 @@ sources:
   file_path:
     description: Lists all file events from files in a certain path
     metadata:
+      pivot:
+        short_name: file_events_path
     args:
       query: '
         {table}
@@ -55,6 +59,8 @@ sources:
   list_filehash:
     description: Lists all file events by hash
     metadata:
+      pivot:
+        short_name: file_events_hash
     args:
       query: '
         {table}

@@ -153,19 +153,18 @@ class MsticpyTimeSeriesAccessor:
 
         Parameters
         ----------
-        y : str, optional
+            value_column : str, optional
             Name of column holding numeric values to plot against time series to
             determine anomalies
             (the default is 'Total')
+        y : str, optional
+            alias for "value_column"
         time_column : str, optional
             Name of the timestamp column
             (the default is 'TimeGenerated')
         anomalies_column : str, optional
             Name of the column holding binary status(1/0) for anomaly/benign
             (the default is 'anomalies')
-        source_columns : list, optional
-            List of default source columns to use in tooltips
-            (the default is None)
         period : int, optional
             Period of the dataset for hourly-no of days, for daily-no of weeks.
             This is used to correctly calculate the plot height.

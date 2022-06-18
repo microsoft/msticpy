@@ -655,7 +655,7 @@ def plot_map(
     Raises
     ------
     ValueError
-        If neither `ip_col` nor `lat_col` and `long_col` are passed.
+        If neither `ip_column` nor `lat_column` and `long_column` are passed.
     LookupError
         If one of the passed columns does not exist in `data`
 
@@ -790,8 +790,8 @@ def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
     """Validate required columns and that optional cols are in the data."""
     if not ip_column and not (lat_column and long_column):
         raise ValueError(
-            "Data must have either an IpAddress ('ip_col')",
-            "or latitude ('lat_col') and longitude ('long_col')",
+            "Data must have either an IpAddress ('ip_column')",
+            "or latitude ('lat_column') and longitude ('long_column')",
         )
     param_cols: List[str] = []
     for param in other_columns:

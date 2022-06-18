@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Pandas accessor class for timeline functions."""
+import warnings
 from typing import Iterable, Optional, Union
 
 import pandas as pd
@@ -18,7 +19,7 @@ __author__ = "Ian Hellen"
 # pylint: disable=import-outside-toplevel, cyclic-import
 
 
-@deprecated("Will be removed in version 2.0.0", version="1.7.0")
+@deprecated("Will be removed in version 2.2.0", version="1.7.0")
 @pd.api.extensions.register_dataframe_accessor("mp_timeline")
 class TimeLineAccessor:
     """Pandas api extension for Timeline."""
@@ -101,6 +102,12 @@ class TimeLineAccessor:
             The bokeh plot figure.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp_plot.timeline() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return self._display_timeline(data=self._df, **kwargs)
 
     def plot_values(self, value_col: str = None, **kwargs) -> LayoutDOM:
@@ -174,6 +181,12 @@ class TimeLineAccessor:
             The bokeh plot figure.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp_plot.timeline_values() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return self._display_timeline_values(
             data=self._df, value_col=value_col, **kwargs
         )
@@ -236,6 +249,12 @@ class TimeLineAccessor:
             The bokeh plot figure.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use df.mp_plot.timeline_duration() method instead."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return self._display_timeline_duration(
             data=self._df,
             group_by=group_by,

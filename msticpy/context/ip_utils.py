@@ -13,11 +13,11 @@ Designed to support any data source containing IP address entity.
 
 """
 import ipaddress
+import warnings
 from functools import lru_cache
 from typing import List, Optional, Set, Tuple
 
 import pandas as pd
-from deprecated.sphinx import deprecated
 from ipwhois import (
     ASNRegistryError,
     HostLookupError,
@@ -30,7 +30,7 @@ from ipwhois import (
 
 from .._version import VERSION
 from ..common.utility import arg_to_list, export
-from ..datamodel.entities import GeoLocation, IpAddress
+from ..datamodel.entities import IpAddress
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
@@ -301,64 +301,10 @@ class IpWhoisAccessor:
             Output DataFrame with results in added columns.
 
         """
+        warn_message = (
+            "This accessor method has been deprecated.\n"
+            "Please use IpAddress.util.whois() pivot function."
+            "This will be removed in MSTICPy v2.2.0"
+        )
+        warnings.warn(warn_message, category=DeprecationWarning)
         return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
-
-
-@deprecated("Will be removed in version 2.0.0", version="1.4.0")
-@export
-def create_ip_record(
-    heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
-) -> IpAddress:
-    """
-    Generate ip_entity record for provided IP value.
-
-    Parameters
-    ----------
-    heartbeat_df : pd.DataFrame
-        A dataframe of heartbeat data for the host
-    az_net_df : pd.DataFrame
-        Option dataframe of Azure network data for the host
-
-    Returns
-    -------
-    IP
-        Details of the IP data collected
-
-    """
-    ip_entity = IpAddress()
-
-    # Produce ip_entity record using available dataframes
-    ip_hb = heartbeat_df.iloc[0]
-    ip_entity.Address = ip_hb["ComputerIP"]
-    ip_entity.hostname = ip_hb["Computer"]  # type: ignore
-    ip_entity.SourceComputerId = ip_hb["SourceComputerId"]  # type: ignore
-    ip_entity.OSType = ip_hb["OSType"]  # type: ignore
-    ip_entity.OSName = ip_hb["OSName"]  # type: ignore
-    ip_entity.OSVMajorersion = ip_hb["OSMajorVersion"]  # type: ignore
-    ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
-    ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]  # type: ignore
-    ip_entity.OmsSolutions = [  # type: ignore
-        sol.strip() for sol in ip_hb["Solutions"].split(",")
-    ]
-    ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
-    ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
-    geoloc_entity = GeoLocation()  # type: ignore
-    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
-    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
-    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
-    ip_entity.Location = geoloc_entity  # type: ignore
-
-    # If Azure network data present add this to host record
-    if az_net_df is not None and not az_net_df.empty:
-        if len(az_net_df) == 1:
-            priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
-            ip_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
-            pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
-            ip_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
-        else:
-            if "private_ips" not in ip_entity:
-                ip_entity["private_ips"] = []
-            if "public_ips" not in ip_entity:
-                ip_entity["public_ips"] = []
-
-    return ip_entity

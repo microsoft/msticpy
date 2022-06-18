@@ -42,7 +42,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserConfigError
 from ..common.pkg_config import current_config_path, get_http_timeout
 from ..common.provider_settings import ProviderSettings, get_provider_settings
-from ..common.utility import SingletonClass, export, is_ipython
+from ..common.utility import SingletonArgsClass, export, is_ipython
 from ..datamodel.entities import GeoLocation, IpAddress
 from .ip_utils import get_ip_type
 
@@ -161,11 +161,11 @@ class GeoIpLookup(metaclass=ABCMeta):
             if isinstance(ip_address, str):
                 return [ip_address.strip()]
             if isinstance(ip_address, abc.Iterable):
-                return [ip.strip() for ip in ip_addr_list]
+                return [str(ip).strip() for ip in ip_addr_list]
             if isinstance(ip_address, IpAddress):
                 return [ip_entity.Address]
         if ip_addr_list is not None and isinstance(ip_addr_list, abc.Iterable):
-            return [ip.strip() for ip in ip_addr_list]
+            return [str(ip).strip() for ip in ip_addr_list]
         if ip_entity:
             return [ip_entity.Address]
         raise ValueError("No valid ip addresses were passed as arguments.")
@@ -386,7 +386,7 @@ Alternatively, you can pass this to the IPStackLookup class when creating it:
 
 
 @export
-@SingletonClass
+@SingletonArgsClass
 class GeoLiteLookup(GeoIpLookup):
     """
     GeoIP Lookup using MaxMindDB database.

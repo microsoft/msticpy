@@ -242,7 +242,7 @@ class Entity(ABC, Node):
             params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
-            params = params[:80] + "..."
+            params = f"{params[:80]}..."
         return f"{self.__class__.__name__}({params})"
 
     def _to_dict(self) -> dict:
@@ -588,7 +588,7 @@ class Entity(ABC, Node):
         return graph
 
     @classmethod
-    def get_pivot_list(cls) -> List[str]:
+    def get_pivot_list(cls, search_str: Optional[str] = None) -> List[str]:
         """
         Return list of current pivot functions.
 
@@ -606,10 +606,17 @@ class Entity(ABC, Node):
                 continue
             if attr.__class__.__name__ != "PivotContainer":
                 continue
-            for name, qt_attr in attr:
-                if hasattr(qt_attr, "pivot_properties"):
-                    pivots.append(f"{prop}.{name}")
-        return sorted(pivots)
+            pivots.extend(
+                f"{prop}.{name}"
+                for name, qt_attr in attr
+                if hasattr(qt_attr, "pivot_properties")
+            )
+
+        return sorted(
+            pivot
+            for pivot in pivots
+            if search_str is None or search_str.casefold() in pivot.casefold()
+        )
 
     # alias for get_pivot_list
     pivots = get_pivot_list
