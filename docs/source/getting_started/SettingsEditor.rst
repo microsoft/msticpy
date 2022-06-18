@@ -74,71 +74,6 @@ should set up a ``msticpyconfig.yaml``.
    msticpyconfig.yaml <#Setting-the-path-to-your-msticpyconfig.yaml>`__
    to set your MSTICPYCONFIG environment variable.
 
-Import your Config.json and create a msticpyconfig.yaml (Azure Sentinel)
-------------------------------------------------------------------------
-
-Azure Sentinel creates a ``config.json`` file in the root of your
-notebooks user folder. This contains configuration details about the
-Azure Sentinel workspace that you launched the notebook from. However,
-the format is slightly different to the settings format used by **MSTICPy**.
-
-Follow these steps to find and convert your ``config.json``:
-
-1. Run ``MpConfigFile()`` (see the code immediately below)
-2. Locate your ``config.json``
-
-   - click the **Load file** button. There are two options for finding
-     a file.
-   - Browse - use the controls to navigate to find config.json
-   - Search - set the starting directory to search and open the
-     **Search** drop-down
-   - When you see the file click on it to select it and
-     click **Select File** button (below the file browser). The **Select File**
-     button will act on the last file you selected - whether in the file directory
-     listing or the search results.
-   - optionally, click **View Settings** to confirm that the settings in the
-     ``config.json`` look right
-
-3. Convert the config settings to msticpyconfig format
-
-   - click **Convert to MP**
-   - click **View Settings**
-
-4. Save the file
-
-   - type a path into the **Current file** text box
-   - Click on **Save file**
-
-5. You can set this file to always load by assigning the path to
-   an environment variable. See `Setting the path to your
-   msticpyconfig.yaml <#Setting-the-path-to-your-msticpyconfig.yaml>`__
-
-.. code:: ipython3
-
-    mpconfig = MpConfigFile()
-    mpconfig
-
-.. figure:: _static/settings_mp_file_config_view.png
-   :alt: Imported settings from config.json
-
-This is the equivalent of the previous steps from the command line, which
-is probably faster if you know where your config file is.
-
-.. code:: ipython3
-
-    mpconfig = MpConfigFile()
-    mpconfig.load_from_file("E:\\src\\asi-jupyter\\notebooks\\config.json")
-    mpconfig.map_json_to_mp_ws()
-    mpconfig.settings
-
-
-.. code:: ipython3
-
-    {'AzureSentinel': {'Workspaces': {'ASWorkspace': {'ResourceGroup': 'ASWorkspaceRG',
-        'SubscriptionId': '2c1bc08d-6a9e-43f0-aa55-a84f383b1a6b',
-        'TenantId': '3f3fb3df-3c79-4407-8043-4a765430db0e',
-        'WorkspaceId': '722f602f-340e-47a1-8d0a-c2b6a8fbc4c4'}}}}
-
 
 
 Edit your msticpyconfig settings
@@ -186,22 +121,158 @@ If you don't supply any value for ``settings`` it will try to load your default
 settings using the MSTICPYCONFIG environment variable.
 
 
-Azure Sentinel Workspaces
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Microsoft Sentinel Workspaces
+-----------------------------
+
+Microsoft Sentinel settings can be edited from the **MicrosoftSentinel**
+tab. Click on the **Add** button to add a new Workspace settings
+entry or select an existing Workspace to edit the settings.
+
+Click on **Update** to confirm changes that you make and click
+on **Save Settings** to write the settings to the selected ``msticpyconfig.yaml``.
+
+Import Microsoft Sentinel Workspace Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In version 2.0 of MSTICPy we added functionality to retrieve
+Microsoft Sentinel settings from a portal URL and to resolve
+full details of a Workspace from partial information such as
+a Workspace ID.
+
+In the **Microsoft Sentinel** tab, you can paste a URL from
+the Microsoft Sentinel portal, for example, the Overview Page.
+
+.. note:: You will need to authenticate to Azure for this to
+   work. If you are not automatically authenticated, use the
+   following code in another cell and retry.
+
+   .. code:: python
+
+      from msticpy.auth.azure_auth import az_connect
+      az_connect()
+
+
+Navigate to your
+Sentinel portal and copy the URL from the address bar. Paste this
+into the **Portal URL** text box and click on **Import from URL**.
+Clicking on **Import from URL** will parse the URL and attempt
+to lookup the full workspace details and populate the currently
+selected workspace with these details.
+
+.. warning:: The **Import from URL** will overwrite any settings
+   for the workspace currently displayed. If you do this by mistake
+   simple select another workspace then select your previous workspace
+   (without clicking on the **Update** button), to refresh the
+   existing settings.
+
+.. figure:: _static/mpconfig_edit_new_workspace.png
+   :alt: Imported settings from config.json
+
+You can also resolve full Workspace details from partial details
+using the **Resolve settings** button. Using this you can populate
+full workspace details from a Workspace ID or Workspace Name.
+
+.. important:: The value for TenantID returned using either of these
+   operations is the Tenant ID of the workspace itself. If you are
+   using Azure Lighthouse or other delegation authentication mechanism
+   and your account is not in the same Azure Active Directory (AAD) you
+   should use the Tenant ID of the AAD where your account is located.
+
+
+Importing settings from ``config.json``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you create a notebook in Azure Machine Learning, Microsoft Sentinel
+creates a ``config.json`` file in the root of your
+notebooks user folder. You can use this configuration file as an
+alternative to using the Workspace lookup described in the previous
+section.
+
+This file contains configuration details about the
+Microsoft Sentinel workspace that you launched the notebook from. However,
+the format is slightly different to the settings format used by **MSTICPy**.
+
+Follow these steps to find and convert your ``config.json``:
+
+1. Run ``MpConfigFile()`` (see the code immediately below)
+2. Locate your ``config.json``
+
+   - click the **Load file** button. There are two options for finding
+     a file.
+   - Browse - use the controls to navigate to find config.json
+   - Search - set the starting directory to search and open the
+     **Search** drop-down
+   - When you see the file click on it to select it and
+     click **Select File** button (below the file browser). The **Select File**
+     button will act on the last file you selected - whether in the file directory
+     listing or the search results.
+   - optionally, click **View Settings** to confirm that the settings in the
+     ``config.json`` look right
+
+3. Convert the config settings to msticpyconfig format
+
+   - click **Convert to MP**
+   - click **View Settings**
+
+4. Save the file
+
+   - type a path into the **Current file** text box
+   - Click on **Save file**
+
+5. You can set this file to always load by assigning the path to
+   an environment variable. See `Setting the path to your
+   msticpyconfig.yaml <#Setting-the-path-to-your-msticpyconfig.yaml>`__
+
+.. code:: ipython3
+
+    mpconfig = MpConfigFile()
+    mpconfig
+
+.. figure:: _static/settings_mp_file_config_view.png
+   :alt: Imported settings from config.json
+
+This is the equivalent of the previous steps from the command line, which
+is probably faster if you know where your config file is.
+
+.. code:: ipython3
+
+    mpconfig = MpConfigFile()
+    mpconfig.load_from_file("E:\\src\\sentinel\\notebooks\\config.json")
+    mpconfig.map_json_to_mp_ws()
+    mpconfig.settings
+
+
+.. code:: ipython3
+
+    {'AzureSentinel': {'Workspaces': {'ASWorkspace': {'ResourceGroup': 'ASWorkspaceRG',
+        'SubscriptionId': '2c1bc08d-6a9e-43f0-aa55-a84f383b1a6b',
+        'TenantId': '3f3fb3df-3c79-4407-8043-4a765430db0e',
+        'WorkspaceId': '722f602f-340e-47a1-8d0a-c2b6a8fbc4c4'}}}}
+
 
 If you loaded a config.json file you should see your workspace
 displayed. If not, you can add one or more workspaces here. The Name,
 WorkspaceId and TenantId are mandatory. The other fields are helpful but
 not essential.
 
-Use the **Help** drop-down panel to find more information about adding
-workspaces and finding the correct values for your workspace.
 
-If this the workspace that you use frequently or all of the time, you
+Default Workspace
+~~~~~~~~~~~~~~~~~
+If you have a workspace that you use frequently or all of the time, you
 may want to set this as the default. This creates a duplicate entry
 named “Default” and this is used when you connect to AzureSentinel as
 the default workspace to connect to (you can override this by specifying
 a workspace name at connect time).
+
+
+Getting help
+~~~~~~~~~~~~
+
+Use the **Help** drop-down panel to find more information about adding
+workspaces and finding the correct values for your workspace.
+
+Saving your settings
+~~~~~~~~~~~~~~~~~~~~
 
 When you’ve finished, type a file name (usually “msticpyconfig.yaml”)
 into the **Conf File** text box and click **Save File**,
@@ -220,8 +291,34 @@ show nothing under the the “Type Validation Results”.
    :alt: Imported settings from config.json
 
 
-Setting the path to your msticpyconfig.yaml
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. note:: The saved settings are not automatically reloaded by
+   MSTICPy. If you want to reload the settings you just saved
+   you can use the following code
+
+   .. code:: python
+
+      import msticpy
+      msticpy.settings.refresh_config()
+
+How MSTICPy finds ``msticpyconfig.yaml``
+----------------------------------------
+
+MSTICPy uses the following logic for finding its configuration
+file:
+
+- Using the path defined in a MSTICPYCONFIG environment variable
+- Looking for a msticpyconfig.yaml in the .msticpy folder of your
+  home directory (%USERPROFILE% on Windows or $HOME on Linux/Mac)
+- Looking in the current directory
+
+When you use :py:meth:`init_notebook <msticpy.init.nbinit.init_notebook>`
+to initialize MSTICPy you can also specify a ``config="<path>"``
+parameter. This will load msticpy settings from this location
+and takes priority over the other methods.
+
+
+Setting the MSTICPYCONFIG variable to point to your msticpyconfig.yaml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is a good point to set up an environment variable so that you can
 keep a single configuration file in a known location and always load the
@@ -356,7 +453,7 @@ then run a simple lookup.
     mpconfig.refresh_mp_config()
 
     # import the TI module
-    from msticpy.sectools import TILookup
+    from msticpy.context import TILookup
     result = TILookup().lookup_ioc('ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa')
     TILookup.result_to_df(result)
 
@@ -435,7 +532,7 @@ Test that the GeoIP settings work
 
     mpconfig.refresh_mp_config()
 
-    from msticpy.sectools import IPStackLookup
+    from msticpy.context.geoip import IPStackLookup
     geoip = IPStackLookup()
     geoip.lookup_ip("52.96.165.18")[1][0]
 
@@ -466,7 +563,7 @@ This is the equivalent for Maxmind *GeoLite*.
 
     mpconfig.refresh_mp_config()
 
-    from msticpy.sectools import GeoLiteLookup
+    from msticpy.context.geoip import GeoLiteLookup
     geoip = GeoLiteLookup()
     geoip.lookup_ip("52.96.165.18")[1][0]
 
@@ -509,8 +606,8 @@ components to use the Authority and API endpoint URLs specific to that cloud.
 
 These components include:
 
-- Azure Sentinel data provider
-- Azure Sentinel API
+- Microsoft Sentinel data provider
+- Microsoft Sentinel API
 - Azure Data (Azure resource API) provider
 - Azure Resource graph provider
 - Azure Key Vault
@@ -599,13 +696,13 @@ Optional Settings
 Other data providers - Splunk, Azure CLI, LocalData, Mordor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Azure API and Azure Sentinel API
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Azure API and Microsoft Sentinel API
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have set your preferences for Azure authentication methods
 in the **Azure** tab you do not need to add the **AzureCLI**
 data provider unless you want to explicitly use something other
-that the defaults for Azure and Azure Sentinel APIs. If you are
+that the defaults for Azure and Microsoft Sentinel APIs. If you are
 happy to use the defaults, you can skip the remainder of this section.
 
 See `Default Azure authentication methods`_ for details about this.
@@ -771,14 +868,14 @@ components that might use them such as:
 
 There are two types of provider support:
 
-- Azure Sentinel - here you specify both the provider name and the
+- Microsoft Sentinel - here you specify both the provider name and the
   workspace name that you want to connect to.
 - Other providers - for other query providers, just specify the name
   of the provider.
 
-Available Azure Sentinel workspaces (in the Add Item drop-down)
+Available Microsoft Sentinel workspaces (in the Add Item drop-down)
 are taken from the items you
-configured in the **Azure Sentinel** tab. Other providers are taken from
+configured in the **Microsoft Sentinel** tab. Other providers are taken from
 the list of available provider types in *MSTICPy*.
 
 There are two options for each of these:
@@ -788,7 +885,7 @@ There are two options for each of these:
   credentials for the provider in your settings. Note: if this is not set
   it defaults to True.
 - **alias** - when *MSTICPy* loads a provider it assigns it to a Python variable name.
-  By default this is "qry\_*workspace_name*" for Azure Sentinel providers and
+  By default this is "qry\_*workspace_name*" for Microsoft Sentinel providers and
   "qry\_*provider_name*" for other providers. If you want to use
   something a bit shorter and easier to type/remember you can add an
   *alias*. The variable name created will be "qry\_*alias*"
@@ -819,7 +916,7 @@ This includes:
 - TILookup - the Threat Intel provider library
 - GeopIP - the Geo ip provider that you want to use
 - AzureData - the module used to query details about Azure resources
-- AzureSentinelAPI - the module used to query the Azure Sentinel API
+- AzureSentinelAPI - the module used to query the Microsoft Sentinel API
 - Notebooklets - loads notebooklets from the `msticnb package <https://msticnb.readthedocs.io/en/latest/>`__
 - Pivot - pivot functions
 

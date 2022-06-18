@@ -6,11 +6,12 @@
 """Tests for the Splunk Uploader class."""
 from pathlib import Path
 from unittest.mock import MagicMock
-import pytest
-import pandas as pd
 
+import pandas as pd
+import pytest
+
+from msticpy.common.exceptions import MsticpyConnectionError, MsticpyUserError
 from msticpy.data.uploaders.splunk_uploader import SplunkUploader
-from msticpy.common.exceptions import MsticpyUserError, MsticpyConnectionError
 
 from ...unit_test_lib import get_test_data_path
 

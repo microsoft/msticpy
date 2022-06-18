@@ -4,16 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """Cybereason Driver class."""
-from typing import Any, Dict, Optional, Tuple, Union, List
-
-import json
 import datetime as dt
+import json
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import httpx
 import pandas as pd
 
 from ..._version import VERSION
-from ...common.provider_settings import get_provider_settings, ProviderArgs
 from ...common.exceptions import MsticpyUserConfigError
+from ...common.provider_settings import ProviderArgs, get_provider_settings
 from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
@@ -115,8 +115,10 @@ class CybereasonDriver(DriverBase):
         """
         cs_dict: Dict[str, Any] = {}
 
-        instance = kwargs.pop("instance", None)
-        cs_dict = CybereasonDriver._get_driver_settings(self.CONFIG_NAME, instance)
+        self._instance = kwargs.pop("instance", None)
+        cs_dict = CybereasonDriver._get_driver_settings(
+            self.CONFIG_NAME, self._instance
+        )
         # let user override config settings with function kwargs
         cs_dict.update(kwargs)
 

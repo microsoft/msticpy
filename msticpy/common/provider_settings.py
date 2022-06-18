@@ -4,20 +4,20 @@
 # license information.
 # --------------------------------------------------------------------------
 """Helper functions for configuration settings."""
-from collections import UserDict
 import os
-from typing import Any, Dict, Optional, Union, Callable
 import warnings
+from collections import UserDict
+from typing import Any, Callable, Dict, Optional, Union
 
 import attr
 from attr import Factory
 
 from .._version import VERSION
-from .exceptions import MsticpyImportExtraError
 from . import pkg_config as config
+from .exceptions import MsticpyImportExtraError
 
 try:
-    from .secret_settings import SecretsClient
+    from ..auth.secret_settings import SecretsClient
 
     _SECRETS_ENABLED = True
 except ImportError:

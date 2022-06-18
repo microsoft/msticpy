@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """Pkg_config test class."""
 import os
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 import httpx
 import pytest
@@ -14,9 +14,9 @@ import pytest_check as check
 import yaml
 
 from msticpy.common import pkg_config
-from msticpy.sectools.geoip import IPStackLookup, GeoLiteLookup
+from msticpy.context.geoip import GeoLiteLookup, IPStackLookup
 
-from ..unit_test_lib import get_test_data_path, custom_mp_config
+from ..unit_test_lib import custom_mp_config, get_test_data_path
 
 _TEST_DATA = get_test_data_path()
 
@@ -101,12 +101,14 @@ def test_geo_ip_settings():
             # We want to ignore warnings from failure to download DB file
             warnings.simplefilter("ignore", category=UserWarning)
             geoip_lite = GeoLiteLookup()
+            geoip_lite._check_initialized()
         check.is_instance(geoip_lite._api_key, str)
         check.equal(geoip_lite._api_key, os.environ["MAXMIND_AUTH"])
 
         check.equal(geoip_lite._db_folder, conf_dbpath)
 
         ipstack = IPStackLookup()
+        ipstack._check_initialized()
         check.equal(ipstack._api_key, "987654321-222")
 
 

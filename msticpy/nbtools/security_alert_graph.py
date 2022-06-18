@@ -11,10 +11,10 @@ Creates an entity graph for the alert.
 import networkx as nx
 import pandas as pd
 
-from .security_alert import SecurityAlert
-from ..datamodel.entities import Entity
-from ..common.utility import export, is_not_empty
 from .._version import VERSION
+from ..common.utility import export, is_not_empty
+from ..datamodel.entities import Entity
+from .security_alert import SecurityAlert
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

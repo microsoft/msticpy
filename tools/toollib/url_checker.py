@@ -6,11 +6,11 @@
 """Python file import analyzer."""
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict, Set, Tuple, Optional, List
+from typing import Dict, List, Optional, Set, Tuple
 from urllib import parse
 
-import markdown
 import httpx
+import markdown
 from bs4 import BeautifulSoup
 
 # pylint: disable=relative-beyond-top-level
@@ -273,7 +273,7 @@ def check_md_document(doc_path: str) -> Dict[str, UrlResult]:
         Dictionary of checked links
 
     """
-    with open(doc_path, "r") as doc_file:
+    with open(doc_path, "r", encoding="utf-8") as doc_file:
         body_markdown = doc_file.read()
     md_content = markdown.markdown(body_markdown)
     soup = BeautifulSoup(md_content, "html.parser")

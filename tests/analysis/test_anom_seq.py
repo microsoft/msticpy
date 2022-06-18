@@ -1,10 +1,11 @@
 import unittest
 from datetime import datetime
-import pandas as pd
-import numpy as np
 
-from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
+import numpy as np
+import pandas as pd
+
 from msticpy.analysis.anomalous_sequence import anomalous
+from msticpy.analysis.anomalous_sequence.utils.data_structures import Cmd
 
 
 class TestAnomalous(unittest.TestCase):

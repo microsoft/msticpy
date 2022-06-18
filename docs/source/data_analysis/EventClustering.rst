@@ -62,9 +62,7 @@ to find.
     pd.set_option('display.max_colwidth', 100)
 
     from msticpy.data import QueryProvider
-    from msticpy.nbtools import *
-    from msticpy.sectools import *
-    from msticpy.nbtools.foliummap import FoliumMap
+    from msticpy.vis.foliummap import FoliumMap
 
     WIDGET_DEFAULTS = {'layout': widgets.Layout(width='95%'),
                        'style': {'description_width': 'initial'}}
@@ -110,7 +108,7 @@ Then we run a clustering algorithm (DBScan in this case) on the process
 list. The result groups similar (noisy) processes together and leaves
 unique process patterns as single-member clusters.
 
-Clustered Processes (i.e. processes that have a cluster size > 1)
+Clustered Processes (i.e. processes that have a cluster size > 1)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: ipython3

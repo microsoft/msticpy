@@ -6,15 +6,15 @@
 """Module for SecurityAlert class."""
 import json
 from json import JSONDecodeError
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 import pandas as pd
 from deprecated.sphinx import deprecated
 
 from .._version import VERSION
+from ..common.utility import export
 from ..datamodel.entities import Entity, UnknownEntity
 from .security_base import SecurityBase
-from ..common.utility import export
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

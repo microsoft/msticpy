@@ -13,8 +13,8 @@ import ipywidgets as widgets
 from .._version import VERSION
 
 try:
-    from ..common.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
-    from ..common.secret_settings import SecretsClient
+    from ..auth.keyvault_client import BHKeyVaultClient, MsticpyKeyVaultConfigError
+    from ..auth.secret_settings import SecretsClient
 
     _KEYVAULT = True
 except ImportError:

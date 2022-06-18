@@ -56,7 +56,7 @@ User Defaults
 ~~~~~~~~~~~~~
 This section controls loading of default providers when using the
 package in a notebook. The settings here are loaded by the
-:py:func:`init_notebook <msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
 function.
 
 Specifying secrets as Environment Variables
@@ -287,8 +287,8 @@ You can also use powershell or Python to manage these programmatically.
 *MSTICPy* has some convenience wrappers around the Azure SDK functions.
 
 The documentation for these is available here:
-:py:mod:`keyvault_client<msticpy.common.keyvault_client>`
-:py:mod:`secrets_settings<msticpy.common.secrets_settings>`
+:py:mod:`keyvault_client<msticpy.auth.keyvault_client>`
+:py:mod:`secrets_settings<msticpy.auth.secrets_settings>`
 
 
 User Defaults Section
@@ -296,9 +296,9 @@ User Defaults Section
 
 This section specifies the query and other providers that you want
 to load by default. It is triggered from the
-:py:func:`init_notebook<msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook<msticpy.init.nbinit.init_notebook>`
 although you can call the
-:py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
+:py:func:`load_user_defaults<msticpy.init.user_config.load_user_defaults>`
 function to do this manually.
 
 If you do not have this section in your configuration ``init_notebook`` will
@@ -462,7 +462,7 @@ AzureData example above this is equivalent to the following code.
 
 .. code:: ipython3
 
-    from msticpy.data.azure_data import AzureData
+    from msticpy.context.azure_data import AzureData
     az_data = AzureData()
     az_data.connect(auth_methods=['cli','interactive'])
 
@@ -495,11 +495,11 @@ provider instances created are also stored in an attribute of the
     'qry_cybersoc': <msticpy.data.data_providers.QueryProvider at 0x21660d41308>,
     'qry_splunk': <msticpy.data.data_providers.QueryProvider at 0x21661127208>,
     'qry_local': <msticpy.data.data_providers.QueryProvider at 0x216605a7c48>,
-    'ti_lookup': <msticpy.sectools.tilookup.TILookup at 0x216611c7908>,
-    'geoip': <msticpy.sectools.geoip.GeoLiteLookup at 0x21660659c88>,
+    'ti_lookup': <msticpy.context.tilookup.TILookup at 0x216611c7908>,
+    'geoip': <msticpy.context.geoip.GeoLiteLookup at 0x21660659c88>,
     'pivot': <msticpy.datamodel.pivot.Pivot at 0x216602d8e88>,
-    'az_data': <msticpy.data.azure_data.AzureData at 0x21668aaf708>,
-    'azs_api': <msticpy.data.azure_sentinel.AzureSentinel at 0x21603f42388>,
+    'az_data': <msticpy.context.azure_data.AzureData at 0x21668aaf708>,
+    'azs_api': <msticpy.context.azure_sentinel.AzureSentinel at 0x21603f42388>,
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
 
 

@@ -74,7 +74,7 @@ an instance string to the "MicrosoftDefender" section name.
       MicrosoftDefender-Tenant2:
           Args:
             ClientId: "CLIENT ID"
-            UserName: "pete@contoso.com"
+            UserName: "USER NAME"
             TenantId: "TENANT ID"
 
 

@@ -6,7 +6,7 @@ List Watchlists
 
 You can get details of the Watchlists in your workspace with 'list_watchlists'.
 
-See :py:meth:`list_watchlists <msticpy.data.azure.MicrosoftSentinel.list_watchlists>`
+See :py:meth:`list_watchlists <msticpy.context.azure.MicrosoftSentinel.list_watchlists>`
 
 .. code:: ipython3
 
@@ -40,7 +40,7 @@ Items in a Watchlist
 You can get the items in a Watchlist with `list_watchlist_items`. Call this and pass it the name of the
 watchlist to get items from.
 
-See :py:meth:`list_watchlist_items <msticpy.data.azure.MicrosoftSentinel.list_watchlist_items>`
+See :py:meth:`list_watchlist_items <msticpy.context.azure.MicrosoftSentinel.list_watchlist_items>`
 
 .. code:: ipython3
 
@@ -52,7 +52,7 @@ as who created it and when. Columns containing the data items from the Watchlist
 You can also add items to a Watchlist with `add_watchlist_item` by passing in a Watchlist name and
 the items to add. The items to add can be in the form of a Pandas Series, DataFrame or as a dictionary of items.
 
-See :py:meth:`add_watchlist_item <msticpy.data.azure.MicrosoftSentinel.add_watchlist_item>`
+See :py:meth:`add_watchlist_item <msticpy.context.azure.MicrosoftSentinel.add_watchlist_item>`
 
 .. code:: ipython3
 
@@ -68,7 +68,7 @@ Delete Watchlists
 Existing Watchlists can be deleted with `delete_watchlist` by passing it the Watchlist name to be
 deleted.
 
-See :py:meth:`delete_watchlist <msticpy.data.azure.MicrosoftSentinel.delete_watchlist>`
+See :py:meth:`delete_watchlist <msticpy.context.azure.MicrosoftSentinel.delete_watchlist>`
 
 .. code:: ipython3
 

@@ -6,10 +6,8 @@
 """Auditd cluster function."""
 import pandas as pd
 
-from .eventcluster import dbcluster_events, add_process_features
-
-
 from .._version import VERSION
+from .eventcluster import add_process_features, dbcluster_events
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

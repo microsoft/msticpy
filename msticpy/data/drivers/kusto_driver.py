@@ -8,13 +8,12 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 
-from ...common.exceptions import MsticpyParameterError, MsticpyUserConfigError
-from ...common.provider_settings import get_provider_settings, ProviderArgs
-from ...common.utility import export
-from ..query_defns import DataEnvironment
-from .kql_driver import KqlDriver, QuerySource
-
 from ..._version import VERSION
+from ...common.exceptions import MsticpyParameterError, MsticpyUserConfigError
+from ...common.provider_settings import ProviderArgs, get_provider_settings
+from ...common.utility import export
+from ..core.query_defns import DataEnvironment
+from .kql_driver import KqlDriver, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"

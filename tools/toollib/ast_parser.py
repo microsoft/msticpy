@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 """AST Parser for limited node types."""
 import ast
-from pprint import pprint
 from collections import defaultdict
-from typing import List, Dict, Any
+from pprint import pprint
+from typing import Any, Dict, List
 
 from . import VERSION
 
@@ -36,7 +36,7 @@ def analyze(
         Dictionary of node results keyed by node type.
 
     """
-    with open(src_file, "r") as source:
+    with open(src_file, "r", encoding="utf-8") as source:
         tree = ast.parse(source.read())
 
     analyzer = Analyzer()
