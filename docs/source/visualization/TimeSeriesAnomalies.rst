@@ -1,115 +1,257 @@
 Time Series Analysis and Anomalies Visualization
 ================================================
 
-This notebook demonstrates the time series analysis and anomalies
-visualization built using the `Bokeh
-library <https://bokeh.pydata.org>`__ as well as using built-in native
-KQL operators.
+MSTICPy has functions to calculate and display time series
+decomposition results. These can be useful to spot time-based
+anomalies in something that has a predictable seasonal pattern.
 
-Time Series analysis generally involves below steps
+.. warning:: This document is in the process of being updated
+   The first sections describe some of the new functionality in
+   MSTICPy 2.0 - main the encapsulation of many of the time
+   series functions in pandas accessors.
+   The second part of the document is the original document
+   that is still to be updated.
+
+
+Some examples are number of logons or network bytes transmitted
+per hour. Although these vary by day and time of day, they tend
+to exhibit a regular recurring pattern over time.
+Time Series decomposition can calculate this seasonal pattern.
+We can then use this established pattern to look for periods
+when significant differences occur - these might be indicators of
+malicious activity on your network.
+
+Time Series analysis generally involves these steps
  - Generating TimeSeries Data
- - Use Time Series Analysis functions to discover anomalies
- - Visualize Time Series anomalies
+ - Using Time Series Analysis functions to discover anomalies
+ - Visualizing Time Series anomalies
 
-Read more about time series analysis in detail from reference microsoft
-TechCommunity blog posts
+You can read more about time series analysis in detail some Microsoft
+TechCommunity blog posts.
 
-**Reference Blog Posts:**
+- `Looking for unknown anomalies - what is normal?
+  Time Series analysis & its applications in Security
+  <https://techcommunity.microsoft.com/t5/azure-sentinel/looking-for-unknown-anomalies-what-is-normal-time-series/ba-p/555052>`__
 
-- `Looking for unknown anomalies - what is normal? Time Series analysis & its applications in Security <https://techcommunity.microsoft.com/t5/azure-sentinel/looking-for-unknown-anomalies-what-is-normal-time-series/ba-p/555052>`__
+- `Time Series visualization of Palo Alto logs to detect data exfiltration
+   <https://techcommunity.microsoft.com/t5/azure-sentinel/time-series-visualization-of-palo-alto-logs-to-detect-data/ba-p/666344>`__
 
-- `Time Series visualization of Palo Alto logs to detect data exfiltration <https://techcommunity.microsoft.com/t5/azure-sentinel/time-series-visualization-of-palo-alto-logs-to-detect-data/ba-p/666344>`__
+Some useful background reading on Forecasting and prediction using time
+series here `Forecasting: Principals and Practice <https://otexts.com/fpp2/>`__
+The section dealing with STL (Seasonal and Trend decomposition using Loess)
+`STL decomposition <https://otexts.com/fpp2/stl.html>`__
+is directly related to the techniques used here.
 
-.. code:: ipython3
+Preparation
+-----------
 
-    # Imports
-    import sys
-    import warnings
+You need to have the SciPy and Statsmodels packages installed to use
+the Time Series functionality.
 
-    from msticpy.common.utility import check_py_version
+An easy way to get these is to install MSTICPy with the "ml" extract
 
-    MIN_REQ_PYTHON = (3, 6)
-    check_py_version(MIN_REQ_PYTHON)
+.. code:: bash
 
-    from IPython import get_ipython
-    from IPython.display import display, HTML, Markdown
-    import ipywidgets as widgets
+  python -m pip install msticpy[ml]
 
-    import pandas as pd
-
-    #setting pandas display options for dataframe
-    pd.set_option("display.max_rows", 100)
-    pd.set_option("display.max_columns", 50)
-    pd.set_option("display.max_colwidth", 100)
-
-    # msticpy imports
-    from msticpy.data import QueryProvider
-    from msticpy.common.wsconfig import WorkspaceConfig
-    from msticpy.vis.timeseries import display_timeseries_anomalies
-
-    WIDGET_DEFAULTS = {
-        "layout": widgets.Layout(width="95%"),
-        "style": {"description_width": "initial"},
-    }
-
-    #Adjusting width of the screen
-    display(HTML("<style>.container { width:80% !important; }</style>"))
-
-    ws_config = WorkspaceConfig()
-
+Initializing MSTICPy
 
 .. code:: ipython3
 
-    # Authentication
-    qry_prov = QueryProvider(data_environment="LogAnalytics")
-    qry_prov.connect(connection_str=ws_config.code_connect_str)
+    import msticpy as mp
+    mp.init_notebook()
 
-Generating Time Series Data
----------------------------
+
+Retrieving data to analyze
+--------------------------
 
 Time Series is a series of data points indexed (or listed or graphed) in
 time order. The data points are often discrete numeric points such as
 frequency of counts or occurrences against a timestamp column of the
-dataset
+dataset.
 
-Using LogAnalytics Query Provider
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The basic characteristics of the data that you need is as follows:
 
-msticpy has a QueryProvider through which you can connect to LogAnalytics
-Data environment. via ``QueryProvider(data_environment="LogAnalytics")``
-Once you connect to data environment (``qry_prov.connect()``), you can
-list the available queries (``qry_prov.list_queries()``) for the data
-environment which in this case is LogAnalytics.
+- Time column - with the time stamp of the sampling interval
+- A numeric count or sum of whatever value you want to check for
+  anomalies. For example, bytes per hour. The numeric value is
+  calculated for each time period.
+- The total time span of the data must cover one or more seasonal periods,
+  for example, 7 days.
 
-Displaying available timeseries queries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For this notebook, we are interested in time series queries only, so we
-will filter and display only those.
+A simple query for doing this for logon data is shown below.
 
 .. code:: ipython3
 
-    queries = qry_prov.list_queries()
-    for query in queries:
-        if "timeseries" in query:
-            print(query)
+  query = """
+  SecurityEvent
+  | where EventID == 4624
+  | where TimeGenerated >= datetime(2022-05-01 00:00)
+  | where TimeGenerated <= datetime(2022-06-01 00:00)
+  | summarize LogonCount=count() by bin(TimeGenerated, 1h)
+  | project TimeGenerated, LogonCount
+  """
+  ts_df = qry_prov.exec_query(query)
+  ts_df = ts_df.set_index("TimeGenerated")
 
+
+Performing the Time Series analysis
+-----------------------------------
+
+MSTICPy has a timeseries module that uses Statsmodel's STL function
+to generate the time series analysis.
+
+You can use it with your input DataFrame directly via the
+:py:meth:`mp_timeseries.analyze <msticpy.analysis.timeseries.MsticpyTimeSeriesAccessor.analyze>`
+pandas method.
+
+.. code:: ipython3
+
+  from msticpy.analysis import timeseries
+
+  ts_decomp_df = ts_df.mp_timeseries.analyze(
+      # time_column="TimeGenerated"  - if the DF is not indexed by timestamp
+      data_column="LogonCount",
+      seasonal=7,
+      period=24
+  )
+
+  ts_decomp_df.head()
+
+
+A full list and description of parameters to this function:
+
+- time_column : If the input data is not indexed on the time column, use this column
+  as the time index
+- data_column : Use named column if the input data has more than one column.
+- seasonal : Seasonality period of the input data required for STL.
+  Must be an odd integer, and should normally be >= 7 (default).
+- period: Periodicity of the the input data. by default 24 (Hourly).
+- score_threshold : Standard deviation threshold value calculated using Z-score used to
+  flag anomalies, by default 3
+
+Displaying the time series anomalies
+------------------------------------
+
+Using the output from the previous step we can display the trends and any
+anomalies graphically using
+:py:meth:`mp_timeseries.plot <msticpy.analysis.timeseries.MsticpyTimeSeriesAccessor.plot>`
+
+.. code:: ipython3
+
+    ts_decomp_df.mp_timeseries.plot(
+        y="LogonCount",
+    )
+
+
+.. image:: _static/TimeSeriesAnomalieswithRangeTool.png
+
+You can also chain both operations together
+
+.. code:: ipython3
+
+    ts_decomp_df = ts_df.mp_timeseries.analyze(
+        # time_column="TimeGenerated"  - if the DF is not indexed by timestamp
+        data_column="LogonCount",
+        seasonal=7,
+        period=24
+    ).mp_timeseries.plot(
+        y="LogonCount",
+    )
+
+Extracting anomaly periods
+--------------------------
+
+You can get the anomalous periods (if any) using the
+:py:meth:`mp_timeseries.anomaly_periods <msticpy.analysis.timeseries.MsticpyTimeSeriesAccessor.anomaly_periods>`
+function.
+
+.. code:: ipython3
+
+    ts_decomp_df.mp_timeseries.anomaly_periods()
 
 .. parsed-literal::
 
-    MultiDataSource.get_timeseries_anomalies
-    MultiDataSource.get_timeseries_data
-    MultiDataSource.get_timeseries_decompose
-    MultiDataSource.plot_timeseries_datawithbaseline
-    MultiDataSource.plot_timeseries_scoreanomolies
+    [TimeSpan(start=2019-05-13 16:00:00+00:00, end=2019-05-13 18:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-17 20:00:00+00:00, end=2019-05-17 22:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-26 04:00:00+00:00, end=2019-05-26 06:00:00+00:00, period=0 days 02:00:00)]
+
+This function returns anomaly periods as a list of MSTICPy :py:class:`TimeSpan <msticpy.common.timespan.TimeSpan>`
+objects.
+
+Extracting anomaly periods as KQL time filter clauses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also return the anomaly periods as a KQL expression that you
+can use in MS Sentinel queries using
+:py:meth:`mp_timeseries.kql_periods <msticpy.analysis.timeseries.MsticpyTimeSeriesAccessor.kql_periods>`.
+
+.. code:: ipython3
+
+    ts_decomp_df.mp_timeseries.kql_periods()
+
+.. parsed-literal::
+
+    '| where TimeGenerated between (datetime(2019-05-13 16:00:00+00:00) .. datetime(2019-05-13 18:00:00+00:00))
+     or TimeGenerated between (datetime(2019-05-17 20:00:00+00:00) .. datetime(2019-05-17 22:00:00+00:00))
+     or TimeGenerated between (datetime(2019-05-26 04:00:00+00:00) .. datetime(2019-05-26 06:00:00+00:00))'
 
 
-Get TimeSeries Data from LogAnalytics Table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Readjusting the anomaly threshold
+---------------------------------
 
-You can get more details about the individual query by executing
-``qry_prov.MultiDataSource.get_timeseries_data('?')`` which will display
-Query, data source, parameters and parameterized raw KQL query
+You can re-calculate the anomalies using a different setting for the
+threshold. The threshold determines how much difference between the
+actual measure value and the expected seasonal value before a period
+is considered anomalous.
+
+The default threshold is 3 standard deviations away from the
+expected seasonal value.
+
+.. code:: ipython3
+
+    ts_decomp_df.mp_timeseries.apply_threshold(threshold=2.5).mp_timeseries.anomaly_periods()
+
+.. parsed-literal::
+
+    [TimeSpan(start=2019-05-06 02:00:00+00:00, end=2019-05-06 04:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-08 04:00:00+00:00, end=2019-05-08 06:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-08 10:00:00+00:00, end=2019-05-08 12:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-13 02:00:00+00:00, end=2019-05-13 05:00:00+00:00, period=0 days 03:00:00),
+    TimeSpan(start=2019-05-13 16:00:00+00:00, end=2019-05-13 18:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-17 20:00:00+00:00, end=2019-05-17 22:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-22 05:00:00+00:00, end=2019-05-22 07:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-26 04:00:00+00:00, end=2019-05-26 06:00:00+00:00, period=0 days 02:00:00),
+    TimeSpan(start=2019-05-27 03:00:00+00:00, end=2019-05-27 05:00:00+00:00, period=0 days 02:00:00)]
+
+
+MSTICPy built-in Sentinel Queries
+---------------------------------
+
+MSTICPy has a number of built-in queries for MS Sentinel to support time series
+analysis.
+
+- MultiDataSource.get_timeseries_anomalies
+- MultiDataSource.get_timeseries_data
+- MultiDataSource.get_timeseries_decompose
+- MultiDataSource.plot_timeseries_datawithbaseline
+- MultiDataSource.plot_timeseries_scoreanomolies
+
+To use these you will need to connect to a Sentinel workspace.
+
+.. code:: ipython3
+
+    # Authentication
+    qry_prov = mp.QueryProvider(data_environment="LogAnalytics")
+    qry_prov.connect(mp.WorkspaceConfig(workspace="MySentinelWorkspace"))
+
+Table-agnostic time series query
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We can use the generic ``get_timeseries_data`` to retrieve suitable
+data to analyze from different source tables.
+
+The help for this query is show below.
 
 ::
 
@@ -148,7 +290,14 @@ Query, data source, parameters and parameterized raw KQL query
     where_clause: str (optional)
         Optional additional filter clauses
     Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn} | where {timestampcolumn} >= datetime({start}) | where {timestampcolumn} <= datetime({end}) | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end}) step {timeframe} by {groupbycolumn} {add_query_items}
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+    | where {timestampcolumn} >= datetime({start})
+    | where {timestampcolumn} <= datetime({end})
+    | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn}
+      from datetime({start}) to datetime({end})
+      step {timeframe} by {groupbycolumn} {add_query_items}
+
+And an example of running the query.
 
 .. code:: ipython3
 
@@ -210,22 +359,11 @@ Query, data source, parameters and parameterized raw KQL query
 
 |
 
-Time Series Analysis and discovering Anomalies
-----------------------------------------------
+Using Log Analytics/MS Sentinel to calculate the Time Series
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By analyzing time series data over an extended period, we can identify
-time-based patterns (e.g. seasonality, trend etc.) in the data and
-extract meaningful statistics which can help in flagging outliers. A
-particular example in a security context is user logon patterns over a
-period of time exhibiting different behavior after hours and on
-weekends: computing deviations from these changing patterns is rather
-difficult in traditional atomic detections with static thresholds. KQL
-built-in functions can automatically identify such seasonality and trend
-from the input data and take it into consideration when flagging
-anomalies.
-
-Using Built-in KQL to generate TimeSeries decomposition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can also perform the time series analysis using the kusto
+functionality in Microsoft Sentinel.
 
 In this case, we will use built-in KQL function ``series_decompose()``
 to decompose time series to generate additional data points such as
@@ -234,7 +372,7 @@ baseline, seasonal , trend etc.
 **KQL Reference Documentation:** -
 `series_decompose <https://docs.microsoft.com/azure/kusto/query/series-decomposefunction>`__
 
-You can use available query
+You can use the query
 ``qry_prov.MultiDataSource.plot_timeseries_datawithbaseline()`` to get
 the similar details
 
@@ -363,8 +501,129 @@ the similar details
 
 |
 
-Using MSTICPY - Seasonal-Trend decomposition using LOESS (STL)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Displaying Time Series anomaly alerts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also use ``series_decompose_anomalies()`` which will run Anomaly
+Detection based on series decomposition. This takes an expression
+containing a series (dynamic numerical array) as input and extract
+anomalous points with scores.
+
+**KQL Reference Documentation:** -
+`series_decompose_anomalies <https://docs.microsoft.com/azure/kusto/query/series-decompose-anomaliesfunction>`__
+
+You can use available query
+``qry_prov.MultiDataSource.get_timeseries_alerts()`` to get the similar
+details
+
+::
+
+   Query:  get_timeseries_alerts
+   Data source:  LogAnalytics
+   Time Series anomaly alerts generated using built-in KQL time series functions
+
+   Parameters
+   ----------
+   aggregatecolumn: str (optional)
+       field to aggregate from source dataset
+       (default value is: Total)
+   aggregatefunction: str (optional)
+       Aggregation functions to use - count(), sum(), avg() etc
+       (default value is: count())
+   end: datetime
+       Query end time
+   groupbycolumn: str (optional)
+       Group by field to aggregate results
+       (default value is: Type)
+   scorethreshold: str (optional)
+       Score threshold for alerting
+       (default value is: 3)
+   start: datetime
+       Query start time
+   table: str
+       Table name
+   timeframe: str (optional)
+       Aggregation TimeFrame
+       (default value is: 1h)
+   timestampcolumn: str (optional)
+       Timestamp field to use from source dataset
+       (default value is: TimeGenerated)
+   where_clause: str (optional)
+       Optional additional filter clauses
+   Query:
+    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
+    | where {timestampcolumn} >= datetime({start})
+    | where {timestampcolumn} <= datetime({end})
+    | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end})
+      step {timeframe} by {groupbycolumn}
+    | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
+    | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime),
+      anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
+    | where anomalies > 0
+    | extend score = round(score,2)
+
+.. code:: ipython3
+
+    time_series_alerts = qry_prov.MultiDataSource.get_timeseries_alerts(
+        start=start,
+        end=end,
+        table='CommonSecurityLog',
+        timestampcolumn='TimeGenerated',
+        aggregatecolumn='SentBytes',
+        groupbycolumn='DeviceVendor',
+        aggregatefunction='sum(SentBytes)',
+        scorethreshold='1.5',
+        where_clause='|where DeviceVendor=="Palo Alto Networks"'
+    )
+    time_series_alerts
+
+
+.. raw:: html
+
+    <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
+    <table border="1" class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th></th>
+          <th>DeviceVendor</th>
+          <th>SentBytes</th>
+          <th>TimeGenerated</th>
+          <th>anomalies</th>
+          <th>score</th>
+          <th>baseline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>0</th>
+          <td>Palo Alto Networks</td>
+          <td>2.318680e+09</td>
+          <td>2020-03-09 23:00:00</td>
+          <td>1.0</td>
+          <td>1.52</td>
+          <td>2204764145</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+|
+
+Using MSTICPY functions - Seasonal-Trend decomposition using LOESS (STL)
+------------------------------------------------------------------------
 
 In this case, we will use msticpy function `timeseries_anomalies_stl`
 which leverages `STL` method from `statsmodels` API to decompose a time
@@ -378,42 +637,13 @@ estimates of the three components. The key inputs into STL are:
 - low_pass - The length of the low-pass estimation window, usually the
   smallest odd number larger than the periodicity of the data.
 
-More info at the
+More background informatio is available at the
 `statsmodel STL documentation
 <https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL>`__
 
-Documentation of timeseries_anomalies_stl function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
-
-  timeseries_anomalies_stl(data: pandas.core.frame.DataFrame, **kwargs) -> pandas.core.frame.DataFrame
-      Discover anomalies in Timeseries data using
-      STL (Seasonal-Trend Decomposition using LOESS) method using statsmodels package.
-
-      Parameters
-      ----------
-      data: pd.DataFrame
-          DataFrame as a time series data set retrieved from data connector or external data source.
-          Dataframe must have 2 columns with time column set as index and other numeric value.
-
-      Other Parameters
-      ----------------
-      seasonal: int, optional
-          Seasonality period of the input data required for STL.
-          Must be an odd integer, and should normally be >= 7 (default).
-      period: int, optional
-          Periodicity of the the input data. by default 24 (Hourly).
-      score_threshold: float, optional
-          standard deviation threshold value calculated using Z-score used to flag anomalies,
-          by default 3
-
-      Returns
-      -------
-      pd.DataFrame
-          Returns a dataframe with additional columns by decomposing time series data
-          into residual, trend, seasonal, weights, baseline, score and anomalies.
-          The anomalies column will have 0, 1, -1 values based on score_threshold set.
+The timeseries_anomalies_stl function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -476,10 +706,9 @@ Documentation of timeseries_anomalies_stl function
 
 |
 
-Discover anomalies using timeseries_anomalies_stl function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We will run msticpy function `timeseries_anomalies_stl` on the input data to discover anomalies.
+We will run msticpy function
+:py:func:`timeseries_anomalies_stl <msticpy.analysis.timeseries.timeseries_anomalies_stl>`
+on the input data to discover anomalies.
 
 .. code:: ipython3
 
@@ -588,7 +817,7 @@ Displaying Anomalies using STL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We will filter only the anomalies (with value 1 from anomalies column) of
-the output dataframe retrieved after running the msticpy function
+the output dataframe retrieved after running the MSTICPy function
 `timeseries_anomalies_stl`
 
 .. code:: ipython3
@@ -677,223 +906,6 @@ pandas or respective data store API where data is stored. The pandas I/O
 API is a set of top level reader functions accessed like
 pandas.read_csv() that generally return a pandas object.
 
-Read More at Pandas Documentation: - `I/O Tools (Text
-,CSV,HDF5..) <https://pandas.pydata.org/docs/user_guide/io.html>`__
-
-Example of using Pandas ``read_csv`` to read local csv file containing
-TimeSeries demo dataset. Additional columns in the csv such as
-``baseline``, ``score`` and ``anoamlies`` are generated using built-in
-KQL Time series functions such as ``series_decompose_anomalies()``.
-
-.. code:: ipython3
-
-    timeseriesdemo = pd.read_csv('TimeSeriesDemo.csv',
-                              parse_dates=["TimeGenerated"],
-                              infer_datetime_format=True)
-    timeseriesdemo.head()
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>TimeGenerated</th>
-          <th>TotalBytesSent</th>
-          <th>baseline</th>
-          <th>score</th>
-          <th>anomalies</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>2019-05-01 06:00:00</td>
-          <td>873713587</td>
-          <td>782728212</td>
-          <td>0.224776</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2019-05-01 07:00:00</td>
-          <td>882187669</td>
-          <td>838492449</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>2019-05-01 08:00:00</td>
-          <td>852506841</td>
-          <td>816772273</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>2019-05-01 09:00:00</td>
-          <td>898793650</td>
-          <td>878871426</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>2019-05-01 10:00:00</td>
-          <td>891598085</td>
-          <td>862639955</td>
-          <td>0.000000</td>
-          <td>0</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-|
-
-Displaying Time Series anomaly alerts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can also use ``series_decompose_anomalies()`` which will run Anomaly
-Detection based on series decomposition. This takes an expression
-containing a series (dynamic numerical array) as input and extract
-anomalous points with scores.
-
-**KQL Reference Documentation:** -
-`series_decompose_anomalies <https://docs.microsoft.com/azure/kusto/query/series-decompose-anomaliesfunction>`__
-
-You can use available query
-``qry_prov.MultiDataSource.get_timeseries_alerts()`` to get the similar
-details
-
-::
-
-   Query:  get_timeseries_alerts
-   Data source:  LogAnalytics
-   Time Series anomaly alerts generated using built-in KQL time series functions
-
-   Parameters
-   ----------
-   aggregatecolumn: str (optional)
-       field to agregate from source dataset
-       (default value is: Total)
-   aggregatefunction: str (optional)
-       Aggregation functions to use - count(), sum(), avg() etc
-       (default value is: count())
-   end: datetime
-       Query end time
-   groupbycolumn: str (optional)
-       Group by field to aggregate results
-       (default value is: Type)
-   scorethreshold: str (optional)
-       Score threshold for alerting
-       (default value is: 3)
-   start: datetime
-       Query start time
-   table: str
-       Table name
-   timeframe: str (optional)
-       Aggregation TimeFrame
-       (default value is: 1h)
-   timestampcolumn: str (optional)
-       Timestamp field to use from source dataset
-       (default value is: TimeGenerated)
-   where_clause: str (optional)
-       Optional additional filter clauses
-   Query:
-    {table} {where_clause} | project {timestampcolumn},{aggregatecolumn},{groupbycolumn}
-    | where {timestampcolumn} >= datetime({start})
-    | where {timestampcolumn} <= datetime({end})
-    | make-series {aggregatecolumn}={aggregatefunction} on {timestampcolumn} from datetime({start}) to datetime({end})
-      step {timeframe} by {groupbycolumn}
-    | extend (anomalies, score, baseline) = series_decompose_anomalies({aggregatecolumn}, {scorethreshold},-1,"linefit")
-    | mv-expand {aggregatecolumn} to typeof(double), {timestampcolumn} to typeof(datetime),
-      anomalies to typeof(double), score to typeof(double), baseline to typeof(long)
-    | where anomalies > 0
-    | extend score = round(score,2)
-
-.. code:: ipython3
-
-    time_series_alerts = qry_prov.MultiDataSource.get_timeseries_alerts(
-        start=start,
-        end=end,
-        table='CommonSecurityLog',
-        timestampcolumn='TimeGenerated',
-        aggregatecolumn='SentBytes',
-        groupbycolumn='DeviceVendor',
-        aggregatefunction='sum(SentBytes)',
-        scorethreshold='1.5',
-        where_clause='|where DeviceVendor=="Palo Alto Networks"'
-    )
-    time_series_alerts
-
-
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>DeviceVendor</th>
-          <th>SentBytes</th>
-          <th>TimeGenerated</th>
-          <th>anomalies</th>
-          <th>score</th>
-          <th>baseline</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>Palo Alto Networks</td>
-          <td>2.318680e+09</td>
-          <td>2020-03-09 23:00:00</td>
-          <td>1.0</td>
-          <td>1.52</td>
-          <td>2204764145</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-|
-
 Displaying Anomalies Separately
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -975,79 +987,7 @@ type to display outliers. Below we will see 2 types to visualize using msticpy f
 ``display_timeseries_anomalies()`` via Bokeh library as well as using
 built-in KQL ``render``.
 
-Using Bokeh Visualization Library
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Documentation for display_timeseries_anomalies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-   display_timeseries_anomalies(
-       data: pandas.core.frame.DataFrame,
-       y: str = 'Total',
-       time_column: str = 'TimeGenerated',
-       anomalies_column: str = 'anomalies',
-       source_columns: list = None,
-       period: int = 30,
-       **kwargs,
-   ) -> <function figure at 0x7f0de9ae2598>
-   Docstring:
-    Display time series anomalies visualization.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        DataFrame as a time series data set retrieved from KQL time series functions
-        dataframe will have columns as TimeGenerated, y, baseline, score, anomalies
-    y : str, optional
-        Name of column holding numeric values to plot against time series to determine anomalies
-        (the default is 'Total')
-    time_column : str, optional
-        Name of the timestamp column
-        (the default is 'TimeGenerated')
-    anomalies_column : str, optional
-        Name of the column holding binary status(1/0) for anomaly/benign
-        (the default is 'anomalies')
-    source_columns : list, optional
-        List of default source columns to use in tooltips
-        (the default is None)
-    period : int, optional
-        Period of the dataset for hourly-no of days, for daily-no of weeks.
-        This is used to correctly calculate the plot height.
-        (the default is 30)
-
-    Other Parameters
-    ----------------
-    ref_time : datetime, optional
-        Input reference line to display (the default is None)
-    title : str, optional
-        Title to display (the default is None)
-    legend: str, optional
-        Where to position the legend
-        None, left, right or inline (default is None)
-    yaxis : bool, optional
-        Whether to show the yaxis and labels
-    range_tool : bool, optional
-        Show the the range slider tool (default is True)
-    height : int, optional
-        The height of the plot figure
-        (the default is auto-calculated height)
-    width : int, optional
-        The width of the plot figure (the default is 900)
-    xgrid : bool, optional
-        Whether to show the xaxis grid (default is True)
-    ygrid : bool, optional
-        Whether to show the yaxis grid (default is False)
-    color : list, optional
-        List of colors to use in 3 plots as specified in order
-        3 plots- line(observed), circle(baseline), circle_x/user specified(anomalies).
-        (the default is ["navy", "green", "firebrick"])
-
-    Returns
-    -------
-    figure
-        The bokeh plot figure.
+:py:func:`display_timeseries_anomalies <msticpy.vis.timeseries.display_timeseries_anomalies>`.
 
 .. code:: ipython3
 
@@ -1072,7 +1012,7 @@ Documentation for display_timeseries_anomalies
 
 
 Exporting Plots as PNGs
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 To use bokeh.io image export functions you need selenium, phantomjs and
 pillow installed:
@@ -1126,7 +1066,7 @@ Here is our saved plot: plot.png
 |
 
 Using Built-in KQL render operator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Render operator instructs the user agent to render the results of the
 query in a particular way. In this case, we are using timechart which

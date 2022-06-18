@@ -466,20 +466,9 @@ class MsticpyPlotAccessor:
             The color of the source nodes, by default 'light-green'
         edge_color : str, optional
             The color of the edges, by default 'black'
-        node_size : int, optional
-            Size of the nodes in pixels, by default 25
-        font_size : int, optional
-            Font size for node labels, by default 10
-            Can be an integer (point size) or a string (e.g. "10pt")
-        width : int, optional
-            Width in pixels, by default 800
-        height : int, optional
-            Image height (the default is 800)
-        scale : int, optional
-            Position scale (the default is 2)
-        hide : bool, optional
-            Don't show the plot, by default False. If True, just
-            return the figure.
+        kwargs :
+            Additional keyword arguments are passed to the networkx
+            layout function.
 
         Returns
         -------
