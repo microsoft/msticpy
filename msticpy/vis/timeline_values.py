@@ -70,7 +70,7 @@ class PlotParams:
 @export  # noqa: C901, MC0001
 def display_timeline_values(  # noqa: C901, MC0001
     data: pd.DataFrame,
-    value_col: str = None,
+    value_column: str = None,
     time_column: str = "TimeGenerated",
     source_columns: list = None,
     **kwargs,
@@ -86,7 +86,7 @@ def display_timeline_values(  # noqa: C901, MC0001
     time_column : str, optional
         Name of the timestamp column
         (the default is 'TimeGenerated')
-    value_col : str
+    value_column : str
         The column name holding the value to plot vertically
     source_columns : list, optional
         List of default source columns to use in tooltips
@@ -96,8 +96,10 @@ def display_timeline_values(  # noqa: C901, MC0001
     ----------------
     x : str, optional
         alias of `time_column`
-    y : str
-        an alias for `value_col`
+    y : str, optional
+        alias of `value_column`
+    value_col : str, optional
+        alias of `value_column`
     title : str, optional
         Title to display (the default is None)
     ref_event : Any, optional
@@ -152,7 +154,7 @@ def display_timeline_values(  # noqa: C901, MC0001
 
     """
     # check_kwargs(kwargs, _DEFAULT_KWARGS + _TL_VALUE_KWARGS + ["y"])
-    check_kwargs(kwargs, PlotParams.field_list())
+    check_kwargs(kwargs, PlotParams.field_list() + ["y", "value_col"])
     param = PlotParams(**kwargs)
 
     if data is None or not isinstance(data, pd.DataFrame) or data.empty:
@@ -166,7 +168,7 @@ def display_timeline_values(  # noqa: C901, MC0001
 
     plot_kinds = param.kind if isinstance(param.kind, list) else [param.kind]
     param.ref_time_col = param.ref_time_col or time_column or "TimeGenerated"
-    value_col = value_col or kwargs.pop("y", kwargs.pop("value_column", None))
+    value_col = value_column or kwargs.pop("y", kwargs.pop("value_col", None))
     if not value_col:
         raise ValueError("Must supply 'value_column', 'value_col' or 'y' parameter.")
 
