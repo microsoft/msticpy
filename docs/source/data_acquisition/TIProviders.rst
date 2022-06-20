@@ -325,7 +325,7 @@ Pivot functions also call the `lookup_iocs` method of this class.
 
 Brief help is shown below. You can read more details about the
 attributes and functions in the
-[TILookup documentation](https://msticpy.readthedocs.io/api/msticpy.context.tilookup.html)
+:py:mod:`TILookup documentation <msticpy.context.tilookup>`
 
 To use TILookup, you need to create an instance of the class.
 Avoid creating lots of instances of this class:
@@ -528,7 +528,7 @@ Lookup an IoC from a single provider
 And show the output
 
 .. code-block:: ipython3
-   :emphasize-lines:1
+   :emphasize-lines: 1
 
     result, details = ti_lookup.lookup_ioc(observable="38.75.137.9", providers=["OTX"])
 

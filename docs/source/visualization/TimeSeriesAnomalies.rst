@@ -33,8 +33,7 @@ TechCommunity blog posts.
   Time Series analysis & its applications in Security
   <https://techcommunity.microsoft.com/t5/azure-sentinel/looking-for-unknown-anomalies-what-is-normal-time-series/ba-p/555052>`__
 
-- `Time Series visualization of Palo Alto logs to detect data exfiltration
-   <https://techcommunity.microsoft.com/t5/azure-sentinel/time-series-visualization-of-palo-alto-logs-to-detect-data/ba-p/666344>`__
+- `Time Series visualization of Palo Alto logs to detect data exfiltration <https://techcommunity.microsoft.com/t5/azure-sentinel/time-series-visualization-of-palo-alto-logs-to-detect-data/ba-p/666344>`__
 
 Some useful background reading on Forecasting and prediction using time
 series here `Forecasting: Principals and Practice <https://otexts.com/fpp2/>`__
