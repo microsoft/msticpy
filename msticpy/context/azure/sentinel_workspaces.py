@@ -17,6 +17,7 @@ from ..._version import VERSION
 from ...auth.azure_auth_core import AzureCloudConfig
 from ...common.data_utils import df_has_data
 from ...common.pkg_config import get_http_timeout
+from ...common.utility import mp_ua_header
 from ...data import QueryProvider
 
 __version__ = VERSION
@@ -315,6 +316,7 @@ class SentinelWorkspacesMixin:
         t_resp = httpx.get(
             cls._TENANT_URI.format(cloud_endpoint=login_endpoint, tenant_name=domain),
             timeout=get_http_timeout(),
+            headers=mp_ua_header(),
         )
         tenant_details = t_resp.json()
 
