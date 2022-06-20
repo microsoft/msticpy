@@ -109,7 +109,7 @@ class MsticpyTimeSeriesAccessor:
             anomalies. Used as positive and negative threshold
             unless `threshold_low` is specified.
         threshold_low : Optional[float], optional
-            The threshhold below which values will be reported
+            The threshold below which values will be reported
             as anomalies, by default None.
         anomalies_column : str, optional
             The column containing the anomalies flag.
