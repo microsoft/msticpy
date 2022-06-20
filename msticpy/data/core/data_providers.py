@@ -29,6 +29,7 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 _DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
+_COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
 
 
 @export
@@ -70,7 +71,7 @@ class QueryProvider:
 
         """
         # import at runtime to prevent circular import
-        # pylint: disable=import-outside-toplevel, cyclic-import
+        # pylint: disable=import-outside-toplevel
         from ...init.pivot_init.pivot_data_queries import add_data_queries_to_entities
 
         # pylint: enable=import-outside-toplevel
@@ -110,6 +111,7 @@ class QueryProvider:
         )
         self._add_query_functions()
         self._query_time = QueryTime(units="day")
+        self._add_pivots(lambda: self._query_time.timespan)
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
@@ -141,8 +143,7 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
-        # Since we're now connected, add Pivot functions
-        self._add_pivots(lambda: self._query_time.timespan)
+            self._add_pivots(lambda: self._query_time.timespan)
 
     def add_connection(
         self,
@@ -230,20 +231,6 @@ class QueryProvider:
 
         """
         return list(self._query_provider.schema.keys())
-
-    @property
-    def instance(self) -> Optional[str]:
-        """
-        Return instance name, if any for provider.
-
-        Returns
-        -------
-        Optional[str]
-            The instance name or None for drivers that do not
-            support multiple instances.
-
-        """
-        return self._query_provider.instance
 
     def import_query_file(self, query_file: str):
         """
@@ -472,34 +459,35 @@ class QueryProvider:
     def _get_query_options(
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
-        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
         """Return any kwargs not already in params."""
-        query_options = kwargs.pop("query_options", {})
-        if not query_options:
-            # Any kwargs left over we send to the query provider driver
-            query_options = {
-                key: val for key, val in kwargs.items() if key not in params
-            }
-        return query_options
+        return kwargs.pop("query_options", {}) or {
+            key: val for key, val in kwargs.items() if key not in params
+        }
 
-    def _get_query_folder_for_env(self, root_path: str, environment: str) -> Path:
+    def _get_query_folder_for_env(self, root_path: str, environment: str) -> List[Path]:
         """Return query folder for current environment."""
-        environment = "MDE" if environment == "M365D" else environment
-        return self._resolve_package_path(root_path).joinpath(environment.casefold())
+        data_envs = [environment]
+        if environment.casefold() in _COMPATIBLE_DRIVER_MAPPINGS:
+            data_envs += _COMPATIBLE_DRIVER_MAPPINGS[environment.casefold()]
+        return [
+            self._resolve_package_path(root_path).joinpath(data_env.casefold())
+            for data_env in data_envs
+        ]
 
     def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
         """Fetch queries from YAML files in specified paths."""
         settings: Dict[str, Any] = config.settings.get(  # type: ignore
             "QueryDefinitions"
         )  # type: ignore
-        all_query_paths = []
+        all_query_paths: List[Union[Path, str]] = []
         for def_qry_path in settings.get("Default"):  # type: ignore
             # only read queries from environment folder
-            builtin_qry_path = self._get_query_folder_for_env(
+            builtin_qry_paths = self._get_query_folder_for_env(
                 def_qry_path, self.environment
             )
-            if builtin_qry_path and builtin_qry_path.is_dir():
-                all_query_paths.append(str(builtin_qry_path))
+            all_query_paths.extend(
+                str(qry_path) for qry_path in builtin_qry_paths if qry_path.is_dir()
+            )
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
@@ -511,7 +499,6 @@ class QueryProvider:
                 param_qry_path = self._resolve_path(param_path)
                 if param_qry_path:
                     all_query_paths.append(param_qry_path)
-
         if all_query_paths:
             return QueryStore.import_files(
                 source_path=all_query_paths,
