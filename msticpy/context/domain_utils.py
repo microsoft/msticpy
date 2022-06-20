@@ -33,7 +33,7 @@ from urllib3.util import parse_url
 from .._version import VERSION
 from ..common import pkg_config as config
 from ..common.exceptions import MsticpyUserConfigError
-from ..common.utility import export
+from ..common.utility import export, mp_ua_header
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -81,13 +81,21 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
         )
 
     # Request screenshot from Browshot and get request ID
-    id_string = f"https://api.browshot.com/api/v1/screenshot/create?url={url}/&instance_id=26&size=screen&cache=0&key={bs_api_key}"  # pylint: disable=line-too-long
-    id_data = httpx.get(id_string, timeout=config.get_http_timeout())
+    id_string = (
+        f"https://api.browshot.com/api/v1/screenshot/create?url={url}/"
+        f"&instance_id=26&size=screen&cache=0&key={bs_api_key}"
+    )
+    id_data = httpx.get(
+        id_string, timeout=config.get_http_timeout(), headers=mp_ua_header()
+    )
     bs_id = json.loads(id_data.content)["id"]
     status_string = (
         f"https://api.browshot.com/api/v1/screenshot/info?id={bs_id}&key={bs_api_key}"
     )
-    image_string = f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}&zoom=50&key={bs_api_key}"  # pylint: disable=line-too-long
+    image_string = (
+        f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}"
+        "&zoom=50&key={bs_api_key}"
+    )
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
     progress = IntProgress(min=0, max=100)
@@ -95,7 +103,9 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     ready = False
     while not ready and progress.value < 100:
         progress.value += 1
-        status_data = httpx.get(status_string, timeout=config.get_http_timeout())
+        status_data = httpx.get(
+            status_string, timeout=config.get_http_timeout(), headers=mp_ua_header()
+        )
         status = json.loads(status_data.content)["status"]
         if status == "finished":
             ready = True

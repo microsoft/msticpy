@@ -18,6 +18,7 @@ from bokeh.models import (
     NodesAndLinkedEdges,
     Renderer,
     TapTool,
+    WheelZoomTool,
 )
 from bokeh.palettes import Spectral4
 from bokeh.plotting import figure, from_networkx, show
@@ -107,7 +108,8 @@ def plot_nx_graph(
     edge_color : str, optional
         The color of the edges, by default 'black'
     kwargs :
-        Additional keyword arguments are passed to the layout
+        Additional keyword arguments are passed to the networkx
+        layout function.
 
     Returns
     -------
@@ -156,7 +158,7 @@ def plot_nx_graph(
         hover_tools.append(
             _create_edge_hover(edge_attrs, [graph_renderer.edge_renderer])
         )
-    plot.add_tools(*hover_tools, TapTool(), BoxSelectTool())
+    plot.add_tools(*hover_tools, WheelZoomTool(), TapTool(), BoxSelectTool())
 
     # Create labels
     # pylint: disable=no-member

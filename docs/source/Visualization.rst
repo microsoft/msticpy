@@ -14,3 +14,4 @@ Displaying/Visualizing Data
    visualization/DataViewer
    visualization/MatrixPlot
    visualization/EntityGraph
+   visualization/NetworkGraph

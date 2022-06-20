@@ -16,6 +16,7 @@ Submodules
    msticpy.auth.azure_auth_core
    msticpy.auth.cloud_mappings
    msticpy.auth.cred_wrapper
+   msticpy.auth.keyring_client
    msticpy.auth.keyvault_client
    msticpy.auth.keyvault_settings
    msticpy.auth.msal_auth

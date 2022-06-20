@@ -183,6 +183,12 @@ _MSTICPY_USER_AGENT = _get_mp_ua()
 
 
 @export
+def mp_ua_header() -> Dict[str, str]:
+    """Return headers dict for MSTICPy User Agent."""
+    return {"UserAgent": _get_mp_ua()}
+
+
+@export
 def search_for_file(
     pattern: str, paths: List[Union[str, Path]] = None
 ) -> Optional[str]:

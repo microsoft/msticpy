@@ -187,11 +187,10 @@ class SplunkDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Splunk oneshot method
-            count=0 by default
-            oneshot=False by default for async query,
-                set to True for oneshot (blocking) mode
+        count : int, optional
+            Passed to Splunk oneshot method if `oneshot` is True, by default, 0
+        oneshot : bool, optional
+            Set to True for oneshot (blocking) mode, by default False
 
         Returns
         -------

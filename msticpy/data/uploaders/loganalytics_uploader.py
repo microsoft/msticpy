@@ -20,6 +20,7 @@ from tqdm.notebook import tqdm
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyConnectionError
+from ...common.utility import mp_ua_header
 from .uploader_base import UploaderBase
 
 # Credits
@@ -123,6 +124,7 @@ class LAUploader(UploaderBase):
             "Authorization": signature,
             "Log-Type": table_name,
             "x-ms-date": rfc1123date,
+            **mp_ua_header(),
         }
         try:
             response = httpx.post(

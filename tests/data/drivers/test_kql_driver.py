@@ -82,8 +82,9 @@ class _MockIPython:
         return kql_exec(content)
 
 
-def kql_exec(content):
+def kql_exec(content, options=None):
     """Mock kql_exec function."""
+    del options
     if "--config" in content:
         if "=" in content:
             conf_item, conf_value = content.replace("--config", "").strip().split("=")

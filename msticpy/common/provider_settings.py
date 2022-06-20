@@ -110,15 +110,7 @@ def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSet
 
 
 def reload_settings():
-    """
-    Reload settings from config files.
-
-    Parameters
-    ----------
-    clear_keyring : bool, optional
-        Clears any secrets cached in keyring, by default False
-
-    """
+    """Reload settings from config files."""
     config.refresh_config()
 
 
