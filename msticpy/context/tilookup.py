@@ -129,7 +129,7 @@ class TILookup:
             [description]
 
         """
-        return self._all_providers  # type: ignore
+        return dict(self._all_providers)
 
     @property
     def provider_status(self) -> Iterable[str]:
@@ -356,16 +356,8 @@ class TILookup:
         )
 
     def reload_providers(self):
-        """
-        Reload providers based on current settings in config.
-
-        Parameters
-        ----------
-        clear_keyring : bool, optional
-            Clears any secrets cached in keyring, by default False
-
-        """
-        self.reload_provider_settings()
+        """Reload settings and provider classes."""
+        reload_settings()
         self._load_providers()
 
     def add_provider(
