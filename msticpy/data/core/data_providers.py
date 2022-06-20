@@ -142,8 +142,8 @@ class QueryProvider:
         if self._query_provider.has_driver_queries:
             driver_queries = self._query_provider.driver_queries
             self._add_driver_queries(queries=driver_queries)
-            # Since we're now connected, add Pivot functions
-            self._add_pivots(lambda: self._query_time.timespan)
+        # Since we're now connected, add Pivot functions
+        self._add_pivots(lambda: self._query_time.timespan)
 
     def add_connection(
         self,
