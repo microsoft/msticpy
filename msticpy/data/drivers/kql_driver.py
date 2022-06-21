@@ -100,7 +100,7 @@ class KqlDriver(DriverBase):
         if not self._loaded:
             self._load_kql_magic()
 
-        self._set_kql_option("request_user_agent-tag", MSTICPY_USER_AGENT)
+        self._set_kql_option("request_user_agent_tag", MSTICPY_USER_AGENT)
         self._schema: Dict[str, Any] = {}
         self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()

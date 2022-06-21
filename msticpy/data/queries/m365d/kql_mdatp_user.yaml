@@ -1,8 +1,8 @@
 metadata:
   version: 1
   description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
   tags: ["user"]
 defaults:
   metadata:
@@ -18,6 +18,10 @@ defaults:
       description: Additional query clauses
       type: str
       default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "Timestamp"
 sources:
   user_logons:
     description: Lists all user logons by user
@@ -25,8 +29,8 @@ sources:
     args:
       query: '
         DeviceLogonEvents
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
       uri: None
@@ -40,8 +44,8 @@ sources:
     args:
       query: '
         DeviceProcessEvents
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where AccountName has "{account_name}"
         {add_query_items}'
     parameters:
@@ -54,8 +58,8 @@ sources:
     args:
       query: '
         DeviceFileEvents
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:
@@ -68,8 +72,8 @@ sources:
     args:
       query: '
         DeviceNetworkEvents
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where InitiatingProcessAccountName contains "{account_name}"
         {add_query_items}'
     parameters:

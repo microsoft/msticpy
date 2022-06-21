@@ -785,7 +785,7 @@ class TILookup:
 
         if not result_list:
             print("No IoC matches")
-        return pd.concat(result_list, sort=False)
+        return pd.concat(result_list, sort=False) if result_list else None
 
 
 def _make_sync(future):

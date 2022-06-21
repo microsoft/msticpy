@@ -1,8 +1,8 @@
 metadata:
   version: 1
   description: MDATP Queries
-  data_environments: [MDATP, MDE, M365D]
-  data_families: [MDATP]
+  data_environments: [MDATP, MDE, M365D, LogAnalytics]
+  data_families: [MDATP, MDE]
   tags: ["file"]
 defaults:
   metadata:
@@ -22,6 +22,10 @@ defaults:
       description: Additional query clauses
       type: str
       default: ""
+    time_column:
+      description: The name of the column detailing the time the event was generated.
+      type: str
+      default: "Timestamp"
 sources:
   list_files:
     description: Lists all file events by filename
@@ -29,8 +33,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where FileName has "{file_name}"
         {add_query_items}'
       uri: None
@@ -44,8 +48,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where FolderPath contains "{path}"
         {add_query_items}'
     parameters:
@@ -58,8 +62,8 @@ sources:
     args:
       query: '
         {table}
-        | where Timestamp >= datetime({start})
-        | where Timestamp <= datetime({end})
+        | where {time_column} >= datetime({start})
+        | where {time_column} <= datetime({end})
         | where SHA1 == "{file_hash}" or SHA256 == "{file_hash}" or MD5 == "{file_hash}"
         {add_query_items}'
       uri: None
