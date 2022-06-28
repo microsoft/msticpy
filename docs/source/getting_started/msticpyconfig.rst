@@ -28,29 +28,185 @@ Here you can specify your default workspace IDs and tenant IDs and add additiona
 workspaces if needed. If you wish to use the Microsoft Sentinel API features you
 can also specify Subscription Ids, Subscription names and Workspace names here.
 
+Sample entry for MS Sentinel workspaces
+
+.. code:: yaml
+
+    AzureSentinel:
+      Workspaces:
+        Default:
+          # An entry named "Default" allows authentication without
+          # having to specify a workspace name
+          WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+          TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+          SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+          ResourceGroup: ABC
+          WorkspaceName: Workspace1
+        Workspace1:
+          # You can also duplicate entries with different keys
+          # that refer to the same workspace settings
+          WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+          TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+          SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+          ResourceGroup: ABC
+          WorkspaceName: Workspace1
+        MyTestWS:
+          # minimal workspace configuration for queries
+          WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+          TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+
+
 QueryDefinitions
 ~~~~~~~~~~~~~~~~
 This allows you to specify paths to additional yaml query template files.
+
+Sample
+
+.. code:: yaml
+
+    QueryDefinitions:
+      Custom:
+        - ./working
+        - ~/.msticpy/queries
 
 TIProviders
 ~~~~~~~~~~~
 This allows you to configure which providers are run by default and to
 supply any authorization keys needed to access the service.
 
+Specifying ``Primary: True`` means that the TI Provider will
+be included in lookups by default. If this is ``False`` you must specifically
+include the provider name in the optional ``providers`` parameter
+when you make a TI lookup call.
+
+Currently supported provider names are:
+
+- OTX - AlienVault OTX
+- VirusTotal
+- XForce - IBM XForce
+- AzureSentinel - Microsoft Sentinel TI
+- GreyNoise
+- IntSights
+- TorExitNodes
+- OpenPageRank
+
+.. code:: yaml
+
+    TIProviders:
+      OTX:
+        Args:
+          AuthKey: 1234567890
+        Primary: True
+        Provider: "OTX"
+      VirusTotal:
+        Args:
+          AuthKey:
+            EnvironmentVar: "VIRUSTOTAL_AUTH"
+        Primary: True
+        Provider: "VirusTotal"
+      OpenPageRank:
+        Args:
+          AuthKey:
+            KeyVault:
+        Primary: False
+        Provider: "OPR"
+
+.. note:: You store values in the ``Args`` section as simple strings,
+   as names of environment variables containing the value, or
+   as references to Azure Key Vault (see the later sections
+   `Specifying secrets as Environment Variables`_ and
+   `Specifying secrets as Key Vault secrets`_).
+
 OtherProviders
 ~~~~~~~~~~~~~~
 This section is similar to the TIProviders section, allowing you
-specify configuration options for specialist data providers.
+specify configuration options for specialist data providers such
+as geo-location providers.
+
+.. code:: yaml
+
+    OtherProviders:
+      GeoIPLite:
+        Args:
+          AuthKey:
+            EnvironmentVar: "MAXMIND_AUTH"
+          DBFolder: "~/.msticpy"
+        Provider: "GeoLiteLookup"
 
 DataProviders
 ~~~~~~~~~~~~~~
 This section is similar to the previous two sections, allowing you
 specify configuration options for other data providers.
 
+.. code:: yaml
+
+    DataProviders:
+      MicrosoftDefender:
+        Args:
+          TenantId: 8360dd21-0294-4240-9128-89611f415c53
+          ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+          ClientSecret:
+            KeyVault:
+      Cybereason:
+        Args:
+          TenantId: 8360dd21-0294-4240-9128-89611f415c53
+          ClientId: 1234
+          ClientSecret:
+            EnvironmentVar: "CYBEREASON_AUTH"
+
 Key Vault
 ~~~~~~~~~
 This section contains Azure Key Vault settings. This is only used if you
-choose to store secrets (e.g. API keys) in Key Vault.
+choose to store secrets (e.g. API keys) in Key Vault. See the
+section `Specifying secrets as Key Vault secrets`_ for more details.
+
+Azure
+~~~~~
+
+This section provides configuration settings for Azure authentication,
+including the Azure cloud.
+
+Legal values for ``cloud`` are:
+
+- global
+- usgov - US government cloud
+- cn - China national cloud
+- de - German national cloud (no longer used)
+
+The ``auth_methods`` key lists the types of authentication
+methods that you want to enable. MSTICPy uses the Azure identity
+`DefaultCredential <https://docs.microsoft.com/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`__
+class to authenticate. This has a hard-coded order in which it
+attempts to find and use credentials. It will use the first valid
+credential type available.
+
+.. important:: In some cases ``DefaultCredential`` may find a valid
+   credential type but is unable to authenticate with this type due
+   to Conditional access policies or other restrictions. If you
+   find issues authenticating, edit this list to specify specific
+   credential types that you are able to use.
+
+Possible credential types (``auth_methods``) are:
+
+- "cli": Use credentials from authenticated Azure CLI session
+- "env": Azure credentials stored in environment variables
+- "msi": Use Managed identity credentials
+- "vscode": Use credentials from authenticated VS Code session
+- "powershell": Use credentials from authenticated PowerShel session
+- "interactive": Use interactive browser device code authentication
+- "cache": Use MSAL cached credentials store
+
+.. warning:: Some environments (such as Azure Machine Learning notebooks)
+   do not allow notebooks to open browser windows, so "interactive"
+   credentials will fail. We have found Azure CLI to be reliable
+   and maintains authentication tokens between notebook sessions.
+
+.. code:: yaml
+
+    Azure:
+      cloud: "global"
+      auth_methods: ["cli", "msi", "interactive"]
+
 
 User Defaults
 ~~~~~~~~~~~~~
@@ -58,6 +214,8 @@ This section controls loading of default providers when using the
 package in a notebook. The settings here are loaded by the
 :py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
 function.
+
+See the `User Defaults Section`_ below.
 
 Specifying secrets as Environment Variables
 -------------------------------------------
@@ -104,12 +262,9 @@ Required Settings
      - the name of the vault to use (note this can be
        overridden in the individual secret specifications
    * - Authority
-     - this specifies the Azure cloud instance to use.
-
-For most users ``Authority`` is "global" (default). Other values are:
-- **usgov**: Azure US Government
-- **de**: German cloud
-- **chi**: China cloud
+     - You should use the ``cloud`` setting in the
+       ``Azure`` configuration section unless you need to override
+       this setting for Key Vault
 
 Required to Create a Key Vault
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,15 +290,9 @@ Optional Settings
      - the name of the vault to use (note this can be
        overridden in the individual secret specifications)
    * - AuthnType
-     - this governs the authentication type used by
-       the KeyVault client (to read and write secrets). The choices
-       are "interactive" for interactive browser authentication or
-       "device" for authentication using a user/device code. The
-       default is "interactive".
-
-.. note:: The ``AuthnType`` does not affect the authentication used by
-   the Key Vault **Management** client (the creation and enumeration
-   of vaults). This always uses device code authentication.
+     - You should use the ``auth_methods``
+       setting of the ``Azure`` section - see `Azure`_ above.
+       unless you need to override the Azure defaults.
 
 Specifying Key Vault Secrets in Provider Settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,6 +423,10 @@ lets you list and manipulate local stored credentials.
    with the Key Vault secret values. If you change the value of a
    secret in Key Vault you must delete the keyring secret so that
    the new value will be re-read from Key Vault.
+
+   You can use the :py:func:`refresh_keyring <msticpy.common.provider_settings.refresh_keyring>`
+   and :py:func:`clear_keyring <msticpy.common.provider_settings.clear_keyring>`
+   to control these automatically-cached Key Vault values.
 
 
 Manually managing your Key Vault secrets
@@ -672,7 +825,8 @@ Commented configuration file sample
 See also
 --------
 
-:doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
+:doc:`The Threat Intelligence Providers documentation <../data_acquisition/TIProviders>`
+:doc:`Settings Editor <./SettingsEditor>`
 
 :py:mod:`wsconfig<msticpy.common.wsconfig>`
 :py:mod:`provider_settings<msticpy.common.provider_settings>`
