@@ -18,6 +18,9 @@ to the vis sub-package.
 """
 # flake8: noqa: F403
 # pylint: disable=W0401
+import importlib
+from typing import Any
+
 from .. import nbwidgets
 from .._version import VERSION
 from ..common import utility as utils
@@ -35,3 +38,34 @@ except ImportError as err:
 
 
 __version__ = VERSION
+
+
+_DEFAULT_IMPORTS = {
+    "nbinit": "msticpy.init.nbinit",
+}
+
+
+def __getattr__(attrib: str) -> Any:
+    """
+    Import and return an attribute of nbtools.
+
+    Parameters
+    ----------
+    attrib : str
+        The attribute name
+
+    Returns
+    -------
+    Any
+        The attribute value.
+
+    Raises
+    ------
+    AttributeError
+        No attribute found.
+
+    """
+    if attrib in _DEFAULT_IMPORTS:
+        module = importlib.import_module(_DEFAULT_IMPORTS[attrib])
+        return module
+    raise AttributeError(f"msticpy has no attribute {attrib}")
