@@ -780,6 +780,8 @@ def plot_map(
             )
             feature_group.add_to(folium_map.folium_map)
         folium.LayerControl().add_to(folium_map.folium_map)
+    if "location" not in kwargs:
+        folium_map.center_map()
     return folium_map
 
 

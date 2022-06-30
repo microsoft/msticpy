@@ -414,7 +414,125 @@ class MsticpyPlotAccessor:
         return graph.plot(hide=hide, timeline=timeline, **kwargs)
 
     def folium_map(self, **kwargs):
-        """Plot folium map."""
+        """
+        Plot folium map from DataFrame.
+
+        Parameters
+        ----------
+        ip_column : Optional[str], optional
+            The name of the IP Address column, by default None
+        lat_column : Optional[str], optional
+            The name of the location 'latitude' column, by default None
+        long_column : Optional[str], optional
+            The name of the location 'longitude' column, by default None
+        layer_column : Optional[str], optional
+            The column to group markers into for displaying on different
+            map layers, by default None
+        icon_column : Optional[str], optional
+            Optional column containing the name of the icon to use
+            for the marker in this row, by default None
+        icon_map : IconMapper, optional
+            Mapping dictionary or function, by default None
+            See Notes for more details.
+        popup_columns : Optional[List[str]], optional
+            List of columns to use for the popup text, by default None
+        tooltip_columns : Optional[List[str]], optional
+            List of columns to use for the tooltip text, by default None
+
+
+        Other Parameters
+        ----------------
+        marker_cluster : bool, optional
+            Use marker clustering, default is True.
+        default_color : str, optional
+            Default color for marker icons, by default "blue"
+        title : str, optional
+            Name of the layer (the default is 'layer1')
+            (passed to FoliumMap constructor)
+        zoom_start : int, optional
+            The zoom level of the map (the default is 7)
+            (passed to FoliumMap constructor)
+        tiles : [type], optional
+            Custom set of tiles or tile URL (the default is None)
+            (passed to FoliumMap constructor)
+        width : str, optional
+            Map display width (the default is '100%')
+            (passed to FoliumMap constructor)
+        height : str, optional
+            Map display height (the default is '100%')
+            (passed to FoliumMap constructor)
+        location : list, optional
+            Location to center map on
+
+        Returns
+        -------
+        folium.Map
+            Folium Map object.
+
+        Raises
+        ------
+        ValueError
+            If neither `ip_column` nor `lat_column` and `long_column` are passed.
+        LookupError
+            If one of the passed columns does not exist in `data`
+
+        Notes
+        -----
+        There are two ways of providing custom icon settings based on the
+        the row of the input DataFrame.
+
+        If `icon_map` is a dict it should contain keys that map to the
+        value of `icon_col` and values that a dicts of valid
+        folium Icon properties ("color", "icon_color", "icon", "angle", "prefix").
+        The dict should include a "default" entry that will be used if the
+        value in the DataFrame[icon_col] doesn't match any key.
+        For example:
+
+        .. code:: python
+
+            icon_map = {
+                "high": {
+                    "color": "red",
+                    "icon": "warning",
+                },
+                "medium": {
+                    "color": "orange",
+                    "icon": "triangle-exclamation",
+                    "prefix": "fa",
+                },
+                "default": {
+                    "color": "blue",
+                    "icon": "info-sign",
+                },
+            }
+
+        If icon_map is a function it should take a single str parameter
+        (the item key) and return a dict of icon properties. It should
+        return a default set of values if the key does not match a known
+        key. The `icon_col` value for each row will be passed to this
+        function and the return value used to populate the Icon arguments.
+
+        For example:
+
+        .. code::python
+
+            def icon_mapper(icon_key):
+                if icon_key.startswith("bad"):
+                    return {
+                        "color": "red",
+                        "icon": "triangle-alert",
+                    }
+                ...
+                else:
+                    return {
+                        "color": "blue",
+                        "icon": "info-sign",
+                    }
+
+        FontAwesome icon (prefix "fa") names are available at https://fontawesome.com/
+        GlyphIcons icons (prefix "glyphicon") are available at https://www.glyphicons.com/
+
+        """
         return plot_map(data=self._df, **kwargs)
 
     # pylint: disable=too-many-arguments

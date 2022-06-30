@@ -213,7 +213,7 @@ def init_notebook(
     additional_packages: List[str] = None,
     extra_imports: List[str] = None,
     **kwargs,
-) -> bool:
+):
     """
     Initialize the notebook environment.
 
@@ -255,7 +255,7 @@ def init_notebook(
         an additional placeholder comma: e.g. "pandas, , pd"
     friendly_exceptions : Optional[bool]
         Setting this to True causes msticpy to hook the notebook
-        exception hander. Any exceptions derived from MsticpyUserException
+        exception handler. Any exceptions derived from MsticpyUserException
         are displayed but do not produce a stack trace, etc.
         Defaults to system/user settings if no value is supplied.
     verbose : Union[int, bool], optional
@@ -270,12 +270,6 @@ def init_notebook(
     no_config_check : bool, optional
         Skip the check for valid configuration. Default is False.
     verbosity : int, optional
-
-
-    Returns
-    -------
-    bool
-        True if successful
 
     Raises
     ------
@@ -366,9 +360,8 @@ def init_notebook(
         _pr_output("Auto-loaded components:", ", ".join(prov_dict.keys()))
 
     # show any warnings
-    init_status = _show_init_warnings(imp_ok, conf_ok)
+    _show_init_warnings(imp_ok, conf_ok)
     _pr_output("<h4>Notebook initialization complete</h4>")
-    return init_status
 
 
 def _show_init_warnings(imp_ok, conf_ok):
