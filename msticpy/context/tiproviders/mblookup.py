@@ -259,11 +259,7 @@ class MBlookup:
         try:
             data = {'query': 'get_file', "sha256_hash": sha2}
             res = requests.post(_BASE_URL, data=data)
-            #res = json.loads(res.text)
-            #print(res.text)
-            if res["query_status"] == 'ok':
-                print("downloaded")
-            return res["query_status"]
+            return res.content
         except requests.exceptions.RequestException as err:
             return err
 
