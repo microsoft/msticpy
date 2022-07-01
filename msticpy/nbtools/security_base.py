@@ -86,7 +86,7 @@ class SecurityBase(QueryParamProvider):
 
     def __getattr__(self, name):
         """Return the value of the named property 'name'."""
-        if self._source_data and name in self._source_data:
+        if self._source_data is not None and name in self._source_data:
             return self._source_data[name]
         raise AttributeError(f"{name} is not a valid attribute.")
 
