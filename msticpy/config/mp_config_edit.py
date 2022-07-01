@@ -70,17 +70,16 @@ class MpConfigEdit(CompEditDisplayMixin):
         self._lbl_loading = widgets.Label(value="Loading. Please wait.")
         display(self._lbl_loading)
         if isinstance(settings, MpConfigFile):
-            self.mp_conf_file = MpConfigFile(settings=settings.settings)
-            if not self.mp_conf_file.current_file and conf_filepath:
-                self.mp_conf_file.current_file = conf_filepath
+            self.mp_conf_file = MpConfigFile(
+                settings=settings.settings, file=conf_filepath
+            )
         elif isinstance(settings, dict):
-            self.mp_conf_file = MpConfigFile(settings=settings)
-            if not self.mp_conf_file.current_file and conf_filepath:
-                self.mp_conf_file.current_file = conf_filepath
+            self.mp_conf_file = MpConfigFile(settings=settings, file=conf_filepath)
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile(file=settings)
         else:
-            self.mp_conf_file = MpConfigFile()
+            # This is the default if neither settings nor conf_filepath are passed.
+            self.mp_conf_file = MpConfigFile(file=conf_filepath)
             self.mp_conf_file.load_default()
         self.tool_buttons: Dict[str, widgets.Widget] = {}
         self._inc_loading_label()

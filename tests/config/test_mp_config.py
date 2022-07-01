@@ -92,7 +92,7 @@ def test_mp_config_file_save():
     for test_file in Path().glob(f"{tgt_file}.save_*"):
         test_file.unlink()
 
-    mpc_file.txt_current_file.value = tgt_file
+    mpc_file.txt_current_config_path.value = tgt_file
     mpc_file.buttons["save"].click()  # same thing but via button click
     check.is_true(Path(tgt_file).is_file())
     Path(tgt_file).unlink()

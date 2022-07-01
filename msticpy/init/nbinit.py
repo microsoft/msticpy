@@ -158,7 +158,9 @@ _MP_IMPORTS = [
     dict(pkg="msticpy.init.pivot", tgt="Pivot"),
     dict(pkg="msticpy.datamodel", tgt="entities"),
     dict(pkg="msticpy.init", tgt="nbmagics"),
+    dict(pkg="msticpy.nbtools", tgt="SecurityAlert"),
     dict(pkg="msticpy.vis", tgt="mp_pandas_plot"),
+    dict(pkg="msticpy.vis", tgt="nbdisplay"),
     dict(pkg="msticpy.init", tgt="mp_pandas_accessors"),
     dict(pkg="msticpy", tgt="nbwidgets"),
 ]

@@ -14,7 +14,7 @@ VT3_AVAILABLE = False
 with contextlib.suppress(ImportError):
     import nest_asyncio
     import vt
-    import vt_graph_api2
+    import vt_graph_api
 
     VT3_AVAILABLE = True
 
