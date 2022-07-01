@@ -26,6 +26,7 @@ from .._version import VERSION
 from ..common import utility as utils
 from ..common.wsconfig import WorkspaceConfig
 from ..vis import nbdisplay
+from .security_alert import SecurityAlert
 
 try:
     from IPython import get_ipython
@@ -40,9 +41,7 @@ except ImportError as err:
 __version__ = VERSION
 
 
-_DEFAULT_IMPORTS = {
-    "nbinit": "msticpy.init.nbinit",
-}
+_DEFAULT_IMPORTS = {"nbinit": "msticpy.init.nbinit"}
 
 
 def __getattr__(attrib: str) -> Any:

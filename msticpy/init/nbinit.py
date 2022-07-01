@@ -163,7 +163,11 @@ _MP_IMPORTS = [
     dict(pkg="msticpy", tgt="nbwidgets"),
 ]
 
-_MP_IMPORT_ALL: List[Dict[str, str]] = [dict(module_name="msticpy.datamodel.entities")]
+_MP_IMPORT_ALL: List[Dict[str, str]] = [
+    dict(module_name="msticpy.datamodel.entities"),
+    dict(module_name="msticpy.nbtools"),
+    dict(module_name="msticpy.sectools"),
+]
 
 _CONF_URI = (
     "https://msticpy.readthedocs.io/en/latest/getting_started/msticpyconfig.html"
