@@ -50,7 +50,9 @@ class SecurityBase(QueryParamProvider):
 
     def __init__(self, src_row: pd.Series = None):
         """Instantiate a security alert from a pandas Series."""
-        self._source_data: pd.Series = src_row or pd.Series(dtype="object")
+        self._source_data: pd.Series = (
+            src_row if src_row is not None else pd.Series(dtype="object")
+        )
         self._custom_query_params: Dict[str, Any] = {}
         self._entities: List[Entity] = []
 
