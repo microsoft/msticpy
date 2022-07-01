@@ -312,6 +312,7 @@ class IpWhoisAccessor:
 
 
 @deprecated("Will be removed in a version 2.2", version="1.4.0")
+@export
 def create_ip_record(
     heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
 ) -> IpAddress:
