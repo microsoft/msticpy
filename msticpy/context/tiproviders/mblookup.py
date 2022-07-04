@@ -49,6 +49,7 @@ class MBEntityType(Enum):
     CODESIGNISSUER = "issuerinfo"
     CODESIGNSUBJECT = "subjectinfo"
     CODESIGNSN = "certificate"
+    GIMPHASH = "gimphash"
 
 class MBlookup:
     """ MBlookup Python Class wrapper for MalwareBazaar API.
@@ -77,6 +78,7 @@ class MBlookup:
         MBEntityType.CODESIGNISSUER,
         MBEntityType.CODESIGNSUBJECT,
         MBEntityType.CODESIGNSN,
+        MBEntityType.GIMPHASH,
     }
 
     def __init__(self, mb_key=None):
@@ -209,6 +211,18 @@ class MBlookup:
         elif mb_type == "telfhash":
             try:
                 data = {'query': 'get_telfhash', "telfhash": observable, "limit": limit}
+                res = requests.post(_BASE_URL, data=data)
+                res = json.loads(res.text)
+                if res["query_status"] == 'ok':
+                    observable_df = json_normalize(res['data'])
+                    return observable_df
+                return res["query_status"]
+            except requests.exceptions.RequestException as err:
+                return err
+
+        elif mb_type == "gimphash":
+            try:
+                data = {'query': 'get_gimphash', "gimphash": observable, "limit": limit}
                 res = requests.post(_BASE_URL, data=data)
                 res = json.loads(res.text)
                 if res["query_status"] == 'ok':
