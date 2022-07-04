@@ -14,4 +14,4 @@ typing-extensions>=4.2.0
 readthedocs-sphinx-ext==2.1.8
 seed_intersphinx_mapping
 sphinx-rtd-theme==1.0.0
-sphinx==5.0.1
+sphinx==5.0.2
