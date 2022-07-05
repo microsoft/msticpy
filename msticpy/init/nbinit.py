@@ -592,6 +592,7 @@ def _load_pivots(namespace):
     # pylint: disable=no-member
     if not Pivot.current():
         pivot = Pivot()
+        pivot.reload_pivots()
         namespace["pivot"] = pivot
         # pylint: disable=import-outside-toplevel, cyclic-import
         import msticpy
