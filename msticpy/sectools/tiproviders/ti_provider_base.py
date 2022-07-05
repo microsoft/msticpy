@@ -15,11 +15,9 @@ from ..._version import VERSION
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-
-from ...context.tiproviders.result_severity import ResultSeverity as TISeverity
-
 # flake8: noqa: F403, F401
 # pylint: disable=wildcard-import, unused-wildcard-import, unused-import
+from ...context.tiproviders.result_severity import ResultSeverity as TISeverity
 from ...context.tiproviders.ti_provider_base import *
 
 WARN_MSSG = (
