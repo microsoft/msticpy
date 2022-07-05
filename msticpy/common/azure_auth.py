@@ -4,25 +4,23 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-Deprecated - module ti_provider_base.py has moved.
+Deprecated - module common.azure_auth has moved.
 
-See :py:mod:`msticpy.context.tiproviders.ti_provider_base`
+See :py:mod:`msticpy.auth`
 """
 import warnings
 
-from ..._version import VERSION
+from .._version import VERSION
+
+# flake8: noqa: F403, F401
+# pylint: disable=wildcard-import, unused-wildcard-import, unused-import
+from ..auth.azure_auth import *  # noqa: F401
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
 
-# flake8: noqa: F403, F401
-# pylint: disable=wildcard-import, unused-wildcard-import, unused-import
-from ...context.tiproviders.result_severity import ResultSeverity as TISeverity
-from ...context.tiproviders.ti_provider_base import *
-
 WARN_MSSG = (
-    "This module has moved to "
-    "msticpy.context.tiproviders.ti_provider_base\n"
+    "This module has moved to msticpy.auth\n"
     "Please change your import to reflect this new location."
     "This will be removed in MSTICPy v2.2.0"
 )

@@ -93,10 +93,11 @@ def test_query_functions_methods(azure_sentinel):
     #  required=True),
     # ParamAttrs(type='str', query='get_heartbeat_for_ip', family='Network',
     #  required=True)]
-    check.is_in(param_attrs[0].type, ("str", "list", "datetime"))
-    check.is_true(param_attrs[0].required)
-    check.is_not_none(param_attrs[0].query)
-    check.is_not_none(param_attrs[0].family)
+    for param_attr in param_attrs:
+        check.is_in(param_attr.type, ("str", "list", "datetime"))
+        check.is_not_none(param_attr.required)
+        check.is_not_none(param_attr.query)
+        check.is_not_none(param_attr.family)
 
 
 # Support functions and classes

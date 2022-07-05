@@ -17,7 +17,7 @@ import pytest_check as check
 from bokeh.layouts import LayoutDOM
 from vt.object import Object as VtObject
 
-from msticpy.context import vtlookupv3
+from msticpy.context.vtlookupv3 import vtlookupv3
 
 # import this to make pandas plot accessors work
 # pylint: disable=unused import

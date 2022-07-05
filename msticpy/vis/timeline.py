@@ -340,9 +340,12 @@ def _plot_series(data, plot, legend_pos):
                 glyph_size = 10
         else:
             glyph_size = size_param
+        time_col = "TimeGenerated"
+        if "time_column" in series_def:
+            time_col = series_def["time_column"]
         if legend_pos == "inline":
             p_series = plot.diamond(
-                x=series_def["time_column"],
+                x=time_col,
                 y="y_index",
                 color=series_def["color"],
                 alpha=0.5,
@@ -352,7 +355,7 @@ def _plot_series(data, plot, legend_pos):
             )
         else:
             p_series = plot.diamond(
-                x=series_def["time_column"],
+                x=time_col,
                 y="y_index",
                 color=series_def["color"],
                 alpha=0.5,
