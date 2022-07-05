@@ -28,6 +28,8 @@ from ...common.utility import export
 from ...transform.iocextract import IoCExtract, IoCType
 from .lookup_result import LookupResult, LookupStatus
 from .preprocess_observable import PreProcessor
+
+# pylint: disable=unused-import
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
