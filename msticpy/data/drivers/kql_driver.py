@@ -57,6 +57,8 @@ _KQL_CLOUD_MAP = {
     "de": "germany",
 }
 
+_KQL_OPTIONS = ["timeout"]
+
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
 
 _LOGANALYTICS_URL_BY_CLOUD = {
@@ -238,7 +240,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -297,7 +299,13 @@ class KqlDriver(DriverBase):
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = kql_exec(query, options=kwargs)
+        # Add any Kqlmagic options from kwargs
+        kql_opts = {
+            option: option_val
+            for option, option_val in kwargs.items()
+            if option in _KQL_OPTIONS
+        }
+        result = kql_exec(query, options=kql_opts)
         self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
