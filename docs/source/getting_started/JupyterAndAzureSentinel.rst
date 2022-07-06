@@ -1,49 +1,47 @@
-Jupyter, msticpy and Azure Sentinel
-===================================
+Jupyter, msticpy and Microsoft Sentinel
+=======================================
 
-Creating a notebooks project within `Azure
-Notebooks <https://notebooks.azure.com/>`__ is directly supported by
-Azure Sentinel. Click on the notebook icon in the Azure Sentinel main
-navigation menu. From here you have the option to create a new project
-from our GitHub repo or just open your existing Azure Notebooks project.
-Azure Notebooks is a
-`Jupyterhub <https://jupyterhub.readthedocs.io/en/stable/>`__
-implementation and has a free tier that you can use for any notebook
-tasks.
+You can run notebooks from Microsoft Sentinel in the
+Azure Machine Learning studio hosted environment.
 
-.. figure:: _static/SentinelGettingStarted.png
-   :alt: Accessing the Notebooks section of Azure Sentinel user interface.
-
-   Accessing the Notebooks section of Azure Sentinel user interface.
-
-If you have a local installation of Python 3.6 or later, you can also
-download the notebooks and run these locally. My personal recommendation
+If you have a local installation of Python 3.8 or later, you can also
+download the notebooks and run these locally. Our recommendation
 is to use the `Anaconda <https://www.anaconda.com/distribution/>`__
 distribution since it contains the Jupyter packages and many others
-needed for the Azure Sentinel notebooks.
+needed for the Microsoft Sentinel notebooks.
 
-Further reading: `Using Notebooks in Azure
-Sentinel <https://docs.microsoft.com/azure/sentinel/notebooks>`__
-and .
+Running notebooks in Azure Machine Learning (AML)
+-------------------------------------------------
 
-Open one of the Sample Notebooks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Please follow the guidance given in this document to get started
+`Tutorial: Get started with Jupyter notebooks and MSTICPy in Microsoft Sentinel
+<https://docs.microsoft.com/azure/sentinel/notebook-get-started>`__.
 
-If you have cloned the Azure Sentinel repo you already have several
-notebooks in your Notebooks for Azure Project -- in the notebooks and
-notebooks/samples folders. Most of the notebooks in the samples folders
-(anything that begins with "Example") have data is saved with them so
-you can the expected output without having access to a data source. I
-strongly recommend viewing the notebook using nbviewer.org. This seems
-to have magical powers to render data and interactive JavaScript
-controls that are displayed incorrectly even when viewing a notebook
-locally. The GitHub notebook viewer is reasonable for simple notebooks
-but not very sophisticated. Here is a link to one of the notebooks
-displayed in
-`nbviewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__.
 
-Note: you do not need to have Python or any of the dependencies
-installed to view notebooks in nbviewer or GitHub.
+Running notebooks locally
+-------------------------
+
+The easiest way of getting to the Microsoft Sentinel template
+and sample notebooks is to use Git to clone the `Azure-Sentinel-Notebooks
+repository <https://github.com/Azure/Azure-Sentinel-Notebooks>`__
+
+.. code:: bash
+
+   cd <root-path-to-create-repo-folder>
+   git clone https://github.com/Azure/Azure-Sentinel-Notebooks.git
+
+You can also download the repo as a ZIP file and extract the contents
+into a folder of your choice.
+
+View the notebooks on GitHub or in NBViewer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also view the notebooks without executing them natively
+in GitHub just by clicking on them. You can also use **nbviewer**.
+Copy the URL from a notebook in the repo, then go to
+`nbviewer.org <https://nbviewer.org>`__ and paste the notebook URL
+into the text box.
+
 
 Notebook Setup
 --------------
@@ -52,160 +50,180 @@ When it comes to running one of the notebooks in against real data, you
 will need some preparatory steps.
 
 Prerequisites
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
-Permissions in your Azure Sentinel/Log Analytics Workspace
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-In order to read any data, you will need to have at least LogAnalytics
+Permissions - in order to read any data, you will need to have at least LogAnalytics
 Reader role for your account.
 
 Configuring your Python Environment for the First Time
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will need to carry out this procedure every time you start working
 in a fresh Python environment.
 
-If you are using Notebooks for Azure using free computer, creating a new
-project is effectively starting a new environment (although there are
-ways to automate this setup). The exception to this is if you are using
-a dedicated Compute resource such as a `Data Science Virtual
-Machine <https://azure.microsoft.com/services/virtual-machines/data-science-virtual-machines/>`__.
-Since this machine is persisted and linked to your Notebooks for Azure
-account, all the configuration will be there next time you come to use
-it.
+1. Ensure that you have a version of Python 3.8 or later.
 
-If you are working locally or using another Jupyterhub hosted
-environment, you will only need to do this environment configuration for
-each fresh install or when you create a new python or conda virtual
-environment.
+2. Install msticpy.
 
-Steps
-"""""
+For more details see :doc:`Installing <../getting_started/Installing>`
 
-1. Ensure that you have a version of Python 3.6 or later.
+Creating a ``msticpyconfig.yaml`` configuration file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2. Install the two main packages used by the notebook: Kqlmagic and
-   msticpy (see references at end of document). These will install most
-   of the dependencies needed by the notebooks if they are not already
-   installed.
+To use Microsoft Sentinel you need at least to configure the Sentinel
+Workspace details in this file.
 
-3. Install one or two additional python packages -- these vary depending
-   on the notebook.
+See the section `Authenticating to MS Sentinel`_ below.
+This is covered in more detail in:
 
-If you are running on a Windows machine where Python is installed for
-All Users, you may have to add the --user flag to the pip install
-commands. You will see permission failures when trying to install if
-this is the case.
+- :doc:`MSTICPy Config <../getting_started/SettingsEditor>`
+- :doc:`Settings Editor <../getting_started/msticpyconfig>`
 
-    ``pip install --user <pkg_name>``
 
-Notes for Conda users.
+Querying Data
+-------------
 
-If you are running in a Conda environment (an Anaconda distribution) run
-the pip commands from a Conda prompt, ideally in a dedicated Conda
-virtual environment. Just start an Anaconda prompt shell, paste the pip
-install commands into it and execute them, rather than running them from
-the notebook. You will need to run Jupyter from the same environment.
-More details of can be found
-`here <https://www.anaconda.com/using-pip-in-a-conda-environment/>`__.
+Import and initialize MSTICPy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Keeping the packages up-to-date
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code:: python
 
-It is a good idea to force an update of packages at regular intervals
-using
+   import msticpy as mp
+   mp.init_notebook()
 
-    ``pip install --upgrade <pkg_name>``
 
-to ensure that you have the latest features and fixes (including fixes
-for security vulnerabilities).
+Creating a Query Provider
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Notebook Initialization
-^^^^^^^^^^^^^^^^^^^^^^^
+.. code:: python
 
-There are two main pieces of housekeeping here that you need each time a
-notebook is started:
+   qry_prov = mp.QueryProvider("MSSentinel")
 
-1. Importing python libraries (this is reading in the installed versions
-   of the libraries so that they become accessible in your python
-   session). I try to keep all of the imports at the start of my
-   notebooks so that you have an early warning of missing dependencies.
+A range of built-in queries come with the Sentinel query provider.
+You can view these with the ``list_queries`` function or interactively
+browse the queries and help with the query browser.
 
-2. Authenticating to Azure Sentinel/Log Analytics with Azure Active
-   Directory. This is a complex topic but there are two main methods of
-   authentication:
+.. code:: python
 
--  Interactive device/user authentication - this prompts you for user
-   credentials and a one-time device code. While this frees you from
-   having to worry about saving/pasting in credentials each time, you do
-   suffer a multi-prompt authentication experience. If you happen to be
-   working a long time in a single notebook this is not too onerous but
-   can be frustrating if you are hopping between multiple notebooks.
+   qry_prov.list_queries()
 
--  `AppId
-   authentication <https://docs.microsoft.com/azure/active-directory/develop/howto-create-service-principal-portal>`__
-   - this uses an App account, created in your Azure Active Directory
-   tenant, and granted read access to your Log Analytics workspace. This
-   is a smoother authentication experience but means that you need to
-   manage the app client secret (and, hopefully, avoid leaving a copy of
-   it in a notebook uploaded to GitHub!).
+   # or
+   qry_prov.browse()
 
-On successful authentication you should see a button displayed. Clicking
-this brings up a pop-up of the schema of all the tables your workspace
-and is a useful reference feature. This feature is also accessible from
-the notebook Help menu.
 
-.. figure:: _static/SentinelGettingStarted-KqlAuth.png
-   :alt: Kql magic Show Schema button
+Authenticating to MS Sentinel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Kql magic Show Schema button
+This assumes that you have configured at least one Sentinel Workspace
+in your ``msticpyconfig.yaml``. The contents should look something
+like this.
 
-References
-----------
+.. code:: yaml
 
--  The `msticpy <https://github.com/microsoft/msticpy>`__ Python package
-   containing tools used in these notebooks developed by engineers on the
-   Microsoft Threat Intelligence team. It is available on
-   `GitHub <https://github.com/microsoft/msticpy>`__ along with several
-   notebooks documenting the use of the tools and on
-   `PyPi <https://pypi.org/project/msticpy/>`__.
+   AzureSentinel:
+      Workspaces:
+         Default:
+            WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+            TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+            SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+            ResourceGroup: MyResourceGroup
+            WorkspaceName: Workspace1
 
--  `Kqlmagic <https://github.com/microsoft/jupyter-Kqlmagic>`__ is a
-   Jupyter-friendly package developed by Azure's Michael Binstock.
+At minimum you must have WorkspaceId and TenantId configured.
 
--  `Using Notebooks in Azure
-   Sentinel <https://docs.microsoft.com/azure/sentinel/notebooks>`__
-   is the official documentation for using Jupyter notebooks in Azure
-   Sentinel.
+You can authenticate to Sentinel using the query provider ``connect``
+function.
 
-Notebooks
----------
+.. code:: python
 
--  `Automating Security Operations Using Windows Defender ATP APIs with
-   Python and Jupyter
-   Notebooks <https://techcommunity.microsoft.com/t5/Windows-Defender-ATP/Automating-Security-Operations-Using-Windows-Defender-ATP-APIs/ba-p/294434>`__
-   by John Lambert
+   qry_prov.connect(mp.WorkspaceConfig())
 
--  Azure Sentinel Jupyter notebooks can be found
+No parameters are needed for WorkspaceConfig if you have a Workspace
+entry in your msticpyconfig name "Default". If you do not, use
+the workspace parameter to pick a named workspace.
+
+.. code:: yaml
+
+   AzureSentinel:
+      Workspaces:
+         MyHuntingWorkspace:
+            WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+            TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+            ...
+
+.. code:: python
+
+   qry_prov.connect(mp.WorkspaceConfig(workspace="MyHuntingWorkspace"))
+
+.. note:: From version 2.0 you can also use a shortcut parameter to
+   connect to specify the workspace directly.
+   ``qry_prov.connect(workspace="MyHuntingWorkspace")``
+   to use the Default workspace, use "Default" as the workspace name.
+
+
+Query Help
+~~~~~~~~~~
+
+Most queries require additional parameters (you can check which
+parameters are needed by using the help in the query browser or
+calling the query with a "?" parameter).
+
+.. code:: python
+
+   qry_prov.Linux.list_logons("?")
+
+Time range
+~~~~~~~~~~
+
+The queries use a built-in time range as their default time boundary.
+You can change this by opening and modifying the ``query_time`` country_flag_emoji
+
+.. code:: python
+
+   qry_prov.query_time
+
+Run a query
+~~~~~~~~~~~
+
+.. code:: python
+
+   results_df = qry_prov.WindowsSecurity.list_host_logons(host_name="MyHost")
+   results_df.head()
+
+This will run the query with start and end times defined by the settings in
+``qry_prov.query_time``
+
+Run an ad hoc query
+~~~~~~~~~~~~~~~~~~~
+
+Use the ``exec_query`` function to run arbitrary KQL queries.
+
+.. note:: The ``query_time`` settings have no impact on ad hoc queries.
+   You must supply required ``where`` clauses to restrict the time
+   range for your query.
+
+.. code:: python
+
+   results_df = qry_prov.exec_query("SecurityAlert | where TimeGenerated > ago(1day)")
+   results_df.head()
+
+
+Example Notebooks
+-----------------
+
+
+-  Microsoft Sentinel Jupyter notebooks can be found
    `here <https://github.com/Azure/Azure-Sentinel-Notebooks>`__ on GitHub.
-   - `Account Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb>`__
-   - `Domain and URL Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb>`__
-   - `IP Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb>`__
-   - `Linux Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb>`__
-   - `Windows Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb>`__
 
-Other sample notebooks with saved data are in the `Sample-Notebooks <https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/Sample-Notebooks>`__
-folder:
+Some examples:
 
--  Windows Alert Investigation
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Investigation%20-%20Process-Alerts.ipynb>`__
+- `Getting started <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Getting%20Started%20Guide%20For%20Azure%20Sentinel%20ML%20Notebooks.ipynb>`__
+- `MSTICPy CyberSec Features tour <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/A%20Tour%20of%20Cybersec%20notebook%20features.ipynb>`__
+- `Account Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Account.ipynb>`__
+- `Domain and URL Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Domain%20and%20URL.ipynb>`__
+- `IP Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20IP%20Address.ipynb>`__
+- `Linux Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Linux%20Host.ipynb>`__
+- `Windows Host Explorer <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Entity%20Explorer%20-%20Windows%20Host.ipynb>`__
 
--  Office 365 Exploration
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Guided%20Hunting%20-%20Office365-Exploring.ipynb>`__
-
--  Cross-Network Hunting
-   in \ `github <https://github.com/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__
-   or `NbViewer <https://nbviewer.jupyter.org/github/Azure/Azure-Sentinel-Notebooks/blob/master/Sample-Notebooks/Example%20-%20Step-by-Step%20Linux-Windows-Office%20Investigation.ipynb>`__
+Other sample notebooks with saved data are in the `Sample-Notebooks <https://github.com/Azure/Azure-Sentinel-Notebooks/tree/master/tutorials-and-examples>`__
+folder.

@@ -1,12 +1,12 @@
 ﻿	{
 	"name": "Msticpy Python Development Container",
-	"build": { 
+	"build": {
 		"context": "..",
 		"dockerfile": "Dockerfile"
 	},
 
 	// Set *default* container specific settings.json values on container create.
-	"settings": { 
+	"settings": {
 		"python.defaultInterpreterPath": "/opt/conda/bin/python",
 		"python.linting.enabled": true,
 		"python.linting.flake8Path": "/opt/conda/bin/flake8",
@@ -21,7 +21,7 @@
 		"python.linting.pep8Enabled": true,
 		"python.linting.pep8Args": ["--ignore=E501,E251,W503,E701"],
 		"python.linting.flake8Enabled": true,
-		"python.linting.flake8Args": ["--max-line-length=90"], 
+		"python.linting.flake8Args": ["--max-line-length=90"],
 		"python.linting.pydocstyleEnabled": true,
 		"python.linting.mypyEnabled": true,
 		"python.linting.pylintUseMinimalCheckers": false,

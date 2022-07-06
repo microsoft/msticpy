@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Msticpy Exception test class."""
-from typing import List, Any, Tuple
+from typing import Any, List, Tuple
 
 import pytest
 import pytest_check as check
@@ -12,9 +12,9 @@ from pytest import raises
 
 # pylint: disable=relative-beyond-top-level, redefined-outer-name
 from msticpy.common.exceptions import (
-    MsticpyException,
     MsticpyAzureConfigError,
     MsticpyConfigException,
+    MsticpyException,
     MsticpyKeyVaultConfigError,
     MsticpyKeyVaultMissingSecretError,
     MsticpyNoDataSourceError,

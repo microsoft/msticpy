@@ -6,9 +6,11 @@
 """Url Entity class."""
 from typing import Any, Dict, Mapping, Optional
 
+from urllib3.exceptions import LocationParseError
+from urllib3.util import parse_url
+
 from ..._version import VERSION
 from ...common.utility import export
-from ...sectools.domain_utils import url_components
 from .entity import Entity
 
 __version__ = VERSION
@@ -84,7 +86,7 @@ class Url(Entity):
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
         if self.Url:
-            val = url_components(self.Url).get(key)
+            val = _url_components(self.Url).get(key)
             if val:
                 return val
         return super().__getitem__(key)
@@ -92,7 +94,7 @@ class Url(Entity):
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
         if self.Url:
-            val = url_components(self.Url).get(name)
+            val = _url_components(self.Url).get(name)
             if val:
                 return val
         return super().__getattr__(name)
@@ -105,3 +107,11 @@ class Url(Entity):
         "StartTime": None,
         "EndTime": None,
     }
+
+
+def _url_components(url: str) -> Dict[str, str]:
+    """Return parsed Url components as dict."""
+    try:
+        return parse_url(url)._asdict()
+    except LocationParseError:
+        return {}

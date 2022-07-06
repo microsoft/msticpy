@@ -4,24 +4,24 @@
 # license information.
 # --------------------------------------------------------------------------
 """LogAnayltics Uploader class."""
-from typing import Any
-import json
+import base64
 import datetime
-import sys
 import hashlib
 import hmac
-import base64
+import json
 import re
+import sys
 from pathlib import Path
+from typing import Any
 
 import httpx
-from tqdm.notebook import tqdm
 import pandas as pd
+from tqdm.notebook import tqdm
 
-from ...common.exceptions import MsticpyConnectionError
-
-from .uploader_base import UploaderBase
 from ..._version import VERSION
+from ...common.exceptions import MsticpyConnectionError
+from ...common.utility import mp_ua_header
+from .uploader_base import UploaderBase
 
 # Credits
 # https://docs.microsoft.com/en-us/azure/azure-monitor/platform/data-collector-api#python-3-sample
@@ -124,9 +124,12 @@ class LAUploader(UploaderBase):
             "Authorization": signature,
             "Log-Type": table_name,
             "x-ms-date": rfc1123date,
+            **mp_ua_header(),
         }
         try:
-            response = httpx.post(uri, content=body, headers=headers)
+            response = httpx.post(
+                uri, content=body, headers=headers, timeout=self.get_http_timeout()
+            )
         except httpx.ConnectError as req_err:
             raise MsticpyConnectionError(
                 "Unable to connect to workspace, ensure your Workspace ID is correct.",

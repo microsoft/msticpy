@@ -7,12 +7,11 @@
 import importlib
 from typing import Union
 
-from ..query_defns import DataEnvironment
+from ..._version import VERSION
+from ..core.query_defns import DataEnvironment
 
 # flake8: noqa: F403
 from .driver_base import DriverBase
-
-from ..._version import VERSION
 
 __version__ = VERSION
 
@@ -30,6 +29,7 @@ _ENVIRONMENT_DRIVERS = {
     DataEnvironment.ResourceGraph: ("resource_graph_driver", "ResourceGraphDriver"),
     DataEnvironment.M365D: ("mdatp_driver", "MDATPDriver"),
     DataEnvironment.Cybereason: ("cybereason_driver", "CybereasonDriver"),
+    DataEnvironment.Elastic: ("elastic_driver", "ElasticDriver"),
 }
 
 

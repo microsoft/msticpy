@@ -5,12 +5,14 @@
 # --------------------------------------------------------------------------
 """Python file import analyzer."""
 import sys
+from collections import defaultdict
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, DefaultDict, Dict, Generator, List, Optional, Set, Tuple
 
-import pkg_resources
 import networkx as nx
+import pandas as pd
+import pkg_resources
 
 from . import VERSION
 
@@ -22,6 +24,7 @@ __author__ = "Ian Hellen"
 
 
 PKG_TOKENS = r"([^#=><\[]+)(?:\[[^\]]+\])?([~=><]+)(.+)"
+ImportDict = Dict[str, Dict[str, List[str]]]
 
 
 # pylint: disable=too-few-public-methods
@@ -48,10 +51,158 @@ _PKG_RENAME_NAME = {
     "dateutil": "python-dateutil",
     "splunklib": "splunk-sdk",
     "sumologic": "sumologic-sdk",
+    "typing_extensions": "typing-extensions",
     "vt": "vt-py",
     "vt_graph_api": "vt-graph-api",
     "kqlmagic": "KqlmagicCustom",
 }
+
+
+def analyze_imports(
+    package_root: str,
+    package_name: str,
+    req_file: str = "requirements.txt",
+    extras: Optional[List[str]] = None,
+    process_setup_py: bool = True,
+) -> Dict[str, ModuleImports]:
+    """
+    Analyze imports for package.
+
+    Parameters
+    ----------
+    package_root : str
+        The path containing the package and requirements.txt
+    package_name : str
+        The name of the package (subfolder name)
+    req_file : str, optional
+        Name of the requirements file,
+        by default "requirements.txt"
+    extras : List[str]
+        A list of extras not specified in requirements file.
+    process_setup_py : bool, optional
+        If True try to parse setup.py for extras.
+
+    Returns
+    -------
+    Dict[str, ModuleImports]
+        A dictionary of modules and imports
+
+    """
+    setup_reqs, _ = get_setup_reqs(
+        package_root, req_file, extras, skip_setup=(not process_setup_py)
+    )
+    pkg_root = Path(package_root) / package_name
+    all_mod_imports: Dict[str, ModuleImports] = {}
+    pkg_modules = _get_pkg_modules(pkg_root)
+
+    pkg_py_files = list(pkg_root.glob("**/*.py"))
+    print(f"processing {len(pkg_py_files)} modules")
+    for py_file in pkg_py_files:
+        module_imports = _analyze_module_imports(py_file, pkg_modules, setup_reqs)
+        # add the external imports for the module
+        mod_name = ".".join(py_file.relative_to(pkg_root).parts)
+        all_mod_imports[mod_name] = module_imports
+
+    return all_mod_imports
+
+
+def analyze_local_imports(
+    package_root: str,
+    package_name: str,
+    filter_common: bool = True,
+) -> pd.DataFrame:
+    """
+    Analyze imports for package.
+
+    Parameters
+    ----------
+    package_root : str
+        The path containing the package and requirements.txt
+    package_name : str
+        The name of the package (subfolder name)
+    filter_common : bool
+        Filter common imports.
+
+    Returns
+    -------
+    DataFrame of internal module dependencies.
+
+    """
+    pkg_root = Path(package_root) / package_name
+    all_mod_imports: ImportDict = {}
+    # get all the module names in the package
+    pkg_module_names = _get_pkg_module_paths(pkg_root)
+    # generate relative variants - e.g. a.b.c -> {a.b.c, b.c, c}
+    pkg_modules: Set[str] = set()
+    for mod_variants in pkg_module_names.values():
+        pkg_modules.update(mod_variants)
+
+    pkg_py_files = list(pkg_root.glob("**/*.py"))
+    print(f"processing {len(pkg_py_files)} modules")
+    for py_file in pkg_py_files:
+        # get all of the imports from the module
+        module_imports = _analyze_module_local_imports(py_file, pkg_modules)
+        # create the relative module name
+        mod_name = ".".join(py_file.relative_to(pkg_root).parts)
+        all_mod_imports[mod_name] = module_imports
+
+    # filter out imports of modules without a dot (same folder imports)
+    all_mod_imports = _filter_none_local_imports(all_mod_imports)
+    # remove noisy imports
+    if filter_common:
+        all_mod_imports = _filter_exclusions(all_mod_imports, ["common", "_version"])
+    # create a reverse mapping from partial module paths to full paths.
+    mod_name_mapping = _create_module_reverse_mapping(pkg_module_names)
+    # and remap the targets to full module names.
+    all_mod_imports = _remap_partial_module_names(all_mod_imports, mod_name_mapping)
+    return pd.DataFrame(all_mod_imports)
+
+
+def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs"):
+    """
+    Print module imports of type.
+
+    Parameters
+    ----------
+    modules : Dict[str, ModuleImports]
+        Dictionary of module imports
+    imp_type : str, optional
+        import type, by default "setup_reqs"
+
+    """
+    for py_mod_name, py_mod in modules.items():
+        print(py_mod_name, getattr(py_mod, imp_type))
+
+
+def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
+    """
+    Build Networkx graph of imports.
+
+    Parameters
+    ----------
+    modules : Dict[str, ModuleImports]
+        Dictionary of module imports
+
+    Returns
+    -------
+    nx.Graph
+        Networkx DiGraph
+
+    """
+    req_imports = {mod: attribs.setup_reqs for mod, attribs in modules.items()}
+    import_graph = nx.DiGraph()
+    for py_mod, mod_imps in req_imports.items():
+        for imp in mod_imps:
+            import_graph.add_node(py_mod, n_type="module", degree=len(mod_imps))
+            import_graph.add_node(imp, n_type="import")
+            import_graph.add_edge(py_mod, imp)
+
+    for node, attr in import_graph.nodes(data=True):
+        if attr["n_type"] == "import":
+            imp_nbrs = len(list(import_graph.predecessors(node)))
+            import_graph.add_node(node, n_type="import", degree=imp_nbrs)
+
+    return import_graph
 
 
 def get_setup_reqs(
@@ -153,24 +304,118 @@ def get_extras_from_setup(
     return sorted(list(set(extras)), key=str.casefold)
 
 
-def _extract_pkg_specs(pkg_specs: List[str]):
+def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
+    file_analysis = analyze(py_file)
+
+    # create a set of all imports
+    all_imports = {file.strip() for file in file_analysis["imports"] if file}
+    all_imports.update(
+        file.strip() for file in file_analysis["imports_from"].keys() if file
+    )
+
+    if None in all_imports:
+        all_imports.remove(None)  # type: ignore
+
+    module_imports = ModuleImports()
+    module_imports.internal = set(all_imports) & pkg_modules
+    # remove known modules from the current package
+    # to get the list of external imports
+    ext_imports = set(all_imports) - pkg_modules
+    (
+        module_imports.standard,
+        module_imports.external,
+        module_imports.unknown,
+    ) = _check_std_lib(ext_imports)
+
+    module_imports.setup_reqs, module_imports.missing_reqs = _match_pkg_to_reqs(
+        module_imports.external, setup_reqs
+    )
+    return module_imports
+
+
+# Local imports analysis functions
+def _analyze_module_local_imports(py_file, pkg_modules):
+    file_analysis = analyze(py_file)
+
+    # create a set of all imports
+    all_imports = {module.strip(): [] for module in file_analysis["imports"] if module}
+    all_imports.update(
+        {
+            module.strip(): imports
+            for module, imports in file_analysis["imports_from"].items()
+            if module
+        }
+    )
+
+    if None in all_imports:
+        all_imports.remove(None)  # type: ignore
+
+    return {
+        imp_mod: imports
+        for imp_mod, imports in all_imports.items()
+        if imp_mod in pkg_modules
+    }
+
+
+def _create_module_reverse_mapping(pkg_mod_mapping):
+    """Return dict of partial module names to full names."""
+    pkg_mod_mapping = {
+        par.replace(".__init__", ""): variants
+        for par, variants in pkg_mod_mapping.items()
+    }
+    return {mapping: key for key, val in pkg_mod_mapping.items() for mapping in val}
+
+
+def _filter_none_local_imports(module_imports: ImportDict) -> ImportDict:
+    """Remove all imports without dotted names."""
+    return {
+        mod: {imp: tgts for imp, tgts in imports.items() if "." in imp}
+        for mod, imports in module_imports.items()
+        if any(imp for imp in imports if "." in imp)
+    }
+
+
+def _filter_exclusions(
+    module_imports: ImportDict,
+    excl_prefixes: List[str],
+) -> ImportDict:
+    """Remove any imports that start with items in `excl_prefixes`."""
+    return {
+        mod: {
+            imp: tgts
+            for imp, tgts in imports.items()
+            if not any(exc for exc in excl_prefixes if imp.startswith(exc))
+        }
+        for mod, imports in module_imports.items()
+        if any(
+            imp
+            for imp in imports
+            if not any(exc for exc in excl_prefixes if imp.startswith(exc))
+        )
+    }
+
+
+def _remap_partial_module_names(
+    module_imports: ImportDict, name_mapping: Dict[str, str]
+) -> ImportDict:
+    """Map partial names of module imports to full names."""
+    remapped: ImportDict = {}
+    for importer, imported in module_imports.items():
+        remapped[importer] = {}
+        for imp_path, targets in imported.items():
+            if imp_path in name_mapping:
+                remapped[importer][name_mapping[imp_path]] = targets
+            else:
+                remapped[importer][imp_path] = targets
+    return remapped
+
+
+def _extract_pkg_specs(pkg_specs: List[str]) -> pkg_resources.Requirement:
     return {
         pkg_resources.Requirement.parse(req)  # type: ignore
         for req in pkg_specs
         if (req and not req.strip().startswith("#"))
     }
-
-
-def _get_pkg_from_path(pkg_file: str, pkg_root: str):
-    module = ""
-    py_file = Path(pkg_file)
-    rel_path = py_file.relative_to(pkg_root)
-
-    for p_elem in reversed(rel_path.parts):
-        if p_elem.endswith(".py"):
-            p_elem = p_elem.replace(".py", "")
-        module = p_elem + "." + module if module else p_elem
-        yield module
 
 
 # Adapted from code on stackoverflow (url split over 3 lines)
@@ -245,13 +490,37 @@ def _check_stdlib_path(module, mod_name, stdlib_paths):
     return None
 
 
-def _get_pkg_modules(pkg_root):
+def _get_pkg_from_path(pkg_file: str, pkg_root: str) -> Generator[str, None, None]:
+    module = ""
+    py_file = Path(pkg_file)
+    rel_path = py_file.relative_to(pkg_root)
+    for p_elem in reversed(rel_path.parts):
+        if p_elem.endswith(".py"):
+            p_elem = p_elem.replace(".py", "")
+        module = f"{p_elem}.{module}" if module else p_elem
+        yield module
+
+
+def _get_pkg_modules(pkg_root) -> Set[str]:
     """Get the list of all modules from file paths."""
     pkg_modules = set()
     for py_file in pkg_root.glob("**/*.py"):
         pkg_modules.update(list(_get_pkg_from_path(py_file, pkg_root)))
         if py_file.name == "__init__.py":
             pkg_modules.update(list(_get_pkg_from_path(py_file.parent, pkg_root)))
+    return pkg_modules
+
+
+def _get_pkg_module_paths(pkg_root) -> DefaultDict[str, Set[str]]:
+    """Get the list of all modules from file paths."""
+    pkg_modules = defaultdict(set)
+    for py_file in pkg_root.glob("**/*.py"):
+        module_name = ".".join(py_file.relative_to(pkg_root).parts).replace(".py", "")
+        pkg_modules[module_name].update(list(_get_pkg_from_path(py_file, pkg_root)))
+        if py_file.name == "__init__.py":
+            pkg_modules[module_name].update(
+                list(_get_pkg_from_path(py_file.parent, pkg_root))
+            )
     return pkg_modules
 
 
@@ -273,127 +542,3 @@ def _match_pkg_to_reqs(imports, setup_reqs):
         else:
             req_missing.add(setup_reqs.get(imp, imp))
     return req_libs, req_missing
-
-
-def analyze_imports(
-    package_root: str,
-    package_name: str,
-    req_file: str = "requirements.txt",
-    extras: Optional[List[str]] = None,
-    process_setup_py: bool = True,
-) -> Dict[str, ModuleImports]:
-    """
-    Analyze imports for package.
-
-    Parameters
-    ----------
-    package_root : str
-        The path containing the package and requirements.txt
-    package_name : str
-        The name of the package (subfolder name)
-    req_file : str, optional
-        Name of the requirements file,
-        by default "requirements.txt"
-    extras : List[str]
-        A list of extras not specified in requirements file.
-    process_setup_py : bool, optional
-        If True try to parse setup.py for extras.
-
-    Returns
-    -------
-    Dict[str, ModuleImports]
-        A dictionary of modules and imports
-
-    """
-    setup_reqs, _ = get_setup_reqs(
-        package_root, req_file, extras, skip_setup=(not process_setup_py)
-    )
-    pkg_root = Path(package_root) / package_name
-    all_mod_imports: Dict[str, ModuleImports] = {}
-    pkg_modules = _get_pkg_modules(pkg_root)
-
-    pkg_py_files = list(pkg_root.glob("**/*.py"))
-    print(f"processing {len(pkg_py_files)} modules")
-    for py_file in pkg_py_files:
-        module_imports = _analyze_module_imports(py_file, pkg_modules, setup_reqs)
-        # add the external imports for the module
-        mod_name = ".".join(py_file.relative_to(pkg_root).parts)
-        all_mod_imports[mod_name] = module_imports
-
-    return all_mod_imports
-
-
-def _analyze_module_imports(py_file, pkg_modules, setup_reqs):
-    file_analysis = analyze(py_file)
-
-    # create a set of all imports
-    all_imports = {file.strip() for file in file_analysis["imports"] if file}
-    all_imports.update(
-        file.strip() for file in file_analysis["imports_from"].keys() if file
-    )
-
-    if None in all_imports:
-        all_imports.remove(None)  # type: ignore
-
-    module_imports = ModuleImports()
-    module_imports.internal = set(all_imports) & pkg_modules
-    # remove known modules from the current package
-    # to get the list of external imports
-    ext_imports = set(all_imports) - pkg_modules
-    (
-        module_imports.standard,
-        module_imports.external,
-        module_imports.unknown,
-    ) = _check_std_lib(ext_imports)
-
-    module_imports.setup_reqs, module_imports.missing_reqs = _match_pkg_to_reqs(
-        module_imports.external, setup_reqs
-    )
-    return module_imports
-
-
-def print_module_imports(modules: Dict[str, ModuleImports], imp_type="setup_reqs"):
-    """
-    Print module imports of type.
-
-    Parameters
-    ----------
-    modules : Dict[str, ModuleImports]
-        Dictionary of module imports
-    imp_type : str, optional
-        import type, by default "setup_reqs"
-
-    """
-    for py_mod_name, py_mod in modules.items():
-        print(py_mod_name, getattr(py_mod, imp_type))
-
-
-def build_import_graph(modules: Dict[str, ModuleImports]) -> nx.Graph:
-    """
-    Build Networkx graph of imports.
-
-    Parameters
-    ----------
-    modules : Dict[str, ModuleImports]
-        Dictionary of module imports
-
-    Returns
-    -------
-    nx.Graph
-        Networkx DiGraph
-
-    """
-    req_imports = {mod: attribs.setup_reqs for mod, attribs in modules.items()}
-    import_graph = nx.DiGraph()
-    for py_mod, mod_imps in req_imports.items():
-        for imp in mod_imps:
-            import_graph.add_node(py_mod, n_type="module", degree=len(mod_imps))
-            import_graph.add_node(imp, n_type="import")
-            import_graph.add_edge(py_mod, imp)
-
-    for node, attr in import_graph.nodes(data=True):
-        if attr["n_type"] == "import":
-            imp_nbrs = len(list(import_graph.predecessors(node)))
-            import_graph.add_node(node, n_type="import", degree=imp_nbrs)
-
-    return import_graph

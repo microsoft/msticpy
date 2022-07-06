@@ -12,11 +12,15 @@ from bokeh.plotting import figure
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
-from ..nbtools.process_tree import build_and_show_process_tree
-from ..nbtools.timeline import display_timeline, display_timeline_values
-from ..nbtools.timeline_duration import display_timeline_duration
+from ..transform.network import GraphType, df_to_networkx
+from ..vis.network_plot import plot_nx_graph
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
+from .foliummap import plot_map
 from .matrix_plot import plot_matrix
+from .process_tree import build_and_show_process_tree
+from .timeline import display_timeline
+from .timeline_duration import display_timeline_duration
+from .timeline_values import display_timeline_values
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -101,7 +105,7 @@ class MsticpyPlotAccessor:
         return display_timeline(data=self._df, **kwargs)
 
     # pylint: disable=invalid-name
-    def timeline_values(self, value_col: str = None, **kwargs) -> LayoutDOM:
+    def timeline_values(self, value_column: str = None, **kwargs) -> LayoutDOM:
         """
         Display a timeline of events.
 
@@ -110,7 +114,7 @@ class MsticpyPlotAccessor:
         time_column : str, optional
             Name of the timestamp column
             (the default is 'TimeGenerated')
-        value_col : str
+        value_column : str
             The column name holding the value to plot vertically
         source_columns : list, optional
             List of default source columns to use in tooltips
@@ -121,7 +125,9 @@ class MsticpyPlotAccessor:
         x : str, optional
             alias of `time_column`
         y : str, optional
-            alias of `value_col`
+            alias of `value_column`
+        value_col : str, optional
+            alias of `value_column`
         title : str, optional
             Title to display (the default is None)
         ref_event : Any, optional
@@ -172,7 +178,9 @@ class MsticpyPlotAccessor:
             The bokeh plot figure.
 
         """
-        return display_timeline_values(data=self._df, value_col=value_col, **kwargs)
+        return display_timeline_values(
+            data=self._df, value_column=value_column, **kwargs
+        )
 
     def timeline_duration(
         self,
@@ -398,9 +406,213 @@ class MsticpyPlotAccessor:
             Raised if the dataframe does not contain incidents or alerts.
 
         """
-        if not all(elem in self._df.columns for elem in req_alert_cols) and any(
+        if any(elem not in self._df.columns for elem in req_alert_cols) and any(
             elem not in self._df.columns for elem in req_inc_cols
         ):
             raise MsticpyUserError("DataFrame must consist of Incidents or Alerts")
         graph = EntityGraph(self._df)
         return graph.plot(hide=hide, timeline=timeline, **kwargs)
+
+    def folium_map(self, **kwargs):
+        """
+        Plot folium map from DataFrame.
+
+        Parameters
+        ----------
+        ip_column : Optional[str], optional
+            The name of the IP Address column, by default None
+        lat_column : Optional[str], optional
+            The name of the location 'latitude' column, by default None
+        long_column : Optional[str], optional
+            The name of the location 'longitude' column, by default None
+        layer_column : Optional[str], optional
+            The column to group markers into for displaying on different
+            map layers, by default None
+        icon_column : Optional[str], optional
+            Optional column containing the name of the icon to use
+            for the marker in this row, by default None
+        icon_map : IconMapper, optional
+            Mapping dictionary or function, by default None
+            See Notes for more details.
+        popup_columns : Optional[List[str]], optional
+            List of columns to use for the popup text, by default None
+        tooltip_columns : Optional[List[str]], optional
+            List of columns to use for the tooltip text, by default None
+
+
+        Other Parameters
+        ----------------
+        marker_cluster : bool, optional
+            Use marker clustering, default is True.
+        default_color : str, optional
+            Default color for marker icons, by default "blue"
+        title : str, optional
+            Name of the layer (the default is 'layer1')
+            (passed to FoliumMap constructor)
+        zoom_start : int, optional
+            The zoom level of the map (the default is 7)
+            (passed to FoliumMap constructor)
+        tiles : [type], optional
+            Custom set of tiles or tile URL (the default is None)
+            (passed to FoliumMap constructor)
+        width : str, optional
+            Map display width (the default is '100%')
+            (passed to FoliumMap constructor)
+        height : str, optional
+            Map display height (the default is '100%')
+            (passed to FoliumMap constructor)
+        location : list, optional
+            Location to center map on
+
+        Returns
+        -------
+        folium.Map
+            Folium Map object.
+
+        Raises
+        ------
+        ValueError
+            If neither `ip_column` nor `lat_column` and `long_column` are passed.
+        LookupError
+            If one of the passed columns does not exist in `data`
+
+        Notes
+        -----
+        There are two ways of providing custom icon settings based on the
+        the row of the input DataFrame.
+
+        If `icon_map` is a dict it should contain keys that map to the
+        value of `icon_col` and values that a dicts of valid
+        folium Icon properties ("color", "icon_color", "icon", "angle", "prefix").
+        The dict should include a "default" entry that will be used if the
+        value in the DataFrame[icon_col] doesn't match any key.
+        For example:
+
+        .. code:: python
+
+            icon_map = {
+                "high": {
+                    "color": "red",
+                    "icon": "warning",
+                },
+                "medium": {
+                    "color": "orange",
+                    "icon": "triangle-exclamation",
+                    "prefix": "fa",
+                },
+                "default": {
+                    "color": "blue",
+                    "icon": "info-sign",
+                },
+            }
+
+        If icon_map is a function it should take a single str parameter
+        (the item key) and return a dict of icon properties. It should
+        return a default set of values if the key does not match a known
+        key. The `icon_col` value for each row will be passed to this
+        function and the return value used to populate the Icon arguments.
+
+        For example:
+
+        .. code::python
+
+            def icon_mapper(icon_key):
+                if icon_key.startswith("bad"):
+                    return {
+                        "color": "red",
+                        "icon": "triangle-alert",
+                    }
+                ...
+                else:
+                    return {
+                        "color": "blue",
+                        "icon": "info-sign",
+                    }
+
+        FontAwesome icon (prefix "fa") names are available at https://fontawesome.com/
+        GlyphIcons icons (prefix "glyphicon") are available at https://www.glyphicons.com/
+
+        """
+        return plot_map(data=self._df, **kwargs)
+
+    # pylint: disable=too-many-arguments
+    def network(
+        self,
+        source_col: str,
+        target_col: str,
+        title: str = "Data Graph",
+        source_attrs: Optional[Iterable[str]] = None,
+        target_attrs: Optional[Iterable[str]] = None,
+        edge_attrs: Optional[Iterable[str]] = None,
+        graph_type: GraphType = "graph",
+        **kwargs,
+    ):
+        """
+        Plot entity graph with Bokeh.
+
+        Parameters
+        ----------
+        source_col : str
+            Column for source nodes.
+        target_col : str
+            Column for target nodes.
+        title : str
+            Title for the plot, by default 'Data Graph'
+        node_size : int, optional
+            Size of the nodes in pixels, by default 25
+        font_size : int, optional
+            Font size for node labels, by default 10
+            Can be an integer (point size) or a string (e.g. "10pt")
+        width : int, optional
+            Width in pixels, by default 800
+        height : int, optional
+            Image height (the default is 800)
+        scale : int, optional
+            Position scale (the default is 2)
+        hide : bool, optional
+            Don't show the plot, by default False. If True, just
+            return the figure.
+        source_attrs : Optional[List[str]], optional
+            Optional list of source attributes to use as hover properties, by default None
+        target_attrs : Optional[List[str]], optional
+            Optional list of target attributes to use as hover properties, by default None
+        edge_attrs : Optional[List[str]], optional
+            Optional list of edge attributes to use as hover properties, by default None
+        graph_type : str
+            "graph" or "digraph" (for nx.DiGraph)
+
+        Other Parameters
+        ----------------
+        source_color : str, optional
+            The color of the source nodes, by default 'light-blue'
+        target_color : str, optional
+            The color of the source nodes, by default 'light-green'
+        edge_color : str, optional
+            The color of the edges, by default 'black'
+        kwargs :
+            Additional keyword arguments are passed to the networkx
+            layout function.
+
+        Returns
+        -------
+        bokeh.plotting.figure
+            The network plot.
+
+        """
+        nx_graph = df_to_networkx(
+            data=self._df,
+            source_col=source_col,
+            target_col=target_col,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            graph_type=graph_type,
+        )
+        return plot_nx_graph(
+            nx_graph=nx_graph,
+            title=title,
+            source_attrs=source_attrs,
+            target_attrs=target_attrs,
+            edge_attrs=edge_attrs,
+            **kwargs,
+        )

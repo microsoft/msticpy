@@ -4,7 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 """Timespan class."""
-from datetime import datetime, timedelta
+
+
+import contextlib
+from datetime import datetime, timedelta, timezone
+from numbers import Number
 from typing import Any, Optional, Tuple, Union
 
 import pandas as pd
@@ -22,6 +26,7 @@ class TimeSpan:
     # pylint: enable=too-many-branches
     def __init__(
         self,
+        *args,
         timespan: Optional[Union["TimeSpan", Tuple[Any, Any], Any]] = None,
         start: Optional[Union[datetime, str]] = None,
         end: Optional[Union[datetime, str]] = None,
@@ -45,13 +50,22 @@ class TimeSpan:
         period : Optional[Union[timedelta, str]], optional
             duration of the period, by default None
 
+        Other Parameters
+        ----------------
+        If passed unnamed parameters, the arguments can one of:
+        - a TimeSpan object (or a tuple of start/end dates or strings)
+        - a start datetime and and end datetime
+        - a start datetime and a numeric period.
+
         Raises
         ------
         ValueError
             If neither `start` nor `period` are specified.
 
         """
-        start, end, period = self._process_args(timespan, start, end, period)
+        start, end, period = self._process_args(
+            *args, timespan=timespan, start=start, end=end, period=period
+        )
 
         if not start and not period:
             raise ValueError(
@@ -68,15 +82,17 @@ class TimeSpan:
         if self._start and self._period:
             self._end = self._start + self._period
         if self._end is None:
-            self._end = datetime.utcnow()
+            self._end = datetime.now(timezone.utc)
         if self._start is None and self._period:
             self._start = self._end - self._period
 
     def __eq__(self, value):
         """Return True if the timespans are equal."""
-        if not isinstance(value, TimeSpan):
-            return False
-        return self.start == value.start and self.end == value.end
+        return (
+            self.start == value.start and self.end == value.end
+            if isinstance(value, TimeSpan)
+            else False
+        )
 
     def __hash__(self):
         """Return the hash of the timespan."""
@@ -131,21 +147,25 @@ class TimeSpan:
         return self._period
 
     @staticmethod
-    def _process_args(timespan, start, end, period):
+    def _process_args(*args, timespan, start, end, period):
+        # Allow for use with unnamed arguments
+        if len(args) == 1:
+            timespan = args[0]  # e.g. a tuple of start, end
+        if len(args) == 2:
+            start = args[0]
+            if isinstance(args[1], (str, datetime)):
+                end = args[1]
+            elif isinstance(args[1], Number):
+                period = args[1]
         if timespan:
-            if isinstance(timespan, TimeSpan):
-                start = timespan.start
-                end = timespan.end
-                period = timespan.period
+            if _is_timespan_type(timespan):
+                start = start or getattr(timespan, "start", None)
+                end = end or getattr(timespan, "end", None)
+                period = period or getattr(timespan, "period", None)
             elif isinstance(timespan, tuple):
                 start = timespan[0]
                 end = timespan[1]
-        if not start and hasattr(timespan, "start"):
-            start = getattr(timespan, "start", None)
-        if not end and hasattr(timespan, "end"):
-            end = getattr(timespan, "end", None)
-        if not period and hasattr(timespan, "period"):
-            period = getattr(timespan, "period", None)
+
         return start, end, period
 
     @staticmethod
@@ -154,11 +174,9 @@ class TimeSpan:
             return None
         if isinstance(time_val, datetime):
             return time_val
-        try:
+        with contextlib.suppress(ValueError, ParserError):
             if isinstance(time_val, str):
                 return pd.to_datetime(time_val, infer_datetime_format=True)
-        except (ValueError, ParserError):
-            pass
         raise ValueError(f"'{prop_name}' must be a datetime or a datetime string.")
 
     @staticmethod
@@ -167,12 +185,24 @@ class TimeSpan:
             return None
         if isinstance(time_val, timedelta):
             return time_val
-        try:
+        with contextlib.suppress(ValueError, ParserError):
             if isinstance(time_val, str):
                 return pd.Timedelta(time_val).to_pytimedelta()
-        except (ValueError, ParserError):
-            pass
         raise ValueError(
             "'period' must be a pandas-compatible time period string",
             " or Python timedelta.",
         )
+
+
+def _is_timespan_type(timespan):
+    """Return true if the object has least 2 usable properties."""
+    return (
+        sum(
+            [
+                hasattr(timespan, "start"),
+                hasattr(timespan, "end"),
+                hasattr(timespan, "period"),
+            ]
+        )
+        >= 2
+    )

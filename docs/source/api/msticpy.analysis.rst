@@ -1,6 +1,11 @@
 msticpy.analysis package
 ========================
 
+.. automodule:: msticpy.analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -12,42 +17,13 @@ Subpackages
 Submodules
 ----------
 
-msticpy.analysis.cluster\_auditd module
----------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: msticpy.analysis.cluster_auditd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-msticpy.analysis.eventcluster module
-------------------------------------
-
-.. automodule:: msticpy.analysis.eventcluster
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-msticpy.analysis.outliers module
---------------------------------
-
-.. automodule:: msticpy.analysis.outliers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-msticpy.analysis.timeseries module
-----------------------------------
-
-.. automodule:: msticpy.analysis.timeseries
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: msticpy.analysis
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   msticpy.analysis.cluster_auditd
+   msticpy.analysis.code_cleanup
+   msticpy.analysis.eventcluster
+   msticpy.analysis.observationlist
+   msticpy.analysis.outliers
+   msticpy.analysis.syslog_utils
+   msticpy.analysis.timeseries

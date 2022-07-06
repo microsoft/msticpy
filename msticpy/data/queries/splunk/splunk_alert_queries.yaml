@@ -1,0 +1,72 @@
+metadata:
+  version: 1
+  description: Splunk Alert Queries (non-accelerated)
+  data_environments: [Splunk]
+  data_families: [SplunkDatamodel]
+  tags: ['alerts']
+defaults:
+  metadata:
+    data_source: 'bots'
+  parameters:
+    start:
+      description: Query start time
+      type: datetime
+    end:
+      description: Query end time
+      type: datetime
+    project_fields:
+      description: Project Field names
+      type: str
+      default: '| table _time, host, source, sourcetype, src, dest, description, type, user, severity, signature, subject, body, mitre_technique_id, signature_id, app'
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: '| head 100'
+    field_rename:
+      description: Renames fields which are prepended by datamodel name
+      type: str
+      default: '|rename "Alerts.*" as *'
+    timeformat:
+      description: 'Datetime format to use in Splunk query'
+      type: str
+      default: '"%Y-%m-%d %H:%M:%S.%6N"'
+sources:
+  list_alerts:
+    description: Retrieves list of alerts
+    metadata:
+      data_families: [Alerts]
+    args:
+      query: '|datamodel Alerts Alerts search {field_rename} {project_fields} {add_query_items}'
+
+  list_alerts_for_src_ip:
+    description: Retrieves list of alerts with a common source IP Address
+    metadata:
+      data_families: [Alerts]
+    args:
+      query: '|datamodel Alerts Alerts search {field_rename}| search src={ip_address} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      ip_address:
+        description: The source IP Address to search on
+        type: str
+
+  list_alerts_for_dest_ip:
+    description: Retrieves list of alerts with a common destination IP Address
+    metadata:
+      data_families: [Alerts]
+    args:
+      query: '|datamodel Alerts Alerts search| search dest={ip_address} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      ip_address:
+        description: The source IP Address to search on
+        type: str
+
+  list_alerts_for_user:
+    description: Retrieves list of alerts with a common username
+    metadata:
+      data_families: [Alerts]
+    args:
+      query: '|datamodel Alerts Alerts search| search user={user} {field_rename} {project_fields} {add_query_items}'
+    parameters:
+      user:
+        description: The username to search on
+        type: str

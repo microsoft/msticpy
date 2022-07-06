@@ -64,6 +64,10 @@ an instance string to the "Kusto" section names
         Args:
           Cluster: https://mstic.kusto.windows.net
           IntegratedAuth: True
+      Kusto-mstic2:
+        Args:
+          Cluster: https://mstic2.kusto.windows.net
+          IntegratedAuth: True
       Kusto-msticapp:
         Args:
           Cluster: https://msticapp.kusto.windows.net
@@ -87,6 +91,7 @@ the following.
         data_environments: [Kusto]
         data_families: [DeviceEvents.hostdata]
         cluster: https://msticapp.kusto.windows.net
+        database: hostdata
         tags: ["user"]
     defaults:
       parameters:
@@ -124,7 +129,8 @@ the following.
                 type: str
 
 Most of the query file is identical to queries for other drivers.
-However, the metadata section has additional items.
+However, the metadata section has additional items: ``cluster`` and
+``database``.
 
 .. code-block:: yaml
    :emphasize-lines: 4, 5, 6
@@ -133,23 +139,44 @@ However, the metadata section has additional items.
         version: 1
         description: Kusto Queries
         data_environments: [Kusto]
-        data_families: [ALIAS.DATABASE]
+        data_families: [ALIAS[.DATABASE]]
         cluster: KUSTO_CLUSTER_URI
+        database: DATABASE
 
 
 The ``data_environments`` item must include "Kusto" in the list of
 applicable environments.
 
-The ``data_families`` item is composed of two parts, separated by a ".":
+You can specify the Kusto database to use in one of two ways:
 
-- the first half is friendly name or alias that will be used as a prefix
-  when the queries are added to the query provider.
-- the second part is the Kusto database containing the data to be queried.
+1. Use the ``database`` key.
+   Add the name of the database to connect to. The ``data_families`` key
+   is used as a container name when adding attributes. Whatever string
+   you specify here will be added as a prefix to the query name before attaching
+   the query to the query provider.
 
-The ``cluster`` item must match the ``Cluster`` setting in the *msticpyconfig*
-setting described in the previous section.
+2. Encode the database in the ``data_families`` item. If you do not
+   specify a database key explicitly, you should use a dot-separated string
+   for the data_families item:
 
-Here is an example.
+   - the first part (before the dot) is an alias that will be used as a prefix
+     when the queries are added to the query provider.
+   - the second part is the Kusto database containing the data to be queried.
+
+The ``cluster`` item in the query template file must match the ``Cluster``
+setting in the *msticpyconfig* setting described in the previous section.
+
+Here is are two examples.
+
+.. code-block:: yaml
+
+    metadata:
+        version: 1
+        description: Kusto Queries
+        data_environments: [Kusto]
+        data_families: [DeviceEvents]
+        database: hostdata
+        cluster: https://msticapp.kusto.windows.net
 
 .. code-block:: yaml
 
@@ -160,11 +187,11 @@ Here is an example.
         data_families: [DeviceEvents.hostdata]
         cluster: https://msticapp.kusto.windows.net
 
-Queries using this metadata would be accessed and run as follows:
+Queries using either of these metadata sections would be accessed and run as follows:
 
 .. code:: ipython3
 
-    kql_prov.DeviceEvents.list_host_processes(host_name=....)
+    kql_prov.DeviceEvents.list_host_processes(host_name="my_host", ...)
 
 The file-level ``metadata`` section applies to all queries in the file by
 default. You can specify a metadata section for individual queries. Any
@@ -220,33 +247,37 @@ Loading a QueryProvider for Kusto
 Connecting to a Kusto cluster
 -----------------------------
 
-The parameters required for connection to a Kusto cluster can be passed in
-a number of ways. The simplest is to configure your settings
-in msticpyconfig. You can then just call connect with no parameters.
+If you are using query files (as described above) you do not need to explicitly
+connect - the connection will be made dynamically using the parameters in the
+query definition.
+
+To run add-hoc queries however, you need to explicitly connect to a cluster and
+database. The parameters required for connection to a Kusto cluster can be passed in
+a number of ways. You can provide a full connection string or parameters
+for ``cluster`` and ``database``. In the latter case, you must have configured
+settings for the cluster defined in your msticpyconfig.yaml.
+
+The ``cluster`` name can be either the actual cluster name or the alias
+that you used in your settings (i.e. the ``INSTANCE`` value in ``Kusto-INSTANCE``
+configuration key). To connect, you must also specify a valid database
+name in the cluster.
+
 
 .. code:: ipython3
 
-        kql_prov.DeviceEvents.list_host_processes(
-            host_name="my_host",
-            cluster="https://somecluster."
-        )
+        kql_prov.connect(cluster="msticapp", database="hostdata")
 
 
-If you have configured multiple instances you must specify
-an instance name when you call connect.
-
-.. code:: ipython3
-
-        kql_prov.connect(cluster="msticapp")
-
-
-You can also pass connection parameters as
-keyword arguments or a connection string.
+If you have queries defined (in template files) for multiple clusters
+and databases, you do not need to connect explicitly to each one.
+You can call these queries by name - the driver will dynamically
+read the connection parameters from the query file and attempt
+to authenticate to the cluster.
 
 Additional Kusto query parameters
 ---------------------------------
 
-You can also override the cluster and database for an individual
+You can override the cluster and database for an individual
 query by supply the ``cluster`` and/or ``database`` parameters
 as query parameters.
 

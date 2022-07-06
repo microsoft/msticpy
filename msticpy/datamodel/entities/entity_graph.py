@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Entity Graph classes."""
-from typing import Any, Dict, Set, Optional
+from typing import Any, Dict, Optional, Set
 
 from ..._version import VERSION
 

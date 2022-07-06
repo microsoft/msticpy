@@ -1,7 +1,7 @@
 Morph Charts
 ============
 
-:py:mod:`msticpy.nbtools.morph_charts`
+:py:mod:`msticpy.vis.morph_charts`
 
 This module formats data and configuration files for use with http://morphcharts.com/.
 In addition it renders http://morphcharts.com/ in an IFrame within the interface to allow
@@ -18,7 +18,7 @@ list_charts() returns a list of all available charts:
 
 .. code:: ipython3
 
-    from msticpy.nbtools.morph_charts import MorphCharts
+    from msticpy.vis.morph_charts import MorphCharts
     morph = MorphCharts()
     morph.list_charts()
 

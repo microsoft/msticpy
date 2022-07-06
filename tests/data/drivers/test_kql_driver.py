@@ -4,30 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL driver query test class."""
-from contextlib import redirect_stdout
 import io
+from contextlib import redirect_stdout
 from unittest.mock import patch
 
+import pandas as pd
 import pytest
 import pytest_check as check
-import pandas as pd
-
 from adal.adal_error import AdalError
-from Kqlmagic.kql_response import KqlError
 from Kqlmagic.kql_engine import KqlEngineError
+from Kqlmagic.kql_response import KqlError
 from Kqlmagic.my_aad_helper import AuthenticationError
+
+from msticpy.common.exceptions import (
+    MsticpyDataQueryError,
+    MsticpyKqlConnectionError,
+    MsticpyNoDataSourceError,
+    MsticpyNotConnectedError,
+)
+from msticpy.data.core.query_defns import DataEnvironment
+from msticpy.data.drivers import import_driver, kql_driver
 
 # from Kqlmagic import kql as kql_exec
 
-from msticpy.data.drivers import kql_driver
-from msticpy.common.exceptions import (
-    MsticpyKqlConnectionError,
-    MsticpyNotConnectedError,
-    MsticpyNoDataSourceError,
-    MsticpyDataQueryError,
-)
-from msticpy.data.drivers import import_driver
-from msticpy.data.query_defns import DataEnvironment
 
 KqlDriver = import_driver(DataEnvironment.AzureSentinel)
 
@@ -83,14 +82,18 @@ class _MockIPython:
         return kql_exec(content)
 
 
-def kql_exec(content):
+def kql_exec(content, options=None):
     """Mock kql_exec function."""
+    del options
     if "--config" in content:
         if "=" in content:
             conf_item, conf_value = content.replace("--config", "").strip().split("=")
             return {conf_item: conf_value}
         _, conf_item = content.split()
         return {conf_item: True}
+
+    if "--conn" in content:
+        return [" * 1234"]
 
     if "KqlErrorUnk" in content:
         resp = '{"error": {"code": "UnknownError"}}'
