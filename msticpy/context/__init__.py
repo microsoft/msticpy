@@ -10,13 +10,12 @@ from typing import Any
 from ..common.utility import ImportPlaceholder
 from .geoip import GeoLiteLookup, IPStackLookup
 from .tilookup import TILookup
+from .vtlookupv3 import VT3_AVAILABLE
 
 vtlookupv3: Any
-try:
-    import vt
-
+if VT3_AVAILABLE:
     from .vtlookupv3 import vtlookupv3
-except ImportError:
+else:
     # vtlookup3 will not load if vt package not installed
     vtlookupv3 = ImportPlaceholder(  # type: ignore
         "vtlookupv3", ["vt-py", "vt-graph-api", "nest_asyncio"]

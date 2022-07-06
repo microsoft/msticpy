@@ -308,9 +308,12 @@ class ImportPlaceholder:
             f"{self.name} cannot be loaded without the following packages"
             f" installed: {', '.join(self.required_pkgs)}"
         )
+        self._mssg_displayed = False
 
     def _print_req_packages(self):
-        print(self.message, "\nPlease install and restart the notebook.")
+        if not self._mssg_displayed:
+            print(self.message, "\nPlease install and restart the notebook.")
+            self._mssg_displayed = True
 
     def __getattr__(self, name):
         """When any attribute is accessed, print requirements."""

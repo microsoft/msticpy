@@ -373,8 +373,16 @@ class KqlDriver(DriverBase):
     @staticmethod
     def _set_kql_option(option, value):
         """Set a Kqlmagic notebook option."""
-        opt_val = f"'{value}'" if isinstance(value, str) else value
-        return kql_exec(f"--config {option}={opt_val}")
+        kql_exec("--config short_errors=False")
+        result: Any
+        try:
+            opt_val = f"'{value}'" if isinstance(value, str) else value
+            result = kql_exec(f"--config {option}={opt_val}")
+        except ValueError:
+            result = None
+        finally:
+            kql_exec("--config short_errors=True")
+        return result
 
     @staticmethod
     def _get_kql_current_connection():
