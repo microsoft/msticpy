@@ -345,6 +345,7 @@ class KqlTIProvider(TIProvider):
 
     def _connect(self):
         """Connect to query provider."""
+        print("MS Sentinel TI query provider needs authenticated connection.")
         self._query_provider.connect(self._connect_str)
 
     @staticmethod
