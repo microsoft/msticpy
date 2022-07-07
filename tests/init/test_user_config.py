@@ -60,7 +60,6 @@ UserDefaults:
         LocalData:
           workspace: CyberSoc
           some_param: some_value
-    Pivot:
     AzureData:
       auth_methods: ['cli','interactive']
       connect: False
@@ -81,10 +80,6 @@ def mp_settings():
         "LoadComponents", {}
     ).get("Notebooklets"):
         del settings_dict["UserDefaults"]["LoadComponents"]["Notebooklets"]
-    if not _PIVOT and settings_dict["UserDefaults"].get("LoadComponents", {}).get(
-        "Pivot"
-    ):
-        del settings_dict["UserDefaults"]["LoadComponents"]["Pivot"]
     return settings_dict
 
 

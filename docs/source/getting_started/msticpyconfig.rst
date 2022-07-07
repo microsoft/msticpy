@@ -566,7 +566,6 @@ of other data providers and components.
           query_provider:
             AzureSentinel:
               workspace: CyberSoc
-        Pivot:
         AzureData:
           auth_methods=['cli','interactive']
         AzureSentinelAPI:
@@ -603,9 +602,6 @@ providers (query and others such as TILookip) as its ``providers`` parameter.
 For more details see
 `data_providers.init <https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
 
-``Pivot`` loads the Pivot library to add pivot functions to *MSTICPy* entities.
-It requires other providers to be loaded before itself (in order to
-harvest the pivot functions from them) so it is loaded last.
 
 ``AzureData`` and ``AzureSentinel`` load the Azure resource API and Azure
 Sentinel API libraries respectively. Any key/pair values defined under either
@@ -626,7 +622,6 @@ configuration settings:
 - geoip
 - ti_lookup
 - nb
-- pivot
 - az_data
 - azs_api
 
@@ -650,7 +645,6 @@ provider instances created are also stored in an attribute of the
     'qry_local': <msticpy.data.data_providers.QueryProvider at 0x216605a7c48>,
     'ti_lookup': <msticpy.context.tilookup.TILookup at 0x216611c7908>,
     'geoip': <msticpy.context.geoip.GeoLiteLookup at 0x21660659c88>,
-    'pivot': <msticpy.datamodel.pivot.Pivot at 0x216602d8e88>,
     'az_data': <msticpy.context.azure_data.AzureData at 0x21668aaf708>,
     'azs_api': <msticpy.context.azure_sentinel.AzureSentinel at 0x21603f42388>,
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
