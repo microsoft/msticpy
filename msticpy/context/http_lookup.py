@@ -4,24 +4,29 @@
 # license information.
 # --------------------------------------------------------------------------
 """
-HTTP TI Provider base.
+HTTP Lookup base class.
 
-Input can be a single IoC observable or a pandas DataFrame containing
-multiple observables. Processing may require a an API key and
+Input can be a single item or a pandas DataFrame containing
+multiple items. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-import abc
-from typing import Dict, Iterable, List, Union
+from typing import Dict, List, Tuple, Any, Union
+from json import JSONDecodeError
+import traceback
 
 import attr
-import pandas as pd
+import httpx
 from attr import Factory
 
-from ..._version import VERSION
-from .http_provider import HttpTIProvider
-from .ti_provider_base import LookupResult
+
+from .._version import VERSION
+from .lookup_result import LookupResult, LookupStatus
+from ..common.utility import mp_ua_header
+from ..common.pkg_config import get_http_timeout
+from ..common.exceptions import MsticpyConfigException
+from .provider_base import Provider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -30,20 +35,20 @@ __author__ = "Ian Hellen"
 # pylint: disable=too-few-public-methods
 @attr.s(auto_attribs=True)
 class APILookupParams:
-    """IoC HTTP Lookup Params definition."""
+    """HTTP Lookup Params definition."""
 
     path: str = ""
     verb: str = "GET"
     full_url: bool = False
     headers: Dict[str, str] = Factory(dict)
-    params: Dict[str, str] = Factory(dict)
+    params: Dict[str, Union[str, int, float]] = Factory(dict)
     data: Dict[str, str] = Factory(dict)
     auth_type: str = ""
     auth_str: List[str] = Factory(list)
     sub_type: str = ""
 
 
-class HttpLookupProvider(HttpTIProvider, abc.ABC):
+class HttpLookupProvider(Provider):
     """
     HTTP Generic lookup provider base class.
 
@@ -65,7 +70,7 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
 
     .. code:: python
 
-        _IOC_QUERIES = {
+        _API_QUERIES = {
         # Community API
         "ipv4": IoCLookupParams(
             path="/v3/community/{observable}",
@@ -122,7 +127,33 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
     def __init__(self, **kwargs):
         """Initialize the class."""
         super().__init__(**kwargs)
-        self.__class__._IOC_QUERIES = self._API_QUERIES
+        self._httpx_client = httpx.Client(timeout=get_http_timeout(**kwargs))
+        self._request_params = {}
+        if "ApiID" in kwargs:
+            api_id = kwargs.pop("ApiID")
+            self._request_params["API_ID"] = api_id.strip() if api_id else None
+        if "AuthKey" in kwargs:
+            auth_key = kwargs.pop("AuthKey")
+            self._request_params["API_KEY"] = auth_key.strip() if auth_key else None
+        if "Instance" in kwargs:
+            auth_key = kwargs.pop("Instance")
+            self._request_params["INSTANCE"] = auth_key.strip() if auth_key else None
+
+        missing_params = [
+            param
+            for param in self._REQUIRED_PARAMS
+            if param not in self._request_params
+        ]
+
+        missing_params = []
+
+        if missing_params:
+            param_list = ", ".join(f"'{param}'" for param in missing_params)
+            raise MsticpyConfigException(
+                f"Parameter values missing for Provider '{self.__class__.__name__}'",
+                f"Missing parameters are: {param_list}",
+            )
+        self.__class__._API_QUERIES = self._API_QUERIES
 
         # In __init__ you might want to
         # supply additional checkers/preprocessors
@@ -131,23 +162,49 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
         # or replace the default PreProcessors
         # self._preprocessors = MyPreProcessor()
 
-    def lookup_item(  # type: ignore
-        self, value: str, item_type: str = None, query_type: str = None, **kwargs
+    def _check_item_type(
+        self, item: str, item_type: str = None, query_subtype: str = None
     ) -> LookupResult:
         """
-        Lookup a single item.
+        Check Item Type and cleans up item.
 
         Parameters
         ----------
-        value : str
-            Item value to lookup
+        item : str
+            item
         item_type : str, optional
-            The Type of the value to lookup, by default None (type will be inferred)
+            item type, by default None
+        query_subtype : str, optional
+            Query sub-type, if any, by default None
+        Returns
+        -------
+        LookupResult
+            Lookup result with resolved item_type and pre-processed
+            item.
+            LookupResult.status is none-zero on failure.
+        """
+        return super()._check_item_type(
+            item=item,
+            item_type=item_type,
+            query_subtype=query_subtype,
+        )
+
+    def lookup_item(
+        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    ) -> LookupResult:
+        """
+        Lookup from a value.
+
+        Parameters
+        ----------
+        item : str
+            item to lookup
+        item_type : str, optional
+            The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item_value
             will be returned.
-
         Returns
         -------
         LookupResult
@@ -156,62 +213,166 @@ class HttpLookupProvider(HttpTIProvider, abc.ABC):
             details - Lookup Details (or status if failure),
             raw_result - Raw Response
             reference - URL of the item
-
         Raises
         ------
         NotImplementedError
             If attempting to use an HTTP method or authentication
             protocol that is not supported.
-
         Notes
         -----
         Note: this method uses memoization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
+        for a particular item to try avoid repeated network calls for
         the same item.
-
         """
-        return self.lookup_ioc(
-            ioc=value, ioc_type=item_type, query_type=query_type, **kwargs
+        result = self._check_item_type(
+            item=item, item_type=item_type, query_subtype=query_type
         )
 
-    def lookup_items(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        obs_col: str = None,
-        item_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
-    ) -> pd.DataFrame:
+        result.provider = kwargs.get("provider_name", self.__class__.__name__)
+        if result.status != LookupStatus.OK.value:
+            return result
+
+        req_params: Dict[str, Any] = {}
+        try:
+            verb, req_params = self._substitute_parms(
+                result.safe_item, result.item_type, query_type
+            )
+            if verb == "GET":
+                response = self._httpx_client.get(
+                    **req_params, timeout=get_http_timeout(**kwargs)
+                )
+            else:
+                raise NotImplementedError(f"Unsupported verb {verb}")
+
+            result.status = response.status_code
+            result.reference = req_params["url"]
+            if result.status == 200:
+                try:
+                    result.raw_result = response.json()
+                except JSONDecodeError:
+                    result.raw_result = f"""There was a problem parsing results from this lookup:
+                                        {response.text}"""
+                    result.result = False
+                    result.details = {}
+                result.status = LookupStatus.OK.value
+            else:
+                result.raw_result = str(response)
+                result.result = False
+                result.details = self._response_message(result.status)
+            return result
+        except (
+            LookupError,
+            JSONDecodeError,
+            NotImplementedError,
+            ConnectionError,
+        ) as err:
+            self._err_to_results(result, err)
+            if not isinstance(err, LookupError):
+                url = req_params.get("url", None) if req_params else None
+                result.reference = url
+            return result
+
+    # pylint: enable=duplicate-code
+    def _substitute_parms(
+        self, value: str, value_type: str, query_type: str = None
+    ) -> Tuple[str, Dict[str, Any]]:
         """
-        Lookup collection of IoC observables.
+        Create requests parameters collection.
 
         Parameters
         ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
-            Data input in one of three formats:
-            1. Pandas dataframe (you must supply the column name in
-            `obs_col` parameter)
-            2. Dict of observable, IoCType
-            3. Iterable of observables - IoCTypes will be inferred
-        obs_col : str, optional
-            DataFrame column to use for observables, by default None
-        item_type_col : str, optional
-            DataFrame column to use for IoCTypes, by default None
+        value : str
+            The value of the item being queried
+        value_type : str, optional
+            The value type, by default None
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
+            If not specified the default record type for the type
             will be returned.
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame of results.
+        Tuple[str, Dict[str, Any]]
+            HTTP method, dictionary of parameter keys/values
 
         """
-        return self.lookup_iocs(
-            data=data,
-            obs_col=obs_col,
-            ioc_type_col=item_type_col,
-            query_type=query_type,
-            **kwargs,
+        req_params = {"observable": value}
+        req_params.update(self._request_params)
+        value_key = f"{value_type}-{query_type}" if query_type else value_type
+        src = self.item_query_defs.get(value_key, None)
+        if not src:
+            raise LookupError(f"Provider does not support this type {value_key}.")
+
+        # create a parameter dictionary to pass to requests
+        # substitute any parameter value from our req_params dict
+        req_dict: Dict[str, Any] = {
+            "headers": {},
+            "url": src.path.format(**req_params)
+            if src.full_url
+            else (self._BASE_URL + src.path).format(**req_params),
+        }
+
+        if src.headers:
+            headers: Dict[str, Any] = {
+                key: val.format(**req_params) for key, val in src.headers.items()
+            }
+            req_dict["headers"] = headers
+        if "User-Agent" not in req_dict["headers"]:
+            req_dict["headers"].update(mp_ua_header())
+        if src.params:
+            q_params: Dict[str, Any] = {
+                key: val.format(**req_params) if isinstance(val, str) else val
+                for key, val in src.params.items()
+            }
+            req_dict["params"] = q_params
+        if src.data:
+            q_data: Dict[str, Any] = {
+                key: val.format(**req_params) for key, val in src.data.items()
+            }
+            req_dict["data"] = q_data
+        if src.auth_type and src.auth_str:
+            auth_strs: Tuple = tuple(p.format(**req_params) for p in src.auth_str)
+            if src.auth_type == "HTTPBasic":
+                req_dict["auth"] = auth_strs
+            else:
+                raise NotImplementedError(f"Unknown auth type {src.auth_type}")
+        return src.verb, req_dict
+
+    @staticmethod
+    def _failed_response(response: LookupResult) -> bool:
+        """
+        Return True if negative response.
+
+        Parameters
+        ----------
+        response : LookupResult
+            The returned data response
+
+        Returns
+        -------
+        bool
+            True if the response indicated failure.
+
+        """
+        return (
+            response.status not in (200, LookupStatus.OK.value)
+            or not response.raw_result
+            or not isinstance(response.raw_result, dict)
         )
+
+    @staticmethod
+    def _err_to_results(result: LookupResult, err: Exception):
+        result.details = err.args
+        result.raw_result = (
+            type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
+        )
+
+    @staticmethod
+    def _response_message(status_code):
+        if status_code == 404:
+            return "Not found."
+        if status_code == 401:
+            return "Authorization failed. Check account and key details."
+        if status_code == 403:
+            return "Request forbidden. Allowed query rate may have been exceeded."
+        return httpx.codes.get_reason_phrase(status_code) or "Unknown HTTP status code."
