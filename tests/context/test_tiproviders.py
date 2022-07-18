@@ -20,7 +20,7 @@ import pytest_check as check
 from msticpy.common import pkg_config
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
-from msticpy.context.tiproviders.preprocess_observable import (
+from msticpy.context.preprocess_observable import (
     _clean_url,
     preprocess_observable,
 )
@@ -174,7 +174,7 @@ def test_ti_provider(ti_lookup, provider_name):
         result = ti_lookup.lookup_ioc(
             observable=ioc,
             ioc_type=ioc_params[0],
-            ioc_query_type=ioc_params[1],
+            query_type=ioc_params[1],
             providers=[provider_name],
         )
         verify_result(result, ti_lookup)
@@ -300,7 +300,7 @@ def test_opr_single_result(ti_lookup):
         result = ti_lookup.lookup_ioc(
             observable=ioc,
             ioc_type=ioc_params[0],
-            ioc_query_type=ioc_params[1],
+            query_type=ioc_params[1],
             providers=["OPR"],
         )
         check.is_not_none(result)

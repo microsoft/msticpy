@@ -18,8 +18,9 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, ResultSeverity
+from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_provider_base import TILookupResult, ResultSeverity
+
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -73,13 +74,13 @@ class OTX(HttpTIProvider):
         super().__init__(**kwargs)
         self.require_url_encoding = True
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : TILookupResult
             The returned data response
 
         Returns

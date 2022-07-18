@@ -15,7 +15,7 @@ import pytest_check as check
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
-from msticpy.context.tiproviders.lookup_result import LookupStatus
+from msticpy.context.tiproviders.ti_lookup_result import TILookupStatus
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 
@@ -231,27 +231,27 @@ def test_sentinel_ti_provider(ti_lookup):
 
 
 _TEST_MULTI = [
-    (_IOC_URLS, 10, 7, LookupStatus.OK.value, None),
-    (_IOC_IPS, 20, 15, LookupStatus.OK.value, None),
+    (_IOC_URLS, 10, 7, TILookupStatus.OK.value, None),
+    (_IOC_IPS, 20, 15, TILookupStatus.OK.value, None),
     (
         {"c:\\empty_result.txt": "windows_path"},
         1,
         0,
-        LookupStatus.NO_DATA.value,
+        TILookupStatus.NO_DATA.value,
         "Not found",
     ),
     (
         {"c:\\failed_query.txt": "windows_path"},
         1,
         0,
-        LookupStatus.QUERY_FAILED.value,
+        TILookupStatus.QUERY_FAILED.value,
         "Query failure",
     ),
     (
         {"c:\\no_dataframe.txt": "windows_path"},
         1,
         0,
-        LookupStatus.QUERY_FAILED.value,
+        TILookupStatus.QUERY_FAILED.value,
         "Query failure",
     ),
 ]

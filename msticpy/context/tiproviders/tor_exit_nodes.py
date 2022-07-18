@@ -24,7 +24,7 @@ import httpx
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export, mp_ua_header
-from .ti_provider_base import LookupResult, LookupStatus, ResultSeverity, TIProvider
+from .ti_provider_base import TILookupResult, TILookupStatus, ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -90,7 +90,7 @@ class Tor(TIProvider):
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> TILookupResult:
         """
         Lookup a single IoC observable.
 
@@ -107,7 +107,7 @@ class Tor(TIProvider):
 
         Returns
         -------
-        LookupResult
+        TILookupResult
             The returned results.
 
         """
@@ -122,7 +122,7 @@ class Tor(TIProvider):
         result.reference = self._BASE_URL
 
         if result.status and not bool(self._nodelist):
-            result.status = LookupStatus.QUERY_FAILED.value
+            result.status = TILookupStatus.QUERY_FAILED.value
 
         if result.status:
             return result
@@ -140,13 +140,15 @@ class Tor(TIProvider):
             result.details = "Not found."
         return result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : TILookupResult
             The returned data response
 
         Returns

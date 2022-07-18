@@ -20,8 +20,8 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
 from .ti_provider_base import (
-    LookupResult,
-    LookupStatus,
+    TILookupResult,
+    TILookupStatus,
     ResultSeverity,
     TIPivotProvider,
     TIProvider,
@@ -151,7 +151,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> TILookupResult:
         """
         Lookup a single IoC observable.
 
@@ -168,7 +168,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         Returns
         -------
-        LookupResult
+        TILookupResult
             The returned results.
 
         """
@@ -188,7 +188,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
         ]:
             result.result = False
-            result.status = LookupStatus.QUERY_FAILED.value
+            result.status = TILookupStatus.QUERY_FAILED.value
             result.details = f"ERROR: unsupported query type {query_type}"
             return result
         else:
@@ -203,7 +203,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
                 result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
             result.result = False
-            result.status = LookupStatus.QUERY_FAILED.value
+            result.status = TILookupStatus.QUERY_FAILED.value
             result.details = f"ERROR: {err}"
             result.raw_result = err
             result.set_severity(ResultSeverity.unknown)
@@ -245,13 +245,13 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ti_result.result = True
         return ti_result
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : TILookupResult
             The returned data response
 
         Returns

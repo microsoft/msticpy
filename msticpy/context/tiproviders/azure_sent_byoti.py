@@ -19,7 +19,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.utility import export
 from .kql_base import KqlTIProvider
-from .ti_provider_base import LookupResult, ResultSeverity
+from .ti_provider_base import TILookupResult, ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -51,13 +51,13 @@ class AzSTI(KqlTIProvider):
     _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
     _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : TILookupResult
             The returned data response
 
         Returns

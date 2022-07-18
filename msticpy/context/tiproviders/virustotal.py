@@ -17,8 +17,10 @@ from typing import Any, Dict, Tuple
 
 from ..._version import VERSION
 from ...common.utility import export
-from .http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import LookupResult, ResultSeverity
+from .ti_http_provider import HttpTIProvider
+from ..http_lookup import APILookupParams as IoCLookupParams
+from .ti_lookup_result import TILookupResult
+from .result_severity import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -71,13 +73,15 @@ class VirusTotal(HttpTIProvider):
         "detected_communicating_samples": ("sha256", "date"),
     }
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : TILookupResult
             The returned data response
 
         Returns
@@ -135,7 +139,7 @@ class VirusTotal(HttpTIProvider):
 
     @staticmethod
     def _extract_url_results(
-        response: LookupResult,
+        response: TILookupResult,
         result_dict: Dict[str, Any],
         hit_type: str,
         item_type: str,
