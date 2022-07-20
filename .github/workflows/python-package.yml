@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8"]
+        python-version: ["3.8", "3.9", "3.10", "3.11-dev"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -28,7 +28,7 @@ jobs:
       # end print details
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache pip
@@ -75,6 +75,31 @@ jobs:
         run: |
           pytest tests -n auto --junitxml=junit/test-${{ matrix.python-version }}-results.xml --cov=msticpy --cov-report=xml
         if: ${{ always() }}
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest-results-${{ matrix.python-version }}
+          path: junit/test-${{ matrix.python-version }}-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+      - name: Upload mypy test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mypy results ${{ matrix.python-version }}
+          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: black
         run: |
           black --diff --check --exclude venv .
@@ -107,18 +132,4 @@ jobs:
           # install this separately since it uses older versions of pylint/isort
           # chain running to installation since this sometimes fails
           python -m pip install prospector[with_pyroma] && prospector --ignore-paths tests --without-tool pylint
-        if: ${{ always() }}
-      - name: Upload pytest test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: pytest-results-${{ matrix.python-version }}
-          path: junit/test-${{ matrix.python-version }}-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
-      - name: Upload mypy test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: Mypy results ${{ matrix.python-version }}
-          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
