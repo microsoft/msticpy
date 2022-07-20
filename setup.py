@@ -47,7 +47,7 @@ EXTRAS = {
         "keyring>=13.2.1",  # needed by Key Vault package
     ],
     "ml": ["scikit-learn>=0.20.2", "scipy>=1.1.0", "statsmodels>=0.11.1"],
-    "sql2kql": ["moz_sql_parser>=4.5.0,<=4.11.21016"],
+    "sql2kql": ["moz_sql_parser>=4.5.0,<=4.40.21126"],
     "riskiq": ["passivetotal>=2.5.3"],
 }
 extras_all = [
