@@ -13,28 +13,46 @@ Designed to support any data source containing IP address entity.
 
 """
 import ipaddress
+import re
+import socket
 import warnings
 from functools import lru_cache
-from typing import List, Optional, Set, Tuple
+from time import sleep
+from typing import Dict, List, Optional, Set, Tuple, Union
 
+import httpx
 import pandas as pd
+from bs4 import BeautifulSoup
 from deprecated.sphinx import deprecated
-from ipwhois import (
-    ASNRegistryError,
-    HostLookupError,
-    HTTPLookupError,
-    HTTPRateLimitError,
-    IPWhois,
-    WhoisLookupError,
-    WhoisRateLimitError,
-)
 
 from .._version import VERSION
+from ..common.exceptions import MsticpyConnectionError, MsticpyException
 from ..common.utility import arg_to_list, export
 from ..datamodel.entities import GeoLocation, IpAddress
 
 __version__ = VERSION
 __author__ = "Ashwin Patil"
+
+
+_REGISTRIES = {
+    "arin": {
+        "url": "http://rdap.arin.net/registry/ip/",
+    },
+    "ripencc": {
+        "url": "http://rdap.db.ripe.net/ip/",
+    },
+    "apnic": {
+        "url": "http://rdap.apnic.net/ip/",
+    },
+    "lacnic": {
+        "url": "http://rdap.lacnic.net/rdap/ip/",
+    },
+    "afrinic": {
+        "url": "http://rdap.afrinic.net/rdap/ip/",
+    },
+}
+_ASNS = httpx.get("https://bgp.potaroo.net/cidr/autnums.html")
+_ASNS_SOUP = BeautifulSoup(_ASNS.content)
 
 
 @export  # noqa: MC0001
@@ -154,6 +172,7 @@ def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
 
 
 # pylint: disable=invalid-name
+@deprecated("Replaced with ip_whois function", version="2.1.0")
 @export
 @lru_cache(maxsize=1024)
 def get_whois_info(
@@ -189,19 +208,11 @@ def get_whois_info(
     ip_type = get_ip_type(ip_str)
     if ip_type == "Public":
         try:
-            whois = IPWhois(ip_str)
-            whois_result = whois.lookup_whois()
+            whois_result = ip_whois(ip_str)
             if show_progress:
                 print(".", end="")
             return whois_result["asn_description"], whois_result
-        except (
-            HTTPLookupError,
-            HTTPRateLimitError,
-            HostLookupError,
-            WhoisLookupError,
-            WhoisRateLimitError,
-            ASNRegistryError,
-        ) as err:
+        except (MsticpyException,) as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 
@@ -369,3 +380,304 @@ def create_ip_record(
                 ip_entity["public_ips"] = []
 
     return ip_entity
+
+
+def ip_whois(  # pylint: disable=inconsistent-return-statements
+    ips: Union[IpAddress, str, List], raw=False
+) -> Union[pd.DataFrame, Dict]:
+    """
+    Lookup IP Whois information.
+
+    Parameters
+    ----------
+    ips : Union[IpAddress, str, List]
+        An IP address or list of IP addresses to lookup.
+    raw : bool, optional
+        Set True if raw whois result wanted, by default False
+
+    Returns
+    -------
+    Union[pd.DataFrame, Dict]
+        If a single IP Address provided result is a dictionary
+        if multipe provided results are formatted as a dataframe.
+
+    """
+    if isinstance(ips, list):
+        whois_results = []
+        for ip_address in ips:
+            if len(ips) > 50:
+                sleep(1)
+            whois_results.append(_whois_lookup(ip_address, raw=raw))
+        return _whois_result_to_pandas(whois_results)
+    if isinstance(ips, (str, IpAddress)):
+        return _whois_lookup(ips, raw=raw)
+
+
+def _whois_lookup(ip_addr: Union[str, IpAddress], raw=False) -> Dict:
+    """Conduct lookup of IP Whois information"""
+    if isinstance(ip_addr, IpAddress):
+        ip_addr = ip_addr.Address
+    asn_details = get_asn_from_ip(ip_addr.strip())
+    keys = asn_details.split("\n")[0].split("|")
+    values = asn_details.split("\n")[1].split("|")
+    asn_items = {key.strip(): value.strip() for key, value in zip(keys, values)}
+    ipwhois_result = (asn_items["AS Name"], {})
+    ipwhois_result[1]["asn"] = asn_items["AS"]
+    ipwhois_result[1]["query"] = asn_items["IP"]
+    ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
+    ipwhois_result[1]["asn_country_code"] = asn_items["CC"]
+    ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
+    ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
+    ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
+    registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
+    rdap_data = httpx.get(registry_urls["url"] + str(ip_addr))
+    if rdap_data.status_code == 200:
+        rdap_data = rdap_data.json()
+        net = _create_net(rdap_data)
+        ipwhois_result[1]["nets"] = [net]
+        for link in rdap_data["links"]:
+            if link["rel"] == "up":
+                up_data_link = link["href"]
+                up_rdap_data = httpx.get(up_data_link)
+                up_rdap_data = up_rdap_data.json()
+                up_net = _create_net(up_rdap_data)
+                ipwhois_result[1]["nets"].append(up_net)
+        if raw:
+            ipwhois_result[1]["raw"] = rdap_data
+    elif rdap_data.status_code == 429:
+        sleep(5)
+        _whois_lookup(ip_addr)
+    else:
+        raise MsticpyConnectionError(f"Error code: {rdap_data.status_code}")
+    return ipwhois_result
+
+
+def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
+    """Transfroms whois results to a Pandas DataFrame."""
+    if isinstance(results, list):
+        new_results = [results[1] for results in results]
+    else:
+        new_results = results[1]
+    return pd.DataFrame(new_results)
+
+
+def _find_address(
+    entity: dict,
+) -> str:  # pylint: disable=inconsistent-return-statements
+    """Find an orgs address from an RDAP entity."""
+    if "vcardArray" in entity:
+        for vcard in entity["vcardArray"]:
+            if isinstance(vcard, list):
+                for vcard_sub in vcard:
+                    if vcard_sub[0] == "adr":
+                        return vcard_sub[1]["label"]
+    return None
+
+
+def _create_net(data: Dict) -> Dict:
+    """Create a network object from RDAP data."""
+    net_cidr = (
+        str(data["cidr0_cidrs"][0]["v4prefix"])
+        + "/"
+        + str(data["cidr0_cidrs"][0]["length"])
+        if "cidr0_cidrs" in data
+        else None
+    )
+    address = ""
+    for item in data["events"]:
+        created = item["eventDate"] if item["eventAction"] == "last changed" else None
+        updated = item["eventDate"] if item["eventAction"] == "registration" else None
+    for entity in data["entities"]:
+        address = _find_address(entity)
+    regex = r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
+    emails = re.findall(regex, str(data))
+    return {
+        "cidr": net_cidr,
+        "handle": data["handle"],
+        "name": data["name"],
+        "startAddress": data["startAddress"],
+        "endAddress": data["endAddress"],
+        "created": created,
+        "updated": updated,
+        "address": address,
+        "emails": emails,
+    }
+
+
+def get_asn_details(asns: Union[str, List]) -> Union[pd.DataFrame, Dict]:
+    """
+    Get details about an ASN(s) from its number.
+
+    Parameters
+    ----------
+    asns : Union[str, List]
+        A single ASN or list of ASNs to lookup.
+
+    Returns
+    -------
+    Union[pd.DataFrame, Dict]
+        Details about the ASN(s) if a single ASN provided result is a dictionary
+        if multlete provided results are formatted as a DataFrame.
+
+    """
+    if isinstance(asns, list):
+        asn_detail_results = [_asn_results(str(asn)) for asn in asns]
+        return pd.DataFrame(asn_detail_results)
+    return _asn_results(str(asns))
+
+
+def get_asn_from_name(name: str) -> Dict:
+    """
+    Get a list of ASNs that match a name.
+
+    Parameters
+    ----------
+    name : str
+        The name of the ASN to search for
+
+    Returns
+    -------
+    Dict
+        A list of ASNs that match the name.
+
+    Raises
+    ------
+    MsticpyConnectionError
+        If the list of all ASNs cannot be retrieved.
+    MsticpyException
+        If no matches found.
+
+    """
+    name = name.casefold()
+    asns_dict = {}
+    try:
+        for asn in _ASNS_SOUP.find_all("a"):
+            asns_dict[str(asn.next_element).strip()] = str(
+                asn.next_element.next_element
+            ).strip()
+    except httpx.ConnectError as err:
+        raise MsticpyConnectionError("Unable to get ASN details") from err
+    matches = {
+        key: value for key, value in asns_dict.items() if name in value.casefold()
+    }
+    if len(matches.keys()) == 1:
+        return next(iter(matches))
+    if len(matches.keys()) > 1:
+        return matches
+
+    raise MsticpyException(f"No ASNs found matching {name}")
+
+
+def get_asn_from_ip(ip_addr: Union[str, IpAddress]) -> Dict:
+    """
+    Get the ASN that an IP belongs to.
+
+    Parameters
+    ----------
+    ip : Union[str, IpAddress]
+        IP address to lookup.
+
+    Returns
+    -------
+    dict
+        Details of the ASN that the IP belongs to.
+
+    """
+    if isinstance(ip_addr, IpAddress):
+        ip_addr = ip_addr.Address
+    ip_addr = ip_addr.strip()
+    query = f" -v {ip_addr}\r\n"
+    ip_response = _cymru_query(query)
+    keys = ip_response.split("\n")[0].split("|")
+    values = ip_response.split("\n")[1].split("|")
+    return {key.strip(): value.strip() for key, value in zip(keys, values)}
+
+
+def _asn_whois_query(query, server, port=43):
+    """Connect to whois server and send query."""
+    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn.connect((server, port))
+    conn.send(query.encode())
+    response = ""
+    while True:
+        response_data = conn.recv(4096).decode()
+        if "error" in response_data:
+            raise MsticpyConnectionError(
+                "An error occured during lookup, please try again."
+            )
+        if "rate limit exceeded" in response_data:
+            raise MsticpyConnectionError(
+                "Rate limit exceeded please wait and try again."
+            )
+        response += response_data
+        if not response_data:
+            break
+    conn.close()
+    return response
+
+
+def _cymru_query(query):
+    """Query Cymru for ASN information."""
+    return _asn_whois_query(query, "whois.cymru.com")
+
+
+def _radb_query(query):
+    """Query RADB for ASN information."""
+    return _asn_whois_query(query, "whois.radb.net")
+
+
+def _parse_asn_response(response) -> dict:
+    """Parse ASN response into a dictionary."""
+    response_output = {}
+    for item in response.split("\n"):
+        try:
+            key = item.split(":")[0].strip()
+            if key and key not in response_output:
+                try:
+                    response_output[key] = item.split(":")[1].strip()
+                except IndexError:
+                    continue
+            elif key in response_output:
+                if not isinstance(response_output[key], list):
+                    response_output[key] = [response_output[key]]
+                response_output[key].append(item.split(":")[1].strip())
+        except IndexError:
+            continue
+    return response_output
+
+
+def _asn_results(asn: str) -> dict:
+    """Get ASN details from ASN number."""
+    if not asn.startswith("AS"):
+        asn = f"AS{asn}"
+    query1 = f" {asn}\r\n"
+    asn_response = _radb_query(query1)
+    asn_details = _parse_asn_details(asn_response)
+    query2 = f" -i origin {asn}\r\n"
+    asn_ranges_response = _radb_query(query2)
+    asn_details["ranges"] = _parse_asn_ranges(asn_ranges_response)
+    return asn_details
+
+
+def _parse_asn_details(response):
+    """Parse ASN details response into a dictionary."""
+    asn_keys = ["aut-num", "as-name", "descr", "notify", "changed"]
+    asn_output = _parse_asn_response(response)
+    asn_output_filtered = {
+        key: value for key, value in asn_output.items() if key in asn_keys
+    }
+    asn_output_filtered["Autonomous Number"] = asn_output_filtered.pop("aut-num", None)
+    asn_output_filtered["AS Name"] = asn_output_filtered.pop("as-name", None)
+    asn_output_filtered["Description"] = asn_output_filtered.pop("descr", None)
+    asn_output_filtered["Contact"] = asn_output_filtered.pop("notify", None)
+    asn_output_filtered["Last Updated"] = asn_output_filtered.pop("changed", None)
+    return asn_output_filtered
+
+
+def _parse_asn_ranges(response):
+    """Parse ASN ranges response into a list."""
+    ranges = []
+    for item in response.split("\n"):
+        if item.split(":   ")[0].strip() == "route":
+            ranges.append(item.split(":   ")[1].strip())
+    return ranges
