@@ -8,7 +8,7 @@ Module for SQL to KQL Conversion.
 
 This is an experiment conversion utility built to support a limited subset
 of ANSI SQL.
-It relies on moz_sql_parser (https://github.com/mozilla/moz-sql-parser)
+It relies on mo-sql-parsing (https://github.com/klahnakoski/mo-sql-parsing)
 to parse the SQL syntax tree. Some hacky additions have been done to
 allow table renaming and support for a few SparkSQL operators such as
 RLIKE.
@@ -31,12 +31,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ..common.exceptions import MsticpyImportExtraError
 
 try:
-    import moz_sql_parser
-    from moz_sql_parser import parse
+    import mo_sql_parsing
+    from mo_sql_parsing import parse
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
-        "Cannot use this feature without moz_sql_parser installed",
-        title="Error importing moz_sql_parser for sql_to_kql",
+        "Cannot use this feature without mo-sql-parsing installed",
+        title="Error importing mo_sql_parsing for sql_to_kql",
         extra="sql",
     ) from imp_err
 
@@ -152,7 +152,7 @@ JOIN_KEYWORDS = {
 JOIN_KEYWORDS = {kw.replace("_", " "): kql for kw, kql in JOIN_KEYWORDS.items()}
 
 
-BINARY_OPS = {val: key for key, val in moz_sql_parser.keywords.binary_ops.items()}
+BINARY_OPS = {val: key for key, val in mo_sql_parsing.keywords.binary_ops.items()}
 BINARY_OPS["eq"] = "=="
 BINARY_OPS["neq"] = "!="
 BINARY_OPS["nin"] = "!in"
