@@ -82,13 +82,7 @@ jobs:
           path: junit/test-${{ matrix.python-version }}-results.xml
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
-      - name: Upload mypy test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: Mypy results ${{ matrix.python-version }}
-          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
+      
   lint:
     runs-on: ubuntu-latest
     strategy:
@@ -100,6 +94,18 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          if [ -f requirements-all.txt ]; then
+            python -m pip install -r requirements-all.txt
+          elif [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt;
+          fi
+          python -m pip install -e .
+      - name: Install test dependencies
+        run: |
+          python -m pip install flake8 black bandit mypy lxml pylint types-attrs
       - name: black
         run: |
           black --diff --check --exclude venv .
@@ -118,6 +124,13 @@ jobs:
       - name: mypy
         run: |
           mypy --ignore-missing-imports --follow-imports=silent --show-column-numbers --junit-xml junit/mypy-test-${{ matrix.python-version }}-results.xml msticpy
+        if: ${{ always() }}
+      - name: Upload mypy test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mypy results ${{ matrix.python-version }}
+          path: junit/mypy-test-${{ matrix.python-version }}-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
       - name: bandit
         run: |
