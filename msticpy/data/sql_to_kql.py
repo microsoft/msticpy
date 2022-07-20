@@ -31,7 +31,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ..common.exceptions import MsticpyImportExtraError
 
 try:
-    import mo_sql_parsing
     from mo_sql_parsing import parse
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -152,15 +151,30 @@ JOIN_KEYWORDS = {
 JOIN_KEYWORDS = {kw.replace("_", " "): kql for kw, kql in JOIN_KEYWORDS.items()}
 
 
-BINARY_OPS = {val: key for key, val in mo_sql_parsing.keywords.binary_ops.items()}
-BINARY_OPS["eq"] = "=="
-BINARY_OPS["neq"] = "!="
-BINARY_OPS["nin"] = "!in"
-BINARY_OPS["rlike"] = "not matches regex"
-BINARY_OPS["nlike"] = "not matches regex"
-BINARY_OPS["concat"] = "+"
-BINARY_OPS["is"] = "=="
-BINARY_OPS["is not"] = "!="
+BINARY_OPS = {
+    "concat": "+",
+    "mul": "*",
+    "div": "/",
+    "mod": "%",
+    "add": "+",
+    "sub": "-",
+    "binary_and": "&",
+    "binary_or": "|",
+    "lt": "<",
+    "lte": "<=",
+    "gt": ">",
+    "gte": ">=",
+    "eq": "==",
+    "neq": "!=",
+    "nin": "!in",
+    "nlike": "not matches regex",
+    "rlike": "not matches regex",
+    "not_between": "not between",
+    "or": "or",
+    "and": "and",
+    "is": "==",
+    "is not": "!=",
+}
 
 
 REMAPPED_KEYWORDS = {"RLIKE": "LIKE"}
