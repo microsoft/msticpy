@@ -52,7 +52,7 @@ _REGISTRIES = {
     },
 }
 _ASNS = httpx.get("https://bgp.potaroo.net/cidr/autnums.html")
-_ASNS_SOUP = BeautifulSoup(_ASNS.content)
+_ASNS_SOUP = BeautifulSoup(_ASNS.content, features="lxml")
 
 
 @export  # noqa: MC0001
@@ -208,11 +208,12 @@ def get_whois_info(
     ip_type = get_ip_type(ip_str)
     if ip_type == "Public":
         try:
+            print(ip_str)
             whois_result = ip_whois(ip_str)
             if show_progress:
                 print(".", end="")
-            return whois_result["asn_description"], whois_result
-        except (MsticpyException,) as err:
+            return whois_result
+        except (MsticpyException) as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
 
@@ -226,7 +227,7 @@ def get_whois_df(
     ip_column: str,
     all_columns: bool = False,
     asn_col: str = "AsnDescription",
-    whois_col: Optional[str] = None,
+    whois_col: Optional[str] = "WhoIsData",
     show_progress: bool = False,
 ) -> pd.DataFrame:
     """
@@ -257,24 +258,19 @@ def get_whois_df(
         Output DataFrame with results in added columns.
 
     """
-    if all_columns:
-        return data.apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[1],
-            axis=1,
-            result_type="expand",
-        )
+    del show_progress
+    whois_data = ip_whois(data[ip_column])
     data = data.copy()
-    if whois_col is not None:
-        data[[asn_col, whois_col]] = data.apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=show_progress),
-            axis=1,
-            result_type="expand",
+    if all_columns:
+        return data.merge(
+            whois_data,
+            how="left",
+            left_on=ip_column,
+            right_on="query",
+            suffixes=("", "_whois"),
         )
-    else:
-        data[asn_col] = data.apply(
-            lambda x: get_whois_info(x[ip_column], show_progress=show_progress)[0],
-            axis=1,
-        )
+    data[asn_col] = whois_data["asn_description"]
+    data[whois_col] = whois_data.apply(lambda x: x.to_dict(), axis=1)
     return data
 
 
@@ -383,7 +379,10 @@ def create_ip_record(
 
 
 def ip_whois(  # pylint: disable=inconsistent-return-statements
-    ips: Union[IpAddress, str, List], raw=False
+    ips: Union[IpAddress, str, List],
+    raw=False,
+    query_rate: int = 0.5,
+    retry_count: int = 5,
 ) -> Union[pd.DataFrame, Dict]:
     """
     Lookup IP Whois information.
@@ -394,6 +393,8 @@ def ip_whois(  # pylint: disable=inconsistent-return-statements
         An IP address or list of IP addresses to lookup.
     raw : bool, optional
         Set True if raw whois result wanted, by default False
+    query_rate : int, optional
+        Controls the rate at which queries are made, by default 0.5
 
     Returns
     -------
@@ -402,25 +403,30 @@ def ip_whois(  # pylint: disable=inconsistent-return-statements
         if multipe provided results are formatted as a dataframe.
 
     """
-    if isinstance(ips, list):
+    if isinstance(ips, (list, pd.Series)):
+        rate_limit = len(ips) > 50
+        if rate_limit:
+            print("Large number of lookups, this may take some time.")
         whois_results = []
         for ip_address in ips:
-            if len(ips) > 50:
-                sleep(1)
-            whois_results.append(_whois_lookup(ip_address, raw=raw))
+            if rate_limit:
+                sleep(query_rate)
+            whois_results.append(
+                _whois_lookup(ip_address, raw=raw, retry_count=retry_count)
+            )
         return _whois_result_to_pandas(whois_results)
     if isinstance(ips, (str, IpAddress)):
         return _whois_lookup(ips, raw=raw)
 
 
-def _whois_lookup(ip_addr: Union[str, IpAddress], raw=False) -> Dict:
+@lru_cache(maxsize=1024)
+def _whois_lookup(
+    ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5
+) -> Dict:
     """Conduct lookup of IP Whois information"""
     if isinstance(ip_addr, IpAddress):
         ip_addr = ip_addr.Address
-    asn_details = get_asn_from_ip(ip_addr.strip())
-    keys = asn_details.split("\n")[0].split("|")
-    values = asn_details.split("\n")[1].split("|")
-    asn_items = {key.strip(): value.strip() for key, value in zip(keys, values)}
+    asn_items = get_asn_from_ip(ip_addr.strip())
     ipwhois_result = (asn_items["AS Name"], {})
     ipwhois_result[1]["asn"] = asn_items["AS"]
     ipwhois_result[1]["query"] = asn_items["IP"]
@@ -429,8 +435,20 @@ def _whois_lookup(ip_addr: Union[str, IpAddress], raw=False) -> Dict:
     ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
     ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
     ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
-    registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
-    rdap_data = httpx.get(registry_urls["url"] + str(ip_addr))
+    if ipwhois_result[1]["asn_registry"] in _REGISTRIES:
+        registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
+    else:
+        return (None, None)
+    rdap_data = None
+    while retry_count > 0 and not rdap_data:
+        try:
+            rdap_data = httpx.get(registry_urls["url"] + str(ip_addr))
+        except (httpx.WriteError, httpx.ReadError):
+            retry_count -= 1
+    if not rdap_data:
+        raise MsticpyConnectionError(
+            "Rate limt exceeded - try adjusting query_rate parameter to slow down requests"
+        )
     if rdap_data.status_code == 200:
         rdap_data = rdap_data.json()
         net = _create_net(rdap_data)
@@ -455,7 +473,7 @@ def _whois_lookup(ip_addr: Union[str, IpAddress], raw=False) -> Dict:
 def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
     """Transfroms whois results to a Pandas DataFrame."""
     if isinstance(results, list):
-        new_results = [results[1] for results in results]
+        new_results = [result[1] for result in results]
     else:
         new_results = results[1]
     return pd.DataFrame(new_results)

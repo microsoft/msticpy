@@ -73,6 +73,7 @@ def test_get_whois():
 
 def test_get_whois_df(net_df):
     """Test IP Whois."""
+    net_df = net_df.head(25)
     results = get_whois_df(data=net_df, ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
@@ -90,6 +91,7 @@ def test_get_whois_df(net_df):
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_whois_pdext(net_df):
     """Test IP Whois."""
+    net_df = net_df.head(25)
     results = net_df.mp_whois.lookup(ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
