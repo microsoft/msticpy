@@ -439,16 +439,9 @@ def _whois_lookup(
         registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
     else:
         return (None, None)
-    rdap_data = None
-    while retry_count > 0 and not rdap_data:
-        try:
-            rdap_data = httpx.get(registry_urls["url"] + str(ip_addr))
-        except (httpx.WriteError, httpx.ReadError):
-            retry_count -= 1
-    if not rdap_data:
-        raise MsticpyConnectionError(
-            "Rate limt exceeded - try adjusting query_rate parameter to slow down requests"
-        )
+    rdap_data = _rdap_lookup(
+        url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
+    )
     if rdap_data.status_code == 200:
         rdap_data = rdap_data.json()
         net = _create_net(rdap_data)
@@ -468,6 +461,21 @@ def _whois_lookup(
     else:
         raise MsticpyConnectionError(f"Error code: {rdap_data.status_code}")
     return ipwhois_result
+
+
+def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
+    """Perform RDAP lookup with retries."""
+    rdap_data = None
+    while retry_count > 0 and not rdap_data:
+        try:
+            rdap_data = httpx.get(url)
+        except (httpx.WriteError, httpx.ReadError):
+            retry_count -= 1
+    if not rdap_data:
+        raise MsticpyException(
+            "Rate limt exceeded - try adjusting query_rate parameter to slow down requests"
+        )
+    return rdap_data
 
 
 def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
