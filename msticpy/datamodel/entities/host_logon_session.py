@@ -9,8 +9,8 @@ from typing import Any, Mapping, Optional
 
 from ..._version import VERSION
 from ...common.utility import export
-from .entity import Entity
 from .account import Account
+from .entity import Entity
 from .host import Host
 
 __version__ = VERSION

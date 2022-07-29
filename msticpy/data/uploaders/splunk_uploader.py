@@ -6,14 +6,15 @@
 """Splunk Uploader class."""
 from pathlib import Path
 from typing import Any, Optional
-from tqdm.notebook import tqdm
+
 import pandas as pd
 from pandas.errors import ParserError
+from tqdm.notebook import tqdm
 
-from .uploader_base import UploaderBase
 from ..._version import VERSION
-from ..drivers.splunk_driver import SplunkDriver
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserError
+from ..drivers.splunk_driver import SplunkDriver
+from .uploader_base import UploaderBase
 
 __version__ = VERSION
 __author__ = "Pete Bryan"

@@ -13,12 +13,12 @@ import httpx
 import pandas as pd
 
 from ..._version import VERSION
+from ...auth.msal_auth import MSALDelegatedAuth
 from ...common import pkg_config as config
 from ...common.exceptions import MsticpyConnectionError, MsticpyUserConfigError
-from ...common.msal_auth import MSALDelegatedAuth
 from ...common.provider_settings import get_provider_settings
+from ...common.utility import mp_ua_header
 from .driver_base import DriverBase, QuerySource
-
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -57,6 +57,7 @@ class OData(DriverBase):
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": None,
+            **mp_ua_header(),
         }
         self._loaded = True
         self.aad_token = None
@@ -163,6 +164,7 @@ class OData(DriverBase):
                 url=req_url,
                 content=data,
                 timeout=self.get_http_timeout(**kwargs),
+                headers=mp_ua_header(),
             )
             json_response = response.json()
             self.aad_token = json_response.get("access_token", None)

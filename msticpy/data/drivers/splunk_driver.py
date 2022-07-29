@@ -5,21 +5,21 @@
 #  --------------------------------------------------------------------------
 """Splunk Driver class."""
 from datetime import datetime
-from typing import Any, Tuple, Union, Dict, Iterable, Optional
 from time import sleep
-from tqdm import tqdm
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
-from .driver_base import DriverBase, QuerySource
+from tqdm import tqdm
+
 from ..._version import VERSION
-from ...common.utility import export, check_kwargs
 from ...common.exceptions import (
     MsticpyConnectionError,
-    MsticpyNotConnectedError,
-    MsticpyUserConfigError,
     MsticpyImportExtraError,
+    MsticpyUserConfigError,
 )
-from ...common.provider_settings import get_provider_settings, ProviderSettings
+from ...common.utility import check_kwargs, export
+from ..core.query_defns import Formatters
+from .driver_base import DriverBase, QuerySource
 
 try:
     import splunklib.client as sp_client
@@ -79,7 +79,10 @@ class SplunkDriver(DriverBase):
             "saved_searches": self._saved_searches,
             "fired_alerts": self._fired_alerts,
         }
-        self.formatters = {"datetime": self._format_datetime, "list": self._format_list}
+        self.formatters = {
+            Formatters.DATETIME: self._format_datetime,
+            Formatters.LIST: self._format_list,
+        }
 
     def connect(self, connection_str: str = None, **kwargs):
         """
@@ -135,7 +138,7 @@ class SplunkDriver(DriverBase):
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
-        cs_dict.update(self._get_config_settings())
+        cs_dict.update(self._get_config_settings("Splunk"))
         # If a connection string - parse this and add to config
         if connection_str:
             cs_items = connection_str.split(";")
@@ -184,11 +187,10 @@ class SplunkDriver(DriverBase):
 
         Other Parameters
         ----------------
-        kwargs :
-            Are passed to Splunk oneshot method
-            count=0 by default
-            oneshot=False by default for async query,
-                set to True for oneshot (blocking) mode
+        count : int, optional
+            Passed to Splunk oneshot method if `oneshot` is True, by default, 0
+        oneshot : bool, optional
+            Set to True for oneshot (blocking) mode, by default False
 
         Returns
         -------
@@ -199,7 +201,7 @@ class SplunkDriver(DriverBase):
         """
         del query_source
         if not self._connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("Splunk")
 
         # default to unlimited query unless count is specified
         count = kwargs.pop("count", 0)
@@ -267,7 +269,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("Splunk")
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             queries = {
                 search.name.strip().replace(" ", "_"): f"search {search['search']}"
@@ -294,7 +296,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("Splunk")
         if hasattr(self.service, "saved_searches") and self.service.saved_searches:
             return [
                 {
@@ -318,11 +320,10 @@ class SplunkDriver(DriverBase):
             Dataframe with list of saved searches with name and query columns.
 
         """
-        if self.connected:
-            return self._get_saved_searches()
-        return None
+        return self._get_saved_searches() if self.connected else None
 
     def _get_saved_searches(self) -> Union[pd.DataFrame, Any]:
+        # sourcery skip: class-extract-method
         """
         Return list of saved searches in dataframe.
 
@@ -333,7 +334,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("Splunk")
         savedsearches = self.service.saved_searches
 
         out_df = pd.DataFrame(columns=["name", "query"])
@@ -359,9 +360,7 @@ class SplunkDriver(DriverBase):
             Dataframe with list of fired alerts with alert name and count columns.
 
         """
-        if self.connected:
-            return self._get_fired_alerts()
-        return None
+        return self._get_fired_alerts() if self.connected else None
 
     def _get_fired_alerts(self) -> Union[pd.DataFrame, Any]:
         """
@@ -374,7 +373,7 @@ class SplunkDriver(DriverBase):
 
         """
         if not self.connected:
-            raise self._create_not_connected_err()
+            raise self._create_not_connected_err("Splunk")
         firedalerts = self.service.fired_alerts
 
         out_df = pd.DataFrame(columns=["name", "count"])
@@ -400,19 +399,3 @@ class SplunkDriver(DriverBase):
         """Return formatted list parameter."""
         fmt_list = [f'"{item}"' for item in param_list]
         return ",".join(fmt_list)
-
-    # Read values from configuration
-    @staticmethod
-    def _get_config_settings() -> Dict[Any, Any]:
-        """Get config from msticpyconfig."""
-        data_provs = get_provider_settings(config_section="DataProviders")
-        splunk_settings: Optional[ProviderSettings] = data_provs.get("Splunk")
-        return getattr(splunk_settings, "args", {})
-
-    @staticmethod
-    def _create_not_connected_err():
-        return MsticpyNotConnectedError(
-            "Please run the connect() method before running this method.",
-            title="not connected to Splunk.",
-            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
-        )

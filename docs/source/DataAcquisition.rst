@@ -47,4 +47,3 @@ Other Data Modules and Functions
    data_acquisition/DataMasking
    data_acquisition/AzureBlobStorage
    data_acquisition/SqlToKql
-   data_acquisition/CybereasonProvider

@@ -10,16 +10,16 @@ import ipywidgets as widgets
 from IPython.display import display
 
 from .._version import VERSION
+from .ce_azure import CEAzure
 from .ce_azure_sentinel import CEAzureSentinel
 from .ce_data_providers import CEDataProviders
 from .ce_keyvault import CEKeyVault
-from .ce_azure import CEAzure
 from .ce_other_providers import CEOtherProviders
 from .ce_ti_providers import CETIProviders
 from .ce_user_defaults import CEAutoLoadComps, CEAutoLoadQProvs
-from .comp_edit import CompEditDisplayMixin, CompEditTabs, CETabControlDef
-from .mp_config_file import MpConfigFile
+from .comp_edit import CETabControlDef, CompEditDisplayMixin, CompEditTabs
 from .mp_config_control import MpConfigControls, get_mpconfig_definitions
+from .mp_config_file import MpConfigFile
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -70,17 +70,16 @@ class MpConfigEdit(CompEditDisplayMixin):
         self._lbl_loading = widgets.Label(value="Loading. Please wait.")
         display(self._lbl_loading)
         if isinstance(settings, MpConfigFile):
-            self.mp_conf_file = MpConfigFile(settings=settings.settings)
-            if not self.mp_conf_file.current_file and conf_filepath:
-                self.mp_conf_file.current_file = conf_filepath
+            self.mp_conf_file = MpConfigFile(
+                settings=settings.settings, file=conf_filepath
+            )
         elif isinstance(settings, dict):
-            self.mp_conf_file = MpConfigFile(settings=settings)
-            if not self.mp_conf_file.current_file and conf_filepath:
-                self.mp_conf_file.current_file = conf_filepath
+            self.mp_conf_file = MpConfigFile(settings=settings, file=conf_filepath)
         elif isinstance(settings, str):
             self.mp_conf_file = MpConfigFile(file=settings)
         else:
-            self.mp_conf_file = MpConfigFile()
+            # This is the default if neither settings nor conf_filepath are passed.
+            self.mp_conf_file = MpConfigFile(file=conf_filepath)
             self.mp_conf_file.load_default()
         self.tool_buttons: Dict[str, widgets.Widget] = {}
         self._inc_loading_label()

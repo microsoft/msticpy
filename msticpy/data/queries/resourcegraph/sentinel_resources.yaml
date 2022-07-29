@@ -1,0 +1,83 @@
+metadata:
+  version: 1
+  description: Resource Graph Queries
+  data_environments: [ResourceGraph]
+  data_families: [Sentinel]
+  tags: ['iaas', 'paas']
+defaults:
+  metadata:
+    data_source: 'resource_graph'
+    top: 1000
+  parameters:
+    table:
+      description: Table name
+      type: str
+      default: 'resources'
+    add_query_items:
+      description: Additional query clauses
+      type: str
+      default: ''
+sources:
+  get_sentinel_workspace_for_resource_id:
+    description: Retrieves Sentinel/Azure monitor workspace details by resource ID
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type == "microsoft.operationalinsights/workspaces"
+        | where id =~ "{resource_id}"
+        | extend workspaceId = tostring(properties["customerId"])
+        | project-rename workspaceName = name
+        | project workspaceName, workspaceId, tenantId, subscriptionId, resourceGroup, id
+        '
+      uri: None
+    parameters:
+      resource_id:
+        description: Azure resource ID string
+        type: str
+  list_sentinel_workspaces_for_name:
+    description: '
+      Retrieves Sentinel/Azure monitor workspace(s) details by name and optionally resource group
+      and/or subscription_id'
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type == "microsoft.operationalinsights/workspaces"
+        | where name =~ "{workspace_name}"
+          and ("{resource_group}" == "" or resourceGroup =~ "{resource_group}")
+          and ("{subscription_id}" == "" or subscriptionId =~ "{subscription_id}")
+        | extend workspaceId = tostring(properties["customerId"])
+        | project-rename workspaceName = name
+        | project workspaceName, workspaceId, tenantId, subscriptionId, resourceGroup, id
+        '
+      uri: None
+    parameters:
+      workspace_name:
+        description: Azure resource name
+        type: str
+      resource_group:
+        description: Azure resource group name
+        type: str
+        default: ''
+      subscription_id:
+        description: Azure subscription ID
+        type: str
+        default: ''
+  get_sentinel_workspace_for_workspace_id:
+    description: Retrieves Sentinel/Azure monitor workspace details by workspace ID
+    metadata:
+    args:
+      query: '
+        {table}
+        | where type == "microsoft.operationalinsights/workspaces"
+        | extend workspaceId = tostring(properties["customerId"])
+        | where workspaceId =~ "{workspace_id}"
+        | project-rename workspaceName = name
+        | project workspaceName, workspaceId, tenantId, subscriptionId, resourceGroup, id
+        '
+      uri: None
+    parameters:
+      workspace_id:
+        description: Sentinel workspace UUID
+        type: str

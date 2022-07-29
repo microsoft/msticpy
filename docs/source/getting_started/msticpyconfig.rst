@@ -28,36 +28,194 @@ Here you can specify your default workspace IDs and tenant IDs and add additiona
 workspaces if needed. If you wish to use the Microsoft Sentinel API features you
 can also specify Subscription Ids, Subscription names and Workspace names here.
 
+Sample entry for MS Sentinel workspaces
+
+.. code:: yaml
+
+    AzureSentinel:
+      Workspaces:
+        Default:
+          # An entry named "Default" allows authentication without
+          # having to specify a workspace name
+          WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+          TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+          SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+          ResourceGroup: ABC
+          WorkspaceName: Workspace1
+        Workspace1:
+          # You can also duplicate entries with different keys
+          # that refer to the same workspace settings
+          WorkspaceId: "52b1ab41-869e-4138-9e40-2a4457f09bf3"
+          TenantId: "72f988bf-86f1-41af-91ab-2d7cd011db49"
+          SubscriptionId: "cd928da3-dcde-42a3-aad7-d2a1268c2f48"
+          ResourceGroup: ABC
+          WorkspaceName: Workspace1
+        MyTestWS:
+          # minimal workspace configuration for queries
+          WorkspaceId: "a927809c-8142-43e1-96b3-4ad87cfe95a3"
+          TenantId: "69d28fd7-42a5-48bc-a619-af56397b9f28"
+
+
 QueryDefinitions
 ~~~~~~~~~~~~~~~~
 This allows you to specify paths to additional yaml query template files.
+
+Sample
+
+.. code:: yaml
+
+    QueryDefinitions:
+      Custom:
+        - ./working
+        - ~/.msticpy/queries
 
 TIProviders
 ~~~~~~~~~~~
 This allows you to configure which providers are run by default and to
 supply any authorization keys needed to access the service.
 
+Specifying ``Primary: True`` means that the TI Provider will
+be included in lookups by default. If this is ``False`` you must specifically
+include the provider name in the optional ``providers`` parameter
+when you make a TI lookup call.
+
+Currently supported provider names are:
+
+- OTX - AlienVault OTX
+- VirusTotal
+- XForce - IBM XForce
+- AzureSentinel - Microsoft Sentinel TI
+- GreyNoise
+- IntSights
+- TorExitNodes
+- OpenPageRank
+
+.. code:: yaml
+
+    TIProviders:
+      OTX:
+        Args:
+          AuthKey: 1234567890
+        Primary: True
+        Provider: "OTX"
+      VirusTotal:
+        Args:
+          AuthKey:
+            EnvironmentVar: "VIRUSTOTAL_AUTH"
+        Primary: True
+        Provider: "VirusTotal"
+      OpenPageRank:
+        Args:
+          AuthKey:
+            KeyVault:
+        Primary: False
+        Provider: "OPR"
+
+.. note:: You store values in the ``Args`` section as simple strings,
+   as names of environment variables containing the value, or
+   as references to Azure Key Vault (see the later sections
+   `Specifying secrets as Environment Variables`_ and
+   `Specifying secrets as Key Vault secrets`_).
+
 OtherProviders
 ~~~~~~~~~~~~~~
 This section is similar to the TIProviders section, allowing you
-specify configuration options for specialist data providers.
+specify configuration options for specialist data providers such
+as geo-location providers.
+
+.. code:: yaml
+
+    OtherProviders:
+      GeoIPLite:
+        Args:
+          AuthKey:
+            EnvironmentVar: "MAXMIND_AUTH"
+          DBFolder: "~/.msticpy"
+        Provider: "GeoLiteLookup"
 
 DataProviders
 ~~~~~~~~~~~~~~
 This section is similar to the previous two sections, allowing you
 specify configuration options for other data providers.
 
+.. code:: yaml
+
+    DataProviders:
+      MicrosoftDefender:
+        Args:
+          TenantId: 8360dd21-0294-4240-9128-89611f415c53
+          ClientId: 66b9818a-26cd-4584-8eb0-7f7a499242aa
+          ClientSecret:
+            KeyVault:
+      Cybereason:
+        Args:
+          TenantId: 8360dd21-0294-4240-9128-89611f415c53
+          ClientId: 1234
+          ClientSecret:
+            EnvironmentVar: "CYBEREASON_AUTH"
+
 Key Vault
 ~~~~~~~~~
 This section contains Azure Key Vault settings. This is only used if you
-choose to store secrets (e.g. API keys) in Key Vault.
+choose to store secrets (e.g. API keys) in Key Vault. See the
+section `Specifying secrets as Key Vault secrets`_ for more details.
+
+Azure
+~~~~~
+
+This section provides configuration settings for Azure authentication,
+including the Azure cloud.
+
+Legal values for ``cloud`` are:
+
+- global
+- usgov - US government cloud
+- cn - China national cloud
+- de - German national cloud (no longer used)
+
+The ``auth_methods`` key lists the types of authentication
+methods that you want to enable. MSTICPy uses the Azure identity
+`DefaultCredential <https://docs.microsoft.com/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`__
+class to authenticate. This has a hard-coded order in which it
+attempts to find and use credentials. It will use the first valid
+credential type available.
+
+.. important:: In some cases ``DefaultCredential`` may find a valid
+   credential type but is unable to authenticate with this type due
+   to Conditional access policies or other restrictions. If you
+   find issues authenticating, edit this list to specify specific
+   credential types that you are able to use.
+
+Possible credential types (``auth_methods``) are:
+
+- "cli": Use credentials from authenticated Azure CLI session
+- "env": Azure credentials stored in environment variables
+- "msi": Use Managed identity credentials
+- "vscode": Use credentials from authenticated VS Code session
+- "powershell": Use credentials from authenticated PowerShel session
+- "interactive": Use interactive browser device code authentication
+- "cache": Use MSAL cached credentials store
+
+.. warning:: Some environments (such as Azure Machine Learning notebooks)
+   do not allow notebooks to open browser windows, so "interactive"
+   credentials will fail. We have found Azure CLI to be reliable
+   and maintains authentication tokens between notebook sessions.
+
+.. code:: yaml
+
+    Azure:
+      cloud: "global"
+      auth_methods: ["cli", "msi", "interactive"]
+
 
 User Defaults
 ~~~~~~~~~~~~~
 This section controls loading of default providers when using the
 package in a notebook. The settings here are loaded by the
-:py:func:`init_notebook <msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook <msticpy.init.nbinit.init_notebook>`
 function.
+
+See the `User Defaults Section`_ below.
 
 Specifying secrets as Environment Variables
 -------------------------------------------
@@ -104,12 +262,9 @@ Required Settings
      - the name of the vault to use (note this can be
        overridden in the individual secret specifications
    * - Authority
-     - this specifies the Azure cloud instance to use.
-
-For most users ``Authority`` is "global" (default). Other values are:
-- **usgov**: Azure US Government
-- **de**: German cloud
-- **chi**: China cloud
+     - You should use the ``cloud`` setting in the
+       ``Azure`` configuration section unless you need to override
+       this setting for Key Vault
 
 Required to Create a Key Vault
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,15 +290,9 @@ Optional Settings
      - the name of the vault to use (note this can be
        overridden in the individual secret specifications)
    * - AuthnType
-     - this governs the authentication type used by
-       the KeyVault client (to read and write secrets). The choices
-       are "interactive" for interactive browser authentication or
-       "device" for authentication using a user/device code. The
-       default is "interactive".
-
-.. note:: The ``AuthnType`` does not affect the authentication used by
-   the Key Vault **Management** client (the creation and enumeration
-   of vaults). This always uses device code authentication.
+     - You should use the ``auth_methods``
+       setting of the ``Azure`` section - see `Azure`_ above.
+       unless you need to override the Azure defaults.
 
 Specifying Key Vault Secrets in Provider Settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,6 +424,10 @@ lets you list and manipulate local stored credentials.
    secret in Key Vault you must delete the keyring secret so that
    the new value will be re-read from Key Vault.
 
+   You can use the :py:func:`refresh_keyring <msticpy.common.provider_settings.refresh_keyring>`
+   and :py:func:`clear_keyring <msticpy.common.provider_settings.clear_keyring>`
+   to control these automatically-cached Key Vault values.
+
 
 Manually managing your Key Vault secrets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,8 +440,8 @@ You can also use powershell or Python to manage these programmatically.
 *MSTICPy* has some convenience wrappers around the Azure SDK functions.
 
 The documentation for these is available here:
-:py:mod:`keyvault_client<msticpy.common.keyvault_client>`
-:py:mod:`secrets_settings<msticpy.common.secrets_settings>`
+:py:mod:`keyvault_client<msticpy.auth.keyvault_client>`
+:py:mod:`secrets_settings<msticpy.auth.secrets_settings>`
 
 
 User Defaults Section
@@ -296,9 +449,9 @@ User Defaults Section
 
 This section specifies the query and other providers that you want
 to load by default. It is triggered from the
-:py:func:`init_notebook<msticpy.nbtools.nbinit.init_notebook>`
+:py:func:`init_notebook<msticpy.init.nbinit.init_notebook>`
 although you can call the
-:py:func:`load_user_defaults<msticpy.nbtools.user_config.load_user_defaults>`
+:py:func:`load_user_defaults<msticpy.init.user_config.load_user_defaults>`
 function to do this manually.
 
 If you do not have this section in your configuration ``init_notebook`` will
@@ -413,7 +566,6 @@ of other data providers and components.
           query_provider:
             AzureSentinel:
               workspace: CyberSoc
-        Pivot:
         AzureData:
           auth_methods=['cli','interactive']
         AzureSentinelAPI:
@@ -450,9 +602,6 @@ providers (query and others such as TILookip) as its ``providers`` parameter.
 For more details see
 `data_providers.init <https://msticnb.readthedocs.io/en/latest/msticnb.html#msticnb.data_providers.init>`__.
 
-``Pivot`` loads the Pivot library to add pivot functions to *MSTICPy* entities.
-It requires other providers to be loaded before itself (in order to
-harvest the pivot functions from them) so it is loaded last.
 
 ``AzureData`` and ``AzureSentinel`` load the Azure resource API and Azure
 Sentinel API libraries respectively. Any key/pair values defined under either
@@ -462,7 +611,7 @@ AzureData example above this is equivalent to the following code.
 
 .. code:: ipython3
 
-    from msticpy.data.azure_data import AzureData
+    from msticpy.context.azure_data import AzureData
     az_data = AzureData()
     az_data.connect(auth_methods=['cli','interactive'])
 
@@ -473,7 +622,6 @@ configuration settings:
 - geoip
 - ti_lookup
 - nb
-- pivot
 - az_data
 - azs_api
 
@@ -495,11 +643,10 @@ provider instances created are also stored in an attribute of the
     'qry_cybersoc': <msticpy.data.data_providers.QueryProvider at 0x21660d41308>,
     'qry_splunk': <msticpy.data.data_providers.QueryProvider at 0x21661127208>,
     'qry_local': <msticpy.data.data_providers.QueryProvider at 0x216605a7c48>,
-    'ti_lookup': <msticpy.sectools.tilookup.TILookup at 0x216611c7908>,
-    'geoip': <msticpy.sectools.geoip.GeoLiteLookup at 0x21660659c88>,
-    'pivot': <msticpy.datamodel.pivot.Pivot at 0x216602d8e88>,
-    'az_data': <msticpy.data.azure_data.AzureData at 0x21668aaf708>,
-    'azs_api': <msticpy.data.azure_sentinel.AzureSentinel at 0x21603f42388>,
+    'ti_lookup': <msticpy.context.tilookup.TILookup at 0x216611c7908>,
+    'geoip': <msticpy.context.geoip.GeoLiteLookup at 0x21660659c88>,
+    'az_data': <msticpy.context.azure_data.AzureData at 0x21668aaf708>,
+    'azs_api': <msticpy.context.azure_sentinel.AzureSentinel at 0x21603f42388>,
     'nb': <module 'msticnb' from 'e:\\src\\msticnb\\msticnb\\__init__.py'>}
 
 
@@ -672,7 +819,8 @@ Commented configuration file sample
 See also
 --------
 
-:doc:`The Threat Intelligence Providers documention <../data_acquisition/TIProviders>`
+:doc:`The Threat Intelligence Providers documentation <../data_acquisition/TIProviders>`
+:doc:`Settings Editor <./SettingsEditor>`
 
 :py:mod:`wsconfig<msticpy.common.wsconfig>`
 :py:mod:`provider_settings<msticpy.common.provider_settings>`

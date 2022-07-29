@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """KQL Driver class."""
+
+import contextlib
 import json
 import logging
 import os
@@ -13,9 +15,10 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
+from azure.core.exceptions import ClientAuthenticationError
 from IPython import get_ipython
 
-from ...common.azure_auth import AzureCloudConfig, only_interactive_cred, az_connect
+from ...auth.azure_auth import AzureCloudConfig, az_connect, only_interactive_cred
 from ...common.exceptions import (
     MsticpyDataQueryError,
     MsticpyImportExtraError,
@@ -23,16 +26,16 @@ from ...common.exceptions import (
     MsticpyNoDataSourceError,
     MsticpyNotConnectedError,
 )
+from ...common.utility import MSTICPY_USER_AGENT, export
 from ...common.wsconfig import WorkspaceConfig
-from ...common.utility import export
-from ..query_defns import DataEnvironment
+from ..core.query_defns import DataEnvironment
 from .driver_base import DriverBase, QuerySource
 
 try:
     from Kqlmagic import kql as kql_exec
     from Kqlmagic.kql_engine import KqlEngineError
-    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.kql_proxy import KqlResponse
+    from Kqlmagic.kql_response import KqlError
     from Kqlmagic.my_aad_helper import AuthenticationError
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
@@ -53,6 +56,8 @@ _KQL_CLOUD_MAP = {
     "usgov": "government",
     "de": "germany",
 }
+
+_KQL_OPTIONS = ["timeout"]
 
 _AZ_CLOUD_MAP = {kql_cloud: az_cloud for az_cloud, kql_cloud in _KQL_CLOUD_MAP.items()}
 
@@ -97,9 +102,12 @@ class KqlDriver(DriverBase):
         if not self._loaded:
             self._load_kql_magic()
 
+        self._set_kql_option("request_user_agent_tag", MSTICPY_USER_AGENT)
         self._schema: Dict[str, Any] = {}
-        self.environment = kwargs.get("data_environment", DataEnvironment.MSSentinel)
+        self.environment = kwargs.pop("data_environment", DataEnvironment.MSSentinel)
         self.kql_cloud, self.az_cloud = self._set_kql_cloud()
+        for option, value in kwargs.items():
+            self._set_kql_option(option, value)
 
         self.current_connection = ""
         self.current_connection_args: Dict[str, Any] = {}
@@ -115,8 +123,8 @@ class KqlDriver(DriverBase):
 
         Parameters
         ----------
-        connection_str : str
-            Connect to a data source
+        connection_str : Union[str, WorkspaceConfig, None]
+            Connection string or WorkspaceConfig for the Sentinel Workspace.
 
         Other Parameters
         ----------------
@@ -133,6 +141,11 @@ class KqlDriver(DriverBase):
         mp_az_tenant_id: str, optional
             Optional parameter specifying a Tenant ID for use by MSTICPy Azure
             authentication.
+        workspace : str, optional
+            Alternative to supplying a WorkspaceConfig object as the connection_str
+            parameter. Giving a workspace name will fetch the workspace
+            settings from msticpyconfig.yaml.
+
 
         """
         if not self._previous_connection:
@@ -140,10 +153,14 @@ class KqlDriver(DriverBase):
 
         mp_az_auth = kwargs.get("mp_az_auth", "default")
         mp_az_tenant_id = kwargs.get("mp_az_tenant_id", None)
+        workspace = kwargs.get("workspace", None)
+        if workspace:
+            connection_str = WorkspaceConfig(workspace=workspace)  # type: ignore
 
         if isinstance(connection_str, WorkspaceConfig):
             if not mp_az_tenant_id and "tenant_id" in connection_str:
                 mp_az_tenant_id = connection_str["tenant_id"]
+            self._instance = connection_str.workspace_key
             connection_str = connection_str.code_connect_str
 
         if not connection_str:
@@ -164,7 +181,7 @@ class KqlDriver(DriverBase):
             self.current_connection,
             re.IGNORECASE,
         )
-        self.workspace_id = ws_in_connection.group(1) if ws_in_connection else None
+        self.workspace_id = ws_in_connection[1] if ws_in_connection else None
         self.current_connection_args.update(kwargs)
         kql_err_setting = self._get_kql_option("short_errors")
         self._connected = False
@@ -223,7 +240,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Union[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) or
+            A DataFrame (if successful) or
             the underlying provider result if an error.
 
         """
@@ -282,7 +299,13 @@ class KqlDriver(DriverBase):
         if not query.strip().endswith(";"):
             query = f"{query}\n;"
 
-        result = kql_exec(query)
+        # Add any Kqlmagic options from kwargs
+        kql_opts = {
+            option: option_val
+            for option, option_val in kwargs.items()
+            if option in _KQL_OPTIONS
+        }
+        result = kql_exec(query, options=kql_opts)
         self._set_kql_option(option="auto_dataframe", value=auto_dataframe)
         if result is not None:
             if isinstance(result, pd.DataFrame):
@@ -320,7 +343,7 @@ class KqlDriver(DriverBase):
         print("Please wait. Loading Kqlmagic extension...", end="")
         if self._ip is not None:
             with warnings.catch_warnings():
-                # Supress logging exception about PyGObject from msal_extensions
+                # Suppress logging exception about PyGObject from msal_extensions
                 msal_ext_logger = logging.getLogger("msal_extensions.libsecret")
                 current_level = msal_ext_logger.getEffectiveLevel()
                 msal_ext_logger.setLevel(logging.CRITICAL)
@@ -358,8 +381,16 @@ class KqlDriver(DriverBase):
     @staticmethod
     def _set_kql_option(option, value):
         """Set a Kqlmagic notebook option."""
-        opt_val = f"'{value}'" if isinstance(value, str) else value
-        return kql_exec(f"--config {option}={opt_val}")
+        kql_exec("--config short_errors=False")
+        result: Any
+        try:
+            opt_val = f"'{value}'" if isinstance(value, str) else value
+            result = kql_exec(f"--config {option}={opt_val}")
+        except ValueError:
+            result = None
+        finally:
+            kql_exec("--config short_errors=True")
+        return result
 
     @staticmethod
     def _get_kql_current_connection():
@@ -530,15 +561,17 @@ class KqlDriver(DriverBase):
         endpoint_uri = self._get_endpoint_uri()
         endpoint_token_uri = f"{endpoint_uri}.default"
         # obtain token for the endpoint
-        token = creds.modern.get_token(endpoint_token_uri, tenant_id=mp_az_tenant_id)
-        # set the token values in the namespace
-
-        endpoint_token = {
-            "access_token": token.token,
-            "token_type": "Bearer",
-            "resource": endpoint_uri,
-        }
-        self._set_kql_option("try_token", endpoint_token)
+        with contextlib.suppress(ClientAuthenticationError):
+            token = creds.modern.get_token(
+                endpoint_token_uri, tenant_id=mp_az_tenant_id
+            )
+            # set the token values in the namespace
+            endpoint_token = {
+                "access_token": token.token,
+                "token_type": "Bearer",
+                "resource": endpoint_uri,
+            }
+            self._set_kql_option("try_token", endpoint_token)
 
     def _get_endpoint_uri(self):
         return _LOGANALYTICS_URL_BY_CLOUD[self.az_cloud]

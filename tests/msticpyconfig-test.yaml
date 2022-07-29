@@ -42,7 +42,7 @@ TIProviders:
     Args:
       AuthKey: ""
     Primary: True
-    Provider: "Greynoise"
+    Provider: "GreyNoise"
   OpenPageRank:
     Args:
       AuthKey:
@@ -60,6 +60,10 @@ TIProviders:
         EnvironmentVar: "INTSIGHTS_AUTH"
     Primary: True
     Provider: IntSights
+  AzureSentinel:
+    Args:
+    Primary: True
+    Provider: "AzSTI"
 OtherProviders:
   GeoIPLite:
     Args:

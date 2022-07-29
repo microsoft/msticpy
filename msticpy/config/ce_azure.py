@@ -7,7 +7,6 @@
 from .._version import VERSION
 from .ce_simple_settings import CESimpleSettings
 
-
 __version__ = VERSION
 __author__ = "Ian Hellen"
 

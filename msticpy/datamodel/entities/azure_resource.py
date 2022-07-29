@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 """AzureResource Entity class."""
-from itertools import islice
 import re
+from itertools import islice
 from typing import Any, Dict, Mapping, Optional
 
 from ..._version import VERSION
@@ -70,18 +70,18 @@ class AzureResource(Entity):
         return self.ResourceId or self.__class__.__name__
 
     @property
-    def SubscriptionId(self):  # noqa N802
-        """Return the subscription Id or None."""  # noqa N802
+    def SubscriptionId(self):  # noqa: N802
+        """Return the subscription Id or None."""  # noqa: N802
         return self.ResourceIdParts.get("subscriptions")
 
     @property
-    def ResourceGroup(self):  # noqa N802
-        """Return the ResourceGroup name or None."""  # noqa N802
+    def ResourceGroup(self):  # noqa: N802
+        """Return the ResourceGroup name or None."""  # noqa: N802
         return self.ResourceIdParts.get("resourceGroups")
 
     @property
-    def Provider(self):  # noqa N802
-        """Return the Provider name or None."""  # noqa N802
+    def Provider(self):  # noqa: N802
+        """Return the Provider name or None."""  # noqa: N802
         return self.ResourceIdParts.get("providers")
 
     _entity_schema = {

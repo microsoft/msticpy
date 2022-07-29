@@ -7,23 +7,23 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
-import numpy as np
 import networkx as nx
+import numpy as np
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import LayoutDOM
+from bokeh.models import Circle, HoverTool, Label, LayoutDOM
 from bokeh.plotting import figure, from_networkx
-from bokeh.models import Circle, HoverTool, Label
 
 from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
+from ..common.utility import export
 from ..datamodel.entities import Entity
 from ..datamodel.entities.alert import Alert
 from ..datamodel.soc.incident import Incident
 from ..nbtools.security_alert import SecurityAlert
-from ..nbtools.timeline import display_timeline
-from ..nbtools.timeline_duration import display_timeline_duration
+from ..vis.timeline import display_timeline
+from ..vis.timeline_duration import display_timeline_duration
 
 __version__ = VERSION
 __author__ = "Pete Bryan"
@@ -32,6 +32,7 @@ req_alert_cols = ["DisplayName", "Severity", "AlertType"]
 req_inc_cols = ["id", "name", "properties.severity"]
 
 
+@export
 class EntityGraph:
     """Create a graph for visualizing and tracking links between entities."""
 
@@ -399,17 +400,18 @@ class EntityGraph:
 
 def _dedupe_entities(alerts, ents) -> list:
     """Deduplicate incident and alert entities."""
-    alrt_ents = []
-    for alrt in alerts:
-        if alrt["Entities"]:
+    alert_entities = []
+    for alert in alerts:
+        if alert["Entities"]:
 
-            alrt_ents += [ent.__hash__() for ent in alrt["Entities"]]
+            alert_entities += [hash(ent) for ent in alert["Entities"]]
     for ent in ents:
-        if ent.__hash__() in alrt_ents:
+        if hash(ent) in alert_entities:
             ents.remove(ent)
     return ents
 
 
+@export
 def plot_entitygraph(  # pylint: disable=too-many-locals
     entity_graph: nx.Graph,
     node_size: int = 25,

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """TI Providers Component Edit."""
 from .._version import VERSION
-from .ce_provider_base import CEProviders, HELP_URIS
+from .ce_provider_base import HELP_URIS, CEProviders
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
