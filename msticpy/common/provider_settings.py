@@ -55,6 +55,10 @@ class ProviderSettings:
 # pylint: enable=too-few-public-methods, too-many-ancestors
 
 
+def _secrets_enabled() -> bool:
+    return _SECRETS_ENABLED and _SECRETS_CLIENT
+
+
 def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     """
     Return function to get or create secrets client.
@@ -89,10 +93,6 @@ _SET_SECRETS_CLIENT: Callable[
 ] = get_secrets_client_func()
 if "KeyVault" in config.settings and config.settings["KeyVault"] and _SECRETS_ENABLED:
     _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
-
-
-def _secrets_enabled() -> bool:
-    return _SECRETS_ENABLED and _SECRETS_CLIENT
 
 
 def get_provider_settings(config_section="TIProviders") -> Dict[str, ProviderSettings]:

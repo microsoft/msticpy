@@ -10,7 +10,14 @@ import pandas as pd
 import pytest
 import pytest_check as check
 
-from msticpy.context.ip_utils import get_ip_type, get_whois_df, get_whois_info
+from msticpy.context.ip_utils import (
+    get_asn_details,
+    get_asn_from_ip,
+    get_asn_from_name,
+    get_ip_type,
+    get_whois_df,
+    get_whois_info,
+)
 
 from ..unit_test_lib import TEST_DATA_PATH
 
@@ -104,3 +111,19 @@ def test_whois_pdext(net_df):
     check.is_in("whois", results2.columns)
     check.less_equal(len(results2[~results2["asn"].isna()]), len(net_df))
     check.equal(len(results2[~results2["whois"].isna()]), len(net_df))
+
+
+def test_asn_query_features():
+    """Test ASN query features"""
+    asn_ip_details = get_asn_from_ip("65.55.44.109")
+    check.is_in("AS", asn_ip_details.keys())
+    check.equal(asn_ip_details["AS"], "8075")
+    check.is_instance(asn_ip_details, dict)
+    asn_details = get_asn_details("AS8075")
+    check.is_in("ranges", asn_details.keys())
+    check.is_instance(asn_details["ranges"], list)
+    check.is_instance(asn_details, dict)
+    asn_name_details = get_asn_from_name("Microsoft")
+    check.is_in("AS3598", asn_name_details.keys())
+    check.is_instance(asn_name_details, dict)
+    check.equal(asn_name_details["AS3598"], "MICROSOFT-CORP-AS, US")
