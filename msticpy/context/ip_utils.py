@@ -625,25 +625,28 @@ def get_asn_from_ip(ip_addr: Union[str, IpAddress]) -> Dict:
     return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
 
-def _asn_whois_query(query, server, port=43):
+def _asn_whois_query(query, server, port=43, retry_count=5) -> str:
     """Connect to whois server and send query."""
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     conn.connect((server, port))
     conn.send(query.encode())
     response = ""
-    while True:
-        response_data = conn.recv(4096).decode()
-        if "error" in response_data:
-            raise MsticpyConnectionError(
-                "An error occured during lookup, please try again."
-            )
-        if "rate limit exceeded" in response_data:
-            raise MsticpyConnectionError(
-                "Rate limit exceeded please wait and try again."
-            )
-        response += response_data
-        if not response_data:
-            break
+    response_data = None
+    while retry_count > 0 and not response_data:
+        try:
+            response_data = conn.recv(4096).decode()
+            if "error" in response_data:
+                raise MsticpyConnectionError(
+                    "An error occured during lookup, please try again."
+                )
+            if "rate limit exceeded" in response_data:
+                raise MsticpyConnectionError(
+                    "Rate limit exceeded please wait and try again."
+                )
+            response += response_data
+        except (UnicodeDecodeError, ConnectionResetError):
+            retry_count -= 1
+            response_data = None
     conn.close()
     return response
 
