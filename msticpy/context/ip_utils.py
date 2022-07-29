@@ -6,8 +6,8 @@
 """
 ip_utils - IP Address functions.
 
-Contains a series of functions required to manipulate and enrich IP Address data
-to assist investigations.
+Contains a series of functions required to manipulate and
+enrich IP Address data to assist investigations.
 
 Designed to support any data source containing IP address entity.
 
@@ -212,7 +212,7 @@ def get_whois_info(
             whois_result = ip_whois(ip_str)
             if show_progress:
                 print(".", end="")
-            return whois_result
+            return whois_result  # type: ignore
         except (MsticpyException) as err:
             return f"Error during lookup of {ip_str} {type(err)}", {}
     return f"No ASN Information for IP type: {ip_type}", {}
@@ -263,14 +263,14 @@ def get_whois_df(
     data = data.copy()
     if all_columns:
         return data.merge(
-            whois_data,
+            whois_data,  # type: ignore
             how="left",
             left_on=ip_column,
             right_on="query",
             suffixes=("", "_whois"),
         )
-    data[asn_col] = whois_data["asn_description"]
-    data[whois_col] = whois_data.apply(lambda x: x.to_dict(), axis=1)
+    data[asn_col] = whois_data["asn_description"]  # type: ignore
+    data[whois_col] = whois_data.apply(lambda x: x.to_dict(), axis=1)  # type: ignore
     return data
 
 
@@ -378,12 +378,13 @@ def create_ip_record(
     return ip_entity
 
 
-def ip_whois(  # pylint: disable=inconsistent-return-statements
-    ips: Union[IpAddress, str, List],
+# pylint: disable=inconsistent-return-statements
+def ip_whois(  # type: ignore
+    ips: Union[IpAddress, str, List, pd.Series],
     raw=False,
-    query_rate: int = 0.5,
+    query_rate: float = 0.5,
     retry_count: int = 5,
-) -> Union[pd.DataFrame, Dict]:
+) -> Union[pd.DataFrame, Tuple]:
     """
     Lookup IP Whois information.
 
@@ -393,8 +394,10 @@ def ip_whois(  # pylint: disable=inconsistent-return-statements
         An IP address or list of IP addresses to lookup.
     raw : bool, optional
         Set True if raw whois result wanted, by default False
-    query_rate : int, optional
+    query_rate : float, optional
         Controls the rate at which queries are made, by default 0.5
+    retry_count : int, optional
+        The number of times to retry a query if it fails, default is 5
 
     Returns
     -------
@@ -419,15 +422,18 @@ def ip_whois(  # pylint: disable=inconsistent-return-statements
         return _whois_lookup(ips, raw=raw)
 
 
+# pylint: enable=inconsistent-return-statements
+
+
 @lru_cache(maxsize=1024)
 def _whois_lookup(
     ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5
-) -> Dict:
-    """Conduct lookup of IP Whois information"""
+) -> Tuple:
+    """Conduct lookup of IP Whois information."""
     if isinstance(ip_addr, IpAddress):
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
-    ipwhois_result = (asn_items["AS Name"], {})
+    ipwhois_result = Tuple(asn_items["AS Name"], dict({}))  # type: ignore
     ipwhois_result[1]["asn"] = asn_items["AS"]
     ipwhois_result[1]["query"] = asn_items["IP"]
     ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
@@ -443,15 +449,15 @@ def _whois_lookup(
         url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
     )
     if rdap_data.status_code == 200:
-        rdap_data = rdap_data.json()
-        net = _create_net(rdap_data)
+        rdap_data_content = rdap_data.json()
+        net = _create_net(rdap_data_content)
         ipwhois_result[1]["nets"] = [net]
-        for link in rdap_data["links"]:
+        for link in rdap_data_content["links"]:
             if link["rel"] == "up":
                 up_data_link = link["href"]
                 up_rdap_data = httpx.get(up_data_link)
-                up_rdap_data = up_rdap_data.json()
-                up_net = _create_net(up_rdap_data)
+                up_rdap_data_content = up_rdap_data.json()
+                up_net = _create_net(up_rdap_data_content)
                 ipwhois_result[1]["nets"].append(up_net)
         if raw:
             ipwhois_result[1]["raw"] = rdap_data
@@ -483,13 +489,13 @@ def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
     if isinstance(results, list):
         new_results = [result[1] for result in results]
     else:
-        new_results = results[1]
+        new_results = results[1]  # type: ignore
     return pd.DataFrame(new_results)
 
 
 def _find_address(
     entity: dict,
-) -> str:  # pylint: disable=inconsistent-return-statements
+) -> Union[str, None]:  # pylint: disable=inconsistent-return-statements
     """Find an orgs address from an RDAP entity."""
     if "vcardArray" in entity:
         for vcard in entity["vcardArray"]:
@@ -514,7 +520,7 @@ def _create_net(data: Dict) -> Dict:
         created = item["eventDate"] if item["eventAction"] == "last changed" else None
         updated = item["eventDate"] if item["eventAction"] == "registration" else None
     for entity in data["entities"]:
-        address = _find_address(entity)
+        address = _find_address(entity)  # type: ignore
     regex = r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
     emails = re.findall(regex, str(data))
     return {
@@ -587,7 +593,7 @@ def get_asn_from_name(name: str) -> Dict:
         key: value for key, value in asns_dict.items() if name in value.casefold()
     }
     if len(matches.keys()) == 1:
-        return next(iter(matches))
+        return next(iter(matches))  # type: ignore
     if len(matches.keys()) > 1:
         return matches
 
@@ -600,7 +606,7 @@ def get_asn_from_ip(ip_addr: Union[str, IpAddress]) -> Dict:
 
     Parameters
     ----------
-    ip : Union[str, IpAddress]
+    ip_addr : Union[str, IpAddress]
         IP address to lookup.
 
     Returns
@@ -702,8 +708,8 @@ def _parse_asn_details(response):
 
 def _parse_asn_ranges(response):
     """Parse ASN ranges response into a list."""
-    ranges = []
-    for item in response.split("\n"):
-        if item.split(":   ")[0].strip() == "route":
-            ranges.append(item.split(":   ")[1].strip())
-    return ranges
+    return [
+        item.split(":   ")[1].strip()
+        for item in response.split("\n")
+        if item.split(":   ")[0].strip() == "route"
+    ]
