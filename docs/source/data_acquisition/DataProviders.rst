@@ -400,16 +400,16 @@ split a query into time ranges. Each sub-range is run as an independent
 query and the results are combined before being returned as a
 DataFrame.
 
-To use this feature you must specify the keyword parameter ``split_queries_by``
+To use this feature you must specify the keyword parameter ``split_query_by``
 when executing the query function. The value to this parameter is a
 string that specifies a time period. The time range specified by the
 ``start`` and ``end`` parameters to the query is split into sub-ranges
 each of which are the length of the split time period. For example, if you
-specify ``split_queries_by="1H"`` the query will be split into one hour
+specify ``split_query_by="1H"`` the query will be split into one hour
 chunks.
 
 .. note:: The final chunk may cover a time period larger or smaller
-   than the split period that you specified in the *split_queries_by*
+   than the split period that you specified in the *split_query_by*
    parameter. This can happen if *start* and *end* are not aligned
    exactly on time boundaries (e.g. if you used a one hour split period
    and *end* is 10 hours 15 min after *start*. The query split logic
@@ -421,7 +421,7 @@ The sub-ranges are used to generate a query for each time range. The
 queries are then executed in sequence and the results concatenated into
 a single DataFrame before being returned.
 
-The values acceptable for the *split_queries_by* parameter have the format:
+The values acceptable for the *split_query_by* parameter have the format:
 
 ::
 
