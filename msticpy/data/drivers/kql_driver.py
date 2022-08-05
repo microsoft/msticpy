@@ -276,7 +276,7 @@ class KqlDriver(DriverBase):
         Returns
         -------
         Tuple[pd.DataFrame, results.ResultSet]
-            A DataFrame (if successfull) and
+            A DataFrame (if successful) and
             Kql ResultSet.
 
         """

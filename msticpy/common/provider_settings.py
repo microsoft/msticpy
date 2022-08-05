@@ -57,7 +57,7 @@ class ProviderSettings:
 
 def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     """
-    Return function to get or create secrets client.
+    Return a function to get or create a SecretsClient.
 
     Returns
     -------
@@ -72,12 +72,17 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     ) -> Optional["SecretsClient"]:
         """Return (optionally setting or creating) a SecretsClient."""
         nonlocal _secrets_client
-        if not _secrets_enabled():
+        # If we can't use secrets just return None
+        if not _SECRETS_ENABLED:
             return None
+        # If we are passed a SecretsClient instance, set that to be
+        # the current _secrets_client
         if isinstance(secrets_client, SecretsClient):
             _secrets_client = secrets_client
+        # If _secrets_client is currently not initialized, create one
         if _secrets_client is None:
             _secrets_client = SecretsClient(**kwargs)
+        # return the current secrets client.
         return _secrets_client
 
     return _return_secrets_client
