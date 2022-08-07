@@ -222,8 +222,8 @@ class SumologicDriver(DriverBase):
 
         # default to unlimited query unless count is specified
         # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/limit
-        if "limit" in kwargs and kwargs['limit'] <= 10000:
-            limit = kwargs['limit']
+        if "limit" in kwargs and kwargs["limit"] <= 10000:
+            limit = kwargs["limit"]
             query = f"{query} | limit {limit}"
         else:
             limit = None
@@ -291,7 +291,9 @@ class SumologicDriver(DriverBase):
 
     # pylint: disable=inconsistent-return-statements
     # I don't think there are any - everything returns a list
-    def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit, verbosity):
+    def _get_job_results(
+        self, searchjob, status, qry_count, force_mssg_rstls, limit, verbosity
+    ):
         if status["state"] != "DONE GATHERING RESULTS":
             return []
         if (not qry_count or force_mssg_rstls) and limit is not None:
@@ -351,7 +353,9 @@ class SumologicDriver(DriverBase):
                         else:
                             job_limit2 = job_limit
                         if verbosity >= 2:
-                            print(f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}")
+                            print(
+                                f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}"
+                            )
                         result = self.service.search_job_records(
                             searchjob, offset=(i * job_limit), limit=job_limit2
                         )
@@ -359,8 +363,9 @@ class SumologicDriver(DriverBase):
                     return total_results
                 except Exception as err:
                     self._raise_qry_except(
-                        err, "search_job_records",
-                        f"to get search records (paging i {i*job_limit} / {count})"
+                        err,
+                        "search_job_records",
+                        f"to get search records (paging i {i*job_limit} / {count})",
                     )
 
         else:
@@ -392,7 +397,9 @@ class SumologicDriver(DriverBase):
                         else:
                             job_limit2 = job_limit
                         if verbosity >= 2:
-                            print(f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}")
+                            print(
+                                f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}"
+                            )
                         result = self.service.search_job_records(
                             searchjob, offset=(i * job_limit), limit=job_limit2
                         )
@@ -400,8 +407,9 @@ class SumologicDriver(DriverBase):
                     return total_results
                 except Exception as err:
                     self._raise_qry_except(
-                        err, "search_job_records",
-                        f"to get search records (paging i {i*job_limit} / {count})"
+                        err,
+                        "search_job_records",
+                        f"to get search records (paging i {i*job_limit} / {count})",
                     )
 
     # pylint: enable=inconsistent-return-statements
@@ -524,21 +532,25 @@ class SumologicDriver(DriverBase):
 
         for col in dataframe_res.columns:
             try:
-                if col in [
-                        'map._count', 'map._collectorid', 'map._messageid', 'map._size'
-                        ] + numeric_columns:
+                if (
+                    col
+                    in ["map._count", "map._collectorid", "map._messageid", "map._size"]
+                    + numeric_columns
+                ):
                     dataframe_res[col] = pd.to_numeric(dataframe_res[col])
                 # ensure timestamp format
                 # https://help.sumologic.com/05Search/Get-Started-with-Search/Search-Basics/Built-in-Metadata
                 # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice
-                if col in ('map._receipttime', 'map._messagetime', 'map._timeslice'):
-                    dataframe_res[col] = pd.to_datetime(dataframe_res[col], unit='ms')
+                if col in ("map._receipttime", "map._messagetime", "map._timeslice"):
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col], unit="ms")
                 if col in time_columns:
                     dataframe_res[col] = pd.to_datetime(dataframe_res[col])
 
             except Exception as err:
                 self._raise_qry_except(
-                    err, "query", f"query column type conversion: {col} -> {dataframe_res[col]}"
+                    err,
+                    "query",
+                    f"query column type conversion: {col} -> {dataframe_res[col]}",
                 )
 
         if exporting:
