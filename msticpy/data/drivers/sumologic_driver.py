@@ -404,6 +404,10 @@ class SumologicDriver(DriverBase):
             Export result to file.
         export_path : str
             file path for exporte results.
+        time_columns: array[string]
+            returning columns which format should be dataframe timestamp
+        numeric_columns: array[string]
+            returning columns which format should be dataframe numeric
 
         Returns
         -------
@@ -416,6 +420,8 @@ class SumologicDriver(DriverBase):
         normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
         export_path = kwargs.pop("export_path", "")
+        time_columns = kwargs.pop("time_columns", [])
+        numeric_columns = kwargs.pop("numeric_columns", [])
 
         results = self._query(query, **kwargs)
         if verbosity >= 3:
@@ -426,8 +432,21 @@ class SumologicDriver(DriverBase):
             dataframe_res = pd.DataFrame(results)
 
         for col in dataframe_res.columns:
-            if col in ("map._count", "map._timeslice"):
-                dataframe_res[col] = pd.to_numeric(dataframe_res[col])
+            try:
+                if col in ['map._count', 'map._collectorid', 'map._messageid', 'map._size'] + numeric_columns:
+                    dataframe_res[col] = pd.to_numeric(dataframe_res[col])
+                # ensure timestamp format
+                # https://help.sumologic.com/05Search/Get-Started-with-Search/Search-Basics/Built-in-Metadata
+                # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice
+                if col in ('map._receipttime', 'map._messagetime', 'map._timeslice'):
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col], unit='ms')
+                if col in time_columns:
+                    dataframe_res[col] = pd.to_datetime(dataframe_res[col])
+
+            except Exception as err:
+                self._raise_qry_except(
+                    err, "query", f"query column type conversion: {col} -> {dataframe_res[col]}"
+                )
 
         if exporting:
             if export_path.endswith(".xlsx"):
