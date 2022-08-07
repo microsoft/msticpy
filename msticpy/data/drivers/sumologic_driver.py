@@ -352,12 +352,15 @@ class SumologicDriver(DriverBase):
                             job_limit2 = job_limit
                         if verbosity >= 2:
                             print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
-                        result = self.service.search_job_records(searchjob, offset=i*job_limit, limit=job_limit2)
+                        result = self.service.search_job_records(
+                            searchjob, offset=i*job_limit, limit=job_limit2
+                        )
                         total_results.extend(result["records"])
                     return total_results
                 except Exception as err:
                     self._raise_qry_except(
-                        err, "search_job_records", f"to get search records (paging i {i*job_limit} / {count})"
+                        err, "search_job_records",
+                        f"to get search records (paging i {i*job_limit} / {count})"
                     )
 
         else:
@@ -390,12 +393,15 @@ class SumologicDriver(DriverBase):
                             job_limit2 = job_limit
                         if verbosity >= 2:
                             print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
-                        result = self.service.search_job_records(searchjob, offset=i*job_limit, limit=job_limit2)
+                        result = self.service.search_job_records(
+                            searchjob, offset=i*job_limit, limit=job_limit2
+                        )
                         total_results.extend(result["records"])
                     return total_results
                 except Exception as err:
                     self._raise_qry_except(
-                        err, "search_job_records", f"to get search records (paging i {i*job_limit} / {count})"
+                        err, "search_job_records",
+                        f"to get search records (paging i {i*job_limit} / {count})"
                     )
 
     # pylint: enable=inconsistent-return-statements
@@ -518,7 +524,9 @@ class SumologicDriver(DriverBase):
 
         for col in dataframe_res.columns:
             try:
-                if col in ['map._count', 'map._collectorid', 'map._messageid', 'map._size'] + numeric_columns:
+                if col in [
+                        'map._count', 'map._collectorid', 'map._messageid', 'map._size'
+                        ] + numeric_columns:
                     dataframe_res[col] = pd.to_numeric(dataframe_res[col])
                 # ensure timestamp format
                 # https://help.sumologic.com/05Search/Get-Started-with-Search/Search-Basics/Built-in-Metadata
