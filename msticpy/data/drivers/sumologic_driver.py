@@ -221,9 +221,12 @@ class SumologicDriver(DriverBase):
         start_time, end_time = self._get_time_params(**kwargs)
 
         # default to unlimited query unless count is specified
-        if "limit" in kwargs:
-            query = f"{query} | limit {kwargs['limit']}"
-        limit = kwargs.pop("limit", 10000)
+        # https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/limit
+        if "limit" in kwargs and kwargs['limit'] <= 10000:
+            limit = kwargs['limit']
+            query = f"{query} | limit {limit}"
+        else:
+            limit = None
 
         if verbosity >= 1:
             print(f"INFO: from {start_time} to {end_time}, TZ {timezone}")
@@ -257,6 +260,7 @@ class SumologicDriver(DriverBase):
             qry_count=qry_count,
             force_mssg_rstls=kwargs.pop("forcemessagesresults", False),
             limit=limit,
+            verbosity=verbosity,
         )
 
     def _poll_job_status(self, searchjob, verbosity):
@@ -287,10 +291,10 @@ class SumologicDriver(DriverBase):
 
     # pylint: disable=inconsistent-return-statements
     # I don't think there are any - everything returns a list
-    def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit):
+    def _get_job_results(self, searchjob, status, qry_count, force_mssg_rstls, limit, verbosity):
         if status["state"] != "DONE GATHERING RESULTS":
             return []
-        if not qry_count or force_mssg_rstls:
+        if (not qry_count or force_mssg_rstls) and limit is not None:
             # Non-aggregated results, Messages only
             count = status["messageCount"]
             limit2 = (
@@ -303,19 +307,96 @@ class SumologicDriver(DriverBase):
                 self._raise_qry_except(
                     err, "search_job_messages", "to get job messages"
                 )
-        else:
-            # Aggregated results
+
+        elif (not qry_count or force_mssg_rstls) and limit is None:
+            # Non-aggregated results, Messages only
+            count = status["messageCount"]
+            try:
+                result = self.service.search_job_messages(searchjob)
+
+                return result["messages"]
+            except Exception as err:
+                self._raise_qry_except(
+                    err, "search_job_messages", "to get job messages"
+                )
+        elif limit is not None:
+            # Aggregated results, limit
             count = status["recordCount"]
             limit2 = (
                 count if count < limit and count != 0 else limit
             )  # compensate bad limit check
-            try:
-                result = self.service.search_job_records(searchjob, limit=limit2)
-                return result["records"]
-            except Exception as err:
-                self._raise_qry_except(
-                    err, "search_job_records", "to get search records"
-                )
+
+            if count < limit:
+                if verbosity >= 2:
+                    print(f"DEBUG: No Paging, total count {count}, limit {limit}")
+                try:
+                    result = self.service.search_job_records(searchjob, limit=limit2)
+                    return result["records"]
+                except Exception as err:
+                    self._raise_qry_except(
+                        err, "search_job_records", "to get search records"
+                    )
+            else:
+                # paging results
+                # https://help.sumologic.com/APIs/Search-Job-API/About-the-Search-Job-API#query-parameters-2
+                if verbosity >= 2:
+                    print(f"DEBUG: Paging, total count {count}, limit {limit}")
+                try:
+                    job_limit = 10000
+                    iterations = int(count/job_limit) + (count % job_limit > 0)
+                    total_results = []
+                    for i in range(0, iterations):
+                        if i == iterations:
+                            job_limit2 = count - (iterations-1)*job_limit
+                        else:
+                            job_limit2 = job_limit
+                        if verbosity >= 2:
+                            print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
+                        result = self.service.search_job_records(searchjob, offset=i*job_limit, limit=job_limit2)
+                        total_results.extend(result["records"])
+                    return total_results
+                except Exception as err:
+                    self._raise_qry_except(
+                        err, "search_job_records", f"to get search records (paging i {i*job_limit} / {count})"
+                    )
+
+        else:
+            # Aggregated results, no limit
+            count = status["recordCount"]
+
+            if count <= 10000:
+                if verbosity >= 2:
+                    print(f"DEBUG: No Paging, total count {count}, no limit")
+                try:
+                    result = self.service.search_job_records(searchjob, limit=10000)
+                    return result["records"]
+                except Exception as err:
+                    self._raise_qry_except(
+                        err, "search_job_records", "to get search records"
+                    )
+            else:
+                # paging results
+                # https://help.sumologic.com/APIs/Search-Job-API/About-the-Search-Job-API#query-parameters-2
+                if verbosity >= 2:
+                    print(f"DEBUG: Paging, total count {count}, no limit")
+                try:
+                    job_limit = 10000
+                    iterations = int(count/job_limit) + (count % job_limit > 0)
+                    total_results = []
+                    for i in range(0, iterations):
+                        if i == iterations:
+                            job_limit2 = count - (iterations-1)*job_limit
+                        else:
+                            job_limit2 = job_limit
+                        if verbosity >= 2:
+                            print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
+                        result = self.service.search_job_records(searchjob, offset=i*job_limit, limit=job_limit2)
+                        total_results.extend(result["records"])
+                    return total_results
+                except Exception as err:
+                    self._raise_qry_except(
+                        err, "search_job_records", f"to get search records (paging i {i*job_limit} / {count})"
+                    )
 
     # pylint: enable=inconsistent-return-statements
 
@@ -416,6 +497,7 @@ class SumologicDriver(DriverBase):
             or query response if an error.
 
         """
+        limit = kwargs.get("limit", None)
         verbosity = kwargs.get("verbosity", 0)
         normalize = kwargs.pop("normalize", True)
         exporting = kwargs.pop("exporting", False)
@@ -430,6 +512,9 @@ class SumologicDriver(DriverBase):
             dataframe_res = pd.json_normalize(results)
         else:
             dataframe_res = pd.DataFrame(results)
+
+        if limit is not None and dataframe_res.shape[0] > limit:
+            dataframe_res = dataframe_res.head(limit)
 
         for col in dataframe_res.columns:
             try:
