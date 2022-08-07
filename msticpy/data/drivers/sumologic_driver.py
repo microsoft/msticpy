@@ -343,17 +343,17 @@ class SumologicDriver(DriverBase):
                     print(f"DEBUG: Paging, total count {count}, limit {limit}")
                 try:
                     job_limit = 10000
-                    iterations = int(count/job_limit) + (count % job_limit > 0)
+                    iterations = int(count / job_limit) + (count % job_limit > 0)
                     total_results = []
                     for i in range(0, iterations):
                         if i == iterations:
-                            job_limit2 = count - (iterations-1)*job_limit
+                            job_limit2 = count - (iterations - 1) * job_limit
                         else:
                             job_limit2 = job_limit
                         if verbosity >= 2:
-                            print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
+                            print(f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}")
                         result = self.service.search_job_records(
-                            searchjob, offset=i*job_limit, limit=job_limit2
+                            searchjob, offset=(i * job_limit), limit=job_limit2
                         )
                         total_results.extend(result["records"])
                     return total_results
@@ -384,17 +384,17 @@ class SumologicDriver(DriverBase):
                     print(f"DEBUG: Paging, total count {count}, no limit")
                 try:
                     job_limit = 10000
-                    iterations = int(count/job_limit) + (count % job_limit > 0)
+                    iterations = int(count / job_limit) + (count % job_limit > 0)
                     total_results = []
                     for i in range(0, iterations):
                         if i == iterations:
-                            job_limit2 = count - (iterations-1)*job_limit
+                            job_limit2 = count - (iterations - 1) * job_limit
                         else:
                             job_limit2 = job_limit
                         if verbosity >= 2:
-                            print(f"DEBUG: Paging {i*job_limit} / {count}, limit {job_limit2}")
+                            print(f"DEBUG: Paging {i * job_limit} / {count}, limit {job_limit2}")
                         result = self.service.search_job_records(
-                            searchjob, offset=i*job_limit, limit=job_limit2
+                            searchjob, offset=(i * job_limit), limit=job_limit2
                         )
                         total_results.extend(result["records"])
                     return total_results
