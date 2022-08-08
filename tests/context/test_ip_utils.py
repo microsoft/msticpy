@@ -18,6 +18,7 @@ from msticpy.context.ip_utils import (
     get_whois_df,
     get_whois_info,
 )
+from msticpy.init import mp_pandas_accessors
 
 from ..unit_test_lib import TEST_DATA_PATH
 
@@ -99,13 +100,11 @@ def test_get_whois_df(net_df):
 def test_whois_pdext(net_df):
     """Test IP Whois."""
     net_df = net_df.head(25)
-    results = net_df.mp_whois.lookup(ip_column="AllExtIPs")
+    results = net_df.mp.whois(ip_column="AllExtIPs")
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
 
-    results2 = net_df.mp_whois.lookup(
-        ip_column="AllExtIPs", asn_col="asn", whois_col="whois"
-    )
+    results2 = net_df.mp.whois(ip_column="AllExtIPs", asn_col="asn", whois_col="whois")
     check.equal(len(results2), len(net_df))
     check.is_in("asn", results2.columns)
     check.is_in("whois", results2.columns)
@@ -114,7 +113,7 @@ def test_whois_pdext(net_df):
 
 
 def test_asn_query_features():
-    """Test ASN query features"""
+    """Test ASN query features."""
     asn_ip_details = get_asn_from_ip("65.55.44.109")
     check.is_in("AS", asn_ip_details.keys())
     check.equal(asn_ip_details["AS"], "8075")

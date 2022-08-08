@@ -121,6 +121,66 @@ def convert_to_ip_entities(  # noqa: MC0001
     return ip_entities
 
 
+@deprecated("Will be removed in a version 2.2", version="1.4.0")
+@export
+def create_ip_record(
+    heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
+) -> IpAddress:
+    """
+    Generate ip_entity record for provided IP value.
+
+    Parameters
+    ----------
+    heartbeat_df : pd.DataFrame
+        A dataframe of heartbeat data for the host
+    az_net_df : pd.DataFrame
+        Option dataframe of Azure network data for the host
+
+    Returns
+    -------
+    IP
+        Details of the IP data collected
+
+    """
+    ip_entity = IpAddress()
+
+    # Produce ip_entity record using available dataframes
+    ip_hb = heartbeat_df.iloc[0]
+    ip_entity.Address = ip_hb["ComputerIP"]
+    ip_entity.hostname = ip_hb["Computer"]  # type: ignore
+    ip_entity.SourceComputerId = ip_hb["SourceComputerId"]  # type: ignore
+    ip_entity.OSType = ip_hb["OSType"]  # type: ignore
+    ip_entity.OSName = ip_hb["OSName"]  # type: ignore
+    ip_entity.OSVMajorVersion = ip_hb["OSMajorVersion"]  # type: ignore
+    ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
+    ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]  # type: ignore
+    ip_entity.OmsSolutions = [  # type: ignore
+        sol.strip() for sol in ip_hb["Solutions"].split(",")
+    ]
+    ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
+    ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
+    geoloc_entity = GeoLocation()  # type: ignore
+    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
+    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
+    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
+    ip_entity.Location = geoloc_entity  # type: ignore
+
+    # If Azure network data present add this to host record
+    if az_net_df is not None and not az_net_df.empty:
+        if len(az_net_df) == 1:
+            priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
+            ip_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
+            pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
+            ip_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
+        else:
+            if "private_ips" not in ip_entity:
+                ip_entity["private_ips"] = []
+            if "public_ips" not in ip_entity:
+                ip_entity["public_ips"] = []
+
+    return ip_entity
+
+
 @export  # noqa: MC0001
 # pylint: disable=too-many-return-statements, invalid-name
 def get_ip_type(ip: str = None, ip_str: str = None) -> str:  # noqa: MC0001
@@ -225,7 +285,7 @@ def get_whois_info(
 def get_whois_df(
     data: pd.DataFrame,
     ip_column: str,
-    all_columns: bool = False,
+    all_columns: bool = True,
     asn_col: str = "AsnDescription",
     whois_col: Optional[str] = "WhoIsData",
     show_progress: bool = False,
@@ -259,18 +319,20 @@ def get_whois_df(
 
     """
     del show_progress
-    whois_data = ip_whois(data[ip_column])
-    data = data.copy()
-    if all_columns:
-        return data.merge(
-            whois_data,  # type: ignore
-            how="left",
-            left_on=ip_column,
-            right_on="query",
-            suffixes=("", "_whois"),
-        )
-    data[asn_col] = whois_data["asn_description"]  # type: ignore
-    data[whois_col] = whois_data.apply(lambda x: x.to_dict(), axis=1)  # type: ignore
+    whois_data = ip_whois(data[ip_column].drop_duplicates())
+    if not isinstance(whois_data, pd.DataFrame):
+        return data.assign(ASNDescription="No data returned")
+    data = data.merge(
+        whois_data,  # type: ignore
+        how="left",
+        left_on=ip_column,
+        right_on="query",
+        suffixes=("", "_whois"),
+    )
+    data[whois_col] = data[whois_data.columns].apply(lambda x: x.to_dict(), axis=1)
+    data[asn_col] = data["asn_description"]
+    if not all_columns:
+        return data.drop(columns=whois_data.columns)
     return data
 
 
@@ -318,80 +380,24 @@ class IpWhoisAccessor:
         return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)
 
 
-@deprecated("Will be removed in a version 2.2", version="1.4.0")
-@export
-def create_ip_record(
-    heartbeat_df: pd.DataFrame, az_net_df: pd.DataFrame = None
-) -> IpAddress:
-    """
-    Generate ip_entity record for provided IP value.
-
-    Parameters
-    ----------
-    heartbeat_df : pd.DataFrame
-        A dataframe of heartbeat data for the host
-    az_net_df : pd.DataFrame
-        Option dataframe of Azure network data for the host
-
-    Returns
-    -------
-    IP
-        Details of the IP data collected
-
-    """
-    ip_entity = IpAddress()
-
-    # Produce ip_entity record using available dataframes
-    ip_hb = heartbeat_df.iloc[0]
-    ip_entity.Address = ip_hb["ComputerIP"]
-    ip_entity.hostname = ip_hb["Computer"]  # type: ignore
-    ip_entity.SourceComputerId = ip_hb["SourceComputerId"]  # type: ignore
-    ip_entity.OSType = ip_hb["OSType"]  # type: ignore
-    ip_entity.OSName = ip_hb["OSName"]  # type: ignore
-    ip_entity.OSVMajorVersion = ip_hb["OSMajorVersion"]  # type: ignore
-    ip_entity.OSVMinorVersion = ip_hb["OSMinorVersion"]  # type: ignore
-    ip_entity.ComputerEnvironment = ip_hb["ComputerEnvironment"]  # type: ignore
-    ip_entity.OmsSolutions = [  # type: ignore
-        sol.strip() for sol in ip_hb["Solutions"].split(",")
-    ]
-    ip_entity.VMUUID = ip_hb["VMUUID"]  # type: ignore
-    ip_entity.SubscriptionId = ip_hb["SubscriptionId"]  # type: ignore
-    geoloc_entity = GeoLocation()  # type: ignore
-    geoloc_entity.CountryName = ip_hb["RemoteIPCountry"]  # type: ignore
-    geoloc_entity.Longitude = ip_hb["RemoteIPLongitude"]  # type: ignore
-    geoloc_entity.Latitude = ip_hb["RemoteIPLatitude"]  # type: ignore
-    ip_entity.Location = geoloc_entity  # type: ignore
-
-    # If Azure network data present add this to host record
-    if az_net_df is not None and not az_net_df.empty:
-        if len(az_net_df) == 1:
-            priv_addr_str = az_net_df["PrivateIPAddresses"].loc[0]
-            ip_entity["private_ips"] = convert_to_ip_entities(priv_addr_str)
-            pub_addr_str = az_net_df["PublicIPAddresses"].loc[0]
-            ip_entity["public_ips"] = convert_to_ip_entities(pub_addr_str)
-        else:
-            if "private_ips" not in ip_entity:
-                ip_entity["private_ips"] = []
-            if "public_ips" not in ip_entity:
-                ip_entity["public_ips"] = []
-
-    return ip_entity
-
-
-# pylint: disable=inconsistent-return-statements
-def ip_whois(  # type: ignore
-    ips: Union[IpAddress, str, List, pd.Series],
+# pylint: disable=inconsistent-return-statements, invalid-name
+def ip_whois(
+    ip: Union[IpAddress, str, List, pd.Series, None] = None,
+    ip_address: Union[IpAddress, str, List, pd.Series, None] = None,
     raw=False,
     query_rate: float = 0.5,
     retry_count: int = 5,
 ) -> Union[pd.DataFrame, Tuple]:
+    # sourcery skip: assign-if-exp, reintroduce-else
     """
     Lookup IP Whois information.
 
     Parameters
     ----------
-    ips : Union[IpAddress, str, List]
+    ip : Union[IpAddress, str, List]
         An IP address or list of IP addresses to lookup.
+    ip_address : Union[IpAddress, str, List]
+        An IP address or list of IP addresses to lookup. Alias of `ip`.
     raw : bool, optional
         Set True if raw whois result wanted, by default False
     query_rate : float, optional
@@ -403,26 +409,129 @@ def ip_whois(  # type: ignore
     -------
     Union[pd.DataFrame, Dict]
         If a single IP Address provided result is a dictionary
-        if multipe provided results are formatted as a dataframe.
+        if multiple provided results are formatted as a dataframe.
+
+    Raises
+    ------
+    ValueError:
+        If neither `ip` nor `ip_address` is supplied.
 
     """
-    if isinstance(ips, (list, pd.Series)):
-        rate_limit = len(ips) > 50
+    ip = ip if ip is not None else ip_address
+    if ip is None:
+        raise ValueError("One of ip or ip_address parameters must be supplied.")
+    if isinstance(ip, (list, pd.Series)):
+        rate_limit = len(ip) > 50
         if rate_limit:
             print("Large number of lookups, this may take some time.")
         whois_results = []
-        for ip_address in ips:
+        for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
             whois_results.append(
-                _whois_lookup(ip_address, raw=raw, retry_count=retry_count)
+                _whois_lookup(ip_addr, raw=raw, retry_count=retry_count)
             )
         return _whois_result_to_pandas(whois_results)
-    if isinstance(ips, (str, IpAddress)):
-        return _whois_lookup(ips, raw=raw)
+    if isinstance(ip, (str, IpAddress)):
+        return _whois_lookup(ip, raw=raw)
+    return {}
 
 
-# pylint: enable=inconsistent-return-statements
+def get_asn_details(asns: Union[str, List]) -> Union[pd.DataFrame, Dict]:
+    """
+    Get details about an ASN(s) from its number.
+
+    Parameters
+    ----------
+    asns : Union[str, List]
+        A single ASN or list of ASNs to lookup.
+
+    Returns
+    -------
+    Union[pd.DataFrame, Dict]
+        Details about the ASN(s) if a single ASN provided, result is a dictionary.
+        If multiple provided, results are returned as a DataFrame.
+
+    """
+    if isinstance(asns, list):
+        asn_detail_results = [_asn_results(str(asn)) for asn in asns]
+        return pd.DataFrame(asn_detail_results)
+    return _asn_results(str(asns))
+
+
+def get_asn_from_name(name: str) -> Dict:
+    """
+    Get a list of ASNs that match a name.
+
+    Parameters
+    ----------
+    name : str
+        The name of the ASN to search for
+
+    Returns
+    -------
+    Dict
+        A list of ASNs that match the name.
+
+    Raises
+    ------
+    MsticpyConnectionError
+        If the list of all ASNs cannot be retrieved.
+    MsticpyException
+        If no matches found.
+
+    """
+    name = name.casefold()
+    asns_dict = {}
+    try:
+        for asn in _ASNS_SOUP.find_all("a"):
+            asns_dict[str(asn.next_element).strip()] = str(
+                asn.next_element.next_element
+            ).strip()
+    except httpx.ConnectError as err:
+        raise MsticpyConnectionError("Unable to get ASN details") from err
+    matches = {
+        key: value for key, value in asns_dict.items() if name in value.casefold()
+    }
+    if len(matches.keys()) == 1:
+        return next(iter(matches))  # type: ignore
+    if len(matches.keys()) > 1:
+        return matches
+
+    raise MsticpyException(f"No ASNs found matching {name}")
+
+
+def get_asn_from_ip(
+    ip: Union[str, IpAddress, None] = None,
+    ip_address: Union[str, IpAddress, None] = None,
+) -> Dict:
+    """
+    Get the ASN that an IP belongs to.
+
+    Parameters
+    ----------
+    ip : Union[str, IpAddress]
+        IP address to lookup.
+    ip_address : Union[str, IpAddress]
+        IP address to lookup (alias of `ip`).
+
+    Returns
+    -------
+    dict
+        Details of the ASN that the IP belongs to.
+
+    """
+    ip = ip or ip_address
+    if not ip:
+        return {}
+    if isinstance(ip, IpAddress):
+        ip = ip.Address
+    ip = ip.strip()
+    query = f" -v {ip}\r\n"
+    ip_response = _cymru_query(query)
+    keys = ip_response.split("\n")[0].split("|")
+    values = ip_response.split("\n")[1].split("|")
+    return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
 
 @lru_cache(maxsize=1024)
@@ -485,7 +594,7 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
 
 
 def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
-    """Transfroms whois results to a Pandas DataFrame."""
+    """Transform whois results to a Pandas DataFrame."""
     if isinstance(results, list):
         new_results = [result[1] for result in results]
     else:
@@ -534,95 +643,6 @@ def _create_net(data: Dict) -> Dict:
         "address": address,
         "emails": emails,
     }
-
-
-def get_asn_details(asns: Union[str, List]) -> Union[pd.DataFrame, Dict]:
-    """
-    Get details about an ASN(s) from its number.
-
-    Parameters
-    ----------
-    asns : Union[str, List]
-        A single ASN or list of ASNs to lookup.
-
-    Returns
-    -------
-    Union[pd.DataFrame, Dict]
-        Details about the ASN(s) if a single ASN provided result is a dictionary
-        if multlete provided results are formatted as a DataFrame.
-
-    """
-    if isinstance(asns, list):
-        asn_detail_results = [_asn_results(str(asn)) for asn in asns]
-        return pd.DataFrame(asn_detail_results)
-    return _asn_results(str(asns))
-
-
-def get_asn_from_name(name: str) -> Dict:
-    """
-    Get a list of ASNs that match a name.
-
-    Parameters
-    ----------
-    name : str
-        The name of the ASN to search for
-
-    Returns
-    -------
-    Dict
-        A list of ASNs that match the name.
-
-    Raises
-    ------
-    MsticpyConnectionError
-        If the list of all ASNs cannot be retrieved.
-    MsticpyException
-        If no matches found.
-
-    """
-    name = name.casefold()
-    asns_dict = {}
-    try:
-        for asn in _ASNS_SOUP.find_all("a"):
-            asns_dict[str(asn.next_element).strip()] = str(
-                asn.next_element.next_element
-            ).strip()
-    except httpx.ConnectError as err:
-        raise MsticpyConnectionError("Unable to get ASN details") from err
-    matches = {
-        key: value for key, value in asns_dict.items() if name in value.casefold()
-    }
-    if len(matches.keys()) == 1:
-        return next(iter(matches))  # type: ignore
-    if len(matches.keys()) > 1:
-        return matches
-
-    raise MsticpyException(f"No ASNs found matching {name}")
-
-
-def get_asn_from_ip(ip_addr: Union[str, IpAddress]) -> Dict:
-    """
-    Get the ASN that an IP belongs to.
-
-    Parameters
-    ----------
-    ip_addr : Union[str, IpAddress]
-        IP address to lookup.
-
-    Returns
-    -------
-    dict
-        Details of the ASN that the IP belongs to.
-
-    """
-    if isinstance(ip_addr, IpAddress):
-        ip_addr = ip_addr.Address
-    ip_addr = ip_addr.strip()
-    query = f" -v {ip_addr}\r\n"
-    ip_response = _cymru_query(query)
-    keys = ip_response.split("\n")[0].split("|")
-    values = ip_response.split("\n")[1].split("|")
-    return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
 
 def _asn_whois_query(query, server, port=43, retry_count=5) -> str:

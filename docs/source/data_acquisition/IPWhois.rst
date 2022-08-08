@@ -2,17 +2,23 @@ IP Whois Enrichment
 ===================
 
 MSTICPy supports enriching IP address information with data from open source Whois services.
-Lookups are possible against IPs and ASNs.
+Lookups are possible against IPs and ASNs (Autonomous System Number).
 
 IP Lookups
-^^^^^^^^^^
+----------
 
 Whois lookups can be performed against a single IP address or a as a bulk lookup against a list or
 DataFrame column.
-A single IP can be looked up with the `ip_whois` method.
+
+WhoIs Lookup of single IP Address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``ip_whois`` function looks an single IP Address and returns a results
+as a Python dictionary.
 
 .. code:: ipython3
 
+    >>> from msticpy.iptools import ip_whois
     >>> ip_whois("65.55.44.109")
 
 .. parsed-literal::
@@ -33,18 +39,48 @@ A single IP can be looked up with the `ip_whois` method.
         'created': None,
     ...
 
-If a list of IP addressed is passed to `ip_whois` then the data is returned as a DataFrame.
-This same feature can be accessed as a Pandas accessor with `.mp_whois.lookup`
+You can also lookup a single IP Address using the ``IpAddress.whois`` function. This
+returns results as a pandas DataFrame.
 
 .. code:: ipython3
 
-    >>> df.mp_whois.lookup("IPAddress")
+    >>> IpAddress.whois(["123.1.2.3", "124.5.6.7"])
 
-As well as Whois data it is also possible to lookup details of the ASN an IP address belongs to.
+WhoIs Lookup of multiple IP Addresses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a list of IP addresses (or a pandas series) is passed to ``ip_whois``
+then the data is returned as a DataFrame.
+
+This same feature can be accessed using the ``mp`` pandas accessor or via the
+``IpAddress.whois`` pivot function.
+
+Using the ``mp`` pandas accessor:
+
+.. code:: ipython3
+
+    >>> df.mp.whois(ip_column="IPAddress")
+
+
+Using the whois pivot function:
+
+.. code:: ipython3
+
+    >>> IpAddress.whois(["123.1.2.3", "124.5.6.7"])
+    >>> IpAddress.whois(data=df, column="IP")
+
+ASN Lookups
+-----------
+
+ASN Lookup by IP
+^^^^^^^^^^^^^^^^
+
+It is also possible to lookup details of the ASN that an IP address belongs to.
 This is done with the `get_asn_from_ip` function.
 
 .. code:: ipython3
 
+    >>> from msticpy.iptools import get_asn_from_ip
     >>> get_asn_from_ip("65.55.44.109")
 
 .. parsed-literal::
@@ -57,15 +93,27 @@ This is done with the `get_asn_from_ip` function.
     'Allocated': '2001-02-14',
     'AS Name': 'MICROSOFT-CORP-MSN-AS-BLOCK, US'}
 
-ASN Lookups
-^^^^^^^^^^^
+The same function is also accessible via the ``IpAddress.whois_as`` pivot function:
 
-In addition to lookups against an IP address it’s possible to look up against an ASN.
+.. code:: ipython3
+
+    >>> IpAddress.whois_asn("65.55.44.109")
+
+This function can accepts a single IP, an iterable of IPs or a DataFrame (
+in the latter case specify the dataframe via the ``data`` parameter and the
+IP column via the ``column`` parameter).
+
+
+ASN Lookup by Number or Name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can get details of a specific to look up against an ASN.
 `get_asn_details` can be used to get details based on an ASN, along with details of the IP ranges
 belonging to that ASN.
 
 .. code:: ipython3
 
+    >>> from msticpy.iptools import get_asn_details
     >>> get_asn_details("AS3598")
 
 .. parsed-literal::
@@ -83,7 +131,7 @@ belonging to that ASN.
     '157.59.0.0/16',
     ...
 
-It is also possible to search of ASNs based on the AS Name. For example, you can search for "Microsoft"
+It is also possible to search ASNs based on the AS Name. For example, you can search for "Microsoft"
 to see a list of all ASNs that are associated with Microsoft with `get_asns_from_name`.
 
 .. code:: ipython3
