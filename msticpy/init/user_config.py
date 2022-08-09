@@ -223,17 +223,6 @@ def _load_notebooklets(comp_settings=None, **kwargs):
     return None, None
 
 
-def _load_pivot(comp_settings=None, **kwargs):
-    del comp_settings
-    from .pivot import Pivot
-
-    namespace = kwargs.get("global_ns", {}).copy()
-    namespace.update(kwargs.get("local_ns", {}))
-    piv_kwargs = {"namespace": namespace}
-    pivot = Pivot(**piv_kwargs)
-    return "pivot", pivot
-
-
 def _load_azure_data(comp_settings=None, **kwargs):
     del kwargs
     from ..context.azure.azure_data import AzureData
@@ -272,7 +261,6 @@ COMP_LOADERS = {
     "GeoIpLookup": _load_geoip_lookup,
     "AzureData": _load_azure_data,
     "AzureSentinelAPI": _load_azsent_api,
-    "Pivot": _load_pivot,  # Pivots loaded after most providers
     "Notebooklets": _load_notebooklets,  # Notebooklets calls add_pivots
 }
 
@@ -284,6 +272,6 @@ def _get_provider_names(prov_dict):
             providers.append(obj.environment.casefold())
         else:
             cls_name = obj.__class__.__name__
-            if cls_name in COMP_LOADERS and cls_name != "Pivot":
+            if cls_name in COMP_LOADERS:
                 providers.append(cls_name.casefold())
     return providers

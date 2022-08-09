@@ -57,11 +57,18 @@ class KqlTIProvider(TIProvider):
             kwargs["query_provider"], QueryProvider
         ):
             self._query_provider = kwargs.pop("query_provider")
+            self._connect_str = kwargs.pop("connect_str", WorkspaceConfig())
         else:
-            self._query_provider = self._create_query_provider(**kwargs)
+            self._query_provider, self._connect_str = self._create_query_provider(
+                **kwargs
+            )
 
-        if not self._query_provider or not self._query_provider.connected:
+        if not self._query_provider:
             raise MsticpyConfigException("Query provider for KQL could not be created.")
+
+    @property
+    def _connected(self):
+        return self._query_provider.connected
 
     @lru_cache(maxsize=256)
     def lookup_ioc(  # type: ignore
@@ -102,6 +109,9 @@ class KqlTIProvider(TIProvider):
         the same item.
 
         """
+        if not self._connected:
+            self._connect()
+
         # check and lookup (if needed) ioc_type
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
@@ -173,6 +183,8 @@ class KqlTIProvider(TIProvider):
             DataFrame of results.
 
         """
+        if not self._connected:
+            self._connect()
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
@@ -329,8 +341,12 @@ class KqlTIProvider(TIProvider):
             TENANT_ID=tenant_id, WORKSPACE_ID=workspace_id
         )
         query_provider = QueryProvider("LogAnalytics")
-        query_provider.connect(connect_str)
-        return query_provider
+        return query_provider, connect_str
+
+    def _connect(self):
+        """Connect to query provider."""
+        print("MS Sentinel TI query provider needs authenticated connection.")
+        self._query_provider.connect(self._connect_str)
 
     @staticmethod
     def _get_spelled_variants(name: str, **kwargs) -> Any:
