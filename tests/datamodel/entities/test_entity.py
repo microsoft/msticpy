@@ -77,7 +77,8 @@ def test_url():
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_pivot_shortcuts():
     """Test pivot function shortcut creation and deletion."""
-    Pivot()
+    pivot = Pivot()
+    pivot.reload_pivots()
 
     check.is_true(hasattr(IpAddress, "util"))
     util_ctnr = getattr(IpAddress, "util")

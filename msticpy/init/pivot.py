@@ -55,8 +55,6 @@ _DEF_PIVOT_REG_FILE = "resources/mp_pivot_reg.yaml"
 class Pivot:
     """Pivot environment loader."""
 
-    # current: Optional["Pivot"] = None
-
     def __init__(
         self,
         namespace: Dict[str, Any] = None,
@@ -81,14 +79,14 @@ class Pivot:
             to be 24 hours prior to the load time.
 
         """
-        # self.__class__.current = self
         self._query_time: QueryTime = self._get_default_query_time("day", 1)
         if timespan is not None:
             self.timespan = timespan
 
         # acquire current providers
         self._providers: Dict[str, Any] = {}
-        self.reload_pivots(namespace=namespace, providers=providers)
+        self._param_providers = providers
+        self._param_namespace = namespace
 
     def reload_pivots(
         self,
@@ -118,7 +116,9 @@ class Pivot:
         if clear_existing:
             self.remove_pivot_funcs(entity="all")
 
-        self._get_all_providers(namespace, providers)
+        self._get_all_providers(
+            namespace or self._param_namespace, providers or self._param_namespace
+        )
 
         # load TI functions
         add_ioc_queries_to_entities(self.get_provider("TILookup"), container="ti")
@@ -132,43 +132,19 @@ class Pivot:
         )
         self._load_from_pivot_init()
 
+    load_pivots = reload_pivots
+
     def _get_all_providers(
         self,
         namespace: Dict[str, Any] = None,
         providers: Iterable[Any] = None,
     ):
-        self._get_query_providers(namespace=namespace, providers=providers)
         self._providers["TILookup"] = (
             self._get_provider_by_type(
                 namespace=namespace, providers=providers, provider_type=TILookup
             )
             or TILookup()
         )
-
-    def _get_query_providers(
-        self,
-        namespace: Dict[str, Any] = None,
-        providers: Iterable[Any] = None,
-    ):
-        """Update the current list of loaded providers."""
-        if namespace:
-            # return just one provider for each data env.
-            # Use the last one in the namespace
-            self._providers.update(
-                {
-                    prov.environment: prov
-                    for prov in namespace.values()
-                    if isinstance(prov, QueryProvider)
-                }
-            )
-        if providers:
-            self._providers.update(
-                {
-                    prov.environment: prov
-                    for prov in providers
-                    if isinstance(prov, QueryProvider)
-                }
-            )
 
     @staticmethod
     def _load_from_pivot_init():

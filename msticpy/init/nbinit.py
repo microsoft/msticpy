@@ -31,7 +31,7 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import get_config, refresh_config, validate_config
+from ..common.pkg_config import get_config, refresh_config, validate_config, _HOME_PATH
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -533,7 +533,7 @@ def _get_or_create_config() -> bool:
     if mp_path and not Path(mp_path).is_file():
         _err_output(_MISSING_MPCONFIG_ENV_ERR)
     if not mp_path or not Path(mp_path).is_file():
-        mp_path = search_for_file("msticpyconfig.yaml", paths=["."])
+        mp_path = search_for_file("msticpyconfig.yaml", paths=[".", _HOME_PATH])
 
     if mp_path:
         errs: List[str] = []
@@ -592,6 +592,7 @@ def _load_pivots(namespace):
     # pylint: disable=no-member
     if not Pivot.current():
         pivot = Pivot()
+        pivot.reload_pivots()
         namespace["pivot"] = pivot
         # pylint: disable=import-outside-toplevel, cyclic-import
         import msticpy

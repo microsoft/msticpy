@@ -20,7 +20,7 @@ from pkg_resources import (  # type: ignore
 )
 
 from .._version import VERSION
-from ..common.pkg_config import refresh_config
+from ..common.pkg_config import refresh_config, _HOME_PATH
 from ..common.utility import search_for_file
 from ..config import MpConfigFile
 
@@ -301,7 +301,7 @@ def get_aml_user_folder() -> Optional[Path]:
     """Return the root of the user folder."""
     path_parts = Path(".").absolute().parts
     if "Users" not in path_parts:
-        return None
+        return Path(_HOME_PATH).expanduser()
     # find the index of the last occurrence of "users"
     users_idx = len(path_parts) - path_parts[::-1].index("Users")
     # the user folder is one item below this
@@ -314,7 +314,7 @@ def get_aml_user_folder() -> Optional[Path]:
 def _run_user_settings():
     """Import nbuser_settings.py, if it exists."""
     user_folder = get_aml_user_folder()
-    if user_folder.joinpath("nbuser_settings.py").is_file():
+    if user_folder and user_folder.joinpath("nbuser_settings.py").is_file():
         sys.path.append(str(user_folder))
         import nbuser_settings  # noqa: F401
 
@@ -334,16 +334,17 @@ def _set_mpconfig_var():
         return
     # Otherwise check the user's root folder
     user_dir = get_aml_user_folder()
-    mp_path = Path(user_dir).joinpath(MP_FILE)
-    if mp_path.is_file():
-        # If there's a file there, set the env variable to that.
-        os.environ[MP_ENV_VAR] = str(mp_path)
-        # Since we have already imported msticpy to check the version
-        # it will have already configured settings so we need to refresh.
-        refresh_config()
-        _disp_html(
-            f"<br>No {MP_FILE} found. Will use {MP_FILE} in user folder {user_dir}<br>"
-        )
+    if user_dir:
+        mp_path = Path(user_dir).joinpath(MP_FILE)
+        if mp_path.is_file():
+            # If there's a file there, set the env variable to that.
+            os.environ[MP_ENV_VAR] = str(mp_path)
+            # Since we have already imported msticpy to check the version
+            # it will have already configured settings so we need to refresh.
+            refresh_config()
+            _disp_html(
+                f"<br>No {MP_FILE} found. Will use {MP_FILE} in user folder {user_dir}<br>"
+            )
 
 
 _NBVM_PATH = "/mnt/azmnt/.nbvm"
