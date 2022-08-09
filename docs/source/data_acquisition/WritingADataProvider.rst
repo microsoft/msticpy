@@ -36,7 +36,7 @@ To implement a data provider you need to do the following:
 5. Create documentation
 6. Create unit tests
 
-7. Write the driver class
+1. Write the driver class
 -------------------------
 
 This must be derived from :py:class:`DriverBase<msticpy.data.drivers.driver_base.DriverBase>`
@@ -82,7 +82,7 @@ Any per-connection configuration settings can be read in here using the
 section of your configuration settings from ``msticpyconfig.yaml``.
 
 Some existing drivers use an API key to authenticate, some use name/password and others
-use Azure AAD. See :py:class:`KqlDriver <msticpy.data.drivers.kql_driver.KqlDriver>`
+use Azure Active Directory (AAD). See :py:class:`KqlDriver <msticpy.data.drivers.kql_driver.KqlDriver>`
 (`KqlDriver source <https://github.com/microsoft/msticpy/tree/main/msticpy/data/drivers/kql_driver.py>`_)
 for an example
 of the latter.)
@@ -325,8 +325,9 @@ In the ``__init__.py`` module of data drivers
 4. Add queries
 --------------
 
-Create a folder in msticpy/data/queries with the name of your provider and
-add queries. For more details on creating queries, see
+Create a folder in msticpy/data/queries with the name of your *DataEnvironment* and
+add queries. The folder name must match the item that you added to the DataEnvironment
+Enum class in step 3 above. The For more details on creating queries, see
 :ref:`Creating new queries <data_acquisition/dataproviders:Creating new queries>`.
 
 Query parameter names
