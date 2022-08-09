@@ -14,6 +14,7 @@ from .._version import VERSION
 from ..common.exceptions import MsticpyUserError
 from ..transform.network import GraphType, df_to_networkx
 from ..vis.network_plot import plot_nx_graph
+from ..vis.heatmap import plot_heatmap
 from .entity_graph_tools import EntityGraph, req_alert_cols, req_inc_cols
 from .foliummap import plot_map
 from .matrix_plot import plot_matrix
@@ -616,3 +617,73 @@ class MsticpyPlotAccessor:
             edge_attrs=edge_attrs,
             **kwargs,
         )
+
+    # pylint: disable=too-many-arguments
+    def heatmap(data: pd.DataFrame, **kwargs) -> LayoutDOM:
+        """
+        Plot data as a heatmap.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The data to plot.
+        x : str
+            Column to plot on the x (horizontal) axis
+        x_col : str
+            Alias for 'x'
+        y : str
+            Column to plot on the y (vertical) axis
+        y_col : str
+            Alias for 'y'
+        title : str, optional
+            Custom title, default is 'Intersection plot'
+        value_col : str, optional
+            Column from the DataFrame used to categorize heatmap. Default is Total.
+        height : int, optional
+            The plot height. Default is 700
+        width : int
+            The plot width. Default is 900
+        color_pallette : List, optional
+            The color pallette of the heatmap, default is custom list  ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
+        sort : Union[str, bool], optional
+            Sorts the labels of both axes, default is None.
+            Acceptable values are:
+            'asc' (or string starting with 'asc') - Sort ascending
+            'desc' (or string starting with 'asc') - Sort descending
+            False or None (no sort)
+            True  - Sort ascending
+        sort_x : str, optional
+            Sorts the labels of the x axis (takes precedence over `sort`),
+            default is None.
+            Acceptable values are:
+            'asc' (or string starting with 'asc') - Sort ascending
+            'desc' (or string starting with 'asc') - Sort descending
+            False or None (no sort)
+            True  - Sort ascending
+        sort_y : str, optional
+            Sorts the labels of the y axis (takes precedence over `sort`),
+            default is None.
+            Acceptable values are:
+            'asc' (or string starting with 'asc') - Sort ascending
+            'desc' (or string starting with 'asc') - Sort descending
+            False or None (no sort)
+            True  - Sort ascending
+        hide : bool, optional
+            Creates and returns but does not display the plot, default
+            is False.
+        font_size : int, optional
+            Manually specify the font size for axis labels, in points,
+            the default is to automatically calculate a size based on the
+            number of items in each axis.
+        max_label_font_size : int, optional
+            The maximum size, in points, of the X and Y labels, default is 11.
+
+
+        Returns
+        -------
+        LayoutDOM
+            The Bokeh plot
+
+        """
+
+        return plot_heatmap(data=self._df, **kwargs)
