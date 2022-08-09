@@ -96,7 +96,7 @@ details) with:
     )
 
 
-For more details see :py:class:`QueryProvider API<class:msticpy.data.data_providers.QueryProvider>`.
+For more details see :py:class:`QueryProvider API<msticpy.data.data_providers.QueryProvider>`.
 
 
 Connecting to a Data Environment
@@ -133,7 +133,7 @@ Example
 The format of the parameters supplied to the ``connect`` function varies
 by the environment/driver you are trying to use. Please check
 the details for the environment you are using in the
-`Individual Data Environments/Drivers`__ section.
+:ref:`DataAcquisition:Individual Data Environments` section.
 
 List of current built-in queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,9 +210,9 @@ Getting Help for a query
 
 To get further details on a specific query call:
 
-qry_prov.{*query_group*}.{*query_name*}(‘?’) or
+qry_prov.{*query_group*}.{*query_name*}("?") or
 
-qry_prov.{*query_group*}.{*query_name*}(‘help’)
+qry_prov.{*query_group*}.{*query_name*}("help")
 
 or you can use the builtin Python help:
 
@@ -430,7 +430,7 @@ The values acceptable for the *split_queries_by* parameter have the format:
 where N is the number of units and TimeUnit is a mnemonic of the unit, e.g.
 H = hour, D = day, etc. For the full list of these see the documentation
 for Timedelta in the
-`pandas documentation <https://pandas.pydata.org/pandas-docs>`__
+`pandas documentation <https://pandas.pydata.org/docs>`__
 
 .. warning:: There are some important caveats to this feature.
 
@@ -760,19 +760,19 @@ a query definition file then you import it with
 
     *query_provider*.import_query_file(query_file= *path_to_query_file*)
 
-This will load the query file into the Query Provider’s Query Store from
+This will load the query file into the Query Provider's Query Store from
 where it can be called.
 
 .. code:: ipython3
 
     qry_prov.import_query_file(query_file='C:\\queries\\example.yaml')
 
-Once imported the queries in the files appear in the Query Provider’s
+Once imported the queries in the files appear in the Query Provider's
 Query Store alongside the others and can be called in the same manner as
 pre-defined queries.
 
 If you have created a large number of query definition files and you
-want to have the automatically imported into a Query Provider’s query
+want to have the automatically imported into a Query Provider's query
 store at initialization you can specify a directory containing these
 queries in the msticpyconfig.yaml file under QueryDefinitions: Custom:
 
@@ -1007,7 +1007,7 @@ same name as default queries will overwrite default queries.
 If you are having difficulties with a defined query and it is not
 producing the expected results it can be useful to see the raw query
 exactly as it is passed to the Data Environment. If you call a query
-with ‘print’ and the parameters required by that query it will construct
+with "print" and the parameters required by that query it will construct
 and print out the query string to be run.
 
 .. code:: ipython3

@@ -4,16 +4,16 @@
 # license information.
 # --------------------------------------------------------------------------
 """MP Config Control Class."""
-from collections import namedtuple
 import pkgutil
 import re
+from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ipywidgets as widgets
 import yaml
 
-from ..common.utility import is_valid_uuid
 from .._version import VERSION
+from ..common.utility import is_valid_uuid
 from .ce_common import print_debug, py_to_widget, widget_to_py
 from .comp_edit import SettingsControl
 
@@ -26,16 +26,14 @@ STORE_ENV_VAR = "EnvironmentVar"
 STORE_KEYVAULT = "KeyVault"
 STORE_OPT = "StoreType"
 
-ValidtnResult = namedtuple("ValidtnResult", "result, status")
-_VALID_SUCESS = "Validation succeeded"
+ValidationResult = namedtuple("ValidationResult", "result, status")
+_VALID_SUCCESS = "Validation succeeded"
 
 
 class MpConfigControls:
     """Msticpy configuration and settings database."""
 
-    def __init__(
-        self, mp_config_def: Dict[str, Any], mp_config: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, mp_config_def: Dict[str, Any], mp_config: Dict[str, Any]):
         """
         Return an instance of MpConfigControls.
 
@@ -43,11 +41,11 @@ class MpConfigControls:
         ----------
         mp_config_def : Dict[str, Any]
             Msticpy config setting definitions.
-        mp_config : Optional[Dict[str, Any]], optional
-            Msticpy Settings dictionary, by default None
+        mp_config : Dict[str, Any]
+            Msticpy Settings dictionary
 
         """
-        self.mp_config = mp_config or {}
+        self.mp_config = mp_config
         self._raw_config_defn = mp_config_def
         self.config_defn = self._convert_mp_config(mp_config_def)
         self.controls = self._create_ctrl_dict(self.mp_config)
@@ -224,7 +222,7 @@ class MpConfigControls:
                 ctrl_dict[name] = None
         return ctrl_dict
 
-    def validate_all_settings(self, show_all: bool = False) -> List[ValidtnResult]:
+    def validate_all_settings(self, show_all: bool = False) -> List[ValidationResult]:
         """
         Validate settings against definitions.
 
@@ -248,7 +246,7 @@ class MpConfigControls:
 
     def validate_setting(
         self, path: str, defn_path: Optional[str] = None, show_all: bool = False
-    ) -> List[ValidtnResult]:
+    ) -> List[ValidationResult]:
         """
         Validate settings against definitions for a specific path.
 
@@ -277,9 +275,9 @@ class MpConfigControls:
         if isinstance(results, list):
             up_results = self._unpack_lists(results)
             return [res for res in up_results if not res[0] or show_all]
-        return [ValidtnResult(True, "No validation results found")]
+        return [ValidationResult(True, "No validation results found")]
 
-    def _unpack_lists(self, res_list: List[Any]) -> List[ValidtnResult]:
+    def _unpack_lists(self, res_list: List[Any]) -> List[ValidationResult]:
         """Unpack nested lists into a single list."""
         results = []
         for item in res_list:
@@ -292,7 +290,7 @@ class MpConfigControls:
     # pylint: disable=too-many-return-statements
     def _validate_setting_at_path(
         self, path: str, defn_path: Optional[str] = None, index: Optional[int] = None
-    ) -> Union[ValidtnResult, List[Union[ValidtnResult, List[Any]]]]:
+    ) -> Union[ValidationResult, List[Union[ValidationResult, List[Any]]]]:
         """Recursively validate settings at path."""
         defn_path = defn_path or path
         conf_defn = self.get_defn(defn_path)
@@ -305,12 +303,12 @@ class MpConfigControls:
 
         # If we don't have a definition, there's nothing to validate against.
         if not conf_defn:
-            return ValidtnResult(True, f"No definition for path '{path}'")
+            return ValidationResult(True, f"No definition for path '{path}'")
 
         # If this is None and we're not at a leaf setting it means the
         # settings path doesn't exist, so bail here.
         if not setting and not isinstance(conf_defn, tuple):
-            return ValidtnResult(True, f"No setting at path '{path}'")
+            return ValidationResult(True, f"No setting at path '{path}'")
 
         # if the current defn node is a dict, then we need to recurse
         # into it.
@@ -344,14 +342,14 @@ class MpConfigControls:
             validator = _VALIDATORS.get(val_type)
             if validator:
                 return validator(setting, path, val_type, val_opts)
-            return ValidtnResult(True, "No validator for type '{val_type}'")
+            return ValidationResult(True, "No validator for type '{val_type}'")
 
         # If the conf definition is a literal value - compare directly
         if conf_defn == setting:
-            return ValidtnResult(True, f"Value is valid at path '{path}'")
+            return ValidationResult(True, f"Value is valid at path '{path}'")
 
         # Otherwise, we assume failure.
-        return ValidtnResult(False, f"Validation failed for path '{path}'")
+        return ValidationResult(False, f"Validation failed for path '{path}'")
 
     def _yml_extract_type(self, conf_val):
         """Extract type and options from definition."""
@@ -467,101 +465,101 @@ def _is_none_and_not_required(value, val_type, val_opts):
 def _validate_string(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, str):
-        return ValidtnResult(
+        return ValidationResult(
             False, f"Value type {type(value)} should be type {val_type} - {mssg}"
         )
     if "options" in val_opts and value not in val_opts["options"]:
-        return ValidtnResult(
+        return ValidationResult(
             False,
             f"Value {value} must be one of {', '.join(val_opts['options'])} - {mssg}",
         )
     if val_opts.get("format") == "uuid" and not is_valid_uuid(value):
-        return ValidtnResult(
+        return ValidationResult(
             False,
             f"Value {value} should be a UUID - {mssg}",
         )
-    return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+    return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
 
 
 def _validate_bool(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, bool):
-        return ValidtnResult(
+        return ValidationResult(
             False, f"Value type {type(value)} should be type {val_type} - {mssg}"
         )
-    return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+    return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
 
 
 def _validate_m_enum(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if not isinstance(value, (str, list)):
-        return ValidtnResult(
+        return ValidationResult(
             False, f"Value type {type(value)} should be type {val_type} - {mssg}"
         )
     if "options" in val_opts:
         if isinstance(value, str) and value not in val_opts["options"]:
-            return ValidtnResult(
+            return ValidationResult(
                 False,
                 f"Value {value} must be one of {', '.join(val_opts['options'])} - {mssg}",
             )
         if not isinstance(value, list):
-            return ValidtnResult(
+            return ValidationResult(
                 False,
                 f"Value '{value}' should be a string or list. "
                 + f"Must be one of {', '.join(val_opts['options'])} - {mssg}",
             )
         invalid_opts = [val for val in value if val not in val_opts["options"]]
         if invalid_opts:
-            return ValidtnResult(
+            return ValidationResult(
                 False,
                 f"Invalid values '{invalid_opts}' found. "
                 + f"Must be one of {', '.join(val_opts['options'])} - {mssg}",
             )
-    return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+    return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
 
 
 def _validate_txt_dict(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if isinstance(value, dict):
         for d_key, d_val in value.items():
             if not isinstance(d_key, str):
-                return ValidtnResult(
+                return ValidationResult(
                     False,
                     f"Key {d_key} of {value} must be a string - {mssg}",
                 )
             if not isinstance(d_val, (str, int, bool)):
-                return ValidtnResult(
+                return ValidationResult(
                     False,
                     f"Value {d_val} of key {d_key} in {value} must be a"
                     + f" string, int or bool - {mssg}",
                 )
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
-    return ValidtnResult(False, f"Value {value} should be a dictionary - {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
+    return ValidationResult(False, f"Value {value} should be a dictionary - {mssg}")
 
 
 def _validate_list(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     if isinstance(value, list):
         for item_val in value:
             expected_type = val_opts.get("elem_type", "str")
             val_type = type(item_val).__name__
             if expected_type != val_type:
-                return ValidtnResult(
+                return ValidationResult(
                     False,
                     f"Item {item_val} of {value} expected to be a {expected_type} - {mssg}",
                 )
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
-    return ValidtnResult(False, f"Value {value} should be a list - {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
+    return ValidationResult(False, f"Value {value} should be a list - {mssg}")
 
 
 def _validate_defn(value, path, val_type, val_opts):
@@ -583,12 +581,12 @@ def _validate_defn(value, path, val_type, val_opts):
     """
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
 
     # This only handles "one_of" lists of alternatives
     opt_list = val_opts.get("defn", {}).get("one_of")
     if not opt_list:
-        return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        return ValidationResult(True, f"{_VALID_SUCCESS} {mssg}")
     # pull the definitions (val_type and val_opts) for each item into a dict
     opt_dict = {next(iter(val.keys())): next(iter(val.values())) for val in opt_list}
 
@@ -612,7 +610,7 @@ def _validate_defn(value, path, val_type, val_opts):
             _validator = _VALIDATORS.get(opt_v_type, _validate_string)
             return _validator(v_val, f"{path}.{v_key}", opt_v_type, opt_v_opts)
     # Otherwise the validation failed
-    return ValidtnResult(
+    return ValidationResult(
         False,
         f"Value type {type(value)} does not match definition {val_opts['defn']} - {mssg}",
     )

@@ -7,13 +7,13 @@
 
 from pathlib import Path
 from unittest.mock import patch
-import pytest
 
-from httpx import Response
 import pandas as pd
+import pytest
+from httpx import Response
 
-from msticpy.data.uploaders.loganalytics_uploader import LAUploader
 from msticpy.common.exceptions import MsticpyConnectionError
+from msticpy.data.uploaders.loganalytics_uploader import LAUploader
 
 from ...unit_test_lib import get_test_data_path
 

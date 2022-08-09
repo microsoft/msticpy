@@ -1,6 +1,11 @@
 msticpy package
 ===============
 
+.. automodule:: msticpy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -8,18 +13,14 @@ Subpackages
    :maxdepth: 4
 
    msticpy.analysis
+   msticpy.auth
    msticpy.common
    msticpy.config
+   msticpy.context
    msticpy.data
    msticpy.datamodel
+   msticpy.init
    msticpy.nbtools
-   msticpy.sectools
+   msticpy.nbwidgets
+   msticpy.transform
    msticpy.vis
-
-Module contents
----------------
-
-.. automodule:: msticpy
-   :members:
-   :undoc-members:
-   :show-inheritance:

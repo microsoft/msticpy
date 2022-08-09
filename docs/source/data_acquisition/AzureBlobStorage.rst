@@ -16,9 +16,9 @@ Import the module
 
 .. code:: ipython3
 
-    from msticpy.data.azure_blob_storage import AzureBobStorage
+    from msticpy.data.storage import AzureBobStorage
 
-See :py:mod:`azure_blob_storage<msticpy.data.azure_blob_storage>` for API details.
+See :py:mod:`azure_blob_storage<msticpy.data.storage.azure_blob_storage>` for API details.
 
 Initialize  the class and connect
 ---------------------------------
@@ -46,7 +46,7 @@ List Containers
 
     <table border="1" class="dataframe"><thead><tr style="text-align: right;"><th></th><th>name</th><th>last_modified</th><th>etag</th><th>public_access</th><th>has_immutability_policy</th><th>deleted</th><th>version</th><th>has_legal_hold</th><th>metadata</th></tr></thead><tbody><tr><th>0</th><td>papermill</td><td>2020-11-06 21:53:33+00:00</td><td>"0x8D8829E684FCAA2"</td><td>None</td><td>False</td><td>None</td><td>None</td><td>False</td><td>None</td></tr><tr><th>1</th><td>testcontainer</td><td>2020-11-19 15:22:38+00:00</td><td>"0x8D88C9EF3328E1F"</td><td>None</td><td>False</td><td>None</td><td>None</td><td>False</td><td>None</td></tr></tbody></table>
 
-See :py:mod:`containers<msticpy.data.azure_blob_storage.AzureBlobStorage.containers>` for API details.
+See :py:mod:`containers<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.containers>` for API details.
 
 Create a Container
 ------------------
@@ -61,7 +61,7 @@ Create a Container
 
     <table border="1" class="dataframe"><thead><tr style="text-align: right;"><th></th><th>name</th><th>last_modified</th><th>etag</th><th>public_access</th><th>has_immutability_policy</th><th>deleted</th><th>version</th><th>has_legal_hold</th></tr></thead><tbody><tr><th>0</th><td>MyNewContainer</td><td>2020-11-25 16:28:54+00:00</td><td>"0x8D8915F336764B3"</td><td>None</td><td>False</td><td>None</td><td>None</td><td>False</td></tr></tbody></table>
 
-See :py:mod:`create_container<msticpy.data.azure_blob_storage.AzureBlobStorage.create_container>` for API details.
+See :py:mod:`create_container<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.create_container>` for API details.
 
 List Blobs
 ----------
@@ -78,7 +78,7 @@ the name of the container you want to list blobs from.
 
     <table border="1" class="dataframe"><thead><tr style="text-align: right;"><th></th><th>name</th><th>container</th><th>snapshot</th><th>blob_type</th><th>last_modified</th></tr></thead><tbody><tr><th>0</th><td>test-blob</td><td>MyNewContainer</td><td>None</td><td>BlobType.BlockBlob</td><td>2020-11-25 17:26:44+00:00</td></tr></tbody></table>
 
-See :py:mod:`blobs<msticpy.data.azure_blob_storage.AzureBlobStorage.blobs>` for API details.
+See :py:mod:`blobs<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.blobs>` for API details.
 
 Write to a Blob
 ---------------
@@ -92,7 +92,7 @@ The function returns True if the upload was successful.
     >abs.upload_to_blob(blob="Here is some test data", container_name="MyNewContainer", blob_name="test-blob")
     True
 
-See :py:mod:`upload_to_blob<msticpy.data.azure_blob_storage.AzureBlobStorage.upload_to_blob>` for API details.
+See :py:mod:`upload_to_blob<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.upload_to_blob>` for API details.
 
 Read from a Blob
 ----------------
@@ -105,7 +105,7 @@ Read from a Blob
     > print(blob_contents)
     b"Here is some test data"
 
-See :py:mod:`get_blob<msticpy.data.azure_blob_storage.AzureBlobStorage.get_blob>` for API details.
+See :py:mod:`get_blob<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.get_blob>` for API details.
 
 Delete a Blob
 -------------
@@ -118,7 +118,7 @@ Returns True if blob is successfully deleted.
     >abs.delete_blob(container_name="MyNewContainer", blob_name="test-blob")
     True
 
-See :py:mod:`delete_blob<msticpy.data.azure_blob_storage.AzureBlobStorage.delete_blob>` for API details.
+See :py:mod:`delete_blob<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.delete_blob>` for API details.
 
 Generate a SAS Token for a Blob
 -------------------------------
@@ -133,4 +133,4 @@ The returned string is a full URI for the blob, with the SAS token appended.
     >abs.get_sas_token(container_name="MyNewContainer", blob_name="test-blob")
     "https://myabsaccount.blob.core.windows.net/MyNewContainer/test-blob?SASTOKENSTRING
 
-See :py:mod:`get_sas_token<msticpy.data.azure_blob_storage.AzureBlobStorage.get_sas_token>` for API details.
+See :py:mod:`get_sas_token<msticpy.data.storage.azure_blob_storage.AzureBlobStorage.get_sas_token>` for API details.

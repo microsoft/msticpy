@@ -11,7 +11,6 @@ import pytest_check as check
 
 from msticpy.data import sql_to_kql
 
-
 SQLTestCase = namedtuple("SQLTestCase", "sql, kql, id, rename")
 SQL_CASES = [
     SQLTestCase(

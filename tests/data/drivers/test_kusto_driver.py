@@ -5,15 +5,16 @@
 # --------------------------------------------------------------------------
 """Kusto driver unit tests."""
 from unittest.mock import Mock
+
 import pytest
 import pytest_check as check
 
-from msticpy.common.exceptions import MsticpyUserConfigError, MsticpyParameterError
+from msticpy.common.exceptions import MsticpyParameterError, MsticpyUserConfigError
 from msticpy.data import QueryProvider
-from msticpy.data.drivers.kusto_driver import KustoDriver
 from msticpy.data.drivers.kql_driver import KqlDriver
+from msticpy.data.drivers.kusto_driver import KustoDriver
 
-from ...unit_test_lib import get_test_data_path, custom_mp_config
+from ...unit_test_lib import custom_mp_config, get_test_data_path
 
 __author__ = "Ian Hellen"
 
@@ -38,7 +39,7 @@ DataProviders:
 """
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def kusto_qry_prov():
     """Return query provider with query paths."""
     qry_path = str(get_test_data_path().joinpath("kusto"))

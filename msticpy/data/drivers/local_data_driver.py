@@ -5,14 +5,14 @@
 # --------------------------------------------------------------------------
 """Local Data Driver class - for testing and demos."""
 from pathlib import Path
-from typing import Union, Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from .driver_base import DriverBase, QuerySource
+from ..._version import VERSION
 from ...common.pkg_config import settings
 from ...common.utility import export
-from ..._version import VERSION
+from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -133,9 +133,12 @@ class LocalDataDriver(DriverBase):
                 f"Data file ({query}) for query {query_name} not found."
             )
         if file_path.endswith("csv"):
-            return pd.read_csv(
-                file_path, infer_datetime_format=True, parse_dates=["TimeGenerated"]
-            )
+            try:
+                return pd.read_csv(
+                    file_path, infer_datetime_format=True, parse_dates=["TimeGenerated"]
+                )
+            except ValueError:
+                return pd.read_csv(file_path)
         data_df = pd.read_pickle(file_path)
         if isinstance(data_df, pd.DataFrame):
             return data_df

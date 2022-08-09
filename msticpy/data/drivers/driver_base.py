@@ -12,7 +12,10 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple, Union
 import pandas as pd
 
 from ..._version import VERSION
-from ..query_source import QuerySource
+from ...common.exceptions import MsticpyNotConnectedError
+from ...common.pkg_config import get_http_timeout
+from ...common.provider_settings import ProviderSettings, get_provider_settings
+from ..core.query_source import QuerySource
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -35,6 +38,7 @@ class DriverBase(ABC):
         self._previous_connection = False
         self.data_environment = kwargs.get("data_environment")
         self._query_filter: Dict[str, Set[str]] = defaultdict(set)
+        self._instance: Optional[str] = None
 
     @property
     def loaded(self) -> bool:
@@ -72,6 +76,20 @@ class DriverBase(ABC):
 
         """
         return self._connected
+
+    @property
+    def instance(self) -> Optional[str]:
+        """
+        Return instance name, if one is set.
+
+        Returns
+        -------
+        Optional[str]
+            The name of driver instance or None if
+            the driver does not support multiple instances
+
+        """
+        return self._instance
 
     @property
     def schema(self) -> Dict[str, Dict]:
@@ -186,3 +204,24 @@ class DriverBase(ABC):
                 ", ".join(f"'{name}'" for name in allowed_names),
             )
         self._query_filter[name].add(query_filter)
+
+    # Read values from configuration
+    @staticmethod
+    def _get_config_settings(prov_name) -> Dict[Any, Any]:
+        """Get config from msticpyconfig."""
+        data_provs = get_provider_settings(config_section="DataProviders")
+        splunk_settings: Optional[ProviderSettings] = data_provs.get(prov_name)
+        return getattr(splunk_settings, "args", {})
+
+    @staticmethod
+    def _create_not_connected_err(prov_name):
+        return MsticpyNotConnectedError(
+            "Please run the connect() method before running this method.",
+            title=f"not connected to {prov_name}.",
+            help_uri="https://msticpy.readthedocs.io/en/latest/DataProviders.html",
+        )
+
+    @staticmethod
+    def get_http_timeout(**kwargs):
+        """Get http timeout from settings or kwargs."""
+        return get_http_timeout(**kwargs)

@@ -1,5 +1,5 @@
 ﻿# See here for image contents: https://hub.docker.com/r/jupyter/scipy-notebook
-FROM jupyter/scipy-notebook
+FROM mcr.microsoft.com/vscode/devcontainers/anaconda
 LABEL maintainer="Msticpy Dev Team <msticpy@microsoft.com>"
 
 #installing Msticpy requirements and dependencies

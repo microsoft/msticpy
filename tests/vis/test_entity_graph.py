@@ -7,6 +7,7 @@
 import pandas as pd
 from bokeh.models.layouts import Column
 from bokeh.plotting.figure import Figure
+
 from msticpy.datamodel.entities import Alert, Entity, Incident
 from msticpy.nbtools.security_alert import SecurityAlert
 
