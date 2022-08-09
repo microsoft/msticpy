@@ -21,6 +21,7 @@ from msticpy.context.ip_utils import (
     get_whois_df,
     get_whois_info,
 )
+from msticpy.init import mp_pandas_accessors
 
 from ..unit_test_lib import TEST_DATA_PATH
 
@@ -491,9 +492,7 @@ def test_whois_pdext(net_df, mock_asn_whois_query):
     check.equal(len(results), len(net_df))
     check.is_in("AsnDescription", results.columns)
 
-    results2 = net_df.mp_whois.lookup(
-        ip_column="AllExtIPs", asn_col="asn", whois_col="whois"
-    )
+    results2 = net_df.mp.whois(ip_column="AllExtIPs", asn_col="asn", whois_col="whois")
     check.equal(len(results2), len(net_df))
     check.is_in("asn", results2.columns)
     check.is_in("whois", results2.columns)

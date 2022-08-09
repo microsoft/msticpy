@@ -68,6 +68,19 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     Callable
         Function to get, replace or create a SecretsClient
 
+    Notes
+    -----
+    This function creates closure that persists the secrets client
+    instance.
+    The inner function works as follows:
+
+    - if called with no parameters and SecretsClient is not
+      instantiated, it will try to instantiate a SecretsClient,
+      assign it to the nonlocal `_secrets_client` and return this instance.
+    - if called subsequently it will just return the secrets client.
+    - if called with a SecretsClient instance as a parameter, it will
+      replace the SecretsClient instance and return that.
+
     """
     _secrets_client: Optional["SecretsClient"] = None
 
@@ -76,7 +89,7 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     ) -> Optional["SecretsClient"]:
         """Return (optionally setting or creating) a SecretsClient."""
         nonlocal _secrets_client
-        if not _secrets_enabled():
+        if not _SECRETS_ENABLED:
             return None
         if isinstance(secrets_client, SecretsClient):
             _secrets_client = secrets_client
@@ -87,10 +100,15 @@ def get_secrets_client_func() -> Callable[..., Optional["SecretsClient"]]:
     return _return_secrets_client
 
 
+# Create a SecretsClient instance if it can be imported when
+# the module is imported.
 _SECRETS_CLIENT: Any = None
+# Create the secrets client closure
 _SET_SECRETS_CLIENT: Callable[
     ..., Optional["SecretsClient"]
 ] = get_secrets_client_func()
+# Create secrets client instance if SecretsClient can be imported
+# and config has KeyVault settings.
 if "KeyVault" in config.settings and config.settings["KeyVault"] and _SECRETS_ENABLED:
     _SECRETS_CLIENT = _SET_SECRETS_CLIENT()
 
