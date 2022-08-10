@@ -125,7 +125,10 @@ OtherProviders:
 DataProviders:
   AzureCLI:
     Args:
-      auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["env"; "interactive"])
+      auth_methods: m_enum(required=False,
+        options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
+        default=["cli"; "msi", "interactive"]
+        )
       clientId: str(required=False, format=uuid)
       tenantId: str(required=False, format=uuid)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
@@ -184,7 +187,10 @@ DataProviders:
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:
-    auth_methods: m_enum(required=False, options=[env; msi; cli; interactive], default=["env"; "interactive"])
+    auth_methods: m_enum(required=False,
+      options=[env; msi; cli; devicecode; interactive; vscode; powershell; clientsecret; certificate],
+      default=["cli"; "msi", "interactive"]
+      )
     clientId: str(required=False, format=uuid)
     tenantId: str(required=False, format=uuid)
     # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
