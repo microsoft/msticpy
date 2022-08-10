@@ -23,7 +23,7 @@ Your workspace key can be found under the Advanced setting tab of your Log Analy
 
 .. code:: ipython3
 
-	from msticpy.data.uploader.loganalytics_uploader import LAUploader
+	from msticpy.data.uploaders.loganalytics_uploader import LAUploader
 	laup = LAUploader(workspace=WORKSPACE_ID, workspace_secret=WORKSPACE_KEY)
 
 You can also set a ``debug`` flag when instantiating which will provide additional progress messages during an upload process.
