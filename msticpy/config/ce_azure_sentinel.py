@@ -113,7 +113,8 @@ class CEAzureSentinel(CEItemsBase):
         )
         self.txt_imp_url = widgets.Text(
             description="Portal URL",
-            tooltip="Paste in the URL from the Sentinel Azure portal to fetch settings.",
+            # Tooltip not yet supported in widgets.Text
+            # tooltip="Paste in the URL from the Sentinel Azure portal to fetch settings.",
         )
         self.ws_btns = widgets.HBox([self.btn_set_default, btn_resolve])
         self.url_imp_ctrls = widgets.HBox([self.txt_imp_url, self.btn_imp_url])
