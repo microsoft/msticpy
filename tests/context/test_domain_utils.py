@@ -3,7 +3,10 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-"""domain_utilstes extract test class."""
+"""domain_utilities extract test class."""
+import ipaddress
+
+import pandas as pd
 import pytest_check as check
 
 from msticpy.context import domain_utils
@@ -42,6 +45,17 @@ def test_resolver_funcs():
 
     result = domain_utils.ip_rev_resolve(ip)
     check.is_not_none(result)
+
+    result_df = domain_utils.dns_resolve_df("www.microsoft.com")
+    check.is_instance(result_df, pd.DataFrame)
+    check.greater_equal(len(result_df), 1)
+    ip = result_df.iloc[0].rrset
+    ip_addr = ipaddress.ip_address(ip)
+    check.is_instance(ip_addr, (ipaddress.IPv4Address, ipaddress.IPv6Address))
+
+    result_df = domain_utils.ip_rev_resolve_df(ip)
+    check.is_instance(result_df, pd.DataFrame)
+    check.greater_equal(len(result_df), 1)
 
     result = domain_utils.dns_components("www.microsoft.com")
     check.equal(result["subdomain"], "www")
