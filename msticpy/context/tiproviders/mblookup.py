@@ -165,43 +165,25 @@ class MBlookup:
 
     def download_sample(self, sha2):
         """ Download specified sample from MB"""
-        try:
-            data = {'query': 'get_file', "sha256_hash": sha2}
-            res = requests.post(_BASE_URL, data=data)
-            return res.content
-        except requests.exceptions.RequestException as err:
-            return err
+        return self._make_mb_request({'query': 'get_file', "sha256_hash": sha2})
 
     def get_recent(self, selector):
         """ Get the recent MB additions.
+            The selector can be either "time" or number of samples.
+            https://bazaar.abuse.ch/api/#latest_additions
 
             selector:
-                - time: get the latest sample from the last 60 min.
-                - 100: get the latest 100 samples.
+                time (str): get the latest sample from the last 60 min.
+                100 (int): get the latest 100 samples.
+
+            Returns:
+            pandas.DataFrame: The results of the latest addition.
         """
-        try:
-            data = {'query': 'get_recent', "selector": selector}
-            res = requests.post(_BASE_URL, data=data)
-            res = json.loads(res.text)
-            if res["query_status"] == 'ok':
-                observable_df = json_normalize(res['data'])
-                return observable_df
-            return res["query_status"]
-        except requests.exceptions.RequestException as err:
-            return err
+        return self._make_mb_request({'query': 'get_recent', "selector": selector})
 
     def get_cscb(self):
         """ Query Code Signing Certificate Blocklist (CSCB) """
-        try:
-            data = {'query': 'get_cscb'}
-            res = requests.post(_BASE_URL, data=data)
-            res = json.loads(res.text)
-            if res["query_status"] == 'ok':
-                observable_df = json_normalize(res['data'])
-                return observable_df
-            return res["query_status"]
-        except requests.exceptions.RequestException as err:
-            return err
+        return self._make_mb_request({'query': 'get_cscb'})
 
 def _get_mb_api_key():
     """Retrieve the MB key from settings."""
