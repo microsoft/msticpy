@@ -4,27 +4,15 @@
 # license information.
 # Author: Thomas Roccia - @fr0gger_
 # --------------------------------------------------------------------------
-"""
-MalwareBazaar Provider.
-
-Input can be a hash, tag, signature, filetype, clamav signature, imphash, dhash,
-tlsh, telfhash, certificate issuer info, certificate subject info, or certificate.
-
-The class can be used to:
-    - Get data about a sample from MalwareBazaar
-    - Download malware sample from MalwareBazaar
-    - Query Code Signing Certificate Blocklist (CSCB)
-    - Get the recent addition from MalwareBazaar
-
-"""
+"""MalwareBazaar TI Provider."""
+import json
 from enum import Enum
 from typing import Set
 
-import httpx 
-import json
+import httpx
 import pandas as pd
-
 from pandas import json_normalize
+
 from ..._version import VERSION
 from ...common.provider_settings import get_provider_settings
 
@@ -32,6 +20,24 @@ __version__ = VERSION
 __author__ = "Thomas Roccia | @fr0gger_"
 
 _BASE_URL = "https://mb-api.abuse.ch/api/v1/"
+
+_QUERY_OBJECTS_MAPPINGS = {
+    "hash": {"query": "get_info", "hash": "observable"},
+    "tag": {"query": "get_taginfo", "tag": "observable", "limit": "limit"},
+    "signature": {"query": "get_siginfo", "signature": "observable", "limit": "limit"},
+    "filetype": {"query": "get_file_type", "file_type": "observable", "limit": "limit"},
+    "clamav": {"query": "get_clamavinfo", "clamav": "observable", "limit": "limit"},
+    "imphash": {"query": "get_imphash", "imphash": "observable", "limit": "limit"},
+    "dhash": {"query": "get_dhash_icon", "dhash_icon": "observable", "limit": "limit"},
+    "yara": {"query": "get_yarainfo", "yara_rule": "observable", "limit": "limit"},
+    "tlsh": {"query": "get_tlsh", "tlsh": "observable", "limit": "limit"},
+    "telfhash": {"query": "get_telfhash", "telfhash": "observable", "limit": "limit"},
+    "gimphash": {"query": "get_gimphash", "gimphash": "observable", "limit": "limit"},
+    "issuerinfo": {"query": "get_issuerinfo", "issuer_cn": "observable"},
+    "subjectinfo": {"query": "get_subjectinfo", "subject_cn": "observable"},
+    "certificate": {"query": "get_certificate", "serial_number": "observable"},
+}
+
 
 class MBEntityType(Enum):
     """MBEntityType: Enum class for MalwareBazaar entity types."""
@@ -51,18 +57,9 @@ class MBEntityType(Enum):
     CODESIGNSN = "certificate"
     GIMPHASH = "gimphash"
 
+
 class MBlookup:
-    """ MBlookup Python Class wrapper for MalwareBazaar API.
-
-        Classes:
-            MBLookup: Class for MalwareBazaar API.
-
-        Functions:
-            lookup_ioc(self, ioc_type: MBEntityType, ioc_value: str) -> pandas.DataFrame
-            download_sample(self, sha2: str) -> str
-            get_recent(self, selector: str) -> pandas.DataFrame
-            get_cscb(self) -> pandas.DataFrame
-    """
+    """MBlookup Python Class wrapper for MalwareBazaar API."""
 
     _SUPPORTED_MB_TYPES: Set[MBEntityType] = {
         MBEntityType.HASH,
@@ -82,38 +79,44 @@ class MBlookup:
     }
 
     def __init__(self, mb_key=None):
-        """Init function to get the API key if necessary"""
-        self.mb_key = mb_key # or_get_mb_api_key()
-
+        """Init function to get the API key if necessary."""
+        self.mb_key = mb_key  # or_get_mb_api_key()
 
     def _make_mb_request(self, data):
-        """
-        Request to the malware bazaar api.
-        """
+        """Request to the malware bazaar api."""
         try:
             res = httpx.post(_BASE_URL, data=data, timeout=None)
             res_data = json.loads(res.text)
-            if res_data["query_status"] == 'ok':
-                return json_normalize(res_data['data'])
+            if res_data["query_status"] == "ok":
+                return json_normalize(res_data["data"])
             return res["query_status"]
-        except requests.exceptions.RequestException as err:
-                return err
+        except httpx.ConnectError as err:
+            return err
 
     def lookup_ioc(self, observable: str, mb_type: str, limit=10) -> pd.DataFrame:
         """
         Lookup for IOC in MalwareBazaar.
 
-        Parameters:
-            observable (str): The observable to lookup. It can be a hash, a signature 
-                            or a tag(e.g: emotet, filetype, clamav, imphash, dhash...
-            
-            mb_type (str): The type of the observable. It can be a hash, a signature (refer to MBEntityType).
-            limit (int): The number of results to return, default is 100 or 50 in some cases. 
+        Parameters
+        ----------
+        observable : str
+            The observable to lookup. It can be a hash, a signature
+        mb_type : str
+            The type of the observable. It can be a hash, a signature (refer to MBEntityType).
+        limit : int, optional
+            The number of results to return, default is 100 or 50 in some cases, by default 10
 
-        Returns:
-            pandas.DataFrame: The results of the lookup.
+        Returns
+        -------
+        pd.DataFrame
+            The results of the lookup.
+
+        Raises
+        ------
+        KeyError
+            If invalid IoC type is provided.
+
         """
-
         if MBEntityType(mb_type) not in self._SUPPORTED_MB_TYPES:
             raise KeyError(
                 f"Property type {mb_type} not supported",
@@ -121,69 +124,35 @@ class MBlookup:
                 ", ".join(x.value for x in MBEntityType.__members__.values()),
             )
 
-        if mb_type == "hash":
-            return self._make_mb_request({'query': 'get_info', "hash": observable})
+        query_parameters = _build_query_string(observable, mb_type, limit)
 
-        elif mb_type == "tag":
-            return self._make_mb_request({'query': 'get_taginfo', "tag": observable, "limit": limit})
-    
-        elif mb_type == "signature":
-            return self._make_mb_request({'query': 'get_siginfo', "signature": observable, "limit": limit})
+        return self._make_mb_request(query_parameters)
 
-        elif mb_type == "filetype":
-            return self._make_mb_request({'query': 'get_file_type', "file_type": observable, "limit": limit})
+    def download_sample(self, sha2: str):
+        """Download specified sample from MB."""
+        return self._make_mb_request({"query": "get_file", "sha256_hash": sha2})
 
-        elif mb_type == "clamav":
-            return self._make_mb_request({'query': 'get_clamavinfo', "clamav": observable, "limit": limit})
-        
-        elif mb_type == "imphash":
-            return self._make_mb_request({'query': 'get_imphash', "imphash": observable, "limit": limit})
-
-        elif mb_type == "dhash":
-            return self._make_mb_request({'query': 'get_dhash_icon', "dhash_icon": observable, "limit": limit})
-
-        elif mb_type == "yara":
-            return self._make_mb_request({'query': 'get_yarainfo', "yara_rule": observable, "limit": limit})
-
-        elif mb_type == "tlsh":
-            return self._make_mb_request({'query': 'get_tlsh', "tlsh": observable, "limit": limit})
-
-        elif mb_type == "telfhash":
-            return self._make_mb_request({'query': 'get_telfhash', "telfhash": observable, "limit": limit})
-
-        elif mb_type == "gimphash":
-            return self._make_mb_request({'query': 'get_gimphash', "gimphash": observable, "limit": limit})
-            
-        elif mb_type == "issuerinfo":
-            return self._make_mb_request({'query': 'get_issuerinfo', "issuer_cn": observable})
-
-        elif mb_type == "subjectinfo":
-            return self._make_mb_request({'query': 'get_subjectinfo', "subject_cn": observable})
-            
-        elif mb_type == "certificate":
-            return self._make_mb_request({'query': 'get_certificate', "serial_number": observable})
-
-    def download_sample(self, sha2):
-        """ Download specified sample from MB"""
-        return self._make_mb_request({'query': 'get_file', "sha256_hash": sha2})
-
-    def get_recent(self, selector):
-        """ Get the recent MB additions.
-            The selector can be either "time" or number of samples.
-            https://bazaar.abuse.ch/api/#latest_additions
-
-            selector:
-                time (str): get the latest sample from the last 60 min.
-                100 (int): get the latest 100 samples.
-
-            Returns:
-            pandas.DataFrame: The results of the latest addition.
+    def get_recent(self, selector: str):
         """
-        return self._make_mb_request({'query': 'get_recent', "selector": selector})
+        Get the recent MB additions.
+
+        Parameters
+        ----------
+        selector : str
+            Get the latest sample from the last 60 min.
+
+        Returns
+        -------
+        pd.DataFrame
+           The results of the latest addition.
+
+        """
+        return self._make_mb_request({"query": "get_recent", "selector": selector})
 
     def get_cscb(self):
-        """ Query Code Signing Certificate Blocklist (CSCB) """
-        return self._make_mb_request({'query': 'get_cscb'})
+        """Query Code Signing Certificate Blocklist (CSCB)."""
+        return self._make_mb_request({"query": "get_cscb"})
+
 
 def _get_mb_api_key():
     """Retrieve the MB key from settings."""
@@ -192,3 +161,14 @@ def _get_mb_api_key():
     if mb_settings:
         return mb_settings.args.get("AuthKey")
     return None
+
+
+def _build_query_string(observable, mb_type, limit):
+    """Build the query string for the MB API."""
+    query_items = _QUERY_OBJECTS_MAPPINGS[mb_type]
+    if "limit" in query_items:
+        query_items["limit"] = limit
+    for key, value in query_items.items():
+        if value == "observable":
+            query_items[key] = observable
+    return query_items
