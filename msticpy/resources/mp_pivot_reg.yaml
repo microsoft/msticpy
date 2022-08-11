@@ -185,7 +185,8 @@ pivot_providers:
     func_input_value_arg: url
   dns_resolve:
     src_module: msticpy.context.domain_utils
-    src_func_name: dns_resolve
+    src_func_name: dns_resolve_df
+    func_new_name: dns_resolve
     input_type: value
     can_iterate: True
     entity_map:
@@ -196,7 +197,8 @@ pivot_providers:
     create_shortcut: True
   ip_rev_resolve:
     src_module: msticpy.context.domain_utils
-    src_func_name: ip_rev_resolve
+    src_func_name: ip_rev_resolve_df
+    func_new_name: ip_rev_resolve
     input_type: value
     can_iterate: True
     entity_map:
