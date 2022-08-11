@@ -20,8 +20,8 @@ The class can be used to:
 from enum import Enum
 from typing import Set
 
+import httpx 
 import json
-import requests
 import pandas as pd
 
 from pandas import json_normalize
@@ -85,9 +85,33 @@ class MBlookup:
         """Init function to get the API key if necessary"""
         self.mb_key = mb_key # or_get_mb_api_key()
 
+
+    def _make_mb_request(self, data):
+        """
+        Request to the malware bazaar api.
+        """
+        try:
+            res = httpx.post(_BASE_URL, data=data, timeout=None)
+            res_data = json.loads(res.text)
+            if res_data["query_status"] == 'ok':
+                return json_normalize(res_data['data'])
+            return res["query_status"]
+        except requests.exceptions.RequestException as err:
+                return err
+
     def lookup_ioc(self, observable: str, mb_type: str, limit=10) -> pd.DataFrame:
         """
-        Lookup an IOC in MalwareBazaar.
+        Lookup for IOC in MalwareBazaar.
+
+        Parameters:
+            observable (str): The observable to lookup. It can be a hash, a signature 
+                            or a tag(e.g: emotet, filetype, clamav, imphash, dhash...
+            
+            mb_type (str): The type of the observable. It can be a hash, a signature (refer to MBEntityType).
+            limit (int): The number of results to return, default is 100 or 50 in some cases. 
+
+        Returns:
+            pandas.DataFrame: The results of the lookup.
         """
 
         if MBEntityType(mb_type) not in self._SUPPORTED_MB_TYPES:
@@ -98,175 +122,46 @@ class MBlookup:
             )
 
         if mb_type == "hash":
-            try:
-                data = {'query': 'get_info', "hash": observable}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_info', "hash": observable})
 
         elif mb_type == "tag":
-            try:
-                data = {'query': 'get_taginfo', "tag": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
-
+            return self._make_mb_request({'query': 'get_taginfo', "tag": observable, "limit": limit})
+    
         elif mb_type == "signature":
-            try:
-                data = {'query': 'get_siginfo', "signature": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_siginfo', "signature": observable, "limit": limit})
 
         elif mb_type == "filetype":
-            try:
-                data = {'query': 'get_file_type', "file_type": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_file_type', "file_type": observable, "limit": limit})
 
         elif mb_type == "clamav":
-            try:
-                data = {'query': 'get_clamavinfo', "clamav": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
-
+            return self._make_mb_request({'query': 'get_clamavinfo', "clamav": observable, "limit": limit})
+        
         elif mb_type == "imphash":
-            try:
-                data = {'query': 'get_imphash', "imphash": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_imphash', "imphash": observable, "limit": limit})
 
         elif mb_type == "dhash":
-            try:
-                data = {'query': 'get_dhash_icon', "dhash_icon": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_dhash_icon', "dhash_icon": observable, "limit": limit})
 
         elif mb_type == "yara":
-            try:
-                data = {'query': 'get_yarainfo', "yara_rule": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_yarainfo', "yara_rule": observable, "limit": limit})
 
         elif mb_type == "tlsh":
-            try:
-                data = {'query': 'get_tlsh', "tlsh": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_tlsh', "tlsh": observable, "limit": limit})
 
         elif mb_type == "telfhash":
-            try:
-                data = {'query': 'get_telfhash', "telfhash": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_telfhash', "telfhash": observable, "limit": limit})
 
         elif mb_type == "gimphash":
-            try:
-                data = {'query': 'get_gimphash', "gimphash": observable, "limit": limit}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
-
+            return self._make_mb_request({'query': 'get_gimphash', "gimphash": observable, "limit": limit})
+            
         elif mb_type == "issuerinfo":
-            try:
-                data = {'query': 'get_issuerinfo', "issuer_cn": observable}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_issuerinfo', "issuer_cn": observable})
 
         elif mb_type == "subjectinfo":
-            try:
-                data = {'query': 'get_subjectinfo', "subject_cn": observable}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
-
+            return self._make_mb_request({'query': 'get_subjectinfo', "subject_cn": observable})
+            
         elif mb_type == "certificate":
-            try:
-                data = {'query': 'get_certificate', "serial_number": observable}
-                res = requests.post(_BASE_URL, data=data)
-                res = json.loads(res.text)
-                if res["query_status"] == 'ok':
-                    observable_df = json_normalize(res['data'])
-                    return observable_df
-                return res["query_status"]
-            except requests.exceptions.RequestException as err:
-                return err
+            return self._make_mb_request({'query': 'get_certificate', "serial_number": observable})
 
     def download_sample(self, sha2):
         """ Download specified sample from MB"""
