@@ -28,7 +28,8 @@ from .query_store import QueryStore
 __version__ = VERSION
 __author__ = "Ian Hellen"
 
-_DB_QUERY_FLAGS = ("print", "debug_query", "print_query")
+_HELP_FLAGS = ("help", "?")
+_DEBUG_FLAGS = ("print", "debug_query", "print_query")
 _COMPATIBLE_DRIVER_MAPPINGS = {"mssentinel": ["m365d"], "mde": ["m365d"]}
 
 
@@ -414,7 +415,11 @@ class QueryProvider:
     def _execute_query(self, *args, **kwargs) -> Union[pd.DataFrame, Any]:
         if not self._query_provider.loaded:
             raise ValueError("Provider is not loaded.")
-        if not self._query_provider.connected:
+        if (
+            not self._query_provider.connected
+            and not _help_flag(*args)
+            and not _debug_flag(*args, **kwargs)
+        ):
             raise ValueError(
                 "No connection to a data source.",
                 "Please call connect(connection_str) and retry.",
@@ -425,7 +430,7 @@ class QueryProvider:
         query_source = self.query_store.get_query(
             query_path=family, query_name=query_name
         )
-        if "help" in args or "?" in args:
+        if _help_flag(*args):
             query_source.help()
             return None
 
@@ -451,13 +456,11 @@ class QueryProvider:
             formatters=self._query_provider.formatters, **params
         )
         # This looks for any of the "print query" debug args in args or kwargs
-        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
-            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
-        ):
+        if _debug_flag(*args, **kwargs):
             return query_str
 
         # Handle any query options passed
-        query_options = self._get_query_options(params, kwargs)
+        query_options = _get_query_options(params, kwargs)
         return self.exec_query(query_str, query_source=query_source, **query_options)
 
     def _check_for_time_params(self, params, missing):
@@ -469,27 +472,13 @@ class QueryProvider:
             missing.remove("end")
             params["end"] = self._query_time.end
 
-    @staticmethod
-    def _get_query_options(
-        params: Dict[str, Any], kwargs: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
-        """Return any kwargs not already in params."""
-        query_options = kwargs.pop("query_options", {})
-        if not query_options:
-            # Any kwargs left over we send to the query provider driver
-            query_options = {
-                key: val for key, val in kwargs.items() if key not in params
-            }
-        return query_options
-
     def _get_query_folder_for_env(self, root_path: str, environment: str) -> List[Path]:
         """Return query folder for current environment."""
         data_envs = [environment]
         if environment.casefold() in _COMPATIBLE_DRIVER_MAPPINGS:
             data_envs += _COMPATIBLE_DRIVER_MAPPINGS[environment.casefold()]
         return [
-            self._resolve_package_path(root_path).joinpath(data_env.casefold())
+            _resolve_package_path(root_path).joinpath(data_env.casefold())
             for data_env in data_envs
         ]
 
@@ -510,12 +499,12 @@ class QueryProvider:
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
-                custom_qry_path = self._resolve_path(custom_path)
+                custom_qry_path = _resolve_path(custom_path)
                 if custom_qry_path:
                     all_query_paths.append(custom_qry_path)
         if query_paths:
             for param_path in query_paths:
-                param_qry_path = self._resolve_path(param_path)
+                param_qry_path = _resolve_path(param_path)
                 if param_qry_path:
                     all_query_paths.append(param_qry_path)
         if all_query_paths:
@@ -590,7 +579,7 @@ class QueryProvider:
         except ValueError:
             split_delta = pd.Timedelta("1D")
 
-        ranges = self._calc_split_ranges(start, end, split_delta)
+        ranges = _calc_split_ranges(start, end, split_delta)
 
         split_queries = [
             query_source.create_query(
@@ -602,14 +591,12 @@ class QueryProvider:
             for q_start, q_end in ranges
         ]
         # This looks for any of the "print query" debug args in args or kwargs
-        if any(db_arg for db_arg in _DB_QUERY_FLAGS if db_arg in args) or any(
-            db_arg for db_arg in _DB_QUERY_FLAGS if kwargs.get(db_arg, False)
-        ):
+        if _debug_flag(*args, **kwargs):
             return "\n\n".join(split_queries)
 
-        # Retrive any query options passed (other than query params)
+        # Retrieve any query options passed (other than query params)
         # and send to query function.
-        query_options = self._get_query_options(query_params, kwargs)
+        query_options = _get_query_options(query_params, kwargs)
         query_dfs = [
             self.exec_query(query_str, query_source=query_source, **query_options)
             for query_str in tqdm(split_queries, unit="sub-queries", desc="Running")
@@ -617,51 +604,75 @@ class QueryProvider:
 
         return pd.concat(query_dfs)
 
-    @staticmethod
-    def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
-        """Return a list of time ranges split by `split_delta`."""
-        # Use pandas date_range and split the result into 2 iterables
-        s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
-        next(e_ranges, None)  # skip to the next item in the 2nd iterable
-        # Zip them together to get a list of (start, end) tuples of ranges
-        # Note: we subtract 1 nanosecond from the 'end' value of each range so
-        # to avoid getting duplicated records at the boundaries of the ranges.
-        # Some providers don't have nanosecond granularity so we might
-        # get duplicates in these cases
-        ranges = [
-            (s_time, e_time - pd.Timedelta("1ns"))
-            for s_time, e_time in zip(s_ranges, e_ranges)
-        ]
 
-        # Since the generated time ranges are based on deltas from 'start'
-        # we need to adjust the end time on the final range.
-        # If the difference between the calculated last range end and
-        # the query 'end' that the user requested is small (< 10% of a delta),
-        # we just replace the last "end" time with our query end time.
-        if (ranges[-1][1] - end) < (split_delta / 10):
-            ranges[-1] = ranges[-1][0], end
-        else:
-            # otherwise append a new range starting after the last range
-            # in ranges and ending in 'end"
-            # note - we need to add back our subtracted 1 nanosecond
-            ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
-        return ranges
+def _calc_split_ranges(start: datetime, end: datetime, split_delta: pd.Timedelta):
+    """Return a list of time ranges split by `split_delta`."""
+    # Use pandas date_range and split the result into 2 iterables
+    s_ranges, e_ranges = tee(pd.date_range(start, end, freq=split_delta))
+    next(e_ranges, None)  # skip to the next item in the 2nd iterable
+    # Zip them together to get a list of (start, end) tuples of ranges
+    # Note: we subtract 1 nanosecond from the 'end' value of each range so
+    # to avoid getting duplicated records at the boundaries of the ranges.
+    # Some providers don't have nanosecond granularity so we might
+    # get duplicates in these cases
+    ranges = [
+        (s_time, e_time - pd.Timedelta("1ns"))
+        for s_time, e_time in zip(s_ranges, e_ranges)
+    ]
 
-    @classmethod
-    def _resolve_package_path(cls, config_path: str) -> Path:
-        """Resolve path relative to current package."""
-        return (
-            Path(config_path)
-            if Path(config_path).is_absolute()
-            else Path(__file__).resolve().parent.parent.joinpath(config_path)
-        )
+    # Since the generated time ranges are based on deltas from 'start'
+    # we need to adjust the end time on the final range.
+    # If the difference between the calculated last range end and
+    # the query 'end' that the user requested is small (< 10% of a delta),
+    # we just replace the last "end" time with our query end time.
+    if (ranges[-1][1] - end) < (split_delta / 10):
+        ranges[-1] = ranges[-1][0], end
+    else:
+        # otherwise append a new range starting after the last range
+        # in ranges and ending in 'end"
+        # note - we need to add back our subtracted 1 nanosecond
+        ranges.append((ranges[-1][0] + pd.Timedelta("1ns"), end))
+    return ranges
 
-    @classmethod
-    def _resolve_path(cls, config_path: str) -> Optional[str]:
-        """Resolve path."""
-        if not Path(config_path).is_absolute():
-            config_path = str(Path(config_path).expanduser().resolve())
-        if not Path(config_path).is_dir():
-            print(f"Warning: Custom query definitions path {config_path} not found")
-            return None
-        return config_path
+
+def _resolve_package_path(config_path: str) -> Path:
+    """Resolve path relative to current package."""
+    return (
+        Path(config_path)
+        if Path(config_path).is_absolute()
+        else Path(__file__).resolve().parent.parent.joinpath(config_path)
+    )
+
+
+def _resolve_path(config_path: str) -> Optional[str]:
+    """Resolve path."""
+    if not Path(config_path).is_absolute():
+        config_path = str(Path(config_path).expanduser().resolve())
+    if not Path(config_path).is_dir():
+        print(f"Warning: Custom query definitions path {config_path} not found")
+        return None
+    return config_path
+
+
+def _help_flag(*args) -> bool:
+    """Return True if help parameter passed."""
+    return any(help_flag for help_flag in _HELP_FLAGS if help_flag in args)
+
+
+def _debug_flag(*args, **kwargs) -> bool:
+    """Return True if debug/print args passed."""
+    return any(db_arg for db_arg in _DEBUG_FLAGS if db_arg in args) or any(
+        db_arg for db_arg in _DEBUG_FLAGS if kwargs.get(db_arg, False)
+    )
+
+
+def _get_query_options(
+    params: Dict[str, Any], kwargs: Dict[str, Any]
+) -> Dict[str, Any]:
+    # sourcery skip: inline-immediately-returned-variable, use-or-for-fallback
+    """Return any kwargs not already in params."""
+    query_options = kwargs.pop("query_options", {})
+    if not query_options:
+        # Any kwargs left over we send to the query provider driver
+        query_options = {key: val for key, val in kwargs.items() if key not in params}
+    return query_options

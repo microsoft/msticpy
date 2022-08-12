@@ -32,5 +32,4 @@ pydocstyle:
 
 pylint:
   disable:
-    - bad-continuation # conflicts with Black formatting
     - relative-beyond-top-level # multiple false positives
