@@ -519,7 +519,7 @@ class SumologicDriver(DriverBase):
                     print("DEBUG: Exporting results to csv file {export_path}")
                 dataframe_res.to_csv(export_path, index=False)
 
-        return dataframe_res
+        return dataframe_res.copy()
 
     def query_with_results(self, query: str, **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
