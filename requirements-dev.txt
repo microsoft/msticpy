@@ -1,5 +1,5 @@
 aiohttp>=3.7.4
-async_lru>=1.0.2
+async-cache>=1.1.1
 bandit>=1.7.0
 beautifulsoup4
 black>=20.8b1
