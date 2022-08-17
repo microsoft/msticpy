@@ -3,8 +3,7 @@ Writing and Contributing a Data Provider
 
 A data provider lets you query data from a notebook in a standardized way.
 Before reading further you should familiarize yourself with how the data
-providers work from the
-`Querying and Importing Data <https://msticpy.readthedocs.io/DataAcquisition.html>`_
+providers work from the :doc:`Querying and Importing Data <../DataAcquisition>`
 section of the MSTICPy documentation.
 
 The term provider is more a concept than defining a single piece of code.
