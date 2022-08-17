@@ -9,6 +9,7 @@ isort>=5.10.1
 markdown>=3.3.4
 mccabe>=0.6.1
 mypy>=0.821
+nbconvert>=6.1.0
 nbdime>=2.1.0
 pandas>=1.4.0
 pep8-naming>=0.10.0
