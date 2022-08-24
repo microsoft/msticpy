@@ -1,5 +1,5 @@
 aiohttp>=3.7.4
-async_lru>=1.0.2
+async-cache>=1.1.1
 bandit>=1.7.0
 beautifulsoup4
 black>=20.8b1
@@ -12,6 +12,7 @@ markdown>=3.3.4
 mccabe>=0.6.1
 mypy>=0.812
 nbdime>=2.1.0
+nbconvert>=6.1.0
 pandas>=1.2.5
 pep8-naming>=0.10.0
 pep8>=1.7.1
@@ -25,9 +26,11 @@ pylint>=2.5.3
 pyroma>=3.1
 pytest-check>=1.0.1
 pytest-cov>=2.11.1
+pytest-xdist>=2.5.0
 pytest>=5.0.1
 readthedocs-sphinx-ext==2.1.8
 responses>=0.13.2
 respx==0.19.2
 sphinx-rtd-theme>=1.0.0
 sphinx>=5.0.1
+types-attrs>=19.0.0

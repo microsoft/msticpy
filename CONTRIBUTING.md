@@ -23,7 +23,7 @@ We use black everywhere and enforce this in the build.
 
 ## Linters/Code Checkers
 We use the following code checkers:
-- pylint (with --disable=bad-continuation)
+- pylint
 - mypy
 - bandit (with -s B303,B404,B603,B607)
 - flake8 (with --ignore=E501,W503)
