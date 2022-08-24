@@ -1,4 +1,4 @@
-async_lru>=1.0.2
+async-cache>=1.1.1
 pyroma>=3.1
 pytest-check>=1.0.1
 pytest-xdist>=2.5.0
