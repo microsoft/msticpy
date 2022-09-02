@@ -31,6 +31,7 @@ numpy>=1.15.4
 pandas>=1.4.0
 pygeohash>=1.2.0
 pygments>=2.0.0
+pyjwt>=2.3.0
 python-dateutil>=2.8.1
 pytz>=2019.2
 pyyaml>=3.13

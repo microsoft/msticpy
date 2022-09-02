@@ -159,14 +159,14 @@ class BHKeyVaultClient:
 
     def _try_credential_types(self, **kwargs):
         """Try to access Key Vault to establish usable authentication method."""
-        credentials = kwargs.pop("credential", None)
-        if credentials:
-            kv_client = SecretClient(self.vault_uri, kwargs.pop("credential"))
+        credential = kwargs.pop("credential", None)
+        if credential:
+            kv_client = SecretClient(self.vault_uri, credential=credential)
             try:
                 self._get_working_kv_client(kv_client)
             except ClientAuthenticationError as client_err:
                 _print_status(
-                    f"Could not obtain access token using {credentials.__class__.__name__}."
+                    f"Could not obtain access token using {credential.__class__.__name__}."
                 )
                 self._raise_auth_failed_error(client_err)
 
@@ -175,8 +175,8 @@ class BHKeyVaultClient:
                 f"Attempting connection to Key Vault using {auth_method} credentials...",
                 newline=False,
             )
-            credentials = az_connect_core(auth_methods=[auth_method], **kwargs)
-            kv_client = SecretClient(self.vault_uri, credentials.modern)
+            credential = az_connect_core(auth_methods=[auth_method], **kwargs)
+            kv_client = SecretClient(self.vault_uri, credential.modern)
             try:
                 return self._get_working_kv_client(kv_client)
             except ClientAuthenticationError as client_err:

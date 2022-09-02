@@ -53,6 +53,7 @@ _PKG_RENAME_NAME = {
     "sumologic": "sumologic-sdk",
     "vt": "vt-py",
     "kqlmagic": "KqlmagicCustom",
+    "jwt": "pyjwt",
 }
 
 
