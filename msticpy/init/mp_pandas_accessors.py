@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Mapping, Union
 import pandas as pd
 
 from .._version import VERSION
+from ..context.ip_utils import get_whois_df
 from ..data.data_obfus import mask_df
 from ..transform.base64unpack import unpack_df
 from ..transform.iocextract import IoCExtract
@@ -212,3 +213,31 @@ class MsticpyCoreAccessor:
 
         """
         return mask_df(data=self._df, column_map=column_map, use_default=use_default)
+
+    def whois(self, ip_column, **kwargs):
+        """
+        Extract IoCs from either a pandas DataFrame.
+
+        Parameters
+        ----------
+        ip_column : str
+            Column name of IP Address to look up.
+
+        Other Parameters
+        ----------------
+        asn_col : str, optional
+            Name of the output column for ASN description,
+            by default "ASNDescription"
+        ip_column : str, optional
+            Name of the output column for full whois data,
+            by default "WhoIsData"
+        show_progress : bool, optional
+            Show progress for each query, by default False
+
+        Returns
+        -------
+        pd.DataFrame
+            Output DataFrame with results in added columns.
+
+        """
+        return get_whois_df(data=self._df, ip_column=ip_column, **kwargs)

@@ -51,9 +51,7 @@ _PKG_RENAME_NAME = {
     "dateutil": "python-dateutil",
     "splunklib": "splunk-sdk",
     "sumologic": "sumologic-sdk",
-    "typing_extensions": "typing-extensions",
     "vt": "vt-py",
-    "vt_graph_api": "vt-graph-api",
     "kqlmagic": "KqlmagicCustom",
 }
 
@@ -266,11 +264,12 @@ def get_setup_reqs(
     az_mgmt_reqs = {
         pkg.replace("-", "."): pkg for pkg in setup_reqs if pkg.startswith("azure-")
     }
-
     for key, pkg in az_mgmt_reqs.items():
         setup_reqs.pop(pkg)
         setup_reqs[key] = pkg
 
+    # remap packages with "-" in the name with "_" to be valid Python identifiers
+    setup_reqs = {key.replace("-", "_"): value for key, value in setup_reqs.items()}
     return setup_reqs, setup_versions
 
 
@@ -283,7 +282,7 @@ def get_extras_from_setup(
 
     Parameters
     ----------
-    extra : str, optiona
+    extra : str, optional
         The name of the extra to return, by default "all"
     include_base : bool, optional
         If True include install_requires, by default False

@@ -20,6 +20,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   msticpy.common.azure_auth
    msticpy.common.check_version
    msticpy.common.data_types
    msticpy.common.data_utils

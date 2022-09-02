@@ -6,7 +6,7 @@
 """Settings provider for secrets."""
 import re
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .._version import VERSION
 from ..common import pkg_config as config
@@ -30,7 +30,14 @@ __author__ = "Ian Hellen"
 class SecretsClient:
     """Secrets client - manages Key Vault and keyring secrets."""
 
-    def __init__(self, tenant_id: str = None, use_keyring: bool = False):
+    def __init__(
+        self,
+        tenant_id: str = None,
+        use_keyring: bool = False,
+        auth_methods: Optional[List[str]] = None,
+        credential: Any = None,
+        **kwargs,
+    ):
         """
         Initialize SecretsClient instance.
 
@@ -40,11 +47,34 @@ class SecretsClient:
             TenantID, by default None
         use_keyring : bool, optional
             If True use keyring to cache secrets, by default False
+        auth_methods : List[str]
+            The authentication methods to use for Key Vault auth
+            Possible values are:
+            - "env" - to get authentication details from environment variables
+            - "cli" - to use Azure CLI authentication details
+            - "msi" - to user Managed Service Identity details
+            - "interactive" - to prompt for interactive login
+            - "vscode" - to use VSCode credentials
+            - "powershell" - to use PowerShell credentials
+            - "interactive" - to prompt for interactive login
+            - "cache" - to use shared token cache credentials
+            - "devicecode" - to use device code with web login
+            - "clientsecret" - to use client id/secret login.
+        credential : Optional[AzureCredential]
+            Azure credential
+
+        Other Parameters
+        ----------------
+        client_id : Optional[str]
+            Required if auth_methods is ["clientsecret"]
+        client_secret : Optional[str]
+            Required if auth_methods is ["clientsecret"]
 
         Raises
         ------
         MsticpyKeyVaultConfigError
-            Missing or invalid configuration settings.
+            Missing or invalid configuration settings or failure to
+            authenticate to Key Vault with the chosen credential type.
 
         Notes
         -----
@@ -54,6 +84,12 @@ class SecretsClient:
         self._kv_settings = KeyVaultSettings()
 
         self.tenant_id = tenant_id or self._kv_settings.get("tenantid")
+        self._auth_dict = {
+            "tenant_id": self.tenant_id,
+            "auth_methods": auth_methods,
+            "credential": credential,
+            **kwargs,
+        }
         if not self.tenant_id:
             raise MsticpyKeyVaultConfigError(
                 "Could not get TenantId from function parameters or configuration.",

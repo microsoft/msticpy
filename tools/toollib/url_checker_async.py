@@ -12,8 +12,8 @@ from urllib import parse
 
 import markdown
 from aiohttp import ClientConnectionError, ClientResponseError, ClientSession
-from async_lru import alru_cache
 from bs4 import BeautifulSoup
+from cache import AsyncLRU
 
 # pylint: disable=relative-beyond-top-level
 # from . import VERSION
@@ -321,7 +321,7 @@ def check_uris(
     return loop.run_until_complete(future)
 
 
-@alru_cache(maxsize=256)
+@AsyncLRU(maxsize=256)
 async def _check_url_async(url: str, session: ClientSession) -> UrlResult:
     """
     Connect to URL and return response status.

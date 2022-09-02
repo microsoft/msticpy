@@ -199,6 +199,7 @@ class KqlTIProvider(TIProvider):
 
         all_results = []
         for ioc_type, obs_set in ioc_groups.items():
+            kwargs.pop("ioc_type", None)  # we want to use locally-determine type
             with contextlib.suppress(LookupError):
                 query_obj, query_params = self._get_query_and_params(
                     ioc=list(obs_set),
