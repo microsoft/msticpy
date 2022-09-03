@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11-dev"]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
       # Print out details about the run
       - name: Dump GitHub context
@@ -86,7 +86,7 @@ jobs:
           path: junit/test-${{ matrix.python-version }}-results.xml
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
-      
+
   lint:
     runs-on: ubuntu-latest
     strategy:
