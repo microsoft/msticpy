@@ -250,7 +250,7 @@ sources:
         CommonSecurityLog
         | where TimeGenerated >= datetime({start})
         | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}" 
+        | where Computer has "{host_name}"
         {add_query_items}'
     parameters:
       host_name:

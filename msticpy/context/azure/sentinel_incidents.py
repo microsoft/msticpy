@@ -257,7 +257,7 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 200:
+        if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Incident updated.")
 
@@ -328,7 +328,7 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 201 and response.status_code != 200:
+        if response.status_code not in (200, 201):
             raise CloudError(response=response)
         if bookmarks:
             for mark in bookmarks:
@@ -424,7 +424,7 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 201 and response.status_code != 200:
+        if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Comment posted.")
 
@@ -452,7 +452,9 @@ class SentinelIncidentsMixin:
         mark_res_id = self.sent_urls["bookmarks"] + f"/{bookmark_id}"  # type: ignore
         relations_id = uuid4()
         bookmark_url = incident_url + f"/relations/{relations_id}"
-        bkmark_data_items = {"relatedResourceId": mark_res_id.split("https://management.azure.com")[1]}
+        bkmark_data_items = {
+            "relatedResourceId": mark_res_id.split("https://management.azure.com")[1]
+        }
         data = _build_sent_data(bkmark_data_items, props=True)
         params = {"api-version": "2021-04-01"}
         response = httpx.put(
@@ -462,7 +464,7 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
-        if response.status_code != 201 and response.status_code != 200:
+        if response.status_code not in (200, 201):
             raise CloudError(response=response)
         print("Bookmark added to incident.")
 
