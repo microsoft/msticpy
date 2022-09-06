@@ -249,7 +249,7 @@ autodoc_mock_imports = [
     "Kqlmagic",
     "matplotlib.pyplot",
     "matplotlib",
-    "moz_sql_parser",
+    "mo-sql-parsing",
     "msal",
     "msal_extensions",
     "msrest",
