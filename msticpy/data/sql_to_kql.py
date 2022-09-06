@@ -9,8 +9,8 @@ Module for SQL to KQL Conversion.
 This is an experiment conversion utility built to support a limited subset
 of ANSI SQL.
 
-It relies on mo_sql_parsing https://github.com/klahnakoski/mo-sql-parsing
-(a maintained fork from the deprecated https://github.com/mozilla/moz-sql-parser)
+It relies on mo_sql_parsing (a maintained fork from the deprecated
+https://github.com/mozilla/moz-sql-parser)
 to parse the SQL syntax tree. Some hacky additions have been done to
 allow table renaming and support for non ANSI SQL operators such as
 RLIKE.
@@ -35,11 +35,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ..common.exceptions import MsticpyImportExtraError
 
 try:
+    # import moz_sql_parser
+    # from moz_sql_parser import parse
     from mo_sql_parsing import parse
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
-        "Cannot use this feature without mo-sql-parsing installed",
-        title="Error importing mo_sql_parsing for sql_to_kql",
+        "Cannot use this feature without moz_sql_parser installed",
+        title="Error importing moz_sql_parser for sql_to_kql",
         extra="sql",
     ) from imp_err
 
