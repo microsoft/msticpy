@@ -93,7 +93,7 @@ class ResourceGraphDriver(DriverBase):
         )
         self.subscription_ids = [
             sub.subscription_id
-            for sub in self.sub_client.subscriptions.list()  # type: ignore
+            for sub in self.sub_client.subscriptions.list().append("")  # type: ignore
         ]
 
         self._connected = True
