@@ -4038,7 +4038,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-mgmt-subscription 2.0.0 - MIT
+azure-mgmt-subscription 3.0.0 - MIT
 
 
 
