@@ -3966,7 +3966,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-azure-core 1.21.1 - MIT
+azure-core 1.24.0 - MIT
 
 
 
