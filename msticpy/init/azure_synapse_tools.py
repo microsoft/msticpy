@@ -519,5 +519,8 @@ def _configure_mp_settings(mp_spark: MPSparkUtils):
     os.environ["MSTICPYHOME"] = str(mp_spark.config_path)
     config.refresh_config()
 
-    geolite_settings = config.settings.get("OtherProviders", {}).get("GeoIPLite")
-    geolite_settings["DBFolder"] = str(mp_spark.config_path)
+    geolite_settings = (
+        config.settings.get("OtherProviders", {}).get("GeoIPLite", {}).get("Args")
+    )
+    if geolite_settings:
+        geolite_settings["DBFolder"] = str(mp_spark.config_path)

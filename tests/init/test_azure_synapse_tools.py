@@ -32,7 +32,7 @@ SparkUtilsTest = namedtuple("SparkUtilsTest", "mp_spark, msspark_mock")
 @respx.mock
 def mpsparkutils(monkeypatch):
     url_pattern = re.compile(
-        r"https://.*.dev.azuresynapse.net/linkedservices\?api-version=2020-12-01"
+        r"https://.*dev\.azuresynapse\.net/linkedservices\?api-version=2020-12-01"
     )
     respx.get(url_pattern).respond(status_code=200, json=LINKED_SERVICES_RESP)
 
@@ -270,7 +270,7 @@ def test_set_mp_azure_settings():
 def test_init_synapse(mpsparkutils, monkeypatch):
     """Test the init_synapse function."""
     url_pattern = re.compile(
-        r"https://.*.dev.azuresynapse.net/linkedservices\?api-version=2020-12-01"
+        r"https://.*dev\.azuresynapse\.net/linkedservices\?api-version=2020-12-01"
     )
     respx.get(url_pattern).respond(status_code=200, json=LINKED_SERVICES_RESP)
 

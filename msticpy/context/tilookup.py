@@ -16,7 +16,7 @@ requests per minute for the account type that you have.
 import asyncio
 import warnings
 from collections import ChainMap
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import attr
 import nest_asyncio
@@ -383,6 +383,14 @@ class TILookup:
             self._providers[name] = provider
         else:
             self._secondary_providers[name] = provider
+
+    @property
+    def available_query_types(self) -> List[str]:
+        """Return query types available from loaded providers."""
+        query_types: Set[str] = set()
+        for provider in self._providers.values():
+            query_types.update(provider.ioc_query_defs.keys())
+        return sorted(query_types)
 
     # pylint: disable=too-many-arguments
     def lookup_ioc(
