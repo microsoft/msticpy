@@ -238,3 +238,41 @@ sources:
         description: Name of host
         type: str
         default: ""
+  host_network_connections_csl:
+    descritpion: List network connections to and from a host using CommonSecurityLog
+    metadata:
+      pivot:
+        short_name: host_connections_csl
+        direct_func_entities:
+          - Host
+    args:
+      query: '
+        CommonSecurityLog
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where Computer has "{host_name}"
+        {add_query_items}'
+    parameters:
+      host_name:
+        description: Name of host
+        type: str
+        default: ""
+  ip_network_connections_csl:
+    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    metadata:
+      pivot:
+        short_name: ip_connections_csl
+        direct_func_entities:
+          - IP
+    args:
+      query: '
+        CommonSecurityLog
+        | where TimeGenerated >= datetime({start})
+        | where TimeGenerated <= datetime({end})
+        | where SourceIP == "{ip}" or DestinationIP == "{ip}"
+        {add_query_items}'
+    parameters:
+      ip:
+        description: IP address of host
+        type: str
+        default: ""

@@ -75,7 +75,7 @@ class SentinelBookmarksMixin:
             "query": query,
         }  # type: Dict[str, Union[str, List]]
         if results:
-            data_items["queryResults"] = results
+            data_items["queryResult"] = results
         if notes:
             data_items["notes"] = notes
         if labels:
