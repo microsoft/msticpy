@@ -53,6 +53,7 @@ jobs:
       - name: Install test dependencies
         run: |
           if [ -f requirements-dev.txt ]; then
+            python -m pip install prospector
             python -m pip install -r requirements-dev.txt
           else
             python -m pip install flake8 black bandit mypy lxml pylint types-attrs

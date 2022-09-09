@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 """Azure KeyVault pre-authentication."""
 
-import contextlib
 import logging
+import os
 import sys
 from collections import namedtuple
 from datetime import datetime
@@ -28,17 +28,12 @@ from azure.identity import (
     VisualStudioCodeCredential,
 )
 from dateutil import parser
-from msrestazure import azure_cloud
 
 from .._version import VERSION
-from ..common import pkg_config as config
 from ..common.exceptions import MsticpyAzureConfigError
-from .cloud_mappings import (
-    CLOUD_ALIASES,
-    CLOUD_MAPPING,
-    get_all_endpoints,
-    get_all_suffixes,
-)
+
+# pylint: disable=unused-import
+from .cloud_mappings import AzureCloudConfig, default_auth_methods  # noqa: F401
 from .cred_wrapper import CredentialWrapper
 
 __version__ = VERSION
@@ -47,118 +42,28 @@ __author__ = "Pete Bryan"
 
 AzCredentials = namedtuple("AzCredentials", ["legacy", "modern"])
 
-_EXCLUDED_AUTH = {
-    "cli": True,
-    "env": True,
-    "msi": True,
-    "vscode": True,
-    "powershell": True,
-    "interactive": True,
-    "cache": True,
-}
+
+# pylint: disable=too-few-public-methods
+class AzureCredEnvNames:
+    """Enumeration of Azure environment credential names."""
+
+    AZURE_CLIENT_ID = "AZURE_CLIENT_ID"  # The app ID for the service principal
+    AZURE_TENANT_ID = "AZURE_TENANT_ID"  # The service principal's Azure AD tenant ID
+    # pylint: disable=line-too-long
+    # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="This is an enum of env variable names")]
+    AZURE_CLIENT_SECRET = "AZURE_CLIENT_SECRET"  # nosec  # noqa
 
 
-def get_azure_config_value(key, default):
-    """Get a config value from Azure section."""
-    with contextlib.suppress(KeyError):
-        az_settings = config.get_config("Azure")
-        if az_settings and key in az_settings:
-            return az_settings[key]
-    return default
-
-
-def default_auth_methods() -> List[str]:
-    """Get the default (all) authentication options."""
-    return get_azure_config_value("auth_methods", ["cli", "msi", "interactive"])
-
-
-class AzureCloudConfig:
-    """Azure Cloud configuration."""
-
-    def __init__(self, cloud: str = None, tenant_id: Optional[str] = None):
-        """
-        Initialize AzureCloudConfig from `cloud` or configuration.
-
-        Parameters
-        ----------
-        cloud : str, optional
-            The cloud to retrieve configuration for. If not supplied,
-            the cloud ID is read from configuration. If this is not available,
-            it defaults to 'global'.
-        tenant_id : str, optional
-            The tenant to authenticate against. If not supplied,
-            the tenant ID is read from configuration, or the default tenant
-            for the identity.
-
-        """
-        self.cloud = cloud or get_azure_config_value("cloud", "global")
-        self.tenant_id = tenant_id or get_azure_config_value("tenant_id", None)
-        self.auth_methods = default_auth_methods()
-
-    @property
-    def cloud_names(self) -> List[str]:
-        """Return a list of current cloud names."""
-        return list(CLOUD_MAPPING.keys())
-
-    @staticmethod
-    def resolve_cloud_alias(alias) -> Optional[str]:
-        """Return match of cloud alias or name."""
-        alias_cf = alias.casefold()
-        aliases = {alias.casefold(): cloud for alias, cloud in CLOUD_ALIASES.items()}
-        if alias_cf in aliases:
-            return aliases[alias_cf]
-        if alias_cf in aliases.values():
-            return alias_cf
-        return None
-
-    @property
-    def endpoints(self) -> azure_cloud.CloudEndpoints:
-        """
-        Get a list of all the endpoints for an Azure cloud.
-
-        Returns
-        -------
-        dict
-            A dictionary of endpoints for the cloud.
-
-        Raises
-        ------
-        MsticpyAzureConfigError
-            If the cloud name is not valid.
-
-        """
-        return get_all_endpoints(self.cloud)
-
-    @property
-    def suffixes(self) -> azure_cloud.CloudSuffixes:
-        """
-        Get a list of all the suffixes for an Azure cloud.
-
-        Returns
-        -------
-        dict
-            A dictionary of suffixes for the cloud.
-
-        Raises
-        ------
-        MsticpyAzureConfigError
-            If the cloud name is not valid.
-
-        """
-        return get_all_suffixes(self.cloud)
-
-    @property
-    def token_uri(self) -> str:
-        """Return the resource manager token URI."""
-        return f"{self.endpoints.resource_manager}.default"
-
-
-def _build_env_client(
-    tenant_id: str = None, aad_uri: str = None, **kwargs
-) -> EnvironmentCredential:
+def _build_env_client(aad_uri: str = None, **kwargs) -> Optional[EnvironmentCredential]:
     """Build a credential from environment variables."""
     del kwargs
-    return EnvironmentCredential(tenant_id=tenant_id, authority=aad_uri)  # type: ignore
+    if (
+        AzureCredEnvNames.AZURE_CLIENT_ID not in os.environ
+        and AzureCredEnvNames.AZURE_CLIENT_SECRET not in os.environ
+    ):
+        # avoid creating env credential if require envs not set.
+        return None
+    return EnvironmentCredential(authority=aad_uri)  # type: ignore
 
 
 def _build_cli_client(**kwargs) -> AzureCliCredential:
@@ -171,8 +76,13 @@ def _build_msi_client(
     tenant_id: str = None, aad_uri: str = None, **kwargs
 ) -> ManagedIdentityCredential:
     """Build a credential from Managed Identity."""
-    del kwargs
-    return ManagedIdentityCredential(tenant_id=tenant_id, authority=aad_uri)
+    msi_kwargs = kwargs.copy()
+    if AzureCredEnvNames.AZURE_CLIENT_ID in os.environ:
+        msi_kwargs["client_id"] = os.environ[AzureCredEnvNames.AZURE_CLIENT_ID]
+
+    return ManagedIdentityCredential(
+        tenant_id=tenant_id, authority=aad_uri, **msi_kwargs
+    )
 
 
 def _build_vscode_client(
@@ -257,6 +167,11 @@ _CLIENTS = dict(
 )
 
 
+def list_auth_methods() -> List[str]:
+    """Return list of accepted authentication methods."""
+    return sorted(_CLIENTS.keys())
+
+
 def _az_connect_core(
     auth_methods: List[str] = None,
     cloud: str = None,
@@ -271,14 +186,8 @@ def _az_connect_core(
     ----------
     auth_methods : List[str], optional
         List of authentication methods to try
-        Possible options are:
-        - "env" - to get authentication details from environment variables
-        - "cli" - to use Azure CLI authentication details
-        - "msi" - to user Managed Service Identity details
-        - "vscode" - to use VSCode credentials
-        - "powershell" - to use PowerShell credentials
-        - "interactive" - to prompt for interactive login
-        - "cache" - to use shared token cache credentials
+        For a list of possible authentication methods use the `list_auth_methods`
+        function.
         If not set, it will use the value defined in msticpyconfig.yaml.
         If this is not set, the default is ["env", "cli", "msi", "interactive"]
     cloud : str, optional
@@ -290,6 +199,8 @@ def _az_connect_core(
         the tenant ID is read from configuration, or the default tenant for the identity.
     silent : bool, optional
         Whether to display any output during auth process. Default is False.
+    credential : AzureCredential
+        If an Azure credential is passed, it will be used directly.
 
     Returns
     -------
@@ -302,6 +213,10 @@ def _az_connect_core(
     ------
     CloudError
         If chained token credential creation fails.
+
+    See Also
+    --------
+    list_auth_methods
 
     Notes
     -----
@@ -320,9 +235,14 @@ def _az_connect_core(
     az_config = AzureCloudConfig(cloud)
     aad_uri = az_config.endpoints.active_directory
     tenant_id = tenant_id or AzureCloudConfig().tenant_id
-    creds = _build_chained_creds(
-        aad_uri=aad_uri, requested_clients=auth_methods, tenant_id=tenant_id, **kwargs
-    )
+    creds = kwargs.pop("credential", None)
+    if not creds:
+        creds = _build_chained_creds(
+            aad_uri=aad_uri,
+            requested_clients=auth_methods,
+            tenant_id=tenant_id,
+            **kwargs,
+        )
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)
@@ -383,7 +303,7 @@ def _build_chained_creds(
             "At least one valid authentication method required."
         )
 
-    return ChainedTokenCredential(*clients)
+    return ChainedTokenCredential(*[client for client in clients if client])
 
 
 class _AzCachedConnect:
