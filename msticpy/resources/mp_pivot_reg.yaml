@@ -71,6 +71,18 @@ pivot_providers:
       show_progress: False
     func_input_value_arg: ip_address
     create_shortcut: True
+  who_asn:
+    src_module: msticpy.context.ip_utils
+    src_func_name: get_asn_from_ip
+    func_new_name: whois_asn
+    input_type: value
+    entity_map:
+      IpAddress: Address
+    can_iterate: True
+    func_df_param_name: ip
+    func_df_col_param_name: ip_column
+    func_input_value_arg: ip_address
+    create_shortcut: True
   ip_type:
     src_module: msticpy.context.ip_utils
     src_func_name: get_ip_type
@@ -173,7 +185,8 @@ pivot_providers:
     func_input_value_arg: url
   dns_resolve:
     src_module: msticpy.context.domain_utils
-    src_func_name: dns_resolve
+    src_func_name: dns_resolve_df
+    func_new_name: dns_resolve
     input_type: value
     can_iterate: True
     entity_map:
@@ -184,7 +197,8 @@ pivot_providers:
     create_shortcut: True
   ip_rev_resolve:
     src_module: msticpy.context.domain_utils
-    src_func_name: ip_rev_resolve
+    src_func_name: ip_rev_resolve_df
+    func_new_name: ip_rev_resolve
     input_type: value
     can_iterate: True
     entity_map:

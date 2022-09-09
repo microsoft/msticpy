@@ -21,6 +21,7 @@ Submodules
    msticpy.context.tiproviders.intsights
    msticpy.context.tiproviders.kql_base
    msticpy.context.tiproviders.lookup_result
+   msticpy.context.tiproviders.mblookup
    msticpy.context.tiproviders.open_page_rank
    msticpy.context.tiproviders.preprocess_observable
    msticpy.context.tiproviders.result_severity

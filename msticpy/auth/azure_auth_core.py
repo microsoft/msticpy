@@ -4,25 +4,35 @@
 # license information.
 # --------------------------------------------------------------------------
 """Azure KeyVault pre-authentication."""
+
+import contextlib
 import logging
 import sys
 from collections import namedtuple
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from azure.common.credentials import get_cli_profile
 from azure.common.exceptions import CloudError
 from azure.identity import (
+    AzureCliCredential,
+    AzurePowerShellCredential,
+    CertificateCredential,
     ChainedTokenCredential,
-    DefaultAzureCredential,
+    ClientSecretCredential,
+    DeviceCodeCredential,
+    EnvironmentCredential,
     InteractiveBrowserCredential,
+    ManagedIdentityCredential,
+    VisualStudioCodeCredential,
 )
 from dateutil import parser
 from msrestazure import azure_cloud
 
 from .._version import VERSION
 from ..common import pkg_config as config
+from ..common.exceptions import MsticpyAzureConfigError
 from .cloud_mappings import (
     CLOUD_ALIASES,
     CLOUD_MAPPING,
@@ -50,12 +60,10 @@ _EXCLUDED_AUTH = {
 
 def get_azure_config_value(key, default):
     """Get a config value from Azure section."""
-    try:
+    with contextlib.suppress(KeyError):
         az_settings = config.get_config("Azure")
         if az_settings and key in az_settings:
             return az_settings[key]
-    except KeyError:
-        pass  # no Azure section in config
     return default
 
 
@@ -145,6 +153,110 @@ class AzureCloudConfig:
         return f"{self.endpoints.resource_manager}.default"
 
 
+def _build_env_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> EnvironmentCredential:
+    """Build a credential from environment variables."""
+    del kwargs
+    return EnvironmentCredential(tenant_id=tenant_id, authority=aad_uri)  # type: ignore
+
+
+def _build_cli_client(**kwargs) -> AzureCliCredential:
+    """Build a credential from Azure CLI."""
+    del kwargs
+    return AzureCliCredential()
+
+
+def _build_msi_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> ManagedIdentityCredential:
+    """Build a credential from Managed Identity."""
+    del kwargs
+    return ManagedIdentityCredential(tenant_id=tenant_id, authority=aad_uri)
+
+
+def _build_vscode_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> VisualStudioCodeCredential:
+    """Build a credential from Visual Studio Code."""
+    del kwargs
+    return VisualStudioCodeCredential(authority=aad_uri, tenant_id=tenant_id)
+
+
+def _build_interactive_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> InteractiveBrowserCredential:
+    """Build a credential from Interactive Browser logon."""
+    return InteractiveBrowserCredential(
+        authority=aad_uri, tenant_id=tenant_id, **kwargs
+    )
+
+
+def _build_device_code_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> DeviceCodeCredential:
+    """Build a credential from Device Code."""
+    return DeviceCodeCredential(authority=aad_uri, tenant_id=tenant_id, **kwargs)
+
+
+def _build_client_secret_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> ClientSecretCredential:
+    """Build a credential from Client Secret."""
+    client_id = kwargs.pop("client_id", None)
+    client_secret = kwargs.pop("client_secret", None)
+    if not client_secret or not client_id:
+        raise MsticpyAzureConfigError("Client secret and client id are required.")
+    return ClientSecretCredential(
+        authority=aad_uri,
+        tenant_id=tenant_id,  # type: ignore
+        client_id=client_id,
+        client_secret=client_secret,
+        **kwargs,
+    )
+
+
+def _build_certificate_client(
+    tenant_id: str = None, aad_uri: str = None, **kwargs
+) -> CertificateCredential:
+    """Build a credential from Certificate."""
+    client_id = kwargs.pop("client_id", None)
+    if not client_id:
+        raise MsticpyAzureConfigError("Client id required.")
+    return CertificateCredential(
+        authority=aad_uri, tenant_id=tenant_id, client_id=client_id, **kwargs  # type: ignore
+    )
+
+
+def _build_powershell_client(**kwargs) -> AzurePowerShellCredential:
+    """Build a credential from PowerShell logon session."""
+    del kwargs
+    return AzurePowerShellCredential()
+
+
+_CLIENTS = dict(
+    {
+        "env": _build_env_client,
+        "cli": _build_cli_client,
+        "msi": _build_msi_client,
+        "vscode": _build_vscode_client,
+        "powershell": _build_powershell_client,
+        "interactive": _build_interactive_client,
+        "interactive_browser": _build_interactive_client,
+        "devicecode": _build_device_code_client,
+        "device_code": _build_device_code_client,
+        "device": _build_device_code_client,
+        "environment": _build_env_client,
+        "managedidentity": _build_msi_client,
+        "managed_identity": _build_msi_client,
+        "clientsecret": _build_client_secret_client,
+        "client_secret": _build_client_secret_client,
+        "certificate": _build_certificate_client,
+        "cert": _build_certificate_client,
+    }
+)
+
+
 def _az_connect_core(
     auth_methods: List[str] = None,
     cloud: str = None,
@@ -208,27 +320,9 @@ def _az_connect_core(
     az_config = AzureCloudConfig(cloud)
     aad_uri = az_config.endpoints.active_directory
     tenant_id = tenant_id or AzureCloudConfig().tenant_id
-    if auth_methods:
-        for method in auth_methods:
-            if method in _EXCLUDED_AUTH:
-                _EXCLUDED_AUTH[method] = False
-        creds = DefaultAzureCredential(
-            authority=aad_uri,
-            exclude_cli_credential=_EXCLUDED_AUTH["cli"],
-            exclude_environment_credential=_EXCLUDED_AUTH["env"],
-            exclude_managed_identity_credential=_EXCLUDED_AUTH["msi"],
-            exclude_powershell_credential=_EXCLUDED_AUTH["powershell"],
-            exclude_visual_studio_code_credential=_EXCLUDED_AUTH["vscode"],
-            exclude_shared_token_cache_credential=_EXCLUDED_AUTH["cache"],
-            exclude_interactive_browser_credential=_EXCLUDED_AUTH["interactive"],
-            interactive_browser_tenant_id=tenant_id,
-        )
-    else:
-        creds = DefaultAzureCredential(
-            authority=aad_uri,
-            exclude_interactive_browser_credential=False,
-            interactive_browser_tenant_id=tenant_id,
-        )
+    creds = _build_chained_creds(
+        aad_uri=aad_uri, requested_clients=auth_methods, tenant_id=tenant_id, **kwargs
+    )
 
     # Filter and replace error message when credentials not found
     handler = logging.StreamHandler(sys.stdout)
@@ -246,6 +340,50 @@ def _az_connect_core(
         raise CloudError("Could not obtain credentials.")
 
     return AzCredentials(legacy_creds, creds)
+
+
+def _build_chained_creds(
+    aad_uri,
+    requested_clients: Union[List[str], None] = None,
+    tenant_id: str = None,
+    **kwargs,
+) -> ChainedTokenCredential:
+    """
+    Build a chained token credential.
+
+    Parameters
+    ----------
+    requested_clients : List[str]
+        List of clients to chain.
+    aad_uri : str
+        The URI of the Azure AD cloud to connect to
+    tenant_id : str
+        The tenant ID to connect to
+
+    Returns
+    -------
+    ChainedTokenCredential
+        A chained token credential.
+
+    Raises
+    ------
+    CloudError
+        If the chained credential creation fails.
+
+    """
+    # Create the chained credential
+    if not requested_clients:
+        requested_clients = ["env", "cli", "msi", "interactive"]
+    clients = [
+        _CLIENTS[client](tenant_id=tenant_id, aad_uri=aad_uri, **kwargs)  # type: ignore
+        for client in requested_clients
+    ]
+    if not clients:
+        raise MsticpyAzureConfigError(
+            "At least one valid authentication method required."
+        )
+
+    return ChainedTokenCredential(*clients)
 
 
 class _AzCachedConnect:
