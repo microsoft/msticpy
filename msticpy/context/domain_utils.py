@@ -94,7 +94,7 @@ def screenshot(url: str, api_key: str = None) -> httpx.Response:
     )
     image_string = (
         f"https://api.browshot.com/api/v1/screenshot/thumbnail?id={bs_id}"
-        "&zoom=50&key={bs_api_key}"
+        f"&zoom=50&key={bs_api_key}"
     )
     # Wait until the screenshot is ready and keep user updated with progress
     print("Getting screenshot")
