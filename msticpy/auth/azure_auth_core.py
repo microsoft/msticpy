@@ -57,6 +57,12 @@ class AzureCredEnvNames:
 def _build_env_client(aad_uri: str = None, **kwargs) -> Optional[EnvironmentCredential]:
     """Build a credential from environment variables."""
     del kwargs
+    if (
+        AzureCredEnvNames.AZURE_CLIENT_ID not in os.environ
+        and AzureCredEnvNames.AZURE_CLIENT_SECRET not in os.environ
+    ):
+        # avoid creating env credential if require envs not set.
+        return None
     return EnvironmentCredential(authority=aad_uri)  # type: ignore
 
 
@@ -296,7 +302,7 @@ def _build_chained_creds(
         raise MsticpyAzureConfigError(
             "At least one valid authentication method required."
         )
-    return ChainedTokenCredential(*[client for client in clients if client])
+    return ChainedTokenCredential(*clients)
 
 
 class _AzCachedConnect:
