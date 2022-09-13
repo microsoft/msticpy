@@ -51,6 +51,13 @@ class IoCLookupParams:
     sub_type: str = ""
 
 
+_PARAM_MAP = {
+    "ApiID": "API_ID",
+    "AuthKey": "API_KEY",
+}
+_REV_PARAM_MAP = {value: key for key, value in _PARAM_MAP.items()}
+
+
 @export
 class HttpTIProvider(TIProvider, abc.ABC):
     """HTTP API Lookup provider base class."""
@@ -69,13 +76,17 @@ class HttpTIProvider(TIProvider, abc.ABC):
         self._request_params = {}
         if "ApiID" in kwargs:
             api_id = kwargs.pop("ApiID")
-            self._request_params["API_ID"] = api_id.strip() if api_id else None
+            self._request_params[_PARAM_MAP["ApiID"]] = (
+                api_id.strip() if api_id else None
+            )
         if "AuthKey" in kwargs:
             auth_key = kwargs.pop("AuthKey")
-            self._request_params["API_KEY"] = auth_key.strip() if auth_key else None
+            self._request_params[_PARAM_MAP["AuthKey"]] = (
+                auth_key.strip() if auth_key else None
+            )
 
         missing_params = [
-            param
+            _REV_PARAM_MAP[param]
             for param in self._REQUIRED_PARAMS
             if param not in self._request_params
         ]
