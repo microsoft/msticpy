@@ -302,7 +302,7 @@ def _build_chained_creds(
         raise MsticpyAzureConfigError(
             "At least one valid authentication method required."
         )
-    return ChainedTokenCredential(*clients)
+    return ChainedTokenCredential([client for client in clients if client])
 
 
 class _AzCachedConnect:
