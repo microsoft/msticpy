@@ -320,20 +320,24 @@ def get_whois_df(
     """
     del show_progress
     whois_data = ip_whois(data[ip_column].drop_duplicates())
-    if not isinstance(whois_data, pd.DataFrame):
-        return data.assign(ASNDescription="No data returned")
-    data = data.merge(
-        whois_data,  # type: ignore
-        how="left",
-        left_on=ip_column,
-        right_on="query",
-        suffixes=("", "_whois"),
-    )
-    data[whois_col] = data[whois_data.columns].apply(lambda x: x.to_dict(), axis=1)
-    data[asn_col] = data["asn_description"]
-    if not all_columns:
-        return data.drop(columns=whois_data.columns)
-    return data
+    if (
+        isinstance(whois_data, pd.DataFrame)
+        and not whois_data.empty
+        and "query" in whois_data.columns
+    ):
+        data = data.merge(
+            whois_data,  # type: ignore
+            how="left",
+            left_on=ip_column,
+            right_on="query",
+            suffixes=("", "_whois"),
+        )
+        data[whois_col] = data[whois_data.columns].apply(lambda x: x.to_dict(), axis=1)
+        data[asn_col] = data["asn_description"]
+        if not all_columns:
+            return data.drop(columns=whois_data.columns)
+        return data
+    return data.assign(ASNDescription="No data returned")
 
 
 @pd.api.extensions.register_dataframe_accessor("mp_whois")
