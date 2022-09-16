@@ -729,9 +729,11 @@ def plot_map(
         ).dropna(axis="index", subset=["Latitude", "Longitude"])
         lat_column, long_column = ["Latitude", "Longitude"]
         if not tooltip_columns:
-            tooltip_columns = [ip_column, "CountryCode", "City"]
+            tooltip_columns = _default_columns(data, [ip_column, "CountryCode", "City"])
         if not popup_columns:
-            popup_columns = [ip_column, "CountryName", "City", lat_column, long_column]
+            popup_columns = _default_columns(
+                data, [ip_column, "CountryName", "City", lat_column, long_column]
+            )
     else:
         if not tooltip_columns:
             tooltip_columns = []
@@ -745,8 +747,10 @@ def plot_map(
         ip_column,
         lat_column,
         long_column,
-        [layer_column, icon_column, popup_columns, tooltip_columns],
+        [layer_column, icon_column],
     )
+    popup_columns = _validate_optional_columns(data, popup_columns)
+    tooltip_columns = _validate_optional_columns(data, tooltip_columns)
 
     folium_map.locations.extend(
         data.apply(lambda row: (row[lat_column], row[long_column]), axis=1)
@@ -788,6 +792,10 @@ def plot_map(
 # pylint: enable=too-many-locals, too-many-arguments
 
 
+def _default_columns(data, defaults: Iterable[str]) -> List[str]:
+    return [col_name for col_name in defaults if col_name in data.columns]
+
+
 def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
     """Validate required columns and that optional cols are in the data."""
     if not ip_column and not (lat_column and long_column):
@@ -809,6 +817,11 @@ def _validate_columns(data, ip_column, lat_column, long_column, other_columns):
             "The following columns are not in the supplied DataFrame",
             ",".join(f"'{col}'" for col in missing_columns),
         )
+
+
+def _validate_optional_columns(data, optional_columns: Iterable[str]) -> List[str]:
+    """Validate that optional columns are in the data."""
+    return [col for col in optional_columns if col in data.columns]
 
 
 # pylint: disable=too-many-arguments

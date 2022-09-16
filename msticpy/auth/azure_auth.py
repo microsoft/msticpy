@@ -21,7 +21,9 @@ from ..common.provider_settings import get_provider_settings
 from .azure_auth_core import (  # noqa: F401
     AzCredentials,
     AzureCloudConfig,
+    AzureCredEnvNames,
     az_connect_core,
+    list_auth_methods,
     only_interactive_cred,
 )
 from .cred_wrapper import CredentialWrapper
@@ -34,6 +36,7 @@ def az_connect(
     auth_methods: List[str] = None,
     tenant_id: str = None,
     silent: bool = False,
+    **kwargs,
 ) -> AzCredentials:
     """
     Connect to Azure SDK/API.
@@ -42,21 +45,16 @@ def az_connect(
     ----------
     auth_methods : List[str], optional
         List of authentication methods to try
-        Possible options are:
-        - "env" - to get authentication details from environment variables
-        - "cli" - to use Azure CLI authentication details
-        - "msi" - to user Managed Service Identity details
-        - "interactive" - to prompt for interactive login
-        - "vscode" - to use VSCode credentials
-        - "powershell" - to use PowerShell credentials
-        - "interactive" - to prompt for interactive login
-        - "cache" - to use shared token cache credentials
-        Default is ["env", "msi", "vscode", "cli", "powershell", "interactive"]
+        For a list of possible authentication methods use the `list_auth_methods`
+        function.
+        Default is ["env", "msi", "vscode", "cli", "powershell", "devicecode"]
     tenant_id : str, optional
         The tenant to authenticate against. If not supplied, the default
         tenant for the identity will be used.
     silent : bool, optional
         Set True to hide all output during connection, by default False
+    credential : AzureCredential
+        If an Azure credential is passed, it will be used directly.
 
     Returns
     -------
@@ -70,6 +68,10 @@ def az_connect(
     ------
     CloudError
         If chained token credential creation fails.
+
+    See Also
+    --------
+    list_auth_methods
 
     """
     az_cloud_config = AzureCloudConfig()
@@ -85,11 +87,17 @@ def az_connect(
         and isinstance(auth_methods, list)
         and "env" in auth_methods
     ):
-        os.environ["AZURE_CLIENT_ID"] = az_cli_config.args.get("clientId") or ""
-        os.environ["AZURE_TENANT_ID"] = az_cli_config.args.get("tenantId") or ""
-        os.environ["AZURE_CLIENT_SECRET"] = az_cli_config.args.get("clientSecret") or ""
+        os.environ[AzureCredEnvNames.AZURE_CLIENT_ID] = (
+            az_cli_config.args.get("clientId") or ""
+        )
+        os.environ[AzureCredEnvNames.AZURE_TENANT_ID] = (
+            az_cli_config.args.get("tenantId") or ""
+        )
+        os.environ[AzureCredEnvNames.AZURE_CLIENT_SECRET] = (
+            az_cli_config.args.get("clientSecret") or ""
+        )
     credentials = az_connect_core(
-        auth_methods=auth_methods, tenant_id=tenant_id, silent=silent
+        auth_methods=auth_methods, tenant_id=tenant_id, silent=silent, **kwargs
     )
     sub_client = SubscriptionClient(
         credential=credentials.modern,

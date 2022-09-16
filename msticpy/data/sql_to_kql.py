@@ -8,9 +8,11 @@ Module for SQL to KQL Conversion.
 
 This is an experiment conversion utility built to support a limited subset
 of ANSI SQL.
-It relies on moz_sql_parser (https://github.com/mozilla/moz-sql-parser)
+
+It relies on mo_sql_parsing https://github.com/klahnakoski/mo-sql-parsing
+(a maintained fork from the deprecated https://github.com/mozilla/moz-sql-parser)
 to parse the SQL syntax tree. Some hacky additions have been done to
-allow table renaming and support for a few SparkSQL operators such as
+allow table renaming and support for non ANSI SQL operators such as
 RLIKE.
 
 For a more complete translation help with SQL to KQL see
@@ -24,19 +26,20 @@ Known limitations
 - Only partial support for AS naming (should work in SELECT expressions)
 
 """
+
 import random
 import re
+from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..common.exceptions import MsticpyImportExtraError
 
 try:
-    import moz_sql_parser
-    from moz_sql_parser import parse
+    from mo_sql_parsing import parse
 except ImportError as imp_err:
     raise MsticpyImportExtraError(
-        "Cannot use this feature without moz_sql_parser installed",
-        title="Error importing moz_sql_parser for sql_to_kql",
+        "Cannot use this feature without mo-sql-parsing installed",
+        title="Error importing mo_sql_parsing for sql_to_kql",
         extra="sql",
     ) from imp_err
 
@@ -48,45 +51,48 @@ __author__ = "Ian Hellen"
 
 _DEBUG = False
 
-SPARK_KQL_FUNC_MAP = {
-    "avg": ("avg", None, None),
-    "base64": ("base64_encode_tostring", None, None),
-    "concat": ("strcat", None, None),
-    "count": ("count", None, None),
-    "if": ("iif", None, None),
-    "iif": ("iif", None, None),
-    "ifnull": (None, None, "iif(isnull({p0}), {p1}, {p0}))"),
-    "in": ("in", None, None),
-    "instr": ("indexof", None, None),
-    "int": ("toint", None, None),
-    "isnotnull": ("isnotnull", None, None),
-    "isnull": ("isnull", None, None),
-    "left": ("NA", None, None),
-    "length": ("strlen", None, None),
-    "like": ("NA", None, None),
-    "locate": ("indexof", None, None),
-    "lower": ("tolower", None, None),
-    "lcase": ("tolower", None, None),
-    "ltrim": ("trim_start", None, None),
-    "max": ("max", None, None),
-    "mean": ("mean", None, None),
-    "min": ("min", None, None),
-    "position": ("indexof", None, None),
-    "regexp_extract": ("extract", "{p1}, {p0}", None),  # swap params 0, 1
-    "replace": ("replace", None, None),
-    "reverse": ("reverse", None, None),
-    "rtrim": ("trim_end", None, None),
-    "split": ("split", None, None),
-    "string": ("tostring", None, None),
-    "str": ("tostring", None, None),
-    "substr": ("substring", None, None),
-    "substring": ("substring", None, None),
-    "sum": ("sum", None, None),
-    "todatetime": ("to_date", None, None),
-    "translate": ("translate", None, None),
-    "trim": ("trim", None, None),
-    "unbase64": ("base64_decode_tostring", None, None),
-    "upper": ("toupper", None, None),
+FuncFormat = namedtuple("FuncFormat", "default, cust_arg_fmt, cust_func_format")
+
+SQL_KQL_FUNC_MAP = {
+    "add": FuncFormat(None, None, "{p0} + {p1}"),
+    "avg": FuncFormat("avg", None, None),
+    "base64": FuncFormat("base64_encode_tostring", None, None),
+    "concat": FuncFormat("strcat", None, None),
+    "count": FuncFormat("count", None, None),
+    "if": FuncFormat("iif", None, None),
+    "iif": FuncFormat("iif", None, None),
+    "ifnull": FuncFormat(None, None, "iif(isnull({p0}), {p1}, {p0}))"),
+    "in": FuncFormat("in", None, None),
+    "instr": FuncFormat("indexof", None, None),
+    "int": FuncFormat("toint", None, None),
+    "isnotnull": FuncFormat("isnotnull", None, None),
+    "isnull": FuncFormat("isnull", None, None),
+    "left": FuncFormat("NA", None, None),
+    "length": FuncFormat("strlen", None, None),
+    "like": FuncFormat("NA", None, None),
+    "locate": FuncFormat("indexof", None, None),
+    "lower": FuncFormat("tolower", None, None),
+    "lcase": FuncFormat("tolower", None, None),
+    "ltrim": FuncFormat("trim_start", None, None),
+    "max": FuncFormat("max", None, None),
+    "mean": FuncFormat("mean", None, None),
+    "min": FuncFormat("min", None, None),
+    "position": FuncFormat("indexof", None, None),
+    "regexp_extract": FuncFormat("extract", "{p1}, {p0}", None),  # swap params 0, 1
+    "replace": FuncFormat("replace", None, None),
+    "reverse": FuncFormat("reverse", None, None),
+    "rtrim": FuncFormat("trim_end", None, None),
+    "split": FuncFormat("split", None, None),
+    "string": FuncFormat("tostring", None, None),
+    "str": FuncFormat("tostring", None, None),
+    "substr": FuncFormat("substring", None, None),
+    "substring": FuncFormat("substring", None, None),
+    "sum": FuncFormat("sum", None, None),
+    "todatetime": FuncFormat("to_date", None, None),
+    "translate": FuncFormat("translate", None, None),
+    "trim": FuncFormat("trim", None, None),
+    "unbase64": FuncFormat("base64_decode_tostring", None, None),
+    "upper": FuncFormat("toupper", None, None),
 }
 
 
@@ -116,16 +122,19 @@ LEFT_OUTER_JOIN = "left outer join"
 LIKE = "like"
 LIMIT = "limit"
 NOT = "not"
-NOT_BETWEEN = "not between"
-NOT_IN = "not in"
-NOT_LIKE = "not like"
+NOT_BETWEEN = "not_between"
+NOT_IN = "nin"
+NOT_LIKE = "not_like"
+NOT_RLIKE = "not_rlike"
 OFFSET = "offset"
 ON = "on"
 OR = "or"
 ORDER_BY = "orderby"
 RIGHT_JOIN = "right join"
 RIGHT_OUTER_JOIN = "right outer join"
+RLIKE = "rlike"
 SELECT = "select"
+SELECT_DISTINCT = "select_distinct"
 THEN = "then"
 UNION = "union"
 UNION_ALL = "union all"
@@ -133,10 +142,6 @@ USING = "using"
 WHEN = "when"
 WHERE = "where"
 WITH = "with"
-
-# override/add keywords
-RLIKE = "rlike"
-
 
 JOIN_KEYWORDS = {
     FULL_JOIN: "outer",
@@ -151,20 +156,31 @@ JOIN_KEYWORDS = {
 }
 JOIN_KEYWORDS = {kw.replace("_", " "): kql for kw, kql in JOIN_KEYWORDS.items()}
 
-
-BINARY_OPS = {val: key for key, val in moz_sql_parser.keywords.binary_ops.items()}
-BINARY_OPS["eq"] = "=="
-BINARY_OPS["neq"] = "!="
-BINARY_OPS["nin"] = "!in"
-BINARY_OPS["rlike"] = "not matches regex"
-BINARY_OPS["nlike"] = "not matches regex"
-BINARY_OPS["concat"] = "+"
-BINARY_OPS["is"] = "=="
-BINARY_OPS["is not"] = "!="
-
-
-REMAPPED_KEYWORDS = {"RLIKE": "LIKE"}
-
+BINARY_OPS = {
+    "concat": "concat",
+    "mul": "*",
+    "div": "/",
+    "mod": "%",
+    "add": "+",
+    "sub": "-",
+    "binary_and": "binary_and",
+    "binary_or": "binary_or",
+    "binary_xor": "binary_xor",
+    "lt": "<",
+    "lte": "<=",
+    "gt": ">",
+    "gte": ">=",
+    "not_between": "not_between",
+    "or": "or",
+    "and": "and",
+    "eq": "==",
+    "neq": "!=",
+    "nin": "!in",
+    "rlike": "matches regex",
+    "not_rlike": "not matches regex",
+    "is": "==",
+    "is_not": "!=",
+}
 
 # noqa: MC0001
 
@@ -179,7 +195,7 @@ def sql_to_kql(sql: str, target_tables: Dict[str, str] = None) -> str:
         for table in target_tables:
             sql = sql.replace(table, target_tables[table])
     # replace keywords
-    sql = _remap_kewords(sql)
+    # sql = _remap_kewords(sql)
     parsed_sql = parse(sql)
     query_lines = _parse_query(parsed_sql)
     return "\n".join(line for line in query_lines if line.strip())
@@ -199,12 +215,16 @@ def _parse_query(parsed_sql: Dict[str, Any]) -> List[str]:  # noqa: MC0001
         _process_group_by(parsed_sql, query_lines)
         # Get rid of the SELECT statement since we've processed it in
         # the groupby
-        parsed_sql.pop(SELECT)
+        parsed_sql.pop(SELECT, parsed_sql.pop(SELECT_DISTINCT, None))
 
     distinct_select: List[Dict[str, Any]] = []
+    if SELECT_DISTINCT in parsed_sql:
+        distinct_select.extend(parsed_sql[SELECT_DISTINCT])
+        _process_select(
+            parsed_sql[SELECT_DISTINCT], parsed_sql[SELECT_DISTINCT], query_lines
+        )
     if SELECT in parsed_sql:
-        distinct_select, expr_list = _is_distinct(parsed_sql[SELECT])
-        _process_select(parsed_sql[SELECT], expr_list, query_lines)
+        _process_select(parsed_sql[SELECT], parsed_sql[SELECT], query_lines)
     if ORDER_BY in parsed_sql:
         query_lines.append(f"| order by {_create_order_by(parsed_sql[ORDER_BY])}")
     if distinct_select:
@@ -233,7 +253,7 @@ def _process_from(
     if isinstance(from_expr, dict) and UNION in from_expr:
         query_lines.extend(_parse_query(from_expr))
     elif isinstance(from_expr, dict):
-        query_lines.extend(_parse_query(from_expr["value"]))
+        query_lines.extend(_parse_query(from_expr))
     elif isinstance(from_expr, str):
         query_lines.append((from_expr))
         return
@@ -328,7 +348,7 @@ def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
     )
     by_clause = ", ".join(val["value"] for val in group_by_expr if val.get("value"))
 
-    _, expr_list = _is_distinct(parsed_sql[SELECT])
+    expr_list = parsed_sql.get(SELECT, parsed_sql.get(SELECT_DISTINCT, []))
     group_by_expr_list = []
     expr_list = _get_expr_value(expr_list)
     for expr in expr_list:
@@ -352,9 +372,13 @@ def _parse_expression(expression):  # noqa: MC0001
     if not isinstance(expression, dict):
         return expression
     if AND in expression:
-        return "\n  and ".join([_parse_expression(expr) for expr in expression[AND]])
+        return "\n  and ".join(
+            [f"({_parse_expression(expr)})" for expr in expression[AND]]
+        )
     if OR in expression:
-        return "\n  or ".join([_parse_expression(expr) for expr in expression[OR]])
+        return "\n  or ".join(
+            [f"({_parse_expression(expr)})" for expr in expression[OR]]
+        )
     if NOT in expression:
         return f" not ({_parse_expression(expression[NOT])})"
     if BETWEEN in expression:
@@ -364,7 +388,7 @@ def _parse_expression(expression):  # noqa: MC0001
     if NOT_BETWEEN in expression:
         args = expression[NOT_BETWEEN]
         betw_expr = f"{_parse_expression(args[1])} .. {_parse_expression(args[2])}"
-        return f"{args[0]} not between ({betw_expr})"
+        return f"{args[0]} !between ({betw_expr})"
     if IN in expression or NOT_IN in expression:
         sql_op = IN if IN in expression else NOT_IN
         kql_op = IN if IN in expression else "!in"
@@ -379,7 +403,7 @@ def _parse_expression(expression):  # noqa: MC0001
         return f"{args[0]} {kql_op} ({sub_query})"
 
     # Handle other operators
-    oper = list(expression.keys())[0] if expression else None
+    oper = next(iter(expression.keys())) if expression else None
     if oper in BINARY_OPS:
         right = _parse_expression(expression[oper][1])
         left = _parse_expression(expression[oper][0])
@@ -391,6 +415,8 @@ def _parse_expression(expression):  # noqa: MC0001
     if expression:
         func, operand = next(iter(expression.items()))
         #         set_trace()
+        if isinstance(operand, list):
+            return _map_func(func, *operand)
         return _map_func(func, operand)
     return "EXPRESSION {expression} not resolved."
 
@@ -403,10 +429,10 @@ def _map_func(func: str, *args) -> str:
     func = func.lower().strip()
     args_dict = {f"p{idx}": arg for idx, arg in enumerate(args)}
     def_arg_fmt = ", ".join(f"{{{arg}}}" for arg in args_dict)
-    if func not in SPARK_KQL_FUNC_MAP:
+    if func not in SQL_KQL_FUNC_MAP:
         func_fmt = f"{func}({def_arg_fmt}) // WARNING unmapped function\n"
         return func_fmt.format(**args_dict)
-    func_map = SPARK_KQL_FUNC_MAP[func]
+    func_map = SQL_KQL_FUNC_MAP[func]
 
     if (
         func == "count"
@@ -416,14 +442,14 @@ def _map_func(func: str, *args) -> str:
         func_arg = _get_expr_value(args[0]["distinct"])
         return f"dcount({func_arg})"
 
-    if not func_map[1] and not func_map[2]:
-        func_fmt = f"{func_map[0]}({def_arg_fmt})"
+    if not func_map.cust_arg_fmt and not func_map.cust_func_format:
+        func_fmt = f"{func_map.default}({def_arg_fmt})"
         return func_fmt.format(**args_dict)
-    if func_map[1]:
-        func_fmt = f"{func_map[0]}({func_map[1]})"
+    if func_map.cust_arg_fmt:
+        func_fmt = f"{func_map.default}({func_map.cust_arg_fmt})"
         return func_fmt.format(**args_dict)
-    if func_map[2]:
-        func_fmt = f"{func_map[2]}"
+    if func_map.cust_func_format:
+        func_fmt = f"{func_map.cust_func_format}"
         return func_fmt.format(**args_dict)
     raise ValueError(f"Could not map function or args {func}{args_dict}")
 
@@ -457,37 +483,6 @@ def _quote(expr: str) -> str:
 def _single_quote_strings(sql: str) -> str:
     """Replace unquoted double-quotes with single-quotes."""
     return re.sub(r"(?<![\\])\"", "'", sql)
-
-
-def _remap_kewords(sql: str) -> str:
-    """Replace keywords in source SQL statement."""
-    for repl_kw, mapped_kw in REMAPPED_KEYWORDS.items():
-        sql = re.sub(f"\\s{repl_kw}\\s", f" {mapped_kw} ", sql)
-    return sql
-
-
-def _is_distinct(
-    select_list: Union[Dict[str, Any], List[Dict[str, Any]]]
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Check for DISTINCT in SELECT clause."""
-    select_list_out = []
-    dist_list: List[Dict[str, Any]] = []
-    dist_dict = _get_expr_value(select_list)
-
-    if isinstance(dist_dict, dict) and DISTINCT in dist_dict:
-        dist_list = dist_dict.pop(DISTINCT)
-        # Keep distinct items in the select list
-        return dist_list, dist_list
-
-    if isinstance(select_list, dict):
-        select_list = [select_list]
-    if isinstance(select_list, list):
-        for expr in select_list:
-            _db_print(expr)
-            if "value" in expr and DISTINCT in expr["value"]:
-                dist_list.append({"value": _get_expr_value(expr["value"][DISTINCT])})
-            select_list_out.append(expr)
-    return dist_list, select_list_out
 
 
 def _format_order_item(item: Dict[str, Any]) -> str:

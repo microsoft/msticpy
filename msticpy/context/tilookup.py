@@ -13,7 +13,10 @@ requests per minute for the account type that you have.
 
 """
 
-from typing import Iterable, List, Mapping, Optional, Tuple, Union
+import asyncio
+import warnings
+from collections import ChainMap
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import pandas as pd
 
@@ -54,7 +57,7 @@ class TILookup(Lookup):
         self,
         ioc: str,
         ioc_type: str = None,
-        query_type: str = None,
+        ioc_query_type: str = None,
         providers: List[str] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
@@ -71,7 +74,7 @@ class TILookup(Lookup):
         ioc_type : str, optional
             One of IoCExtract.IoCType, by default None
             If none, the IoC type will be inferred
-        query_type: str, optional
+        ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
         providers: List[str]
             Explicit list of providers to use
@@ -95,7 +98,7 @@ class TILookup(Lookup):
             item=ioc,
             lookup_function_name="lookup_ioc",
             item_type=ioc_type,
-            query_type=query_type,
+            query_type=ioc_query_type,
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
@@ -107,7 +110,7 @@ class TILookup(Lookup):
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
         ioc_col: str = None,
         ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_query_type: str = None,
         providers: List[str] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
@@ -129,7 +132,7 @@ class TILookup(Lookup):
             ("col" and "column" are also aliases for this parameter)
         ioc_type_col : str, optional
             DataFrame column to use for IoCTypes, by default None
-        query_type: str, optional
+        ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
         providers: List[str]
             Explicit list of providers to use
@@ -152,7 +155,7 @@ class TILookup(Lookup):
                 data=data,
                 ioc_col=ioc_col,
                 ioc_type_col=ioc_type_col,
-                query_type=query_type,
+                ioc_query_type=ioc_query_type,
                 providers=providers,
                 default_providers=default_providers,
                 prov_scope=prov_scope,
@@ -166,7 +169,7 @@ class TILookup(Lookup):
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
         ioc_col: str = None,
         ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_query_type: str = None,
         providers: List[str] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
@@ -178,7 +181,7 @@ class TILookup(Lookup):
             lookup_function_name="lookup_iocs_async",
             item_col=ioc_col,
             item_type_col=ioc_type_col,
-            query_type=query_type,
+            ioc_query_type=ioc_query_type,
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
@@ -190,7 +193,7 @@ class TILookup(Lookup):
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
         ioc_col: str = None,
         ioc_type_col: str = None,
-        query_type: str = None,
+        ioc_query_type: str = None,
         providers: List[str] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
@@ -212,7 +215,7 @@ class TILookup(Lookup):
             ("col" and "column" are also aliases for this parameter)
         ioc_type_col : str, optional
             DataFrame column to use for IoCTypes, by default None
-        query_type: str, optional
+        ioc_query_type: str, optional
             The ioc query type (e.g. rep, info, malware)
         providers: List[str]
             Explicit list of providers to use
@@ -235,7 +238,7 @@ class TILookup(Lookup):
             lookup_function_name="lookup_iocs",
             item_col=ioc_col,
             item_type_col=ioc_type_col,
-            query_type=query_type,
+            query_type=ioc_query_type,
             providers=providers,
             default_providers=default_providers,
             prov_scope=prov_scope,
