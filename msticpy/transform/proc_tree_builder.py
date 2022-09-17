@@ -63,12 +63,12 @@ def build_process_tree(
     ProcSchema
 
     """
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
     # If schema is none, infer schema from columns
     if not schema or schema == MDE_INT_EVENT_SCH:
         # Special case for MDE - since there are two possible schemas
         schema = infer_schema(procs)
-    if isinstance(schema, dict):
-        schema = ProcSchema(**schema)
 
     if not schema:
         raise TypeError(
@@ -91,7 +91,7 @@ def build_process_tree(
 
     if show_summary:
         print(get_summary_info(proc_tree))
-    return proc_tree
+    return proc_tree.sort_values(by=["path", schema.time_stamp], ascending=True)
 
 
 def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:

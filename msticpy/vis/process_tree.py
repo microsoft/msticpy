@@ -120,11 +120,12 @@ def build_and_show_process_tree(
     plot_process_tree
 
     """
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
     # Check if this table already seems to have the proc_tree metadata
     missing_cols = _check_proc_tree_schema(data)
     if missing_cols:
         data = build_process_tree(procs=data, schema=schema)
-
     return plot_process_tree(
         data, schema, output_var=output_var, legend_col=legend_col, **kwargs
     )
@@ -333,7 +334,9 @@ def _pre_process_tree(
 
     _validate_plot_schema(proc_tree, schema)
 
-    proc_tree = proc_tree.sort_values("path", ascending=True).reset_index()
+    proc_tree = proc_tree.sort_values(
+        by=["path", schema.time_stamp], ascending=True
+    ).reset_index()
     n_rows = len(proc_tree)
     proc_tree["Row"] = proc_tree.index
     proc_tree["Row"] = n_rows - proc_tree["Row"]
@@ -350,14 +353,19 @@ def _pre_process_tree(
         _pid_fmt, args=(pid_fmt,)
     )
 
-    # trim long commandlines
+    # Command line processing
+    if not schema.cmd_line:
+        schema = ProcSchema(**vars(schema))
+        schema.cmd_line = "__cmd_line__"
+        proc_tree[schema.cmd_line] = "cmdline unknown"
+    # trim long command lines
     max_cmd_len = 500 // len(levels)
     proc_tree[schema.cmd_line] = proc_tree[schema.cmd_line].astype(str)
     long_cmd = proc_tree[schema.cmd_line].str.len() > max_cmd_len
     proc_tree.loc[long_cmd, "__cmd_line$$"] = (
         proc_tree[long_cmd][schema.cmd_line].str[:max_cmd_len] + "..."
     )
-    # replace missing cmdlines
+    # replace missing cmd lines
     proc_tree.loc[~long_cmd, "__cmd_line$$"] = proc_tree[~long_cmd][
         schema.cmd_line
     ].fillna("cmdline unknown")
@@ -374,9 +382,7 @@ def _pid_fmt(pid, pid_fmt):
 
 def _validate_plot_schema(proc_tree: pd.DataFrame, schema):
     """Validate that we have the required columns."""
-    required_cols = set(
-        ["path", schema.cmd_line, schema.process_name, schema.process_id]
-    )
+    required_cols = {"path", schema.process_name, schema.process_id}
     proc_cols = set(proc_tree.columns)
     missing = required_cols - proc_cols
     if missing:
@@ -441,29 +447,30 @@ def _create_fill_map(
     """Create factor map or linear map based on `source_column`."""
     fill_map = "navy"
     color_bar = None
-    if source_column is None or source_column not in source.data:
-        return fill_map, color_bar
+    key_column = source_column or "Level"
 
-    col_kind = source.data[source_column].dtype.kind
+    col_kind = source.data[key_column].dtype.kind
     if col_kind in ["b", "O"]:
-        s_values = set(source.data[source_column])
+        s_values = set(source.data[key_column])
         if np.nan in s_values:
             s_values.remove(np.nan)
         values = list(s_values)
         fill_map = factor_cmap(
-            source_column, palette=viridis(max(3, len(values))), factors=values
+            key_column, palette=viridis(max(3, len(values))), factors=values
         )
     elif col_kind in ["i", "u", "f", "M"]:
-        values = [val for val in source.data[source_column] if not np.isnan(val)]
+        values = [val for val in source.data[key_column] if not np.isnan(val)]
         fill_map = linear_cmap(
-            field_name=source_column,
+            field_name=key_column,
             palette=viridis(256),
             low=np.min(values),
             high=np.max(values),
         )
-        color_bar = ColorBar(
-            color_mapper=fill_map["transform"], width=8, location=(0, 0)  # type: ignore
-        )
+        if source_column is not None:
+            # If user hasn't specified a legend column - don't create a bar
+            color_bar = ColorBar(
+                color_mapper=fill_map["transform"], width=8, location=(0, 0)  # type: ignore
+            )
     return fill_map, color_bar
 
 

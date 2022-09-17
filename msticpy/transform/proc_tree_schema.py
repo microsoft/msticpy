@@ -42,11 +42,11 @@ class ProcSchema:
     process_name: str
     process_id: str
     parent_id: str
-    logon_id: str
-    cmd_line: str
-    user_name: str
-    path_separator: str
-    host_name_column: str
+    cmd_line: Optional[str] = None
+    path_separator: str = "\\"
+    user_name: Optional[str] = None
+    logon_id: Optional[str] = None
+    host_name_column: Optional[str] = None
     time_stamp: str = "TimeGenerated"
     parent_name: Optional[str] = None
     target_logon_id: Optional[str] = None
@@ -72,11 +72,8 @@ class ProcSchema:
             "process_name",
             "process_id",
             "parent_id",
-            "logon_id",
             "cmd_line",
-            "user_name",
             "path_separator",
-            "host_name_column",
             "time_stamp",
         ]
 
@@ -101,6 +98,11 @@ class ProcSchema:
     def get_df_cols(self, data: pd.DataFrame):
         """Return the subset of columns that are present in `data`."""
         return [col for col in self.columns if col in data.columns]
+
+    @property
+    def host_name(self) -> Optional[str]:
+        """Return host name column."""
+        return self.host_name_column
 
     @property
     def event_type_col(self) -> str:
