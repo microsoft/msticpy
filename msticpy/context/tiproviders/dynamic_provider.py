@@ -5,7 +5,8 @@
 # --------------------------------------------------------------------------
 """Dynamic TI provider to create provider from yaml/json definition."""
 import operator
-from typing import Any, Dict, List, NamedTuple, Tuple, Union, cast
+import re
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union, cast
 
 import attr
 
@@ -26,11 +27,11 @@ def create_ti_provider(provider_def: TIProviderDef):
     """Return an TI Provider class from a definition."""
     _validate_definition(provider_def, _PROVIDER_VALIDATION)
 
-    cls_name = valid_pyname(cast(str, provider_def["name"]))
+    cls_name = valid_pyname(cast(str, provider_def[_Fields.NAME]))
     cls_attributes = {
-        "_BASE_URL": cast(str, provider_def.get("base_url")),
-        "description": cast(str, provider_def.get("description")),
-        "_REQUIRED_PARAMS": cast(str, provider_def.get("required_parameters")),
+        "_BASE_URL": cast(str, provider_def.get(_Fields.BASE_URL)),
+        _Fields.DESCRIPTION: cast(str, provider_def.get(_Fields.DESCRIPTION)),
+        "_REQUIRED_PARAMS": cast(str, provider_def.get(_Fields.REQUIRED_PARAMETERS)),
         "_IOC_QUERIES": _parse_queries(provider_def),
         "parse_results": parse_results,
     }
@@ -44,7 +45,7 @@ def create_ti_provider(provider_def: TIProviderDef):
 
 def _parse_queries(provider_def: TIProviderDef) -> Dict[str, IoCLookupParams]:
     """Parse dictionary of TI query definitions."""
-    queries = cast(Dict[str, Dict], provider_def["queries"])
+    queries = cast(Dict[str, Dict], provider_def[_Fields.QUERIES])
     # create the main queries
     ioc_queries = {
         query_name: _create_param(query_def, provider_def)
@@ -52,7 +53,7 @@ def _parse_queries(provider_def: TIProviderDef) -> Dict[str, IoCLookupParams]:
     }
     # add any aliases for ioc types.
     for query_name, query_def in queries.items():
-        aliases = query_def.get("aliases", [])
+        aliases = query_def.get(_Fields.ALIASES, [])
         for alias in aliases:
             ioc_queries[alias] = ioc_queries[query_name]
     return ioc_queries
@@ -62,19 +63,19 @@ def _create_param(
     query: Dict[str, Any], provider_def: Dict[str, Any]
 ) -> IoCLookupParams:
     """Return IoCLookupParams instance for a query."""
-    macros = provider_def.get("macros", {})
+    macros = provider_def.get(_Fields.MACROS, {})
     query_replaced = {
         key: _replace_macros(value, macros)
         for key, value in query.items()
         if key in attr.fields_dict(IoCLookupParams)
     }
     ioc_params = IoCLookupParams(**query_replaced)
-    _set_request_default(ioc_params, "verb", provider_def, "GET")
-    _set_request_default(ioc_params, "headers", provider_def, {})
-    _set_request_default(ioc_params, "params", provider_def, {})
-    _set_request_default(ioc_params, "data", provider_def, {})
-    _set_request_default(ioc_params, "auth_type", provider_def, "HTTPBasic")
-    _set_request_default(ioc_params, "auth_str", provider_def, [])
+    _set_request_default(ioc_params, _Fields.VERB, provider_def, "GET")
+    _set_request_default(ioc_params, _Fields.HEADERS, provider_def, {})
+    _set_request_default(ioc_params, _Fields.PARAMS, provider_def, {})
+    _set_request_default(ioc_params, _Fields.DATA, provider_def, {})
+    _set_request_default(ioc_params, _Fields.AUTH_TYPE, provider_def, "HTTPBasic")
+    _set_request_default(ioc_params, _Fields.AUTH_STR, provider_def, [])
     _set_request_default(ioc_params, "sub_type", provider_def, "")
     return ioc_params
 
@@ -83,7 +84,9 @@ def _set_request_default(ioc_param, attrib, provider_def, default):
     """Return IoC param attribute value or a default."""
     curr_value = getattr(ioc_param, attrib, None)
     if not curr_value:
-        req_def_value = provider_def.get("request_defaults", {}).get(attrib, default)
+        req_def_value = provider_def.get(_Fields.REQUEST_DEFAULTS, {}).get(
+            attrib, default
+        )
         setattr(ioc_param, attrib, req_def_value)
 
 
@@ -106,6 +109,9 @@ def _replace_macros(
             else:
                 replaced_list.append(item.replace(f"{{{token}}}", replacement))
     return replaced_list
+
+
+# Parse Results Definition and supporting functions
 
 
 def parse_results(
@@ -131,23 +137,23 @@ def parse_results(
 
     """
     del self
-    sev_rules = result_processing["severity"]
+    sev_rules = result_processing[_Fields.SEVERITY]
     severity = _match_severity(
         response=response,
         sev_rules=sev_rules,
-        def_result_key=sev_rules.get("key"),
+        def_result_key=sev_rules.get(_Fields.KEY),
     )
-    summary_rules = result_processing["summary"]
+    summary_rules = result_processing[_Fields.SUMMARY]
     summary = _get_summary_items(
         response=response,
-        summary_rules=result_processing["summary"],
-        def_result_key=summary_rules.get("key"),
+        summary_rules=result_processing[_Fields.SUMMARY],
+        def_result_key=summary_rules.get(_Fields.KEY),
     )
     return True, severity, summary
 
 
 def _get_path_from_dict(response, path):
-    """Retrive dictionary value formatted as dotted path."""
+    """Retrieve dictionary value formatted as dotted path."""
     value = response
     for path_part in path.split("."):
         value = value.get(path_part, {})
@@ -156,8 +162,8 @@ def _get_path_from_dict(response, path):
 
 def _match_severity(response, sev_rules, def_result_key):
     """Return the match for a severity rule."""
-    sev = "information"
-    for sev, condition in sev_rules["conditions"].items():
+    sev = _Fields.INFORMATION
+    for sev, condition in sev_rules[_Fields.CONDITIONS].items():
         print("_match_severity", sev, condition)
         if condition is None:
             # default match
@@ -167,41 +173,69 @@ def _match_severity(response, sev_rules, def_result_key):
     return ResultSeverity.parse(sev)
 
 
+_OP_FUNCS = {
+    "in": lambda a, b: a in b,
+    "contains": lambda a, b: b in a,
+    "ne": lambda a, b: a != b,
+    "eq": operator.eq,
+    "gt": operator.gt,
+    "ge": operator.ge,
+    "lt": lambda a, b: a < b,
+    "le": lambda a, b: a <= b,
+    "matches": lambda a, b: bool(re.match(b, a, re.IGNORECASE)),
+}
+
+
+# pylint: disable=too-many-branches
 def _match_severity_condition_str(response, condition, def_key):
     """Return match for individual severity condition."""
-    key = condition.get("key", def_key) if isinstance(condition, dict) else def_key
+    cond_key = None
     # DEBUG
-    print("_match_severity_condition_str", condition, key)
+    print("_match_severity_condition_str", condition, def_key)
     if isinstance(condition, dict):
-        if "and" in condition:
-            cond_list = condition["and"]
+        if _Fields.AND in condition:
+            cond_list = condition[_Fields.AND]
             return all(
                 _match_severity_condition_str(response, sub_cond, def_key)
                 for sub_cond in cond_list
             )
-        if "or" in condition:
+        if _Fields.OR in condition:
             return any(
                 _match_severity_condition_str(response, sub_cond, def_key)
                 for sub_cond in cond_list
             )
+        if _Fields.NOT in condition:
+            return not _match_severity_condition_str(response, condition, def_key)
+        # otherwise, assume that the condition dict is {"key": "condition"}
+        cond_key, condition = next(iter(condition.items()))
+    # If this is a nested condition (like {"key": "condition"} or {"key": {"and": {...}}})
+    # recurse to evaluate nested conditions
+    if isinstance(condition, dict):
+        return _match_severity_condition_str(response, condition, cond_key)
+    key = cond_key or def_key
     key_value = _get_path_from_dict(response, key)
     # DEBUG
-    print("_match_severity_condition_str", key_value)
+    print("_match_severity_condition_str", condition, key, key_value)
     if not isinstance(condition, str):
         raise ValueError(f"Invalid condition expression '{condition}'")
     cond_terms = condition.split()
     if len(cond_terms) == 2:
-        cond_left, cond_op, cond_right = "value", *cond_terms
+        cond_left, cond_op, cond_right = [_Fields.VALUE, *cond_terms]  # type: ignore
     elif len(cond_terms) == 3:
         cond_left, cond_op, cond_right = cond_terms
     else:
         raise ValueError(f"Invalid condition expression '{condition}'")
     if cond_right.isnumeric():
         cond_right = float(cond_right)
-    op_func = getattr(operator, cond_op)
-    if cond_left == "value":
+    op_func = _OP_FUNCS.get(cond_op.casefold())
+    if op_func is None:
+        raise TypeError(
+            f"Operator '{cond_op}' not recognized. Valid operators are:",
+            ", ".join(f"'{legal_op}'" for legal_op in _OP_FUNCS),
+        )
+    if cond_left == _Fields.VALUE:
         return op_func(key_value, cond_right)
-    if cond_left == "len":
+    if cond_left == _Fields.LEN:
         return op_func(len(key_value), cond_right)
     raise ValueError(f"Unknown left side operand in condition {cond_left}.")
 
@@ -209,44 +243,47 @@ def _match_severity_condition_str(response, condition, def_key):
 def _get_summary_items(response, summary_rules, def_result_key):
     """Return summary items from response."""
     summary_dict = {}
-    for name, rule in summary_rules.items():
-        if name == "key":
-            continue
-
+    for name, rule in summary_rules.get(_Fields.FIELDS, {}).items():
+        print("_get_summary_items", def_result_key, rule)
         item_key = (
-            rule.get("key", def_result_key)
+            rule.get(_Fields.KEY, def_result_key)
             if isinstance(rule, dict)
             else def_result_key
         )
         key_value = _get_path_from_dict(response, item_key)
         if not key_value:
             continue
-        action = rule.get("action", "value")
-        if action in ("value", "data"):
+        action = rule.get(_Fields.ACTION, _Fields.DATA)
+        if action == _Fields.DATA:
             summary_dict[name] = key_value
-        elif action in ("count", "len"):
+        elif action in (_Fields.COUNT, _Fields.LEN):
             summary_dict[name] = len(key_value)
         elif isinstance(action, dict):
             op_name, operand = next(iter(action.items()))
-            if op_name != "get_item":
+            if op_name != _Fields.GET_ITEM:
+                print(f"Unsupported operand {op_name}")
                 continue
-            op_func = operator.itemgetter(operand)
-            if isinstance(key_value, list):
-                item_list = [op_func(item) for item in key_value]
-            elif isinstance(key_value, dict):
-                item_list = op_func(key_value)
-            if rule.get("flatten", False):
+            if op_name == _Fields.GET_ITEM:
+                op_func = operator.itemgetter(operand)
+                if isinstance(key_value, list):
+                    item_list = [op_func(item) for item in key_value]
+                elif isinstance(key_value, dict):
+                    item_list = op_func(key_value)
+            if rule.get(_Fields.FLATTEN, False):
                 item_list = [elem for item in item_list for elem in item]
             summary_dict[name] = item_list
-        elif action == "keys":
+        elif action in (_Fields.KEYS, _Fields.LIST_KEYS):
             summary_dict[name] = (
                 list(key_value.keys()) if isinstance(key_value, dict) else key_value
             )
-        elif action == "values":
+        elif action in (_Fields.VALUES, _Fields.LIST_VALUES):
             summary_dict[name] = (
                 list(key_value.values()) if isinstance(key_value, dict) else key_value
             )
     return summary_dict
+
+
+# End ParseResult definition
 
 
 # Definition validation
@@ -258,33 +295,7 @@ class TIDefCheck(NamedTuple):
     elem_type: Union[
         None, type, Tuple[type, type], Tuple[type, Tuple[type, type]]
     ] = None
-    legal_keys: List[str] = None
-
-
-_PROVIDER_VALIDATION = {
-    "name": TIDefCheck(True, str),
-    "description": TIDefCheck(True, str),
-    "base_url": TIDefCheck(False, str),
-    "required_parameters": TIDefCheck(True, list, str),
-    "request_defaults": TIDefCheck(
-        True,
-        dict,
-        (str, (str, dict)),
-        [
-            "headers",
-            "params",
-            "data",
-            "auth_type",
-            "auth_str",
-        ],
-    ),
-    "macros": TIDefCheck(False, dict, (str, str)),
-    "queries": TIDefCheck(True, "queries_dict"),
-    "result_processing": {
-        "severity": TIDefCheck(True, "severity"),
-        "summary": TIDefCheck(True, "summary"),
-    },
-}
+    legal_keys: Optional[List[str]] = None
 
 
 def _validate_definition(provider_def, validation_rules):
@@ -303,7 +314,7 @@ def _validate_definition(provider_def, validation_rules):
             validation_errors.append(f"Missing required key {v_key}")
 
         if isinstance(validation.prim_type, str):
-            if validation.prim_type == "queries":
+            if validation.prim_type == _Fields.QUERIES:
                 validation_errors.extend(_validate_queries(provider_def.get(v_key)))
                 continue
         else:
@@ -356,7 +367,7 @@ def _validate_type(value: Any, val_type, elem_type, legal_keys):
 def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
     validation_errors = []
     missing_path = [
-        query for query, params in query_dict.items() if "path" not in params
+        query for query, params in query_dict.items() if _Fields.PATH not in params
     ]
     if missing_path:
         validation_errors.append(
@@ -365,7 +376,7 @@ def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
     invalid_path = [
         query
         for query, params in query_dict.items()
-        if isinstance(params["path"], str) and len(params["path"]) > 0
+        if isinstance(params[_Fields.PATH], str) and len(params[_Fields.PATH]) > 0
     ]
     if invalid_path:
         validation_errors.append(
@@ -380,7 +391,7 @@ def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
         validation_errors.append(
             f"The following queries have an invalid IOC type: {', '.join(invalid_ioc)}"
         )
-    known_keys = {"path", "aliases"}
+    known_keys = {_Fields.PATH, _Fields.ALIASES}
     unknown_keys = {
         query: list(params.keys() - known_keys)
         for query, params in query_dict.items()
@@ -392,3 +403,80 @@ def _validate_queries(query_dict: Dict[str, Dict[str, Any]]) -> List[str]:
             f"The following queries have unknown entries: {', '.join(mssg_keys)}"
         )
     return validation_errors
+
+
+# pylint: disable=too-few-public-methods
+class _Fields:
+    """Static class for field and definition item names."""
+
+    ACTION = "action"
+    ALIASES = "aliases"
+    AND = "and"
+    AUTH_STR = "auth_str"
+    AUTH_TYPE = "auth_type"
+    BASE_URL = "base_url"
+    CONDITIONS = "conditions"
+    COUNT = "count"
+    DATA = "data"
+    DESCRIPTION = "description"
+    FIELDS = "fields"
+    FLATTEN = "flatten"
+    GET_ITEM = "get_item"
+    HEADERS = "headers"
+    HIGH = "high"
+    INFORMATION = "information"
+    KEY = "key"
+    KEYS = "keys"
+    LEN = "len"
+    LIST_KEYS = "list_keys"
+    LIST_VALUES = "list_values"
+    MACROS = "macros"
+    NAME = "name"
+    NAMES = "names"
+    NOT = "not"
+    OR = "or"
+    PARAMS = "params"
+    PATH = "path"
+    PULSE_COUNT = "pulse_count"
+    QUERIES = "queries"
+    REFERENCES = "references"
+    REQUEST_DEFAULTS = "request_defaults"
+    REQUIRED_PARAMETERS = "required_parameters"
+    RESULT_PROCESSING = "result_processing"
+    SECTIONS_AVAILABLE = "sections_available"
+    SECTIONS_AVAILABLE_K = "sections_available_k"
+    SEVERITY = "severity"
+    SUMMARY = "summary"
+    TAGS = "tags"
+    VALUE = "value"
+    VALUES = "values"
+    VERB = "verb"
+    WARNING = "warning"
+
+
+# Dictionary used by validation functions - outlines
+# Basic structure of definition file.
+_PROVIDER_VALIDATION = {
+    _Fields.NAME: TIDefCheck(True, str),
+    _Fields.DESCRIPTION: TIDefCheck(True, str),
+    _Fields.BASE_URL: TIDefCheck(False, str),
+    _Fields.REQUIRED_PARAMETERS: TIDefCheck(True, list, str),
+    _Fields.REQUEST_DEFAULTS: TIDefCheck(
+        True,
+        dict,
+        (str, (str, dict)),
+        [
+            _Fields.HEADERS,
+            _Fields.PARAMS,
+            _Fields.DATA,
+            _Fields.AUTH_TYPE,
+            _Fields.AUTH_STR,
+        ],
+    ),
+    _Fields.MACROS: TIDefCheck(False, dict, (str, str)),
+    _Fields.QUERIES: TIDefCheck(True, "queries_dict"),
+    _Fields.RESULT_PROCESSING: {
+        _Fields.SEVERITY: TIDefCheck(True, _Fields.SEVERITY),
+        _Fields.SUMMARY: TIDefCheck(True, _Fields.SUMMARY),
+    },
+}
