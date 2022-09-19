@@ -51,7 +51,9 @@ class AzSTI(KqlTIProvider):
     _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
     _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
 
-    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

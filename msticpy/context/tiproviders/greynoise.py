@@ -45,7 +45,9 @@ class GreyNoise(HttpTIProvider):
         ),
     }
 
-    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

@@ -218,7 +218,7 @@ class OPR(HttpTIProvider):
 
         l_len = len(ioc_list)
         for step in range(0, l_len, batch_size):
-            batch_list = ioc_list[step: (step + batch_size)]  # noqa: E203
+            batch_list = ioc_list[step : (step + batch_size)]  # noqa: E203
             yield from self._lookup_batch(batch_list)
 
     def _lookup_batch(self, ioc_list: list) -> Iterable[TILookupResult]:

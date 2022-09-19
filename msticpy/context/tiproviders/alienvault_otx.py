@@ -74,7 +74,9 @@ class OTX(HttpTIProvider):
         super().__init__(**kwargs)
         self.require_url_encoding = True
 
-    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

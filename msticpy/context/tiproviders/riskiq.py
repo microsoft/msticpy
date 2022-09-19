@@ -245,7 +245,9 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ti_result.result = True
         return ti_result
 
-    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

@@ -69,7 +69,9 @@ class XForce(HttpTIProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    def parse_results(self, response: TILookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(
+        self, response: TILookupResult
+    ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
