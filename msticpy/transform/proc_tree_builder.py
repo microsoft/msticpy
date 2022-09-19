@@ -34,6 +34,7 @@ def build_process_tree(
     schema: Union[ProcSchema, Dict[str, Any]] = None,
     show_summary: bool = False,
     debug: bool = False,
+    **kwargs,
 ) -> pd.DataFrame:
     """
     Build process trees from the process events.
@@ -78,7 +79,9 @@ def build_process_tree(
         )
 
     if schema == MDE_EVENT_SCH:
-        procs = mde.convert_mde_schema_to_internal(procs, schema=MDE_EVENT_SCH)
+        procs = mde.convert_mde_schema_to_internal(
+            procs, schema=MDE_EVENT_SCH, plot_args=kwargs.pop("plot_args", {})
+        )
         schema = MDE_INT_EVENT_SCH
     if schema == MDE_INT_EVENT_SCH:
         extr_proc_tree = mde.extract_process_tree(procs, debug=debug)
@@ -110,11 +113,11 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
 
     """
     src_cols = data.columns if isinstance(data, pd.DataFrame) else data.index
-    schema_matches = {}
-    for schema in SUPPORTED_SCHEMAS:
-        matching_cols = set(src_cols) & set(schema.columns)
-        schema_matches[len(matching_cols)] = schema
-    if max(schema_matches) > 5:
+    schema_matches = {
+        len(set(src_cols) & set(schema.columns)): schema for schema in SUPPORTED_SCHEMAS
+    }
+
+    if max(schema_matches) >= 4:
         return schema_matches[max(schema_matches)]
     return None
 

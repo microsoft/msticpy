@@ -100,7 +100,7 @@ def _clean_proc_data(
 
     if schema.logon_id not in procs_cln.columns:
         schema = ProcSchema(**(attr.asdict(schema)))
-        schema.logon_id = None
+        schema.logon_id = None  # type: ignore
 
     if schema.logon_id:
         procs_cln[Col.EffectiveLogonId] = procs_cln[schema.logon_id]

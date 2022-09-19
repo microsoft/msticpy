@@ -364,7 +364,7 @@ def test_build_and_plot_process_tree_win():
 
 def test_build_and_plot_process_tree_lx():
     """Test build and plot process tree."""
-    build_and_show_process_tree(testdf_lx, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_lx, legend_col="exe")
 
 
 def test_build_and_plot_process_tree_mde():
@@ -374,15 +374,25 @@ def test_build_and_plot_process_tree_mde():
 
 def test_build_and_plot_min_data_tree():
     """Test that minimal data source plots without error."""
+
     cust_win_schema = {
         "process_name": "ImageFileName",
         "process_id": "PID",
         "parent_id": "PPID",
         "time_stamp": "CreateTime",
-        "target_logon_id": "TargetLogonId",
-        "user_id": "SubjectUserSid",
     }
     build_and_show_process_tree(testdf_win_min, schema=cust_win_schema)
+    # add non-existing ID cols and re-run with minimal schema
+    cust_win_schema.update(
+        {
+            "target_logon_id": "TargetLogonId",
+            "user_id": "SubjectUserSid",
+        }
+    )
+    build_and_show_process_tree(
+        testdf_win_min,
+        schema=cust_win_schema,
+    )
 
 
 def test_build_mde_win_tree_dict_schema():

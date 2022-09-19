@@ -5,8 +5,7 @@
 # --------------------------------------------------------------------------
 """Process Tree Visualization."""
 import warnings
-from collections import namedtuple
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -66,7 +65,7 @@ _DEFAULT_KWARGS = ["height", "title", "width", "hide_legend", "pid_fmt"]
 @export
 def build_and_show_process_tree(
     data: pd.DataFrame,
-    schema: ProcSchema = None,
+    schema: Union[ProcSchema, Dict[str, Any]] = None,
     output_var: str = None,
     legend_col: str = None,
     **kwargs,
@@ -78,9 +77,11 @@ def build_and_show_process_tree(
     ----------
     data : pd.DataFrame
         Window process creation or Linux Auditd events
-    schema : ProcSchema
-        The data schema to use for the data set, by default None
-        (if None the schema is inferred)
+    schema : Union[ProcSchema, Dict[str, Any]], optional
+        The column schema to use, by default None.
+        If supplied as a dict it must include definitions for the
+        required fields in the ProcSchema class
+        If None, then the schema is inferred
     output_var : str, optional
         Output variable for selected items in the tree,
         by default None
@@ -124,18 +125,17 @@ def build_and_show_process_tree(
         schema = ProcSchema(**schema)
     # Check if this table already seems to have the proc_tree metadata
     missing_cols = _check_proc_tree_schema(data)
+    plot_args = {**kwargs, "legend_col": legend_col}
     if missing_cols:
-        data = build_process_tree(procs=data, schema=schema)
-    return plot_process_tree(
-        data, schema, output_var=output_var, legend_col=legend_col, **kwargs
-    )
+        data = build_process_tree(procs=data, schema=schema, plot_args=plot_args)
+    return plot_process_tree(data, schema, output_var=output_var, **plot_args)
 
 
 # pylint: disable=too-many-locals, too-many-statements
 @export
 def plot_process_tree(  # noqa: MC0001
     data: pd.DataFrame,
-    schema: ProcSchema = None,
+    schema: Union[ProcSchema, Dict[str, Any]] = None,
     output_var: str = None,
     legend_col: str = None,
     show_table: bool = False,
@@ -148,9 +148,11 @@ def plot_process_tree(  # noqa: MC0001
     ----------
     data : pd.DataFrame
         DataFrame containing one or more Process Trees
-    schema : ProcSchema, optional
-        The data schema to use for the data set, by default None
-        (if None the schema is inferred)
+    schema : Union[ProcSchema, Dict[str, Any]], optional
+        The column schema to use, by default None.
+        If supplied as a dict it must include definitions for the
+        required fields in the ProcSchema class
+        If None, then the schema is inferred
     output_var : str, optional
         Output variable for selected items in the tree,
         by default None
@@ -204,6 +206,8 @@ def plot_process_tree(  # noqa: MC0001
     proc_data, schema, levels, n_rows = _pre_process_tree(data, schema, pid_fmt=pid_fmt)
     if schema is None:
         raise ProcessTreeSchemaException("Could not infer data schema from data set.")
+    if levels is None:
+        raise ProcessTreeSchemaException("Could create process relationships.")
 
     source = ColumnDataSource(data=proc_data)
     # Get legend/color bar map
@@ -315,22 +319,33 @@ def plot_process_tree(  # noqa: MC0001
 # pylint: enable=too-many-locals, too-many-statements
 
 
-TreeResult = namedtuple("TreeResult", "proc_tree, schema, levels, n_rows")
+class TreeResult(NamedTuple):
+    """Result tuple for _pre_process_tree."""
+
+    proc_tree: pd.DataFrame
+    schema: Optional[ProcSchema]
+    levels: Optional[np.ndarray]
+    n_rows: int
 
 
 def _pre_process_tree(
-    proc_tree: pd.DataFrame, schema: ProcSchema = None, pid_fmt: str = "hex"
-):
+    proc_tree: pd.DataFrame,
+    schema: Union[Dict[str, Any], ProcSchema] = None,
+    pid_fmt: str = "hex",
+) -> TreeResult:
     """Extract dimensions and formatted values from proc_tree."""
     # Check if this table already seems to have the proc_tree metadata
     missing_cols = _check_proc_tree_schema(proc_tree)
+
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
     if missing_cols:
         proc_tree = build_process_tree(procs=proc_tree, schema=schema)
 
     if schema is None:
         schema = infer_schema(proc_tree)
     if schema is None:
-        return TreeResult(None, None, None, None)
+        return TreeResult(proc_tree, None, None, 0)
 
     _validate_plot_schema(proc_tree, schema)
 

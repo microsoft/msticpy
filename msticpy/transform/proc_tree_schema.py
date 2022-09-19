@@ -42,12 +42,12 @@ class ProcSchema:
     process_name: str
     process_id: str
     parent_id: str
+    time_stamp: str
     cmd_line: Optional[str] = None
     path_separator: str = "\\"
     user_name: Optional[str] = None
     logon_id: Optional[str] = None
     host_name_column: Optional[str] = None
-    time_stamp: str = "TimeGenerated"
     parent_name: Optional[str] = None
     target_logon_id: Optional[str] = None
     user_id: Optional[str] = None
@@ -147,6 +147,16 @@ class ProcSchema:
         raise ProcessTreeSchemaException(
             "Unknown schema - there is no value for the 'event_id_identifier' in the schema."
         )
+
+    @classmethod
+    def blank_schema_dict(cls) -> Dict[str, Any]:
+        """Return blank schema dictionary."""
+        return {
+            field: "required"
+            if (attrib.default or attrib.default == attr.NOTHING)
+            else None
+            for field, attrib in attr.fields_dict(cls).items()
+        }
 
 
 WIN_EVENT_SCH = ProcSchema(
