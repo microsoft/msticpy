@@ -65,7 +65,7 @@ class TILookup(Lookup):
 
         Parameters
         ----------
-        observable : str
+        ioc : str
             IoC observable
             (`ioc` is also an alias for observable)
         ioc_type : str, optional
@@ -251,7 +251,7 @@ class TILookup(Lookup):
 
         Parameters
         ----------
-        ioc_lookup : Tuple[bool, List[Tuple[str, TILookupResult]]]
+        item_lookup : Tuple[bool, List[Tuple[str, TILookupResult]]]
             Output from `lookup_ioc`
 
         Returns

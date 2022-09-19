@@ -176,6 +176,7 @@ class HttpLookupProvider(Provider):
             item type, by default None
         query_subtype : str, optional
             Query sub-type, if any, by default None
+
         Returns
         -------
         LookupResult
@@ -205,6 +206,7 @@ class HttpLookupProvider(Provider):
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item_value
             will be returned.
+
         Returns
         -------
         LookupResult
@@ -213,11 +215,13 @@ class HttpLookupProvider(Provider):
             details - Lookup Details (or status if failure),
             raw_result - Raw Response
             reference - URL of the item
+
         Raises
         ------
         NotImplementedError
             If attempting to use an HTTP method or authentication
             protocol that is not supported.
+
         Notes
         -----
         Note: this method uses memoization (lru_cache) to cache results

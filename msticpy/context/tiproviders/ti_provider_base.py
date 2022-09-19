@@ -51,7 +51,7 @@ class TIProvider(Provider):
 
         Parameters
         ----------
-        value : str
+        item : str
             Item value to lookup
         item_type : str, optional
             The Type of the value to lookup, by default None (type will be inferred)
@@ -97,6 +97,7 @@ class TIProvider(Provider):
         ----------
         response : TILookupResult
             The returned data response
+
         Returns
         -------
         Tuple[bool, ResultSeverity, Any]
@@ -255,6 +256,7 @@ class TIProvider(Provider):
         ----------
         observable : str
             IoC observable string
+
         Returns
         -------
         str
@@ -276,6 +278,7 @@ class TIProvider(Provider):
             item type, by default None
         query_subtype : str, optional
             Query sub-type, if any, by default None
+
         Returns
         -------
         LookupResult
