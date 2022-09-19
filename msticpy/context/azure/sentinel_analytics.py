@@ -42,6 +42,23 @@ class SentinelHuntingMixin:
 
     get_hunting_queries = list_hunting_queries
 
+    def list_saved_queries(self) -> pd.DataFrame:
+        """
+        Return all saved queries in a Microsoft Sentinel workspace.
+
+        Returns
+        -------
+        pd.DataFrame
+            A table of the custom hunting queries.
+
+        """
+        saved_query_df = self._list_items(  # type: ignore
+            item_type="ss_path", api_version="2020-08-01"
+        )
+        return saved_query_df
+
+    get_hunting_queries = list_hunting_queries
+
 
 class SentinelAnalyticsMixin:
     """Mixin class for Sentinel Analytics feature integrations."""
