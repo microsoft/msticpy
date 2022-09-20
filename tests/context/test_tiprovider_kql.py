@@ -195,7 +195,7 @@ def test_sentinel_ti_provider(ti_lookup):
     end = datetime(2019, 8, 5, 22, 59, 59, 809000)
     start = datetime(2019, 8, 5, 22, 16, 16, 574000)
 
-    result = ti_lookup.lookup_ioc(observable=_IOC_URL, start=start, end=end)
+    result = ti_lookup.lookup_ioc(ioc=_IOC_URL, start=start, end=end)
     check.is_not_none(result)
     ioc_lookups = result[1]
 
@@ -215,7 +215,7 @@ def test_sentinel_ti_provider(ti_lookup):
     check.is_true("ThreatIntelligenceIndicator  | where" in azs_result.reference)
 
     # IP Lookups
-    result = ti_lookup.lookup_ioc(observable=_IOC_IP, start=start, end=end)
+    result = ti_lookup.lookup_ioc(ioc=_IOC_IP, start=start, end=end)
     check.is_not_none(result)
     ioc_lookups = result[1]
 
