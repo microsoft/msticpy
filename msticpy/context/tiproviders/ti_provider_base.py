@@ -104,6 +104,7 @@ class TIProvider(Provider):
             bool = positive or negative hit
             ResultSeverity = enumeration of severity
             Object with match details
+
         """
 
     @abstractmethod
@@ -261,6 +262,7 @@ class TIProvider(Provider):
         -------
         str
             IoC Type (or unknown if type could not be determined)
+
         """
         return TIProvider.resolve_item_type(observable)
 
@@ -285,6 +287,7 @@ class TIProvider(Provider):
             Lookup result with resolved ioc_type and pre-processed
             observable.
             LookupResult.status is none-zero on failure.
+
         """
         return self._check_ioc_type(
             ioc=item, ioc_type=item_type, query_subtype=query_subtype

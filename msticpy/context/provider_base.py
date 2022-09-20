@@ -79,6 +79,7 @@ class Provider(ABC):
         Note: this method uses memoization (lru_cache) to cache results
         for a particular item to try avoid repeated network calls for
         the same item.
+
         """
 
     @abstractmethod
@@ -103,6 +104,7 @@ class Provider(ABC):
             Lookup result with resolved type and pre-processed
             item.
             LookupResult.status is none-zero on failure.
+
         """
 
     # pylint: disable=unused-argument

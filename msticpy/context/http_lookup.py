@@ -183,6 +183,7 @@ class HttpLookupProvider(Provider):
             Lookup result with resolved item_type and pre-processed
             item.
             LookupResult.status is none-zero on failure.
+
         """
         return super()._check_item_type(
             item=item,
@@ -227,6 +228,7 @@ class HttpLookupProvider(Provider):
         Note: this method uses memoization (lru_cache) to cache results
         for a particular item to try avoid repeated network calls for
         the same item.
+
         """
         result = self._check_item_type(
             item=item, item_type=item_type, query_subtype=query_type

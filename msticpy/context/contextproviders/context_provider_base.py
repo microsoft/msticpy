@@ -70,6 +70,7 @@ class ContextProvider(Provider):
         Note: this method uses memoization (lru_cache) to cache results
         for a particular observable to try avoid repeated network calls for
         the same item.
+
         """
         return self.lookup_observable(
             item, obs_type=item_type, query_type=query_type, **kwargs
@@ -140,6 +141,7 @@ class ContextProvider(Provider):
             Lookup result with resolved ioc_type and pre-processed
             observable.
             LookupResult.status is none-zero on failure.
+
         """
         return self._check_observable_type(
             observable=item, observable_type=item_type, query_subtype=query_subtype
