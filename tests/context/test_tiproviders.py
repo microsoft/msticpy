@@ -510,11 +510,11 @@ def test_iterable_generator():
     test_df = pd.DataFrame({"col1": _IOC_IPS, "col2": _IOC_IPS})
 
     # DataFrames
-    for ioc, _ in generate_items(test_df, obs_col="col1", ioc_type_col="col2"):
+    for ioc, _ in generate_items(test_df, item_col="col1", item_type_col="col2"):
         check.is_in(ioc, _IOC_IPS)
 
     # Iterables
-    for ioc, ioc_type in generate_items(test_df[["col1"]], obs_col="col1"):
+    for ioc, ioc_type in generate_items(test_df[["col1"]], item_col="col1"):
         check.is_in(ioc, _IOC_IPS)
         check.equal(ioc_type, "ipv4")
 
