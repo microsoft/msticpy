@@ -24,6 +24,11 @@ from ..unit_test_lib import (
 
 testdf_win = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("win_proc_test.pkl"))
 testdf_lx = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("linux_proc_test.pkl"))
+testdf_win_min = pd.read_csv(
+    Path(TEST_DATA_PATH).joinpath("winproctree-minimal.csv"),
+    index_col=0,
+    parse_dates=["CreateTime"],
+)
 testdf_mde_pub = pd.read_pickle(Path(TEST_DATA_PATH).joinpath("mde_proc_pub.pkl"))
 testdf_win_mde = pd.read_csv(
     Path(TEST_DATA_PATH).joinpath("mde_proc_cs1.csv"),
@@ -205,6 +210,62 @@ def test_build_win_tree_dict_schema():
     }
 
 
+def test_build_win_tree_dict_schema_no_logon_id():
+    """Test building process tree with custom schema - no plotting."""
+    schema = dict(
+        time_stamp="TimeGenerated",
+        process_name="NewProcessName",
+        process_id="NewProcessId",
+        parent_name="ParentProcessName",
+        parent_id="ProcessId",
+        logon_id=None,
+        target_logon_id=None,
+        cmd_line="CommandLine",
+        user_name="SubjectUserName",
+        path_separator="\\",
+        user_id="SubjectUserSid",
+        event_id_column="EventID",
+        event_id_identifier=4688,
+        host_name_column="Computer",
+    )
+    testdf_win_no_logonid = testdf_win.drop(columns=["SubjectLogonId", "TargetLogonId"])
+    p_tree = pt_build.build_process_tree(
+        testdf_win_no_logonid, schema=schema, show_summary=True, debug=True
+    )
+    assert pt_util.get_summary_info(p_tree) == {
+        "Processes": 1010,
+        "RootProcesses": 10,
+        "LeafProcesses": 815,
+        "BranchProcesses": 185,
+        "IsolatedProcesses": 0,
+        "LargestTreeDepth": 7,
+    }
+
+
+def test_build_tree_minimal():
+    """Test build tree with minimal columns."""
+    cust_win_schema = {
+        "process_name": "ImageFileName",
+        "process_id": "PID",
+        "parent_id": "PPID",
+        "time_stamp": "CreateTime",
+        "target_logon_id": "TargetLogonId",
+        "user_id": "SubjectUserSid",
+    }
+    p_tree = pt_build.build_process_tree(
+        testdf_win_min, schema=cust_win_schema, show_summary=True, debug=True
+    )
+    summary = pt_util.get_summary_info(p_tree)
+    assert summary == {
+        "Processes": 126,
+        "RootProcesses": 10,
+        "LeafProcesses": 97,
+        "BranchProcesses": 19,
+        "IsolatedProcesses": 0,
+        "LargestTreeDepth": 7,
+    }
+
+
 def test_tree_utils_win():
     """Test process tree utils."""
     p_tree = pt_build.build_process_tree(testdf_win, show_summary=True, debug=True)
@@ -303,12 +364,35 @@ def test_build_and_plot_process_tree_win():
 
 def test_build_and_plot_process_tree_lx():
     """Test build and plot process tree."""
-    build_and_show_process_tree(testdf_lx, legend_col="NewProcessName")
+    build_and_show_process_tree(testdf_lx, legend_col="exe")
 
 
 def test_build_and_plot_process_tree_mde():
     """Test build and plot process tree."""
     build_and_show_process_tree(testdf_mde_pub, legend_col="FileName")
+
+
+def test_build_and_plot_min_data_tree():
+    """Test that minimal data source plots without error."""
+
+    cust_win_schema = {
+        "process_name": "ImageFileName",
+        "process_id": "PID",
+        "parent_id": "PPID",
+        "time_stamp": "CreateTime",
+    }
+    build_and_show_process_tree(testdf_win_min, schema=cust_win_schema)
+    # add non-existing ID cols and re-run with minimal schema
+    cust_win_schema.update(
+        {
+            "target_logon_id": "TargetLogonId",
+            "user_id": "SubjectUserSid",
+        }
+    )
+    build_and_show_process_tree(
+        testdf_win_min,
+        schema=cust_win_schema,
+    )
 
 
 def test_build_mde_win_tree_dict_schema():

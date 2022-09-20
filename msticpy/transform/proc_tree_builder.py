@@ -34,6 +34,7 @@ def build_process_tree(
     schema: Union[ProcSchema, Dict[str, Any]] = None,
     show_summary: bool = False,
     debug: bool = False,
+    **kwargs,
 ) -> pd.DataFrame:
     """
     Build process trees from the process events.
@@ -63,12 +64,12 @@ def build_process_tree(
     ProcSchema
 
     """
+    if isinstance(schema, dict):
+        schema = ProcSchema(**schema)
     # If schema is none, infer schema from columns
     if not schema or schema == MDE_INT_EVENT_SCH:
         # Special case for MDE - since there are two possible schemas
         schema = infer_schema(procs)
-    if isinstance(schema, dict):
-        schema = ProcSchema(**schema)
 
     if not schema:
         raise TypeError(
@@ -78,7 +79,9 @@ def build_process_tree(
         )
 
     if schema == MDE_EVENT_SCH:
-        procs = mde.convert_mde_schema_to_internal(procs, schema=MDE_EVENT_SCH)
+        procs = mde.convert_mde_schema_to_internal(
+            procs, schema=MDE_EVENT_SCH, plot_args=kwargs.pop("plot_args", {})
+        )
         schema = MDE_INT_EVENT_SCH
     if schema == MDE_INT_EVENT_SCH:
         extr_proc_tree = mde.extract_process_tree(procs, debug=debug)
@@ -91,7 +94,7 @@ def build_process_tree(
 
     if show_summary:
         print(get_summary_info(proc_tree))
-    return proc_tree
+    return proc_tree.sort_values(by=["path", schema.time_stamp], ascending=True)
 
 
 def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
@@ -110,11 +113,11 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
 
     """
     src_cols = data.columns if isinstance(data, pd.DataFrame) else data.index
-    schema_matches = {}
-    for schema in SUPPORTED_SCHEMAS:
-        matching_cols = set(src_cols) & set(schema.columns)
-        schema_matches[len(matching_cols)] = schema
-    if max(schema_matches) > 5:
+    schema_matches = {
+        len(set(src_cols) & set(schema.columns)): schema for schema in SUPPORTED_SCHEMAS
+    }
+
+    if max(schema_matches) >= 4:
         return schema_matches[max(schema_matches)]
     return None
 
