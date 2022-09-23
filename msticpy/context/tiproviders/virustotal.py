@@ -19,7 +19,6 @@ from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider
 from ..http_lookup import APILookupParams as IoCLookupParams
-from .ti_lookup_result import TILookupResult
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -73,15 +72,13 @@ class VirusTotal(HttpTIProvider):
         "detected_communicating_samples": ("sha256", "date"),
     }
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -92,29 +89,31 @@ class VirusTotal(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
 
         result_dict = {
-            "verbose_msg": response.raw_result.get("verbose_msg", None),
-            "response_code": response.raw_result.get("response_code", None),
+            "verbose_msg": response["RawResult"].get("verbose_msg", None),
+            "response_code": response["RawResult"].get("response_code", None),
             "positives": 0,
         }
 
-        if response.ioc_type in [
+        if response["IocType"] in [
             "url",
             "md5_hash",
             "sha1_hash",
             "sha256_hash",
             "file_hash",
         ]:
-            result_dict["resource"] = response.raw_result.get("resource", None)
-            result_dict["permalink"] = response.raw_result.get("permalink", None)
-            result_dict["positives"] = response.raw_result.get("positives", 0)
+            result_dict["resource"] = response["RawResult"].get("resource", None)
+            result_dict["permalink"] = response["RawResult"].get("permalink", None)
+            result_dict["positives"] = response["RawResult"].get("positives", 0)
 
         else:
             for hit_type, params in self._VT_DETECT_RESULTS.items():
-                if hit_type in response.raw_result:
+                if hit_type in response["RawResult"]:
                     self._extract_url_results(
                         response=response,
                         result_dict=result_dict,
@@ -139,18 +138,18 @@ class VirusTotal(HttpTIProvider):
 
     @staticmethod
     def _extract_url_results(
-        response: TILookupResult,
+        response: Dict,
         result_dict: Dict[str, Any],
         hit_type: str,
         item_type: str,
         date_name: str,
     ):
-        if not isinstance(response.raw_result, dict):
+        if not isinstance(response["RawResult"], dict):
             return
         time_scope = dt.datetime.now() - dt.timedelta(days=30)
         result_dict[hit_type] = [
             item[item_type]
-            for item in response.raw_result[hit_type]
+            for item in response["RawResult"][hit_type]
             if item_type in item
             and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
         ]
@@ -158,7 +157,7 @@ class VirusTotal(HttpTIProvider):
         # pull those our and sum them.
         positives = sum(
             item["positives"]
-            for item in response.raw_result[hit_type]
+            for item in response["RawResult"][hit_type]
             if "positives" in item
             and dt.datetime.strptime(item[date_name], "%Y-%m-%d %H:%M:%S") > time_scope
         )

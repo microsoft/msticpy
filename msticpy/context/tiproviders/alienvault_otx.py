@@ -12,14 +12,14 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Tuple
+from typing import Any, Tuple, Dict
 
 import attr
 
 from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import TILookupResult, ResultSeverity
+from .ti_provider_base import ResultSeverity
 
 
 __version__ = VERSION
@@ -75,14 +75,14 @@ class OTX(HttpTIProvider):
         self.require_url_encoding = True
 
     def parse_results(
-        self, response: TILookupResult
+        self, response: Dict
     ) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -93,10 +93,10 @@ class OTX(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(response["RawResult"], dict):
             return False, ResultSeverity.information, "Not found."
-        if "pulse_info" in response.raw_result:
-            pulses = response.raw_result["pulse_info"].get("pulses", {})
+        if "pulse_info" in response["RawResult"]:
+            pulses = response["RawResult"]["pulse_info"].get("pulses", {})
             pulse_count = len(pulses)
             if pulse_count == 0:
                 severity = ResultSeverity.information
@@ -105,7 +105,7 @@ class OTX(HttpTIProvider):
                     severity,
                     {
                         "pulse_count": pulse_count,
-                        "sections_available": response.raw_result["sections"],
+                        "sections_available": response["RawResult"]["sections"],
                     },
                 )
             severity = (

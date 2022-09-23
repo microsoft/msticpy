@@ -12,14 +12,14 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Any, Tuple
+from typing import Any, Tuple, Dict
 
 import attr
 
 from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import TILookupResult, ResultSeverity
+from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -69,15 +69,13 @@ class XForce(HttpTIProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -89,27 +87,29 @@ class XForce(HttpTIProvider):
 
         """
         severity = ResultSeverity.information
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, severity, "Not found."
         result = True
         result_dict = {}
         if (
-            response.ioc_type in ["ipv4", "ipv6", "url", "dns"]
-            and not response.query_subtype
+            response["IocType"] in ["ipv4", "ipv6", "url", "dns"]
+            and not response["QuerySubtype"]
         ):
-            score = response.raw_result.get("score", 0)
+            score = response["RawResult"].get("score", 0)
             result_dict.update(
                 {
-                    "score": response.raw_result.get("score", 0),
-                    "cats": response.raw_result.get("cats"),
-                    "categoryDescriptions": response.raw_result.get(
+                    "score": response["RawResult"].get("score", 0),
+                    "cats": response["RawResult"].get("cats"),
+                    "categoryDescriptions": response["RawResult"].get(
                         "categoryDescriptions"
                     ),
-                    "reason": response.raw_result.get("reason"),
-                    "reasonDescription": response.raw_result.get(
+                    "reason": response["RawResult"].get("reason"),
+                    "reasonDescription": response["RawResult"].get(
                         "reasonDescription", 0
                     ),
-                    "tags": response.raw_result.get("tags", 0),
+                    "tags": response["RawResult"].get("tags", 0),
                 }
             )
             severity = (
@@ -120,29 +120,26 @@ class XForce(HttpTIProvider):
                 else ResultSeverity.high
             )
         if (
-            response.ioc_type in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
-            or response.query_subtype == "malware"
+            response["IocType"] in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
+            or response["QuerySubtype"] == "malware"
         ):
-            malware = response.raw_result.get("malware")
+            malware = response["RawResult"].get("malware")
             if malware:
                 result_dict.update(
                     {
                         "risk": malware.get("risk"),
                         "family": malware.get("family"),
-                        "reasonDescription": response.raw_result.get(
+                        "reasonDescription": response["RawResult"].get(
                             "reasonDescription", 0
                         ),
                     }
                 )
                 severity = ResultSeverity.high
-        if response.ioc_type in [
-            "dns",
-            "ipv4",
-            "ipv6",
-            "hostname",
-        ] and response.query_subtype in ["info", "passivedns", "whois"]:
-            records = response.raw_result.get("total_rows", 0)
-            contact = response.raw_result.get("contact", 0)
+        if response["IocType"] in ["dns", "ipv4", "ipv6", "hostname"] and response[
+            "QuerySubtype"
+        ] in ["info", "passivedns", "whois"]:
+            records = response["RawResult"].get("total_rows", 0)
+            contact = response["RawResult"].get("contact", 0)
             if records:
                 result_dict["records"] = records
             elif contact:

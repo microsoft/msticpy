@@ -12,14 +12,13 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 """
 import datetime as dt
-from typing import Any, Tuple
+from typing import Any, Tuple, Dict
 
 import attr
 
 from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider, IoCLookupParams
-from .ti_provider_base import TILookupResult
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -89,15 +88,13 @@ class IntSights(HttpTIProvider):
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -108,30 +105,32 @@ class IntSights(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response.raw_result, dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
 
-        if response.raw_result["Whitelist"] == "True":
+        if response["RawResult"]["Whitelist"] == "True":
             return False, ResultSeverity.information, "Whitelisted."
 
-        sev = response.raw_result["Severity"]
+        sev = response["RawResult"]["Severity"]
         result_dict = {
-            "threat_actors": response.raw_result["RelatedThreatActors"],
-            "geolocation": response.raw_result.get("Geolocation", ""),
-            "response_code": response.status,
-            "tags": response.raw_result["Tags"] + response.raw_result["SystemTags"],
-            "malware": response.raw_result["RelatedMalware"],
-            "campaigns": response.raw_result["RelatedCampaigns"],
-            "sources": response.raw_result["Sources"],
-            "score": response.raw_result["Score"],
+            "threat_actors": response["RawResult"]["RelatedThreatActors"],
+            "geolocation": response["RawResult"].get("Geolocation", ""),
+            "response_code": response["Status"],
+            "tags": response["RawResult"]["Tags"] + response["RawResult"]["SystemTags"],
+            "malware": response["RawResult"]["RelatedMalware"],
+            "campaigns": response["RawResult"]["RelatedCampaigns"],
+            "sources": response["RawResult"]["Sources"],
+            "score": response["RawResult"]["Score"],
             "first_seen": dt.datetime.strptime(
-                response.raw_result["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["FirstSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_seen": dt.datetime.strptime(
-                response.raw_result["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["LastSeen"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
             "last_update": dt.datetime.strptime(
-                response.raw_result["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                response["RawResult"]["LastUpdate"], "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
         }
 

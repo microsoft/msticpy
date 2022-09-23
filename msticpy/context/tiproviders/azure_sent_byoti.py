@@ -19,7 +19,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.utility import export
 from .kql_base import KqlTIProvider
-from .ti_provider_base import TILookupResult, ResultSeverity
+from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -51,15 +51,13 @@ class AzSTI(KqlTIProvider):
     _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
     _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -70,13 +68,13 @@ class AzSTI(KqlTIProvider):
             Object with match details
 
         """
-        if response.raw_result is None:
+        if response["RawResult"] is None:
             return False, ResultSeverity.information, "No data"
 
         severity = ResultSeverity.warning
         # if this is a series (single row) return a dictionary
-        if isinstance(response.raw_result, pd.Series):
-            extracted_data = response.raw_result[
+        if isinstance(response["RawResult"], pd.Series):
+            extracted_data = response["RawResult"][
                 ["Action", "ThreatType", "ThreatSeverity", "Active", "ConfidenceScore"]
             ].to_dict()
             if extracted_data["Action"].lower() in ["alert", "block"]:
@@ -85,8 +83,8 @@ class AzSTI(KqlTIProvider):
         # if this is a dataframe (multiple rows)
         # concatenate the values for each column/record into a list
         # and return as a dictionary
-        if isinstance(response.raw_result, pd.DataFrame):
-            d_frame = response.raw_result
+        if isinstance(response["RawResult"], pd.DataFrame):
+            d_frame = response["RawResult"]
             if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
                 severity = ResultSeverity.high
 
@@ -124,8 +122,8 @@ class AzSTI(KqlTIProvider):
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
         return data_result.apply(
-            lambda x: ResultSeverity.high.value
+            lambda x: ResultSeverity.high.name
             if x.Action.lower() in ["alert", "block"]
-            else ResultSeverity.warning.value,
+            else ResultSeverity.warning.name,
             axis=1,
         )

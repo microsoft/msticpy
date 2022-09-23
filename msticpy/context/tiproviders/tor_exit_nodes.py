@@ -20,11 +20,13 @@ from threading import Lock
 from typing import Any, Dict, Iterable, Tuple
 
 import httpx
+import pandas as pd
 
 from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from ...common.utility import export, mp_ua_header
-from .ti_provider_base import TILookupResult, TILookupStatus, ResultSeverity, TIProvider
+from ..lookup_result import LookupStatus
+from .ti_provider_base import ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -90,7 +92,7 @@ class Tor(TIProvider):
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> TILookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
 
@@ -107,7 +109,7 @@ class Tor(TIProvider):
 
         Returns
         -------
-        TILookupResult
+        pd.DataFrame
             The returned results.
 
         """
@@ -117,38 +119,36 @@ class Tor(TIProvider):
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        result.result = bool(self._nodelist)
-        result.reference = self._BASE_URL
+        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+        result["Result"] = bool(self._nodelist)
+        result["Reference"] = self._BASE_URL
 
-        if result.status and not bool(self._nodelist):
-            result.status = TILookupStatus.QUERY_FAILED.value
+        if result["Status"] and not bool(self._nodelist):
+            result["Status"] = LookupStatus.QUERY_FAILED.value
 
-        if result.status:
+        if result["Status"]:
             return result
 
         tor_node = self._nodelist.get(ioc)
 
         if tor_node:
-            result.set_severity(ResultSeverity.warning)
-            result.details = {
+            result["Severity"] = ResultSeverity.warning.name
+            result["Details"] = {
                 "NodeID": tor_node["ExitNode"],
                 "LastStatus": tor_node["LastStatus"],
             }
-            result.raw_result = tor_node
+            result["RawResult"] = tor_node
         else:
-            result.details = "Not found."
+            result["Details"] = "Not found."
         return result
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns

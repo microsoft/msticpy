@@ -14,14 +14,15 @@ requests per minute for the account type that you have.
 """
 from datetime import datetime
 from functools import partial
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union, Dict
+
+import pandas as pd
 
 from ..._version import VERSION
 from ...common.exceptions import MsticpyImportExtraError, MsticpyUserError
 from ...common.utility import export
+from ..lookup_result import LookupStatus
 from .ti_provider_base import (
-    TILookupResult,
-    TILookupStatus,
     ResultSeverity,
     TIPivotProvider,
     TIProvider,
@@ -151,7 +152,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
     def lookup_ioc(
         self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
-    ) -> TILookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
 
@@ -168,7 +169,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         Returns
         -------
-        TILookupResult
+        pd.DataFrame
             The returned results.
 
         """
@@ -176,23 +177,23 @@ class RiskIQ(TIProvider, TIPivotProvider):
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
         )
 
-        if result.status:
+        if result["Status"]:
             return result
 
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        result.reference = self._REFERENCE
+        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+        result["Reference"] = self._REFERENCE
 
         if query_type is None:
             prop = "ALL"
         elif query_type not in [
             q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
         ]:
-            result.result = False
-            result.status = TILookupStatus.QUERY_FAILED.value
-            result.details = f"ERROR: unsupported query type {query_type}"
+            result["Result"] = False
+            result["Status"] = LookupStatus.QUERY_FAILED.value
+            result["Details"] = f"ERROR: unsupported query type {query_type}"
             return result
         else:
-            prop = self._IOC_QUERIES.get(f"{result.ioc_type}-{query_type}", "ALL")
+            prop = self._IOC_QUERIES.get(f"{result['IocType']}-{query_type}", "ALL")
 
         try:
             ptanalyzer.set_context("msticpy", "ti", VERSION, prop)
@@ -202,11 +203,11 @@ class RiskIQ(TIProvider, TIPivotProvider):
             else:
                 result = self._parse_result_prop(pt_obj, prop, result)
         except ptanalyzer.AnalyzerError as err:
-            result.result = False
-            result.status = TILookupStatus.QUERY_FAILED.value
-            result.details = f"ERROR: {err}"
-            result.raw_result = err
-            result.set_severity(ResultSeverity.unknown)
+            result["Result"] = False
+            result["Status"] = LookupStatus.QUERY_FAILED.value
+            result["Details"] = f"ERROR: {err}"
+            result["Raw_result"] = err
+            result["Severity"] = ResultSeverity.unknown.name
 
         return result
 
@@ -245,15 +246,13 @@ class RiskIQ(TIProvider, TIPivotProvider):
         ti_result.result = True
         return ti_result
 
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
