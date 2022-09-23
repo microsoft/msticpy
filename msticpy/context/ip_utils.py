@@ -548,7 +548,7 @@ def _whois_lookup(
     asn_items = get_asn_from_ip(ip_addr.strip())
     registry_urls = None
     if asn_items:
-        ipwhois_result = asn_items["AS Name"]  # type: ignore
+        ipwhois_result = (asn_items["AS Name"], {})  # type: ignore
         ipwhois_result[1]["asn"] = asn_items["AS"]
         ipwhois_result[1]["query"] = asn_items["IP"]
         ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
