@@ -15,7 +15,7 @@ import pytest_check as check
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
-from msticpy.context.tiproviders.ti_lookup_result import TILookupStatus
+from msticpy.context.tiproviders.ti_lookup_result import LookupStatus
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 
@@ -197,61 +197,61 @@ def test_sentinel_ti_provider(ti_lookup):
 
     result = ti_lookup.lookup_ioc(ioc=_IOC_URL, start=start, end=end)
     check.is_not_none(result)
-    ioc_lookups = result[1]
+    ioc_lookups = result.to_dict(orient="records")
 
     check.greater_equal(1, len(ioc_lookups))
-    check.equal(ioc_lookups[0][0], "AzSTI")
-    azs_result = ioc_lookups[0][1]
-    check.equal(azs_result.ioc.lower(), _IOC_URL.lower())
-    check.equal(azs_result.ioc_type, "url")
-    check.is_in("alert", azs_result.details["Action"])
-    check.is_in(True, azs_result.details["Active"])
-    check.is_in(100, azs_result.details["ConfidenceScore"])
-    check.is_in("Malware", azs_result.details["ThreatType"])
+    check.equal(ioc_lookups[0]["Provider"], "AzSTI")
+    azs_result = ioc_lookups[0]
+    check.equal(azs_result["Ioc"].lower(), _IOC_URL.lower())
+    check.equal(azs_result["IocType"], "url")
+    check.is_in("alert", azs_result["Details"]["Action"])
+    check.equal(True, azs_result["Details"]["Active"])
+    check.equal(100, azs_result["Details"]["ConfidenceScore"])
+    check.is_in("Malware", azs_result["Details"]["ThreatType"])
 
-    res_df = azs_result.raw_result
-    check.is_instance(res_df, pd.DataFrame)
-    check.is_instance(azs_result.reference, str)
-    check.is_true("ThreatIntelligenceIndicator  | where" in azs_result.reference)
+    res_df = azs_result["RawResult"]
+    check.is_instance(res_df, Dict)
+    check.is_instance(azs_result["Reference"], str)
+    check.is_true("ThreatIntelligenceIndicator  | where" in azs_result["Reference"])
 
     # IP Lookups
     result = ti_lookup.lookup_ioc(ioc=_IOC_IP, start=start, end=end)
     check.is_not_none(result)
-    ioc_lookups = result[1]
+    ioc_lookups = result.to_dict(orient="records")
 
     check.greater_equal(1, len(ioc_lookups))
-    check.equal(ioc_lookups[0][0], "AzSTI")
-    azs_result = ioc_lookups[0][1]
-    check.equal(azs_result.ioc, _IOC_IP)
-    check.equal(azs_result.ioc_type, "ipv4")
-    check.is_in("alert", azs_result.details["Action"])
-    check.is_in(True, azs_result.details["Active"])
-    check.is_in(70, azs_result.details["ConfidenceScore"])
-    check.is_in("Malware", azs_result.details["ThreatType"])
+    check.equal(ioc_lookups[0]["Provider"], "AzSTI")
+    azs_result = ioc_lookups[0]
+    check.equal(azs_result["Ioc"], _IOC_IP)
+    check.equal(azs_result["IocType"], "ipv4")
+    check.is_in("alert", azs_result["Details"]["Action"])
+    check.equal(True, azs_result["Details"]["Active"])
+    check.equal(70, azs_result["Details"]["ConfidenceScore"])
+    check.is_in("Malware", azs_result["Details"]["ThreatType"])
 
 
 _TEST_MULTI = [
-    (_IOC_URLS, 10, 7, TILookupStatus.OK.value, None),
-    (_IOC_IPS, 20, 15, TILookupStatus.OK.value, None),
+    (_IOC_URLS, 10, 7, LookupStatus.OK.value, None),
+    (_IOC_IPS, 20, 15, LookupStatus.OK.value, None),
     (
         {"c:\\empty_result.txt": "windows_path"},
         1,
         0,
-        TILookupStatus.NO_DATA.value,
+        LookupStatus.NO_DATA.value,
         "Not found",
     ),
     (
         {"c:\\failed_query.txt": "windows_path"},
         1,
         0,
-        TILookupStatus.QUERY_FAILED.value,
+        LookupStatus.QUERY_FAILED.value,
         "Query failure",
     ),
     (
         {"c:\\no_dataframe.txt": "windows_path"},
         1,
         0,
-        TILookupStatus.QUERY_FAILED.value,
+        LookupStatus.QUERY_FAILED.value,
         "Query failure",
     ),
 ]

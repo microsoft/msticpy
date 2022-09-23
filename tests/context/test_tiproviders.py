@@ -177,8 +177,9 @@ def test_ti_provider(ti_lookup, provider_name):
             ioc_type=ioc_params[0],
             ioc_query_type=ioc_params[1],
             providers=[provider_name],
+            show_not_supported=True,
         )
-        verify_result(result, ti_lookup)
+        verify_result(result)
 
     results_df = ti_lookup.lookup_iocs(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
@@ -199,38 +200,24 @@ def test_ti_provider(ti_lookup, provider_name):
 
 
 # pylint: disable=pointless-statement
-def verify_result(result, ti_lookup):
+def verify_result(result):
     """Verify return results."""
     check.is_not_none(result)
-    for prov, lu_result in result[1]:
+    check.is_instance(result, pd.DataFrame)
+    check.is_false(result.empty)
+    check.equal(1, len(result))
+    for lu_result in result.to_dict(orient="records"):
         check.is_in(
-            prov,
+            lu_result["Provider"],
             ["OTX", "XForce", "VirusTotal", "GreyNoise", "RiskIQ", "IntSights"],
         )
-        check.is_not_none(lu_result.ioc)
-        check.is_not_none(lu_result.ioc_type)
-        if lu_result.result:
-            check.is_not_none(lu_result.details)
-            check.is_not_none(lu_result.raw_result)
-            check.is_not_none(lu_result.reference)
+        check.is_not_none(lu_result["Ioc"])
+        check.is_not_none(lu_result["IocType"])
+        if lu_result["Result"]:
+            check.is_not_none(lu_result["Details"])
+            check.is_not_none(lu_result["RawResult"])
+            check.is_not_none(lu_result["Reference"])
             # exercise summary functions of Lookup class
-            output = io.StringIO()
-            with redirect_stdout(output):
-                lu_result.summary
-            check.is_not_none(output.getvalue())
-            output = io.StringIO()
-            with redirect_stdout(output):
-                lu_result.raw_result_fmtd
-            check.is_not_none(output.getvalue())
-
-    # test browser with raw result
-    # note something wrong with RiskIQ raw output.
-    if result[1][0][0] != "RiskIQ":
-        ti_lookup.browse(result)
-    # test convert to DF
-    result_df = ti_lookup.result_to_df(result)
-    check.is_instance(result_df, pd.DataFrame)
-    check.is_false(result_df.empty)
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -303,29 +290,31 @@ def test_opr_single_result(ti_lookup):
             ioc_type=ioc_params[0],
             ioc_query_type=ioc_params[1],
             providers=["OPR"],
+            show_not_supported=True,
         )
         check.is_not_none(result)
-        for _, lu_result in result[1]:
-            check.is_not_none(lu_result.ioc)
-            check.is_not_none(lu_result.ioc_type)
-            if lu_result.severity in ["warning", "high"]:
+        for lu_result in result.to_dict(orient="records"):
+            check.is_not_none(lu_result["Ioc"])
+            check.is_not_none(lu_result["IocType"])
+            if lu_result["Severity"] in ["warning", "high"]:
                 check.is_true(
-                    "rank" in lu_result.details and lu_result.details["rank"] is None
+                    "rank" in lu_result["Details"]
+                    and lu_result["Details"]["rank"] is None
                 )
                 check.is_true(
-                    "error" in lu_result.details
-                    and lu_result.details["error"] == "Domain not found"
+                    "error" in lu_result["Details"]
+                    and lu_result["Details"]["error"] == "Domain not found"
                 )
             else:
                 check.is_true(
-                    "rank" in lu_result.details
-                    and lu_result.details["rank"].isdigit()
-                    and int(lu_result.details["rank"]) > 0
+                    "rank" in lu_result["Details"]
+                    and lu_result["Details"]["rank"].isdigit()
+                    and int(lu_result["Details"]["rank"]) > 0
                 )
                 check.is_true(
-                    "response" in lu_result.raw_result
-                    and lu_result.raw_result["response"][0]
-                    and lu_result.raw_result["response"][0]["domain"] == ioc
+                    "response" in lu_result["RawResult"]
+                    and lu_result["RawResult"]["response"][0]
+                    and lu_result["RawResult"]["response"][0]["domain"] == ioc
                 )
 
 
@@ -394,13 +383,17 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
     pos_results = []
     neg_results = []
     for ioc in tor_nodes + other_ips:
-        result = ti_lookup.lookup_ioc(ioc=ioc, providers=["Tor"])
-        lu_result = result[1][0][1]
-        check.is_true(lu_result.result)
-        check.is_true(bool(lu_result.reference))
+        result = ti_lookup.lookup_ioc(
+            ioc=ioc,
+            providers=["Tor"],
+            show_not_supported=True,
+        )
+        lu_result = result.to_dict(orient="records")[0]
+        check.is_true(lu_result["Result"])
+        check.is_true(bool(lu_result["Reference"]))
         if lu_result.severity in ["warning", "high"]:
-            check.is_true(bool(lu_result.details))
-            check.is_true(bool(lu_result.raw_result))
+            check.is_true(bool(lu_result["Details"]))
+            check.is_true(bool(lu_result["RawResult"]))
             pos_results.append(lu_result)
         else:
             neg_results.append(lu_result)
@@ -421,15 +414,15 @@ def test_check_ioc_type(ti_lookup):
     """Check IOC types."""
     provider = ti_lookup.loaded_providers["OTX"]
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="a.b.c.d", ioc_type="ipv6")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="url", ioc_type="ipv4")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="123", ioc_type="dns")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
     lu_result = provider._check_ioc_type(ioc="424246", ioc_type="file_hash")
-    check.equal(lu_result.status, 2)
+    check.equal(lu_result["Status"], 2)
 
 
 def test_result_severity():
