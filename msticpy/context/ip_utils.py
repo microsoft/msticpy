@@ -546,17 +546,19 @@ def _whois_lookup(
     if isinstance(ip_addr, IpAddress):
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
-    ipwhois_result = (asn_items["AS Name"], {})  # type: ignore
-    ipwhois_result[1]["asn"] = asn_items["AS"]
-    ipwhois_result[1]["query"] = asn_items["IP"]
-    ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
-    ipwhois_result[1]["asn_country_code"] = asn_items["CC"]
-    ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
-    ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
-    ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
-    if ipwhois_result[1]["asn_registry"] in _REGISTRIES:
-        registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
-    else:
+    registry_urls = None
+    if asn_items:
+        ipwhois_result = asn_items["AS Name"]  # type: ignore
+        ipwhois_result[1]["asn"] = asn_items["AS"]
+        ipwhois_result[1]["query"] = asn_items["IP"]
+        ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
+        ipwhois_result[1]["asn_country_code"] = asn_items["CC"]
+        ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
+        ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
+        ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
+        if ipwhois_result[1]["asn_registry"] in _REGISTRIES:
+            registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
+    if not asn_items or not registry_urls:
         return (None, None)
     rdap_data = _rdap_lookup(
         url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
@@ -621,13 +623,21 @@ def _find_address(
 
 def _create_net(data: Dict) -> Dict:
     """Create a network object from RDAP data."""
-    net_cidr = (
+    v4net_cidr = (
         str(data["cidr0_cidrs"][0]["v4prefix"])
         + "/"
         + str(data["cidr0_cidrs"][0]["length"])
-        if "cidr0_cidrs" in data
-        else None
+        if "cidr0_cidrs" in data and "v4prefix" in data["cidr0_cidrs"][0]
+        else ""
     )
+    v6net_cidr = (
+        str(data["cidr0_cidrs"][0]["v6prefix"])
+        + "/"
+        + str(data["cidr0_cidrs"][0]["length"])
+        if "cidr0_cidrs" in data and "v6prefix" in data["cidr0_cidrs"][0]
+        else ""
+    )
+    net_cidr = v4net_cidr + v6net_cidr
     address = ""
     for item in data["events"]:
         created = item["eventDate"] if item["eventAction"] == "last changed" else None
