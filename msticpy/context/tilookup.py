@@ -13,7 +13,7 @@ requests per minute for the account type that you have.
 
 """
 
-from typing import Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
@@ -25,8 +25,6 @@ from .lookup import Lookup
 
 # used in dynamic instantiation of providers
 from .tiproviders import TI_PROVIDERS
-from .lookup_result import LookupResult
-from .tiproviders.ti_lookup_result import TILookupResult
 
 
 __version__ = VERSION
@@ -59,7 +57,7 @@ class TILookup(Lookup):
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
-    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
+    ) -> pd.DataFrame:
         """
         Lookup single IoC in active providers.
 
@@ -85,7 +83,7 @@ class TILookup(Lookup):
 
         Returns
         -------
-        Tuple[bool, List[Tuple[str, TILookupResult]]]
+        pd.DataFrame
             The result returned as a tuple(bool, list):
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
@@ -93,7 +91,6 @@ class TILookup(Lookup):
         """
         return self.lookup_item(
             item=ioc,
-            lookup_function_name="lookup_ioc",
             item_type=ioc_type,
             query_type=ioc_query_type,
             providers=providers,
@@ -175,7 +172,6 @@ class TILookup(Lookup):
         """Lookup IoCs async."""
         return await self._lookup_items_async(
             data,
-            lookup_function_name="lookup_iocs_async",
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             ioc_query_type=ioc_query_type,
@@ -232,7 +228,6 @@ class TILookup(Lookup):
         """
         return self.lookup_items_sync(
             data,
-            lookup_function_name="lookup_iocs",
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=ioc_query_type,
@@ -240,31 +235,6 @@ class TILookup(Lookup):
             default_providers=default_providers,
             prov_scope=prov_scope,
             **kwargs,
-        )
-
-    @staticmethod
-    def result_to_df(
-        item_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
-    ) -> pd.DataFrame:
-        """
-        Return DataFrame representation of IoC Lookup response.
-
-        Parameters
-        ----------
-        item_lookup : Tuple[bool, List[Tuple[str, TILookupResult]]]
-            Output from `lookup_ioc`
-
-        Returns
-        -------
-        pd.DataFrame
-            The response as a DataFrame with a row for each
-            provider response.
-
-        """
-        return (
-            Lookup.result_to_df(item_lookup)
-            .rename(columns=TILookupResult.column_map())
-            .drop("SafeIoc", errors="ignore", axis=1)
         )
 
     def _load_providers(self, **kwargs):

@@ -11,10 +11,16 @@ It is used to interface with HTTP API providing additional contexts.
 It inherits from ContextProvider and HttpProvider
 
 """
-import attr
+from typing import Dict, Any
+from json import JSONDecodeError
+from functools import lru_cache
+import pandas as pd
+
+
 from ..._version import VERSION
+from ...common.pkg_config import get_http_timeout
 from .context_provider_base import ContextProvider
-from .context_lookup_result import ContextLookupResult, ContextLookupStatus
+from ..lookup_result import LookupStatus
 from ..http_lookup import HttpLookupProvider, APILookupParams
 
 __version__ = VERSION
@@ -28,22 +34,19 @@ ContextLookupParams = APILookupParams
 class HttpContextProvider(HttpLookupProvider, ContextProvider):
     """HTTP Context Provider base class."""
 
-    def lookup_observable(  # type: ignore
-        self,
-        observable: str,
-        obs_type: str = None,
-        query_type: str = None,
-        **kwargs,
-    ) -> ContextLookupResult:
+    @lru_cache(maxsize=256)
+    def lookup_item(
+        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    ) -> pd.DataFrame:
         """
-        Lookup a single item.
+        Lookup from a value.
 
         Parameters
         ----------
-        observable : str
-            Observable value to lookup
-        obs_type : str, optional
-            The Type of the value to lookup, by default None (type will be inferred)
+        item : str
+            item to lookup
+        item_type : str, optional
+            The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item_value
@@ -51,8 +54,8 @@ class HttpContextProvider(HttpLookupProvider, ContextProvider):
 
         Returns
         -------
-        ContextLookupResult
-            The context lookup result:
+        pd.DataFrame
+            The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
             raw_result - Raw Response
@@ -66,20 +69,55 @@ class HttpContextProvider(HttpLookupProvider, ContextProvider):
 
         Notes
         -----
-        Note: this method uses memorization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
+        Note: this method uses memoization (lru_cache) to cache results
+        for a particular item to try avoid repeated network calls for
         the same item.
 
         """
-        result = self.lookup_item(
-            observable, item_type=obs_type, query_type=query_type, **kwargs
+        result = self._check_item_type(
+            item=item, item_type=item_type, query_subtype=query_type
         )
-        item_dict = attr.asdict(result)
-        obs_dict = {
-            key.replace("item", "observable"): value for key, value in item_dict.items()
-        }
-        obs_result = ContextLookupResult(**obs_dict)
-        if obs_result.status == ContextLookupStatus.OK.value:
-            obs_result.result, obs_result.details = self.parse_results(obs_result)
 
-        return obs_result
+        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
+
+        req_params: Dict[str, Any] = {}
+        try:
+            verb, req_params = self._substitute_parms(
+                result["SafeObservable"], result["ObsType"], query_type
+            )
+            if verb == "GET":
+                response = self._httpx_client.get(
+                    **req_params, timeout=get_http_timeout(**kwargs)
+                )
+            else:
+                raise NotImplementedError(f"Unsupported verb {verb}")
+
+            result["Status"] = response.status_code
+            result["Reference"] = req_params["url"]
+            if result["Status"] == 200:
+                try:
+                    result["RawResult"] = response.json()
+                    result["Result"], result["Details"] = self.parse_results(result)
+                except JSONDecodeError:
+                    result[
+                        "RawResult"
+                    ] = f"""There was a problem parsing results from this lookup:
+                                        {response.text}"""
+                    result["Result"] = False
+                    result["Details"] = {}
+                result["Status"] = LookupStatus.OK.value
+            else:
+                result["RawResult"] = str(response)
+                result["Result"] = False
+                result["Details"] = self._response_message(result["Status"])
+        except (
+            LookupError,
+            JSONDecodeError,
+            NotImplementedError,
+            ConnectionError,
+        ) as err:
+            self._err_to_results(result, err)
+            if not isinstance(err, LookupError):
+                url = req_params.get("url", None) if req_params else None
+                result["Reference"] = url
+        return pd.DataFrame([result])

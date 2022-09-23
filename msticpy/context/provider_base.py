@@ -18,14 +18,13 @@ import collections
 from abc import ABC, abstractmethod
 from asyncio import get_event_loop
 from functools import lru_cache, partial, singledispatch
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union, Callable
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-import attr
 import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
-from .lookup_result import LookupResult
+from .lookup_result import LookupStatus
 from .preprocess_observable import PreProcessor
 from ..transform.iocextract import IoCExtract as ItemExtract, IoCType as Type
 
@@ -44,7 +43,7 @@ class Provider(ABC):
     @abstractmethod
     def lookup_item(
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup from a value.
 
@@ -82,10 +81,9 @@ class Provider(ABC):
 
         """
 
-    @abstractmethod
     def _check_item_type(
         self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> LookupResult:
+    ) -> Dict:
         """
         Check Item Type and cleans up item.
 
@@ -100,12 +98,42 @@ class Provider(ABC):
 
         Returns
         -------
-        LookupResult
-            Lookup result with resolved type and pre-processed
+        Dict
+            Dict result with resolved type and pre-processed
             item.
-            LookupResult.status is none-zero on failure.
+            Status is none-zero on failure.
 
         """
+        result: Dict[str, Any] = {
+            "Item": item,
+            "SanitizedValue": item,
+            "ItemType": item_type or self.resolve_item_type(item_type),
+            "QuerySubtype": query_subtype,
+            "Result": False,
+            "Details": "",
+            "RawResult": None,
+            "Reference": None,
+            "Status": LookupStatus.OK.value,
+        }
+
+        if not self.is_supported_type(result["ItemType"]):
+            result["Details"] = f"Type {result['ItemType']} not supported."
+            result["Status"] = LookupStatus.NOT_SUPPORTED.value
+            return result
+
+        clean_item = self._preprocessors.check(
+            item,
+            item_type,
+            require_url_encoding=self.require_url_encoding,
+        )
+
+        result["SanitizedValue"] = clean_item.observable
+
+        if clean_item.status != "ok":
+            result["Details"] = clean_item.status
+            result["Status"] = LookupStatus.BAD_FORMAT.value
+
+        return result
 
     # pylint: disable=unused-argument
     def __init__(self, **kwargs):
@@ -129,7 +157,6 @@ class Provider(ABC):
     def lookup_items(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        lookup_function: Callable,
         item_col: str = None,
         item_type_col: str = None,
         query_type: str = None,
@@ -146,8 +173,6 @@ class Provider(ABC):
             `item_col` parameter)
             2. Dict of items
             3. Iterable of items
-        lookup_function: Callable
-            Function to call to lookup items unitarily
         item_col : str, optional
             DataFrame column to use for items, by default None
         item_type_col : str, optional
@@ -167,20 +192,19 @@ class Provider(ABC):
         for item, item_type in generate_items(data, item_col, item_type_col):
             if not item:
                 continue
-            item_result = lookup_function(
+            item_result = self.lookup_item(
                 item,
                 item_type,
                 query_type,
                 **kwargs,
             )
-            results.append(pd.Series(attr.asdict(item_result)))
+            results.append(item_result)
 
-        return pd.DataFrame(data=results)
+        return pd.concat(results)
 
     async def lookup_items_async(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        lookup_function: Callable,
         item_col: str = None,
         item_type_col: str = None,
         query_type: str = None,
@@ -197,8 +221,6 @@ class Provider(ABC):
             `item_col` parameter)
             2. Dict of items, Type
             3. Iterable of items - Types will be inferred
-        lookup_function: Callable
-            Function to call to lookup items unitarily
         item_col : str, optional
             DataFrame column to use for items, by default None
         item_type_col : str, optional
@@ -222,18 +244,18 @@ class Provider(ABC):
             if not item:
                 continue
             get_item = partial(
-                lookup_function,
-                item,
-                item_type,
-                query_type,
+                self.lookup_item,
+                item=item,
+                item_type=item_type,
+                query_type=query_type,
                 **kwargs,
             )
-            item_result: LookupResult = await event_loop.run_in_executor(None, get_item)
+            item_result: pd.DataFrame = await event_loop.run_in_executor(None, get_item)
             if prog_counter:
                 await prog_counter.decrement()
-            results.append(pd.Series(attr.asdict(item_result)))
+            results.append(item_result)
 
-        return pd.DataFrame(data=results)
+        return pd.concat(results)
 
     @property
     def item_query_defs(self) -> Dict[str, Any]:
@@ -331,7 +353,6 @@ class Provider(ABC):
     async def _lookup_items_async_wrapper(
         self,
         data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        lookup_function: Callable,
         item_col: str = None,
         item_type_col: str = None,
         query_type: str = None,
@@ -348,8 +369,6 @@ class Provider(ABC):
             `item_col` parameter)
             2. Dict of items, Type
             3. Iterable of items - Type will be inferred
-        lookup_function: Callable
-            Function to call to lookup items unitarily
         item_col : str, optional
             DataFrame column to use for items, by default None
         item_type_col : str, optional
@@ -370,7 +389,6 @@ class Provider(ABC):
         get_items = partial(
             self.lookup_items,
             data,
-            lookup_function,
             item_col,
             item_type_col,
             query_type,

@@ -18,7 +18,6 @@ from collections import ChainMap
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 import importlib
 
-import attr
 import nest_asyncio
 import pandas as pd
 from tqdm.auto import tqdm
@@ -337,14 +336,13 @@ class Lookup:
     def lookup_item(
         self,
         item: str,
-        lookup_function_name: str,
         item_type: str = None,
         query_type: str = None,
         providers: List[str] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
-    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
+    ) -> pd.DataFrame:
         """
         Lookup single item in active providers.
 
@@ -352,8 +350,6 @@ class Lookup:
         ----------
         item : str
             item to lookup
-        lookup_function_name: str = None
-            Function to use to lookup item
         item_type : str, optional
             One of ItemExtract.ItemType, by default None
             If none, the Item type will be inferred
@@ -377,34 +373,14 @@ class Lookup:
             list has an entry for each provider result
 
         """
-        if not item and "item" in kwargs:
-            item = kwargs["item"]
-        if not item:
-            raise ValueError("item or item parameter must be supplied.")
-
-        result_list: List[Tuple[str, LookupResult]] = []
-        selected_providers = self._select_providers(
-            providers or default_providers, prov_scope
+        return self.lookup_items(
+            data={item: item_type},
+            query_type=query_type,
+            providers=providers,
+            default_providers=default_providers,
+            prov_scope=prov_scope,
+            **kwargs,
         )
-        if not selected_providers:
-            raise MsticpyUserConfigError(
-                self._NO_PROVIDERS_MSG,
-                title="No Provider configuration found.",
-                help_uri=self._HELP_URI,
-            )
-
-        item_type = item_type or Provider.resolve_item_type(item)
-        for prov_name, provider in selected_providers.items():
-            lookup_function = getattr(provider, lookup_function_name)
-            provider_result = lookup_function(
-                item,
-                item_type,
-                query_type,
-                **kwargs,
-            )
-            result_list.append((prov_name, provider_result))
-        overall_result = any(res.result for _, res in result_list)
-        return overall_result, result_list
 
     def lookup_items(
         self,
@@ -468,7 +444,6 @@ class Lookup:
     async def _lookup_items_async(
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        lookup_function_name: str,
         item_col: str = None,
         item_type_col: str = None,
         query_type: str = None,
@@ -498,14 +473,13 @@ class Lookup:
         )
         # create a list of futures/tasks to await
         for prov_name, provider in selected_providers.items():
-            lookup_async_function = getattr(provider, lookup_function_name)
             provider_names.append(prov_name)
             result_futures.append(
-                lookup_async_function(
-                    data,
-                    item_col,
-                    item_type_col,
-                    query_type,
+                provider.lookup_items_async(
+                    data=data,
+                    item_col=item_col,
+                    item_type_col=item_type_col,
+                    query_type=query_type,
                     prog_counter=prog_counter,
                     **kwargs,
                 )
@@ -516,12 +490,11 @@ class Lookup:
         results = await asyncio.gather(*result_futures)
         # cancel the progress task if results have completed.
         prog_task.cancel()
-        return self._combine_results(results, provider_names, kwargs)
+        return self._combine_results(results, provider_names, **kwargs)
 
     def lookup_items_sync(
         self,
         data: Union[pd.DataFrame, Mapping[str, str], Iterable[str]],
-        lookup_function_name: str,
         item_col: str = None,
         item_type_col: str = None,
         query_type: str = None,
@@ -541,8 +514,6 @@ class Lookup:
             `item_col` parameter)
             2. Mapping (e.g. a dict) of [item, ItemType]
             3. Iterable of items - ItemTypes will be inferred
-        lookup_function_name: str = None
-            Function to use to lookup item
         item_col : str, optional
             DataFrame column to use for items, by default None
             ("col" and "column" are also aliases for this parameter)
@@ -581,29 +552,28 @@ class Lookup:
         results: List[Any] = []
         provider_names: List[str] = []
         for prov_name, provider in selected_providers.items():
-            lookup_function = getattr(provider, lookup_function_name)
             provider_names.append(prov_name)
             results.append(
-                lookup_function(
-                    data,
-                    item_col,
-                    item_type_col,
-                    query_type,
+                provider.lookup_items(
+                    data=data,
+                    item_col=item_col,
+                    item_type_col=item_type_col,
+                    query_type=query_type,
                     **kwargs,
                 )
             )
-        return self._combine_results(results, provider_names, kwargs)
+        return self._combine_results(results, provider_names, **kwargs)
 
     @staticmethod
     def result_to_df(
-        item_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
+        item_lookup: Tuple[bool, List[Tuple[str, Dict]]]
     ) -> pd.DataFrame:
         """
         Return DataFrame representation of Lookup response.
 
         Parameters
         ----------
-        item_lookup : Tuple[bool, List[Tuple[str, TILookupResult]]]
+        item_lookup : Tuple[bool, List[Tuple[str, Dict]]]
             Output from `lookup_item`
 
         Returns
@@ -616,7 +586,7 @@ class Lookup:
         return (
             pd.DataFrame(
                 {
-                    r_item[0]: pd.Series(attr.asdict(r_item[1]))
+                    r_item[0]: pd.Series(r_item[1])
                     for r_item in item_lookup[1]
                 }
             )
@@ -789,7 +759,7 @@ class Lookup:
 
     @staticmethod
     def _combine_results(
-        results: Iterable[pd.DataFrame], provider_names: List[str], kwargs
+        results: Iterable[pd.DataFrame], provider_names: List[str], **kwargs
     ):
         """Combine dataframe results into single DF."""
         result_list: List[pd.DataFrame] = []

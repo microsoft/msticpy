@@ -12,17 +12,17 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
+from abc import abstractmethod
 from typing import Dict, List, Tuple, Any, Union
-from json import JSONDecodeError
 import traceback
 
 import attr
 import httpx
 from attr import Factory
-
+import pandas as pd
 
 from .._version import VERSION
-from .lookup_result import LookupResult, LookupStatus
+from .lookup_result import LookupStatus
 from ..common.utility import mp_ua_header
 from ..common.pkg_config import get_http_timeout
 from ..common.exceptions import MsticpyConfigException
@@ -162,38 +162,10 @@ class HttpLookupProvider(Provider):
         # or replace the default PreProcessors
         # self._preprocessors = MyPreProcessor()
 
-    def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> LookupResult:
-        """
-        Check Item Type and cleans up item.
-
-        Parameters
-        ----------
-        item : str
-            item
-        item_type : str, optional
-            item type, by default None
-        query_subtype : str, optional
-            Query sub-type, if any, by default None
-
-        Returns
-        -------
-        LookupResult
-            Lookup result with resolved item_type and pre-processed
-            item.
-            LookupResult.status is none-zero on failure.
-
-        """
-        return super()._check_item_type(
-            item=item,
-            item_type=item_type,
-            query_subtype=query_subtype,
-        )
-
+    @abstractmethod
     def lookup_item(
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup from a value.
 
@@ -210,7 +182,7 @@ class HttpLookupProvider(Provider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
@@ -230,53 +202,6 @@ class HttpLookupProvider(Provider):
         the same item.
 
         """
-        result = self._check_item_type(
-            item=item, item_type=item_type, query_subtype=query_type
-        )
-
-        result.provider = kwargs.get("provider_name", self.__class__.__name__)
-        if result.status != LookupStatus.OK.value:
-            return result
-
-        req_params: Dict[str, Any] = {}
-        try:
-            verb, req_params = self._substitute_parms(
-                result.safe_item, result.item_type, query_type
-            )
-            if verb == "GET":
-                response = self._httpx_client.get(
-                    **req_params, timeout=get_http_timeout(**kwargs)
-                )
-            else:
-                raise NotImplementedError(f"Unsupported verb {verb}")
-
-            result.status = response.status_code
-            result.reference = req_params["url"]
-            if result.status == 200:
-                try:
-                    result.raw_result = response.json()
-                except JSONDecodeError:
-                    result.raw_result = f"""There was a problem parsing results from this lookup:
-                                        {response.text}"""
-                    result.result = False
-                    result.details = {}
-                result.status = LookupStatus.OK.value
-            else:
-                result.raw_result = str(response)
-                result.result = False
-                result.details = self._response_message(result.status)
-            return result
-        except (
-            LookupError,
-            JSONDecodeError,
-            NotImplementedError,
-            ConnectionError,
-        ) as err:
-            self._err_to_results(result, err)
-            if not isinstance(err, LookupError):
-                url = req_params.get("url", None) if req_params else None
-                result.reference = url
-            return result
 
     # pylint: enable=duplicate-code
     def _substitute_parms(
@@ -345,13 +270,13 @@ class HttpLookupProvider(Provider):
         return src.verb, req_dict
 
     @staticmethod
-    def _failed_response(response: LookupResult) -> bool:
+    def _failed_response(response: Dict) -> bool:
         """
         Return True if negative response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -361,15 +286,15 @@ class HttpLookupProvider(Provider):
 
         """
         return (
-            response.status not in (200, LookupStatus.OK.value)
-            or not response.raw_result
-            or not isinstance(response.raw_result, dict)
+            response["Status"] not in (200, LookupStatus.OK.value)
+            or not response["RawResult"]
+            or not isinstance(response["RawResult"], dict)
         )
 
     @staticmethod
-    def _err_to_results(result: LookupResult, err: Exception):
-        result.details = err.args
-        result.raw_result = (
+    def _err_to_results(result: Dict, err: Exception):
+        result["Details"] = err.args
+        result["RawResult"] = (
             type(err).__name__ + "\n" + str(err) + "\n" + traceback.format_exc()
         )
 

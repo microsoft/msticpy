@@ -7,19 +7,18 @@
 Module for ContextProvider classes.
 
 Input can be a single observable or a pandas DataFrame containing
-multiple observables. Processing may require a an API key and
+    multiple observables. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
 from abc import abstractmethod
 from typing import Tuple, Any, List, Union, Dict, Iterable
+from functools import lru_cache
 
 import pandas as pd
 
-from ..provider_base import Provider, _make_sync
-from ..lookup_result import LookupResult
-from .context_lookup_result import ContextLookupResult, ContextLookupStatus
+from ..provider_base import Provider
 from ...common.utility import export
 from ..._version import VERSION
 
@@ -33,9 +32,10 @@ class ContextProvider(Provider):
 
     _REQUIRED_PARAMS: List[str] = []
 
+    @lru_cache(maxsize=256)
     def lookup_item(
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup from a value.
 
@@ -52,7 +52,7 @@ class ContextProvider(Provider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
@@ -72,20 +72,21 @@ class ContextProvider(Provider):
         the same item.
 
         """
-        return self.lookup_observable(
-            item, obs_type=item_type, query_type=query_type, **kwargs
+        return self.lookup_observables(
+            data={item: item_type},
+            query_type=query_type,
+            **kwargs,
         )
 
-    @abstractmethod
     def lookup_observable(  # type: ignore
         self,
         observable: str,
         obs_type: str = None,
         query_type: str = None,
         **kwargs,
-    ) -> ContextLookupResult:
+    ) -> pd.DataFrame:
         """
-        Lookup a single item.
+        Lookup a single observable.
 
         Parameters
         ----------
@@ -100,30 +101,24 @@ class ContextProvider(Provider):
 
         Returns
         -------
-        ContextLookupResult
+        pd.DataFrame
             The context lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
             raw_result - Raw Response
             reference - URL of the item
 
-        Raises
-        ------
-        NotImplementedError
-            If attempting to use an HTTP method or authentication
-            protocol that is not supported.
-
-        Notes
-        -----
-        Note: this method uses memorization (lru_cache) to cache results
-        for a particular observable to try avoid repeated network calls for
-        the same item.
-
         """
+        return self.lookup_item(
+            item=observable,
+            item_type=obs_type,
+            query_type=query_type,
+            **kwargs,
+        )
 
     def _check_item_type(
         self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> LookupResult:
+    ) -> Dict:
         """
         Check Item Type and cleans up item.
 
@@ -135,73 +130,54 @@ class ContextProvider(Provider):
             item type, by default None
         query_subtype : str, optional
             Query sub-type, if any, by default None
+
         Returns
         -------
-        LookupResult
-            Lookup result with resolved ioc_type and pre-processed
-            observable.
-            LookupResult.status is none-zero on failure.
+        Dict
+            Dict result with resolved type and pre-processed
+            item.
+            Status is none-zero on failure.
 
         """
         return self._check_observable_type(
-            observable=item, observable_type=item_type, query_subtype=query_subtype
+            item,
+            item_type,
+            query_subtype,
         )
 
     def _check_observable_type(
-        self, observable: str, observable_type: str = None, query_subtype: str = None
-    ) -> ContextLookupResult:
+        self, obs: str, obs_type: str = None, query_subtype: str = None
+    ) -> Dict:
         """
         Check Observable Type and cleans up observable.
 
         Parameters
         ----------
-        observable : str
-            observable
-        observable_type : str, optional
-            observable type, by default None
+        obs : str
+            Observable
+        obs_type : str, optional
+            Observable type, by default None
         query_subtype : str, optional
             Query sub-type, if any, by default None
 
         Returns
         -------
-        LookupResult
-            ContextLookup result with resolved observed_type and pre-processed
-            observable.
-            ContextLookupResult.status is none-zero on failure.
+        Dict
+            Dict result with resolved type and pre-processed
+            Observable.
+            Status is none-zero on failure.
 
         """
-        result = ContextLookupResult(
-            observable=observable,
-            sanitized_value=observable,
-            observable_type=observable_type or self.resolve_item_type(observable),
-            query_subtype=query_subtype,
-            result=False,
-            details="",
-            raw_result=None,
-            reference=None,
+        result = super()._check_item_type(
+            item=obs, item_type=obs_type, query_subtype=query_subtype
         )
-
-        if not self.is_supported_type(result.observable_type):
-            result.details = f"Type {result.observable_type} not supported."
-            result.status = ContextLookupStatus.NOT_SUPPORTED.value
-            return result
-
-        clean_observable = self._preprocessors.check(
-            result.observable,
-            result.observable_type,
-            require_url_encoding=self.require_url_encoding,
-        )
-
-        result.sanitized_value = clean_observable.observable
-
-        if clean_observable.status != "ok":
-            result.details = clean_observable.status
-            result.status = ContextLookupStatus.BAD_FORMAT.value
-
+        result["Observable"] = result.pop("Item")
+        result["ObservableType"] = result.pop("ItemType")
+        result["SafeObservable"] = result.pop("SanitizedValue")
         return result
 
     @abstractmethod
-    def parse_results(self, response: ContextLookupResult) -> Tuple[bool, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, Any]:
         """
         Return the details of the response.
 
@@ -255,12 +231,11 @@ class ContextProvider(Provider):
         """
         return self.lookup_items(
             data,
-            self.lookup_observable,
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
             **kwargs,
-        ).rename(columns=ContextLookupResult.column_map())
+        )
 
     async def lookup_observables_async(
         self,
@@ -270,42 +245,14 @@ class ContextProvider(Provider):
         query_type: str = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Lookup collection of items.
-
-        Parameters
-        ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
-            Data input in one of three formats:
-            1. Pandas dataframe (you must supply the column name in
-            `obs_col` parameter)
-            2. Dict of observables, Observables Type
-            3. Iterable of Observables - Types will be inferred
-        obs_col : str, optional
-            DataFrame column to use for observables, by default None
-        obs_type_col : str, optional
-            DataFrame column to use for Observables Types, by default None
-        query_type : str, optional
-            Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the item
-            will be returned.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame of results.
-
-        """
-        return _make_sync(
-            self.lookup_items_async(
-                data,
-                self.lookup_observable,
-                item_col=obs_col,
-                item_type_col=obs_type_col,
-                query_type=query_type,
-                **kwargs,
-            )
-        ).rename(columns=ContextLookupResult.column_map())
+        """Call base async wrapper."""
+        return await self._lookup_items_async_wrapper(
+            data,
+            item_col=obs_col,
+            item_type_col=obs_type_col,
+            query_type=query_type,
+            **kwargs,
+        )
 
     async def _lookup_observables_async_wrapper(
         self,
@@ -316,7 +263,7 @@ class ContextProvider(Provider):
         **kwargs,
     ) -> pd.DataFrame:
         """
-        Async wrapper for providers that do not implement lookup_items_async.
+        Async wrapper for providers that do not implement lookup_iocs_async.
 
         Parameters
         ----------
@@ -324,26 +271,24 @@ class ContextProvider(Provider):
             Data input in one of three formats:
             1. Pandas dataframe (you must supply the column name in
             `obs_col` parameter)
-            2. Dict of observable, Type
-            3. Iterable of observables - Type will be inferred
+            2. Dict of observable, Observables Types
+            3. Iterable of observables - Observables Types will be inferred
         obs_col : str, optional
             DataFrame column to use for observables, by default None
         obs_type_col : str, optional
-            DataFrame column to use for Observable Type, by default None
+            DataFrame column to use for Observables Types, by default None
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoitemC type
+            If not specified the default record type for the IoC type
             will be returned.
-
         Returns
         -------
         pd.DataFrame
             DataFrame of results.
 
         """
-        return self._lookup_items_async_wrapper(
+        return await self._lookup_items_async_wrapper(
             data,
-            self.lookup_observable,
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,

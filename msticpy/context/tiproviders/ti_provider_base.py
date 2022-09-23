@@ -15,15 +15,14 @@ requests per minute for the account type that you have.
 
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, Union, Tuple
+from functools import lru_cache
 
 import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
 
-from ..provider_base import Provider, PivotProvider, _make_sync
-from .ti_lookup_result import TILookupResult, TILookupStatus
-from ..lookup_result import LookupResult
+from ..provider_base import Provider, PivotProvider
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -43,9 +42,71 @@ class TIProvider(Provider):
         self._QUERIES = self._IOC_QUERIES
         super().__init__(**kwargs)
 
+    def _check_item_type(
+        self, item: str, item_type: str = None, query_subtype: str = None
+    ) -> Dict:
+        """
+        Check Item Type and cleans up item.
+
+        Parameters
+        ----------
+        item : str
+            item
+        item_type : str, optional
+            item type, by default None
+        query_subtype : str, optional
+            Query sub-type, if any, by default None
+
+        Returns
+        -------
+        Dict
+            Dict result with resolved type and pre-processed
+            item.
+            Status is none-zero on failure.
+
+        """
+        return self._check_ioc_type(
+            item,
+            item_type,
+            query_subtype,
+        )
+
+    def _check_ioc_type(
+        self, ioc: str, ioc_type: str = None, query_subtype: str = None
+    ) -> Dict:
+        """
+        Check Ioc Type and cleans up ioc.
+
+        Parameters
+        ----------
+        ioc : str
+            IoC
+        ioc_type : str, optional
+            IoC type, by default None
+        query_subtype : str, optional
+            Query sub-type, if any, by default None
+
+        Returns
+        -------
+        Dict
+            Dict result with resolved type and pre-processed
+            Ioc.
+            Status is none-zero on failure.
+
+        """
+        result = super()._check_item_type(
+            item=ioc, item_type=ioc_type, query_subtype=query_subtype
+        )
+        result["Ioc"] = result.pop("Item")
+        result["IocType"] = result.pop("ItemType")
+        result["SafeIoc"] = result.pop("SanitizedValue")
+        result["Severity"] = 0
+        return result
+
+    @lru_cache(maxsize=256)
     def lookup_item(
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
-    ) -> LookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup a single item.
 
@@ -62,7 +123,7 @@ class TIProvider(Provider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
@@ -82,20 +143,20 @@ class TIProvider(Provider):
         the same item.
 
         """
-        return self.lookup_ioc(
-            item, ioc_type=item_type, query_type=query_type, **kwargs
+        return self.lookup_iocs(
+            data={item: item_type},
+            query_type=query_type,
+            **kwargs,
         )
 
     @abstractmethod
-    def parse_results(
-        self, response: TILookupResult
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : TILookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -107,14 +168,13 @@ class TIProvider(Provider):
 
         """
 
-    @abstractmethod
     def lookup_ioc(
         self,
         ioc: str,
         ioc_type: str = None,
         query_type: str = None,
         **kwargs,
-    ) -> TILookupResult:
+    ) -> pd.DataFrame:
         """
         Lookup a single IoC observable.
 
@@ -135,6 +195,12 @@ class TIProvider(Provider):
             The returned results.
 
         """
+        return self.lookup_item(
+            item=ioc,
+            item_type=ioc_type,
+            query_type=query_type,
+            **kwargs,
+        )
 
     def lookup_iocs(
         self,
@@ -172,12 +238,11 @@ class TIProvider(Provider):
         """
         return self.lookup_items(
             data,
-            self.lookup_ioc,
             item_col=ioc_col,
             item_type_col=ioc_type_col,
             query_type=query_type,
             **kwargs,
-        ).rename(columns=TILookupResult.column_map())
+        )
 
     async def lookup_iocs_async(
         self,
@@ -187,8 +252,25 @@ class TIProvider(Provider):
         query_type: str = None,
         **kwargs,
     ) -> pd.DataFrame:
+        """Call base async wrapper."""
+        return await self._lookup_items_async_wrapper(
+            data,
+            item_col=ioc_col,
+            item_type_col=ioc_type_col,
+            query_type=query_type,
+            **kwargs,
+        )
+
+    async def _lookup_iocs_async_wrapper(
+        self,
+        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
+        ioc_col: str = None,
+        ioc_type_col: str = None,
+        query_type: str = None,
+        **kwargs,
+    ) -> pd.DataFrame:
         """
-        Lookup collection of IoC observables.
+        Async wrapper for providers that do not implement lookup_iocs_async.
 
         Parameters
         ----------
@@ -206,23 +288,19 @@ class TIProvider(Provider):
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the IoC type
             will be returned.
-
         Returns
         -------
         pd.DataFrame
             DataFrame of results.
 
         """
-        return _make_sync(
-            self.lookup_items_async(
-                data,
-                self.lookup_ioc,
-                item_col=ioc_col,
-                item_type_col=ioc_type_col,
-                query_type=query_type,
-                **kwargs,
-            )
-        ).rename(columns=TILookupResult.column_map())
+        return await self._lookup_items_async_wrapper(
+            data,
+            item_col=ioc_col,
+            item_type_col=ioc_type_col,
+            query_type=query_type,
+            **kwargs,
+        )
 
     @property
     def ioc_query_defs(self) -> Dict[str, Any]:
@@ -265,129 +343,6 @@ class TIProvider(Provider):
 
         """
         return TIProvider.resolve_item_type(observable)
-
-    def _check_item_type(
-        self, item: str, item_type: str = None, query_subtype: str = None
-    ) -> LookupResult:
-        """
-        Check Item Type and cleans up item.
-
-        Parameters
-        ----------
-        item : str
-            item
-        item_type : str, optional
-            item type, by default None
-        query_subtype : str, optional
-            Query sub-type, if any, by default None
-
-        Returns
-        -------
-        LookupResult
-            Lookup result with resolved ioc_type and pre-processed
-            observable.
-            LookupResult.status is none-zero on failure.
-
-        """
-        return self._check_ioc_type(
-            ioc=item, ioc_type=item_type, query_subtype=query_subtype
-        )
-
-    def _check_ioc_type(
-        self, ioc: str, ioc_type: str = None, query_subtype: str = None
-    ) -> TILookupResult:
-        """
-        Check IoC Type and cleans up observable.
-
-        Parameters
-        ----------
-        ioc : str
-            IoC observable
-        ioc_type : str, optional
-            IoC type, by default None
-        query_subtype : str, optional
-            Query sub-type, if any, by default None
-
-        Returns
-        -------
-        LookupResult
-            Lookup result with resolved ioc_type and pre-processed
-            observable.
-            LookupResult.status is none-zero on failure.
-
-        """
-        result = TILookupResult(
-            ioc=ioc,
-            sanitized_value=ioc,
-            ioc_type=ioc_type or self.resolve_ioc_type(ioc),
-            query_subtype=query_subtype,
-            result=False,
-            details="",
-            raw_result=None,
-            reference=None,
-        )
-
-        if not self.is_supported_type(result.ioc_type):
-            result.details = f"Type {result.item_type} not supported."
-            result.status = TILookupStatus.NOT_SUPPORTED.value
-            return result
-
-        clean_ioc = self._preprocessors.check(
-            result.ioc,
-            result.ioc_type,
-            require_url_encoding=self.require_url_encoding,
-        )
-
-        result.sanitized_value = clean_ioc.observable
-
-        if clean_ioc.status != "ok":
-            result.details = clean_ioc.status
-            result.status = TILookupStatus.BAD_FORMAT.value
-
-        return result
-
-    async def _lookup_iocs_async_wrapper(
-        self,
-        data: Union[pd.DataFrame, Dict[str, str], Iterable[str]],
-        ioc_col: str = None,
-        ioc_type_col: str = None,
-        query_type: str = None,
-        **kwargs,
-    ) -> pd.DataFrame:
-        """
-        Async wrapper for providers that do not implement lookup_iocs_async.
-
-        Parameters
-        ----------
-        data : Union[pd.DataFrame, Dict[str, str], Iterable[str]]
-            Data input in one of three formats:
-            1. Pandas dataframe (you must supply the column name in
-            `ioc_col` parameter)
-            2. Dict of IoCs, IoCType
-            3. Iterable of iocs - IoCTypes will be inferred
-        ioc_col : str, optional
-            DataFrame column to use for iocs, by default None
-        ioc_type_col : str, optional
-            DataFrame column to use for IoCTypes, by default None
-        query_type : str, optional
-            Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
-            will be returned.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame of results.
-
-        """
-        return await self._lookup_items_async_wrapper(
-            data,
-            self.lookup_ioc,
-            item_col=ioc_col,
-            item_type_col=ioc_type_col,
-            query_type=query_type,
-            **kwargs,
-        )
 
 
 class TIPivotProvider(PivotProvider):

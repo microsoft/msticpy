@@ -8,7 +8,6 @@ from typing import Dict, Tuple
 from ..._version import VERSION
 from .ti_provider_base import TIProvider  # noqa:F401
 from .ti_http_provider import HttpTIProvider  # noqa:F401
-from .ti_lookup_result import TILookupResult  # noqa:F401
 from ..preprocess_observable import preprocess_observable  # noqa:F401
 
 __version__ = VERSION

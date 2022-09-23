@@ -12,13 +12,19 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-import attr
-from .ti_provider_base import TIProvider
-from ..http_lookup import HttpLookupProvider, APILookupParams
-from .ti_lookup_result import TILookupResult, TILookupStatus
-from .result_severity import ResultSeverity
-from ...common.utility import export
+from typing import Dict, Any
+from json import JSONDecodeError
+
+from functools import lru_cache
+import pandas as pd
+
 from ..._version import VERSION
+from .ti_provider_base import TIProvider
+from ...common.pkg_config import get_http_timeout
+from ..http_lookup import HttpLookupProvider, APILookupParams
+from ..lookup_result import LookupStatus
+from ...common.utility import export
+from .result_severity import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -31,49 +37,96 @@ IoCLookupParams = APILookupParams
 class HttpTIProvider(HttpLookupProvider, TIProvider):
     """HTTP API Lookup provider base class."""
 
-    def lookup_ioc(
-        self,
-        ioc: str,
-        ioc_type: str = None,
-        query_type: str = None,
-        **kwargs,
-    ) -> TILookupResult:
+    @lru_cache(maxsize=256)
+    def lookup_item(
+        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    ) -> pd.DataFrame:
         """
-        Lookup a single IoC observable.
+        Lookup from a value.
 
         Parameters
         ----------
-        ioc : str
-            IoC Observable value
-        ioc_type : str, optional
-            IoC Type, by default None (type will be inferred)
+        item : str
+            item to lookup
+        item_type : str, optional
+            The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the IoC type
+            If not specified the default record type for the item_value
             will be returned.
 
         Returns
         -------
-        LookupResult
-            The returned results.
+        pd.DataFrame
+            The lookup result:
+            result - Positive/Negative,
+            details - Lookup Details (or status if failure),
+            raw_result - Raw Response
+            reference - URL of the item
+
+        Raises
+        ------
+        NotImplementedError
+            If attempting to use an HTTP method or authentication
+            protocol that is not supported.
+
+        Notes
+        -----
+        Note: this method uses memoization (lru_cache) to cache results
+        for a particular item to try avoid repeated network calls for
+        the same item.
 
         """
-        result = self.lookup_item(
-            ioc, item_type=ioc_type, query_type=query_type, **kwargs
+        result = self._check_item_type(
+            item=item, item_type=item_type, query_subtype=query_type
         )
 
-        item_dict = attr.asdict(result)
-        ioc_dict = {
-            key.replace("item", "ioc"): value for key, value in item_dict.items()
-        }
-        ioc_result = TILookupResult(**ioc_dict)
+        result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
 
-        if ioc_result.status == TILookupStatus.OK.value:
-            ioc_result.result, severity, ioc_result.details = self.parse_results(
-                ioc_result
+        req_params: Dict[str, Any] = {}
+        try:
+            verb, req_params = self._substitute_parms(
+                result["SafeIoc"], result["IocType"], query_type
             )
-        else:
-            severity = ResultSeverity.information
-        ioc_result.set_severity(severity)
+            if verb == "GET":
+                response = self._httpx_client.get(
+                    **req_params, timeout=get_http_timeout(**kwargs)
+                )
+            else:
+                raise NotImplementedError(f"Unsupported verb {verb}")
 
-        return ioc_result
+            result["Status"] = response.status_code
+            result["Reference"] = req_params["url"]
+            if result["Status"] == 200:
+                try:
+                    result["RawResult"] = response.json()
+                    result["Result"], severity, result["Details"] = self.parse_results(
+                        result
+                    )
+                except JSONDecodeError:
+                    result[
+                        "RawResult"
+                    ] = f"""There was a problem parsing results from this lookup:
+                                        {response.text}"""
+                    result["Result"] = False
+                    severity = ResultSeverity.information
+                    result["Details"] = {}
+                if isinstance(severity, ResultSeverity):
+                    result["Severity"] = severity.name
+                result["Severity"] = ResultSeverity.parse(severity).name
+                result["Status"] = LookupStatus.OK.value
+            else:
+                result["RawResult"] = str(response)
+                result["Result"] = False
+                result["Details"] = self._response_message(result["Status"])
+        except (
+            LookupError,
+            JSONDecodeError,
+            NotImplementedError,
+            ConnectionError,
+        ) as err:
+            self._err_to_results(result, err)
+            if not isinstance(err, LookupError):
+                url = req_params.get("url", None) if req_params else None
+                result["Reference"] = url
+        return pd.DataFrame([result])

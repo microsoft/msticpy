@@ -60,7 +60,7 @@ class ContextLookup(Lookup):
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
-    ) -> Tuple[bool, List[Tuple[str, LookupResult]]]:
+    ) -> pd.DataFrame:
         """
         Lookup single observable in active providers.
 
@@ -85,16 +85,14 @@ class ContextLookup(Lookup):
 
         Returns
         -------
-        Tuple[bool, List[Tuple[str, ContextLookupResult]]]
-            The result returned as a tuple(bool, list):
+        pd.DataFrame
+            The result returned as a DataFrame:
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
 
         """
-        return self.lookup_item(
-            item=observable,
-            lookup_function_name="lookup_observable",
-            item_type=obs_type,
+        return self.lookup_observables(
+            data={observable: obs_type},
             query_type=query_type,
             providers=providers,
             default_providers=default_providers,
@@ -175,7 +173,6 @@ class ContextLookup(Lookup):
         """Lookup items async."""
         return await self._lookup_items_async(
             data,
-            lookup_function_name="lookup_observables_async",
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
@@ -232,7 +229,6 @@ class ContextLookup(Lookup):
         """
         return self.lookup_items_sync(
             data,
-            lookup_function_name="lookup_observables",
             item_col=obs_col,
             item_type_col=obs_type_col,
             query_type=query_type,
@@ -264,7 +260,7 @@ class ContextLookup(Lookup):
         return (
             Lookup.result_to_df(item_lookup)
             .rename(columns=ContextLookupResult.column_map())
-            .drop("SafeIoc", axis=1)
+            .drop("SafeObservable", axis=1)
         )
 
     def _load_providers(self, **kwargs):
