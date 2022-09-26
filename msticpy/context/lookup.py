@@ -265,13 +265,8 @@ class Lookup:
 
         """
         if not isinstance(data, pd.DataFrame):
-            try:
-                data = cls.result_to_df(data)
-            # pylint: disable=broad-except
-            except Exception:
-                print("Input data is in an unexpected format.")
-                return None
-            # pylint: enable=broad-except
+            print("Input data is in an unexpected format.")
+            return None
         return browse_results(data=data, severities=severities, **kwargs)
 
     browse = browse_results
@@ -565,9 +560,7 @@ class Lookup:
         return self._combine_results(results, provider_names, **kwargs)
 
     @staticmethod
-    def result_to_df(
-        item_lookup: Tuple[bool, List[Tuple[str, Dict]]]
-    ) -> pd.DataFrame:
+    def result_to_df(item_lookup: Tuple[bool, List[Tuple[str, Dict]]]) -> pd.DataFrame:
         """
         Return DataFrame representation of Lookup response.
 
@@ -584,12 +577,7 @@ class Lookup:
 
         """
         return (
-            pd.DataFrame(
-                {
-                    r_item[0]: pd.Series(r_item[1])
-                    for r_item in item_lookup[1]
-                }
-            )
+            pd.DataFrame({r_item[0]: pd.Series(r_item[1]) for r_item in item_lookup[1]})
             .T.rename(columns=LookupResult.column_map())
             .drop("SanitizedValue", errors="ignore", axis=1)
         )

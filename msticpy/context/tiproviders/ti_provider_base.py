@@ -288,6 +288,7 @@ class TIProvider(Provider):
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the IoC type
             will be returned.
+
         Returns
         -------
         pd.DataFrame

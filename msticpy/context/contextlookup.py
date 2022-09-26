@@ -12,7 +12,7 @@ processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
-from typing import Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Iterable, List, Mapping, Optional, Union
 
 
 import pandas as pd
@@ -25,8 +25,6 @@ from .provider_base import _make_sync
 
 # used in dynamic instantiation of providers
 from .contextproviders import CONTEXT_PROVIDERS
-from .contextproviders.context_lookup_result import ContextLookupResult
-from .lookup_result import LookupResult
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -236,31 +234,6 @@ class ContextLookup(Lookup):
             default_providers=default_providers,
             prov_scope=prov_scope,
             **kwargs,
-        )
-
-    @staticmethod
-    def result_to_df(
-        item_lookup: Tuple[bool, List[Tuple[str, LookupResult]]]
-    ) -> pd.DataFrame:
-        """
-        Return DataFrame representation of Observable Lookup response.
-
-        Parameters
-        ----------
-        item_lookup : Tuple[bool, List[Tuple[str, ContextLookupResult]]]
-            Output from `lookup_observable`
-
-        Returns
-        -------
-        pd.DataFrame
-            The response as a DataFrame with a row for each
-            provider response.
-
-        """
-        return (
-            Lookup.result_to_df(item_lookup)
-            .rename(columns=ContextLookupResult.column_map())
-            .drop("SafeObservable", axis=1)
         )
 
     def _load_providers(self, **kwargs):

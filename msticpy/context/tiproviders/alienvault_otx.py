@@ -74,9 +74,7 @@ class OTX(HttpTIProvider):
         super().__init__(**kwargs)
         self.require_url_encoding = True
 
-    def parse_results(
-        self, response: Dict
-    ) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
@@ -93,7 +91,9 @@ class OTX(HttpTIProvider):
             Object with match details
 
         """
-        if self._failed_response(response) or not isinstance(response["RawResult"], dict):
+        if self._failed_response(response) or not isinstance(
+            response["RawResult"], dict
+        ):
             return False, ResultSeverity.information, "Not found."
         if "pulse_info" in response["RawResult"]:
             pulses = response["RawResult"]["pulse_info"].get("pulses", {})
