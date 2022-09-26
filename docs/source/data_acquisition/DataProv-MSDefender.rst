@@ -42,6 +42,7 @@ The settings in the file should look like the following:
             ClientSecret: "CLIENT SECRET"
             TenantId: "TENANT ID"
             UserName: "User Name"
+            Cloud: "global"
 
 
 We strongly recommend storing the client secret value
@@ -86,6 +87,45 @@ Loading a QueryProvider for M365 Defender
         mdatp_prov = QueryProvider("M365D")
 
 You can also use the aliases "MDE" and "MDATP".
+
+Specifying an API to Connect to
+-------------------------------
+
+If connecting to the Defender API to run queries there are a number of
+different endpoints you can connect to.
+Which one is most applicable will depend on your location and which
+cloud you are using.
+
+By defualt 'https://api.securitycenter.microsoft.com/' or
+'https://api.security.microsoft.com/' is used, but others can be
+specified either in your MSTICPy config file, or by passing
+in the name with the `cloud` parameter:
+
+.. code:: ipython3
+
+        mdatp_prov = QueryProvider("MDE", cloud="gcc")
+
+
+M365D APIs and MDE APIs have a different set of endpoints avaliable to them.
+If using a MDE specific API endpoint the QueryProvider name must be "MDE" or "MDATP".
+
++----------+----------------------------------------------+----------------------------------------+
+|          | MDE                                          | M365D                                  |
++==========+==============================================+========================================+
+| global   | https://api.securitycenter.microsoft.com/    | https://api.security.microsoft.com/    |
++----------+----------------------------------------------+----------------------------------------+
+| uk       | https://api-uk.securitycenter.microsoft.com/ | https://api-uk.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| us       | https://api-us.securitycenter.microsoft.com/ | https://api-us.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| eu       | https://api-eu.securitycenter.microsoft.com/ | https://api-eu.security.microsoft.com/ |
++----------+----------------------------------------------+----------------------------------------+
+| gcc      | https://api-gcc.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
+| gcc-high | https://api-gov.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
+| dod      | https://api-gov.securitycenter.microsoft.us/ | NA                                     |
++----------+----------------------------------------------+----------------------------------------+
 
 Connecting to M365 Defender
 ---------------------------
