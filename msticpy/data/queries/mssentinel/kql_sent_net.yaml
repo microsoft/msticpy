@@ -55,6 +55,18 @@ defaults:
     end:
       description: Query end time
       type: datetime
+    vendors:
+      description: Vendors to filter queries on
+      type: list
+      default: ["Palo Alto Networks", "Fortinet", "Cisco", "Check Point"]
+    source_ip_field:
+      description: The column name containing source IP
+      type: str
+      default: "SourceIP"
+    dest_ip_field:
+      description: The column name containing destination IP
+      type: str
+      default: "DestinationIP"
 sources:
   get_ips_for_host:
     description: Gets the latest AzureNetworkAnalytics interface event for a host.
@@ -224,20 +236,21 @@ sources:
           - URL
     args:
       query: '
-        CommonSecurityLog
-        | where TimeGenerated >= datetime({start})
-        | where TimeGenerated <= datetime({end})
-        | where Computer has "{host_name}"
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
         | where RequestURL has "{url}"
         {add_query_items}'
     parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
       url:
         description: URL to search for
         type: str
-      host_name:
-        description: Name of host
-        type: str
-        default: ""
   host_network_connections_csl:
     descritpion: List network connections to and from a host using CommonSecurityLog
     metadata:
@@ -247,12 +260,18 @@ sources:
           - Host
     args:
       query: '
-        CommonSecurityLog
-        | where TimeGenerated >= datetime({start})
-        | where TimeGenerated <= datetime({end})
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
         | where Computer has "{host_name}"
         {add_query_items}'
     parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
       host_name:
         description: Name of host
         type: str
@@ -266,12 +285,86 @@ sources:
           - IP
     args:
       query: '
-        CommonSecurityLog
-        | where TimeGenerated >= datetime({start})
-        | where TimeGenerated <= datetime({end})
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
         | where SourceIP == "{ip}" or DestinationIP == "{ip}"
         {add_query_items}'
     parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
+      ip:
+        description: IP address of host
+        type: str
+        default: ""
+  all_network_connections_csl:
+    descritpion: List network connections to and from an IP address using CommonSecurityLog
+    args:
+      query: '
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
+        | summarize FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated) by SourceIP, DestinationIP
+        {add_query_items}'
+    parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
+  ips_by_host_csl:
+    descritpion: All IP addresses associated with a host using CommonSecurityLog
+    metadata:
+      pivot:
+        short_name: ips_csl
+        direct_func_entities:
+          - Host
+    args:
+      query: '
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
+        | where Computer has "{host_name}"
+        | summarize sources=make_set(SourceIP), dests=make_set(DestinationIP) by Computer
+        {add_query_items}'
+    parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
+      host_name:
+        description: Name of host
+        type: str
+        default: ""
+  hosts_by_ip_csl:
+    descritpion: All hosts associated with a IP addresses using CommonSecurityLog
+    metadata:
+      pivot:
+        short_name: hosts_csl
+        direct_func_entities:
+          - IP
+    args:
+      query: '
+        {table}
+        | where TimeGenerated between(datetime({start})..datetime({end}))
+        | where DeviceVendor in ({vendors})
+        | extend SourceIP = {source_ip_field}
+        | extend DestinationIP = {dest_ip_field}
+        | where SourceIP == "{ip}" or DestinationIP == "{ip}"
+        | summarize sources=make_set(SourceIP), dests=make_set(DestinationIP) by Computer
+        {add_query_items}'
+    parameters:
+      table:
+        description: The table to run against
+        type: str
+        default: "CommonSecurityLog"
       ip:
         description: IP address of host
         type: str
