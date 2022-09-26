@@ -15,6 +15,7 @@ from ..._version import VERSION
 from ...common.exceptions import MsticpyUserConfigError
 from ...common.provider_settings import ProviderArgs, get_provider_settings
 from ...common.utility import mp_ua_header
+from ..core.query_defns import Formatters
 from .driver_base import DriverBase, QuerySource
 
 __version__ = VERSION
@@ -50,7 +51,8 @@ class CybereasonDriver(DriverBase):
             "perGroupLimit": 100,
             "perFeatureLimit": 100,
             "templateContext": "SPECIFIC",
-            "queryTimeout": 2 * 60 * 1000,  # 2 minutes in milliseconds
+            "queryTimeout": 2 * 60 * 1000,  # 2 minutes in milliseconds,
+            "pagination": {"pageSize": 1000},
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded = True
@@ -60,8 +62,9 @@ class CybereasonDriver(DriverBase):
             headers=mp_ua_header(),
         )
         self.formatters = {
-            "datetime": self._format_datetime,
-            "list": self._format_list,
+            Formatters.PARAM_HANDLER: self._custom_param_handler,
+            Formatters.DATETIME: self._format_datetime,
+            # Formatters.LIST: self._format_list,
         }
 
         self._debug = kwargs.get("debug", False)
@@ -287,9 +290,6 @@ class CybereasonDriver(DriverBase):
         result = result.get("resultIdToElementDataMap", result)
         result = [CybereasonDriver._flatten_result(v) for v in result.values()]
 
-        if not result:
-            print("Warning - query did not return any results.")
-            return None, json_response
         return pd.json_normalize(result), json_response
 
     # pylint: enable=too-many-branches
@@ -324,18 +324,6 @@ class CybereasonDriver(DriverBase):
         except TypeError:
             return timestamp
 
-    # Parameter Formatting method
-    @staticmethod
-    def _format_list(item_list: List[Any]) -> str:
-        """Return formatted list parameter."""
-        fmt_list = []
-        for item in item_list:
-            if isinstance(item, str):
-                fmt_list.append(f'"{item}"')
-            else:
-                fmt_list.append(f"{item}")
-        return ",".join(fmt_list)
-
     # Retrieve configuration parameters with aliases
     @staticmethod
     def _map_config_dict_name(config_dict: Dict[str, str]):
@@ -364,3 +352,33 @@ class CybereasonDriver(DriverBase):
             return {}
         # map names to allow for different spellings
         return CybereasonDriver._map_config_dict_name(app_config)
+
+    @staticmethod
+    def _custom_param_handler(query: str, param_dict: Dict[str, Any]) -> str:
+        """Replace parameters in query template for Elastic JSON queries."""
+        query_dict = json.loads(query)
+
+        updated_query_dict = {
+            "queryPath": [],
+            "customFields": param_dict.get(
+                "customFields", query_dict.get("customFields", [])
+            ),
+        }
+        # Replace with json.dumps() split by line and format?
+        for path in query_dict.get("queryPath", []):
+            new_path = {"requestedType": path.get("requestedType"), "filters": []}
+            for p_filter in path.get("filters", []):
+                for f_key, f_value in p_filter.items():
+                    for key, value in param_dict.items():
+                        if f_value in [
+                            f"{{{key}}}",
+                            [f"{{{key}}}"],
+                        ]:  # Should be format to cover "dates"/multi params in one line
+                            p_filter.update({f_key: value})
+                new_path["filters"].append(p_filter)
+            if path.get("isResult", False):
+                new_path["isResult"] = path["isResult"]
+
+            updated_query_dict["queryPath"].append(new_path)
+
+        return json.dumps(updated_query_dict, indent=2)

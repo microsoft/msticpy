@@ -10,9 +10,12 @@ import re
 from datetime import datetime, timedelta
 from numbers import Number
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+import json
+from json.decoder import JSONDecodeError
 
 from dateutil.parser import ParserError, parse  # type: ignore
 from dateutil.relativedelta import relativedelta
+
 
 from ..._version import VERSION
 from ...common.utility import collapse_dicts
@@ -272,7 +275,7 @@ class QuerySource:
             self._format_parameter(p_name, param_dict, settings, formatters)
 
         if formatters and Formatters.PARAM_HANDLER in formatters:
-            return formatters[Formatters.PARAM_HANDLER](self._query, **param_dict)
+            return formatters[Formatters.PARAM_HANDLER](self._query, param_dict)
         return self._query.format(**param_dict)
 
     def _format_parameter(self, p_name, param_dict, param_settings, formatters):
@@ -510,7 +513,15 @@ class QuerySource:
         # check that every parameter specified in the query has a corresponding
         # 'parameter definition in either the source or the defaults.
         source_params = self.params.keys()
-        q_params = set(re.findall(param_pattern, self._query))
+        try:
+            data = json.loads(self._query)
+            q_params = {
+                value
+                for line in json.dumps(data, indent=2).split("\n")
+                for value in set(re.findall(param_pattern, line))
+            }
+        except JSONDecodeError:
+            q_params = set(re.findall(param_pattern, self._query))
 
         missing_params = q_params - source_params
         if missing_params:
