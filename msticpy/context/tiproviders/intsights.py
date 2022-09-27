@@ -41,7 +41,7 @@ class _IntSightsParams(IoCLookupParams):
 class IntSights(HttpTIProvider):
     """IntSights Lookup."""
 
-    _BASE_URL = "https://api.intsights.com"
+    _BASE_URL = "https://api.ti.insight.rapid7.com"
 
     _IOC_QUERIES = {
         "ipv4": _IntSightsParams(
