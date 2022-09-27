@@ -178,7 +178,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
         )
 
         if result["Status"]:
-            return result
+            return pd.DataFrame([result])
 
         result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
         result["Reference"] = self._REFERENCE
@@ -191,7 +191,7 @@ class RiskIQ(TIProvider, TIPivotProvider):
             result["Result"] = False
             result["Status"] = LookupStatus.QUERY_FAILED.value
             result["Details"] = f"ERROR: unsupported query type {query_type}"
-            return result
+            return pd.DataFrame([result])
         else:
             prop = self._IOC_QUERIES.get(f"{result['IocType']}-{query_type}", "ALL")
 
@@ -209,41 +209,41 @@ class RiskIQ(TIProvider, TIPivotProvider):
             result["Raw_result"] = err
             result["Severity"] = ResultSeverity.unknown.name
 
-        return result
+        return pd.DataFrame([result])
 
     def _parse_result_all_props(self, pt_result, ti_result):
         """Parse results for ALL properties."""
-        ti_result.details = {
+        ti_result["Details"] = {
             "summary": pt_result.summary.as_dict,
             "reputation": pt_result.reputation.as_dict,
         }
-        ti_result.raw_result = ti_result.details
-        ti_result.result = (
+        ti_result["RawResult"] = ti_result["Details"]
+        ti_result["Result"] = (
             pt_result.summary.total != 0 or pt_result.reputation.score != 0
         )
 
         rep_severity = self._severity_rep(pt_result.reputation.classification)
-        ti_result.set_severity(rep_severity)
+        ti_result["Severity"] = rep_severity.name
         if (
             "malware_hashes" in pt_result.summary.available
             or "articles" in pt_result.summary.available
         ):
-            ti_result.set_severity(max(rep_severity, ResultSeverity.high))
+            ti_result["Severity"] = (max(rep_severity, ResultSeverity.high)).name
         elif "projects" in pt_result.summary.available:
-            ti_result.set_severity(max(rep_severity, ResultSeverity.warning))
+            ti_result["Severity"] = (max(rep_severity, ResultSeverity.warning)).name
         return ti_result
 
     def _parse_result_prop(self, pt_result, pt_prop, ti_result):
         """Parse result for a specific property."""
         attr = getattr(pt_result, pt_prop)
         if pt_prop == "reputation":
-            ti_result.set_severity(self._severity_rep(attr.classification))
+            ti_result["Severity"] = self._severity_rep(attr.classification).name
         elif pt_prop == "malware_hashes" and len(attr) > 0:
-            ti_result.set_severity(ResultSeverity.high)
+            ti_result["Severity"] = ResultSeverity.high.name
         else:
-            ti_result.set_severity(ResultSeverity.information)
-        ti_result.details = ti_result.raw_result = attr.as_dict
-        ti_result.result = True
+            ti_result["Severity"] = ResultSeverity.information.name
+        ti_result["Details"] = ti_result["RawResult"] = attr.as_dict
+        ti_result["Result"] = True
         return ti_result
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:

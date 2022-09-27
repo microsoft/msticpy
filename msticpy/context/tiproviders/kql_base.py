@@ -70,17 +70,17 @@ class KqlTIProvider(TIProvider):
         return self._query_provider.connected
 
     @lru_cache(maxsize=256)
-    def lookup_item(  # type: ignore
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    def lookup_ioc(  # type: ignore
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
         """
         Lookup from a value.
 
         Parameters
         ----------
-        item : str
+        ioc : str
             item to lookup
-        item_type : str, optional
+        ioc_type : str, optional
             The Type of the item to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
@@ -110,7 +110,7 @@ class KqlTIProvider(TIProvider):
 
         """
         return self.lookup_iocs(
-            data={item: item_type},
+            data={ioc: ioc_type},
             query_type=query_type,
             **kwargs,
         )

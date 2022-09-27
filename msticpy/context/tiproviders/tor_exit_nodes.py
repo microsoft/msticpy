@@ -127,7 +127,7 @@ class Tor(TIProvider):
             result["Status"] = LookupStatus.QUERY_FAILED.value
 
         if result["Status"]:
-            return result
+            return pd.DataFrame([result])
 
         tor_node = self._nodelist.get(ioc)
 
@@ -140,7 +140,7 @@ class Tor(TIProvider):
             result["RawResult"] = tor_node
         else:
             result["Details"] = "Not found."
-        return result
+        return pd.DataFrame([result])
 
     def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """

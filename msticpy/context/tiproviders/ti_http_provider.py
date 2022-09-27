@@ -34,25 +34,25 @@ IoCLookupParams = APILookupParams
 
 
 @export
-class HttpTIProvider(HttpLookupProvider, TIProvider):
+class HttpTIProvider(TIProvider, HttpLookupProvider):
     """HTTP API Lookup provider base class."""
 
     @lru_cache(maxsize=256)
-    def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    def lookup_ioc(
+        self, ioc: str, ioc_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
         """
         Lookup from a value.
 
         Parameters
         ----------
-        item : str
-            item to lookup
-        item_type : str, optional
-            The Type of the item to lookup, by default None (type will be inferred)
+        ioc : str
+            ioc to lookup
+        ioc_type : str, optional
+            The Type of the ioc to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
-            If not specified the default record type for the item_value
+            If not specified the default record type for the ioc
             will be returned.
 
         Returns
@@ -77,9 +77,7 @@ class HttpTIProvider(HttpLookupProvider, TIProvider):
         the same item.
 
         """
-        result = self._check_item_type(
-            item=item, item_type=item_type, query_subtype=query_type
-        )
+        result = self._check_ioc_type(ioc, ioc_type, query_subtype=query_type)
 
         result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
 

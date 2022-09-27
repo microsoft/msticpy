@@ -391,7 +391,7 @@ def test_tor_exit_nodes(ti_lookup, monkeypatch):
         lu_result = result.to_dict(orient="records")[0]
         check.is_true(lu_result["Result"])
         check.is_true(bool(lu_result["Reference"]))
-        if lu_result.severity in ["warning", "high"]:
+        if lu_result["Severity"] in ["warning", "high"]:
             check.is_true(bool(lu_result["Details"]))
             check.is_true(bool(lu_result["RawResult"]))
             pos_results.append(lu_result)

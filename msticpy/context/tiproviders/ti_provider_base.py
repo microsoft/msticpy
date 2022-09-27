@@ -15,7 +15,6 @@ requests per minute for the account type that you have.
 
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, Union, Tuple
-from functools import lru_cache
 
 import pandas as pd
 
@@ -103,7 +102,6 @@ class TIProvider(Provider):
         result["Severity"] = 0
         return result
 
-    @lru_cache(maxsize=256)
     def lookup_item(
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
@@ -143,8 +141,9 @@ class TIProvider(Provider):
         the same item.
 
         """
-        return self.lookup_iocs(
-            data={item: item_type},
+        return self.lookup_ioc(
+            ioc=item,
+            ioc_type=item_type,
             query_type=query_type,
             **kwargs,
         )
@@ -168,6 +167,7 @@ class TIProvider(Provider):
 
         """
 
+    @abstractmethod
     def lookup_ioc(
         self,
         ioc: str,
@@ -195,12 +195,6 @@ class TIProvider(Provider):
             The returned results.
 
         """
-        return self.lookup_item(
-            item=ioc,
-            item_type=ioc_type,
-            query_type=query_type,
-            **kwargs,
-        )
 
     def lookup_iocs(
         self,
