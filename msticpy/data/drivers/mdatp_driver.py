@@ -35,6 +35,8 @@ class MDATPDriver(OData):
         ----------
         connection_str : str, optional
             Connection string
+        instance : str, optional
+            The instance name from config to use
 
         """
         super().__init__(**kwargs)
