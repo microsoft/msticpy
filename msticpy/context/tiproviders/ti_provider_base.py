@@ -99,7 +99,7 @@ class TIProvider(Provider):
         result["Ioc"] = result.pop("Item")
         result["IocType"] = result.pop("ItemType")
         result["SafeIoc"] = result.pop("SanitizedValue")
-        result["Severity"] = 0
+        result["Severity"] = ResultSeverity.information.name
         return result
 
     def lookup_item(
