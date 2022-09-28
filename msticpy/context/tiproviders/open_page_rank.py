@@ -15,7 +15,6 @@ requests per minute for the account type that you have.
 from json import JSONDecodeError
 from typing import Any, Dict, Iterable, List, Tuple, Union
 
-import attr
 import pandas as pd
 
 from ..._version import VERSION
