@@ -116,7 +116,7 @@ class OPR(HttpTIProvider):
             if result["Status"] == LookupStatus.OK.value:
                 domain_list.add(result["Ioc"])
             else:
-                bad_requests.append(pd.Series(attr.asdict(result)))
+                bad_requests.append(pd.Series(result))
 
         results: List[pd.Series] = []
         if not domain_list:
