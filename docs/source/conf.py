@@ -34,12 +34,12 @@ sys.path.insert(0, os.path.abspath("..//.."))
 project = "msticpy"
 # pylint: disable=redefined-builtin
 copyright = "2019, (c) Microsoft Corporation."
-author = "Ian Hellen"
+author = "Ian Hellen, Pete Bryan"
 
 
-with open("../../msticpy/_version.py", "r", encoding="utf-8") as fd:
+with open(f"../../{project}/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
-    _ver = v_match.group(1) if v_match else "no version"
+    _ver = v_match[1] if v_match else "no version"
 
 # The full version, including alpha/beta/rc tags
 release = _ver
@@ -62,8 +62,8 @@ extensions = [
     # "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
-    "sphinx.ext.intersphinx",
-    "seed_intersphinx_mapping",
+    # "sphinx.ext.intersphinx",
+    # "seed_intersphinx_mapping",
 ]
 
 autosectionlabel_prefix_document = True
@@ -90,7 +90,7 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns: list = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -138,7 +138,7 @@ htmlhelp_basename = "msticpydoc"
 
 # -- Options for LaTeX output ------------------------------------------------
 
-latex_elements = {
+latex_elements: dict = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -157,7 +157,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "msticpy.tex", "msticpy Documentation", "Ian Hellen", "manual")
+    (master_doc, "msticpy.tex", "MSTICPy Documentation", author, "manual")
 ]
 
 
@@ -165,7 +165,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "msticpy", "msticpy Documentation", [author], 1)]
+man_pages = [(master_doc, project, "MSTICPy Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -176,10 +176,10 @@ man_pages = [(master_doc, "msticpy", "msticpy Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        "msticpy",
-        "msticpy Documentation",
+        project,
+        "MSTICPy Documentation",
         author,
-        "msticpy",
+        project,
         "Security tools for Python and Jupyter notebooks.",
         "Security",
     )

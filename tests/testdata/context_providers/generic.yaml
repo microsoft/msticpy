@@ -1,0 +1,90 @@
+name: OTX
+description: AlienVault OTX
+base_url: https://otx.alienvault.com/ # [OPT] if None - queries must contain absolute URL
+required_parameters:
+  [API_KEY] # The parameters that must be available from config
+  #    to instantiate the provider (usually API_KEY)
+request_defaults: # The only required value in this section is is where to insert
+  #    auth keys in the request
+  headers:
+    X-OTX-API-KEY: API_KEY # Pass the API_KEY in headers
+  params: #    or in params?
+  data: #    or in data?
+  auth_type: HTTPBasic # [OPT] This is the default so not normally needed
+  auth_str: # [OPT] This is needed if the auth string needs some special formatting
+  verb: GET # [OPT] GET is default or POST
+
+macros: # [OPT] keys defined here will have their value substituted in queries
+  api_path: /api/v1/indicators
+
+queries: # tokens with braces replaced by macro or runtime value
+  ipv4:
+    path: "{api_path}/IPv4/{observable}/general"
+  ipv6:
+    path: "{api_path}/IPv6/{observable}/general"
+  ipv4-passivedns:
+    path: "{api_path}/IPv4/{observable}/passive_dns"
+  ipv6-passivedns:
+    path: "{api_path}/IPv6/{observable}/passive_dns"
+  ipv4-geo:
+    path: "{api_path}/IPv4/{observable}/geo"
+  ipv6-geo:
+    path: "{api_path}/IPv6/{observable}/geo"
+  dns:
+    path: "{api_path}/domain/{observable}/general"
+  dns-passivedns:
+    path: "{api_path}/domain/{observable}/passive_dns"
+  dns-geo:
+    path: "{api_path}/domain/{observable}/geo"
+  hostname:
+    path: "{api_path}/hostname/{observable}/general"
+  file_hash:
+    path: "{api_path}/file/{observable}/general"
+    aliases: [md5_hash, sha1_hash, sha256_hash]
+  url:
+    path: "{api_path}/url/{observable}/general"
+
+result_processing: # Rules used to parse response
+  severity: # Determine severity from response
+    key: pulse_info.pulses # default key for conditions to use
+    conditions: # evaluate conditions (in order)
+      high: len gt 1 # simple condition
+      warning:
+        and: # support ands and ors
+          - len gt 1
+          - len gt 3
+      information: None # [OPT] default if no previous matches (optional)
+    # other examples
+    #   high:                               # Override section key for this condition
+    #       pulse_info.pulses: len gt 1     # and specify condition for that key value
+    #   warning:
+    #       pulse_info.pulses:              # Override section key for this condition
+    #           and: [len gt 1, len gt 3]   # with more complex condition
+
+  summary: # [OPT] define which items from response to pull out
+    key: pulse_info.pulses # default key to use if not specified in subkey
+    fields: # fields to create in summary dictionary
+      pulse_count:
+        action: count # count of contents
+      sections_available:
+        key: pulse_info.sections_available
+        action: value # [OPT] add value at key (also default if no action specified)
+
+      sections_available_k: # list of keys at location
+        key: pulse_info.sections
+        action: keys
+
+      names:
+        action: # get the list of values of the 'name' key
+          get_item: name # e.g. [data[name] for data in key]
+      tags:
+        key: pulse_info.pulses
+        action:
+          get_item: tags # get the list of values of the 'tags' key
+        flatten: True # if the result is nested list, flatten
+
+      references:
+        key: pulse_info.pulses
+        action:
+          get_item: references
+        flatten: True
