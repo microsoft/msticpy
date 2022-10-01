@@ -60,7 +60,7 @@ class SentinelTIMixin:
             appendix += f"&$top={limit}"
         if orderby:
             appendix += f"&$orderby={orderby}"
-        return self._list_items(
+        return self._list_items(  # type: ignore
             item_type="ti_path", api_version="2021-10-01", appendix=appendix
         )  # type: ignore
 
@@ -74,7 +74,7 @@ class SentinelTIMixin:
             A table of the custom hunting queries.
 
         """
-        return self._list_items(
+        return self._list_items(  # type: ignore
             item_type="ti_path", api_version="2021-10-01", appendix="/metrics"
         )  # type: ignore
 
@@ -88,7 +88,7 @@ class SentinelTIMixin:
         **kwargs,
     ):
         """
-        Creates a new indicator within the Microsoft Sentinel workspace.
+        Create a new indicator within the Microsoft Sentinel workspace.
 
         Parameters
         ----------
@@ -127,8 +127,8 @@ class SentinelTIMixin:
             If API call fails
 
         """
-        self.check_connected()
-        ti_url = self.sent_urls["ti"] + "/createIndicator"
+        self.check_connected()  # type: ignore
+        ti_url = self.sent_urls["ti"] + "/createIndicator"  # type: ignore
         params = {"api-version": "2021-10-01"}
         if ioc_type not in ["domain-name", "url", "file", "ipv4-addr", "ipv6_addr"]:
             raise MsticpyUserError(
@@ -150,7 +150,7 @@ class SentinelTIMixin:
         data["kind"] = "indicator"
         response = httpx.post(
             ti_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -168,7 +168,7 @@ class SentinelTIMixin:
         **kwargs,
     ):
         """
-        Bulk create indicators from a DataFrame
+        Bulk create indicators from a DataFrame.
 
         Parameters
         ----------
@@ -184,9 +184,7 @@ class SentinelTIMixin:
         """
         for row in data.iterrows():
             confidence = (
-                row[1][
-                    confidence_column  # pylint: disable=undefined-variable # noqa: F821
-                ]
+                row[1][kwargs["confidence_column"]]
                 if "confidence_column" in kwargs
                 else 0
             )
@@ -221,12 +219,12 @@ class SentinelTIMixin:
             If API call fails.
 
         """
-        self.check_connected()
-        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"
+        self.check_connected()  # type: ignore
+        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"  # type: ignore
         params = {"api-version": "2021-10-01"}
         response = httpx.get(
             ti_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -236,7 +234,7 @@ class SentinelTIMixin:
 
     def update_indicator(self, indicator_id: str, **kwargs):
         """
-        Updates an existing indicator within the Microsoft Sentinel workspace.
+        Update an existing indicator within the Microsoft Sentinel workspace.
 
         Parameters
         ----------
@@ -269,8 +267,8 @@ class SentinelTIMixin:
             If API call fails
 
         """
-        self.check_connected()
-        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"
+        self.check_connected()  # type: ignore
+        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"  # type: ignore
         indicator_details = self.get_indicator(indicator_id)
         data_items = _build_additional_indicator_items(**kwargs)
         data_items.pop("validFrom")
@@ -281,7 +279,7 @@ class SentinelTIMixin:
         params = {"api-version": "2021-10-01"}
         response = httpx.put(
             ti_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data),
             timeout=get_http_timeout(),
@@ -302,7 +300,7 @@ class SentinelTIMixin:
             The tag to add.
 
         """
-        self.check_connected()
+        self.check_connected()  # type: ignore
         indicator_details = self.get_indicator(indicator_id)
         tags = [tag]
         if "threatIntelligenceTags" in indicator_details["properties"]:
@@ -311,7 +309,7 @@ class SentinelTIMixin:
 
     def delete_indicator(self, indicator_id: str):
         """
-        Delete a specific TI indicator
+        Delete a specific TI indicator.
 
         Parameters
         ----------
@@ -322,13 +320,14 @@ class SentinelTIMixin:
         ------
         CloudError
             If API call fails
+
         """
-        self.check_connected()
-        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"
+        self.check_connected()  # type: ignore
+        ti_url = self.sent_urls["ti"] + f"/indicators/{indicator_id}"  # type: ignore
         params = {"api-version": "2021-10-01"}
         response = httpx.delete(
             ti_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             timeout=get_http_timeout(),
         )
@@ -338,7 +337,7 @@ class SentinelTIMixin:
 
     def query_indicators(self, **kwargs) -> pd.DataFrame:
         """
-        Query for indicators in a Sentinel workspace
+        Query for indicators in a Sentinel workspace.
 
         Parameters
         ----------
@@ -377,13 +376,13 @@ class SentinelTIMixin:
             If API call fails
 
         """
-        self.check_connected()
-        ti_url = self.sent_urls["ti"] + "/queryIndicators"
+        self.check_connected()  # type: ignore
+        ti_url = self.sent_urls["ti"] + "/queryIndicators"  # type: ignore
         data_items = dict(kwargs)
         params = {"api-version": "2021-10-01"}
         response = httpx.post(
             ti_url,
-            headers=get_api_headers(self.token),
+            headers=get_api_headers(self.token),  # type: ignore
             params=params,
             content=str(data_items),
             timeout=get_http_timeout(),
