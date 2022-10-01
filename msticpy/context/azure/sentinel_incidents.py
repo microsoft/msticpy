@@ -257,7 +257,14 @@ class SentinelIncidentsMixin:
             content=str(data),
             timeout=get_http_timeout(),
         )
+        if response.status_code == 400:
+            print("Error")
+            print(response.content)
+            print(response)
         if response.status_code not in (200, 201):
+            print("Error")
+            print(response.content)
+            print(response)
             raise CloudError(response=response)
         print("Incident updated.")
 

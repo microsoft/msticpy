@@ -31,6 +31,7 @@ _PATH_MAPPING = {
     "watchlists": "/providers/Microsoft.SecurityInsights/watchlists",
     "alert_template": "/providers/Microsoft.SecurityInsights/alertRuleTemplates",
     "search": "/tables",
+    "ti_path": "/providers/Microsoft.SecurityInsights/threatIntelligence/main",
 }
 
 
@@ -84,7 +85,16 @@ class SentinelUtilsMixin:
             results_df = _azs_api_result_to_df(response)
         else:
             raise CloudError(response=response)
-        return results_df
+        j_resp = response.json()
+        results = [results_df]
+        # If nextLink in reponse, go get that data as well
+        while "nextLink" in j_resp:
+            next_url = j_resp["nextLink"]
+            next_response = self._get_items(next_url, api_version)
+            next_results_df = _azs_api_result_to_df(next_response)
+            results.append(next_results_df)
+            j_resp = next_response.json()
+        return pd.concat(results)
 
     def _check_config(self, items: List) -> Dict:
         """
