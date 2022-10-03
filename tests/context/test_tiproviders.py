@@ -181,6 +181,7 @@ def test_ti_provider(ti_lookup, provider_name):
         )
         verify_result(result, ti_lookup)
 
+    # Check if lookup works with observable parameter
     for ioc, ioc_params in _TEST_IOCS.items():
         result = ti_lookup.lookup_ioc(
             ioc=None,
@@ -232,7 +233,9 @@ def verify_result(result, ti_lookup):
 
     # test browser with raw result
     # note something wrong with RiskIQ raw output.
-    riskiq_result = result[result.Provider == "RiskIQ"]
+    riskiq_result = result[
+        (result.Provider == "RiskIQ") & (result.Severity != ResultSeverity.unknown.name)
+    ]
     if not riskiq_result.empty:
         ti_lookup.browse(riskiq_result)
         # test convert to DF
