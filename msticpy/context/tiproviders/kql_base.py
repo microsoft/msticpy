@@ -89,7 +89,7 @@ class KqlTIProvider(TIProvider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),

@@ -30,7 +30,7 @@ from ..vis.ti_browser import browse_results
 
 # used in dynamic instantiation of providers
 from .provider_base import Provider, _make_sync
-from .lookup_result import LookupResult, LookupStatus
+from .lookup_result import LookupStatus
 
 
 __version__ = VERSION
@@ -362,7 +362,7 @@ class Lookup:
 
         Returns
         -------
-        Tuple[bool, List[Tuple[str, LookupResult]]]
+        pd.DataFrame
             The result returned as a tuple(bool, list):
             bool indicates whether a TI record was found in any provider
             list has an entry for each provider result
@@ -558,29 +558,6 @@ class Lookup:
                 )
             )
         return self._combine_results(results, provider_names, **kwargs)
-
-    @staticmethod
-    def result_to_df(item_lookup: Tuple[bool, List[Tuple[str, Dict]]]) -> pd.DataFrame:
-        """
-        Return DataFrame representation of Lookup response.
-
-        Parameters
-        ----------
-        item_lookup : Tuple[bool, List[Tuple[str, Dict]]]
-            Output from `lookup_item`
-
-        Returns
-        -------
-        pd.DataFrame
-            The response as a DataFrame with a row for each
-            provider response.
-
-        """
-        return (
-            pd.DataFrame({r_item[0]: pd.Series(r_item[1]) for r_item in item_lookup[1]})
-            .T.rename(columns=LookupResult.column_map())
-            .drop("SanitizedValue", errors="ignore", axis=1)
-        )
 
     @staticmethod
     async def _track_completion(prog_counter):

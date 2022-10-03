@@ -15,7 +15,7 @@ import pytest_check as check
 from msticpy.common.provider_settings import get_provider_settings
 from msticpy.context.tilookup import TILookup
 from msticpy.context.tiproviders.azure_sent_byoti import AzSTI
-from msticpy.context.tiproviders.ti_lookup_result import LookupStatus
+from msticpy.context.lookup_result import LookupStatus
 from msticpy.data import QueryProvider
 from msticpy.data.core.data_providers import DriverBase
 

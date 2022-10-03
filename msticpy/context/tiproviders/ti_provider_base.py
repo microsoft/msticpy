@@ -191,7 +191,7 @@ class TIProvider(Provider):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The returned results.
 
         """

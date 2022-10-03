@@ -183,7 +183,7 @@ class ContextProvider(Provider):
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns

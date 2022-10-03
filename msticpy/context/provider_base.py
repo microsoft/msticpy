@@ -60,7 +60,7 @@ class Provider(ABC):
 
         Returns
         -------
-        LookupResult
+        pd.DataFrame
             The lookup result:
             result - Positive/Negative,
             details - Lookup Details (or status if failure),
