@@ -46,7 +46,7 @@ __author__ = "Mark Kendrick"
 class RiskIQ(TIProvider, TIPivotProvider):
     """RiskIQ Threat Intelligence Lookup."""
 
-    _QUERIES: dict = {
+    _QUERIES: Dict[str, str] = {
         "ipv4": "ALL",
         "ipv4-articles": "articles",
         "ipv4-artifacts": "artifacts",

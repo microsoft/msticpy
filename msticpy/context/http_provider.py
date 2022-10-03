@@ -166,7 +166,7 @@ class HttpProvider(Provider):
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
         """
-        Lookup from a value.
+        Lookup from an item value.
 
         Parameters
         ----------

@@ -13,7 +13,7 @@ requests per minute for the account type that you have.
 
 """
 from abc import abstractmethod
-from typing import Tuple, Any, List, Union, Dict, Iterable
+from typing import Tuple, Any, List, Union, Dict, Iterable, Optional
 from functools import lru_cache
 
 import pandas as pd
@@ -34,7 +34,11 @@ class ContextProvider(Provider):
 
     @lru_cache(maxsize=256)
     def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+        self,
+        item: str,
+        item_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
