@@ -435,6 +435,27 @@ class Lookup:
             )
         )
 
+    @staticmethod
+    def result_to_df(item_lookup: pd.DataFrame) -> pd.DataFrame:
+        """
+        Return DataFrame representation of Lookup response.
+
+        Parameters
+        ----------
+        item_lookup : pd.DataFrame
+            Output from `lookup_item`
+
+        Returns
+        -------
+        pd.DataFrame
+            The response as a DataFrame with a row for each
+            provider response.
+
+        """
+        if isinstance(item_lookup, pd.DataFrame):
+            return item_lookup
+        raise ValueError(f"DataFrame was expected, but {type(item_lookup)} received.")
+
     # pylint: disable=too-many-locals
     async def _lookup_items_async(
         self,
