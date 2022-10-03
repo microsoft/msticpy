@@ -48,7 +48,7 @@ class APILookupParams:
     sub_type: str = ""
 
 
-class HttpLookupProvider(Provider):
+class HttpProvider(Provider):
     """
     HTTP Generic lookup provider base class.
 

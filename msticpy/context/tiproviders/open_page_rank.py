@@ -22,7 +22,7 @@ from ...common.utility import export
 from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
 from .ti_http_provider import HttpTIProvider
-from ..http_lookup import APILookupParams
+from ..http_provider import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION

@@ -18,7 +18,7 @@ from typing import Any, Dict, Tuple
 from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider
-from ..http_lookup import APILookupParams
+from ..http_provider import APILookupParams
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
