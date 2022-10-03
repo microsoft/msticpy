@@ -179,7 +179,18 @@ def test_ti_provider(ti_lookup, provider_name):
             providers=[provider_name],
             show_not_supported=True,
         )
-        verify_result(result)
+        verify_result(result, ti_lookup)
+
+    for ioc, ioc_params in _TEST_IOCS.items():
+        result = ti_lookup.lookup_ioc(
+            ioc=None,
+            observable=ioc,
+            ioc_type=ioc_params[0],
+            ioc_query_type=ioc_params[1],
+            providers=[provider_name],
+            show_not_supported=True,
+        )
+        verify_result(result, ti_lookup)
 
     results_df = ti_lookup.lookup_iocs(
         data=(_IOC_IPS + _BENIGN_IPS), providers=[provider_name]
@@ -200,7 +211,7 @@ def test_ti_provider(ti_lookup, provider_name):
 
 
 # pylint: disable=pointless-statement
-def verify_result(result):
+def verify_result(result, ti_lookup):
     """Verify return results."""
     check.is_not_none(result)
     check.is_instance(result, pd.DataFrame)
@@ -218,6 +229,16 @@ def verify_result(result):
             check.is_not_none(lu_result["RawResult"])
             check.is_not_none(lu_result["Reference"])
             # exercise summary functions of Lookup class
+
+    # test browser with raw result
+    # note something wrong with RiskIQ raw output.
+    riskiq_result = result[result.Provider == "RiskIQ"]
+    if not riskiq_result.empty:
+        ti_lookup.browse(riskiq_result)
+    # test convert to DF
+    result_df = ti_lookup.result_to_df(riskiq_result)
+    check.is_instance(result_df, pd.DataFrame)
+    check.is_false(result_df.empty)
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
