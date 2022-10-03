@@ -88,29 +88,28 @@ Loading a QueryProvider for M365 Defender
 
 You can also use the aliases "MDE" and "MDATP".
 
-Specifying an API to Connect to
--------------------------------
+Specifying the Defender Cloud Instance to Connect to
+----------------------------------------------------
 
 If connecting to the Defender API to run queries there are a number of
 different endpoints you can connect to.
 Which one is most applicable will depend on your location and which
 cloud you are using.
 
-By defualt 'https://api.securitycenter.microsoft.com/' or
+By default 'https://api.securitycenter.microsoft.com/' or
 'https://api.security.microsoft.com/' is used, but others can be
 specified either in your MSTICPy config file, or by passing
-in the name with the `cloud` parameter:
+in the name with the cloud keyword:
 
 .. code:: ipython3
 
         mdatp_prov = QueryProvider("MDE", cloud="gcc")
 
 
-M365D APIs and MDE APIs have a different set of endpoints avaliable to them.
-If using a MDE specific API endpoint the QueryProvider name must be "MDE" or "MDATP".
+If using an MDE-specific API endpoint, the "name" (the first parameter to QueryProvider in the example above) must be "MDE".
 
 +----------+----------------------------------------------+----------------------------------------+
-|          | MDE                                          | M365D                                  |
+| Cloud    | MDE                                          | M365D                                  |
 +==========+==============================================+========================================+
 | global   | https://api.securitycenter.microsoft.com/    | https://api.security.microsoft.com/    |
 +----------+----------------------------------------------+----------------------------------------+

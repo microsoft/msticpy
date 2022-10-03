@@ -165,6 +165,7 @@ DataProviders:
       UserName: str(required=False)
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
+      Cloud: str(required=False)
   MicrosoftGraph:
     Args:
       ClientId: str(format=uuid)

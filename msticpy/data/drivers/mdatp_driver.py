@@ -10,7 +10,7 @@ import pandas as pd
 
 from ..._version import VERSION
 from ...auth.azure_auth import AzureCloudConfig
-from ...auth.cloud_mappings import return_defender_endpoint, return_m365d_endpoint
+from ...auth.cloud_mappings import get_defender_endpoint, get_m365d_endpoint
 from ...common.data_utils import ensure_df_datetimes
 from ...common.utility import export
 from ..core.query_defns import DataEnvironment
@@ -112,13 +112,13 @@ def _select_api_uris(data_environment, cloud):
     cloud_config = AzureCloudConfig()
     login_uri = cloud_config.endpoints.active_directory
     if data_environment == DataEnvironment.M365D:
-        base_url = return_m365d_endpoint(cloud)
+        base_url = get_m365d_endpoint(cloud)
         return (
             base_url,
             f"{login_uri}/{{tenantId}}/oauth2/token",
             "/advancedhunting/run",
         )
-    base_url = return_defender_endpoint(cloud)
+    base_url = get_defender_endpoint(cloud)
     return (
         base_url,
         f"{login_uri}/{{tenantId}}/oauth2/token",

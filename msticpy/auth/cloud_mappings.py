@@ -278,11 +278,11 @@ class AzureCloudConfig:
         return f"{self.endpoints.resource_manager}.default"
 
 
-def return_defender_endpoint(cloud: str) -> str:
+def get_defender_endpoint(cloud: str) -> str:
     """Get the URI of the applicable Defender for Endpoint API."""
     return _DEFENDER_MAPPINGS[cloud.casefold()]
 
 
-def return_m365d_endpoint(cloud: str) -> str:
+def get_m365d_endpoint(cloud: str) -> str:
     """Get the URI of the applicable Defender for Endpoint API."""
     return _M365D_MAPPINGS[cloud]
