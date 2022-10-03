@@ -235,10 +235,9 @@ def verify_result(result, ti_lookup):
     riskiq_result = result[result.Provider == "RiskIQ"]
     if not riskiq_result.empty:
         ti_lookup.browse(riskiq_result)
-    # test convert to DF
-    result_df = ti_lookup.result_to_df(riskiq_result)
-    check.is_instance(result_df, pd.DataFrame)
-    check.is_false(result_df.empty)
+        # test convert to DF
+        result_df = ti_lookup.result_to_df(riskiq_result)
+        check.is_instance(result_df, pd.DataFrame)
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
