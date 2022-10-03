@@ -15,7 +15,8 @@ requests per minute for the account type that you have.
 from typing import Any, Tuple, Dict
 
 from ..._version import VERSION
-from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_http_provider import HttpTIProvider
+from ..http_lookup import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
@@ -27,19 +28,19 @@ class GreyNoise(HttpTIProvider):
 
     _BASE_URL = "https://api.greynoise.io"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         # Community API
-        "ipv4": IoCLookupParams(
+        "ipv4": APILookupParams(
             path="/v3/community/{observable}",
             headers={"key": "{API_KEY}"},
         ),
         # Enterprise API Quick Lookup
-        "ipv4-quick": IoCLookupParams(
+        "ipv4-quick": APILookupParams(
             path="/v2/noise/quick/{observable}",
             headers={"key": "{API_KEY}"},
         ),
         # Enterprise API Full Lookup
-        "ipv4-full": IoCLookupParams(
+        "ipv4-full": APILookupParams(
             path="/v2/noise/context/{observable}",
             headers={"key": "{API_KEY}"},
         ),

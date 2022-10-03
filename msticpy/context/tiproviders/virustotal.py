@@ -18,7 +18,7 @@ from typing import Any, Dict, Tuple
 from ..._version import VERSION
 from ...common.utility import export
 from .ti_http_provider import HttpTIProvider
-from ..http_lookup import APILookupParams as IoCLookupParams
+from ..http_lookup import APILookupParams
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -36,23 +36,23 @@ class VirusTotal(HttpTIProvider):
     _BASE_URL = "https://www.virustotal.com/"
 
     _PARAMS = {"apikey": "{API_KEY}"}
-    _IOC_QUERIES = {
-        "ipv4": IoCLookupParams(
+    _QUERIES = {
+        "ipv4": APILookupParams(
             path="vtapi/v2/ip-address/report",
             params={**_PARAMS, "ip": "{observable}"},
             headers=_DEF_HEADERS,
         ),
-        "dns": IoCLookupParams(
+        "dns": APILookupParams(
             path="vtapi/v2/domain/report",
             params={**_PARAMS, "domain": "{observable}"},
             headers=_DEF_HEADERS,
         ),
-        "file_hash": IoCLookupParams(
+        "file_hash": APILookupParams(
             path="vtapi/v2/file/report",
             params={**_PARAMS, "resource": "{observable}"},
             headers={**_DEF_HEADERS, **_GZIP_HEADERS},
         ),
-        "url": IoCLookupParams(
+        "url": APILookupParams(
             path="vtapi/v2/url/report",
             params={**_PARAMS, "resource": "{observable}"},
             headers={**_DEF_HEADERS, **_GZIP_HEADERS},
@@ -60,9 +60,9 @@ class VirusTotal(HttpTIProvider):
     }
 
     # aliases
-    _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
+    _QUERIES["md5_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
     _REQUIRED_PARAMS = ["API_KEY"]
 

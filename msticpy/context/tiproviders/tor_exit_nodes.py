@@ -42,7 +42,7 @@ class Tor(TIProvider):
         "/master/tor-exit-nodes.lst"
     )
 
-    _IOC_QUERIES: dict = {"ipv4": None, "ipv6": None}
+    _QUERIES: dict = {"ipv4": None, "ipv6": None}
     _nodelist: Dict[str, Dict[str, str]] = {}
     _last_cached = datetime.min
     _cache_lock = Lock()

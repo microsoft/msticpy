@@ -42,7 +42,7 @@ __author__ = "Ian Hellen"
 class KqlTIProvider(TIProvider):
     """KQL TI provider base class."""
 
-    _IOC_QUERIES: Dict[str, tuple] = {}
+    _QUERIES: Dict[str, tuple] = {}
 
     _CONNECT_STR = (
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
@@ -322,7 +322,7 @@ class KqlTIProvider(TIProvider):
     ) -> Tuple[Callable, Dict[str, Any]]:
 
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
-        query_def = self._IOC_QUERIES.get(ioc_key, None)
+        query_def = self._QUERIES.get(ioc_key, None)
         if not query_def:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 

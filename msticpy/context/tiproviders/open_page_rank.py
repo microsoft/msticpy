@@ -21,7 +21,8 @@ from ..._version import VERSION
 from ...common.utility import export
 from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
-from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_http_provider import HttpTIProvider
+from ..http_lookup import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
@@ -34,8 +35,8 @@ class OPR(HttpTIProvider):
 
     _BASE_URL = "https://openpagerank.com"
 
-    _IOC_QUERIES = {
-        "dns": IoCLookupParams(
+    _QUERIES = {
+        "dns": APILookupParams(
             path="/api/v1.0/getPageRank",
             params={"domains[0]": "{observable}"},
             headers={"API-OPR": "{API_KEY}"},
@@ -223,7 +224,7 @@ class OPR(HttpTIProvider):
         ]
 
         qry_str = "&".join(qry_elements)
-        path = self._IOC_QUERIES["dns"].path
+        path = self._QUERIES["dns"].path
         req_url = f"{self._BASE_URL}{path}?{qry_str}"
 
         try:

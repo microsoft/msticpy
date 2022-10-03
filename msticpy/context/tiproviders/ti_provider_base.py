@@ -32,13 +32,13 @@ __author__ = "Ian Hellen"
 class TIProvider(Provider):
     """Abstract base class for Threat Intel providers."""
 
-    _IOC_QUERIES: Dict[str, Any] = {}
+    _QUERIES: Dict[str, Any] = {}
 
     # pylint: disable=unused-argument
     def __init__(self, **kwargs):
         """Initialize the provider."""
         # pylint: disable=invalid-name
-        self._QUERIES = self._IOC_QUERIES
+        self._QUERIES = self._QUERIES
         super().__init__(**kwargs)
 
     def _check_item_type(
@@ -308,13 +308,13 @@ class TIProvider(Provider):
             IoC query/request definitions keyed by IoCType
 
         """
-        return self._IOC_QUERIES
+        return self._QUERIES
 
     @classmethod
     def usage(cls):
         """Print usage of provider."""
         print(f"{cls.__doc__} Supported query types:")
-        for ioc_key in sorted(cls._IOC_QUERIES):
+        for ioc_key in sorted(cls._QUERIES):
             ioc_key_elems = ioc_key.split("-", maxsplit=1)
             if len(ioc_key_elems) == 1:
                 print(f"\tioc_type={ioc_key_elems[0]}")
