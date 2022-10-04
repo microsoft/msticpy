@@ -546,7 +546,6 @@ def _whois_lookup(
     if isinstance(ip_addr, IpAddress):
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
-    registry_urls = None
     if asn_items and "Error: no ASN or IP match on line 1." not in asn_items:
         ipwhois_result = (asn_items["AS Name"], {})  # type: ignore
         ipwhois_result[1]["asn"] = asn_items["AS"]
@@ -556,15 +555,24 @@ def _whois_lookup(
         ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
         ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
         ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
-        if ipwhois_result[1]["asn_registry"] in _REGISTRIES:
-            registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
-    if not asn_items or not registry_urls:
+        registry_url = _REGISTRIES.get(asn_items.get("Registry", ""), {}).get("url")
+    if not asn_items or not registry_url:
         return (None, None)
+    return _add_rdap_data(
+        ipwhois_result=ipwhois_result,
+        rdap_reg_url=f"{registry_url}{ip_addr}",
+        retry_count=retry_count,
+        raw=raw,
+    )
+
+
+def _add_rdap_data(
+    ipwhois_result: Dict[str, Any], rdap_reg_url: str, retry_count: int, raw: bool
+) -> Dict[str, Any]:
+    """Add RDAP data to WhoIs result."""
     retries = 0
     while retries < retry_count:
-        rdap_data = _rdap_lookup(
-            url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
-        )
+        rdap_data = _rdap_lookup(url=rdap_reg_url, retry_count=retry_count)
         if rdap_data.status_code == 200:
             rdap_data_content = rdap_data.json()
             net = _create_net(rdap_data_content)
