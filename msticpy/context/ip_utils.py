@@ -18,7 +18,7 @@ import socket
 import warnings
 from functools import lru_cache
 from time import sleep
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import httpx
 import pandas as pd
@@ -428,13 +428,13 @@ def ip_whois(
         rate_limit = len(ip) > 50
         if rate_limit:
             print("Large number of lookups, this may take some time.")
-        whois_results = []
+        whois_results: Dict[str, Any] = {}
         for ip_addr in ip:
             if rate_limit:
                 sleep(query_rate)
-            whois_results.append(
-                _whois_lookup(ip_addr, raw=raw, retry_count=retry_count)
-            )
+            whois_results[ip_addr] = _whois_lookup(
+                ip_addr, raw=raw, retry_count=retry_count
+            )[1]
         return _whois_result_to_pandas(whois_results)
     if isinstance(ip, (str, IpAddress)):
         return _whois_lookup(ip, raw=raw)
@@ -533,7 +533,7 @@ def get_asn_from_ip(
     ip = ip.strip()
     query = f" -v {ip}\r\n"
     ip_response = _cymru_query(query)
-    keys = ip_response.split("\n")[0].split("|")
+    keys = ip_response.split("\n", maxsplit=1)[0].split("|")
     values = ip_response.split("\n")[1].split("|")
     return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
@@ -560,26 +560,29 @@ def _whois_lookup(
             registry_urls = _REGISTRIES[ipwhois_result[1]["asn_registry"]]
     if not asn_items or not registry_urls:
         return (None, None)
-    rdap_data = _rdap_lookup(
-        url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
-    )
-    if rdap_data.status_code == 200:
-        rdap_data_content = rdap_data.json()
-        net = _create_net(rdap_data_content)
-        ipwhois_result[1]["nets"] = [net]
-        for link in rdap_data_content["links"]:
-            if link["rel"] == "up":
-                up_data_link = link["href"]
-                up_rdap_data = httpx.get(up_data_link)
-                up_rdap_data_content = up_rdap_data.json()
-                up_net = _create_net(up_rdap_data_content)
-                ipwhois_result[1]["nets"].append(up_net)
-        if raw:
-            ipwhois_result[1]["raw"] = rdap_data
-    elif rdap_data.status_code == 429:
-        sleep(5)
-        _whois_lookup(ip_addr)
-    else:
+    retries = 0
+    while retries < retry_count:
+        rdap_data = _rdap_lookup(
+            url=registry_urls["url"] + str(ip_addr), retry_count=retry_count
+        )
+        if rdap_data.status_code == 200:
+            rdap_data_content = rdap_data.json()
+            net = _create_net(rdap_data_content)
+            ipwhois_result[1]["nets"] = [net]
+            for link in rdap_data_content["links"]:
+                if link["rel"] == "up":
+                    up_data_link = link["href"]
+                    up_rdap_data = httpx.get(up_data_link)
+                    up_rdap_data_content = up_rdap_data.json()
+                    up_net = _create_net(up_rdap_data_content)
+                    ipwhois_result[1]["nets"].append(up_net)
+            if raw:
+                ipwhois_result[1]["raw"] = rdap_data
+            break
+        if rdap_data.status_code == 429:
+            sleep(3)
+            retries += 1
+            continue
         raise MsticpyConnectionError(f"Error code: {rdap_data.status_code}")
     return ipwhois_result
 
@@ -594,18 +597,21 @@ def _rdap_lookup(url: str, retry_count: int = 5) -> httpx.Response:
             retry_count -= 1
     if not rdap_data:
         raise MsticpyException(
-            "Rate limt exceeded - try adjusting query_rate parameter to slow down requests"
+            "Rate limit exceeded - try adjusting query_rate parameter to slow down requests"
         )
     return rdap_data
 
 
-def _whois_result_to_pandas(results: Union[str, List]) -> pd.DataFrame:
+def _whois_result_to_pandas(results: Union[str, List, Dict]) -> pd.DataFrame:
     """Transform whois results to a Pandas DataFrame."""
-    if isinstance(results, list):
-        new_results = [result[1] for result in results]
-    else:
-        new_results = results[1]  # type: ignore
-    return pd.DataFrame(new_results)
+    if isinstance(results, dict):
+        return pd.DataFrame(
+            [
+                {"query": idx} if result is None else result
+                for idx, result in results.items()
+            ]
+        )
+    return pd.DataFrame(results[1])
 
 
 def _find_address(
@@ -623,21 +629,16 @@ def _find_address(
 
 def _create_net(data: Dict) -> Dict:
     """Create a network object from RDAP data."""
-    v4net_cidr = (
-        str(data["cidr0_cidrs"][0]["v4prefix"])
-        + "/"
-        + str(data["cidr0_cidrs"][0]["length"])
-        if "cidr0_cidrs" in data and "v4prefix" in data["cidr0_cidrs"][0]
-        else ""
-    )
-    v6net_cidr = (
-        str(data["cidr0_cidrs"][0]["v6prefix"])
-        + "/"
-        + str(data["cidr0_cidrs"][0]["length"])
-        if "cidr0_cidrs" in data and "v6prefix" in data["cidr0_cidrs"][0]
-        else ""
-    )
-    net_cidr = v4net_cidr + v6net_cidr
+    net_data = data.get("cidr0_cidrs", [None])[0] or []
+    net_prefixes = [pref for pref in net_data if pref in ("v4prefix", "v6prefix")]
+
+    if not net_data or not net_prefixes:
+        net_cidr = "No network data retrieved."
+    else:
+        net_cidr = " ".join(
+            f"{net_data[net_prefix]}/{net_data.get('length', '')}"
+            for net_prefix in net_prefixes
+        )
     address = ""
     for item in data["events"]:
         created = item["eventDate"] if item["eventAction"] == "last changed" else None
@@ -661,28 +662,27 @@ def _create_net(data: Dict) -> Dict:
 
 def _asn_whois_query(query, server, port=43, retry_count=5) -> str:
     """Connect to whois server and send query."""
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    conn.connect((server, port))
-    conn.send(query.encode())
-    response = ""
-    response_data = None
-    while retry_count > 0 and not response_data:
-        try:
-            response_data = conn.recv(4096).decode()
-            if "error" in response_data:
-                raise MsticpyConnectionError(
-                    "An error occured during lookup, please try again."
-                )
-            if "rate limit exceeded" in response_data:
-                raise MsticpyConnectionError(
-                    "Rate limit exceeded please wait and try again."
-                )
-            response += response_data
-        except (UnicodeDecodeError, ConnectionResetError):
-            retry_count -= 1
-            response_data = None
-    conn.close()
-    return response
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as conn:
+        conn.connect((server, port))
+        conn.send(query.encode())
+        response = []
+        response_data = None
+        while retry_count > 0 and not response_data:
+            try:
+                response_data = conn.recv(4096).decode()
+                if "error" in response_data:
+                    raise MsticpyConnectionError(
+                        "An error occurred during lookup, please try again."
+                    )
+                if "rate limit exceeded" in response_data:
+                    raise MsticpyConnectionError(
+                        "Rate limit exceeded please wait and try again."
+                    )
+                response.append(response_data)
+            except (UnicodeDecodeError, ConnectionResetError):
+                retry_count -= 1
+                response_data = None
+    return "".join(response)
 
 
 def _cymru_query(query):
