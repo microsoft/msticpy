@@ -18,7 +18,7 @@ import socket
 import warnings
 from functools import lru_cache
 from time import sleep
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import httpx
 import pandas as pd
@@ -434,7 +434,7 @@ def ip_whois(
                 sleep(query_rate)
             whois_results[ip_addr] = _whois_lookup(
                 ip_addr, raw=raw, retry_count=retry_count
-            )[1]
+            ).properties
         return _whois_result_to_pandas(whois_results)
     if isinstance(ip, (str, IpAddress)):
         return _whois_lookup(ip, raw=raw)
@@ -538,26 +538,33 @@ def get_asn_from_ip(
     return {key.strip(): value.strip() for key, value in zip(keys, values)}
 
 
+class _IpWhoIsResult(NamedTuple):
+    """Named tuple for IPWhoIs Result."""
+
+    name: Optional[str]
+    properties: Dict[str, Any] = {}
+
+
 @lru_cache(maxsize=1024)
 def _whois_lookup(
     ip_addr: Union[str, IpAddress], raw: bool = False, retry_count: int = 5
-) -> Tuple:
+) -> _IpWhoIsResult:
     """Conduct lookup of IP Whois information."""
     if isinstance(ip_addr, IpAddress):
         ip_addr = ip_addr.Address
     asn_items = get_asn_from_ip(ip_addr.strip())
     if asn_items and "Error: no ASN or IP match on line 1." not in asn_items:
-        ipwhois_result = (asn_items["AS Name"], {})  # type: ignore
-        ipwhois_result[1]["asn"] = asn_items["AS"]
-        ipwhois_result[1]["query"] = asn_items["IP"]
-        ipwhois_result[1]["asn_cidr"] = asn_items["BGP Prefix"]
-        ipwhois_result[1]["asn_country_code"] = asn_items["CC"]
-        ipwhois_result[1]["asn_registry"] = asn_items["Registry"]
-        ipwhois_result[1]["asn_date"] = asn_items["Allocated"]
-        ipwhois_result[1]["asn_description"] = asn_items["AS Name"]
+        ipwhois_result = _IpWhoIsResult(asn_items["AS Name"], {})  # type: ignore
+        ipwhois_result.properties["asn"] = asn_items["AS"]
+        ipwhois_result.properties["query"] = asn_items["IP"]
+        ipwhois_result.properties["asn_cidr"] = asn_items["BGP Prefix"]
+        ipwhois_result.properties["asn_country_code"] = asn_items["CC"]
+        ipwhois_result.properties["asn_registry"] = asn_items["Registry"]
+        ipwhois_result.properties["asn_date"] = asn_items["Allocated"]
+        ipwhois_result.properties["asn_description"] = asn_items["AS Name"]
         registry_url = _REGISTRIES.get(asn_items.get("Registry", ""), {}).get("url")
     if not asn_items or not registry_url:
-        return (None, None)
+        return _IpWhoIsResult(None)
     return _add_rdap_data(
         ipwhois_result=ipwhois_result,
         rdap_reg_url=f"{registry_url}{ip_addr}",
@@ -567,8 +574,8 @@ def _whois_lookup(
 
 
 def _add_rdap_data(
-    ipwhois_result: Dict[str, Any], rdap_reg_url: str, retry_count: int, raw: bool
-) -> Dict[str, Any]:
+    ipwhois_result: _IpWhoIsResult, rdap_reg_url: str, retry_count: int, raw: bool
+) -> _IpWhoIsResult:
     """Add RDAP data to WhoIs result."""
     retries = 0
     while retries < retry_count:
@@ -576,16 +583,16 @@ def _add_rdap_data(
         if rdap_data.status_code == 200:
             rdap_data_content = rdap_data.json()
             net = _create_net(rdap_data_content)
-            ipwhois_result[1]["nets"] = [net]
+            ipwhois_result.properties["nets"] = [net]
             for link in rdap_data_content["links"]:
                 if link["rel"] == "up":
                     up_data_link = link["href"]
                     up_rdap_data = httpx.get(up_data_link)
                     up_rdap_data_content = up_rdap_data.json()
                     up_net = _create_net(up_rdap_data_content)
-                    ipwhois_result[1]["nets"].append(up_net)
+                    ipwhois_result.properties["nets"].append(up_net)
             if raw:
-                ipwhois_result[1]["raw"] = rdap_data
+                ipwhois_result.properties["raw"] = rdap_data
             break
         if rdap_data.status_code == 429:
             sleep(3)
@@ -614,31 +621,28 @@ def _whois_result_to_pandas(results: Union[str, List, Dict]) -> pd.DataFrame:
     """Transform whois results to a Pandas DataFrame."""
     if isinstance(results, dict):
         return pd.DataFrame(
-            [
-                {"query": idx} if result is None else result
-                for idx, result in results.items()
-            ]
+            [result or {"query": idx} for idx, result in results.items()]
         )
-    return pd.DataFrame(results[1])
+    raise NotImplementedError("Only dict type current supported for `results`.")
 
 
 def _find_address(
     entity: dict,
 ) -> Union[str, None]:  # pylint: disable=inconsistent-return-statements
     """Find an orgs address from an RDAP entity."""
-    if "vcardArray" in entity:
-        for vcard in entity["vcardArray"]:
-            if isinstance(vcard, list):
-                for vcard_sub in vcard:
-                    if vcard_sub[0] == "adr":
-                        return vcard_sub[1]["label"]
+    if "vcardArray" not in entity:
+        return None
+    for vcard in [vcard for vcard in entity["vcardArray"] if isinstance(vcard, list)]:
+        for vcard_sub in vcard:
+            if vcard_sub[0] == "adr":
+                return vcard_sub[1]["label"]
     return None
 
 
 def _create_net(data: Dict) -> Dict:
     """Create a network object from RDAP data."""
-    net_data = data.get("cidr0_cidrs", [None])[0] or []
-    net_prefixes = [pref for pref in net_data if pref in ("v4prefix", "v6prefix")]
+    net_data = data.get("cidr0_cidrs", [None])[0] or {}
+    net_prefixes = net_data.keys() & {"v4prefix", "v6prefix"}
 
     if not net_data or not net_prefixes:
         net_cidr = "No network data retrieved."
