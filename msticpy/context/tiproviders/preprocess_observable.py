@@ -68,6 +68,7 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
 
     """
     require_url_encoding: bool = kwargs.pop("require_url_encoding", False)
+    url = _refang_ioc(ioc_type="url", input_str=url)
     clean_url, scheme, host = get_schema_and_host(url, require_url_encoding)
 
     if scheme is None or host is None:
@@ -167,6 +168,7 @@ def _clean_url(url: str) -> Optional[str]:
 def _preprocess_ip(ipaddress: str, **kwargs):
     """Ensure Ip address is a valid public IPv4 address."""
     version = kwargs.pop("version", 4)
+    ipaddress = _refang_ioc(ioc_type="ipv4", input_str=ipaddress)
     try:
         addr = ip_address(ipaddress)
     except ValueError:
@@ -185,6 +187,7 @@ def _preprocess_ip(ipaddress: str, **kwargs):
 def _preprocess_dns(domain: str, **kwargs) -> SanitizedObservable:
     """Ensure DNS is a valid-looking domain."""
     del kwargs
+    domain = _refang_ioc(ioc_type="dns", input_str=domain)
     if "." not in domain:
         return SanitizedObservable(None, "Domain is unqualified domain name")
     with contextlib.suppress(ValueError):
@@ -324,3 +327,13 @@ def _entropy(input_str: str) -> float:
             Counter(input_str).values(),
         )
     )
+
+
+def _refang_ioc(ioc_type: str, input_str: str):
+    """Remove any de-fanging from IoC."""
+    re_fanged = input_str
+    if ioc_type == "email":
+        re_fanged = re_fanged.replace("AT", "@")
+    elif ioc_type == "url":
+        re_fanged = re_fanged.replace("hXXp", "http").replace("fXp", "ftp")
+    return re_fanged.replace("[.]", ".")

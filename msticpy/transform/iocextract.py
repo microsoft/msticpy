@@ -125,13 +125,30 @@ class IoCExtract:
     """
 
     IPV4_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"
+    IPV4_DF_REGEX = r"(?P<ipaddress>(?:[0-9]{1,3}\[?\.\]?){3}[0-9]{1,3})"
     IPV6_REGEX = r"(?<![:.\w])(?:[A-F0-9]{0,4}:){2,7}[A-F0-9]{0,4}(?![:.\w])"
     DNS_REGEX = r"((?=[a-z0-9-]{1,63}\.)[a-z0-9]+(-[a-z0-9]+)*\.){1,126}[a-z]{2,63}"
+    DNS_DF_REGEX = (
+        r"((?=[a-z0-9-]{1,63}\[?\.\]?)[a-z0-9]+(-[a-z0-9]+)*\[?\.\]?){1,126}[a-z]{2,63}"
+    )
+
+    EMAIL_USER_REGEX = r"(?P<user>[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+)(@|AT)"
+    EMAIL_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_REGEX})"
+    EMAIL_DF_REGEX = f"{EMAIL_USER_REGEX}(?P<domain>{DNS_DF_REGEX})"
 
     URL_REGEX = r"""
-            (?P<protocol>(https?|ftp|telnet|ldap|file)://)
+            (?P<protocol>(https?|s?ftps?|telnet|ldap|file)://)
             (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
             (?P<host>([a-z0-9-._~!$&\'()*+,;=]|%[0-9A-F]{2})*)
+            (:(?P<port>\d*))?
+            (/(?P<path>([^?\#"<>\s]|%[0-9A-F]{2})*/?))?
+            (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
+            (\#(?P<fragment>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?"""
+
+    URL_DF_REGEX = r"""
+            (?P<protocol>(https?|hXXps?|s?ftps?|s?fXps?|telnet|ldap|file)://)
+            (?P<userinfo>([a-z0-9-._~!$&\'()*+,;=:]|%[0-9A-F]{2})*@)?
+            (?P<host>([a-z0-9-._~!$&\'()*+,;=\[\]]|%[0-9A-F]{2})*)
             (:(?P<port>\d*))?
             (/(?P<path>([^?\#"<>\s]|%[0-9A-F]{2})*/?))?
             (\?(?P<query>([a-z0-9-._~!$&'()*+,;=:/?@]|%[0-9A-F]{2})*))?
@@ -147,33 +164,47 @@ class IoCExtract:
     LXPATH_REGEX = r"""(?P<root>/+||[.]+)
             (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
             (?P<file>[^/\0<>|\r\n ]+)"""
-
+    LXSTDPATH_REGEX = r"""
+            (?P<root>/|/bin|/boot|/dev|/home|/lib|/lost\\+found|/misc|/mnt|/net|/opt|/proc|/root|/sbin|/tmp|/usr|/var)
+            (?P<folder>/(?:[^\\/:*?<>|\r\n]+/)*)
+            (?P<file>[^/\0<>|\r\n ]+)
+    """
     MD5_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{32})(?:$|[^A-Fa-f0-9])"
     SHA1_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{40})(?:$|[^A-Fa-f0-9])"
     SHA256_REGEX = r"(?:^|[^A-Fa-f0-9])(?P<hash>[A-Fa-f0-9]{64})(?:$|[^A-Fa-f0-9])"
 
     _content_regex: Dict[str, IoCPattern] = {}
 
-    def __init__(self):
+    def __init__(self, defanged: bool = True):
         """Initialize new instance of IoCExtract."""
         # IP Addresses
-        self.add_ioc_type(IoCType.ipv4.name, self.IPV4_REGEX, 0, "ipaddress")
+        self.add_ioc_type(
+            IoCType.ipv4.name,
+            self.IPV4_DF_REGEX if defanged else self.IPV4_REGEX,
+            0,
+            "ipaddress",
+        )
         self.add_ioc_type(IoCType.ipv6.name, self.IPV6_REGEX, 0)
 
         # Dns Domains
         # This also matches IP addresses but IPs have higher
         # priority both matching on the same substring will defer
         # to the IP regex
-        self.add_ioc_type(IoCType.dns.name, self.DNS_REGEX, 1)
+        self.add_ioc_type(
+            IoCType.dns.name, self.DNS_DF_REGEX if defanged else self.DNS_REGEX, 2
+        )
 
-        # Http requests
-        self.add_ioc_type(IoCType.url.name, self.URL_REGEX, 0)
-
+        # URLs
+        self.add_ioc_type(
+            IoCType.url.name, self.URL_DF_REGEX if defanged else self.URL_REGEX, 0
+        )
+        # Email addresses (lower priority than URLs)
+        self.add_ioc_type(
+            IoCType.email.name, self.EMAIL_DF_REGEX if defanged else self.EMAIL_REGEX, 1
+        )
         # File paths
-        # Windows
-        self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 2)
-
-        self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 2)
+        self.add_ioc_type(IoCType.windows_path.name, self.WINPATH_REGEX, 3)
+        self.add_ioc_type(IoCType.linux_path.name, self.LXPATH_REGEX, 4)
 
         # MD5, SHA1, SHA256 hashes
         self.add_ioc_type(IoCType.md5_hash.name, self.MD5_REGEX, 1, "hash")
@@ -304,11 +335,11 @@ class IoCExtract:
         'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
         user-defined types.
         'windows_path', 'linux_path' are excluded unless `include_paths`
-        is True or explicitly included in `ioc_paths`.
+        is True or explicitly included in `ioc_types`.
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
@@ -411,11 +442,11 @@ class IoCExtract:
         'md5_hash', 'sha1_hash', 'sha256_hash'] plus any
         user-defined types.
         'windows_path', 'linux_path' are excluded unless `include_paths`
-        is True or explicitly included in `ioc_paths`.
+        is True or explicitly included in `ioc_types`.
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
@@ -458,7 +489,7 @@ class IoCExtract:
         self, input_str: str, ioc_type: str, ignore_tlds: bool = False
     ) -> bool:
         """
-        Check that `input_str` matches the regex for the specificed `ioc_type`.
+        Check that `input_str` matches the regex for the specified `ioc_type`.
 
         Parameters
         ----------
@@ -557,7 +588,7 @@ class IoCExtract:
         """If validate TLDS check with TLD list."""
         if self._ignore_tld:
             return True
-        return self._dom_validator.validate_tld(domain)
+        return self._dom_validator.validate_tld(domain.replace("[.]", "."))
 
     def _scan_for_iocs(
         self, src: str, ioc_types: List[str] = None
