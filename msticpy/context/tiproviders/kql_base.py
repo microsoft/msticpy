@@ -49,6 +49,8 @@ class KqlTIProvider(TIProvider):
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
     )
 
+    _REQUIRED_TABLES = []
+
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
@@ -112,6 +114,10 @@ class KqlTIProvider(TIProvider):
         if not self._connected:
             self._connect()
 
+        if any(
+            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
+        ):
+            return None
         # check and lookup (if needed) ioc_type
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
@@ -185,6 +191,11 @@ class KqlTIProvider(TIProvider):
         """
         if not self._connected:
             self._connect()
+        if any(
+            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
+        ):
+            return pd.DataFrame()
+
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
