@@ -390,7 +390,7 @@ def _pre_process_tree(
 def _pid_fmt(pid, pid_fmt):
     if pid_fmt == "hex":
         return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
-    elif pid_fmt == "guid":
+    if pid_fmt == "guid":
         return f"GUID: {pid}"
     return (
         f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
