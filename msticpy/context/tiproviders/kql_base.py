@@ -49,7 +49,7 @@ class KqlTIProvider(TIProvider):
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
     )
 
-    _REQUIRED_TABLES = []
+    _REQUIRED_TABLES: List[str] = []
 
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
@@ -117,7 +117,9 @@ class KqlTIProvider(TIProvider):
         if any(
             table not in self._query_provider.schema for table in self._REQUIRED_TABLES
         ):
-            return None
+            return LookupResult(
+                ioc=ioc, ioc_type=ioc_type or "", status=LookupStatus.NO_DATA.value
+            )
         # check and lookup (if needed) ioc_type
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
