@@ -301,7 +301,7 @@ for API details.
 
 For more explanation of the data items shown in the browser, please see
 the `Mordor GitHub repo <https://github.com/OTRF/mordor>`__ and the
-`Threat Hunter Playbook <https://threathunterplaybook.com/introduction.html>`__
+`Threat Hunter Playbook <https://threathunterplaybook.com>`__
 
 .. code:: ipython3
 
