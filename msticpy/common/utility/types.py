@@ -32,7 +32,7 @@ def export(obj: Callable):
 @export
 def checked_kwargs(legal_args: Iterable[str]):
     """
-    Decorator to check kwargs names against legal arg names.
+    Decorate function to check kwargs names against legal arg names.
 
     Parameters
     ----------
