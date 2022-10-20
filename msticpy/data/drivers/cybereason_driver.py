@@ -7,7 +7,7 @@
 import datetime as dt
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
-
+import re
 import httpx
 import pandas as pd
 
@@ -355,30 +355,42 @@ class CybereasonDriver(DriverBase):
 
     @staticmethod
     def _custom_param_handler(query: str, param_dict: Dict[str, Any]) -> str:
-        """Replace parameters in query template for Elastic JSON queries."""
+        """Replace parameters in query template for Cybereason JSON queries."""
         query_dict = json.loads(query)
 
         updated_query_dict = {
-            "queryPath": [],
             "customFields": param_dict.get(
-                "customFields", query_dict.get("customFields", [])
+                "customFields",
+                param_dict.get("customFields", query_dict.get("customFields", [])),
             ),
+            "queryPath": [
+                [
+                    {
+                        filter_key: CybereasonDriver._find_and_replace(
+                            param_dict, filter_value
+                        )
+                        for filter_key, filter_value in p_filter.items()
+                    }
+                    for p_filter in path.get("filters", [])
+                ]
+                for path in query_dict.get("queryPath", [])
+            ],
         }
-        # Replace with json.dumps() split by line and format?
-        for path in query_dict.get("queryPath", []):
-            new_path = {"requestedType": path.get("requestedType"), "filters": []}
-            for p_filter in path.get("filters", []):
-                for f_key, f_value in p_filter.items():
-                    for key, value in param_dict.items():
-                        if f_value in [
-                            f"{{{key}}}",
-                            [f"{{{key}}}"],
-                        ]:  # Should be format to cover "dates"/multi params in one line
-                            p_filter.update({f_key: value})
-                new_path["filters"].append(p_filter)
-            if path.get("isResult", False):
-                new_path["isResult"] = path["isResult"]
-
-            updated_query_dict["queryPath"].append(new_path)
 
         return json.dumps(updated_query_dict, indent=2)
+
+    @staticmethod
+    def _find_and_replace(parameters, values):
+        keys = re.findall(r"{([^}]+)}", str(values))
+        if len(keys) == 1:
+            new_value = parameters.get(keys[0], None)
+            if not isinstance(new_value, str):
+                return new_value
+            else:
+                return values.format(**parameters)
+        elif len(keys) > 1:
+            if isinstance(values, list):
+                return [parameters.get(key, None) for key in keys]
+            else:
+                return values.format(**parameters)
+        return values
