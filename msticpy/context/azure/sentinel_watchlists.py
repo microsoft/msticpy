@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Watchlist Features."""
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 from uuid import uuid4
 
 import httpx
@@ -51,7 +51,7 @@ class SentinelWatchlistsMixin:
         provider: str = "MSTICPy",
         source: str = "Notebook",
         data: pd.DataFrame = None,
-    ):
+    ) -> Optional[str]:
         """
         Create a new watchlist.
 
@@ -73,6 +73,11 @@ class SentinelWatchlistsMixin:
             The source of the data to be put in the watchlist, by default "Notebook"
         data: pd.DataFrame, optional
             The data you want to upload to the watchlist
+
+        Returns
+        -------
+        Optional[str]
+            The name/ID of the watchlist.
 
         Raises
         ------
@@ -110,6 +115,7 @@ class SentinelWatchlistsMixin:
             raise CloudError(response=response)
 
         print("Watchlist created.")
+        return response.json().get("name")
 
     def list_watchlist_items(
         self,
