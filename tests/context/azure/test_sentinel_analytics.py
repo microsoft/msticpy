@@ -146,32 +146,26 @@ def test_sent_alert_rules(sent_loader):
 @respx.mock
 def test_sent_analytic_create(sent_loader):
     """Test Sentinel analytics feature."""
+    json_resp = {
+        "name": "508f3c50-f6d3-45b3-8321-fb674afe3478",
+        "properties": {
+            "displayName": "Test Bookmark",
+            "query": "SecurityAlert | take 10",
+            "queryFrequency": "PT1H",
+            "queryPeriod": "PT1H",
+            "severity": "Low",
+            "triggerOperator": "GreaterThan",
+            "triggerThreshold": 0,
+            "description": "Test Template",
+            "tactics": ["test1"],
+        },
+    }
     respx.put(re.compile(r"https://management\.azure\.com/.*/alertRules/.*")).respond(
-        201
+        201, json=json_resp
     )
     respx.get(
         re.compile(r"https://management\.azure\.com/.*/alertRuleTemplates")
-    ).respond(
-        200,
-        json={
-            "value": [
-                {
-                    "name": "508f3c50-f6d3-45b3-8321-fb674afe3478",
-                    "properties": {
-                        "displayName": "Test Bookmark",
-                        "query": "SecurityAlert | take 10",
-                        "queryFrequency": "PT1H",
-                        "queryPeriod": "PT1H",
-                        "severity": "Low",
-                        "triggerOperator": "GreaterThan",
-                        "triggerThreshold": 0,
-                        "description": "Test Template",
-                        "tactics": ["test1"],
-                    },
-                }
-            ]
-        },
-    )
+    ).respond(200, json={"value": [json_resp]})
     sent_loader.create_analytic_rule("508f3c50-f6d3-45b3-8321-fb674afe3478")
     sent_loader.create_analytic_rule("Test Bookmark")
     sent_loader.create_analytic_rule(name="Test Rule", query="SecurityAlert | take 10")

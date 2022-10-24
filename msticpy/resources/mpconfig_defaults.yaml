@@ -184,6 +184,14 @@ DataProviders:
       ClientId: str()
       # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
       ClientSecret: *cred_key
+  Kusto:
+    Args:
+      Cluster: str()
+      TenantId: str(format=uuid)
+      IntegratedAuth: bool()
+      ClientId: str(required=False, format=uuid)
+      # [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification="Test code")]
+      ClientSecret: *cred_key_opt
 AzureCLI:
   # Deprecated section - use DataProviders.AzureCLI
   Args:

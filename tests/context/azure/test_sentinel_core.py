@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Microsoft Sentinel core unit tests."""
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -48,7 +48,10 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
     token = "12398120398"
 
     sentinel_inst = MicrosoftSentinel(res_id=_RES_ID)
+
+    setattr(sentinel_inst, "set_default_workspace", MagicMock())
     sentinel_inst.connect(auth_methods=["env"], token=token)
+
     tenant_id = sentinel_inst._check_config(["tenant_id"])["tenant_id"]
     assert sentinel_inst.token == token
     az_data_connect.assert_called_once_with(
@@ -60,6 +63,7 @@ def test_azuresent_connect_token(get_token: Mock, az_data_connect: Mock):
     sentinel_inst = MicrosoftSentinel(
         res_id=_RES_ID,
     )
+    setattr(sentinel_inst, "set_default_workspace", MagicMock())
     sentinel_inst.connect(auth_methods=["env"])
 
     assert sentinel_inst.token == token
