@@ -339,7 +339,7 @@ class IoCExtract:
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types")
+        ioc_types = kwargs.get("ioc_types", [])
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
@@ -446,7 +446,7 @@ class IoCExtract:
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types")
+        ioc_types = kwargs.get("ioc_types", [])
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
