@@ -43,16 +43,18 @@ class CybereasonDriver(DriverBase):
     def __init__(self, **kwargs):
         """Instantiate Cybereason driver."""
         super().__init__(**kwargs)
+        timeout = kwargs.get("timeout", 2 * 60 * 1000)  # 2 minutes in milliseconds
+        max_results = min(kwargs.get("max_results", 1000), 1000)
         self.base_url: str = "https://{tenant_id}.cybereason.net"
         self.auth_endpoint: str = "/login.html"
         self.req_body: Dict[str, Any] = {
             "queryPath": [],
-            "totalResultLimit": 1000,
-            "perGroupLimit": 100,
-            "perFeatureLimit": 100,
+            "totalResultLimit": max_results,
+            "perGroupLimit": max_results,
+            "perFeatureLimit": max_results,
             "templateContext": "SPECIFIC",
-            "queryTimeout": 2 * 60 * 1000,  # 2 minutes in milliseconds,
-            "pagination": {"pageSize": 1000},
+            "queryTimeout": timeout,
+            "pagination": {"pageSize": max_results},
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded = True
