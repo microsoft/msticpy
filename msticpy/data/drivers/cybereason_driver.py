@@ -234,6 +234,7 @@ class CybereasonDriver(DriverBase):
         if isinstance(element_values, list):
             for values in element_values:
                 result[values["elementType"]] = values["name"]
+                result[f"{values['elementType']}.guid"] = values["guid"]
         elif isinstance(element_values, dict):
             for key, values in element_values.items():
                 flattened = CybereasonDriver._flatten_result(values)
@@ -284,13 +285,23 @@ class CybereasonDriver(DriverBase):
                 "Warning - query did not complete successfully.",
                 "Check returned response.",
             )
-            return None, json_response
+            return pd.DataFrame(), json_response
 
-        result = json_response.get("data", json_response)
-        result = result.get("resultIdToElementDataMap", result)
-        result = [CybereasonDriver._flatten_result(v) for v in result.values()]
+        data = json_response.get("data", json_response)
+        results = data.get("resultIdToElementDataMap", data)
+        total_results = data.get("totalResults", len(results))
+        guessed_results = data.get("guessedPossibleResults", len(results))
+        if guessed_results > len(results):
+            print(
+                f"Warning - query returned {total_results} out of {guessed_results}.",
+                "Check returned response.",
+            )
+        results = [
+            dict(CybereasonDriver._flatten_result(values), **{"resultId": result_id})
+            for result_id, values in results.items()
+        ]
 
-        return pd.json_normalize(result), json_response
+        return pd.json_normalize(results), json_response
 
     # pylint: enable=too-many-branches
 
