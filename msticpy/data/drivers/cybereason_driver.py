@@ -373,20 +373,27 @@ class CybereasonDriver(DriverBase):
             "customFields": param_dict.get(
                 "customFields",
                 param_dict.get("customFields", query_dict.get("customFields", [])),
-            ),
-            "queryPath": [
-                [
-                    {
-                        filter_key: CybereasonDriver._find_and_replace(
-                            param_dict, filter_value
-                        )
-                        for filter_key, filter_value in p_filter.items()
-                    }
-                    for p_filter in path.get("filters", [])
-                ]
-                for path in query_dict.get("queryPath", [])
-            ],
+            )
         }
+        updated_query_dict["queryPath"] = []
+        for path in query_dict.get("queryPath", []):
+            temp_path = {}
+            for path_key, path_values in path.items():
+                if isinstance(path_values, list):
+                    temp_path[path_key] = [
+                        {
+                            key: CybereasonDriver._find_and_replace(param_dict, value)
+                            for key, value in path_value.items()
+                        }
+                        for path_value in path_values
+                    ]
+                elif isinstance(path_values, str):
+                    temp_path[path_key] = CybereasonDriver._find_and_replace(
+                        param_dict, path_values
+                    )
+                else:
+                    temp_path[path_key] = path_values
+            updated_query_dict["queryPath"].append(temp_path)
 
         return json.dumps(updated_query_dict, indent=2)
 
