@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Analytics Features."""
+from typing import Optional
 from uuid import UUID, uuid4
 
 import httpx
@@ -136,7 +137,7 @@ class SentinelAnalyticsMixin:
         trigger_threshold: int = 0,
         description: str = None,
         tactics: list = None,
-    ):
+    ) -> Optional[str]:
         """
         Create a Sentinel Analytics Rule.
 
@@ -169,6 +170,11 @@ class SentinelAnalyticsMixin:
             A description of the analytic, by default None
         tactics : list, optional
             A list of MITRE ATT&CK tactics related to the analytic, by default None
+
+        Returns
+        -------
+        Optional[str]
+            The name/ID of the analytic rule.
 
         Raises
         ------
@@ -234,6 +240,7 @@ class SentinelAnalyticsMixin:
         if response.status_code != 201:
             raise CloudError(response=response)
         print("Analytic Created.")
+        return response.json().get("name")
 
     def _get_analytic_id(self, analytic: str) -> str:
         """
