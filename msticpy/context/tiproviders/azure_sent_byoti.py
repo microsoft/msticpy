@@ -51,6 +51,8 @@ class AzSTI(KqlTIProvider):
     _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
     _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
 
+    _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
+
     def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
