@@ -64,7 +64,7 @@ class CybereasonDriver(DriverBase):
         self.formatters = {
             Formatters.PARAM_HANDLER: self._custom_param_handler,
             Formatters.DATETIME: self._format_datetime,
-            # Formatters.LIST: self._format_list,
+            Formatters.LIST: self._format_list,
         }
 
         self._debug = kwargs.get("debug", False)
@@ -325,6 +325,11 @@ class CybereasonDriver(DriverBase):
     def _format_datetime(date_time: dt.datetime) -> int:
         """Return datetime formatted as timestamp in milliseconds."""
         return int(date_time.timestamp() * 1000)
+
+    @staticmethod
+    def _format_list(value: List) -> List:
+        """Return list as itself."""
+        return value
 
     # Parameter Formatting method
     @staticmethod
