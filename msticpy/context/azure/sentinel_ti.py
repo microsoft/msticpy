@@ -163,7 +163,6 @@ class SentinelTIMixin:
         data_items.update(additional_data_items)
         data = _build_sent_data(data_items, props=True)
         data["kind"] = "indicator"
-        print(data)
         response = httpx.post(
             ti_url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -175,6 +174,8 @@ class SentinelTIMixin:
             raise CloudError(response=response)
         if not silent:
             print("Indicator created.")
+
+        return response.json().get("name")
 
     def bulk_create_indicators(
         self,
