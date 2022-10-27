@@ -130,17 +130,32 @@ class SentinelTIMixin:
         self.check_connected()  # type: ignore
         ti_url = self.sent_urls["ti"] + "/createIndicator"  # type: ignore
         params = {"api-version": "2021-10-01"}
-        if ioc_type not in ["domain-name", "url", "file", "ipv4-addr", "ipv6_addr"]:
+        if ioc_type not in [
+            "domain-name",
+            "url",
+            "SHA-256",
+            "SHA-1",
+            "MD5",
+            "ipv4-addr",
+            "ipv6_addr",
+        ]:
             raise MsticpyUserError(
-                "ioc_type must be one of - 'domain-name', 'url', 'file', 'ipv4-addr'', 'ipv6_addr'"
+                """ioc_type must be one of -
+                 'domain-name', 'url',  'SHA-256', 'SHA-1', 'MD5', 'ipv4-addr', 'ipv6_addr'"""
             )
+        pattern_type = ioc_type
+        value = "value"
+        if ioc_type in ["SHA-256", "SHA-1", "MD5"]:
+            pattern_type = "file"
+            value = f"hashes.'{ioc_type}'"
+
         if confidence > 100 or confidence < 0:
             raise MsticpyUserError("confidence must be between 0 and 100")
         data_items = {
             "displayName": name,
             "confidence": confidence,
-            "pattern": f"[{ioc_type}:value = '{indicator}']",
-            "patternType": ioc_type,
+            "pattern": f"[{pattern_type}:{value} = '{indicator}']",
+            "patternType": pattern_type,
             "revoked": "false",
             "source": "MSTICPy",
         }
@@ -148,6 +163,7 @@ class SentinelTIMixin:
         data_items.update(additional_data_items)
         data = _build_sent_data(data_items, props=True)
         data["kind"] = "indicator"
+        print(data)
         response = httpx.post(
             ti_url,
             headers=get_api_headers(self.token),  # type: ignore
@@ -403,6 +419,8 @@ def _build_additional_indicator_items(**kwargs) -> dict:
         if item in _INDICATOR_ITEMS:
             data_items[_INDICATOR_ITEMS[item]] = value
     if "valid_to" in kwargs:
+        data_items["validUntil"] = kwargs["valid_to"].isoformat()
+    else:
         data_items["validUntil"] = datetime.now().isoformat()
     if "external_references" in kwargs:
         ext_refs = [
