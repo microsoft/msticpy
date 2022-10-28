@@ -92,9 +92,10 @@ class ResourceGraphDriver(DriverBase):
             credential_scopes=[self.az_cloud_config.token_uri],
         )
         self.subscription_ids = [
-            sub.subscription_id
-            for sub in self.sub_client.subscriptions.list().append("")  # type: ignore
+            sub.subscription_id for sub in self.sub_client.subscriptions.list()
         ]
+        # Add blank subscription to match items with no subscription PR #496
+        self.subscription_ids.append("")
 
         self._connected = True
         self._loaded = True
