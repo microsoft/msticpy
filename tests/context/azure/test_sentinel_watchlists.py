@@ -113,7 +113,9 @@ def test_sent_watchlists(sent_loader):
 @respx.mock
 def test_sent_watchlists_create(sent_loader):
     """Test Sentinel Watchlist feature."""
-    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(200)
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
+        200, json=_WATCHLISTS["value"][0]
+    )
     respx.get(re.compile(r"https://management\.azure\.com/.*/watchlists")).respond(
         200, json=_WATCHLISTS
     )

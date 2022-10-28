@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 """Mixin Classes for Sentinel Incident Features."""
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
 import httpx
@@ -271,7 +271,7 @@ class SentinelIncidentsMixin:
         last_activity_time: datetime = None,
         labels: List = None,
         bookmarks: List = None,
-    ):
+    ) -> Optional[str]:
         """
         Create a Sentinel Incident.
 
@@ -295,6 +295,11 @@ class SentinelIncidentsMixin:
             Any labels to apply to the incident, by default None
         bookmarks : List, optional
             A list of bookmark GUIDS you want to associate with the incident
+
+        Returns
+        -------
+        Optional[str]
+            The name/ID of the incident.
 
         Raises
         ------
@@ -347,6 +352,7 @@ class SentinelIncidentsMixin:
                     timeout=get_http_timeout(),
                 )
         print("Incident created.")
+        return response.json().get("name")
 
     def _get_incident_id(self, incident: str) -> str:
         """

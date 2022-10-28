@@ -206,5 +206,7 @@ def test_sent_bookmarks(sent_loader):
 @respx.mock
 def test_sent_incident_create(sent_loader):
     """Test incident creation."""
-    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(201)
+    respx.put(re.compile(r"https://management\.azure\.com/.*")).respond(
+        201, json=_INCIDENT["value"][0]
+    )
     sent_loader.create_incident(title="Test Incident", severity="Low")

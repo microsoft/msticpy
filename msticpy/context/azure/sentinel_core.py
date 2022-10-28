@@ -4,11 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 """Uses the Microsoft Sentinel APIs to interact with Microsoft Sentinel Workspaces."""
+
+import contextlib
 from typing import List, Optional, Tuple
 
 import pandas as pd
 
 from ..._version import VERSION
+from ...common.wsconfig import WorkspaceConfig
 from .azure_data import AzureData, get_token
 from .sentinel_analytics import SentinelAnalyticsMixin, SentinelHuntingMixin
 from .sentinel_bookmarks import SentinelBookmarksMixin
@@ -112,9 +115,8 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
             Set true to prevent output during auth process, by default False
 
         """
-        if not tenant_id:
-            config = self._check_config(["tenant_id"])
-            tenant_id = config["tenant_id"]
+        ws_config = WorkspaceConfig(workspace=kwargs.get("workspace"))
+        tenant_id = tenant_id or ws_config[WorkspaceConfig.CONF_TENANT_ID_KEY]
 
         super().connect(auth_methods=auth_methods, tenant_id=tenant_id, silent=silent)
         if "token" in kwargs:
@@ -124,8 +126,14 @@ class MicrosoftSentinel(  # pylint: disable=too-many-ancestors
                 self.credentials, tenant_id=tenant_id, cloud=self.user_cloud  # type: ignore
             )
 
-        self.res_group_url = None
-        self.prov_path = None
+        with contextlib.suppress(KeyError):
+            self.default_subscription = ws_config[WorkspaceConfig.CONF_SUB_ID_KEY]
+            self.set_default_workspace(
+                self.default_subscription,
+                ws_config[WorkspaceConfig.CONF_WS_NAME_KEY],
+            )
+        # self.res_group_url = None
+        # self.prov_path = None
 
     def set_default_subscription(self, subscription_id: str):
         """Set the default subscription to use to `subscription_id`."""

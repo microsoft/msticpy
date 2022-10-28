@@ -51,7 +51,9 @@ class AzSTI(KqlTIProvider):
     _QUERIES["linux_path"] = _QUERIES["windows_path"]
     _QUERIES["hostname"] = _QUERIES["dns"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
+
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

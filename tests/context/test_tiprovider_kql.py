@@ -38,7 +38,7 @@ class KqlTestDriver(DriverBase):
 
         self._loaded = True
         self._connected = True
-        self._schema: Dict[str, Any] = {}
+        self._schema: Dict[str, Any] = {"ThreatIntelligenceIndicator": {}}
 
         indicator_file = Path(_TEST_DATA).joinpath("as_threatintel")
         self.test_df = pd.read_pickle(indicator_file)
