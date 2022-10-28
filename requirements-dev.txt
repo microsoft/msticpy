@@ -1,7 +1,7 @@
 aiohttp>=3.7.4
 async-cache>=1.1.1
 bandit>=1.7.0
-beautifulsoup4
+beautifulsoup4>=4.0.0
 black>=20.8b1
 coverage>=5.5
 docutils<0.20.0
@@ -28,9 +28,9 @@ pytest-check>=1.0.1
 pytest-cov>=2.11.1
 pytest-xdist>=2.5.0
 pytest>=5.0.1
-readthedocs-sphinx-ext==2.1.8
+readthedocs-sphinx-ext==2.2.0
 responses>=0.13.2
-respx==0.19.2
+respx==0.20.0
 sphinx-rtd-theme>=1.0.0
 sphinx>=5.0.1
 types-attrs>=19.0.0

@@ -31,7 +31,7 @@ from .._version import VERSION
 from ..auth.azure_auth_core import AzureCliStatus, check_cli_credentials
 from ..common.check_version import check_version
 from ..common.exceptions import MsticpyException, MsticpyUserError
-from ..common.pkg_config import get_config, refresh_config, validate_config, _HOME_PATH
+from ..common.pkg_config import _HOME_PATH, get_config, refresh_config, validate_config
 from ..common.utility import (
     check_and_install_missing_packages,
     check_kwargs,
@@ -42,6 +42,7 @@ from ..common.utility import (
 )
 from .azure_ml_tools import check_versions as check_versions_aml
 from .azure_ml_tools import is_in_aml, populate_config_to_mp_config
+from .azure_synapse_tools import init_synapse, is_in_synapse
 from .pivot import Pivot
 from .user_config import load_user_defaults
 
@@ -193,6 +194,8 @@ _CLI_WIKI_MSSG_SHORT = (
 
 current_providers: Dict[str, Any] = {}  # pylint: disable=invalid-name
 
+_SYNAPSE_KWARGS = ["identity_type", "storage_svc_name", "tenant_id", "cloud"]
+
 
 def _pr_output(*args):
     """Output to IPython display or print."""
@@ -299,6 +302,8 @@ def init_notebook(
             "no_config_check",
             "verbosity",
             "verbose",
+            "config",
+            *_SYNAPSE_KWARGS,
         ],
     )
     user_install: bool = kwargs.pop("user_install", False)
@@ -320,11 +325,20 @@ def init_notebook(
             check_version()
             _pr_output(stdout_cap.getvalue())
 
+    if is_in_synapse():
+        synapse_params = {
+            key: val for key, val in kwargs.items() if key in _SYNAPSE_KWARGS
+        }
+        init_synapse(**synapse_params)
+
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    imp_ok = _global_imports(
-        namespace, additional_packages, user_install, extra_imports, def_imports
-    )
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        _pr_output(stdout_cap.getvalue())
 
     # Configuration check
     if no_config_check:
