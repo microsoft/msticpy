@@ -49,6 +49,8 @@ class KqlTIProvider(TIProvider):
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
     )
 
+    _REQUIRED_TABLES: List[str] = []
+
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
         super().__init__(**kwargs)
@@ -112,6 +114,12 @@ class KqlTIProvider(TIProvider):
         if not self._connected:
             self._connect()
 
+        if any(
+            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
+        ):
+            return LookupResult(
+                ioc=ioc, ioc_type=ioc_type or "", status=LookupStatus.NO_DATA.value
+            )
         # check and lookup (if needed) ioc_type
         result = self._check_ioc_type(
             ioc=ioc, ioc_type=ioc_type, query_subtype=query_type
@@ -185,6 +193,11 @@ class KqlTIProvider(TIProvider):
         """
         if not self._connected:
             self._connect()
+        if any(
+            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
+        ):
+            return pd.DataFrame()
+
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, obs_col, ioc_type_col):
@@ -199,6 +212,7 @@ class KqlTIProvider(TIProvider):
 
         all_results = []
         for ioc_type, obs_set in ioc_groups.items():
+            kwargs.pop("ioc_type", None)  # we want to use locally-determine type
             with contextlib.suppress(LookupError):
                 query_obj, query_params = self._get_query_and_params(
                     ioc=list(obs_set),
