@@ -386,7 +386,16 @@ class CybereasonDriver(DriverBase):
         for path in query_dict.get("queryPath", []):
             temp_path = {}
             for path_key, path_values in path.items():
-                if isinstance(path_values, list):
+                if path_key == "guidList":
+                    temp_path[path_key] = CybereasonDriver._find_and_replace(
+                        param_dict, path_values
+                    )
+                elif path_key == "connectionFeature":
+                    temp_path[path_key] = {
+                        key: CybereasonDriver._find_and_replace(param_dict, value)
+                        for key, value in path_values.items()
+                    }
+                elif path_key == "filters":
                     temp_path[path_key] = [
                         {
                             key: CybereasonDriver._find_and_replace(param_dict, value)
@@ -394,10 +403,6 @@ class CybereasonDriver(DriverBase):
                         }
                         for path_value in path_values
                     ]
-                elif isinstance(path_values, str):
-                    temp_path[path_key] = CybereasonDriver._find_and_replace(
-                        param_dict, path_values
-                    )
                 else:
                     temp_path[path_key] = path_values
             updated_query_dict["queryPath"].append(temp_path)
