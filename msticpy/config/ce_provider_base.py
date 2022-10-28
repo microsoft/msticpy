@@ -97,7 +97,7 @@ class CEProviders(CEItemsBase, ABC):
         self.prov_options = widgets.Dropdown(
             options=self.mp_controls.get_defn(path=self._COMP_PATH).keys(),
             description="Add prov",
-            value=self.select_item.label,
+            # value=self.select_item.label,
             style=ITEM_LIST_LAYOUT["style"],
         )
         self.items_frame.children = [*(self.items_frame.children), self.prov_options]
@@ -132,7 +132,10 @@ class CEProviders(CEItemsBase, ABC):
 
     def _populate_edit_ctrls(self, control_name: Optional[str] = None):
         self.edit_ctrls = _get_prov_ctrls(
-            control_name or self._prov_ctrl_name, self.mp_controls, self._COMP_PATH
+            prov_name=control_name or self._prov_ctrl_name,
+            mp_controls=self.mp_controls,
+            conf_path=self._COMP_PATH,
+            prov_instance_name=self._prov_name,
         )
         self.edit_frame.children = [self.edit_ctrls]
 
@@ -183,29 +186,44 @@ class CEProviders(CEItemsBase, ABC):
             self.set_status(status)
 
 
-def _get_prov_ctrls(prov_name, mp_controls, conf_path):
+def _get_prov_ctrls(prov_name, mp_controls, conf_path, prov_instance_name: str = None):
     ctrls = []
     if not prov_name:
         return widgets.VBox(ctrls, layout=CompEditDisplayMixin.no_border_layout("95%"))
-    prov_path = f"{conf_path}.{prov_name}"
-    prov_defn = mp_controls.get_defn(prov_path)
+    # prov_path = f"{conf_path}.{prov_name}"
+    instance_path = f"{conf_path}.{prov_instance_name or prov_name}"
+    defn_path = f"{conf_path}.{prov_name}"
+    prov_defn = mp_controls.get_defn(defn_path)
 
     for setting in prov_defn:
         if setting != "Args":
-            wgt = get_wgt_ctrl(prov_path, setting, mp_controls)
+            wgt = get_wgt_ctrl(
+                setting_path=defn_path,
+                var_name=setting,
+                mp_controls=mp_controls,
+                instance_path=instance_path,
+            )
             if setting == "Provider":
                 wgt.disabled = True
             ctrls.append(wgt)
             continue
 
-        setting_path = f"{prov_path}.{setting}"
+        setting_path = f"{instance_path}.{setting}"
+        setting_defn_path = f"{defn_path}.{setting}"
         for var_name in prov_defn.get(setting):
-            comp_defn = mp_controls.get_defn(f"{setting_path}.{var_name}")
+            comp_defn = mp_controls.get_defn(f"{setting_defn_path}.{var_name}")
             if get_defn_or_default(comp_defn)[0] == "cred_key":
                 arg_ctrl = get_arg_ctrl(setting_path, var_name, mp_controls)
                 ctrls.append(arg_ctrl.hbox)
             else:
-                ctrls.append(get_wgt_ctrl(setting_path, var_name, mp_controls))
+                ctrls.append(
+                    get_wgt_ctrl(
+                        setting_path=setting_defn_path,
+                        var_name=var_name,
+                        mp_controls=mp_controls,
+                        instance_path=setting_path,
+                    )
+                )
 
     return widgets.VBox(ctrls)
 

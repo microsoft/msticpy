@@ -257,6 +257,7 @@ def get_wgt_ctrl(
     var_name: str,
     mp_controls: "MpConfigControls",  # type: ignore
     wgt_style: Optional[Dict[str, Any]] = None,
+    instance_path: str = None,
 ) -> widgets.Widget:
     """
     Return widget appropriate to value type of `var_name`.
@@ -277,6 +278,9 @@ def get_wgt_ctrl(
                 "style": {"description_width": "100px"},
                 "layout": widgets.Layout(width="50%")
             }
+    instance_path : Optional[str]
+        The path to the control settings, if different from
+        the definition path (e.g. ../path/Kusto-Cluster1)
 
     Returns
     -------
@@ -286,9 +290,10 @@ def get_wgt_ctrl(
     """
     if wgt_style is None:
         wgt_style = {}
-    var_path = f"{setting_path}.{var_name}"
+    var_path = f"{instance_path or setting_path}.{var_name}"
     ctrl = mp_controls.get_control(var_path)
-    comp_defn = mp_controls.get_defn(var_path)
+    defn_path = f"{setting_path}.{var_name}"
+    comp_defn = mp_controls.get_defn(defn_path)
     if comp_defn and not isinstance(comp_defn, tuple):
         # definition is a literal
         def_value = comp_defn

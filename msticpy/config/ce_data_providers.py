@@ -82,6 +82,8 @@ class CEDataProviders(CEProviders):
     @property
     def _prov_ctrl_name(self):
         """Return the provider generic name (minus instance suffix)."""
+        if "-" in super()._prov_name:
+            return super()._prov_name.split("-", maxsplit=1)[0]
         return super()._prov_name
 
     @property
@@ -97,7 +99,9 @@ class CEDataProviders(CEProviders):
         return self.text_prov_instance.value.strip()
 
     def _populate_edit_ctrls(self, control_name: Optional[str] = None):
+        self.text_prov_instance.value = ""
         super()._populate_edit_ctrls(control_name=control_name)
+        self.text_prov_instance.value = self._prov_instance_name
         # add the instance text box
         self.edit_ctrls.children = [
             self.text_prov_instance,
