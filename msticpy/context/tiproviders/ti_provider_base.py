@@ -14,14 +14,13 @@ requests per minute for the account type that you have.
 """
 
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Union, Tuple
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import pandas as pd
 
 from ..._version import VERSION
 from ...common.utility import export
-
-from ..provider_base import Provider, PivotProvider
+from ..provider_base import PivotProvider, Provider
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -191,8 +190,8 @@ class TIProvider(Provider):
 
         Returns
         -------
-        LookupResult
-            The returned results.
+        pd.DataFrame
+            DataFrame of results.
 
         """
 

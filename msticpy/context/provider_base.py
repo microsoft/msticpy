@@ -24,9 +24,10 @@ import pandas as pd
 
 from .._version import VERSION
 from ..common.utility import export
+from ..transform.iocextract import IoCExtract as ItemExtract
+from ..transform.iocextract import IoCType as Type
 from .lookup_result import LookupStatus
 from .preprocess_observable import PreProcessor
-from ..transform.iocextract import IoCExtract as ItemExtract, IoCType as Type
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -60,12 +61,8 @@ class Provider(ABC):
 
         Returns
         -------
-        LookupResult
-            The lookup result:
-            result - Positive/Negative,
-            details - Lookup Details (or status if failure),
-            raw_result - Raw Response
-            reference - URL of the item
+        pd.DataFrame
+            DataFrame of results.
 
         Raises
         ------

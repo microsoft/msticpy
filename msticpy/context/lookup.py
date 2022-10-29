@@ -13,10 +13,10 @@ requests per minute for the account type that you have.
 
 """
 import asyncio
+import importlib
 import warnings
 from collections import ChainMap
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
-import importlib
 
 import nest_asyncio
 import pandas as pd
@@ -27,11 +27,10 @@ from ..common.exceptions import MsticpyConfigException, MsticpyUserConfigError
 from ..common.provider_settings import get_provider_settings, reload_settings
 from ..common.utility import export, is_ipython
 from ..vis.ti_browser import browse_results
+from .lookup_result import LookupStatus
 
 # used in dynamic instantiation of providers
 from .provider_base import Provider, _make_sync
-from .lookup_result import LookupResult, LookupStatus
-
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -362,10 +361,8 @@ class Lookup:
 
         Returns
         -------
-        Tuple[bool, List[Tuple[str, LookupResult]]]
-            The result returned as a tuple(bool, list):
-            bool indicates whether a TI record was found in any provider
-            list has an entry for each provider result
+        pd.DataFrame
+            DataFrame of results
 
         """
         return self.lookup_items(
@@ -560,13 +557,13 @@ class Lookup:
         return self._combine_results(results, provider_names, **kwargs)
 
     @staticmethod
-    def result_to_df(item_lookup: Tuple[bool, List[Tuple[str, Dict]]]) -> pd.DataFrame:
+    def result_to_df(item_lookup: Any) -> pd.DataFrame:
         """
         Return DataFrame representation of Lookup response.
 
         Parameters
         ----------
-        item_lookup : Tuple[bool, List[Tuple[str, Dict]]]
+        item_lookup : Any
             Output from `lookup_item`
 
         Returns
@@ -575,12 +572,13 @@ class Lookup:
             The response as a DataFrame with a row for each
             provider response.
 
+        Notes
+        -----
+        Provided for backward compatibility with code that calls
+        this to convert return value from lookup_item to a DF.
+
         """
-        return (
-            pd.DataFrame({r_item[0]: pd.Series(r_item[1]) for r_item in item_lookup[1]})
-            .T.rename(columns=LookupResult.column_map())
-            .drop("SanitizedValue", errors="ignore", axis=1)
-        )
+        return item_lookup
 
     @staticmethod
     async def _track_completion(prog_counter):

@@ -7,20 +7,20 @@
 Module for ContextProvider classes.
 
 Input can be a single observable or a pandas DataFrame containing
-    multiple observables. Processing may require a an API key and
+multiple observables. Processing may require a an API key and
 processing performance may be limited to a specific number of
 requests per minute for the account type that you have.
 
 """
 from abc import abstractmethod
-from typing import Tuple, Any, List, Union, Dict, Iterable
 from functools import lru_cache
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
 import pandas as pd
 
-from ..provider_base import Provider
-from ...common.utility import export
 from ..._version import VERSION
+from ...common.utility import export
+from ..provider_base import Provider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -134,8 +134,7 @@ class ContextProvider(Provider):
         Returns
         -------
         Dict
-            Dict result with resolved type and pre-processed
-            item.
+            Dict result with resolved type and pre-processed item.
             Status is none-zero on failure.
 
         """
@@ -163,8 +162,7 @@ class ContextProvider(Provider):
         Returns
         -------
         Dict
-            Dict result with resolved type and pre-processed
-            Observable.
+            Dict result with resolved type and pre-processed Observable.
             Status is none-zero on failure.
 
         """

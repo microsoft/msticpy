@@ -29,10 +29,7 @@ from ...common.wsconfig import WorkspaceConfig
 from ...data import QueryProvider
 from ..lookup_result import LookupStatus
 from ..provider_base import generate_items
-from .ti_provider_base import (
-    ResultSeverity,
-    TIProvider,
-)
+from .ti_provider_base import ResultSeverity, TIProvider
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -89,12 +86,8 @@ class KqlTIProvider(TIProvider):
 
         Returns
         -------
-        LookupResult
-            The lookup result:
-            result - Positive/Negative,
-            details - Lookup Details (or status if failure),
-            raw_result - Raw Response
-            reference - URL of the item
+        pd.DataFrame
+            DataFrame of results.
 
         Raises
         ------
