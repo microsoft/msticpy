@@ -302,6 +302,7 @@ def init_notebook(
             "no_config_check",
             "verbosity",
             "verbose",
+            "config",
             *_SYNAPSE_KWARGS,
         ],
     )
@@ -332,9 +333,12 @@ def init_notebook(
 
     # Handle required packages and imports
     _pr_output("Processing imports....")
-    imp_ok = _global_imports(
-        namespace, additional_packages, user_install, extra_imports, def_imports
-    )
+    stdout_cap = io.StringIO()
+    with redirect_stdout(stdout_cap):
+        imp_ok = _global_imports(
+            namespace, additional_packages, user_install, extra_imports, def_imports
+        )
+        _pr_output(stdout_cap.getvalue())
 
     # Configuration check
     if no_config_check:

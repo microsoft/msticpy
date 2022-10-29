@@ -18,7 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_http_provider import HttpTIProvider
+from ..http_provider import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 
@@ -28,8 +29,8 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-few-public-methods
 @attr.s
-class _OTXParams(IoCLookupParams):
-    # override IoCLookupParams to set common defaults
+class _OTXParams(APILookupParams):
+    # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
         # pylint: disable=
         self.headers = {"X-OTX-API-KEY": "{API_KEY}"}
@@ -41,7 +42,7 @@ class OTX(HttpTIProvider):
 
     _BASE_URL = "https://otx.alienvault.com"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         "ipv4": _OTXParams(path="/api/v1/indicators/IPv4/{observable}/general"),
         "ipv6": _OTXParams(path="/api/v1/indicators/IPv6/{observable}/general"),
         "ipv4-passivedns": _OTXParams(
@@ -63,9 +64,9 @@ class OTX(HttpTIProvider):
     }
 
     # aliases
-    _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
+    _QUERIES["md5_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
 
     _REQUIRED_PARAMS = ["API_KEY"]
 

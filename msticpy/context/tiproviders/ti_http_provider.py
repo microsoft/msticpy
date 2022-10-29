@@ -21,7 +21,7 @@ import pandas as pd
 from ..._version import VERSION
 from .ti_provider_base import TIProvider
 from ...common.pkg_config import get_http_timeout
-from ..http_lookup import HttpLookupProvider, APILookupParams
+from ..http_provider import HttpProvider
 from ..lookup_result import LookupStatus
 from ...common.utility import export
 from .result_severity import ResultSeverity
@@ -30,11 +30,8 @@ __version__ = VERSION
 __author__ = "Ian Hellen"
 
 
-IoCLookupParams = APILookupParams
-
-
 @export
-class HttpTIProvider(TIProvider, HttpLookupProvider):
+class HttpTIProvider(TIProvider, HttpProvider):
     """HTTP API Lookup provider base class."""
 
     @lru_cache(maxsize=256)

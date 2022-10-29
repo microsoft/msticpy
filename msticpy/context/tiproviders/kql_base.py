@@ -39,11 +39,13 @@ __author__ = "Ian Hellen"
 class KqlTIProvider(TIProvider):
     """KQL TI provider base class."""
 
-    _IOC_QUERIES: Dict[str, tuple] = {}
+    _QUERIES: Dict[str, tuple] = {}
 
     _CONNECT_STR = (
         "loganalytics://code().tenant('{TENANT_ID}').workspace('{WORKSPACE_ID}')"
     )
+
+    _REQUIRED_TABLES: List[str] = []
 
     def __init__(self, **kwargs):
         """Initialize a new instance of the class."""
@@ -145,6 +147,11 @@ class KqlTIProvider(TIProvider):
         """
         if not self._connected:
             self._connect()
+        if any(
+            table not in self._query_provider.schema for table in self._REQUIRED_TABLES
+        ):
+            return pd.DataFrame()
+
         # We need to partition the IoC types to invoke separate queries
         ioc_groups: DefaultDict[str, Set[str]] = defaultdict(set)
         for ioc, ioc_type in generate_items(data, ioc_col, ioc_type_col):
@@ -315,7 +322,7 @@ class KqlTIProvider(TIProvider):
     ) -> Tuple[Callable, Dict[str, Any]]:
 
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
-        query_def = self._IOC_QUERIES.get(ioc_key, None)
+        query_def = self._QUERIES.get(ioc_key, None)
         if not query_def:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 

@@ -18,7 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_http_provider import HttpTIProvider
+from ..http_provider import APILookupParams
 from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
@@ -27,8 +28,8 @@ __author__ = "Ian Hellen"
 
 # pylint: disable=too-few-public-methods
 @attr.s
-class _XForceParams(IoCLookupParams):
-    # override IoCLookupParams to set common defaults
+class _XForceParams(APILookupParams):
+    # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
         self.auth_str = ["{API_ID}", "{API_KEY}"]
         self.auth_type = "HTTPBasic"
@@ -40,7 +41,7 @@ class XForce(HttpTIProvider):
 
     _BASE_URL = "https://api.xforce.ibmcloud.com"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         "ipv4": _XForceParams(path="/ipr/{observable}"),
         "ipv4-rep": _XForceParams(path="/ipr/history/{observable}"),
         "ipv4-malware": _XForceParams(path="/ipr/malware/{observable}"),
@@ -53,19 +54,19 @@ class XForce(HttpTIProvider):
     }
 
     # aliases
-    _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
-    _IOC_QUERIES["ipv6-rep"] = _IOC_QUERIES["ipv4-rep"]
-    _IOC_QUERIES["ipv6-malware"] = _IOC_QUERIES["ipv4-malware"]
-    _IOC_QUERIES["ipv6-whois"] = _IOC_QUERIES["ipv4-whois"]
-    _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["dns"] = _IOC_QUERIES["url"]
-    _IOC_QUERIES["dns-malware"] = _IOC_QUERIES["url-malware"]
-    _IOC_QUERIES["ipv4-passivedns"] = _IOC_QUERIES["dns-passivedns"]
-    _IOC_QUERIES["ipv6-passivedns"] = _IOC_QUERIES["dns-passivedns"]
-    _IOC_QUERIES["hostname-whois"] = _IOC_QUERIES["ipv4-whois"]
-    _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["ipv4-whois"]
+    _QUERIES["ipv6"] = _QUERIES["ipv4"]
+    _QUERIES["ipv6-rep"] = _QUERIES["ipv4-rep"]
+    _QUERIES["ipv6-malware"] = _QUERIES["ipv4-malware"]
+    _QUERIES["ipv6-whois"] = _QUERIES["ipv4-whois"]
+    _QUERIES["md5_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
+    _QUERIES["dns"] = _QUERIES["url"]
+    _QUERIES["dns-malware"] = _QUERIES["url-malware"]
+    _QUERIES["ipv4-passivedns"] = _QUERIES["dns-passivedns"]
+    _QUERIES["ipv6-passivedns"] = _QUERIES["dns-passivedns"]
+    _QUERIES["hostname-whois"] = _QUERIES["ipv4-whois"]
+    _QUERIES["dns-whois"] = _QUERIES["ipv4-whois"]
 
     _REQUIRED_PARAMS = ["API_ID", "API_KEY"]
 

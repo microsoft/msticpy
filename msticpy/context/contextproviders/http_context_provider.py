@@ -21,7 +21,7 @@ from ..._version import VERSION
 from ...common.pkg_config import get_http_timeout
 from .context_provider_base import ContextProvider
 from ..lookup_result import LookupStatus
-from ..http_lookup import HttpLookupProvider, APILookupParams
+from ..http_provider import HttpProvider, APILookupParams
 
 __version__ = VERSION
 __author__ = "Florian Bracq"
@@ -31,7 +31,7 @@ __author__ = "Florian Bracq"
 ContextLookupParams = APILookupParams
 
 
-class HttpContextProvider(HttpLookupProvider, ContextProvider):
+class HttpContextProvider(HttpProvider, ContextProvider):
     """HTTP Context Provider base class."""
 
     @lru_cache(maxsize=256)

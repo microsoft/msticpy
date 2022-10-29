@@ -51,9 +51,9 @@ class TILookup(Lookup):
     def lookup_ioc(
         self,
         ioc: str,
-        ioc_type: str = None,
-        ioc_query_type: str = None,
-        providers: List[str] = None,
+        ioc_type: Optional[str] = None,
+        ioc_query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,
@@ -89,6 +89,9 @@ class TILookup(Lookup):
             list has an entry for each provider result
 
         """
+        ioc = ioc or kwargs.pop("observable", None)
+        if ioc is None:
+            raise ValueError("No value supplied for 'ioc' parameter")
         return self.lookup_item(
             item=ioc,
             item_type=ioc_type,

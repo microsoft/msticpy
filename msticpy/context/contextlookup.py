@@ -52,9 +52,9 @@ class ContextLookup(Lookup):
     def lookup_observable(
         self,
         observable: str,
-        obs_type: str = None,
-        query_type: str = None,
-        providers: List[str] = None,
+        obs_type: Optional[str] = None,
+        query_type: Optional[str] = None,
+        providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
         prov_scope: str = "primary",
         **kwargs,

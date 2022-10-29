@@ -14,12 +14,21 @@ from .pivot_fixtures import create_data_providers, create_pivot, data_providers
 
 def test_import_vt_funcs(create_pivot):
     """Test VT Pivot functions loaded correctly."""
+    print([x for x in dir(entities.Url) if not x.startswith("_")])
     check.is_in("VT", dir(entities.Url))
     check.is_in("VT", dir(entities.File))
     check.is_in("VT", dir(entities.IpAddress))
     check.is_in("VT", dir(entities.Dns))
 
-    check.greater_equal(len(dir(entities.Url.VT())), 6)
-    check.greater_equal(len(dir(entities.File.VT())), 6)
-    check.greater_equal(len(dir(entities.IpAddress.VT())), 6)
-    check.greater_equal(len(dir(entities.Dns.VT())), 6)
+    check.greater_equal(
+        len([attr for attr in dir(entities.Url.VT) if not attr.startswith("_")]), 5
+    )
+    check.greater_equal(
+        len([attr for attr in dir(entities.Url.VT) if not attr.startswith("_")]), 5
+    )
+    check.greater_equal(
+        len([attr for attr in dir(entities.Url.VT) if not attr.startswith("_")]), 5
+    )
+    check.greater_equal(
+        len([attr for attr in dir(entities.Url.VT) if not attr.startswith("_")]), 5
+    )

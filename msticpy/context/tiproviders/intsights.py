@@ -18,7 +18,8 @@ import attr
 
 from ..._version import VERSION
 from ...common.utility import export
-from .ti_http_provider import HttpTIProvider, IoCLookupParams
+from .ti_http_provider import HttpTIProvider
+from ..http_provider import APILookupParams
 from .result_severity import ResultSeverity
 
 __version__ = VERSION
@@ -30,8 +31,8 @@ _DEF_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"
 
 # pylint: disable=too-few-public-methods
 @attr.s
-class _IntSightsParams(IoCLookupParams):
-    # override IoCLookupParams to set common defaults
+class _IntSightsParams(APILookupParams):
+    # override APILookupParams to set common defaults
     def __attrs_post_init__(self):
         self.auth_str = ["{API_ID}", "{API_KEY}"]
         self.auth_type = "HTTPBasic"
@@ -43,7 +44,7 @@ class IntSights(HttpTIProvider):
 
     _BASE_URL = "https://api.intsights.com"
 
-    _IOC_QUERIES = {
+    _QUERIES = {
         "ipv4": _IntSightsParams(
             path="/public/v2/iocs/ioc-by-value",
             params={"iocValue": "{observable}"},

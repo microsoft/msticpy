@@ -46,7 +46,7 @@ __author__ = "Mark Kendrick"
 class RiskIQ(TIProvider, TIPivotProvider):
     """RiskIQ Threat Intelligence Lookup."""
 
-    _IOC_QUERIES: dict = {
+    _QUERIES: Dict[str, str] = {
         "ipv4": "ALL",
         "ipv4-articles": "articles",
         "ipv4-artifacts": "artifacts",
@@ -81,21 +81,21 @@ class RiskIQ(TIProvider, TIPivotProvider):
     }
 
     # Aliases
-    _IOC_QUERIES["dns"] = _IOC_QUERIES["hostname"]
-    _IOC_QUERIES["dns-articles"] = _IOC_QUERIES["hostname-articles"]
-    _IOC_QUERIES["dns-artifacts"] = _IOC_QUERIES["hostname-artifacts"]
-    _IOC_QUERIES["dns-certificates"] = _IOC_QUERIES["hostname-certificates"]
-    _IOC_QUERIES["dns-components"] = _IOC_QUERIES["hostname-components"]
-    _IOC_QUERIES["dns-cookies"] = _IOC_QUERIES["hostname-cookies"]
-    _IOC_QUERIES["dns-hostpairchildren"] = _IOC_QUERIES["hostname-hostpairchildren"]
-    _IOC_QUERIES["dns-hostpairparents"] = _IOC_QUERIES["hostname-hostpairparents"]
-    _IOC_QUERIES["dns-passivedns"] = _IOC_QUERIES["hostname-passivedns"]
-    _IOC_QUERIES["dns-projects"] = _IOC_QUERIES["hostname-projects"]
-    _IOC_QUERIES["dns-malware"] = _IOC_QUERIES["hostname-malware"]
-    _IOC_QUERIES["dns-rep"] = _IOC_QUERIES["hostname-rep"]
-    _IOC_QUERIES["dns-summary"] = _IOC_QUERIES["hostname-summary"]
-    _IOC_QUERIES["dns-trackers"] = _IOC_QUERIES["hostname-trackers"]
-    _IOC_QUERIES["dns-whois"] = _IOC_QUERIES["hostname-whois"]
+    _QUERIES["dns"] = _QUERIES["hostname"]
+    _QUERIES["dns-articles"] = _QUERIES["hostname-articles"]
+    _QUERIES["dns-artifacts"] = _QUERIES["hostname-artifacts"]
+    _QUERIES["dns-certificates"] = _QUERIES["hostname-certificates"]
+    _QUERIES["dns-components"] = _QUERIES["hostname-components"]
+    _QUERIES["dns-cookies"] = _QUERIES["hostname-cookies"]
+    _QUERIES["dns-hostpairchildren"] = _QUERIES["hostname-hostpairchildren"]
+    _QUERIES["dns-hostpairparents"] = _QUERIES["hostname-hostpairparents"]
+    _QUERIES["dns-passivedns"] = _QUERIES["hostname-passivedns"]
+    _QUERIES["dns-projects"] = _QUERIES["hostname-projects"]
+    _QUERIES["dns-malware"] = _QUERIES["hostname-malware"]
+    _QUERIES["dns-rep"] = _QUERIES["hostname-rep"]
+    _QUERIES["dns-summary"] = _QUERIES["hostname-summary"]
+    _QUERIES["dns-trackers"] = _QUERIES["hostname-trackers"]
+    _QUERIES["dns-whois"] = _QUERIES["hostname-whois"]
 
     _PIVOT_ENTITIES = {
         prop: {"Dns": "DomainName", "IpAddress": "Address", "Host": "fqdn"}
@@ -185,15 +185,13 @@ class RiskIQ(TIProvider, TIPivotProvider):
 
         if query_type is None:
             prop = "ALL"
-        elif query_type not in [
-            q.split("-", maxsplit=1)[-1] for q in self._IOC_QUERIES
-        ]:
+        elif query_type not in [q.split("-", maxsplit=1)[-1] for q in self._QUERIES]:
             result["Result"] = False
             result["Status"] = LookupStatus.QUERY_FAILED.value
             result["Details"] = f"ERROR: unsupported query type {query_type}"
             return pd.DataFrame([result])
         else:
-            prop = self._IOC_QUERIES.get(f"{result['IocType']}-{query_type}", "ALL")
+            prop = self._QUERIES.get(f"{result['IocType']}-{query_type}", "ALL")
 
         try:
             ptanalyzer.set_context("msticpy", "ti", VERSION, prop)

@@ -29,7 +29,7 @@ __author__ = "Ian Hellen"
 class AzSTI(KqlTIProvider):
     """Microsoft Sentinel TI provider class."""
 
-    _IOC_QUERIES: Dict[str, tuple] = {
+    _QUERIES: Dict[str, tuple] = {
         "ipv4": ("ThreatIntelligence.list_indicators_by_ip", {"ioc": "observables"}),
         "file_hash": (
             "ThreatIntelligence.list_indicators_by_hash",
@@ -44,14 +44,16 @@ class AzSTI(KqlTIProvider):
     }
 
     # aliases
-    _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
-    _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
-    _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
+    _QUERIES["ipv6"] = _QUERIES["ipv4"]
+    _QUERIES["md5_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
+    _QUERIES["linux_path"] = _QUERIES["windows_path"]
+    _QUERIES["hostname"] = _QUERIES["dns"]
 
-    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
+    _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
+
+    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 

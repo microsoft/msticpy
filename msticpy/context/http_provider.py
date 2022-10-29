@@ -48,7 +48,7 @@ class APILookupParams:
     sub_type: str = ""
 
 
-class HttpLookupProvider(Provider):
+class HttpProvider(Provider):
     """
     HTTP Generic lookup provider base class.
 
@@ -64,20 +64,20 @@ class HttpLookupProvider(Provider):
 
     ..code:: python
 
-        _API_QUERIES: Dict[str, APILookupParams] = {}
+        _QUERIES: Dict[str, APILookupParams] = {}
 
     For example:
 
     .. code:: python
 
-        _API_QUERIES = {
+        _QUERIES = {
         # Community API
-        "ipv4": IoCLookupParams(
+        "ipv4": APILookupParams(
             path="/v3/community/{observable}",
             headers={"key": "{API_KEY}"},
         ),
         # Enterprise API Quick Lookup
-        "ipv4-quick": IoCLookupParams(
+        "ipv4-quick": APILookupParams(
             ...
 
 
@@ -119,7 +119,7 @@ class HttpLookupProvider(Provider):
     _BASE_URL = ""
 
     # Define query parameters for different item types (keys)
-    _API_QUERIES: Dict[str, APILookupParams] = {}
+    _QUERIES: Dict[str, APILookupParams] = {}
 
     # List of required __init__ params
     _REQUIRED_PARAMS: List[str] = []
@@ -153,7 +153,6 @@ class HttpLookupProvider(Provider):
                 f"Parameter values missing for Provider '{self.__class__.__name__}'",
                 f"Missing parameters are: {param_list}",
             )
-        self.__class__._API_QUERIES = self._API_QUERIES
 
         # In __init__ you might want to
         # supply additional checkers/preprocessors
@@ -167,7 +166,7 @@ class HttpLookupProvider(Provider):
         self, item: str, item_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
         """
-        Lookup from a value.
+        Lookup from an item value.
 
         Parameters
         ----------
