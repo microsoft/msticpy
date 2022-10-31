@@ -25,6 +25,7 @@ from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
 from ..._version import VERSION
+from ...common.utility import refang_ioc
 from ...transform.iocextract import IoCExtract
 from .lookup_result import SanitizedObservable
 
@@ -68,6 +69,7 @@ def _preprocess_url(url: str, **kwargs) -> SanitizedObservable:
 
     """
     require_url_encoding: bool = kwargs.pop("require_url_encoding", False)
+    url = refang_ioc(ioc=url, ioc_type="url")
     clean_url, scheme, host = get_schema_and_host(url, require_url_encoding)
 
     if scheme is None or host is None:
@@ -167,6 +169,7 @@ def _clean_url(url: str) -> Optional[str]:
 def _preprocess_ip(ipaddress: str, **kwargs):
     """Ensure Ip address is a valid public IPv4 address."""
     version = kwargs.pop("version", 4)
+    ipaddress = refang_ioc(ioc=ipaddress, ioc_type="ipv4")
     try:
         addr = ip_address(ipaddress)
     except ValueError:
@@ -185,6 +188,7 @@ def _preprocess_ip(ipaddress: str, **kwargs):
 def _preprocess_dns(domain: str, **kwargs) -> SanitizedObservable:
     """Ensure DNS is a valid-looking domain."""
     del kwargs
+    domain = refang_ioc(ioc=domain, ioc_type="dns")
     if "." not in domain:
         return SanitizedObservable(None, "Domain is unqualified domain name")
     with contextlib.suppress(ValueError):
@@ -287,7 +291,7 @@ def preprocess_observable(
     observable, ioc_type, require_url_encoding: bool = False
 ) -> SanitizedObservable:
     """
-    Preprocesses and checks validity of observable against declared IoC type.
+    Preprocess and check validity of observable against declared IoC type.
 
     Parameters
     ----------
