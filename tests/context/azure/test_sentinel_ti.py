@@ -227,8 +227,10 @@ def test_sent_ti_result(sent_loader):
 @respx.mock
 def test_sent_ti_create(sent_loader):
     """Test Sentinel alert feature."""
-    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(200)
-    sent_loader.create_indicator(indicator="1.1.1.1", ioc_type="ipv4-addr")
+    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(
+        200, json=_TI_RESULT
+    )
+    sent_loader.create_indicator(indicator="1.1.1.1", ioc_type="ipv4")
     with pytest.raises(MsticpyUserError):
         sent_loader.create_indicator(indicator="1.1.1.1", ioc_type="not a type")
     with pytest.raises(MsticpyUserError):
@@ -240,11 +242,13 @@ def test_sent_ti_create(sent_loader):
 @respx.mock
 def test_sent_ti_bulk_create(sent_loader):
     """Test Sentinel analytics feature."""
-    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(200)
+    respx.post(re.compile(r"https://management\.azure\.com/.*")).respond(
+        200, json=_TI_RESULT
+    )
     df = pd.DataFrame(
         {
             "Observable": ["1.1.1.1", "2.2.2.2", "3.3.3.3"],
-            "IoCType": ["ipv4-addr", "ipv4-addr", "ipv4-addr"],
+            "IoCType": ["ipv4", "ipv4", "ipv4"],
         }
     )
     sent_loader.bulk_create_indicators(df)

@@ -144,7 +144,7 @@ class SentinelTIMixin:
         self.check_connected()  # type: ignore
         ti_url = self.sent_urls["ti"] + "/createIndicator"  # type: ignore
         params = {"api-version": "2021-10-01"}
-        if ioc_type not in _IOC_TYPE_MAPPING.values():
+        if ioc_type not in _IOC_TYPE_MAPPING:
             raise MsticpyUserError(
                 """ioc_type must be one of -
                  'dns', 'url', 'ipv4', 'ipv6', 'md5_hash', 'sha1_hash', 'sha256_hash'"""
