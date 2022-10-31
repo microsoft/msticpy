@@ -30,6 +30,16 @@ _INDICATOR_ITEMS = {
     "source": "source",
 }
 
+_IOC_TYPE_MAPPING = {
+    "dns": "domain-name",
+    "url": "url",
+    "ipv4": "ipv4-addr",
+    "ipv6": "ipv6-addr",
+    "md5_hash": "MD5",
+    "sha1_hash": "SHA-1",
+    "sha256_hash": "SHA-256",
+}
+
 
 class SentinelTIMixin:
     """Mixin class for Sentinel Hunting feature integrations."""
@@ -86,7 +96,7 @@ class SentinelTIMixin:
         confidence: int = 0,
         silent: bool = False,
         **kwargs,
-    ):
+    ) -> str:
         """
         Create a new indicator within the Microsoft Sentinel workspace.
 
@@ -96,7 +106,7 @@ class SentinelTIMixin:
             The indicator to create - i.e. IP address, domain name etc.
         ioc_type : str
             The type of indicator to create - can be:
-            "domain-name", "url", "file", "ipv4-addr" or "ipv6_addr"
+            "dns", "url", "ipv4", "ipv6", "md5_hash", "sha1_hash", "sha256_hash"
         name : str, optional
             A common name to give to the indicator default is 'TI Indicator'
         confidence : int, optional
@@ -119,6 +129,10 @@ class SentinelTIMixin:
         valid_to : datetime, optional
             A datetime to which the indicator is valid until
 
+        Returns
+        -------
+        The ID of the created indicator
+
         Raises
         ------
         MsticpyUserError
@@ -130,24 +144,17 @@ class SentinelTIMixin:
         self.check_connected()  # type: ignore
         ti_url = self.sent_urls["ti"] + "/createIndicator"  # type: ignore
         params = {"api-version": "2021-10-01"}
-        if ioc_type not in [
-            "domain-name",
-            "url",
-            "SHA-256",
-            "SHA-1",
-            "MD5",
-            "ipv4-addr",
-            "ipv6_addr",
-        ]:
+        if ioc_type not in _IOC_TYPE_MAPPING.values():
             raise MsticpyUserError(
                 """ioc_type must be one of -
-                 'domain-name', 'url',  'SHA-256', 'SHA-1', 'MD5', 'ipv4-addr', 'ipv6_addr'"""
+                 'dns', 'url', 'ipv4', 'ipv6', 'md5_hash', 'sha1_hash', 'sha256_hash'"""
             )
-        pattern_type = ioc_type
+        normalized_ioc_type = _IOC_TYPE_MAPPING[ioc_type]
+        pattern_type = normalized_ioc_type
         value = "value"
-        if ioc_type in ["SHA-256", "SHA-1", "MD5"]:
+        if normalized_ioc_type in ["SHA-256", "SHA-1", "MD5"]:
             pattern_type = "file"
-            value = f"hashes.'{ioc_type}'"
+            value = f"hashes.'{normalized_ioc_type}'"
 
         if confidence > 100 or confidence < 0:
             raise MsticpyUserError("confidence must be between 0 and 100")
@@ -159,8 +166,7 @@ class SentinelTIMixin:
             "revoked": "false",
             "source": "MSTICPy",
         }
-        additional_data_items = _build_additional_indicator_items(**kwargs)
-        data_items.update(additional_data_items)
+        data_items.update(_build_additional_indicator_items(**kwargs))
         data = _build_sent_data(data_items, props=True)
         data["kind"] = "indicator"
         response = httpx.post(
@@ -362,6 +368,7 @@ class SentinelTIMixin:
             Parameter to include/exclude disabled indicators.
         keywords : str, optional
             Keyword for searching threat intelligence indicators
+            Use this to search for specific indicator values.
         maxConfidence : int, optional
             Maximum confidence.
         maxValidUntil : str, optional

@@ -12,15 +12,15 @@ It is possible to return details of all indicators within a workspace.
 Whilst it is possible to access these indicator details via the indicator table in the Workspace, you can also interact
 with them via the Microsoft Sentinel APIs which are utilized in these functions.
 
-See :py:meth:`get_all_indicators <msticpy.context.azure_sentinel.MicrosoftSentinel.get_all_indicators>`
+See :py:meth:`get_all_indicators <msticpy.context.azure_sentinel_core.MicrosoftSentinel.get_all_indicators>`
 
 .. code:: ipython3
-
-    azs.get_all_indicators()
+    sentinel = MicrosoftSentinel()
+    sentinel.get_all_indicators()
 
 This returns a DataFrame with details of all indicators. It is possible to limit the number of indicators
 returned with the `limit` keyword, and sort results by a column with the `orderby` keyword.
-Whilst it is possible to return all indicators you may get a timeout error retunring more than 100,000 at once.
+Whilst it is possible to return all indicators you may get a timeout error returning more than 100,000 at once.
 
 To get details of a single indicator you can call `.get_indicator` and pass the ID of an indicator.
 This ID can be found in the name column of the DataFrame returned by `.get_all_indicators` and appears in the form of a GUID.
@@ -29,14 +29,14 @@ See :py:meth:`get_indicator <msticpy.context.azure.sentinel_core.MicrosoftSentin
 
 .. code:: ipython3
 
-    azs.get_indicator(indicator_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
+    sentinel.get_indicator(indicator_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
 
 
 If you want to return a subset of indicators you can use `.query_indicators` and pass in a number of
-query paramters to get the required indicators. The supported query parameters are:
+query parameters to get the required indicators. The supported query parameters are:
 
 - includeDisabled: Parameter to include/exclude disabled indicators.
-- keywords: Keyword for searching threat intelligence indicators
+- keywords: Keyword for searching threat intelligence indicators - use this to search for specific indicator values.
 - maxConfidence: Maximum confidence.
 - maxValidUntil: End time for ValidUntil filter.
 - minConfidence: Minimum confidence.
@@ -46,11 +46,13 @@ query paramters to get the required indicators. The supported query parameters a
 - sources: A list of indicator sources to include
 - threatTypes: A list of Threat types to include
 
+.. note:: You can also query indicator values via KQL with the ThreatIntelligenceIndicator table.
+
 See :py:meth:`query_indicators <msticpy.context.azure.sentinel_core.MicrosoftSentinel.query_indicators>`
 
 .. code:: ipython3
 
-    azs.query_indicators(keywords = "ACTINIUM", minConfidence=50, patternTypes=["ipv4-addr", "ipv6-addr"])
+    sentinel.query_indicators(keywords = "ACTINIUM", minConfidence=50, patternTypes=["ipv4-addr", "ipv6-addr"])
 
 Update Indicator
 ----------------
@@ -77,18 +79,18 @@ See :py:meth:`update_indicator <msticpy.context.azure_sentinel.MicrosoftSentinel
 
 .. code:: ipython3
 
-    azs.update_indicator(indicator_d = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+    sentinel.update_indicator(indicator_d = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
                 confidence = 75, threat_types=["Turla"]
                 )
 
-If you just want to add a new tag to an indiactor you can use the `.add_tag` function. This appends the
+If you just want to add a new tag to an indicator you can use the `.add_tag` function. This appends the
 new tag to any existing tags.
 
 See :py:meth:`add_tag <msticpy.context.azure_sentinel.MicrosoftSentinel.post_comment>`
 
 .. code:: ipython3
 
-    azs.add_tag(indicator_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
+    sentinel.add_tag(indicator_id = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c",
                 tag = "ACTINIUM",
                 )
 
@@ -110,7 +112,7 @@ With this function you need to specify a number of elements about the indicator 
 
 Optionally you can also provide the following details:
 
-- confidence: A score between 0-100 of the confidence in the indicator, defualt is 0
+- confidence: A score between 0-100 of the confidence in the indicator, default is 0
 - description: An description of the indicator
 - labels: A list of string object labels to associate with the indicator
 - kill_chain_phases: A list of string objects relating to the kill chain phase
@@ -123,7 +125,7 @@ See :py:meth:`create_indicator <msticpy.context.azure.sentinel_core.MicrosoftSen
 
 .. code:: ipython3
 
-    azs.create_indicator(indicator="1.1.1.1", ioc_type="ipv4-addr")
+    sentinel.create_indicator(indicator="1.1.1.1", ioc_type="ipv4-addr")
 
 If you are looking to create a large number of indicators at once you can use `.bulk_create_indicators`
 Pass in a dataframe and specify which columns contain the indictor, the ioc type, and optionally the confidence.
@@ -134,7 +136,7 @@ See :py:meth:`bulk_create_indicators <msticpy.context.azure.sentinel_core.Micros
 
 .. code:: ipython3
 
-    azs.bulk_create_indicators(data=ioc_df, indicator_column="iocs", indicator_type_column="type")
+    sentinel.bulk_create_indicators(data=ioc_df, indicator_column="iocs", indicator_type_column="type")
 
 Delete Indicator
 ----------------
@@ -146,4 +148,4 @@ See :py:meth:`delete_indicator <msticpy.context.azure.sentinel_core.MicrosoftSen
 
 .. code:: ipython3
 
-    azs.delete_indicator(indicator_d = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
+    sentinel.delete_indicator(indicator_d = "875409ee-9e1e-40f6-b0b8-a38aa64a1d1c")
