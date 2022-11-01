@@ -53,7 +53,7 @@ class AzSTI(KqlTIProvider):
 
     _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
