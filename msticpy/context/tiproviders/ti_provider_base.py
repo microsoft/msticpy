@@ -37,7 +37,6 @@ class TIProvider(Provider):
     def __init__(self, **kwargs):
         """Initialize the provider."""
         # pylint: disable=invalid-name
-        self._QUERIES = self._QUERIES
         super().__init__(**kwargs)
 
     def _check_item_type(
