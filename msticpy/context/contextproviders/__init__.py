@@ -2,7 +2,7 @@
 from typing import Dict, Tuple
 from ..._version import VERSION
 
-from .servicenow import ServiceNow
+from .servicenow import ServiceNow  # noqa:F401
 
 __version__ = VERSION
 
