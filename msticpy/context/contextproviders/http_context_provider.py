@@ -36,7 +36,11 @@ class HttpContextProvider(ContextProvider, HttpProvider):
 
     @lru_cache(maxsize=256)
     def lookup_observable(
-        self, observable: str, observable_type: str = None, query_type: str = None, **kwargs
+        self,
+        observable: str,
+        observable_type: str = None,
+        query_type: str = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Lookup from a value.
