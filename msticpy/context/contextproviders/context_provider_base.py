@@ -31,7 +31,6 @@ class ContextProvider(Provider):
 
     _REQUIRED_PARAMS: List[str] = []
 
-    @lru_cache(maxsize=256)
     def lookup_item(
         self,
         item: str,
