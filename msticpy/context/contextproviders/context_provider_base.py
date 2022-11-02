@@ -13,7 +13,6 @@ requests per minute for the account type that you have.
 
 """
 from abc import abstractmethod
-from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -76,16 +75,18 @@ class ContextProvider(Provider):
         the same item.
 
         """
-        return self.lookup_observables(
-            data={item: item_type},
+        return self.lookup_observable(
+            observable=item,
+            observable_type=item_type,
             query_type=query_type,
             **kwargs,
         )
 
+    @abstractmethod
     def lookup_observable(  # type: ignore
         self,
         observable: str,
-        obs_type: str = None,
+        observable_type: str = None,
         query_type: str = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -96,7 +97,7 @@ class ContextProvider(Provider):
         ----------
         observable : str
             Observable value to lookup
-        obs_type : str, optional
+        observable_type : str, optional
             The Type of the value to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
@@ -113,12 +114,6 @@ class ContextProvider(Provider):
             reference - URL of the item
 
         """
-        return self.lookup_item(
-            item=observable,
-            item_type=obs_type,
-            query_type=query_type,
-            **kwargs,
-        )
 
     def _check_item_type(
         self, item: str, item_type: str = None, query_subtype: str = None

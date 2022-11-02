@@ -31,22 +31,22 @@ __author__ = "Florian Bracq"
 ContextLookupParams = APILookupParams
 
 
-class HttpContextProvider(HttpProvider, ContextProvider):
+class HttpContextProvider(ContextProvider, HttpProvider):
     """HTTP Context Provider base class."""
 
     @lru_cache(maxsize=256)
-    def lookup_item(
-        self, item: str, item_type: str = None, query_type: str = None, **kwargs
+    def lookup_observable(
+        self, observable: str, observable_type: str = None, query_type: str = None, **kwargs
     ) -> pd.DataFrame:
         """
         Lookup from a value.
 
         Parameters
         ----------
-        item : str
-            item to lookup
-        item_type : str, optional
-            The Type of the item to lookup, by default None (type will be inferred)
+        observable : str
+            observable to lookup
+        observable_type : str, optional
+            The Type of the observable to lookup, by default None (type will be inferred)
         query_type : str, optional
             Specify the data subtype to be queried, by default None.
             If not specified the default record type for the item_value
@@ -74,8 +74,8 @@ class HttpContextProvider(HttpProvider, ContextProvider):
         the same item.
 
         """
-        result = self._check_item_type(
-            item=item, item_type=item_type, query_subtype=query_type
+        result = self._check_observable_type(
+            observable, observable_type, query_subtype=query_type
         )
 
         result["Provider"] = kwargs.get("provider_name", self.__class__.__name__)
@@ -83,7 +83,7 @@ class HttpContextProvider(HttpProvider, ContextProvider):
         req_params: Dict[str, Any] = {}
         try:
             verb, req_params = self._substitute_parms(
-                result["SafeObservable"], result["ObsType"], query_type
+                result["SafeObservable"], result["ObservableType"], query_type
             )
             if verb == "GET":
                 response = self._httpx_client.get(
@@ -107,7 +107,7 @@ class HttpContextProvider(HttpProvider, ContextProvider):
                     result["Details"] = {}
                 result["Status"] = LookupStatus.OK.value
             else:
-                result["RawResult"] = str(response)
+                result["RawResult"] = str(response.text)
                 result["Result"] = False
                 result["Details"] = self._response_message(result["Status"])
         except (

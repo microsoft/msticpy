@@ -52,7 +52,7 @@ class ContextLookup(Lookup):
     def lookup_observable(
         self,
         observable: str,
-        obs_type: Optional[str] = None,
+        observable_type: Optional[str] = None,
         query_type: Optional[str] = None,
         providers: Optional[List[str]] = None,
         default_providers: Optional[List[str]] = None,
@@ -66,7 +66,7 @@ class ContextLookup(Lookup):
         ----------
         observable : str
             observable
-        obs_type : str, optional
+        observable_type : str, optional
             One of IoCExtract.IOCType, by default None
             If none, the Observable type will be inferred
         query_type: str, optional
@@ -89,8 +89,9 @@ class ContextLookup(Lookup):
             list has an entry for each provider result
 
         """
-        return self.lookup_observables(
-            data={observable: obs_type},
+        return self.lookup_item(
+            item=observable,
+            item_type=observable_type,
             query_type=query_type,
             providers=providers,
             default_providers=default_providers,
