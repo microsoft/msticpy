@@ -33,12 +33,6 @@ class TIProvider(Provider):
 
     _QUERIES: Dict[str, Any] = {}
 
-    # pylint: disable=unused-argument
-    def __init__(self, **kwargs):
-        """Initialize the provider."""
-        # pylint: disable=invalid-name
-        super().__init__(**kwargs)
-
     def _check_item_type(
         self, item: str, item_type: str = None, query_subtype: str = None
     ) -> Dict:
