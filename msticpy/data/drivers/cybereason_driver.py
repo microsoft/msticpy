@@ -41,26 +41,46 @@ class CybereasonDriver(DriverBase):
     }
 
     def __init__(self, **kwargs):
-        """Instantiate Cybereason driver."""
+        """
+        Instantiate Cybereason driver.
+
+        Additional Parameters
+        ----------
+        timeout : int
+            Query timeout in seconds. Defaults to 2min
+        max_results : int
+            Number of total results to return. Defaults to 1000
+            Max is 10,000.
+        page_size : int
+            Number of results to return per page. Defaults to 100
+
+        Returns
+        -------
+        Union[pd.DataFrame, Any]
+            A DataFrame (if successfull) or
+            the underlying provider result if an error.
+        """
         super().__init__(**kwargs)
-        timeout = kwargs.get("timeout", 2 * 60 * 1000)  # 2 minutes in milliseconds
-        max_results = min(kwargs.get("max_results", 1000), 1000)
+        timeout = kwargs.get("timeout", 120)  # 2 minutes in milliseconds
+        max_results = min(kwargs.get("max_results", 1000), 10000)
+        page_size = min(kwargs.get("page_size", 100), 100)
         self.base_url: str = "https://{tenant_id}.cybereason.net"
         self.auth_endpoint: str = "/login.html"
         self.req_body: Dict[str, Any] = {
             "queryPath": [],
             "totalResultLimit": max_results,
-            "perGroupLimit": max_results,
-            "perFeatureLimit": max_results,
+            "perGroupLimit": 100,
+            "perFeatureLimit": 100,
             "templateContext": "SPECIFIC",
-            "queryTimeout": timeout,
-            "pagination": {"pageSize": max_results},
+            "queryTimeout": timeout * 1000,
+            "pagination": {"pageSize": page_size},
+            "customFields": [],
         }
         self.search_endpoint: str = "/rest/visualsearch/query/simple"
         self._loaded = True
         self.client = httpx.Client(
             follow_redirects=True,
-            timeout=self.get_http_timeout(def_timeout=120),
+            timeout=self.get_http_timeout(timeout=timeout, def_timeout=120),
             headers=mp_ua_header(),
         )
         self.formatters = {
