@@ -180,6 +180,7 @@ class CybereasonDriver(DriverBase):
 
         print("Connected.")
         self._connected = True
+        self.current_connection = self._instance
 
         return self._connected
 
