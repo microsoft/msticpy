@@ -364,12 +364,14 @@ def init_notebook(
     # load pivots
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading pivots.")
         _load_pivots(namespace=namespace)
         _pr_output(stdout_cap.getvalue())
 
     # User defaults
     stdout_cap = io.StringIO()
     with redirect_stdout(stdout_cap):
+        _pr_output("Loading user defaults.")
         prov_dict = load_user_defaults()
         _pr_output(stdout_cap.getvalue())
 
