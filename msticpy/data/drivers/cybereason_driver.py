@@ -223,17 +223,21 @@ class CybereasonDriver(DriverBase):
         Dict[str, Any]
 
         """
-        result = {}
+        result: Dict[str, Any] = {}
         for name, values in simple_values.items():
+            if not values["values"]:
+                return result
+            result[name] = list(
+                {
+                    CybereasonDriver._format_to_datetime(int(value))
+                    if "Time" in name
+                    else value.strip().rstrip("\x00")
+                    for value in values["values"]
+                }
+            )
             if values["totalValues"] == 1:
-                if "Time" in name:
-                    result[name] = CybereasonDriver._format_to_datetime(
-                        int(values["values"][0])
-                    )
-                else:
-                    result[name] = values["values"][0]
-            elif values["totalValues"] > 1:
-                result[name] = values["values"]
+                result[name] = result[name][0]
+
         return result
 
     @staticmethod
