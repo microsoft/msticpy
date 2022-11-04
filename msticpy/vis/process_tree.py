@@ -102,8 +102,8 @@ def build_and_show_process_tree(
     hide_legend : bool, optional
         Hide the legend box, even if legend_col is specified.
     pid_fmt : str, optional
-        Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
-        default is 'hex'.
+        Display Process ID as 'dec' (decimal), 'hex' (hexadecimal),
+        or 'guid' (string), default is 'hex'.
 
     Returns
     -------
@@ -173,8 +173,8 @@ def plot_process_tree(  # noqa: MC0001
     hide_legend : bool, optional
         Hide the legend box, even if legend_col is specified.
     pid_fmt : str, optional
-        Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
-        default is 'hex'.
+        Display Process ID as 'dec' (decimal), 'hex' (hexadecimal),
+        or 'guid' (string), default is 'hex'.
 
     Returns
     -------
@@ -390,6 +390,8 @@ def _pre_process_tree(
 def _pid_fmt(pid, pid_fmt):
     if pid_fmt == "hex":
         return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
+    if pid_fmt == "guid":
+        return f"GUID: {pid}"
     return (
         f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
     )
@@ -611,8 +613,8 @@ class ProcessTreeAccessor:
         hide_legend : bool, optional
             Hide the legend box, even if legend_col is specified.
         pid_fmt : str, optional
-            Display Process ID as 'dec' (decimal) or 'hex' (hexadecimal),
-            default is 'hex'.
+            Display Process ID as 'dec' (decimal), 'hex' (hexadecimal),
+            or 'guid' (string), default is 'hex'.
 
         Returns
         -------
