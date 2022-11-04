@@ -300,8 +300,6 @@ class CybereasonDriver(DriverBase):
         json_query = json.loads(query)
         body = self.req_body
         body.update(json_query)
-        if "customFields" in kwargs:
-            body.update({"customFields": kwargs["customFields"]})
         response = self.client.post(self.search_endpoint, json=body)
 
         self._check_response_errors(response)
