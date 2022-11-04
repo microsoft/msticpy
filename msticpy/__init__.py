@@ -81,6 +81,7 @@ _STATIC_ATTRIBS = list(locals().keys())
 _DEFAULT_IMPORTS = {
     "az_connect": "msticpy.auth.azure_auth",
     "current_providers": "msticpy.init.nbinit",
+    "ContextLookup": "msticpy.context.contextlookup",
     "GeoLiteLookup": "msticpy.context.geoip",
     "init_notebook": "msticpy.init.nbinit",
     "IPStackLookup": "msticpy.context.geoip",

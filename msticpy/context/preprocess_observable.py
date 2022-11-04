@@ -24,8 +24,8 @@ from urllib.parse import quote_plus
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
-from ..._version import VERSION
-from ...transform.iocextract import IoCExtract
+from .._version import VERSION
+from ..transform.iocextract import IoCExtract
 from .lookup_result import SanitizedObservable
 
 __version__ = VERSION
