@@ -100,7 +100,7 @@ def _create_lookup_func(
     suffix = f"_{ioc_name}"
     short_func_name = f"lookup{suffix}"
     func_name = f"{short_func_name}_{ioc_name}"
-    params_dict = {"default_providers": providers, "ioc_type": ioc}
+    params_dict = {"default_providers": providers}
 
     # use IoC name if ioc_type is None
     entity_cls, entity_attr = TI_ENTITY_ATTRIBS[ioc or ioc_name]
@@ -110,7 +110,7 @@ def _create_lookup_func(
         input_type="dataframe",
         entity_map={entity_cls.__name__: entity_attr},
         func_df_param_name="data",
-        func_df_col_param_name="obs_col",
+        func_df_col_param_name="ioc_col",
         func_out_column_name="Ioc",
         func_static_params=params_dict,
     )

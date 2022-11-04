@@ -108,6 +108,7 @@ stages:
         echo Env $MSTICPY_BUILD_SOURCE or %MSTICPY_BUILD_SOURCE%
         python -m pip install -r requirements-dev.txt
         python -m pip install "pandas>=1.3.0"
+        python -m pip install seaborn
         pytest tests --junitxml=junit/test-$(variables.imageName)-$(variables.python.version)-results.xml -n auto --cov=msticpy --cov-report=xml
       displayName: pytest
       env:

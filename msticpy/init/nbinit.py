@@ -302,6 +302,7 @@ def init_notebook(
             "no_config_check",
             "verbosity",
             "verbose",
+            "config",
             *_SYNAPSE_KWARGS,
         ],
     )

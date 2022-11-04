@@ -19,7 +19,7 @@ import pandas as pd
 from ..._version import VERSION
 from ...common.utility import export
 from .kql_base import KqlTIProvider
-from .ti_provider_base import LookupResult, ResultSeverity
+from .ti_provider_base import ResultSeverity
 
 __version__ = VERSION
 __author__ = "Ian Hellen"
@@ -29,7 +29,7 @@ __author__ = "Ian Hellen"
 class AzSTI(KqlTIProvider):
     """Microsoft Sentinel TI provider class."""
 
-    _IOC_QUERIES: Dict[str, tuple] = {
+    _QUERIES: Dict[str, tuple] = {
         "ipv4": ("ThreatIntelligence.list_indicators_by_ip", {"ioc": "observables"}),
         "file_hash": (
             "ThreatIntelligence.list_indicators_by_hash",
@@ -44,20 +44,22 @@ class AzSTI(KqlTIProvider):
     }
 
     # aliases
-    _IOC_QUERIES["ipv6"] = _IOC_QUERIES["ipv4"]
-    _IOC_QUERIES["md5_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha1_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["sha256_hash"] = _IOC_QUERIES["file_hash"]
-    _IOC_QUERIES["linux_path"] = _IOC_QUERIES["windows_path"]
-    _IOC_QUERIES["hostname"] = _IOC_QUERIES["dns"]
+    _QUERIES["ipv6"] = _QUERIES["ipv4"]
+    _QUERIES["md5_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha1_hash"] = _QUERIES["file_hash"]
+    _QUERIES["sha256_hash"] = _QUERIES["file_hash"]
+    _QUERIES["linux_path"] = _QUERIES["windows_path"]
+    _QUERIES["hostname"] = _QUERIES["dns"]
 
-    def parse_results(self, response: LookupResult) -> Tuple[bool, ResultSeverity, Any]:
+    _REQUIRED_TABLES = ["ThreatIntelligenceIndicator"]
+
+    def parse_results(self, response: Dict) -> Tuple[bool, ResultSeverity, Any]:
         """
         Return the details of the response.
 
         Parameters
         ----------
-        response : LookupResult
+        response : Dict
             The returned data response
 
         Returns
@@ -68,13 +70,13 @@ class AzSTI(KqlTIProvider):
             Object with match details
 
         """
-        if response.raw_result is None:
+        if response["RawResult"] is None:
             return False, ResultSeverity.information, "No data"
 
         severity = ResultSeverity.warning
         # if this is a series (single row) return a dictionary
-        if isinstance(response.raw_result, pd.Series):
-            extracted_data = response.raw_result[
+        if isinstance(response["RawResult"], pd.Series):
+            extracted_data = response["RawResult"][
                 ["Action", "ThreatType", "ThreatSeverity", "Active", "ConfidenceScore"]
             ].to_dict()
             if extracted_data["Action"].lower() in ["alert", "block"]:
@@ -83,8 +85,8 @@ class AzSTI(KqlTIProvider):
         # if this is a dataframe (multiple rows)
         # concatenate the values for each column/record into a list
         # and return as a dictionary
-        if isinstance(response.raw_result, pd.DataFrame):
-            d_frame = response.raw_result
+        if isinstance(response["RawResult"], pd.DataFrame):
+            d_frame = response["RawResult"]
             if d_frame["Action"].str.lower().isin(["alert", "block"]).any():
                 severity = ResultSeverity.high
 
@@ -122,8 +124,8 @@ class AzSTI(KqlTIProvider):
     def _get_severity(data_result: pd.DataFrame) -> pd.Series:
         # For the input frame return severity in a series
         return data_result.apply(
-            lambda x: ResultSeverity.high.value
+            lambda x: ResultSeverity.high.name
             if x.Action.lower() in ["alert", "block"]
-            else ResultSeverity.warning.value,
+            else ResultSeverity.warning.name,
             axis=1,
         )
